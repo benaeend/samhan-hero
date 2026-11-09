@@ -115,6 +115,12 @@ canvas{display:block;width:100%;image-rendering:pixelated;touch-action:manipulat
 .sk .lk{display:none;position:absolute;inset:0;z-index:3;place-items:center;font-size:9px;font-weight:800;color:var(--text-soft);background:rgba(10,14,22,.86)}
 .sk.locked{border-color:var(--line-2)}
 .sk.locked .lk{display:grid}
+button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.sk .mn{display:none;position:absolute;left:0;right:0;bottom:0;z-index:3;font-size:7.5px;font-weight:800;line-height:9px;text-align:center;color:#1c1303;background:var(--gold)}
+.sk.manual .mn{display:block}
+.sk.manual{border-color:rgba(159,231,255,.6)}
+.sk.manual.rdy{animation:skrdy 0.9s ease-in-out infinite}
+@keyframes skrdy{50%{box-shadow:0 0 0 1px rgba(159,231,255,.8) inset,0 0 14px rgba(159,231,255,.9)}}
 .sp{flex:1}
 .btn-boss{border:0;padding:8px 11px;border-radius:12px;background:linear-gradient(180deg,#ff6b6b,#e0244b);color:#fff;font-weight:800;font-size:13px;cursor:pointer;
   box-shadow:0 0 0 1px rgba(255,255,255,.15) inset,0 0 16px rgba(255,60,90,.55);animation:glowp 1.2s ease-in-out infinite;touch-action:manipulation;white-space:nowrap}
@@ -166,6 +172,26 @@ canvas{display:block;width:100%;image-rendering:pixelated;touch-action:manipulat
 .seg.six{grid-template-columns:repeat(4,1fr)}
 .card.hidq{border-color:rgba(169,139,255,.55);box-shadow:0 0 0 1px rgba(169,139,255,.25),0 0 22px rgba(169,139,255,.18)}
 .card.hidq .ct span:first-child{color:#c8b4ff}
+.matrow{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px}
+.mat{display:inline-flex;align-items:center;gap:5px;color:var(--text-soft)}
+.mat i{width:10px;height:10px;border-radius:3px;background:var(--mc);box-shadow:0 0 8px var(--mc);transform:rotate(45deg)}
+.mat b{color:var(--text)}
+.cic{display:inline-grid;width:18px;height:18px;margin-right:6px;color:var(--gold);vertical-align:-3px}
+.cic svg{width:18px;height:18px}
+.cfnow{font-size:12.5px;color:var(--text-soft);line-height:1.5}
+.cfnow em,.eg em{font-style:normal;font-size:10.5px;font-weight:800;color:#1c1303;background:var(--gold);border-radius:6px;padding:0 5px;margin-left:4px}
+.engr{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.eg{position:relative;display:grid;gap:1px;padding:7px 4px;border-radius:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer;font:inherit;text-align:center}
+.eg b{font-size:13px}
+.eg span{font-size:10.5px;color:var(--text-soft);line-height:1.25}
+.eg em{position:absolute;top:-7px;right:4px;margin:0}
+.eg.best{border-color:rgba(255,204,77,.45)}
+.eg[aria-pressed="true"]{background:linear-gradient(180deg,rgba(255,204,77,.22),rgba(255,204,77,.06));border-color:var(--gold);box-shadow:0 0 12px rgba(255,204,77,.25)}
+.cfrec{font-size:12.5px;line-height:1.5}
+.cfbtns{display:flex;gap:6px;flex-wrap:wrap}
+.cfbtns .btn.primary{flex:1}
+.traits{margin:4px 0 0;padding-left:18px;font-size:12.5px;line-height:1.55;color:var(--text-soft)}
+.traits li{margin:2px 0}
 .avgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .avcell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);text-align:center;font-size:11px}
 .avcell img{width:58px;height:54px;object-fit:contain;image-rendering:pixelated}
@@ -546,7 +572,7 @@ const SESSION_KEY = 'samhan-session';       // 로그인 유지를 끈 경우 �
 const charKey = (acc, cid) => `${SAVE_KEY}:${acc}:${cid}`;
 const MAX_CHARS = 4;
 const STEP_HERO = 0.2;
-const GEM_DROP = 0.1;                       // 잡몹 한 마리가 보석을 떨굴 확률
+const GEM_DROP = 0.06;                       // 잡몹 한 마리가 보석을 떨굴 확률
 let clockSkew = 0;                          // 테스트에서 시간을 빨리 돌릴 때만 쓴다
 
 /* ================= 앱으로 설치(PWA) =================
@@ -620,18 +646,27 @@ const ROMAN = ['I', 'II', 'III', 'IV'];
 
 /* ================= 직업 ================= */
 const CLASSES = {
-  musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'체력 높음 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0, range:1, skillMul:1,
+  musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'균형 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0.003, range:1, skillMul:1.1, dr:10,
+    role:'균형', traits:['체력이 높고 받는 피해 -10%, 체력 회복도 조금 더 빨라요', '여럿을 베는 기술·한 적을 노리는 기술·힘을 북돋는 기술을 고루 써요', '레이드에서는 보스의 눈길을 끌어 동료를 지켜요'],
     weapon:'검', armor:'갑옷', wtype:'sword', base:'#8a5a3a', pants:'#4a3a2e', belt:'#d8b34a', fx:'#ffffff', boltFx:'flash', nukeFx:'slashes', proj:null,
     skills:['회오리 베기', '일섬', '투혼', '천지 가르기', '천둥 연격', '기세 꺾기', '장군의 호령', '신장 강림'], awaken:'개천 일격'},
-  jagaek:{name:'자객', desc:'빠른 손놀림으로 급소를 노려요', tags:'공격 속도·치명타 · 근접', hpMul:1, atkMul:1, spdMul:1.4, critAdd:0.1, regenAdd:0, range:1, skillMul:1,
+  jagaek:{name:'자객', desc:'보스의 급소를 노리는 그림자 사냥꾼', tags:'보스 특화 · 근접', hpMul:0.95, atkMul:1, spdMul:1.25, critAdd:0.08, regenAdd:0, range:1, skillMul:1,
+    bossMul:1.3, aoeMul:0.8, oneMul:1.15, petMul:1.6, accMul:1.2, evade:0.2,
+    role:'보스 특화', traits:['보스·수문장·레이드 보스에게 주는 피해 +30%, 한 적을 노리는 기술 +15%, 몸놀림이 빨라 공격의 20%를 피해요', '여럿을 치는 기술은 80%만 들어가서 몬스터 떼를 치우는 건 느려요', '공격 펫 피해 1.6배, 장신구 효과 1.2배 — 펫·장신구를 잘 맞춰야 사냥터를 빨리 밀어요'],
     weapon:'단검', armor:'야행복', wtype:'dagger', base:'#3a3450', pants:'#22202c', belt:'#8a2b2b', fx:'#e0607a', boltFx:'cross', nukeFx:'rain', proj:null,
     skills:['그림자 베기', '급소 찌르기', '바람 걸음', '비도 난무', '그림자 연환', '급소 낙인', '월영 난무', '귀영 천살'], awaken:'월하 만영참'},
-  sulsa:{name:'술사', desc:'멀리서 불덩이와 벼락을 불러요', tags:'공격력·기술 피해 · 원거리', hpMul:0.8, atkMul:1.2, spdMul:0.9, critAdd:0, regenAdd:0, range:4, skillMul:1.3,
+  sulsa:{name:'술사', desc:'처음엔 약하지만 갈수록 무서워지는 마력', tags:'후반 강함 · 원거리', hpMul:0.7, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0, range:4, skillMul:1.1,
+    grow:[0.6, 1.5], shield:true,
+    role:'늦게 피는 꽃', traits:['마력 성장: 공격력이 처음 60%에서 레벨을 올릴수록 커져 천계 만렙에 150%(이승 100 → 저승 200 → 천계 300을 모두 셈)', '체력이 가장 낮아요(70%). 보스 앞에서 쉽게 쓰러져요', '「마력 보호막」이 최대 체력의 40%(기술 레벨마다 +1%)를 막아요 — 보스가 나올 때 맞춰 쓰면 좋아요'],
     weapon:'지팡이', armor:'도포', wtype:'staff', base:'#3f5f9a', pants:'#2e3555', belt:'#d8b34a', fx:'#ff8a3a', boltFx:'zig', nukeFx:'meteor', proj:'fire',
-    skills:['불꽃 고리', '벼락', '마력 집중', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌'], awaken:'천화 강림'},
-  doin:{name:'도인', desc:'부적으로 싸우고 스스로를 치유해요', tags:'회복 · 원거리', hpMul:1.15, atkMul:1.1, spdMul:1, critAdd:0, regenAdd:0.02, range:3, skillMul:1,
+    skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌'], awaken:'천화 강림'},
+  doin:{name:'도인', desc:'준비 부적을 겹겹이 쌓아 한 방에 터뜨려요', tags:'한방 · 원거리', hpMul:1.1, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0.003, range:3, skillMul:1,
+    role:'한방', traits:['공격 기술은 3개뿐(Lv.5 · 1차 전직 · 환생 뒤). 대신 늘 치명타로 크게 터져요', '나머지는 준비 기술: 봉인(받는 피해↑)·회복·도력(다음 공격 2.5배↑)·팔괘(치명타 피해↑)·대굿(공격 기술 다시 쓰기)', '준비 기술을 다 건 뒤 공격 기술을 직접 누르면 게임에서 가장 큰 한 방이 나와요(자동은 그때그때 써요)'],
+    sk:[{kind:'d_atk1', cd:10, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, icon:'pearl'},
+      {kind:'d_bagua', cd:30, icon:'crit'}, {kind:'d_atk3', cd:40, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}],
+    order:[7, 1, 2, 4, 3, 0, 6, 5],
     weapon:'부채', armor:'도포', wtype:'fan', base:'#e6e0cc', pants:'#bdb59c', belt:'#b8382f', fx:'#f3d36b', boltFx:'pillar', nukeFx:'pillars', proj:'charm',
-    skills:['부적 폭발', '천벌', '회복의 기운', '하늘의 심판', '팔괘 연타', '봉인 부적', '오방신장 소환', '만신 대굿'], awaken:'사신 강림'},
+    skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 모으기', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿'], awaken:'사신 강림'},
 };
 const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin'];
 const W_PRE = ['나무', '무쇠', '청동', '백은', '신령'];
@@ -665,6 +700,22 @@ const SKILLS = [
   {key:'jobA',   unlock:1,  job:1, cd:18, base:2e6, growth:1.9, max:30},   // 1차 전직 기술
   {key:'jobB',   unlock:1,  job:2, cd:32, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
 ];
+// 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
+const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7];
+const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
+const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
+const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
+const skLv = i => skOpen(i) ? S.skills[SKILLS[i].key] || 0 : 0;
+const skAuto = i => !(S.skManual && S.skManual[SKILLS[i].key]);
+const skLockText = i => { const d = skDef(i); return d.reb ? '환생' : d.job ? d.job + '차' : 'Lv.' + d.unlock; };
+const skLockLong = i => { const d = skDef(i); return d.reb ? '환생하면 익힘' : d.job ? `${d.job}차 전직 때 익힘` : `Lv.${d.unlock}에 익힘`; };
+// 도인 기술 수치
+const dAtkPct = (k, l) => ({d_atk1:230, d_atk2:440, d_atk3:2300})[k] * (1 + 0.1 * (l - 1));
+const dSealPct = l => 30 + 2 * (l - 1);
+const dChargeMul = l => 2.5 + 0.05 * (l - 1);
+const dBaguaAdd = l => 60 + 4 * (l - 1);
+// 술사 마력 보호막(최대 체력의 %)
+const shieldPct = l => 40 + (l - 1);
 function spinPct(l){ return 200 + 20 * (l - 1); }
 function boltPct(l){ return 500 + 50 * (l - 1); }
 function meteorPct(l){ return 800 + 80 * (l - 1); }
@@ -674,10 +725,24 @@ function comboPct(l){ return 140 + 14 * (l - 1); }   // 6번 때림
 function markPct(l){ return 25 + 1 * (l - 1); }     // 받는 피해 +%
 const skillName = i => cls().skills[i];
 function skillDesc(i, l){
-  const sm = cls().skillMul;
+  const sm = cls().skillMul, d = skDef(i), C = cls();
+  if (d.kind === 'd_atk1') return `대상과 그 주변 적에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해 · <b>늘 치명타</b>`;
+  if (d.kind === 'd_atk2') return `보이는 적 모두에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해 · <b>늘 치명타</b>`;
+  if (d.kind === 'd_atk3') return `가장 튼튼한 적 하나에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해 · <b>늘 치명타</b>`;
+  if (d.kind === 'd_seal') return `준비: 보이는 적 모두 10초 동안 받는 피해 +${dSealPct(l)}%`;
+  if (d.kind === 'd_heal') return `준비: 체력 30% 회복, 8초 동안 공격력 +${roarAtk(l)}%·공격 속도 +${roarSpd(l)}%`;
+  if (d.kind === 'd_charge') return `준비: 다음 공격 기술 하나의 피해 ×${dChargeMul(l).toFixed(2)}`;
+  if (d.kind === 'd_bagua') return `준비: 10초 동안 치명타 피해 +${dBaguaAdd(l)}%`;
+  if (d.kind === 'd_gut') return `준비: 공격 기술 재사용 시간을 모두 없애고 12초 동안 공격력 +50%`;
+  const am = d.atk && C.aoeMul && ['spin', 'meteor', 'jobA', 'jobB'].includes(d.kind) ? C.aoeMul : d.atk && C.oneMul && ['bolt', 'combo'].includes(d.kind) ? C.oneMul : 1;
+  if (am !== 1) return skillDescBase(i, l, sm * am);
+  if (i === 2 && C.shield) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%, 최대 체력의 ${shieldPct(l)}%를 막는 보호막(12초)`;
+  return skillDescBase(i, l, sm);
+}
+function skillDescBase(i, l, sm){
   if (i === 0) return `${cls().range > 1 ? '대상 주변' : '내 주변'} 적 모두에게 공격력의 ${Math.round(spinPct(l) * sm)}% 피해`;
   if (i === 1) return `가장 튼튼한 적 하나에게 공격력의 ${Math.round(boltPct(l) * sm)}% 피해`;
-  if (i === 2) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%` + (S.cls === 'doin' ? ', 체력 30% 회복' : '');
+  if (i === 2) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%`;
   if (i === 4) return `가장 튼튼한 적을 6번 연달아 공격력의 ${Math.round(comboPct(l) * sm)}%씩 때림`;
   if (i === 5) return `보이는 적 모두 10초 동안 받는 피해 +${markPct(l)}%`;
   if (i === 6) return `보이는 적 모두에게 공격력의 ${Math.round(jobAPct(l) * sm)}% 피해 + 6초 동안 받는 피해 +15%`;
@@ -703,14 +768,19 @@ function cleanLook(l){
 }
 
 /* ================= 재련 =================
-   확률 구조는 로스트아크 재련을 참고: 실패해도 단계는 그대로, 실패할 때마다 다음 확률이 기본 확률의 10%씩 올라(최대 2배)
-   '담금질 기운'이 (그때 확률 × 0.465)만큼 쌓이고, 100%가 되면 다음 재련은 반드시 성공한다. */
+   확률 구조는 메이플스토리의 장비 강화를 참고(이름·수치는 새로): 단계마다 성공 확률을 공개하고, 실패하면 그대로이거나(유지)
+   +11부터는 한 단계 떨어질 수 있고(하락, +10·+15·+20에서는 안 떨어짐), +17부터는 부서져 +15(+21부터는 +20)로 돌아갈 수 있다.
+   두 번 연달아 떨어지면 다음 재련은 반드시 성공(기회의 불꽃). +16~+19는 보석을 두 배 내면 부서짐을 막는다(보호). */
 const REFINE_MAX = 25;
-const REFINE_RATE = [100, 100, 100, 90, 80, 70, 60, 50, 40, 30, 30, 25, 20, 15, 15, 10, 10, 7, 5, 3, 3, 2, 2, 1, 1];
-const ENERGY_K = 0.465;
+const REFINE_RATE = [100, 100, 100, 90, 85, 80, 70, 65, 60, 55, 45, 42, 38, 35, 32, 30, 28, 26, 25, 24, 23, 21, 19, 17, 15];   // +n 성공 %
+const REFINE_DROP = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 25, 30, 30, 30, 30, 30, 35, 35, 35, 30, 30, 35, 35, 35];          // 하락 %
+const REFINE_BREAK = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1.5, 2, 2, 2, 2.5, 3, 3.5, 4];                   // 부서짐 %
+const REFINE_GUARD = [10, 15, 20];
+const refineGuardTo = lv => lv >= 20 ? 20 : 15;
+const refineProtectable = lv => lv >= 16 && lv <= 19;
 const refinePct = lv => 4 * lv + 0.3 * lv * lv;
 const refineGold = lv => 500 * Math.pow(1.2, lv);
-const refineGems = lv => 5 + lv;
+const refineGems = lv => 2 + Math.floor(lv / 4);
 
 /* ================= 펫 ================= */
 const PET_TYPES = {
@@ -738,13 +808,14 @@ const PETS = [
 ];
 const PET_N = PETS.length, PET_MAX = 30, PET_STAR_MAX = 5, PET_DUP_GEMS = 20;
 const PET_P = [0.55, 0.28, 0.13, 0.035, 0.005];
+const PET_PITY = 60;   // 60번 안에 영웅 이상이 안 나오면 60번째는 영웅 이상 확정
 const PET_ATK = [30, 45, 65, 90, 130];      // 한 번 공격할 때 용사 공격력의 %
 const PET_DR = [5, 7, 10, 13, 17];          // 받는 피해 감소 %
 const PET_HP = [10, 16, 25, 38, 55];        // 체력 +%
 const PET_GOLD = [5, 8, 12, 16, 22];        // 엽전·경험치 +%
 const PET_HEAL = [2, 2.5, 3, 4, 5];         // 5초마다 최대 체력의 %
 const petSummonCost = n => n === 10 ? 900 : 100 * n;
-const petUpCost = lv => ({gold:500 * Math.pow(1.25, lv - 1), gems:10 + 3 * (lv - 1)});
+const petUpCost = lv => ({gold:500 * Math.pow(1.25, lv - 1), gems:5 + 2 * (lv - 1)});
 
 /* ================= 레이드 =================
    10레벨마다 하나씩 열린다(10·20·30…). 파티는 나 + 이 기기의 다른 캐릭터 + NPC 동료로 3~10명. 전투는 자동.
@@ -766,7 +837,7 @@ function raidInfo(i){
   const suffix = round ? ` ${round + 1}단` : '';
   const g = Math.min(3, Math.floor((i + 1) / 2));
   return Object.assign({}, d, {i, key:String(i), round, req, party, ref, g, label:d.name + suffix, bossName:d.boss + suffix,
-    gems:30 + 10 * (i + 1), firstGems:50 * (i + 1)});
+    gems:15 + 5 * (i + 1), firstGems:30 * (i + 1)});
 }
 /* 저승 레이드: 시왕(十王). 저승 레벨 20마다 하나씩 */
 const KINGS = [
@@ -786,7 +857,7 @@ function hellRaidInfo(i){
   const suffix = round ? ` ${round + 1}단` : '';
   return Object.assign({}, d, {i, key:'h' + i, hell:true, round, req, party:Math.min(10, 5 + i), ref:HELL_RAID_REF[i] || 86 + 3 * (i - 9),
     g:Math.min(4, 2 + Math.floor(i / 3)), type:'judge', label:d.name + suffix, bossName:d.boss + suffix,
-    gems:120 + 30 * (i + 1), firstGems:200 * (i + 1)});
+    gems:60 + 15 * (i + 1), firstGems:120 * (i + 1)});
 }
 // 시왕 레이드 보스 세기(저승 단계 기준): 그 레벨에 보통 닿아 있는 단계보다 조금 아래
 const HELL_RAID_REF = [5, 15, 30, 42, 55, 66, 72, 76, 80, 84];
@@ -810,6 +881,132 @@ const ACC = {
 const ACC_ORDER = ['ring', 'ear', 'brace'];
 const ACC_DROP = {mob:{ring:0.004, ear:0.0008, brace:0.0008}, gate:{ring:0.08, ear:0.015, brace:0.015}};
 const ACC_GRADE_P = [0.55, 0.28, 0.12, 0.04, 0.01], ACC_DUP_GEMS = 50;
+
+/* ================= 조합 공방 =================
+   직업마다 비전 무기·비전 갑옷·노리개를 재료를 모아 만든다(세계마다 3단계, 모두 9단계).
+   조합식 = 이전 단계 + 그 세계 재료 + 같은 칸 장비(무기·갑옷) 또는 보석(노리개). 진행할수록 다음 조합식이 열린다.
+   각인은 칸마다 셋 중 하나. 직업에 맞는 '최적 각인'이면 1.5배, 세 칸이 모두 최적이면 '조화'.
+   보스·레이드 세기는 이 아이템을 제때 만든다고 보고 맞춰 두었다(없으면 능력치를 훨씬 오래 올려야 한다). */
+const MATS = [
+  {k:'m0', name:'요괴 정수', color:'#7fdc6a'},
+  {k:'m1', name:'망자의 넋', color:'#ff8a7a'},
+  {k:'m2', name:'하늘 조각', color:'#9fe7ff'},
+];
+const MAT_DROP = {boss:1, gate:3, raid:4, raidFirst:6, tb:8, mob:0.005};
+const CRAFT_T = [   // w 세계, need 열리는 단계(그 세계 최고 단계), mat 재료 수, gear [장비 등급, 개수], gems 노리개 보석
+  {w:0, need:21, mat:20,  gear:[1, 2], gems:150},
+  {w:0, need:51, mat:60,  gear:[2, 2], gems:400},
+  {w:0, need:91, mat:150, gear:[2, 4], gems:800},
+  {w:1, need:1,  mat:80,  gear:[3, 1], gems:1200},
+  {w:1, need:51, mat:200, gear:[3, 2], gems:1800},
+  {w:1, need:91, mat:400, gear:[3, 3], gems:2500},
+  {w:2, need:1,  mat:150, gear:[4, 1], gems:3000},
+  {w:2, need:41, mat:350, gear:[4, 2], gems:4000},
+  {w:2, need:76, mat:700, gear:[4, 3], gems:5000},
+];
+const CRAFT_MAX = CRAFT_T.length;
+const CRAFT_RATE = [100, 90, 80, 70, 60, 55, 50, 45, 40];   // 단계별 조합 성공 %(실패하면 재료 절반만 사라짐)
+const CRAFT_PITY = [0, 2, 2, 3, 3, 3, 4, 4, 5];             // 이만큼 실패하면 다음은 확정(천장)
+const CRAFT_SLOTS = [
+  {k:'w', name:'비전 무기', main:'공격력', per:10, gear:'weapon', icon:'sword'},
+  {k:'a', name:'비전 갑옷', main:'체력', per:15, gear:'armor', icon:'armor'},
+  {k:'n', name:'노리개', main:'기술 피해', per:8, gear:null, icon:'flute'},
+];
+const CRAFT_PRE = ['도깨비불', '명부', '천상'], NORI = ['호랑이 발톱 노리개', '저승꽃 노리개', '구름 매듭 노리개'];
+const ENGR = {
+  w:[{k:'power', name:'파쇄', v:4, d:'공격력'}, {k:'hunt', name:'사냥', v:5, d:'보스 피해'}, {k:'vital', name:'급소', v:8, d:'치명타 피해'}],
+  a:[{k:'wall', name:'철벽', v:2, d:'받는 피해 감소·체력'}, {k:'swift', name:'신속', v:3, d:'공격 속도'}, {k:'life', name:'생기', v:0.1, d:'초당 체력 회복'}],
+  n:[{k:'magic', name:'술력', v:4, d:'기술 피해'}, {k:'cdr', name:'도력', v:2, d:'기술 재사용 시간 감소'}, {k:'pet', name:'공명', v:10, d:'펫 피해'}],
+};
+const ENGR_BEST = {musa:{w:'power', a:'wall', n:'cdr'}, jagaek:{w:'hunt', a:'swift', n:'pet'}, sulsa:{w:'vital', a:'wall', n:'magic'}, doin:{w:'vital', a:'life', n:'cdr'}};
+const HARMONY = 15;   // 조화: 공격력·체력 +%
+const craftName = (k, t) => { if (!t) return '없음'; const g = Math.floor((t - 1) / 3), st = '★'.repeat((t - 1) % 3 + 1);
+  return (k === 'n' ? NORI[g] : `${CRAFT_PRE[g]} ${k === 'w' ? cls().weapon : cls().armor}`) + ' ' + st; };
+const engrOf = (k, e) => ENGR[k].find(x => x.k === e);
+const engrBest = (k, e) => (ENGR_BEST[S.cls] || ENGR_BEST.musa)[k] === e;
+const engrVal = (k, e, t) => { const E = engrOf(k, e); return E ? E.v * t * (engrBest(k, e) ? 1.5 : 1) : 0; };
+const craftMain = k => S.craft[k].t * CRAFT_SLOTS.find(c => c.k === k).per;
+// 각인 효과 합(그 각인이 끼워진 칸에서만)
+function craftEff(e){
+  let v = 0;
+  for (const c of CRAFT_SLOTS){ const it = S.craft[c.k]; if (it.t && it.e === e) v += engrVal(c.k, e, it.t); }
+  return v;
+}
+const craftDR = () => Math.min(40, craftEff('wall'));
+const harmonyOn = () => CRAFT_SLOTS.every(c => S.craft[c.k].t > 0 && engrBest(c.k, S.craft[c.k].e));
+const craftMat = t => 'm' + Math.max(CRAFT_T[t - 1].w, Math.min(2, S.world));   // 지난 세계 조합식은 지금 세계 재료로도 만든다
+const craftOpen = t => { const T = CRAFT_T[t - 1]; return !!T && (S.best['s' + T.w] || 0) >= T.need; };
+const gradeHave = (slot, g) => { const G = S.gear[slot]; let n = 0; for (let i = g * 4; i < g * 4 + 4; i++) n += Math.max(0, G.count[i] - (S.equip[slot] === i ? 1 : 0)); return n; };
+function craftNeed(k){
+  const it = S.craft[k], t = it.t + 1, T = CRAFT_T[t - 1];
+  if (!T) return {max:true};
+  const sl = CRAFT_SLOTS.find(c => c.k === k), mk = craftMat(t);
+  const o = {t, T, mk, mat:T.mat, haveMat:S.mat[mk] || 0, open:craftOpen(t)};
+  if (sl.gear){ o.gearSlot = sl.gear; o.g = T.gear[0]; o.n = T.gear[1]; o.haveGear = gradeHave(sl.gear, T.gear[0]); }
+  else { o.gems = T.gems; }
+  o.ok = o.open && o.haveMat >= o.mat && (sl.gear ? o.haveGear >= o.n : S.gems >= o.gems) && !!(it.e2 || it.e);
+  o.fails = it.f || 0; o.sure = o.fails >= CRAFT_PITY[t - 1]; o.rate = o.sure ? 100 : CRAFT_RATE[t - 1];
+  return o;
+}
+function craft(k){
+  const n = craftNeed(k), it = S.craft[k];
+  if (n.max || !n.ok) return false;
+  if (!n.sure && n.rate < 100 && Math.random() * 100 >= n.rate * (window.__game && window.__game.craftLuck || 1)){
+    const lost = Math.ceil(n.mat / 2);
+    S.mat[n.mk] -= lost; it.f = (it.f || 0) + 1;
+    addLog(`조합 실패… ${MATS[+n.mk[1]].name} ${lost}개가 사라졌어요. (${CRAFT_PITY[n.t - 1] - it.f > 0 ? `${CRAFT_PITY[n.t - 1] - it.f}번 더 실패하면 다음은 확정` : '다음 조합은 확정 성공!'})`, 'warn'); sfx('fail');
+    ev('craft');
+    return 'fail';
+  }
+  S.mat[n.mk] -= n.mat; it.f = 0;
+  if (n.gearSlot){
+    let left = n.n;
+    const G = S.gear[n.gearSlot];
+    for (let i = n.g * 4; i < n.g * 4 + 4 && left > 0; i++){ const use = Math.min(left, G.count[i] - (S.equip[n.gearSlot] === i ? 1 : 0)); if (use > 0){ G.count[i] -= use; left -= use; } }
+  } else S.gems -= n.gems;
+  it.t = n.t; it.e = it.e2 || it.e; it.e2 = '';
+  refreshStats();
+  const nm = craftName(k, it.t);
+  addLog(`조합 성공! ${nm} (${CRAFT_SLOTS.find(c => c.k === k).name} ${it.t}단계)`, 'gain'); sfx('rare');
+  announce(`${S.name}님이 조합 공방에서 「${nm}」${josa(nm, '을', '를')} 만들었어요!`);
+  fx.push({type:'level', t:0, dur:0.8});
+  ev('craft');
+  return true;
+}
+// 각인 고르기: 아직 없으면 바로, 있으면 다음 조합 때 바뀐다(지금 바로 바꾸려면 보석)
+const engrSwapCost = k => 50 * Math.max(1, S.craft[k].t);
+function pickEngr(k, e, now){
+  const it = S.craft[k];
+  if (!engrOf(k, e)) return false;
+  if (!it.t){ it.e = e; it.e2 = ''; return true; }
+  if (now){
+    const c = engrSwapCost(k);
+    if (it.e === e || S.gems < c) return false;
+    S.gems -= c; it.e = e; it.e2 = ''; refreshStats();
+    addLog(`각인을 「${engrOf(k, e).name}」${josa(engrOf(k, e).name, '으로', '로')} 바꿨어요.`, 'good');
+    return true;
+  }
+  it.e2 = it.e === e ? '' : e;
+  return true;
+}
+function gainMat(n, quiet){
+  const k = 'm' + Math.min(2, S.world);
+  n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0);
+  if (n <= 0) return 0;
+  S.mat[k] = (S.mat[k] || 0) + n;
+  if (!quiet) addLog(`${MATS[Math.min(2, S.world)].name} +${n}`, 'gain');
+  return n;
+}
+const craftReady = () => CRAFT_SLOTS.some(c => craftNeed(c.k).ok);
+// 조합 아이템을 제때 만든다고 보고 몬스터를 그만큼 단단하게(세계·단계별 기대 단계)
+function craftExpT(w, s){
+  const base = w * 3;
+  let t = base;
+  for (let k = 0; k < 3; k++) if (s >= CRAFT_T[base + k].need + (w === 0 ? 10 : 15)) t = base + k + 1;
+  return t;
+}
+const CRAFT_COMP_K = 0.8;
+const craftComp = (w, s) => { const t = craftExpT(w, s); return 1 + CRAFT_COMP_K * ((1 + 0.1 * t) * (1 + 0.08 * t) * (1 + 0.05 * t) * (t >= 1 ? 1 + HARMONY / 100 : 1) - 1); };
 
 /* 환생: 윤회 구슬로 영원히 남는 능력을 올린다(여러 방치형 게임의 '환생 재화' 방식) */
 const REB_STATS = [
@@ -856,6 +1053,7 @@ const CHAPTERS = [
   '13장 · 빛 없는 곳의 현무', '14장 · 시왕의 심판', '15장 · 윤회의 바퀴', '16장 · 다시 고구려로',
   '17장 · 하늘의 선전포고', '18장 · 구름 위의 도술', '19장 · 활빈의 깃발', '20장 · 살수의 물결', '21장 · 명량의 바다', '22장 · 염라의 심판', '23장 · 제천대성', '24장 · 영소보전', '25장 · 신화',
 ];
+const STORY_GEM_K = 0.6;   // 이야기 보상 보석 배율(보석이 너무 흔하지 않게)
 const MAIN_Q = [
   // 1장 — 마을 어귀
   {ch:0, t:'까치의 부탁', s:'하늘 문에 금이 가 요괴가 내려왔어요. 마을 어귀부터 지켜요.', k:'kills', n:20, gems:50,
@@ -1003,7 +1201,7 @@ const MAIN_Q = [
   {ch:12, t:'독룡', s:'저승 8-6에 닿아요.', k:'s1', n:76, gems:1400,
     c:['poison', 'hero,m:serpent:#3a8a2a', 'shake', [['나', '청룡의 비늘이 독을 막아 준다!'], ['나', '독룡, 물러서라!']]]},
   {ch:12, t:'단단한 갑옷', s:'방어구를 +20까지 재련해요.', k:'refineA', n:20, gems:1400,
-    c:['poison', 'hero,saja', 'fire', [['저승사자', '더 깊이 가려면 갑옷이 버텨야 한다.'], ['나', '담금질 기운이 가득 찼어요.']]]},
+    c:['poison', 'hero,saja', 'fire', [['저승사자', '더 깊이 가려면 갑옷이 버텨야 한다.'], ['나', '부서져도 다시 벼리면 돼요.']]]},
   {ch:12, t:'늪 너머', s:'저승 레벨 115를 달성해요.', k:'l1', n:115, gems:1500,
     c:['poison', 'hero,saja', 'dark', [['저승사자', '이제 빛 없는 곳이다. 등불을 들어라.'], ['나', '현무가 거기 있겠군요.']]]},
   // 13장 — 흑암지옥, 현무
@@ -1133,17 +1331,17 @@ const BUFFS = {
 };
 const BUFF_ADD = 10 * 60, BUFF_MAX = 60 * 60;
 const SHOP = [
-  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요.', cur:'gold', price:() => Math.max(30, Math.round(mGold(S.maxStage) * 60)), inv:'potion', n:10, max:999},
-  {id:'elixir', cat:'potion', icon:'elixir', name:'산삼 탕약', desc:'보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 5, inv:'elixir', n:1, max:99},
-  {id:'b_atk', cat:'charm', icon:'charm', buff:'atk', cur:'gems', price:() => 30},
-  {id:'b_spd', cat:'charm', icon:'charm', buff:'spd', cur:'gems', price:() => 30},
-  {id:'b_def', cat:'charm', icon:'charm', buff:'def', cur:'gems', price:() => 25},
-  {id:'b_gold', cat:'charm', icon:'charm', buff:'gold', cur:'gems', price:() => 20},
-  {id:'b_exp', cat:'charm', icon:'charm', buff:'exp', cur:'gems', price:() => 20},
-  {id:'whet', cat:'mat', icon:'whet', name:'숫돌', desc:'재련할 때 함께 쓰면 성공 확률이 기본 확률의 절반만큼 더 올라요.', cur:'gems', price:() => 15, inv:'whet', n:1, max:99},
-  {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 60, daily:3},
-  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 50},
-  {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'아바타(옷·망토·펫 꾸미기) 하나가 들어 있어요. 이미 가진 것이면 보석 100개로 돌려줘요. 아바타 하나마다 공격력·체력 +2%.', cur:'gems', price:() => AV_BOX},
+  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요.', cur:'gold', price:() => Math.max(60, Math.round(mGold(S.maxStage) * 150)), inv:'potion', n:10, max:999},
+  {id:'elixir', cat:'potion', icon:'elixir', name:'산삼 탕약', desc:'보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 12, inv:'elixir', n:1, max:99},
+  {id:'b_atk', cat:'charm', icon:'charm', buff:'atk', cur:'gems', price:() => 60},
+  {id:'b_spd', cat:'charm', icon:'charm', buff:'spd', cur:'gems', price:() => 60},
+  {id:'b_def', cat:'charm', icon:'charm', buff:'def', cur:'gems', price:() => 50},
+  {id:'b_gold', cat:'charm', icon:'charm', buff:'gold', cur:'gems', price:() => 40},
+  {id:'b_exp', cat:'charm', icon:'charm', buff:'exp', cur:'gems', price:() => 40},
+  {id:'whet', cat:'mat', icon:'whet', name:'숫돌', desc:'재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 25, inv:'whet', n:1, max:99},
+  {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
+  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 90},
+  {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
   {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개.', cur:'free', price:() => 0, daily:1},
 ];
 const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'], ['pack', '꾸러미']];
@@ -1198,8 +1396,14 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-09-5', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-09-6', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['직업 개성', '무사는 균형(체력 높고 받는 피해 -10%), 자객은 보스 사냥꾼(보스 피해↑, 몹 떼는 약함, 펫·장신구 조화), 술사는 늦게 피는 꽃(처음엔 약하고 레벨이 오를수록 강해짐, 몸이 약해 마력 보호막이 중요), 도인은 한 방(공격 기술 3개, 준비 기술을 쌓아 터뜨리기). [기술]에서 직업 특성을 봐요.'],
+  ['기술 직접 쓰기', '아래 기술 칸을 누르면 바로 쓰고, 길게 누르면 자동/수동을 바꿔요. 도인은 준비 기술을 다 건 뒤 큰 기술을 직접 누르면 가장 큰 한 방이 나와요.'],
+  ['조합 공방', '[장비] → [조합]에서 보스·레이드 재료와 장비를 섞어 직업 전용 비전 무기·갑옷·노리개를 만들어요(이승·저승·천계 3단계씩). 직업에 맞는 각인 셋을 맞추면 조화 보너스! 제때 만들어야 보스·레이드를 깨기 쉬워요.'],
+  ['매서워진 보스', '새 단계의 보스가 세게 때려요. 체력·방어 펫·물약·보호막을 챙겨요.'],
+  ['확률 공개·천장', '재련은 단계마다 성공·하락·부서짐 확률을 보여 주고, 두 번 연달아 떨어지면 다음은 반드시 성공해요. 펫 소환 60번·꾸미기 상자 40번 천장, 조합도 실패가 쌓이면 확정!'],
+  ['보석이 귀해졌어요', '보석 보상이 줄고 상점 값이 올랐어요. 꾸미기 상자는 보석 1,000개(옷 6%·망토 11%), 새 아바타 5종.'],
   ['전직', '레벨 50에 [수련] → [전직]에서 스승과 겨뤄 1차 전직(장군·월영·방사·무당)! 전직 기술·무기 모양·전직 망토를 받아요. 숨겨진 2차 전직도 있어요…'],
   ['신과의 전쟁', '저승을 마치면 마지막 환생으로 하늘(천계)에 올라요. 전우치·홍길동·을지문덕·이순신·염라·손오공·옥황상제, 그리고 천마와의 이야기 9장이 새로 생겼어요.'],
   ['아바타', '옷·망토·펫 꾸미기가 생겼어요. 가진 아바타 하나마다 공격력·체력 +2%. [장비] → [아바타], 상점의 꾸미기 상자'],
@@ -1273,9 +1477,24 @@ const FLOAT = {bat:8, ghost:3, wisp:6};
 const HEAVEN_K = 1.5;   // 천계 몬스터 체력 배율(2차 전직만큼 세게, 밸런스용)
 const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
 const mobHp   = s => 20 * Math.pow(CURVE.hp, s - 1) * Math.pow(CURVE.hp2, Math.max(0, s - CURVE.knee));
-const mobAtk  = s => 4 * Math.pow(CURVE.atk, s - 1);
 const mobGold = s => 3 * Math.pow(CURVE.gold, s - 1);
-const EXP_K = [0.12, 0.4, 0.5];   // 세계별 경험치 배율(레벨이 너무 빨리 오르지 않게)
+const EXP_K = [0.12, 0.4, 0.5];
+// 몬스터 공격력: 시뮬로 잰 '그 단계에 처음 닿을 때의 용사 체력'(체력 배율 1 기준, log10) 표를 따라간다.
+// 새 단계의 보스는 평범한 용사를 맨몸으로 MOB_TTK초쯤에 쓰러뜨린다 → 체력·방어 펫·보호막·물약이 중요해지고,
+// 술사처럼 몸이 약한 직업은 생존 기술을 잘 써야 한다. 오래 머물러 강해지면 그만큼 덜 아프다
+const HERO_REF = [
+  [[1, 2.0], [11, 2.7], [21, 3.2], [31, 3.4], [41, 3.9], [51, 4.4], [61, 4.9], [71, 5.3], [81, 6.2], [91, 7.0], [101, 7.5], [111, 8.6], [121, 9.2]],
+  [[1, 5.0], [11, 6.4], [21, 6.8], [31, 7.1], [41, 7.35], [51, 7.65], [61, 7.9], [71, 8.3], [81, 8.8], [91, 9.65], [101, 10.7]],
+  [[1, 6.0], [11, 8.1], [21, 8.5], [31, 8.8], [41, 9.1], [51, 9.45], [61, 10.0], [71, 10.6], [81, 11.25], [91, 11.95]],
+];
+function heroRef(w, s){
+  const T = HERO_REF[w] || HERO_REF[0];
+  if (s <= T[0][0]) return Math.pow(10, T[0][1]);
+  for (let k = 1; k < T.length; k++) if (s <= T[k][0]){ const [s0, v0] = T[k - 1], [s1, v1] = T[k]; return Math.pow(10, v0 + (v1 - v0) * (s - s0) / (s1 - s0)); }
+  const [s0, v0] = T[T.length - 2], [s1, v1] = T[T.length - 1];
+  return Math.pow(10, v1 + (v1 - v0) / (s1 - s0) * (s - s1));
+}
+const MOB_TTK = 20;   // 세계별 경험치 배율(레벨이 너무 빨리 오르지 않게)
 const mobExp  = s => 2 * Math.pow(CURVE.exp, s - 1) * EXP_K[S.world];
 const expNeed = L => 10 * Math.pow(CURVE.need, Math.min(L, 100) - 1) * Math.pow(CURVE.need2, Math.max(0, L - 100));
 /* 저승(환생 뒤 세계): 우리 옛 이야기와 불화(시왕도)에 나오는 지옥들 */
@@ -1293,12 +1512,13 @@ const WORLD_NAME = ['이승', '저승', '천계'];
 const levelCap = () => LV_CAP[S.world] || 100;
 const regionsOf = w => w === 2 ? HEAVEN_REGIONS : w ? HELL_REGIONS : REGIONS;
 const effStage = s => s + (S.world === 2 ? HEAVEN_OFF : S.world ? HELL_OFF : 0);
-const mHp = s => mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1), mAtk = s => mobAtk(effStage(s)), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(effStage(s));
+const mHp = s => mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1) * craftComp(S.world, s), mAtk = s => heroRef(S.world, s) / (2 * MOB_TTK), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(effStage(s));
 // 저승은 이야기 순서대로: 도산 1~20 · 화탕 21~40 · 한빙 41~55 · 검수 56~70 · 독사 71~80 · 흑암 81~
 const HELL_SPAN = [20, 40, 55, 70, 80];
 const regionIndex = s => S.world ? (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(S.world === 2 ? HEAVEN_SPAN : HELL_SPAN) : Math.floor((s - 1) / 10) % REGIONS.length;
 const curRegion = s => regionsOf(S.world)[regionIndex(s)];
 const stageLabel = s => `${curRegion(s).name} ${Math.floor((s - 1) / 10) + 1}-${(s - 1) % 10 + 1}`;
+const stageLabelW = (w, s) => w === S.world ? stageLabel(s) : `${Math.floor((s - 1) / 10) + 1}-${(s - 1) % 10 + 1}`;
 const isGateStage = s => (s - 1) % 10 === 8;  // 각 지역 9번째 단계: 수문장(서브 보스)이 지키고 장신구가 떨어진다
 
 /* ================= 숫자·글자 ================= */
@@ -1335,10 +1555,10 @@ function defaultState(){
     skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0},
     gear:{weapon:{count:Array(20).fill(0), seen:Array(20).fill(false)}, armor:{count:Array(20).fill(0), seen:Array(20).fill(false)}},
     equip:{weapon:-1, armor:-1},
-    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0},
+    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0},
     speed:1, buyMode:1, lastSave:0,
     name:'', look:defaultLook(),
-    refine:{weapon:{lv:0, fails:0, energy:0}, armor:{lv:0, fails:0, energy:0}},
+    refine:{weapon:{lv:0, drops:0}, armor:{lv:0, drops:0}},
     pets:{lv:Array(PET_N).fill(0), star:Array(PET_N).fill(0)}, petEq:{atk:-1, def:-1, sup:-1},
     quest:{main:0, tut:0, tutN:0, day:'', dp:{}, dgot:[], dall:false, sv:3, trials:[], hid:0, hidBase:0},
     raid:{first:{}, tk:TICKET_MAX, tkT:0},
@@ -1350,6 +1570,7 @@ function defaultState(){
     form:{own:{jujak:false, cheong:false, baekho:false, hyeonmu:false}, eq:''},
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
+    craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, useProtect:false,
   };
 }
 function mergeState(d){
@@ -1358,13 +1579,17 @@ function mergeState(d){
   out.up = Object.assign(base.up, d.up || {});
   out.skills = Object.assign(base.skills, d.skills || {});
   out.rec = Object.assign(base.rec, d.rec || {});
+  out.mat = Object.assign(base.mat, d.mat || {});
+  out.craft = base.craft;
+  for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0)}; }
+  out.skManual = d.skManual && typeof d.skManual === 'object' ? d.skManual : {};
   out.equip = Object.assign(base.equip, d.equip || {});
   // 새로 생긴 칸: 예전 저장에는 없으므로 기본값을 채운다
   out.name = typeof d.name === 'string' ? d.name.slice(0, 8) : '';
   out.look = cleanLook(d.look);
   for (const k of ['weapon', 'armor']){
     const r = (d.refine && d.refine[k]) || {};
-    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), fails:Math.max(0, Math.floor(+r.fails) || 0), energy:Math.min(100, Math.max(0, +r.energy || 0))};
+    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0))};
   }
   const pd = d.pets || {};
   out.pets = {
@@ -1439,9 +1664,9 @@ let S = titleState();
 let ST = null;
 let mobs = [], texts = [], parts = [], fx = [], projs = [];
 const hero = {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
-  engaged:false, target:null, buffT:0, buffLv:1, idleT:0};
+  engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
-const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5};
+const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7};
 let raid = null;      // 레이드 진행 중일 때만 채워진다
 let session = null;   // {acc, cid}: 지금 플레이 중인 계정·캐릭터
 
@@ -1473,22 +1698,25 @@ const petHpPct = () => { const i = eqPet('def'); return i < 0 ? 0 : petInfo(i).h
 const petBonus = () => { const i = eqPet('sup'); return i < 0 ? 0 : petInfo(i).bonus; };
 
 // 장신구 효과 %
-const accP = k => S.acc[k].g >= 0 ? S.acc[k].p : 0;
+const accP = k => S.acc[k].g >= 0 ? S.acc[k].p * (cls().accMul || 1) : 0;   // 자객은 장신구 효과 1.5배
+// 술사 마력 성장: 지금까지 오른 레벨(이승 100 + 저승 200 + 천계 300 = 600)에 따라 공격력 배율이 커진다
+const cumLv = () => S.level + [0, 100, 300][S.world];
+const classAtk = () => { const C = cls(); return C.grow ? C.grow[0] + (C.grow[1] - C.grow[0]) * Math.min(1, cumLv() / 600) : C.atkMul; };
 function computeStats(up = S.up){
   const C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
   return {
-    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + gearPct('weapon') / 100) * C.atkMul * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100)
+    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100)
       * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100),
-    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100)
+    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100)
       * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100),
-    regen: 0.01 + 0.001 * up.regen + C.regenAdd,
+    regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
     crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100),
-    critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + 0.05 * RB.eye + accP('ear') / 100,
-    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000),
+    critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
+    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => (1 + S.myth.flute / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100);
+const skillMulX = () => (1 + S.myth.flute / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 function power(st){
   const pi = eqPet('atk'), petDps = pi >= 0 ? st.atk * petInfo(pi).pct / 100 / 1.5 : 0;
@@ -1510,7 +1738,7 @@ function statValue(k, st){
     case 'regen': return (st.regen * 100).toFixed(1) + '%/초';
   }
 }
-const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1);
+const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1.5 : 1);
 const spdBuff = () => (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
@@ -1539,7 +1767,7 @@ function buyStat(k){
 }
 const skillCost = (sk, lv) => sk.base * Math.pow(sk.growth, lv - 1);
 function upgradeSkill(key){
-  const sk = SKILLS.find(s => s.key === key), lv = S.skills[key];
+  const i = SKILLS.findIndex(s => s.key === key), sk = SKILLS[i], lv = skLv(i);
   if (!lv || lv >= sk.max) return false;
   const c = skillCost(sk, lv);
   if (S.gold < c) return false;
@@ -1579,29 +1807,45 @@ function giveItem(slot, it){
 
 /* --- 재련 --- */
 const whetOn = () => S.useWhet && S.inv.whet > 0;
-function refineRate(slot, noWhet){
-  const r = S.refine[slot], base = REFINE_RATE[r.lv] || 0;
-  return Math.min(100, base + Math.min(base, base * 0.1 * r.fails) + (!noWhet && whetOn() ? base * 0.5 : 0));
+function refineOdds(slot){
+  const r = S.refine[slot], lv = r.lv;
+  if ((r.drops || 0) >= 2) return {ok:100, drop:0, brk:0, keep:0, chance:true};
+  const ok = Math.min(100, REFINE_RATE[lv] * (whetOn() ? 1.15 : 1));
+  const brk = S.useProtect && refineProtectable(lv) ? 0 : REFINE_BREAK[lv];
+  const drop = REFINE_GUARD.includes(lv) ? 0 : REFINE_DROP[lv];
+  const left = 100 - ok, b = Math.min(left, brk), d = Math.min(left - b, drop);
+  return {ok, drop:d, brk:b, keep:left - b - d, chance:false};
 }
 function refineTry(slot){
   const r = S.refine[slot];
   if (r.lv >= REFINE_MAX) return null;
-  const g = refineGold(r.lv), gm = refineGems(r.lv);
+  const prot = S.useProtect && refineProtectable(r.lv) && (r.drops || 0) < 2;
+  const g = refineGold(r.lv), gm = refineGems(r.lv) * (prot ? 2 : 1);
   if (S.gold < g || S.gems < gm) return null;
   S.gold -= g; S.gems -= gm; S.rec.refines++;
-  const rate = refineRate(slot), sure = r.energy >= 100;
+  const o = refineOdds(slot), from = r.lv;
   if (whetOn()) S.inv.whet--;
-  const ok = sure || Math.random() * 100 < rate;
-  if (ok){ r.lv++; r.fails = 0; r.energy = 0; refreshStats(); if (r.lv >= 10) { const gn = slot === 'weapon' ? cls().weapon : cls().armor; announce(`${S.name}님이 ${gn}${josa(gn, '을', '를')} +${r.lv}까지 재련했어요!`); } }
-  else { r.fails++; r.energy = Math.min(100, r.energy + rate * ENERGY_K); }
+  let x = Math.random() * 100, res;
+  if (x < o.ok) res = 'ok';
+  else if ((x -= o.ok) < o.brk) res = 'break';
+  else if ((x -= o.brk) < o.drop) res = 'drop';
+  else res = 'keep';
+  if (res === 'ok'){ r.lv++; r.drops = 0; if (r.lv >= 10) { const gn = slot === 'weapon' ? cls().weapon : cls().armor; announce(`${S.name}님이 ${gn}${josa(gn, '을', '를')} +${r.lv}까지 재련했어요!`); } }
+  else if (res === 'drop'){ r.lv--; r.drops = (r.drops || 0) + 1; }
+  else if (res === 'break'){ r.lv = refineGuardTo(r.lv); r.drops = 0; }
+  else r.drops = 0;
+  refreshStats();
   ev('refine');
-  return {ok, sure, lv:r.lv, rate};
+  return {ok:res === 'ok', res, sure:o.chance, lv:r.lv, from, rate:o.ok};
 }
 
 /* --- 펫 --- */
 function rollPet(){
-  let r = Math.random(), g = 0;
-  for (; g < 4; g++){ if (r < PET_P[g]) break; r -= PET_P[g]; }
+  S.petPity = (S.petPity || 0) + 1;
+  let g = 0;
+  if (S.petPity >= PET_PITY) g = Math.random() < PET_P[4] / (PET_P[3] + PET_P[4]) ? 4 : 3;
+  else { let r = Math.random(); for (; g < 4; g++){ if (r < PET_P[g]) break; r -= PET_P[g]; } }
+  if (g >= 3) S.petPity = 0;
   return ((Math.random() * 3) | 0) * 5 + g;
 }
 function petScore(i){ const e = petInfo(i); return PETS[i].type === 'atk' ? e.pct : PETS[i].type === 'def' ? e.hp + e.dr * 4 : e.bonus + e.heal * 5; }
@@ -1714,6 +1958,7 @@ function doRebirth(){
   for (const k in S.up) S.up[k] = 0;
   const wb = S.world === 2 ? ['s2', 'l2'] : ['s1', 'l1']; S.best[wb[0]] = Math.max(S.best[wb[0]], 1); S.best[wb[1]] = Math.max(S.best[wb[1]], 1);
   raid = null; ST = null; refreshStats(); resetRuntime(); mapCache.clear(); applyWorld();
+  unlockSkills();
   addLog(`환생! 윤회 구슬 ${pts}개를 얻고 ${S.world === 2 ? '하늘(천계)에 올랐습니다. 신과의 전쟁이 시작돼요!' : '저승에서 다시 태어났습니다.'}`, 'good');
   announce(`${S.name}님이 ${S.reb.n}번째 환생을 했어요!`);
   sfx('rebirth');
@@ -1893,7 +2138,9 @@ function buyShop(id){
   else if (id === 'ticket') S.raid.tk++;
   else if (id === 'goldbag') S.gold += mGold(S.maxStage) * 300;
   else if (id === 'gift'){ S.gems += 10; S.inv.potion = Math.min(999, S.inv.potion + 5); }
-  else if (id === 'avbox'){ S.gems += AV_BOX; const r = openAvatarBox(); if (r && !(window.__game && window.__game.quiet)) showModal('꾸미기 상자', `<p><b>${r.a.name}</b>${r.isNew ? ' — 새 아바타예요! [장비] → [아바타]에서 입혀 보세요.' : ` — 이미 있어서 보석 ${AV_DUP_GEMS}개로 바꿨어요.`}</p>`, [{label:'확인', primary:true}]); }
+  else if (id === 'avbox'){ S.gems += AV_BOX; const r = openAvatarBox(); if (r && !(window.__game && window.__game.quiet)) showModal('꾸미기 상자', r.miss
+      ? `<p>아쉬워요! 위로품 <b>인삼 탕약 10개</b>가 나왔어요.</p><p class="small">새 옷·망토 확정까지 ${Math.max(0, AV_PITY - S.avPity)}번 남았어요.</p>`
+      : `<p>${r.pity ? '<b style="color:var(--gold)">천장 확정!</b> ' : ''}<b>${r.a.name}</b>${r.isNew ? ' — 새 아바타예요! [장비] → [아바타]에서 입혀 보세요.' : ` — 이미 있어서 보석 ${AV_DUP_GEMS}개로 바꿨어요.`}</p>`, [{label:'확인', primary:true}]); }
   refreshPanel();
   return true;
 }
@@ -1960,14 +2207,7 @@ function gainExp(x){
     if (S.level % 50 < step) announce(`${S.name}님이 레벨 ${Math.floor(S.level / step) * step}을 넘었어요!`);
     addLog(`새 레이드가 열렸습니다: ${info.label} (${info.party}인)`, 'good');
   }
-  for (let i = 0; i < SKILLS.length; i++){
-    const sk = SKILLS[i];
-    if (!S.skills[sk.key] && S.level >= sk.unlock && (!sk.job || S.job >= sk.job)){
-      S.skills[sk.key] = 1; skillCd[sk.key] = 0.5;
-      addLog(`새 기술을 익혔습니다: ${skillName(i)}`, 'gain');
-      if (currentTab === 'skill') buildTab('skill', true);
-    }
-  }
+  unlockSkills();
 }
 
 /* ================= 칸 이동 ================= */
@@ -2024,7 +2264,7 @@ function makeMob(boss, tx, ty){
   const m = {
     type, color:boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
-    hp:mHp(s) * (boss ? 10 : 1), atk:mAtk(s) * (boss ? 3 : 1),
+    hp:mHp(s) * (boss ? 10 : 1), atk:mAtk(s) * (boss ? 3 : 0.5),
     gold:mGold(s) * (boss ? 10 : 1) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : 1), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
@@ -2059,10 +2299,14 @@ function addText(text, x, y, color, size, bold){
   texts.push({text, x, y, color, size, bold, t:0, dur:0.9});
 }
 const HIT_STYLE = {basic:['#ffffff', 12], skill:['#9fe7ff', 12], pet:['#ffd0a0', 11], ally:['#d8d0c0', 10]};
-function hit(m, base, kind){
+let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정)
+function hit(m, base, kind, sure){
   if (m.dead) return;
-  const crit = (kind === 'basic' || kind === 'skill') && Math.random() < ST.crit;
-  const dmg = base * (crit ? ST.critDmg : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (0.92 + Math.random() * 0.16);
+  const C = cls(), mine = kind !== 'ally';
+  const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit;
+  const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0);
+  const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) : 1) * (0.92 + Math.random() * 0.16);
+  if (mine){ dmgMeter += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   m.hp -= dmg; m.flash = 0.1; m.aggro = true;
   const st = HIT_STYLE[kind] || HIT_STYLE.basic;
@@ -2085,6 +2329,7 @@ function killMob(m){
   S.kills = Math.min(KILLS_PER_STAGE, S.kills + 1);
   ev('kill');
   if (isGateStage(S.stage)) rollAcc(false);
+  if (Math.random() < MAT_DROP.mob) gainMat(1);
   if (Math.random() < GEM_DROP){
     const g = 1 + (Math.random() < S.stage / 300 ? 1 : 0);
     S.gems += g;
@@ -2093,15 +2338,21 @@ function killMob(m){
   }
 }
 function damageHero(d){
+  if (cls().evade && Math.random() < cls().evade){ addText('회피', hero.x + Math.random() * 8 - 4, hero.y - 30, '#d8d0ff', 10, true); return; }
   const dr = petDR();
-  const dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (0.9 + Math.random() * 0.2);
+  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (0.9 + Math.random() * 0.2);
   if (dr > 0) petRt.def.glow = 0.25;
+  if (hero.shield > 0){
+    const a = Math.min(hero.shield, dmg);
+    hero.shield -= a; dmg -= a;
+    if (dmg <= 0){ addText('막음', hero.x + Math.random() * 8 - 4, hero.y - 30, '#9fe7ff', 10, true); return; }
+  }
   hero.hp -= dmg; hero.hurt = 0.12;
   addText('-' + fmt(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
 }
 function heroDie(){
-  hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null;
+  hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
   if (raid){ hero.deadT = 3; addLog('용사가 쓰러졌습니다… 동료들이 버티는 사이 다시 일어나요.', 'warn'); return; }
   const wasBoss = bossActive;
   if (bossActive) bossFail('용사가 쓰러짐');
@@ -2136,10 +2387,11 @@ function bossFail(reason){
   addLog(`보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`, 'warn');
 }
 function bossWin(){
-  const gems = 10 + Math.floor(effStage(S.stage) / 2);
+  const gems = 5 + Math.floor(effStage(S.stage) / 4);
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
   S.gems += gems; S.rec.bosses++;
   if (wasGate) rollAcc(true);
+  gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
   const bk = ['s0', 's1', 's2'][S.world];
   if (S.maxStage > S.best[bk]) S.best[bk] = S.maxStage;
@@ -2309,7 +2561,7 @@ function startTimeBoss(diff){
   const base = 10 * mobHp(D.ref) / 15 * 3 * 40;
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
-  startFight(info, party, {hp:Math.max(base, partyDps * 40), atk:mobAtk(D.ref) * 3, aoe:mobAtk(D.ref) * 2, time:TB_TIME});
+  startFight(info, party, {hp:Math.max(base, partyDps * 40), atk:heroRef(0, D.ref) / (2 * MOB_TTK) * 3, aoe:heroRef(0, D.ref) / (2 * MOB_TTK) * 2, time:TB_TIME});
   addLog(`타임 보스 ${info.bossName}! ${party.length + 1}명이 함께 ${TB_TIME}초 안에 쓰러뜨려요.`, 'warn');
   tbJoin();
   return true;
@@ -2325,6 +2577,7 @@ function finishTimeBoss(R){
   S.tb[info.diff] = info.w;
   const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold');
   S.gold += gold; S.rec.tb = (S.rec.tb || 0) + 1;
+  gainMat(MAT_DROP.tb);
   const luck = window.__game && window.__game.tbLuck || 1, drops = [];
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck){
     let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
@@ -2435,13 +2688,14 @@ function raidReward(info){
   if (first) items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:Math.min(info.hell || info.god ? 4 : 3, info.g + 1) * 4 + roll()});
   for (const r of items) r.isNew = giveItem(r.slot, r.it);
   S.gems += gems; S.gold += gold;
+  const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
   S.raid.first[info.key] = true; S.rec.raids++;
   if (info.hell) S.rec.hraids = (S.rec.hraids || 0) + 1;
   if (raidTickets() >= TICKET_MAX) S.raid.tkT = now();
   S.raid.tk = Math.max(0, S.raid.tk - 1);
   refreshStats();
   ev('raid');
-  return {gems, gold, items, first};
+  return {gems, gold, items, first, mat};
 }
 function finishRaid(){
   const R = raid;
@@ -2465,6 +2719,7 @@ function finishRaid(){
       <ul class="rewards">
         <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
         <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
+        <li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(rw.mat)}<span>${MATS[Math.min(2, S.world)].name} (조합 재료)</span></li>
         ${rw.items.map(r => `<li style="color:${GRADES[Math.floor(r.it / 4)].color}">${gearName(r.slot, r.it)}<span>${GRADES[Math.floor(r.it / 4)].name} ${GEAR[r.slot].label}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
       </ul>
       <p class="small" style="margin-top:8px">토벌패 1개를 썼어요(남은 토벌패 ${raidTickets()}/${TICKET_MAX}). 토벌패는 ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요.</p>`,
@@ -2503,7 +2758,7 @@ function updatePets(dt){
       const tg = hero.target && !hero.target.dead && hero.target.spawnT <= 0 ? hero.target : nearestMob();
       if (tg && Math.hypot(tg.x - hero.x, tg.y - hero.y) < 100){
         r.atkT = 1.5; r.lunge = 0.25; r.lx = tg.x; r.ly = tg.y - 3;
-        const e = petInfo(ai), dmg = ST.atk * atkBuff() * e.pct / 100;
+        const e = petInfo(ai), dmg = ST.atk * atkBuff() * e.pct / 100 * (cls().petMul || 1) * (1 + craftEff('pet') / 100);
         fx.push({type:'claw', t:0, dur:0.25, x:tg.x, y:tg.y - mobHeight(tg) * 0.5, color:PETS[ai].c});
         if (e.splash){ for (const m of mobs) if (!m.dead && m.spawnT <= 0 && Math.hypot(m.x - tg.x, m.y - tg.y) <= 30) hit(m, dmg, 'pet'); }
         else hit(tg, dmg, 'pet');
@@ -2535,12 +2790,18 @@ function attack(tg){
     projs.push({kind:C.proj, x:hero.x + (hero.dir === 'left' ? -6 : hero.dir === 'right' ? 6 : 0), y:hero.y - 12, tg, trail:[]});
   }
 }
-function tryCast(i, lv){
-  const C = cls();
+// 직업별 기술 피해 배율(자객: 한 적 노리기 +30%, 여럿 치기 55%)
+const AOE_KINDS = ['spin', 'meteor', 'jobA', 'jobB'], ONE_KINDS = ['bolt', 'combo'];
+const kindMul = k => { const C = cls(); return AOE_KINDS.includes(k) ? C.aoeMul || 1 : ONE_KINDS.includes(k) ? C.oneMul || 1 : 1; };
+const SELF_KINDS = ['roar', 'd_heal', 'd_charge', 'd_bagua', 'd_gut'];
+function tryCast(i, lv, manual){
+  const C = cls(), d = skDef(i), kind = d.kind;
   const alive = mobs.filter(m => !m.dead && m.spawnT <= 0);
-  if (!alive.length || !hero.engaged) return false;
-  const mul = C.skillMul * atkBuff() * skillMulX();
+  if (!manual && (!alive.length || !hero.engaged)) return false;   // 자동은 싸우고 있을 때만
+  if (!alive.length && !SELF_KINDS.includes(kind)) return false;
+  const mul = C.skillMul * atkBuff() * skillMulX() * kindMul(kind);
   const tg = hero.target && !hero.target.dead ? hero.target : alive[0];
+  if (kind.startsWith('d_')) return doinCast(kind, lv, alive, tg, mul);
   if (i === 0){
     const cx = C.range > 1 ? tg.x : hero.x, cy = C.range > 1 ? tg.y : hero.y;
     const hits = alive.filter(m => Math.hypot(m.x - cx, m.y - cy) <= 34);
@@ -2559,11 +2820,9 @@ function tryCast(i, lv){
   if (i === 2){
     hero.buffT = 8; hero.buffLv = lv;
     fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
-    if (S.cls === 'doin'){
-      const h = ST.maxHp * 0.3;
-      hero.hp = Math.min(ST.maxHp, hero.hp + h);
-      addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 12);
-      fx.push({type:'heal', t:0, dur:0.9});
+    if (C.shield){
+      hero.shield = ST.maxHp * shieldPct(lv) / 100; hero.shieldT = 12;
+      addText('보호막!', hero.x, hero.y - 40, '#9fe7ff', 12, true);
     }
     return true;
   }
@@ -2604,6 +2863,73 @@ function tryCast(i, lv){
   for (const m of alive) hit(m, ST.atk * mul * meteorPct(lv) / 100, 'skill');
   sfx('nuke');
   return true;
+}
+function doinCast(kind, lv, alive, tg, mul){
+  const C = cls();
+  if (kind === 'd_atk1' || kind === 'd_atk2' || kind === 'd_atk3'){
+    const ch = hero.charge > 1 ? hero.charge : 1; hero.charge = 0;
+    const tgs = kind === 'd_atk1' ? alive.filter(m => Math.hypot(m.x - tg.x, m.y - tg.y) <= 40) : kind === 'd_atk3' ? [alive.reduce((a, b) => b.hp > a.hp ? b : a)] : alive;
+    if (!tgs.length) return false;
+    if (kind === 'd_atk1') fx.push({type:'pillar', t:0, dur:0.5, x:tg.x, y:tg.y - 10});
+    else { fx.push({type:'awaken', t:0, dur:1, color:C.fx, x:hero.x, y:hero.y - 12}); fx.push({type:C.nukeFx, t:0, dur:0.9, pts:tgs.slice(0, 8).map(m => [m.x, m.y - 6]), seed:Math.random() * 1000}); }
+    shake = kind === 'd_atk3' ? 0.7 : kind === 'd_atk2' ? 0.45 : 0.2;
+    for (const m of tgs) hit(m, ST.atk * mul * dAtkPct(kind, lv) * ch / 100, 'skill', true);
+    if (ch > 1) addText('도력 폭발!', hero.x, hero.y - 44, '#ffd24a', 13, true);
+    sfx(kind === 'd_atk1' ? 'skill' : 'awaken');
+    return true;
+  }
+  if (kind === 'd_seal'){
+    for (const m of alive){ m.markT = 10; m.markP = Math.max(m.markT > 0 ? m.markP || 0 : 0, dSealPct(lv)); fx.push({type:'ring', t:0, dur:0.5, x:m.x, y:m.y - 6, color:'#ff5a8a', r:14}); }
+    addText('봉인!', tg.x, tg.y - mobHeight(tg) - 10, '#ff8ab0', 12, true); sfx('skill');
+    return true;
+  }
+  if (kind === 'd_heal'){
+    hero.buffT = 8; hero.buffLv = lv;
+    const h = ST.maxHp * 0.3;
+    hero.hp = Math.min(ST.maxHp, hero.hp + h);
+    addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 12);
+    fx.push({type:'heal', t:0, dur:0.9}); fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
+    return true;
+  }
+  if (kind === 'd_charge'){
+    hero.charge = dChargeMul(lv);
+    addText(`도력 ×${hero.charge.toFixed(1)}`, hero.x, hero.y - 40, '#ffd24a', 12, true);
+    fx.push({type:'aura', t:0, dur:0.9, color:'#ffd24a'});
+    return true;
+  }
+  if (kind === 'd_bagua'){
+    hero.baguaT = 10; hero.baguaAdd = dBaguaAdd(lv);
+    addText('팔괘진!', hero.x, hero.y - 40, '#9fe7ff', 12, true);
+    fx.push({type:'ring', t:0, dur:0.6, x:hero.x, y:hero.y - 4, color:'#f3d36b', r:26});
+    return true;
+  }
+  if (kind === 'd_gut'){
+    SKILLS.forEach((sk, j) => { if (skDef(j).atk) skillCd[sk.key] = 0; });
+    hero.gutT = 12;
+    addText('만신 대굿!', hero.x, hero.y - 44, '#ffd24a', 13, true);
+    fx.push({type:'awaken', t:0, dur:1, color:'#ffd24a', x:hero.x, y:hero.y - 12}); sfx('awaken');
+    return true;
+  }
+  return false;
+}
+// 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
+const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100);
+// 기술 칸을 눌러 바로 쓰기
+function castNow(i){
+  const key = SKILLS[i].key, lv = skLv(i);
+  if (!lv || hero.dead || cut || !session && !window.__game) return false;
+  if (skillCd[key] > 0) return false;
+  if (!tryCast(i, lv, true)) return false;
+  skillCd[key] = skCdOf(i);
+  return true;
+}
+function toggleSkAuto(i){
+  const key = SKILLS[i].key;
+  if (!S.skManual) S.skManual = {};
+  S.skManual[key] = !S.skManual[key];
+  if (!S.skManual[key]) delete S.skManual[key];
+  addLog(`${skillName(i)}: ${S.skManual[key] ? '수동 — 칸을 눌러 직접 써요' : '자동으로 써요'}`, 'good');
+  sfx('click');
 }
 function nearestMob(){
   let best = null, bd = 1e9;
@@ -2729,13 +3055,16 @@ function update(dt){
   projs = projs.filter(p => !p.done);
 
   // 기술
+  if (hero.shieldT > 0){ hero.shieldT -= dt; if (hero.shieldT <= 0) hero.shield = 0; }
+  if (hero.baguaT > 0) hero.baguaT -= dt;
+  if (hero.gutT > 0) hero.gutT -= dt;
   if (!hero.dead){
-    SKILLS.forEach((sk, i) => {
-      const lv = S.skills[sk.key];
-      if (!lv) return;
-      skillCd[sk.key] = Math.max(0, skillCd[sk.key] - dt);
-      if (skillCd[sk.key] <= 0 && tryCast(i, lv)) skillCd[sk.key] = sk.cd;
-    });
+    for (const i of cls().order || SK_ORDER){
+      const key = SKILLS[i].key, lv = skLv(i);
+      if (!lv) continue;
+      skillCd[key] = Math.max(0, (skillCd[key] || 0) - dt);
+      if (skillCd[key] <= 0 && skAuto(i) && tryCast(i, lv)) skillCd[key] = skCdOf(i);
+    }
   }
 }
 function nearestOther(not){
@@ -3315,7 +3644,7 @@ const JOB_CUT2 = c => ['court', 'gangrim,hero', 'transform', [['강림도령', `
 function unlockSkills(){
   for (let i = 0; i < SKILLS.length; i++){
     const sk = SKILLS[i];
-    if (!S.skills[sk.key] && S.level >= sk.unlock && (!sk.job || S.job >= sk.job)){
+    if (!S.skills[sk.key] && skOpen(i)){
       S.skills[sk.key] = 1; skillCd[sk.key] = 0.5;
       addLog(`새 기술을 익혔습니다: ${skillName(i)}`, 'gain');
       if (currentTab === 'skill') buildTab('skill', true);
@@ -3327,6 +3656,7 @@ function jobBPct(l){ return 4000 + 400 * (l - 1); }
 
 /* ================= 히든 퀘스트: 강림도령 =================
    저승 이야기(80장)를 마치고 저승 레벨 200이 되면 그때서야 나타난다. 옛이야기 '차사본풀이'의 강림도령과 '바리공주'에서 따왔다 */
+for (const q of MAIN_Q) if (q.gems) q.gems = Math.max(30, Math.round(q.gems * STORY_GEM_K / 10) * 10);
 const HIDDEN_Q = [
   {t:'붉은 옷의 차사', s:'저승 이야기를 마치자 붉은 철릭을 입은 차사가 찾아왔어요.', k:'hid0', n:1, gems:1000,
     c:['gate', 'gangrim,hero', 'dark', [['강림도령', '나는 강림. 이승 사람으로 염라대왕을 잡으러 갔던 차사다.'], ['강림도령', '네 넋이 쓸 만하구나. 숨은 길을 걸어 보겠느냐?']]]},
@@ -3359,6 +3689,8 @@ const AVATARS = [
   {k:'c_dokkaebi', type:'char', name:'도깨비 털옷', outfit:'#d8433a', deco:'horns', src:'box'},
   {k:'c_snow', type:'char', name:'눈꽃 털옷', outfit:'#e8f0f8', deco:'fur', src:'box'},
   {k:'c_seonnyeo', type:'char', name:'선녀 날개옷', outfit:'#bfe4ff', deco:'sash', src:'box'},
+  {k:'c_cheongpo', type:'char', name:'청포 도포', outfit:'#2a8a8a', deco:'sash', src:'box'},
+  {k:'c_muggwan', type:'char', name:'무관 철릭', outfit:'#4a4a5a', deco:'armor', src:'box'},
   {k:'c_saja', type:'char', name:'저승차사 철릭', outfit:'#b8282a', deco:'saja', src:'히든 퀘스트'},
   {k:'c_gaema', type:'char', name:'고구려 개마 갑옷', outfit:'#7a5a3a', deco:'armor', src:'이야기(을지문덕)'},
   {k:'c_sugun', type:'char', name:'수군 두정갑', outfit:'#2e3e62', deco:'armor', src:'이야기(명량)'},
@@ -3367,6 +3699,9 @@ const AVATARS = [
   {k:'p_red', type:'cape', name:'붉은 비단 망토', capeC:'#b8382f', src:'box'},
   {k:'p_cloud', type:'cape', name:'구름 망토', capeC:'#eef2fa', src:'box'},
   {k:'p_night', type:'cape', name:'밤하늘 망토', capeC:'#23264a', star:true, src:'box'},
+  {k:'p_maple', type:'cape', name:'단풍 망토', capeC:'#c8642a', src:'box'},
+  {k:'p_indigo', type:'cape', name:'쪽빛 망토', capeC:'#2a4a8a', star:true, src:'box'},
+  {k:'p_ink', type:'cape', name:'먹구름 망토', capeC:'#3a3a48', src:'box'},
   {k:'p_dragon', type:'cape', name:'용비늘 망토', capeC:'#2a7a5a', star:true, src:'이야기(영소보전)'},
   {k:'q_gat', type:'pet', name:'꼬마 갓', acc:'gat', src:'box'},
   {k:'q_ribbon', type:'pet', name:'빨간 리본', acc:'ribbon', src:'box'},
@@ -3380,7 +3715,8 @@ const AVATARS = [
 for (const c of CLASS_ORDER) for (const j of [1, 2]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j === 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
 const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기']];
-const AV_PCT = 2, AV_BOX = 300, AV_DUP_GEMS = 100;
+const AV_PCT = 2, AV_BOX = 1000, AV_DUP_GEMS = 30, AV_PITY = 40;
+const AV_ODDS = [['char', 6], ['cape', 11], ['pet', 28], ['miss', 55]];   // 꾸미기 상자 확률(%)
 const avCount = () => AVATARS.filter(a => S.av.own[a.k] && (!a.job || a.cls === S.cls)).length;   // 전직 망토는 지금 직업 것만 센다
 function giveAvatar(k, quiet){
   const a = AV[k];
@@ -3395,10 +3731,18 @@ function giveAvatar(k, quiet){
 function openAvatarBox(){
   if (S.gems < AV_BOX) return null;
   S.gems -= AV_BOX;
-  const pool = AVATARS.filter(a => a.src === 'box'), a = pool[(Math.random() * pool.length) | 0];
+  const box = AVATARS.filter(a => a.src === 'box');
+  const rare = box.filter(a => a.type !== 'pet' && !S.av.own[a.k]);
+  S.avPity = (S.avPity || 0) + 1;
+  let type;
+  if (S.avPity >= AV_PITY && rare.length) type = 'pity';
+  else { let r = Math.random() * 100 / (window.__game && window.__game.avLuck || 1); type = 'miss'; for (const [t, p] of AV_ODDS){ if (r < p){ type = t; break; } r -= p; } }
+  if (type === 'miss'){ S.inv.potion = Math.min(999, S.inv.potion + 10); return {miss:true, pity:S.avPity}; }
+  const pool = type === 'pity' ? rare : box.filter(a => a.type === type), a = pool[(Math.random() * pool.length) | 0];
   const isNew = !S.av.own[a.k];
+  if (isNew && a.type !== 'pet') S.avPity = 0;
   giveAvatar(a.k);
-  return {a, isNew};
+  return {a, isNew, pity:type === 'pity'};
 }
 function equipAvatar(k){
   const a = AV[k];
@@ -3445,7 +3789,7 @@ function godRaidInfo(i){
   const d = GOD_RAIDS[i % GOD_RAIDS.length], round = Math.floor(i / GOD_RAIDS.length), req = 30 * (i + 1);
   const suffix = round ? ` ${round + 1}단` : '';
   return Object.assign({}, d, {i, key:'g' + i, god:true, round, req, party:Math.min(10, 6 + i), ref:GOD_RAID_REF[i] || 78 + 6 * (i - 7),
-    g:Math.min(4, 3 + Math.floor(i / 4)), label:d.name + suffix, bossName:d.boss + suffix, gems:250 + 50 * (i + 1), firstGems:400 * (i + 1)});
+    g:Math.min(4, 3 + Math.floor(i / 4)), label:d.name + suffix, bossName:d.boss + suffix, gems:120 + 25 * (i + 1), firstGems:250 * (i + 1)});
 }
 
 /* ── 사람 모양 보스·몹(2~3등신 그림을 좌우로 뒤집어 왼쪽을 보게) ── */
@@ -3995,6 +4339,13 @@ function drawEntityHero(){
   }
   b.drawImage(sp, x - HD_AX, y - HD_AY + bob, spW(sp), spH(sp));
   b.restore();
+  if (hero.shield > 0){
+    // 술사 마력 보호막: 몸을 감싸는 하늘빛 방울(남은 양만큼 진하게)
+    const k = Math.min(1, hero.shield / (ST.maxHp * 0.4)), pu = 0.5 + 0.5 * Math.sin(gtime * 5);
+    b.save(); b.globalAlpha = 0.18 + 0.2 * k; b.fillStyle = '#9fe7ff'; b.beginPath(); b.ellipse(x, y - 13, 14, 18, 0, 0, 7); b.fill();
+    b.globalAlpha = 0.55 + 0.3 * pu * k; b.strokeStyle = '#dff6ff'; b.lineWidth = 1; b.beginPath(); b.ellipse(x, y - 13, 14, 18, 0, 0, 7); b.stroke(); b.restore();
+  }
+  if (hero.charge > 1){ for (let i = 0; i < 3; i++){ const a = gtime * 4 + i * 2.1; P(x + Math.cos(a) * 9, y - 26 + Math.sin(a) * 3, 2, 2, '#ffd24a'); } }
   const r = hero.hp / ST.maxHp;
   P(x - 8, y - 33, 16, 3, '#1a1218'); P(x - 7, y - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
@@ -4648,8 +4999,22 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '
 const elLv = $('#lv'), elCls = $('#clsName'), elCp = $('#cp'), elGold = $('#gold'), elGems = $('#gems'), elNick = $('#nick');
 const elHp = $('#hpfill'), elHpN = $('#hpnum'), elXp = $('#xpfill'), elXpN = $('#xpnum');
 const elBoss = $('#bossBtn'), elSpeed = $('#speedBtn');
-$('#skillbar').innerHTML = SKILLS.map(sk => `<div class="sk" id="skb-${sk.key}" role="img">${SVG[sk.key]}<span class="cd"></span><span class="lk">${sk.job ? sk.job + '차' : 'Lv.' + sk.unlock}</span></div>`).join('');
-const skillEls = Object.fromEntries(SKILLS.map(sk => { const el = $('#skb-' + sk.key); return [sk.key, {el, cd:el.querySelector('.cd')}]; }));
+// 기술 줄: 누르면 바로 쓰기, 길게 누르면 자동/수동 바꾸기
+const skillEls = {};
+let skBarCls = '';
+function buildSkillbar(){
+  skBarCls = S.cls;
+  $('#skillbar').innerHTML = SKILLS.map((sk, i) => `<button type="button" class="sk" id="skb-${sk.key}">${SVG[skDef(i).icon]}<span class="cd"></span><span class="mn">수동</span><span class="lk">${skLockText(i)}</span></button>`).join('');
+  SKILLS.forEach((sk, i) => {
+    const el = $('#skb-' + sk.key);
+    skillEls[sk.key] = {el, cd:el.querySelector('.cd'), lk:el.querySelector('.lk')};
+    let t = null, long = false;
+    el.addEventListener('pointerdown', e => { if (e.button > 0) return; long = false; clearTimeout(t); t = setTimeout(() => { long = true; if (skLv(i)) toggleSkAuto(i); }, 520); });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(ev, () => clearTimeout(t));
+    el.addEventListener('click', () => { if (long){ long = false; return; } castNow(i); });
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  });
+}
 elBoss.addEventListener('click', () => { S.autoBoss = true; elBoss.hidden = true; });
 elSpeed.addEventListener('click', () => { S.speed = S.speed === 2 ? 1 : 2; applySpeedBtn(); });
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
@@ -4663,11 +5028,16 @@ function updateHud(){
   elXp.style.width = (xr * 100).toFixed(1) + '%'; setText(elXpN, (xr * 100).toFixed(1) + '%');
   const showBoss = S.kills >= KILLS_PER_STAGE && !S.autoBoss && !bossActive && !raid;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
+  if (skBarCls !== S.cls) buildSkillbar();
   SKILLS.forEach((sk, i) => {
-    const r = skillEls[sk.key], lv = S.skills[sk.key], locked = !lv;
+    const r = skillEls[sk.key], lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), rdy = man && !(skillCd[sk.key] > 0);
     if (r.el.classList.contains('locked') !== locked) r.el.classList.toggle('locked', locked);
-    r.el.setAttribute('aria-label', skillName(i));
-    r.cd.style.setProperty('--p', locked ? '0%' : (skillCd[sk.key] / sk.cd * 100).toFixed(1) + '%');
+    if (r.el.classList.contains('manual') !== man) r.el.classList.toggle('manual', man);
+    if (r.el.classList.contains('rdy') !== rdy) r.el.classList.toggle('rdy', rdy);
+    setText(r.lk, skLockText(i));
+    const lab = `${skillName(i)}${locked ? ' (잠김)' : man ? ' (수동, 눌러서 쓰기)' : ''}`;
+    if (r.el.getAttribute('aria-label') !== lab) r.el.setAttribute('aria-label', lab);
+    r.cd.style.setProperty('--p', locked ? '0%' : Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100).toFixed(1) + '%');
   });
 }
 
@@ -4792,10 +5162,11 @@ function buildReb(){
 /* --- 기술 --- */
 function buildSkill(){
   panel.innerHTML = `
-    <div class="ph"><h2>${cls().name}의 기술</h2></div>
-    <p class="hint">레벨이 오르면 기술을 익히고, 익힌 기술은 알아서 써요.</p>
+    <div class="ph"><h2>${cls().name}의 기술</h2><span class="small">${cls().role}</span></div>
+    <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}</ul></div>
+    <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).</p>
     <ul class="list">${SKILLS.map((sk, i) => `
-      <li class="row" id="sk-${sk.key}"><div class="ic">${SVG[sk.key]}</div>
+      <li class="row" id="sk-${sk.key}"><div class="ic">${SVG[skDef(i).icon]}</div>
         <div><div class="nm">${skillName(i)}<span class="l" data-r="lv"></span></div><div class="val" data-r="desc"></div></div>
         <button class="buy" id="skbuy-${sk.key}"><span class="coin"></span><span data-r="cost"></span></button></li>`).join('')}
     </ul>
@@ -4813,19 +5184,19 @@ function buildSkill(){
   });
   return () => {
     for (const r of refs){
-      const lv = S.skills[r.sk.key];
+      const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
       if (!lv){
-        setText(r.lv, r.sk.job ? `${r.sk.job}차 전직 때 익힘` : `Lv.${r.sk.unlock}에 익힘`);
-        setHTML(r.desc, `${skillDesc(r.i, 1)} · 재사용 ${r.sk.cd}초`);
+        setText(r.lv, skLockLong(r.i));
+        setHTML(r.desc, `${skillDesc(r.i, Math.max(1, S.skills[r.sk.key] || 1))} · ${cdt}`);
         setHTML(r.cost, '잠김'); r.btn.disabled = true; r.btn.classList.add('nocoin');
       } else if (lv >= r.sk.max){
         setText(r.lv, 'Lv.' + lv + ' 최대');
-        setHTML(r.desc, `${skillDesc(r.i, lv)} · 재사용 ${r.sk.cd}초`);
+        setHTML(r.desc, `${skillDesc(r.i, lv)} · ${cdt}`);
         setHTML(r.cost, '최대'); r.btn.disabled = true; r.btn.classList.add('nocoin');
       } else {
         const c = skillCost(r.sk, lv);
         setText(r.lv, 'Lv.' + lv);
-        setHTML(r.desc, `${skillDesc(r.i, lv)} · 재사용 ${r.sk.cd}초`);
+        setHTML(r.desc, `${skillDesc(r.i, lv)} · ${cdt}`);
         setHTML(r.cost, fmt(c)); r.btn.disabled = S.gold < c; r.btn.classList.remove('nocoin');
       }
     }
@@ -4843,10 +5214,11 @@ function gearSegHTML(){
       <button id="seg-acc" aria-pressed="${gearSlot === 'acc'}">장신구</button>
       <button id="seg-form" aria-pressed="${gearSlot === 'form'}">변신</button>
       <button id="seg-av" aria-pressed="${gearSlot === 'av'}">아바타</button>
+      <button id="seg-craft" aria-pressed="${gearSlot === 'craft'}">조합${craftReady() ? ' •' : ''}</button>
     </div>`;
 }
 function wireGearSeg(){
-  for (const k of ['weapon', 'armor', 'refine', 'myth', 'acc', 'form', 'av']) $('#seg-' + k).addEventListener('click', () => { gearSlot = k; gearSel = -1; buildTab('gear', true); });
+  for (const k of ['weapon', 'armor', 'refine', 'myth', 'acc', 'form', 'av', 'craft']) $('#seg-' + k).addEventListener('click', () => { gearSlot = k; gearSel = -1; buildTab('gear', true); });
 }
 function buildGear(){
   if (gearSlot === 'refine') return buildRefine();
@@ -4854,6 +5226,7 @@ function buildGear(){
   if (gearSlot === 'acc') return buildAcc();
   if (gearSlot === 'form') return buildForm();
   if (gearSlot === 'av') return buildAvatar();
+  if (gearSlot === 'craft') return buildCraft();
   const slot = gearSlot, Gd = S.gear[slot], eq = S.equip[slot], def = GEAR[slot];
   let grid = '';
   for (let gr = 0; gr < 5; gr++){
@@ -4944,6 +5317,64 @@ function buildAcc(){
   };
 }
 
+/* --- 조합 공방 --- */
+function buildCraft(){
+  const best = ENGR_BEST[S.cls] || ENGR_BEST.musa;
+  panel.innerHTML = `${gearSegHTML()}
+    <div class="ph" style="margin-top:10px"><h2>조합 공방</h2><span class="small">${cls().name} 전용</span></div>
+    <p class="hint">보스·수문장·레이드·타임 보스가 떨어뜨리는 <b>재료</b>와 소환으로 모은 <b>장비</b>를 섞어 ${cls().name} 전용 비전 장비를 만들어요.
+      이승·저승·천계에서 더 깊이 갈 때마다 다음 단계 조합식이 열려요. <b>제때 만들어 두지 않으면 보스·레이드를 깨기가 훨씬 어려워요.</b></p>
+    <div class="card"><div class="ct">재료</div><div class="matrow">${MATS.map(m => `<span class="mat" style="--mc:${m.color}"><i></i>${m.name} <b id="mat-${m.k}"></b></span>`).join('')}</div>
+      <p class="small">보스 ${MAT_DROP.boss}개 · 수문장 ${MAT_DROP.gate}개 · 레이드 ${MAT_DROP.raid}개(첫 토벌 +${MAT_DROP.raidFirst}) · 타임 보스 ${MAT_DROP.tb}개 · 몬스터는 가끔. 지금 있는 세계의 재료가 나와요.</p></div>
+    ${CRAFT_SLOTS.map(c => `<div class="card craft" id="cf-${c.k}">
+      <div class="ct"><span class="cic">${SVG[c.icon]}</span>${c.name}<span class="tag" data-r="tier"></span></div>
+      <div class="cfnow" data-r="now"></div>
+      <div class="engr" role="group" aria-label="${c.name} 각인">${ENGR[c.k].map(E => `<button class="eg${best[c.k] === E.k ? ' best' : ''}" data-e="${E.k}"><b>${E.name}</b><span>${E.d}</span>${best[c.k] === E.k ? '<em>최적</em>' : ''}</button>`).join('')}</div>
+      <div class="cfrec" data-r="rec"></div>
+      <div class="cfbtns"><button class="btn primary" data-c="${c.k}">조합하기</button><button class="btn sm" data-swap="${c.k}" hidden></button></div>
+    </div>`).join('')}
+    <div class="card" id="cfHarm"></div>`;
+  wireGearSeg();
+  for (const c of CRAFT_SLOTS){
+    const card = $('#cf-' + c.k);
+    card.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => { pickEngr(c.k, b.dataset.e); refreshPanel(); }));
+    card.querySelector('[data-c]').addEventListener('click', () => { const r = craft(c.k); if (r === true) buildTab('gear', true); else if (r) refreshPanel(); });
+    card.querySelector('[data-swap]').addEventListener('click', () => { const it = S.craft[c.k]; if (it.e2 && pickEngr(c.k, it.e2, true)) buildTab('gear', true); });
+  }
+  return () => {
+    for (const m of MATS) setText($('#mat-' + m.k), fmt(S.mat[m.k] || 0));
+    for (const c of CRAFT_SLOTS){
+      const card = $('#cf-' + c.k), it = S.craft[c.k], n = craftNeed(c.k), E = engrOf(c.k, it.e);
+      setText(card.querySelector('[data-r=tier]'), it.t ? `${it.t}단계 / ${CRAFT_MAX}` : '아직 없음');
+      setHTML(card.querySelector('[data-r=now]'), it.t
+        ? `<b>${craftName(c.k, it.t)}</b> — ${c.main} +${craftMain(c.k)}%${E ? ` · 각인 「${E.name}」 ${E.d} +${+engrVal(c.k, it.e, it.t).toFixed(2)}${c.k === 'a' && it.e === 'life' ? '%p' : '%'}${engrBest(c.k, it.e) ? ' <em>최적 ×1.5</em>' : ''}` : ''}`
+        : `아직 만들지 않았어요. 단계마다 ${c.main} +${c.per}%, 각인 효과도 단계만큼 커져요.`);
+      const sel = it.e2 || it.e;
+      card.querySelectorAll('[data-e]').forEach(b => { const on = b.dataset.e === sel; if (b.getAttribute('aria-pressed') !== String(on)) b.setAttribute('aria-pressed', String(on)); });
+      const btn = card.querySelector('[data-c]'), sw = card.querySelector('[data-swap]');
+      if (n.max){ setHTML(card.querySelector('[data-r=rec]'), '가장 높은 단계예요!'); btn.disabled = true; setText(btn, '최고 단계'); }
+      else {
+        const have = (a, b) => `<span style="color:${a >= b ? 'var(--good,#8ff0a0)' : '#ff8a7a'}">${fmt(a)}/${fmt(b)}</span>`;
+        const parts = [];
+        if (it.t) parts.push(craftName(c.k, it.t));
+        parts.push(`${MATS[+n.mk[1]].name} ${have(n.haveMat, n.mat)}`);
+        if (n.gearSlot) parts.push(`${GRADES[n.g].name} ${n.gearSlot === 'weapon' ? cls().weapon : cls().armor} ${have(n.haveGear, n.n)}개`);
+        else parts.push(`보석 ${have(S.gems, n.gems)}`);
+        setHTML(card.querySelector('[data-r=rec]'), n.open
+          ? `<b>${n.t}단계 조합식</b>: ${parts.join(' + ')}${sel ? '' : ' · <span style="color:#ff8a7a">각인을 골라요</span>'}<br><span class="small">성공 확률 <b>${n.rate}%</b>${n.sure ? ' (천장 확정)' : ` · 실패하면 재료 절반만 사라지고, ${CRAFT_PITY[n.t - 1] - n.fails}번 더 실패하면 다음은 확정`}</span>`
+          : `<b>${n.t}단계</b>는 ${WORLD_NAME[n.T.w]} ${n.T.need}단계(${stageLabelW(n.T.w, n.T.need)})에 닿으면 열려요.`);
+        btn.disabled = !n.ok; setText(btn, `${n.t}단계 만들기 (${n.rate}%)`);
+      }
+      const showSwap = it.t > 0 && it.e2 && it.e2 !== it.e;
+      sw.hidden = !showSwap;
+      if (showSwap){ setText(sw, `각인 지금 바꾸기 (보석 ${engrSwapCost(c.k)})`); sw.disabled = S.gems < engrSwapCost(c.k); }
+    }
+    const nOk = CRAFT_SLOTS.filter(c => S.craft[c.k].t > 0 && engrBest(c.k, S.craft[c.k].e)).length;
+    setHTML($('#cfHarm'), `<div class="ct">조화 · ${cls().name}의 최적 조합 <span class="tag">${nOk}/3</span></div>
+      <p class="small">${CRAFT_SLOTS.map(c => `${c.name} 「${engrOf(c.k, best[c.k]).name}」`).join(' + ')} — 세 칸을 모두 최적 각인으로 맞추면 공격력·체력 +${HARMONY}%${harmonyOn() ? ' <b style="color:var(--gold)">(발동 중)</b>' : ''}</p>`);
+  };
+}
+
 /* --- 변신 --- */
 const FORM_FROM = {jujak:'이승 이야기 7장 「다물의 맹세」', cheong:'저승 이야기 「한빙지옥」', baekho:'저승 이야기 「검수지옥」', hyeonmu:'저승 이야기 「흑암지옥」'};
 function buildForm(){
@@ -4986,7 +5417,8 @@ function buildAvatar(){
   panel.innerHTML = `${gearSegHTML()}
     <div class="ph" style="margin-top:10px"><h2>아바타</h2><span class="small">도감 효과 공격력·체력 <b id="avBonus"></b></span></div>
     <p class="hint">옷·망토·펫 꾸미기는 모습만 바꿔요. 대신 가진 아바타 하나마다 공격력·체력이 ${AV_PCT}%씩 올라요(도감 효과). 다시 누르면 벗어요.</p>
-    <button class="btn primary" id="avBox" style="width:100%;margin-bottom:10px">꾸미기 상자 열기 (보석 ${AV_BOX})</button>
+    <button class="btn primary" id="avBox" style="width:100%;margin-bottom:6px">꾸미기 상자 열기 (보석 ${AV_BOX})</button>
+    <p class="odds" id="avOdds"></p>
     ${AV_TYPES.map(([t, nm]) => `<div class="ph"><h2>${nm}</h2></div><div class="avgrid">${list(t).map(a => `<button class="avcell" data-k="${a.k}" aria-pressed="false">
       <img alt="" data-r="img"><b>${a.name}</b><em data-r="st"></em></button>`).join('')}</div>`).join('')}`;
   wireGearSeg();
@@ -4995,6 +5427,7 @@ function buildAvatar(){
   return () => {
     setText($('#avBonus'), `+${AV_PCT * avCount()}% (${avCount()}개)`);
     $('#avBox').disabled = S.gems < AV_BOX;
+    setHTML($('#avOdds'), `확률 공개 — 옷 ${AV_ODDS[0][1]}% · 망토 ${AV_ODDS[1][1]}% · 펫 꾸미기 ${AV_ODDS[2][1]}% · 위로품(인삼 탕약) ${AV_ODDS[3][1]}%. 종류 안에서는 똑같은 확률. <b>새 옷·망토 확정까지 ${Math.max(1, AV_PITY - (S.avPity || 0))}번</b>`);
     panel.querySelectorAll('.avcell').forEach(bt => {
       const a = AV[bt.dataset.k], own = !!S.av.own[a.k], on = S.av[a.type] === a.k, img = bt.querySelector('[data-r=img]');
       const src = avPreview(a); if (img._s !== src){ img._s = src; img.src = src; }
@@ -5075,21 +5508,22 @@ function buildRefine(){
     return `<div class="card" id="rf-${slot}">
       <div class="rhead"><div class="ic">${SVG[isW ? 'sword' : 'armor']}</div>
         <div><div class="nm">${isW ? cls().weapon : cls().armor} 재련 <span class="rlv" data-r="lv"></span></div><div class="val" data-r="eff"></div></div></div>
-      <div class="dl"><span>성공 확률</span><b data-r="rate"></b></div>
-      <div class="dl"><span>담금질 기운 (100%면 반드시 성공)</span><b data-r="en"></b></div>
-      <div class="meter fire"><i data-r="bar"></i></div>
+      <div class="dl"><span>성공</span><b data-r="rate"></b></div>
+      <div class="dl"><span>실패하면</span><b data-r="en"></b></div>
       <p class="rres" data-r="res"></p>
       <button class="buy" data-r="btn"><span class="coin"></span><span data-r="g"></span><i class="gem"></i><span data-r="m"></span></button>
-      <p class="small">${stat}이 재련 단계만큼 크게 올라요. 실패해도 단계는 내려가지 않아요.</p>
+      <p class="small">${stat}이 재련 단계만큼 크게 올라요. 두 번 연달아 떨어지면 다음 재련은 <b>반드시 성공</b>(기회의 불꽃)해요.</p>
     </div>`;
   };
   panel.innerHTML = `${gearSegHTML()}
-    <p class="hint" style="margin-top:8px">엽전과 보석으로 무기·방어구를 벼려요. 실패할 때마다 다음 성공 확률이 조금씩 오르고(최대 2배), 담금질 기운이 쌓여요.</p>
+    <p class="hint" style="margin-top:8px">엽전과 보석으로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
     <label class="whet card"><input type="checkbox" id="whetChk" ${S.useWhet ? 'checked' : ''}><span id="whetTxt"></span></label>
+    <label class="whet card"><input type="checkbox" id="protChk" ${S.useProtect ? 'checked' : ''}><span>보호: +16~+19에서 보석을 두 배 내고 부서짐을 막아요</span></label>
     ${card('weapon')}${card('armor')}
-    <p class="rtable">기본 확률: ${REFINE_RATE.map((r, i) => `+${i + 1} ${r}%`).join(' · ')}</p>`;
+    <p class="rtable">확률 공개 (성공 / 하락 / 부서짐, 나머지는 유지)<br>${REFINE_RATE.map((r, i) => `+${i + 1} ${r}%${REFINE_DROP[i] ? ` / ${REFINE_DROP[i]}%` : ''}${REFINE_BREAK[i] ? ` / ${REFINE_BREAK[i]}%` : ''}`).join(' · ')}</p>`;
   wireGearSeg();
   $('#whetChk').addEventListener('change', e => { S.useWhet = e.target.checked; refreshPanel(); });
+  $('#protChk').addEventListener('change', e => { S.useProtect = e.target.checked; refreshPanel(); });
   const refs = ['weapon', 'armor'].map(slot => {
     const el = $('#rf-' + slot), q = k => el.querySelector(`[data-r=${k}]`);
     const r = {slot, lv:q('lv'), eff:q('eff'), rate:q('rate'), en:q('en'), bar:q('bar'), res:q('res'), btn:q('btn'), g:q('g'), m:q('m')};
@@ -5098,8 +5532,9 @@ function buildRefine(){
       if (!out) return;
       const name = slot === 'weapon' ? cls().weapon : cls().armor;
       sfx(out.ok ? 'refOk' : 'refNo');
-      refineMsg[slot] = out.ok ? {ok:true, t:`성공! ${name} +${out.lv}${out.sure ? ' (담금질 기운)' : ''}`} : {ok:false, t:`실패… 다음 확률이 오르고 기운이 쌓였어요`};
-      addLog(out.ok ? `재련 성공! ${name} +${out.lv}` : `재련 실패 (${name} +${out.lv + 1} 시도)`, out.ok ? 'gain' : 'warn');
+      refineMsg[slot] = out.ok ? {ok:true, t:`성공! ${name} +${out.lv}${out.sure ? ' (기회의 불꽃)' : ''}`}
+        : {ok:false, t:out.res === 'break' ? `부서졌어요… +${out.lv}로 돌아갔어요` : out.res === 'drop' ? `실패… +${out.lv}로 떨어졌어요${(S.refine[slot].drops || 0) >= 2 ? ' — 다음은 반드시 성공!' : ''}` : '실패… 단계는 그대로예요'};
+      addLog(out.ok ? `재련 성공! ${name} +${out.lv}` : `재련 실패 (${name} +${out.from + 1} 시도${out.res === 'break' ? ', 부서짐' : out.res === 'drop' ? ', 하락' : ''})`, out.ok ? 'gain' : 'warn');
       if (out.ok){ fx.push({type:'level', t:0, dur:0.6}); addText(`+${out.lv}`, hero.x, hero.y - 34, '#ffd96a', 14, true); }
       r.res.classList.remove('pop'); void r.res.offsetWidth; r.res.classList.add('pop');
       refreshPanel();
@@ -5113,16 +5548,12 @@ function buildRefine(){
       const R2 = S.refine[r.slot], stat = r.slot === 'weapon' ? '공격력' : '체력', max = R2.lv >= REFINE_MAX;
       setText(r.lv, '+' + R2.lv);
       setHTML(r.eff, max ? `${stat} +${refinePct(R2.lv)}% (최고 단계)` : `${stat} +${refinePct(R2.lv)}% → <em>+${refinePct(R2.lv + 1)}%</em>`);
-      if (max){ setText(r.rate, '-'); setText(r.en, '-'); r.bar.style.width = '0'; setHTML(r.g, '최고'); setHTML(r.m, ''); r.btn.disabled = true; }
+      if (max){ setText(r.rate, '-'); setText(r.en, '-'); setHTML(r.g, '최고'); setHTML(r.m, ''); r.btn.disabled = true; }
       else {
-        const base = REFINE_RATE[R2.lv], rate = refineRate(r.slot), noW = refineRate(r.slot, true);
-        const parts = [`${base}%`];
-        if (noW > base) parts.push(`실패 보너스 ${(noW - base).toFixed(1)}%`);
-        if (rate > noW) parts.push(`숫돌 ${(rate - noW).toFixed(1)}%`);
-        setText(r.rate, R2.energy >= 100 ? '100% (기운 가득)' : parts.length > 1 ? `${parts.join(' + ')} = ${rate.toFixed(1)}%` : `${base}%`);
-        setText(r.en, R2.energy.toFixed(1) + '%');
-        r.bar.style.width = R2.energy.toFixed(1) + '%';
-        const g = refineGold(R2.lv), m = refineGems(R2.lv);
+        const o = refineOdds(r.slot), f1 = v => +v.toFixed(1);
+        setText(r.rate, o.chance ? '100% (기회의 불꽃)' : `${f1(o.ok)}%${whetOn() ? ' (숫돌 ×1.15)' : ''}`);
+        setText(r.en, o.chance ? '-' : [`유지 ${f1(o.keep)}%`, o.drop ? `하락 ${f1(o.drop)}%` : '', o.brk ? `부서짐 ${f1(o.brk)}%` : (S.useProtect && refineProtectable(R2.lv) ? '보호 중' : '')].filter(Boolean).join(' · '));
+        const g = refineGold(R2.lv), m = refineGems(R2.lv) * (S.useProtect && refineProtectable(R2.lv) && !o.chance ? 2 : 1);
         setHTML(r.g, fmt(g)); setHTML(r.m, fmt(m));
         r.btn.disabled = S.gold < g || S.gems < m;
       }
@@ -5173,7 +5604,7 @@ function buildPet(){
       <button class="gbtn" id="psum1"><span>펫 1회 소환</span><span class="price"><i class="gem"></i>${petSummonCost(1)}</span></button>
       <button class="gbtn" id="psum10"><span>펫 10회 소환</span><span class="price"><i class="gem"></i>${petSummonCost(10)}</span></button>
     </div>
-    <p class="odds">전설 0.5% · 영웅 3.5% · 희귀 13% · 고급 28% · 일반 55% (종류는 공격·방어·지원 중 무작위)</p>
+    <p class="odds">확률 공개 — 전설 0.5% · 영웅 3.5% · 희귀 13% · 고급 28% · 일반 55% (등급 안에서 공격·방어·지원 펫이 똑같이 3분의 1씩, 예: 전설 펫 한 마리는 0.17%). <b id="petPity"></b></p>
     <div class="pgrid">${grid}</div>
     ${detail}`;
   $('#psum1').addEventListener('click', () => doPetSummon(1));
@@ -5185,6 +5616,7 @@ function buildPet(){
   if (up) holdButton(up, () => petUpgrade(sel));
   return () => {
     $('#psum1').disabled = S.gems < petSummonCost(1); $('#psum10').disabled = S.gems < petSummonCost(10);
+    setText($('#petPity'), `영웅 이상 확정까지 ${Math.max(1, PET_PITY - (S.petPity || 0))}번`);
     setHTML($('#pslots'), petSlotsHTML());
     if (up){
       const lv = S.pets.lv[sel];
@@ -5385,8 +5817,11 @@ function buildRec(){
       <li>용사는 알아서 사냥해요. 몬스터 10마리를 잡으면 보스가 나타나요. 잡몹도 가끔 보석을 떨궈요.</li>
       <li>보스는 30초 안에 쓰러뜨려야 다음 단계로 가요. 실패하면 엽전을 모아 수련한 뒤 [보스 도전]을 눌러요.</li>
       <li>엽전으로 능력과 기술을 올리고, 보석으로 장비를 소환해요. 같은 장비 4개는 한 단계 위 장비로 합성돼요.</li>
-      <li>[장비] → [재련]에서 무기·방어구를 벼려요. 실패할수록 다음 확률이 오르고, 담금질 기운이 차면 반드시 성공해요.</li>
+      <li>[장비] → [재련]에서 무기·방어구를 벼려요. 높은 단계는 실패하면 떨어지거나 부서질 수 있고, 두 번 연달아 떨어지면 다음은 반드시 성공해요.</li>
       <li>[펫]에서 공격·방어·지원 펫을 뽑아 데려가요. 엽전과 보석으로 강화하고, 같은 펫을 또 뽑으면 별이 올라요.</li>
+      <li>[장비] → [조합]에서 보스·레이드 재료와 장비를 섞어 직업 전용 비전 무기·갑옷·노리개를 만들어요. 깊이 갈수록 다음 단계가 열리니 제때 올려 줘요.</li>
+      <li>아래 기술 칸을 누르면 바로 쓰고, 길게 누르면 자동/수동을 바꿔요. [기술]에서 내 직업의 특성을 볼 수 있어요.</li>
+      <li>새 단계의 보스는 세게 때려요. 체력·방어 펫·탕약으로 버티고, 술사는 마력 보호막을 보스가 나올 때 써요.</li>
       <li>[퀘스트]의 이야기와 오늘의 할 일을 마치면 보석을 받아요. 오늘의 할 일은 매일 자정에 새로 고쳐져요.</li>
       <li>레벨 10마다 [레이드]가 열려요. 3~10인 파티로 자동 전투를 하고 보석·장비를 받아요.</li>
       <li>[상점]에서 탕약(위험하면 저절로 마심)·부적·숫돌·토벌패를 사요. 오늘의 선물은 하루 한 번 공짜예요.</li>
@@ -5511,6 +5946,7 @@ function updateDots(){
   if (on && tw.open && tbAnnounced !== tw.id){ tbAnnounced = tw.id; announce(`타임 보스 '${tw.boss.name}'${josa(tw.boss.name, '이', '가')} 나타났어요! 30분 안에 2명 이상 모여 잡아요.`); }
   shopCheck();
   $('#tab-shop').classList.toggle('has-dot', on && !(S.shop.got.gift >= 1));
+  $('#tab-gear').classList.toggle('has-dot', on && craftReady());
   updateChatHead();
 }
 
@@ -6090,7 +6526,7 @@ async function pushCloud(){
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = [];
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
-  Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false});
+  Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
@@ -6113,6 +6549,7 @@ function offlineReward(sec){
   const gems = Math.floor(sec / 600) + Math.floor(kills * GEM_DROP * 0.5);
   const lv0 = S.level;
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
+  const mats = gainMat(kills * MAT_DROP.mob * 0.5, true);
   gainExp(exp);
   saveLocal();
   showModal('다녀오셨습니까?', `
@@ -6120,6 +6557,7 @@ function offlineReward(sec){
     <ul class="rewards">
       <li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li>
       <li><span class="gem"></span>${fmt(gems)}<span>보석 (10분마다 1개 + 몬스터가 떨군 것)</span></li>
+      ${mats ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(mats)}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}
       <li>Lv.${lv0}${S.level > lv0 ? ` → Lv.${S.level}` : ''}<span>경험치 +${fmt(exp)}</span></li>
     </ul>${sec >= OFFLINE_CAP ? '<p class="small" style="margin-top:8px">오프라인 보상은 최대 12시간까지 쌓여요.</p>' : ''}`,
     [{label:'받기', primary:true}]);
@@ -6378,7 +6816,7 @@ function start(hotData){
 }
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
-    get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get bossActive(){ return bossActive; }, get raid(){ return raid; }, get session(){ return session; },
+    get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX,
     claimAll, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
@@ -6389,8 +6827,26 @@ if (location.search.indexOf('simtest') >= 0){
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
     CURVE, fmt, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
+    // 피해 측정: 안 죽는 보스 하나(또는 몬스터 6마리)를 sec초 동안 때린다. 초당 피해·가장 큰 한 방을 돌려준다
+    bench(sec, pack, each){
+      resetRuntime(); mobs = []; projs = []; raid = null;
+      Object.assign(hero, {dead:false, hp:ST.maxHp, buffT:0, shield:0, charge:0, baguaT:0, gutT:0, jobBuffT:0, tx:8, ty:8, fx:8, fy:8, moving:false, target:null});
+      placeOf(hero);
+      for (const k in skillCd) skillCd[k] = 0;
+      const mk = (b, x, y) => { const m = makeMob(b, x, y); m.hp = m.maxHp = 1e300; m.spawnT = 0; m.atk = 0; mobs.push(m); return m; };
+      if (pack){ for (let k = 0; k < 6; k++) mk(false, 9 + (k % 3), 7 + Math.floor(k / 3) * 2); bossActive = false; }
+      else { const m = mk(true, 9, 8); bossActive = true; bossRef = m; bossTime = 1e9; }
+      spawnT = 1e9; S.kills = 0; S.autoBoss = false;
+      dmgMeter = 0; dmgBy = {}; const mh = S.rec.maxHit; S.rec.maxHit = 0;
+      for (let t = 0; t < sec; t += 0.05){ update(0.05); if (each) each(t); }
+      const out = {dps:dmgMeter / sec, maxHit:S.rec.maxHit, by:Object.fromEntries(Object.entries(dmgBy).map(([k, v]) => [k, v / dmgMeter]))};
+      S.rec.maxHit = Math.max(mh, S.rec.maxHit); bossActive = false; bossRef = null; mobs = []; spawnT = 1;
+      return out;
+    },
     setWorld(w){ S.world = w; S.stage = 1; mapCache.clear(); resetRuntime(); applyWorld(); refreshStats(); },
     doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbCan, castAwaken, startFight,
+    craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
+    unlockSkills, AV_PITY, avLuck:null, craftLuck:null,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
   };
 }

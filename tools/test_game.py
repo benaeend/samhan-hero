@@ -28,7 +28,7 @@ OUT = ROOT / 'tools' / 'out'
 # → 시련·환생(윤회 구슬은 무력부터). opts: {dt, marks:[분…], curve:{CURVE 덮어쓰기}}
 SIM = r"""
 (args) => {
-  const [minutes, cls, opts = {}] = args;
+  const [minutes, cls, opts = {}] = args;   // opts.nocraft: 조합 공방을 쓰지 않는 사람
   const G = window.__game;
   G.quiet = true;
   G.setClass(cls);
@@ -36,8 +36,8 @@ SIM = r"""
   G.S.buyMode = 1;
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
-  const log = [], first = {};
-  let nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0;
+  const log = [], first = {}, snaps = {};
+  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0;
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   for (let i = 1; i <= steps; i++) {
@@ -50,7 +50,7 @@ SIM = r"""
       const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
       for (let k = 0; k < 20; k++) {
         const slot = G.S.refine.weapon.lv < G.REFINE_MAX && G.S.refine.weapon.lv <= G.S.refine.armor.lv + 3 ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
-        if (lv >= G.REFINE_MAX || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.2) break;
+        if (lv >= G.REFINE_MAX || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
         G.refineTry(slot);
       }
       for (const pt of G.PET_TYPE_ORDER) {
@@ -71,13 +71,21 @@ SIM = r"""
         else if (best) { if (!G.buyStat(best)) break; }
         else break;
       }
-      while (G.S.gems >= 450) {
+      while (G.S.gems >= 450 + 400) {   // 재련·조합에 쓸 보석은 남겨 둔다
         if (G.S.rec.psum * 2 < G.S.rec.summons) { if (G.S.gems < 900) break; G.petSummon(10); }
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
-      if (!G.raid && (G.jobReady(1) || G.jobReady(2))) G.startJobTrial(G.S.job + 1);   // 전직 시험
-      if (G.S.gems >= 2500 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
+      if (jobPend && !G.raid) { if (G.S.job < jobPend[0]) jobHold = t + 1200; jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
+      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
+      if (G.S.gems >= 6000 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
+      G.buyShop('gift');
+      if (G.S.inv.potion < 20) { const pp = G.SHOP.find(x => x.id === 'potion').price(); if (pp < G.S.gold * 0.05) G.buyShop('potion'); }
+      if (!opts.nocraft) for (const k of ['w', 'n', 'a']) {   // 조합 공방: 최적 각인으로, 노리개 보석은 지갑의 60%까지만
+        if (!G.S.craft[k].e && !G.S.craft[k].e2) G.pickEngr(k, G.ENGR_BEST[cls][k]);
+        const n = G.craftNeed(k);
+        if (n.ok && (!n.gems || n.gems <= G.S.gems * 0.6)) G.craft(k);
+      }
       if (G.rebirthReady()) {
         G.doRebirth();
         for (const k of ['atk', 'hp', 'luck', 'spd', 'eye']) for (let z = 0; z < 50; z++) if (!G.rebUp(k)) break;
@@ -94,13 +102,14 @@ SIM = r"""
       }
     }
     if (t >= nextRetry) { nextRetry = t + 60; G.S.autoBoss = true; }
-    mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
+    mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
+    if (opts.snaps) { const mm = Math.round(t / 60); if (opts.snaps.includes(mm) && !(mm in snaps) && !G.raid) snaps[mm] = JSON.stringify(G.S); }
     if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
   }
-  return {log, first};
+  return {log, first, snaps};
 }
 """
 
@@ -465,7 +474,7 @@ async def main():
         await page.click('#tab-grow'); await page.wait_for_timeout(200); await page.click('#gv-job'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '25_전직.png'))
         av = await page.evaluate("""() => { const G = window.__game; G.S.gems = 5000; const n0 = G.AVATARS.filter(a => G.S.av.own[a.k]).length;
-          const r = G.openAvatarBox(); G.equipAvatar(r.a.k); return {got: !!r, n: G.AVATARS.filter(a => G.S.av.own[a.k]).length - n0, eq: G.S.av[r.a.type] === r.a.k}; }""")
+          G.avLuck = 100; const r = G.openAvatarBox(); G.avLuck = null; G.equipAvatar(r.a.k); return {got: !!r, n: G.AVATARS.filter(a => G.S.av.own[a.k]).length - n0, eq: G.S.av[r.a.type] === r.a.k}; }""")
         check(av['got'] and av['n'] == 1 and av['eq'], f'꾸미기 상자로 아바타를 얻고 입는다 {av}')
         await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-av'); await page.wait_for_timeout(400)
         await page.screenshot(path=str(OUT / '26_아바타.png'))
@@ -487,6 +496,43 @@ async def main():
         check(gr['ok'] and gr['name'] == '전우치', f'천계 영웅 레이드(전우치)를 할 수 있다 {gr}')
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '28_영웅레이드.png'))
+
+        # 6-4) 기술 직접 쓰기·자동/수동, 직업 특성, 조합 공방, 확률(재련·상자·펫 천장)
+        await page.evaluate("() => { const G = window.__game; G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.S.skManual = {}; }")
+        await page.click('#skb-roar'); await page.wait_for_timeout(100)
+        tap = await page.evaluate("() => ({cd: window.__game.skillCd.roar, buff: window.__game.hero.buffT})")
+        check(tap['cd'] > 0 and tap['buff'] > 0, f'기술 칸을 누르면 그 기술을 바로 쓴다 {tap}')
+        await page.dispatch_event('#skb-bolt', 'pointerdown'); await page.wait_for_timeout(700); await page.dispatch_event('#skb-bolt', 'pointerup')
+        man = await page.evaluate("""() => { const G = window.__game; const m = !!G.S.skManual.bolt; G.skillCd.bolt = 0; for (let i = 0; i < 60; i++) G.update(0.05);
+          const cls = document.querySelector('#skb-bolt').className; G.toggleSkAuto(1); return {m, cd: G.skillCd.bolt, cls, back: !G.S.skManual.bolt}; }""")
+        check(man['m'] and man['cd'] == 0 and 'manual' in man['cls'] and man['back'], f'기술 칸을 길게 누르면 수동이 되고, 수동 기술은 저절로 쓰지 않는다 {man}')
+        dn = await page.evaluate("""() => { const G = window.__game, S = G.S; G.setClass('doin'); S.level = 120; const rb = S.reb.n; S.reb.n = 0; G.unlockSkills();
+          const before = G.skLv(5); S.reb.n = 1; G.unlockSkills(); const after = G.skLv(5); S.reb.n = rb; G.unlockSkills();
+          const atk = [0, 1, 2, 3, 4, 5, 6, 7].filter(i => G.skDef(i).atk).length; return {before, after, atk}; }""")
+        check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 3, f'도인은 공격 기술이 3개이고, 세 번째는 환생해야 열린다 {dn}')
+        sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.castNow(2);
+          return {shield: G.hero.shield / G.ST.maxHp}; }""")
+        check(sh['shield'] >= 0.4, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
+        await page.click('#tab-skill'); await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '29_기술_직업특성.png'))
+        cf = await page.evaluate("""() => { const G = window.__game, S = G.S; G.setClass('jagaek'); G.refreshStats();
+          S.best.s0 = Math.max(S.best.s0, 60); const mk = 'm' + S.world; S.mat[mk] = 200; S.gems = 5000; S.gear.weapon.count[4] += 3; S.gear.weapon.count[8] += 4; S.gear.armor.count[4] += 3;
+          const a0 = G.ST.atk, best = G.ENGR_BEST.jagaek.w;
+          G.pickEngr('w', best); const t1 = G.craft('w') === true;
+          G.craftLuck = 0.0001; const f = G.craft('w'); const fails = S.craft.w.f, mat1 = S.mat[mk];
+          G.craftLuck = null; S.craft.w.f = 5; const ok = G.craft('w') === true;
+          G.pickEngr('a', G.ENGR_BEST.jagaek.a); G.pickEngr('n', G.ENGR_BEST.jagaek.n); G.craft('a'); G.craft('n');
+          G.refreshStats(); return {t1, f, fails, mat1, ok, t: S.craft.w.t, best, up: G.ST.atk / a0, harm: G.harmonyOn()}; }""")
+        check(cf['t1'] and cf['f'] == 'fail' and cf['fails'] == 1 and cf['mat1'] == 150 and cf['ok'] and cf['t'] == 2 and cf['up'] > 1.2 and cf['harm'] and cf['best'] == 'hunt',
+              f'조합 공방: 실패하면 재료 절반만 잃고, 천장이면 확정 성공, 자객 최적 각인 셋이면 조화가 켜진다 {cf}')
+        await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(400)
+        await page.screenshot(path=str(OUT / '30_조합공방.png'))
+        pr = await page.evaluate("""() => { const G = window.__game, S = G.S; S.gold = 1e15; S.gems = 1e5;
+          S.refine.weapon.lv = 16; S.refine.weapon.drops = 2; const r1 = G.refineTry('weapon');
+          S.avPity = G.AV_PITY - 1; const box = G.openAvatarBox();
+          S.petPity = 59; const pets = G.petSummon(1);
+          return {chance: r1.ok && r1.sure && S.refine.weapon.lv === 17, box: !!(box && box.pity && box.isNew && box.a.type !== 'pet'), pet: G.PETS[pets[0].i].g}; }""")
+        check(pr['chance'] and pr['box'] and pr['pet'] >= 3, f'확률 보정: 두 번 떨어진 뒤 재련은 반드시 성공, 꾸미기 상자·펫 소환 천장 {pr}')
 
         # 7) 도트 그림 모음(펫·몬스터)
         data = await page.evaluate("""() => { const sh = window.__game.sheet(); const rows = [sh.pets.map(p => p[0]).concat(sh.pets.map(p => p[1])), sh.mobs.map(m => m[0])];
