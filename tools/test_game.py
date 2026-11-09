@@ -514,6 +514,37 @@ async def main():
         cl = await page.evaluate("() => document.querySelector('#page').hidden")
         check(lay['cw'] > lay['vw'] * 0.8 and not lay['open'] and op and cl, f'가로 화면: 장면이 화면을 가득 채우고, 메뉴 페이지가 열리고 닫힌다 {lay}')
 
+        # 6-3c) 여정 지도: 오른쪽 위 지도 단추 → 세계·지역 그림·지금 위치(용사)·이야기 장, 땅을 누르면 정보
+        await page.evaluate("() => window.__game.closePage()")
+        await page.click('#mapBtn'); await page.wait_for_timeout(2200)
+        jm = await page.evaluate("""() => { const G = window.__game, S = G.S, now = document.querySelector('.jm-node.s-now');
+          const cvs = [...document.querySelectorAll('canvas.th')];
+          return {title: document.querySelector('#pageTitle').textContent, nodes: document.querySelectorAll('.jm-node').length,
+            now: now && now.getAttribute('aria-label'), world: G.WORLD_NAME ? '' : '', hero: !!document.querySelector('.jm-hero'),
+            painted: cvs.filter(c => c.getContext('2d').getImageData(124, 74, 1, 1).data[3] > 0).length, cvs: cvs.length,
+            tags: document.querySelectorAll('.jm-tags i').length, stage: S.stage}; }""")
+        await page.screenshot(path=str(OUT / '6c_여정지도.png'))
+        await page.click('.jm-node[data-n="16"]'); await page.wait_for_timeout(250)
+        jinfo = await page.evaluate("() => document.querySelector('#jmInfo').textContent")
+        check(jm['title'] == '여정 지도' and jm['nodes'] == 29 and jm['now'] and jm['hero'] and jm['painted'] == jm['cvs'] and jm['tags'] >= 30
+              and '천계' in jinfo and '구름 계단' in jinfo, f'여정 지도: 땅 29곳·지금 위치·이야기 장 표시, 땅을 누르면 정보 {jm} / {jinfo[:40]}')
+        await page.click('#pageClose'); await page.wait_for_timeout(150)
+        check(await page.evaluate("() => document.querySelector('#page').hidden"), '여정 지도를 ✕로 닫는다')
+
+        # 6-3d) 반자동(기술은 직접)·보스 수동(눌러야 시작), 사냥터 몹 수·보스까지 처치 수
+        md = await page.evaluate("""() => { const G = window.__game, S = G.S; G.closePage(); G.setStage(S.stage);
+          const st0 = S.stage; G.setStage(1); G.ST.maxHp = 1e300; G.ST.atk = 1e300; G.hero.hp = 1e300;   // 이 점검 동안만 아주 세게
+          S.mode = 'semi'; S.bossAuto = false; S.autoBoss = false; S.kills = G.FIELD.kills; G.hero.dead = false;
+          for (const k in G.skillCd) G.skillCd[k] = 0; const k0 = S.rec.kills;
+          for (let i = 0; i < 120; i++) G.update(0.05);
+          const used = Object.values(G.skillCd).filter(v => v > 0).length, boss = G.bossActive, field = S.rec.kills - k0;
+          document.querySelector('#bossBtn').click(); for (let i = 0; i < 5; i++) G.update(0.05);
+          const pressed = G.bossActive;
+          S.mode = 'auto'; S.bossAuto = true; S.autoBoss = true; G.refreshStats(); G.setStage(st0);
+          return {used, boss, pressed, field, kills: G.FIELD.kills}; }""")
+        check(md['used'] == 0 and not md['boss'] and md['pressed'] and md['kills'] == 25 and md['field'] >= 3,
+              f'반자동이면 기술을 알아서 쓰지 않고, 보스 수동이면 [보스 도전]을 눌러야 보스가 나온다(6초 처치 수 field) {md}')
+
         # 6-4) 기술 직접 쓰기·자동/수동, 직업 특성, 조합 공방, 확률(재련·상자·펫 천장)
         await page.evaluate("() => { const G = window.__game; G.closePage(); G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.S.skManual = {}; G.hero.dead = false; G.hero.hp = G.ST.maxHp; }")
         await page.click('#skb-roar'); await page.wait_for_timeout(100)

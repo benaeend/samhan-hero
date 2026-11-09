@@ -492,7 +492,13 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 .ctrl{position:absolute;right:8px;bottom:8px;z-index:3;display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto;gap:6px;padding:0;background:none;border:0;align-items:end}
 .ctrl .skills{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(5,46px);gap:6px}
 .ctrl .sp{display:none}
-.ctrl .btn-boss{grid-column:1/3;grid-row:1;justify-self:start;font-size:14px;padding:9px 16px}
+.ctrl .btn-mode{grid-row:1;height:34px}
+#modeBtn{grid-column:1/3}#bossModeBtn{grid-column:3/5}
+.btn-mode{border:1px solid rgba(255,204,77,.55);border-radius:10px;padding:0 10px;background:linear-gradient(180deg,rgba(255,214,102,.28),rgba(255,170,40,.16));color:#ffe08a;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.4);touch-action:manipulation}
+.btn-mode.semi{border-color:rgba(120,190,255,.6);background:linear-gradient(180deg,rgba(90,160,255,.28),rgba(40,90,200,.18));color:#bfe0ff}
+.scene > .btn-boss{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:4;font-size:15px;padding:10px 22px;border-radius:999px;box-shadow:0 0 0 3px rgba(255,90,110,.25),0 8px 22px rgba(224,36,75,.45);white-space:nowrap}
+body.portrait .scene > .btn-boss{bottom:auto;top:calc(var(--cvt) + var(--cvh) - 52px)}
 .ctrl .btn-speed{grid-column:5;grid-row:1;justify-self:end;height:34px}
 .sk{width:46px;height:46px;border-radius:14px;background:radial-gradient(circle at 50% 30%,rgba(60,74,104,.95),rgba(18,24,38,.95));border:1px solid rgba(255,204,77,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 3px 10px rgba(0,0,0,.5)}
 .sk svg{width:24px;height:24px}
@@ -512,6 +518,59 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 body.hell .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,120,60,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#24121a,#0f070a)}
 body.busang .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,150,90,.16),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1e1a2c,#0e0c18)}
 body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.015) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1c2238,#0e1222)}
+/* 여정 지도: 이승→저승→천계→부상(→곤륜) 땅을 디오라마 그림으로 이어 보여 준다 */
+.jm-top{display:grid;gap:6px;margin:0 0 8px}
+.jm-row1{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.jm-row1 .jm-sum{flex:1;min-width:230px;max-width:380px}
+.jm-sum{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.jm-sum b{font-size:13.5px;font-weight:900;white-space:nowrap}
+.jm-sum .meter{flex:1;min-width:70px}
+.jm-sum .pct{color:var(--gold);font-weight:900;font-variant-numeric:tabular-nums}
+.jm-worlds{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.jm-wchip{border:1px solid var(--line-2);background:rgba(255,255,255,.04);color:var(--text-soft);padding:4px 11px;border-radius:999px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.jm-wchip.s-done{color:var(--gold);border-color:rgba(255,204,77,.45)}
+.jm-wchip.s-now{background:linear-gradient(180deg,#ffe07a,#f0b43a);color:#241a04;border-color:transparent;box-shadow:0 0 14px rgba(255,204,77,.4)}
+.jm-wchip.s-lock{opacity:.55}
+.jm-arrow{color:var(--text-soft);font-size:11px;opacity:.6}
+.jm-scroll{overflow-x:auto;overflow-y:hidden;border-radius:18px;border:1px solid var(--line-2);background:#0a0f1c;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:thin;box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
+.jm-strip{position:relative;height:180px}
+.jm-band{position:absolute;top:0;bottom:0;overflow:hidden}
+.jm-band::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 120%,rgba(0,0,0,.45),transparent 60%);pointer-events:none}
+.jm-band h3{position:absolute;left:14px;top:8px;margin:0;font-size:14px;font-weight:900;letter-spacing:.06em;text-shadow:0 2px 6px rgba(0,0,0,.6);z-index:1}
+.jm-band p{position:absolute;left:14px;top:29px;margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,.66);z-index:1;white-space:nowrap}
+.jm-band.w0{background:linear-gradient(180deg,#24492f,#11251a)}
+.jm-band.w1{background:linear-gradient(180deg,#4a1a1e,#1c0a0e)}
+.jm-band.w2{background:linear-gradient(180deg,#2c3a64,#141a32)}
+.jm-band.w3{background:linear-gradient(180deg,#5a3446 0%,#24304e 55%,#121a2e)}
+.jm-band.w4{background:linear-gradient(180deg,#3a2a52,#160f22)}
+.jm-band.s-lock h3,.jm-band.s-lock p{opacity:.55}
+.jm-path{position:absolute;left:0;top:0;pointer-events:none}
+.jm-node{position:absolute;width:124px;padding:0;border:0;background:none;color:var(--text);cursor:pointer;text-align:center;transform:translate(-50%,-37px);-webkit-tap-highlight-color:transparent}
+.jm-node .th{width:124px;height:74px;border-radius:12px;border:2px solid rgba(255,255,255,.16);box-shadow:0 6px 14px rgba(0,0,0,.5);display:block;background:#1a2236;transition:transform .15s}
+.jm-node:hover .th,.jm-node:focus-visible .th{transform:translateY(-2px)}
+.jm-node.s-done .th{border-color:rgba(255,204,77,.7)}
+.jm-node.s-now .th{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,204,77,.3),0 0 24px rgba(255,204,77,.55)}
+.jm-node.s-lock .th{filter:grayscale(1) brightness(.42)}
+.jm-node.s-sel .th{outline:2px solid #fff;outline-offset:2px}
+.jm-node b{display:block;font-size:12px;font-weight:800;margin-top:4px;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.jm-node span{display:block;font-size:10.5px;color:rgba(255,255,255,.62);white-space:nowrap}
+.jm-node.s-lock b,.jm-node.s-lock span{opacity:.6}
+.jm-node .lk{position:absolute;left:50%;top:37px;width:26px;height:26px;transform:translate(-50%,-50%);color:rgba(255,255,255,.75)}
+.jm-node .ok{position:absolute;right:-5px;top:-6px;width:20px;height:20px;border-radius:50%;background:linear-gradient(180deg,#ffe07a,#e0a52a);color:#2a1c02;font-size:12px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.jm-tags{position:absolute;left:-6px;top:-9px;display:flex;gap:3px;z-index:1}
+.jm-tags i{font-style:normal;font-size:10px;font-weight:900;padding:1px 5px;border-radius:6px;background:#4a5268;color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.jm-tags i.s-done{background:#a8781e}
+.jm-tags i.s-now{background:var(--seal);animation:jmPulse 1.2s ease-in-out infinite}
+.jm-mist{width:124px;height:74px;border-radius:12px;border:2px dashed rgba(255,255,255,.25);display:grid;place-items:center;font-size:26px;font-weight:900;color:rgba(255,255,255,.55);background:radial-gradient(circle at 50% 60%,rgba(200,170,255,.22),transparent 70%)}
+.jm-hero{position:absolute;width:50px;height:47px;pointer-events:none;transform:translate(-50%,-100%);animation:jmBob 1.2s ease-in-out infinite;filter:drop-shadow(0 4px 3px rgba(0,0,0,.55));z-index:2}
+.jm-here{position:absolute;transform:translate(-50%,-100%);font-size:10px;font-weight:900;background:var(--gold);color:#241a04;border-radius:999px;padding:1px 8px;pointer-events:none;z-index:2;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+@keyframes jmBob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-110%)}}
+@keyframes jmPulse{0%,100%{box-shadow:0 0 0 0 rgba(216,58,58,.6)}50%{box-shadow:0 0 0 4px rgba(216,58,58,0)}}
+.jm-info .chs{display:flex;flex-wrap:wrap;gap:5px}
+.jm-info .chs span{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--text-soft)}
+.jm-info .chs span.s-done{color:var(--gold);border-color:rgba(255,204,77,.4)}
+.jm-info .chs span.s-now{color:#fff;background:rgba(216,58,58,.25);border-color:rgba(216,58,58,.6)}
+@media (prefers-reduced-motion:reduce){.jm-hero,.jm-tags i.s-now{animation:none}}
 .page[hidden]{display:none}
 @keyframes pagein{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .page-head{display:flex;align-items:center;gap:8px;padding:10px 14px 10px calc(14px + env(safe-area-inset-left));border-bottom:1px solid var(--line-2);
@@ -545,6 +604,7 @@ body.portrait .qtrack{top:auto;left:8px;width:calc(100% - 16px)}
 body.portrait .log{width:auto;right:8px}
 body.portrait .ctrl{left:8px;right:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
 body.portrait .ctrl .skills{display:flex;gap:4px}
+body.portrait .btn-mode{height:30px;font-size:11px;padding:0 8px}
 body.portrait .sk{width:34px;height:34px;border-radius:10px}
 body.portrait .sk svg{width:19px;height:19px}
 body.portrait .guide{width:calc(100% - 16px)}
@@ -553,9 +613,6 @@ body.portrait .rotate-tip{display:flex;top:auto;bottom:auto;align-items:center;g
 body.portrait .rotate-tip[hidden]{display:none}
 .rotate-tip button{border:0;background:rgba(255,255,255,.1);color:var(--text);border-radius:50%;width:22px;height:22px;cursor:pointer}
 @media (max-height:420px){
-  .hud{padding:6px 9px 7px;gap:4px}
-  .hud .who .nick{font-size:14px}
-  .qtrack{top:82px;padding:6px 9px}
   .sk{width:42px;height:42px}
   .ctrl .skills{grid-template-columns:repeat(5,42px)}
   .page-head{padding-top:6px;padding-bottom:6px}
@@ -582,6 +639,31 @@ body.portrait .log{bottom:64px}
 body.portrait .guide{bottom:64px}
 body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;transform:translateX(-50%)}
 
+@media (max-height:480px) and (min-aspect-ratio:5/4){   /* 휴대폰 가로: 글자·상자를 작게 해 장면을 더 넓게 */
+  .hud{width:min(226px,30%);padding:5px 8px 6px;gap:3px;border-radius:12px}
+  .who{gap:4px}
+  .who #lv{font-size:9.5px;padding:1px 6px}
+  .who .nick{font-size:12px;max-width:6em}
+  .who .cls{font-size:9.5px;padding:0 4px}
+  .who .cp{font-size:9.5px}
+  .bar{font-size:9.5px;gap:4px}
+  .bar .tr{height:6px}
+  .hud .bar .num{min-width:40px;font-size:9.5px}
+  .qtrack{top:80px;width:min(196px,26%);padding:5px 8px;gap:2px 6px;font-size:10.5px;border-radius:11px}
+  .qtrack b{font-size:9px}
+  .qtrack .qn{font-size:9.5px}
+  .qtrack .qbar{height:4px}
+  .qtrack .btn{padding:3px 8px;font-size:10.5px;border-radius:999px;min-height:0}
+  .log{width:min(260px,34%);bottom:8px;gap:2px}
+  .log div{font-size:9.5px;padding:1px 6px;border-radius:6px}
+  .topr{gap:4px}
+  .topr .cur{font-size:11.5px;padding:2px 8px 2px 4px}
+  .btn-chat{width:32px;height:32px;border-radius:10px}
+  .btn-mode{height:28px;font-size:10.5px;padding:0 8px}
+  .ctrl .btn-speed{height:28px;font-size:11px}
+  .scene > .btn-boss{font-size:13px;padding:8px 18px;bottom:12px}
+  .guide{font-size:11px;padding:6px 9px}
+}
 /* 장 제목 카드(붓글씨 느낌) */
 .chcard{position:absolute;left:50%;top:44%;z-index:12;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:18px 40px 20px;pointer-events:none;opacity:0;
   background:radial-gradient(closest-side,rgba(10,8,6,.86),rgba(10,8,6,.6) 70%,transparent);text-align:center;white-space:nowrap}
@@ -643,14 +725,17 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
     <div class="topr">
       <div class="cur" aria-label="엽전"><span class="coin"></span><span id="gold">0</span></div>
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
+    <button class="btn-chat" id="mapBtn" aria-label="여정 지도"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M3 6.2 9 3.6l6 2.6 6-2.6v14.2l-6 2.6-6-2.6-6 2.6zM9 3.6v14.2M15 6.2v14.2"/></svg></button>
     <button class="btn-chat" id="chatBtn" aria-pressed="false" aria-label="채팅 열기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18v12H11l-5 4v-4H3zm4 4v2h10V8zm0 3v2h7v-2z"/></svg><i class="dot" id="chatDot"></i></button>
     </div>
     <div class="qtrack" id="qtrack" hidden><b id="qtCh"></b><span id="qtName"></span><span class="qbar"><i id="qtBar"></i></span><span class="qn" id="qtNum"></span><button class="btn primary sm" id="qtClaim">보상 받기</button></div>
     <div class="log" id="log" role="log" aria-live="polite"></div>
+  <button class="btn-boss" id="bossBtn" hidden>보스 도전</button>
   <div class="ctrl">
     <div class="skills" id="skillbar"></div>
     <div class="sp"></div>
-    <button class="btn-boss" id="bossBtn" hidden>보스</button>
+    <button class="btn-mode" id="modeBtn" aria-label="전투: 자동 (누르면 반자동)">자동</button>
+    <button class="btn-mode" id="bossModeBtn" aria-label="보스: 자동 도전 (누르면 직접 시작)">보스 자동</button>
 
     <button class="btn-speed" id="speedBtn" aria-pressed="false">속도 ×1</button>
   </div>
@@ -735,7 +820,9 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
 
 /* ================= 기본 설정 ================= */
 const T = 16, COLS = 20, ROWS = 14, W = 240, H = 160, TOPR = 2;   // 싸우는 칸 20×12(위 2줄은 못 걷는다), 화면은 240×160
-const KILLS_PER_STAGE = 10, BOSS_TIME = 30, OFFLINE_CAP = 12 * 3600;
+const BOSS_TIME = 30, OFFLINE_CAP = 12 * 3600;
+// 사냥터: 몹 수(기본+단계마다, 저승부터 더), 나오는 간격, 보스까지 잡을 수(kills), 잡몹 한 마리 보상 배율(rew: 몹이 많아진 만큼 엽전·경험치·보석을 나눠 줌)
+const FIELD = {base:7, step:12, max:16, world:3, gap:0.25, rand:0.2, kills:25, rew:0.75};   // 2026-11 (9): 몹 2배쯤·보스까지 25마리, 한 마리 보상은 0.75배(벽에서 시간당 수입이 예전과 비슷하게)
 const SAVE_KEY = 'samhan-hero-v1';          // 예전(계정 없던 때) 저장 자리. 새 캐릭터로 옮겨 올 때만 읽는다
 const ACC_KEY = 'samhan-accounts-v1';       // 이 기기의 계정·캐릭터 목록
 const SESSION_KEY = 'samhan-session';       // 로그인 유지를 끈 경우 탭이 열려 있는 동안만 기억
@@ -878,7 +965,7 @@ const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
 const skLv = i => skOpen(i) ? S.skills[SKILLS[i].key] || 0 : 0;
-const skAuto = i => !(S.skManual && S.skManual[SKILLS[i].key]);
+const skAuto = i => S.mode !== 'semi' && !(S.skManual && S.skManual[SKILLS[i].key]);   // 반자동이면 기술은 모두 직접
 const skLockText = i => { const d = skDef(i); return d.reb ? '환생' : d.job ? d.job + '차' : 'Lv.' + d.unlock; };
 const skLockLong = i => { const d = skDef(i); return d.reb ? '환생하면 익힘' : d.job ? `${d.job}차 전직 때 익힘` : `Lv.${d.unlock}에 익힘`; };
 // 도인 기술 수치
@@ -1235,7 +1322,7 @@ const CHAPTERS = [
 const STORY_GEM_K = 0.6;   // 이야기 보상 보석 배율(보석이 너무 흔하지 않게)
 const MAIN_Q = [
   // 1장 — 마을 어귀
-  {ch:0, t:'까치의 부탁', s:'하늘 문에 금이 가 요괴가 내려왔어요. 마을 어귀부터 지켜요.', k:'kills', n:20, gems:50,
+  {ch:0, t:'까치의 부탁', s:'하늘 문에 금이 가 요괴가 내려왔어요. 마을 어귀부터 지켜요.', k:'kills', n:30, gems:50,
     c:['village', 'hero,kkachi', 'shake', [['까치', '큰일이에요! 해모수님이 내려오시던 하늘 문에 금이 갔어요!'], ['까치', '그 틈으로 요괴들이 쏟아져요. 용사님, 마을부터 지켜 주세요!'], ['나', '걱정 마. 내가 막을게.']]]},
   {ch:0, t:'멧돼지 대왕', s:'밭을 망치는 멧돼지 떼의 우두머리를 물리쳐요. (1-10 보스)', k:'s0', n:11, gems:80,
     c:['village', 'hero,m:boar:#7a4a2a', 'shake', [['나', '이 녀석이 밭을 다 파헤친 우두머리구나!'], ['까치', '멧돼지들이 하늘 문의 기운에 미쳐 버렸어요.']]]},
@@ -1261,7 +1348,7 @@ const MAIN_Q = [
     c:['palace', 'geumwa,yuhwa,hero', '', [['금와왕', '나는 동부여의 금와왕이다. 물가에서 울던 여인을 데려왔노라.'], ['유화', '햇빛이 자꾸만 저를 따라와요…']]]},
   {ch:2, t:'햇빛이 낳은 알', s:'안개 늪 끝(4-10)의 보스를 물리쳐요.', k:'s0', n:41, gems:250,
     c:['palace', 'yuhwa,hero', 'egg', [['유화', '햇살을 품더니… 커다란 알을 낳았어요.'], ['나', '알 속에서 따뜻한 빛이 나요!']]]},
-  {ch:2, t:'알을 지킨 짐승들', s:'알을 지킨 짐승들처럼 요괴 3,000마리를 물리쳐요. 신화 보물 「천부인 검」을 얻어요.', k:'kills', n:3000, gems:250, myth:'sword',
+  {ch:2, t:'알을 지킨 짐승들', s:'알을 지킨 짐승들처럼 요괴 4,500마리를 물리쳐요. 신화 보물 「천부인 검」을 얻어요.', k:'kills', n:4500, gems:250, myth:'sword',
     c:['village', 'hero,kkachi', 'egg', [['까치', '말과 소는 알을 피해 가고, 새들은 날개로 덮어 주었대요.'], ['나', '짐승들도 이 아이가 특별한 걸 아는구나.']]]},
   {ch:2, t:'깨지지 않는 알', s:'레이드를 5번 클리어해요.', k:'raids', n:5, gems:250,
     c:['palace', 'geumwa,hero', 'shake', [['금와왕', '칼로 쳐도, 돌로 내리쳐도 깨지지 않는구나.'], ['나', '돌려주세요. 어머니 품에서 깨어날 거예요.']]]},
@@ -1556,7 +1643,7 @@ const PART1_END = MAIN_Q.findIndex(q => q.ch >= 26);   // 1부 이야기 수(113
 // 저승 이야기가 끝나는 곳(히든 퀘스트·두 번째 환생 조건)
 const HELL_END_Q = MAIN_Q.findIndex(q => q.t === '다시 고구려로') + 1;
 const DAILY = [
-  {key:'kill', name:'몬스터 200마리 잡기', goal:200, gems:30},
+  {key:'kill', name:'몬스터 300마리 잡기', goal:300, gems:30},
   {key:'boss', name:'보스 5번 물리치기', goal:5, gems:30},
   {key:'summon', name:'장비·펫 10번 소환하기', goal:10, gems:30},
   {key:'up', name:'능력치 30번 올리기', goal:30, gems:20},
@@ -1645,8 +1732,12 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-09-8', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-09-9', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['자동 / 반자동 · 보스 수동', '기술 칸 위 [자동]/[반자동]: 반자동은 사냥은 알아서, 기술은 직접 눌러요. [보스 자동]/[보스 수동]: 수동이면 가운데 아래 [보스 도전!]을 눌러야 보스가 나와요(자동은 지면 45초 뒤 다시).'],
+  ['몬스터가 많아졌어요', '사냥터에 몹이 7~16마리, 보스까지 25마리. 대신 잡몹 한 마리 보상은 0.75배라 시간당 수입은 비슷하고 쉬운 단계는 훨씬 빨라요.'],
+  ['기술 연출', '기술을 쓰면 바닥 마법진·충격파·빛기둥·유성 폭발이, 큰 기술은 화면에 빛과 기술 이름 띠가 나와요.'],
+  ['여정 지도', '오른쪽 위 지도 단추(또는 [퀘스트] → 여정 지도)를 누르면 이승·저승·천계·부상의 땅이 한 장의 길로 이어져 보여요. 깬 땅·지금 있는 땅(내 용사)·아직 못 간 땅과 이야기 장이 어디서 펼쳐지는지, 땅을 누르면 보스·몬스터·레이드·내 기록이 나와요.'],
   ['제2부 · 부상', '천계 이야기를 마치면 동해 용왕의 거북을 타고 해 뜨는 섬 「부상」으로 건너가요([수련] → [환생] → 바다 건너기). 레벨·장비·능력치는 그대로, 단계만 1부터! 레벨 상한 400, 이야기 26~34장, 부상 레이드 8곳, 신화 보물 4종. 부상에서는 「해돋이 기운」이 흘러 사냥이 느려도 지금까지 나아간 단계만큼 경험치가 조금씩 쌓여요.'],
   ['3차 전직', '부상에서 Lv.350이 되고 스승이 나오는 장을 마치면 3차 전직(풍뢰장·익영·식신사·신명)과 새 기술(팔갈래 폭풍·깃바람 분신·식신 행렬·신명 굿춤)이 열려요.'],
   ['장 제목 카드', '이야기의 장이 바뀔 때마다 붓글씨 장 제목이 나오고, 2부의 장은 여는 연출도 있어요.'],
@@ -1810,7 +1901,7 @@ function defaultState(){
     gear:{weapon:{count:Array(20).fill(0), seen:Array(20).fill(false)}, armor:{count:Array(20).fill(0), seen:Array(20).fill(false)}},
     equip:{weapon:-1, armor:-1},
     rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0},
-    speed:1, buyMode:1, lastSave:0,
+    speed:1, mode:'auto', bossAuto:true, buyMode:1, lastSave:0,
     name:'', look:defaultLook(),
     refine:{weapon:{lv:0, drops:0}, armor:{lv:0, drops:0}},
     pets:{lv:Array(PET_N).fill(0), star:Array(PET_N).fill(0)}, petEq:{atk:-1, def:-1, sup:-1},
@@ -1909,6 +2000,8 @@ function mergeState(d){
   out.stage = Math.max(1, Math.floor(out.stage) || 1);
   out.maxStage = Math.max(out.stage, Math.floor(out.maxStage) || 1);
   if (out.speed !== 2) out.speed = 1;
+  if (out.mode !== 'semi') out.mode = 'auto';
+  out.bossAuto = out.bossAuto !== false;
   if (![1, 10, 'max'].includes(out.buyMode)) out.buyMode = 1;
   return out;
 }
@@ -2536,7 +2629,7 @@ function makeMob(boss, tx, ty){
     type, color:boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
     hp:mHp(s) * (boss ? 10 : 1), atk:mAtk(s) * (boss ? 3 : 0.5),
-    gold:mGold(s) * (boss ? 10 : 1) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : 1), markT:0, markP:0,
+    gold:mGold(s) * (boss ? 10 : FIELD.rew) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : FIELD.rew), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
   m.maxHp = m.hp;
@@ -2551,7 +2644,7 @@ function spawnTile(minDist){
   return null;
 }
 const aliveMobs = () => mobs.filter(m => !m.dead);
-const maxField = () => Math.min(10, 4 + Math.floor((S.stage - 1) / 15) + (S.world ? 2 : 0));   // 단계가 오를수록 사냥터에 몹이 더 많이
+const maxField = () => Math.min(FIELD.max, FIELD.base + Math.floor((S.stage - 1) / FIELD.step) + (S.world ? FIELD.world : 0));   // 단계가 오를수록 사냥터에 몹이 더 많이
 const mobScale = m => m.sc || (m.boss ? 2 : 1);
 function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return spH(sp) * sc + (FLOAT[m.type] || 0) * sc; }
 
@@ -2595,13 +2688,13 @@ function killMob(m){
   const gm = gainMul('gold'), xm = gainMul('exp');
   S.gold += m.gold * gm; S.rec.kills++;
   if (m.boss){ gainExp(m.exp * xm); bossWin(); return; }
-  addLog(`${m.name}${josa(m.name, '을', '를')} 잡았습니다. (경험치 +${fmt(m.exp * xm)})`);
+  addLog(`${m.name} 처치 · 경험 +${fmt(m.exp * xm)}`);
   gainExp(m.exp * xm);
-  S.kills = Math.min(KILLS_PER_STAGE, S.kills + 1);
+  S.kills = Math.min(FIELD.kills, S.kills + 1);
   ev('kill');
-  if (isGateStage(S.stage)) rollAcc(false);
-  if (Math.random() < MAT_DROP.mob) gainMat(1);
-  if (Math.random() < GEM_DROP){
+  if (isGateStage(S.stage) && Math.random() < FIELD.rew) rollAcc(false);
+  if (Math.random() < MAT_DROP.mob * FIELD.rew) gainMat(1);
+  if (Math.random() < GEM_DROP * FIELD.rew){
     const g = 1 + (Math.random() < S.stage / 300 ? 1 : 0);
     S.gems += g;
     addText('보석 +' + g, m.x, m.y - mobHeight(m) - 12, '#7fdcff', 11, true); sfx('gem');
@@ -2632,7 +2725,7 @@ function heroDie(){
   if (!wasBoss){
     S.deathsHere++;
     if (S.deathsHere >= 2 && S.stage > 1){
-      S.stage--; S.kills = KILLS_PER_STAGE; S.autoBoss = false; S.deathsHere = 0;
+      S.stage--; S.kills = FIELD.kills; S.autoBoss = false; S.deathsHere = 0;
       addLog('적이 너무 강합니다. 한 단계 물러나 수련합니다.', 'warn');
     }
   }
@@ -2655,7 +2748,8 @@ function bossFail(reason){
   bossActive = false;
   if (bossRef && !bossRef.dead){ bossRef.dead = true; bossRef.deathT = 0.4; bossRef.fled = true; }
   bossRef = null; S.autoBoss = false;
-  addLog(`보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`, 'warn');
+  bossRetry = 0;
+  addLog(S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`, 'warn');
 }
 function bossWin(){
   const gems = 5 + Math.floor(effStage(S.stage) / 4);
@@ -2664,6 +2758,7 @@ function bossWin(){
   if (wasGate) rollAcc(true);
   gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
+  if (!S.bossAuto) S.autoBoss = false;   // 보스 수동: 다음 보스도 [보스 도전]을 눌러야
   const bk = ['s0', 's1', 's2', 's3'][S.world];
   if (S.maxStage > S.best[bk]) S.best[bk] = S.maxStage;
   bossActive = false; bossRef = null; spawnT = 1.4;
@@ -3067,6 +3162,11 @@ const AOE_KINDS = ['spin', 'meteor', 'jobA', 'jobB'], ONE_KINDS = ['bolt', 'comb
 const kindMul = k => { const C = cls(); return AOE_KINDS.includes(k) ? C.aoeMul || 1 : ONE_KINDS.includes(k) ? C.oneMul || 1 : 1; };
 const SELF_KINDS = ['roar', 'd_heal', 'd_charge', 'd_bagua', 'd_gut'];
 function tryCast(i, lv, manual){
+  const ok = castSkill(i, lv, manual);
+  if (ok && !fxOff()) skillVfx(i, manual);
+  return ok;
+}
+function castSkill(i, lv, manual){
   const C = cls(), d = skDef(i), kind = d.kind;
   const alive = mobs.filter(m => !m.dead && m.spawnT <= 0);
   if (!manual && (!alive.length || !hero.engaged)) return false;   // 자동은 싸우고 있을 때만
@@ -3120,7 +3220,6 @@ function tryCast(i, lv, manual){
       hit(m, ST.atk * mul * (i === 6 ? jobAPct(lv) : jobBPct(lv)) / 100, 'skill');
     }
     if (i === 7) hero.jobBuffT = 10;
-    addText(skillName(i) + '!', hero.x, hero.y - 40, '#ffd24a', 12, true);
     sfx('awaken');
     return true;
   }
@@ -3195,7 +3294,7 @@ function doinCast(kind, lv, alive, tg, mul){
 function jobCCast(lv, alive, tg, mul){
   const C = cls();
   fx.push({type:'awaken', t:0, dur:1, color:C.fx, x:hero.x, y:hero.y - 12});
-  addText(skillName(8) + '!', hero.x, hero.y - 40, '#ffd24a', 12, true); sfx('awaken');
+  sfx('awaken');
   if (S.cls === 'jagaek'){   // 깃바람: 둘레의 적을 세 번 휩쓸고, 분신 셋이 12초 함께 싸운다
     hero.cloneT = 12; hero.cloneLv = lv; hero.cloneAcc = 0;
     for (let k = 0; k < 3; k++) after(k * 0.11, () => {
@@ -3251,6 +3350,7 @@ function update(dt){
   if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
+  updateVfx(dt);
   for (const p of parts){
     p.t += dt;
     if (p.type === 'coin'){ p.vy += 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.y > p.gy){ p.y = p.gy; p.vy *= -0.35; p.vx *= 0.5; } }
@@ -3274,7 +3374,8 @@ function update(dt){
     bossTime -= dt;
     if (bossTime <= 0) bossFail('시간 초과');
   } else if (!hero.dead){
-    if (S.kills >= KILLS_PER_STAGE && S.autoBoss) startBoss();
+    if (S.kills >= FIELD.kills && !S.autoBoss && S.bossAuto){ bossRetry += dt; if (bossRetry >= BOSS_RETRY){ S.autoBoss = true; bossRetry = 0; } }   // 보스 자동: 실패해도 잠시 수련한 뒤 다시
+    if (S.kills >= FIELD.kills && S.autoBoss) startBoss();
     else {
       spawnT -= dt;
       if (spawnT <= 0){
@@ -3282,7 +3383,7 @@ function update(dt){
           const spot = spawnTile(4) || spawnTile(2);
           if (spot){ const m = makeMob(false, spot[0], spot[1]); mobs.push(m); fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
         }
-        spawnT = 0.6 + Math.random() * 0.5;
+        spawnT = FIELD.gap + Math.random() * FIELD.rand;
       }
     }
   }
@@ -5103,6 +5204,229 @@ function drawFx(e){
   }
   void C;
 }
+/* ================= 기술 이펙트(크게·빛나게) =================
+   기술을 쓰면 바닥 마법진·충격파·불꽃 튀김·하늘에서 내리꽂는 빛기둥·베기 궤적·표적·유성 폭발·화면 가득 퍼지는 빛과 기술 이름이 나온다.
+   빛은 더하기 섞기(lighter)로 겹칠수록 밝게. 그림만 바꾸므로 시뮬(quiet)·움직임 줄이기에서는 만들지 않는다 */
+let vfx = [], skCut = null;
+const VFX_MAX = 180;
+function vadd(o){ if (vfx.length < VFX_MAX) vfx.push(Object.assign({t:0}, o)); }
+function vSparks(x, y, n, col, sp = 70, up = 30, g = 150){
+  for (let k = 0; k < n; k++){ const a = Math.random() * Math.PI * 2, v = sp * (0.35 + Math.random() * 0.9);
+    vadd({type:'spark', x, y, vx:Math.cos(a) * v, vy:Math.sin(a) * v * 0.55 - up * (0.3 + Math.random()), g, dur:0.4 + Math.random() * 0.4, col, s:0.8 + Math.random() * 1.4}); }
+}
+function vMotes(x, y, n, col, w = 14){ for (let k = 0; k < n; k++) vadd({type:'mote', x:x + (Math.random() - 0.5) * w * 2, y:y + (Math.random() - 0.5) * 6, vx:(Math.random() - 0.5) * 8, vy:-(18 + Math.random() * 30), g:0, dur:0.7 + Math.random() * 0.6, col, s:0.8 + Math.random()}); }
+function vBoom(x, y, col, big){
+  vadd({type:'glow', x, y, r:big ? 30 : 18, col, dur:0.45});
+  vadd({type:'shock', x, y, r0:4, r1:big ? 46 : 28, w:big ? 4 : 3, col, dur:0.5});
+  vSparks(x, y, big ? 18 : 10, col, big ? 95 : 65);
+}
+function vBeam(x, y, col, w = 9, dur = 0.5){ vadd({type:'beam', x, y, w, col, dur}); vadd({type:'glow', x, y, r:w * 2.4, col, dur:dur * 0.9}); vSparks(x, y, 8, col, 60, 40); }
+const vTargets = () => mobs.filter(m => m.spawnT <= 0 && (!m.dead || m.deathT > 0));
+const vAt = m => [m.x, m.y - mobHeight(m) * 0.45];
+function skillVfx(i, manual){
+  const C = cls(), d = skDef(i), kind = d.kind, col = C.fx || '#ffd24a';
+  const ts = vTargets(), tg = hero.target && !hero.target.dead ? hero.target : ts[0];
+  const tank = ts.length ? ts.reduce((a, b2) => b2.maxHp > a.maxHp ? b2 : a) : null;
+  const hx = hero.x, hy = hero.y;
+  const big = ['meteor', 'jobA', 'jobB', 'jobC', 'd_atk3', 'd_gut'].includes(kind);
+  vadd({type:'rune', x:hx, y:hy, r:big ? 30 : 18, col, dur:big ? 1.1 : 0.7, ground:true, spin:Math.random() * 6});
+  if (big || manual) skCut = {name:skillName(i), col, t:0, dur:1.15};
+  else addText(skillName(i), hx, hy - 44, col, 10, true);
+  switch (kind){
+    case 'spin': case 'd_atk1': {
+      const [cx, cy] = C.range > 1 && tg ? vAt(tg) : [hx, hy - 8];
+      vadd({type:'swirl', x:cx, y:cy, r:26, col, dur:0.45, rot:Math.random() * 6});
+      vadd({type:'shock', x:cx, y:cy + 6, r0:6, r1:40, w:4, col, dur:0.5, ground:true});
+      vadd({type:'glow', x:cx, y:cy, r:24, col, dur:0.35});
+      vSparks(cx, cy, 16, col, 90);
+      if (kind === 'd_atk1') vBeam(cx, cy, col, 12, 0.5);
+      break; }
+    case 'bolt': case 'd_atk3': {
+      const m = kind === 'd_atk3' ? tank : (tank || tg); if (!m) break;
+      const [x, y] = vAt(m);
+      vBeam(x, y, kind === 'd_atk3' ? '#ffd24a' : col, kind === 'd_atk3' ? 18 : 11, 0.6);
+      vBoom(x, y, col, kind === 'd_atk3');
+      if (kind === 'd_atk3'){ vadd({type:'nova', x, y, col:'#ffd24a', dur:0.7}); vadd({type:'flash', col:'#fff6d0', a:0.25, dur:0.35}); }
+      break; }
+    case 'combo': {
+      const m = tank || tg; if (!m) break;
+      const [x, y] = vAt(m);
+      for (let k = 0; k < 6; k++) vadd({type:'slashx', x:x + (Math.random() - 0.5) * 8, y:y + (Math.random() - 0.5) * 6, a:-0.9 + k * 0.55 + Math.random() * 0.3, L:18, col, dur:0.32, delay:k * 0.07});
+      vadd({type:'glow', x, y, r:20, col, dur:0.6});
+      vSparks(x, y, 14, col, 80);
+      break; }
+    case 'mark': case 'd_seal': {
+      for (const m of ts.slice(0, 10)){ const [x, y] = vAt(m); vadd({type:'reticle', x, y, r:11, col:'#ff5a8a', dur:0.8, rot:Math.random() * 6}); }
+      vadd({type:'flash', col:'#ff5a8a', a:0.18, dur:0.3});
+      break; }
+    case 'roar': case 'd_heal': case 'd_charge': case 'd_bagua': {
+      const c2 = kind === 'd_heal' ? '#7fe07f' : kind === 'd_charge' ? '#9fe7ff' : kind === 'd_bagua' ? '#ffd24a' : col;
+      vadd({type:'pillar', x:hx, y:hy, w:16, col:c2, dur:0.8});
+      vadd({type:'shock', x:hx, y:hy, r0:6, r1:34, w:3, col:c2, dur:0.6, ground:true});
+      vMotes(hx, hy - 6, 18, c2);
+      if (kind === 'd_charge') vadd({type:'implode', x:hx, y:hy - 12, r:40, col:c2, dur:0.6});
+      if (kind === 'd_bagua') vadd({type:'rune', x:hx, y:hy, r:40, col:'#ffd24a', dur:1.2, ground:true, spin:0, oct:true});
+      break; }
+    case 'meteor': case 'd_atk2': {
+      vadd({type:'flash', col, a:0.22, dur:0.4});
+      ts.slice(0, 8).forEach((m, k) => {
+        const [x, y] = vAt(m);
+        if (kind === 'meteor'){ vadd({type:'fall', x, y, col:'#ff9a4a', dur:0.35, delay:k * 0.06}); after(0.35 + k * 0.06, () => { if (!fxOff()) vBoom(x, y, '#ffb347', true); }); }
+        else vBeam(x, y, col, 10, 0.55);
+      });
+      break; }
+    case 'jobA': case 'jobB': case 'jobC': case 'd_gut': {
+      vadd({type:'flash', col, a:kind === 'jobA' ? 0.14 : 0.22, dur:0.4});
+      vadd({type:'nova', x:hx, y:hy - 10, col, dur:0.8});
+      vadd({type:'rays', x:hx, y:hy - 12, col, dur:0.9, rot:Math.random() * 6});
+      vadd({type:'rune', x:hx, y:hy, r:44, col, dur:1.3, ground:true, spin:Math.random() * 6});
+      ts.slice(0, 8).forEach((m, k) => { const [x, y] = vAt(m); after(0.08 + k * 0.05, () => { if (!fxOff()) vBeam(x, y, k % 2 ? '#ffffff' : col, kind === 'jobB' ? 13 : 10, 0.5); }); });
+      vMotes(hx, hy - 6, 20, col, 20);
+      break; }
+    default: vadd({type:'glow', x:hx, y:hy - 10, r:20, col, dur:0.4}); vSparks(hx, hy - 10, 10, col);
+  }
+}
+function updateVfx(dt){
+  if (skCut){ skCut.t += dt; if (skCut.t >= skCut.dur) skCut = null; }
+  if (!vfx.length) return;
+  for (const v of vfx){
+    if (v.delay > 0){ v.delay -= dt; continue; }
+    v.t += dt;
+    if (v.vx != null){ v.x += v.vx * dt; v.y += v.vy * dt; v.vy += (v.g || 0) * dt; }
+  }
+  vfx = vfx.filter(v => v.t < v.dur);
+}
+const easeOut = k => 1 - Math.pow(1 - k, 3);
+function vGlow(x, y, r, col, a){
+  const g = b.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(0.25, hexA(col, a * 0.8)); g.addColorStop(1, hexA(col, 0));
+  b.fillStyle = g; b.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function hexA(c, a){
+  if (c[0] !== '#') return c;
+  const n = c.length === 4 ? c.slice(1).split('').map(h => parseInt(h + h, 16)) : [1, 3, 5].map(k => parseInt(c.slice(k, k + 2), 16));
+  return `rgba(${n[0]},${n[1]},${n[2]},${Math.max(0, Math.min(1, a))})`;
+}
+function drawVfx(ground){
+  if (!vfx.length) return;
+  b.save(); b.globalCompositeOperation = 'lighter'; b.lineCap = 'round';
+  for (const v of vfx){
+    if (v.delay > 0 || !!v.ground !== ground) continue;
+    const k = Math.min(1, v.t / v.dur), fade = 1 - k;
+    switch (v.type){
+      case 'glow': vGlow(v.x, v.y, v.r * (0.7 + 0.5 * easeOut(k)), v.col, 0.9 * fade); break;
+      case 'shock': {
+        const r = v.r0 + (v.r1 - v.r0) * easeOut(k);
+        b.lineWidth = Math.max(0.5, v.w * fade); b.strokeStyle = hexA(v.col, 0.95 * fade);
+        b.beginPath(); b.ellipse(v.x, v.y, r, r * 0.5, 0, 0, Math.PI * 2); b.stroke();
+        b.lineWidth = Math.max(0.4, v.w * 0.4 * fade); b.strokeStyle = `rgba(255,255,255,${0.8 * fade})`;
+        b.beginPath(); b.ellipse(v.x, v.y, r * 0.92, r * 0.46, 0, 0, Math.PI * 2); b.stroke();
+        break; }
+      case 'rune': {
+        const inK = Math.min(1, v.t / 0.2), outK = Math.max(0, (k - 0.7) / 0.3), a = inK * (1 - outK), r = v.r * (0.6 + 0.4 * easeOut(inK)), rot = (v.spin || 0) + v.t * 2.2;
+        b.strokeStyle = hexA(v.col, 0.85 * a); b.lineWidth = 1.2;
+        b.beginPath(); b.ellipse(v.x, v.y, r, r * 0.5, 0, 0, Math.PI * 2); b.stroke();
+        b.beginPath(); b.ellipse(v.x, v.y, r * 0.78, r * 0.39, 0, 0, Math.PI * 2); b.stroke();
+        const n = v.oct ? 8 : 6;
+        b.beginPath();
+        for (let j = 0; j <= n; j++){ const t2 = rot + j * (v.oct ? 1 : 2) * Math.PI * 2 / n; const px = v.x + Math.cos(t2) * r * 0.78, py = v.y + Math.sin(t2) * r * 0.39; j ? b.lineTo(px, py) : b.moveTo(px, py); }
+        b.stroke();
+        for (let j = 0; j < 12; j++){ const t2 = -rot * 0.6 + j * Math.PI / 6, px = v.x + Math.cos(t2) * r * 0.89, py = v.y + Math.sin(t2) * r * 0.445; b.fillStyle = hexA(j % 3 ? v.col : '#ffffff', a); b.fillRect(px - 0.8, py - 0.8, 1.6, 1.6); }
+        vGlow(v.x, v.y, r * 0.9, v.col, 0.25 * a);
+        break; }
+      case 'beam': {
+        const w = v.w * (k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85 * 0.8), top = camY - 6;
+        const g = b.createLinearGradient(v.x - w, 0, v.x + w, 0);
+        g.addColorStop(0, hexA(v.col, 0)); g.addColorStop(0.5, hexA(v.col, 0.9 * fade)); g.addColorStop(1, hexA(v.col, 0));
+        b.fillStyle = g; b.fillRect(v.x - w, top, w * 2, v.y - top + 2);
+        b.fillStyle = `rgba(255,255,255,${0.95 * fade})`; b.fillRect(v.x - w * 0.18, top, w * 0.36, v.y - top + 2);
+        break; }
+      case 'pillar': {
+        const w = v.w * (0.6 + 0.4 * Math.sin(Math.min(1, k * 2) * Math.PI / 2)), top = v.y - 70;
+        const g = b.createLinearGradient(0, top, 0, v.y);
+        g.addColorStop(0, hexA(v.col, 0)); g.addColorStop(1, hexA(v.col, 0.6 * fade));
+        b.fillStyle = g; b.fillRect(v.x - w / 2, top, w, 70);
+        b.fillStyle = `rgba(255,255,255,${0.5 * fade})`; b.fillRect(v.x - w * 0.12, top + 10, w * 0.24, 60);
+        break; }
+      case 'spark': case 'mote': {
+        const sz = v.s * (v.type === 'mote' ? 1 : fade + 0.3);
+        b.fillStyle = hexA(v.col, fade); b.fillRect(v.x - sz / 2, v.y - sz / 2, sz, sz);
+        if (v.type === 'spark'){ b.strokeStyle = hexA('#ffffff', 0.7 * fade); b.lineWidth = sz * 0.5; b.beginPath(); b.moveTo(v.x, v.y); b.lineTo(v.x - v.vx * 0.03, v.y - v.vy * 0.03); b.stroke(); }
+        break; }
+      case 'swirl': {
+        const r = v.r * (0.7 + 0.4 * easeOut(k)), rot = v.rot + k * 7;
+        for (let j = 0; j < 3; j++){
+          const a0 = rot + j * Math.PI * 2 / 3;
+          b.lineWidth = 4.5 * fade; b.strokeStyle = hexA(v.col, 0.9 * fade);
+          b.beginPath(); b.ellipse(v.x, v.y, r, r * 0.55, 0, a0, a0 + 1.7); b.stroke();
+          b.lineWidth = 1.6 * fade; b.strokeStyle = `rgba(255,255,255,${0.9 * fade})`;
+          b.beginPath(); b.ellipse(v.x, v.y, r - 1.5, (r - 1.5) * 0.55, 0, a0 + 0.3, a0 + 1.6); b.stroke();
+        }
+        break; }
+      case 'slashx': {
+        const L = v.L * Math.min(1, k * 4), ca = Math.cos(v.a), sa = Math.sin(v.a);
+        b.lineWidth = 3.2 * fade; b.strokeStyle = hexA(v.col, fade);
+        b.beginPath(); b.moveTo(v.x - ca * L, v.y - sa * L); b.lineTo(v.x + ca * L, v.y + sa * L); b.stroke();
+        b.lineWidth = 1.2 * fade; b.strokeStyle = `rgba(255,255,255,${fade})`;
+        b.beginPath(); b.moveTo(v.x - ca * L, v.y - sa * L); b.lineTo(v.x + ca * L, v.y + sa * L); b.stroke();
+        break; }
+      case 'reticle': {
+        const r = v.r * (1.6 - 0.6 * easeOut(Math.min(1, k * 2))), rot = v.rot + k * 4;
+        b.lineWidth = 1.4; b.strokeStyle = hexA(v.col, fade);
+        b.beginPath(); b.arc(v.x, v.y, r, 0, Math.PI * 2); b.stroke();
+        for (let j = 0; j < 4; j++){ const t2 = rot + j * Math.PI / 2; b.beginPath(); b.moveTo(v.x + Math.cos(t2) * (r - 3), v.y + Math.sin(t2) * (r - 3)); b.lineTo(v.x + Math.cos(t2) * (r + 4), v.y + Math.sin(t2) * (r + 4)); b.stroke(); }
+        vGlow(v.x, v.y, r, v.col, 0.25 * fade);
+        break; }
+      case 'fall': {
+        const sx = v.x - 70, sy = camY - 20, px = sx + (v.x - sx) * k, py = sy + (v.y - sy) * k;
+        b.lineWidth = 5; b.strokeStyle = hexA(v.col, 0.55);
+        b.beginPath(); b.moveTo(px - 26, py - 20); b.lineTo(px, py); b.stroke();
+        b.lineWidth = 2; b.strokeStyle = 'rgba(255,240,180,.9)'; b.beginPath(); b.moveTo(px - 14, py - 11); b.lineTo(px, py); b.stroke();
+        vGlow(px, py, 9, v.col, 0.9);
+        break; }
+      case 'implode': {
+        const r = v.r * (1 - easeOut(k));
+        for (let j = 0; j < 14; j++){ const t2 = j * Math.PI / 7 + k * 2; b.fillStyle = hexA(v.col, 0.9 * (1 - k * 0.5)); b.fillRect(v.x + Math.cos(t2) * r - 1, v.y + Math.sin(t2) * r * 0.6 - 1, 2, 2); }
+        vGlow(v.x, v.y, 10 + 8 * k, v.col, 0.6 * k);
+        break; }
+      case 'nova': {
+        const r = 10 + easeOut(k) * VW * 0.75;
+        b.lineWidth = 7 * fade; b.strokeStyle = hexA(v.col, 0.8 * fade);
+        b.beginPath(); b.ellipse(v.x, v.y, r, r * 0.6, 0, 0, Math.PI * 2); b.stroke();
+        b.lineWidth = 2 * fade; b.strokeStyle = `rgba(255,255,255,${0.9 * fade})`;
+        b.beginPath(); b.ellipse(v.x, v.y, r * 0.96, r * 0.576, 0, 0, Math.PI * 2); b.stroke();
+        vGlow(v.x, v.y, 40 * (1 - k * 0.5), v.col, 0.4 * fade);
+        break; }
+      case 'rays': {
+        const rot = v.rot + k * 1.2, R = 30 + 140 * easeOut(k);
+        for (let j = 0; j < 14; j++){
+          const t2 = rot + j * Math.PI * 2 / 14, w2 = 0.07;
+          b.fillStyle = hexA(j % 2 ? '#ffffff' : v.col, 0.15 * fade);
+          b.beginPath(); b.moveTo(v.x, v.y); b.lineTo(v.x + Math.cos(t2 - w2) * R, v.y + Math.sin(t2 - w2) * R * 0.7); b.lineTo(v.x + Math.cos(t2 + w2) * R, v.y + Math.sin(t2 + w2) * R * 0.7); b.closePath(); b.fill();
+        }
+        break; }
+      case 'flash': { b.fillStyle = hexA(v.col, v.a * fade); b.fillRect(camX, camY, VW, H); break; }
+    }
+  }
+  b.restore();
+}
+// 큰 기술 이름(화면 위쪽에 빛나는 띠와 함께 미끄러져 들어옴)
+function drawSkCut(cw, ch){
+  const c = skCut; if (!c) return;
+  const k = c.t / c.dur, inK = Math.min(1, c.t / 0.18), outK = Math.max(0, (k - 0.72) / 0.28);
+  const y = ch * 0.3, x = cw / 2 - (1 - easeOut(inK)) * cw * 0.35 + outK * cw * 0.15;
+  ctx.save(); ctx.globalAlpha = 1 - outK;
+  const g = ctx.createLinearGradient(0, 0, cw, 0); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, y - 21, cw, 42);
+  const g2 = ctx.createLinearGradient(cw * 0.15, 0, cw * 0.85, 0); g2.addColorStop(0, hexA(c.col, 0)); g2.addColorStop(0.5, hexA(c.col, 1)); g2.addColorStop(1, hexA(c.col, 0));
+  ctx.fillStyle = g2; ctx.fillRect(cw * 0.15, y - 21, cw * 0.7, 2); ctx.fillRect(cw * 0.15, y + 19, cw * 0.7, 2);
+  ctx.font = '900 24px SamhanSans, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 5; ctx.strokeStyle = '#140a02'; ctx.strokeText(c.name, x, y);
+  ctx.shadowColor = c.col; ctx.shadowBlur = 16;
+  const tg = ctx.createLinearGradient(0, y - 12, 0, y + 12); tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, c.col);
+  ctx.fillStyle = tg; ctx.fillText(c.name, x, y);
+  ctx.restore();
+}
 function drawWeather(Rg){
   const t = Rg.theme;
   if (t === 'cloud' || t === 'heaven' || t === 'peach'){
@@ -5160,10 +5484,12 @@ function render(){
   for (const t of PET_TYPE_ORDER) if (eqPet(t) >= 0 && petRt[t].init) ents.push({y:petRt[t].y, pet:t});
   ents.push({y:hero.y + 0.1, hero:true});
   ents.sort((a, b2) => a.y - b2.y);
+  drawVfx(true);
   for (const e of ents){ if (e.hero) drawEntityHero(); else if (e.a) drawAlly(e.a); else if (e.pet) drawPet(e.pet); else drawMob(e.m); }
   for (const p of parts) if (p.type === 'gem'){ b.globalAlpha = Math.max(0, 1 - p.t / p.dur); P(p.x - 1, p.y - 2, 3, 1, '#7fdcff'); P(p.x - 2, p.y - 1, 5, 1, '#5ac8f0'); P(p.x - 1, p.y, 3, 1, '#2a88b0'); P(p.x, p.y + 1, 1, 1, '#2a88b0'); P(p.x, p.y - 3, 1, 1, '#ffffff'); b.globalAlpha = 1; }
   for (const p of projs) drawProj(p);
   for (const e of fx) drawFx(e);
+  drawVfx(false);
   b.setTransform(RS, 0, 0, RS, 0, 0);
   drawWeather(Rg);
 
@@ -5174,7 +5500,7 @@ function render(){
   ctx.drawImage(buf, ox, oy, cv.width, cv.height);
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawTexts(); drawOverlay();
+  drawTexts(); drawOverlay(); drawSkCut(cv.width / dpr, cv.height / dpr);
 }
 function drawTexts(){
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
@@ -5257,7 +5583,7 @@ function drawOverlay(){
       }
     }
   } else {
-    const n = KILLS_PER_STAGE, pw = 9, gap = 3, total = n * pw + (n - 1) * gap;
+    const n = FIELD.kills, pw = n > 12 ? 4 : 9, gap = n > 12 ? 1.5 : 3, total = n * pw + (n - 1) * gap;
     ctx.font = '700 11px SamhanSans, sans-serif';
     const lab = S.kills >= n && !S.autoBoss ? '보스 대기' : '보스까지';
     const lw = Math.ceil(ctx.measureText(lab).width), bw = total + lw + 24, bx = cx - bw / 2;
@@ -5690,8 +6016,27 @@ function buildSkillbar(){
     el.addEventListener('contextmenu', e => e.preventDefault());
   });
 }
-elBoss.addEventListener('click', () => { S.autoBoss = true; elBoss.hidden = true; });
-elSpeed.addEventListener('click', () => { S.speed = S.speed === 2 ? 1 : 2; applySpeedBtn(); });
+elBoss.addEventListener('click', () => { S.autoBoss = true; bossRetry = 0; elBoss.hidden = true; sfx('click'); });
+// 전투 방식: 자동(사냥·기술 모두) / 반자동(사냥은 자동, 기술은 직접 누름). 보스: 자동 도전 / 직접 시작
+const elMode = $('#modeBtn'), elBossMode = $('#bossModeBtn');
+function applyModeBtns(){
+  const semi = S.mode === 'semi';
+  setText(elMode, semi ? '반자동' : '자동'); elMode.classList.toggle('semi', semi);
+  elMode.setAttribute('aria-label', semi ? '전투: 반자동, 기술은 직접 (누르면 자동)' : '전투: 자동 (누르면 반자동)');
+  setText(elBossMode, S.bossAuto ? '보스 자동' : '보스 수동'); elBossMode.classList.toggle('semi', !S.bossAuto);
+  elBossMode.setAttribute('aria-label', S.bossAuto ? '보스: 자동 도전 (누르면 직접 시작)' : '보스: 직접 시작 (누르면 자동 도전)');
+}
+elMode.addEventListener('click', () => {
+  S.mode = S.mode === 'semi' ? 'auto' : 'semi'; applyModeBtns(); sfx('click');
+  addLog(S.mode === 'semi' ? '반자동: 사냥은 알아서, 기술은 칸을 눌러 직접 써요.' : '자동: 사냥도 기술도 알아서 해요.', 'good');
+});
+elBossMode.addEventListener('click', () => {
+  S.bossAuto = !S.bossAuto; S.autoBoss = S.bossAuto; bossRetry = 0; applyModeBtns(); sfx('click');
+  addLog(S.bossAuto ? '보스 자동: 몹을 다 잡으면 보스에게 알아서 도전해요.' : '보스 수동: 준비되면 [보스 도전]을 눌러야 보스가 나와요.', 'good');
+});
+elSpeed.addEventListener('click', () => { S.speed = S.speed === 2 ? 1 : 2; applySpeedBtn(); applyModeBtns(); });
+let bossRetry = 0;   // 보스 자동일 때 실패 뒤 다시 도전까지 기다린 시간
+const BOSS_RETRY = 45;
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
 function updateHud(){
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
@@ -5702,8 +6047,9 @@ function updateHud(){
   elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmt(hero.hp) + '/' + fmt(ST.maxHp));
   const xr = Math.min(1, S.exp / expNeed(S.level));
   elXp.style.width = (xr * 100).toFixed(1) + '%'; setText(elXpN, (xr * 100).toFixed(1) + '%');
-  const showBoss = S.kills >= KILLS_PER_STAGE && !S.autoBoss && !bossActive && !raid;
+  const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
+  if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '보스 도전!');
   if (skBarCls !== S.cls) buildSkillbar();
   SKILLS.forEach((sk, i) => {
     const r = skillEls[sk.key], lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), rdy = man && !(skillCd[sk.key] > 0);
@@ -6342,7 +6688,7 @@ function doPetSummon(n){
 /* --- 퀘스트 --- */
 function buildQuest(){
   panel.innerHTML = `
-    <div class="ph"><h2>이야기</h2><button class="chip" id="replayBtn">다시 보기</button></div>
+    <div class="ph"><h2>이야기</h2><span><button class="chip" id="qMapBtn">여정 지도</button> <button class="chip" id="replayBtn">다시 보기</button></span></div>
     <p class="hint" id="mqNo" style="margin-top:0;color:var(--gold);font-weight:800"></p>
     <div class="card" id="mainCard">
       <div class="ct"><span id="mqTitle"></span><span class="tag" id="mqRew"></span></div>
@@ -6365,6 +6711,7 @@ function buildQuest(){
   $('#mainClaim').addEventListener('click', () => { if (claimMain()) refreshPanel(); });
   $('#hidClaim').addEventListener('click', () => { if (claimHidden()) refreshPanel(); });
   $('#replayBtn').addEventListener('click', openReplay);
+  $('#qMapBtn').addEventListener('click', openMap);
   $('#dAll').addEventListener('click', () => { if (claimDailyAll()) refreshPanel(); });
   panel.querySelectorAll('.qrow .btn').forEach(bt => bt.addEventListener('click', () => { if (claimDaily(bt.dataset.k)) refreshPanel(); }));
   return () => {
@@ -6556,7 +6903,161 @@ function buildRec(){
   };
 }
 
-const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec};
+/* ================= 여정 지도 =================
+   이승 → 저승 → 천계 → 부상(→ 3부 곤륜)의 땅을 실제 사냥터 디오라마를 줄인 그림으로 길 위에 늘어놓고,
+   깬 곳·지금 있는 곳(용사 그림)·아직 못 간 곳과 이야기 장이 어느 땅에서 펼쳐지는지 보여 준다 */
+const JM_WORLD = [
+  {name:'이승', part:'1부', sub:'고구려 건국 신화', gate:''},
+  {name:'저승', part:'1부', sub:'시왕의 저승', gate:'환생'},
+  {name:'천계', part:'1부', sub:'신과의 전쟁', gate:'마지막 환생'},
+  {name:'부상', part:'2부', sub:'해 뜨는 섬의 신들', gate:'바다 건너기'},
+  {name:'곤륜', part:'3부', sub:'서쪽 하늘 · 준비 중', gate:'다음 이야기'},
+];
+const JM_DX = 138, JM_Y = [104, 62];   // 지그재그(아래·위). 띠 높이 180
+const jmSpan = w => [null, HELL_SPAN, HEAVEN_SPAN, BUSANG_SPAN][w];
+const jmNodeOf = (w, s) => w === 0 ? Math.min(9, Math.floor((Math.max(1, s) - 1) / 10)) : (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(jmSpan(w));
+let jmNodesCache = null, jmChCache = null;
+function jmNodes(){
+  if (jmNodesCache) return jmNodesCache;
+  const N = [];
+  for (let k = 0; k < 10; k++){ const R = REGIONS[k % REGIONS.length]; N.push({w:0, k, ri:k % REGIONS.length, name:R.name + (k >= REGIONS.length ? ' Ⅱ' : ''), a:10 * k + 1, b:10 * k + 10, R}); }
+  for (let w = 1; w <= 3; w++){ const sp = jmSpan(w); regionsOf(w).forEach((R, k) => N.push({w, k, ri:k, name:R.name, a:k ? sp[k - 1] + 1 : 1, b:sp[k] || null, R})); }
+  N.push({w:4, k:0, name:'곤륜', a:0, b:null});
+  return (jmNodesCache = N);
+}
+// 장마다: 그 장 퀘스트 조건 중 가장 뒤 세계, 그 세계에서 처음 나오는 '단계' 조건으로 지도 위 자리를 정한다
+function jmChapters(){
+  if (jmChCache) return jmChCache;
+  const out = [], lastS = [1, 1, 1, 1];
+  let curW = 0;
+  for (let ch = 0; ch < CHAPTERS.length; ch++){
+    const qs = []; MAIN_Q.forEach((q, i) => { if (q.ch === ch) qs.push([q, i]); });
+    if (!qs.length) continue;
+    let w = -1;
+    for (const [q] of qs){ const m = /^[sl](\d)$/.exec(q.k); if (m) w = Math.max(w, +m[1]); if (q.k === 'world') w = Math.max(w, q.n); }
+    if (w < 0) w = curW;
+    let st = null;
+    for (const [q] of qs) if (q.k === 's' + w){ st = Math.max(1, q.n - 1); break; }
+    if (st == null) st = lastS[w];
+    curW = Math.max(curW, w); lastS[w] = st;
+    const lab = CHAPTERS[ch].split(' · ')[0];
+    out.push({ch, w, k:jmNodeOf(w, st), first:qs[0][1], last:qs[qs.length - 1][1], lab, name:CHAPTERS[ch]});
+  }
+  return (jmChCache = out);
+}
+const jmChState = c => S.quest.main > c.last ? 's-done' : S.quest.main >= c.first ? 's-now' : 's-todo';
+const jmBest = w => Math.max(S.best['s' + w] || 0, S.world === w ? S.maxStage : 0);
+function jmState(n){
+  if (n.w === 4 || n.w > S.world) return 's-lock';
+  if (n.w < S.world) return 's-done';
+  const ci = jmNodeOf(n.w, S.stage);
+  if (n.k === ci) return 's-now';
+  return (n.b && jmBest(n.w) > n.b) || n.k < ci ? 's-done' : 's-todo';
+}
+const jmRange = n => n.w === 4 ? '3부' : n.b ? `${n.a}~${n.b}단계` : `${n.a}단계~`;
+// 지역 그림(사냥터 디오라마를 줄인 것). 처음 열 때 몇 장씩 나눠 그린다
+const jmThumbs = new Map();
+function jmThumb(w, ri){
+  const key = w + ':' + ri;
+  let t = jmThumbs.get(key);
+  if (!t){
+    const m = mapCache.get(key) && S.world === w ? mapCache.get(key) : buildIsoMap(ri, w);
+    t = document.createElement('canvas'); t.width = 248; t.height = 148;
+    const g = t.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(m, 0, 0, m.width, m.height, 0, 0, 248, 148);
+    jmThumbs.set(key, t);
+  }
+  return t;
+}
+const JM_LOCK = '<svg class="lk" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1.5v11h-13V10zm2 0h6V7a3 3 0 0 0-6 0z"/></svg>';
+let jmSel = null;
+function buildJourney(){
+  const N = jmNodes(), CH = jmChapters();
+  // 자리 잡기: 세계마다 띠(band), 그 안에 지역 점을 지그재그로
+  const bands = [];
+  let x = 0;
+  for (let w = 0; w <= 4; w++){
+    const ns = N.filter(n => n.w === w), x0 = x;
+    ns.forEach((n, i) => { n.x = x0 + 104 + i * JM_DX; n.y = JM_Y[i % 2]; });
+    x = x0 + 104 + (ns.length - 1) * JM_DX + 92;
+    bands.push({w, x0, x1:x});
+  }
+  const W = x, q = mainQuest(), tot = MAIN_Q.length, done = Math.min(S.quest.main, tot);
+  const cur = N.find(n => jmState(n) === 's-now') || N[0];
+  if (!jmSel || !N.includes(jmSel)) jmSel = cur;
+  const wState = w => w === 4 || w > S.world ? 's-lock' : w < S.world ? 's-done' : 's-now';
+  // 길: 지역 그림 가운데를 부드럽게 잇고, 지금 있는 곳까지는 금빛
+  const pathTo = upto => { let d = ''; N.forEach((n, i) => { if (i > upto) return; if (!i) d += `M${n.x} ${n.y}`; else { const p = N[i - 1], mx = (p.x + n.x) / 2; d += ` C${mx} ${p.y} ${mx} ${n.y} ${n.x} ${n.y}`; } }); return d; };
+  const ci = N.indexOf(cur);
+  const chTags = n => { const cs = CH.filter(c => c.w === n.w && c.k === n.k); if (!cs.length) return '';
+    const sh = cs.slice(0, 3).map(c => `<i class="${jmChState(c)}">${c.lab}</i>`).join('') + (cs.length > 3 ? `<i>+${cs.length - 3}</i>` : '');
+    return `<span class="jm-tags">${sh}</span>`; };
+  const heroImg = lookPreview(S.cls, S.look, gradeOf(S.equip.armor), gradeOf(S.equip.weapon), 'down', heroEx());
+  panel.innerHTML = `
+    <div class="jm-top">
+      <div class="jm-row1"><div class="jm-worlds">${JM_WORLD.map((W2, w) => `${w ? '<span class="jm-arrow">›</span>' : ''}<button class="jm-wchip ${wState(w)}" data-w="${w}">${W2.name}<small>${W2.part}</small></button>`).join('')}</div>
+        <div class="jm-sum"><b>이야기 ${done} / ${tot}</b><div class="meter gold"><i style="width:${(done / tot * 100).toFixed(1)}%"></i></div><span class="pct">${Math.floor(done / tot * 100)}%</span></div></div>
+      <p class="small" style="margin:0">지금: <b>${WORLD_NAME[S.world]} · ${curRegion(S.stage).name} ${S.stage}단계</b> · ${q.ch >= 0 && CHAPTERS[q.ch] ? CHAPTERS[q.ch] : '끝없는 신화'} — 다음 목표 「${q.t}」</p>
+    </div>
+    <div class="jm-scroll" id="jmScroll"><div class="jm-strip" style="width:${W}px">
+      ${bands.map(B => { const J = JM_WORLD[B.w], cs = CH.filter(c => c.w === B.w);
+        const cn = cs.filter(c => /장$/.test(c.lab)), chs = B.w === 4 ? '3부 · 열 개의 해를 따라 서쪽으로' : cn.length ? `${cn[0].lab}~${cn[cn.length - 1].lab} · ${J.sub}` : J.sub;
+        return `<section class="jm-band w${B.w} ${wState(B.w) === 's-lock' ? 's-lock' : ''}" style="left:${B.x0}px;width:${B.x1 - B.x0}px"><h3>${J.name} <small style="font-size:11px;opacity:.7">${J.part}${B.w < 4 ? ` · Lv.${LV_CAP[B.w]}까지` : ''}</small></h3><p>${chs}</p></section>`; }).join('')}
+      <svg class="jm-path" width="${W}" height="180" viewBox="0 0 ${W} 180" aria-hidden="true">
+        <path d="${pathTo(N.length)}" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-dasharray="2 9" stroke-linecap="round"/>
+        <path d="${pathTo(ci)}" fill="none" stroke="#ffcc4d" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+        ${bands.slice(1).map(B => `<g transform="translate(${B.x0} 166)"><rect x="${-(10 + 5.5 * JM_WORLD[B.w].gate.length)}" y="-10" width="${20 + 11 * JM_WORLD[B.w].gate.length}" height="19" rx="9.5" fill="rgba(8,12,22,.82)" stroke="rgba(255,204,77,.45)"/><text x="0" y="3.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffd96a" font-family="SamhanSans,sans-serif">${JM_WORLD[B.w].gate}</text></g>`).join('')}
+      </svg>
+      ${N.map((n, i) => { const st = jmState(n);
+        const pic = n.w === 4 ? '<span class="jm-mist">?</span>' : `<canvas class="th" width="248" height="148" data-w="${n.w}" data-ri="${n.ri}"></canvas>`;
+        return `<button class="jm-node ${st}${jmSel === n ? ' s-sel' : ''}" data-n="${i}" style="left:${n.x}px;top:${n.y}px" aria-label="${JM_WORLD[n.w].name} ${n.name} ${jmRange(n)}">
+          ${chTags(n)}${pic}${st === 's-lock' ? JM_LOCK : ''}${st === 's-done' ? '<i class="ok">✓</i>' : ''}<b>${n.name}</b><span>${jmRange(n)}</span></button>`; }).join('')}
+      <img class="jm-hero" src="${heroImg}" alt="" style="left:${cur.x}px;top:${cur.y + 30}px">
+      <span class="jm-here" style="left:${cur.x}px;top:${cur.y - 41}px">지금 여기</span>
+    </div></div>
+    <div class="card jm-info" id="jmInfo"></div>`;
+  const sc = $('#jmScroll');
+  const showInfo = n => {
+    jmSel = n;
+    panel.querySelectorAll('.jm-node').forEach(b => b.classList.toggle('s-sel', N[+b.dataset.n] === n));
+    const st = jmState(n), J = JM_WORLD[n.w], cs = CH.filter(c => c.w === n.w && c.k === n.k);
+    let body;
+    if (n.w === 4) body = `<p class="story" style="margin:0">부상 끝에서 열 개의 해가 서쪽 하늘로 날아갔어요. 다음 이야기 <b>3부 · 곤륜</b>에서 서왕모와 옛 중국 신화의 신들을 만나요. 다음 업데이트에서 이어져요.</p>`;
+    else {
+      const R = n.R, best = jmBest(n.w);
+      const raids = n.w === 3 ? BUSANG_RAIDS : n.w === 2 ? GOD_RAIDS : n.w === 1 ? KINGS : n.k < REGIONS.length ? RAID_DEFS : [];
+      const rs = raids.filter(r => r.region === n.ri).map(r => r.boss);
+      body = `<div class="dl"><span>지역 보스</span><b>${R.boss}</b></div>
+        <div class="dl"><span>몬스터</span><b>${R.mobs.map(m => m[2]).join(' · ')}</b></div>
+        ${rs.length ? `<div class="dl"><span>이 땅의 레이드</span><b>${rs.join(' · ')}</b></div>` : ''}
+        <div class="dl"><span>내 기록</span><b>${st === 's-lock' ? (n.w > S.world ? `${J.gate}${josa(J.gate, '으로', '로')} 열려요` : '아직') : st === 's-done' ? '깼어요' : st === 's-now' ? `지금 ${S.stage}단계 · 최고 ${best}단계` : `최고 ${best}단계 — 아직 못 갔어요`}</b></div>`;
+    }
+    const chs = cs.length ? `<div class="chs">${cs.map(c => `<span class="${jmChState(c)}">${c.name}</span>`).join('')}</div>` : '';
+    setHTML($('#jmInfo'), `<div class="ct"><span>${J.name} · ${n.name}</span><span class="tag">${jmRange(n)}</span></div>${body}${chs}`);
+  };
+  panel.querySelectorAll('.jm-node').forEach(b => b.addEventListener('click', () => { showInfo(N[+b.dataset.n]); sfx('click'); const inf = $('#jmInfo'); if (inf.scrollIntoView) inf.scrollIntoView({block:'nearest', behavior:'smooth'}); }));
+  panel.querySelectorAll('.jm-wchip').forEach(b => b.addEventListener('click', () => { const B = bands[+b.dataset.w]; sc.scrollTo({left:B.x0 - 8, behavior:'smooth'}); }));
+  showInfo(jmSel);
+  sc.scrollLeft = Math.max(0, jmSel.x - sc.clientWidth / 2);
+  // 그림은 몇 장씩 나눠 그린다(처음 한 번만 오래 걸리고, 다음부터는 바로)
+  const cvs = [...panel.querySelectorAll('canvas.th')];
+  const paint = () => {
+    let made = 0;
+    while (cvs.length && made < 3){
+      const c = cvs.shift(); if (!c.isConnected) continue;
+      const key = c.dataset.w + ':' + c.dataset.ri;
+      if (!jmThumbs.has(key)) made++;
+      c.getContext('2d').drawImage(jmThumb(+c.dataset.w, +c.dataset.ri), 0, 0);
+    }
+    if (cvs.length) requestAnimationFrame(paint);
+  };
+  paint();
+  const sig = () => [S.world, S.stage, S.quest.main, jmBest(S.world)].join(':');
+  let last = sig();
+  return () => { const now = sig(); if (now !== last && currentTab === 'map'){ last = now; const sl = sc.scrollLeft; buildTab('map'); const s2 = $('#jmScroll'); if (s2) s2.scrollLeft = sl; } };
+}
+const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec, map:buildJourney};
+const PAGE_META = {map:['여정 지도', 'mapBtn']};   // 메뉴 칸이 없는 페이지: 제목과 아이콘을 가져올 단추
 // 메뉴 페이지: 오른쪽(세로 화면은 아래) 메뉴를 누르면 장면을 덮는 별도 화면으로 열린다. 같은 메뉴를 다시 누르거나 ✕·Esc로 닫는다
 let currentTab = null, refresher = null;
 function buildTab(key, keepScroll){
@@ -6564,8 +7065,9 @@ function buildTab(key, keepScroll){
   const top = panel.scrollTop, pg = $('#page'), was = !pg.hidden && currentTab === key;
   currentTab = key;
   document.querySelectorAll('.tab').forEach(bt => bt.setAttribute('aria-selected', String(bt.dataset.tab === key)));
-  const tb = $('#tab-' + key);
+  const tb = $('#tab-' + key), pm = PAGE_META[key];
   if (tb){ setText($('#pageTitle'), tb.textContent.trim()); const sv = tb.querySelector('svg'); setHTML($('#pageIc'), sv ? sv.outerHTML : ''); }
+  else if (pm){ setText($('#pageTitle'), pm[0]); const sv = $('#' + pm[1]) && $('#' + pm[1]).querySelector('svg'); setHTML($('#pageIc'), sv ? sv.outerHTML : ''); }
   if (pg.hidden){ pg.hidden = false; pg.style.animation = 'none'; void pg.offsetWidth; pg.style.animation = ''; }
   refresher = BUILDERS[key]();
   refreshPanel();
@@ -6613,6 +7115,8 @@ function updateChatHead(){
   b.classList.toggle('has-dot', chatUnread > 0);
   setText($('#chatDot'), chatUnread > 9 ? '9+' : String(chatUnread));
 }
+function openMap(){ jmSel = null; buildTab('map'); }   // 열 때마다 지금 있는 곳을 가운데로
+$('#mapBtn').addEventListener('click', () => { if (!session && !window.__game) return; setChat(false); if (currentTab === 'map' && !$('#page').hidden) closePage(); else openMap(); });
 $('#chatBtn').addEventListener('click', () => { if (!session) return; setChat(!chatOpen); if (chatOpen && window.matchMedia && window.matchMedia('(pointer: fine)').matches) $('#chatInput').focus({preventScroll:true}); });
 $('#chatClose').addEventListener('click', () => setChat(false));
 $('#chatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#chatInput'); if (sendChat(inp.value)) inp.value = ''; });
@@ -7022,7 +7526,7 @@ async function enterChar(cid, opts = {}){
   session = {acc, cid}; A.lastChar = cid;
   if (REG.keep) REG.keep = {acc, cid};
   writeSession({acc, cid});
-  raid = null; ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); mapCache.clear(); applyWorld();
+  raid = null; ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); applyModeBtns(); mapCache.clear(); applyWorld();
   gearSel = -1; petSel = -1; gearSlot = 'weapon'; growView = 'stats';
   modalLock = false; hideModal(); setTitle(false);
   logEls.forEach(e => e.remove()); logEls = [];
@@ -7042,7 +7546,7 @@ async function enterChar(cid, opts = {}){
 }
 function toTitle(){
   setChat(false);
-  raid = null; S = titleState(); ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); mapCache.clear(); applyWorld();
+  raid = null; S = titleState(); ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); applyModeBtns(); mapCache.clear(); applyWorld();
   logEls.forEach(e => e.remove()); logEls = [];
   closePage();
 }
@@ -7246,7 +7750,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
-  mobs = []; texts = []; parts = []; fx = []; projs = []; later = [];
+  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
   Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
@@ -7256,7 +7760,7 @@ function resetRuntime(){
 function resetGame(){
   const keep = {name:S.name, look:S.look};
   S = defaultState(); S.name = keep.name; S.look = keep.look;
-  ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); gearSel = -1; petSel = -1; mapCache.clear();
+  ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); applyModeBtns(); gearSel = -1; petSel = -1; mapCache.clear();
   saveLocal(); pushCloud();
   closePage();
   chooseClass(false);
@@ -7512,7 +8016,7 @@ function loop(ts){
 }
 function start(hotData){
   REG = loadReg();
-  refreshStats(); resetRuntime(); resize(); applySpeedBtn();
+  refreshStats(); resetRuntime(); resize(); applySpeedBtn(); applyModeBtns();
   if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement);
   else window.addEventListener('resize', resize);
   last = performance.now();
@@ -7569,7 +8073,7 @@ if (location.search.indexOf('simtest') >= 0){
     doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbCan, castAwaken, startFight,
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
-    mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, BUSANG_REGIONS, MOB_HD,
+    openMap, jmNodes, FIELD, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, BUSANG_REGIONS, MOB_HD,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
   };
 }
