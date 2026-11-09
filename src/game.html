@@ -786,6 +786,67 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
 @keyframes legglow{50%{box-shadow:0 0 26px var(--g),inset 0 0 18px -4px var(--g)}}
 @media (prefers-reduced-motion: reduce){#fxl{display:none}.res.flip{animation:none}}
 @media (min-height:640px) and (min-width:1000px){.hud,.topr,.qtrack,.ctrl,.log,.guide{zoom:1.2}}
+
+/* ================= 가로 화면 새 배치(2026-11 (13)) =================
+   아래 아이콘 메뉴 줄 · 오른쪽 끝 큰 보스 단추 · 위 재화 줄 · 오른쪽 미니맵 · 왼쪽 위 얼굴 카드와 펫 얼굴 · 왼쪽 아래 채팅. 세로 화면은 예전 배치 */
+.dusti{width:12px;height:12px;flex:none;display:inline-block;border-radius:3px 6px 3px 6px;background:linear-gradient(135deg,#f2efe8,#a8a29a 55%,#5e5a54);box-shadow:0 0 5px rgba(220,214,200,.4)}
+.piecei{width:13px;height:13px;flex:none;display:inline-block;border-radius:50%;border:3px solid #c8b0ff;box-sizing:border-box;box-shadow:0 0 6px rgba(169,139,255,.6)}
+.hud .face,.hud-pets,.bigboss,.mini canvas,.mini span{display:none}
+.mini{border:1px solid var(--line-2);background:rgba(8,12,22,.72);color:var(--text);cursor:pointer;padding:0;position:absolute;z-index:3}
+.mini .mini-ic{width:18px;height:18px}
+.sbtn{width:34px;height:34px}
+.sbtn svg{width:17px;height:17px}
+.scene > #chatBtn{position:absolute;z-index:3}
+body.portrait .mini{top:calc(var(--cvt) + 6px);right:6px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+body.portrait .scene > #chatBtn{top:calc(var(--cvt) + 6px);left:6px}
+body:not(.portrait) #app{flex-direction:column}
+body:not(.portrait) .tabs{flex-direction:row;justify-content:center;align-items:stretch;width:auto;height:62px;gap:2px;padding:3px calc(110px + env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  border-left:0;border-top:1px solid rgba(255,204,77,.45);background:linear-gradient(180deg,#1f2945,#0c111d 72%);box-shadow:0 -8px 22px rgba(0,0,0,.5)}
+body.hell:not(.portrait) .tabs{background:linear-gradient(180deg,#3a1a22,#140a0d 72%)}
+body:not(.portrait) .tab{flex:0 1 76px;max-height:none;min-height:0;padding:2px 0 3px;gap:2px;font-size:11px;color:#c3cbdc;border-radius:12px;justify-content:flex-start;letter-spacing:-.3px}
+body:not(.portrait) .tab svg{width:36px;height:36px;padding:8px;box-sizing:border-box;border-radius:50%;background:radial-gradient(circle at 50% 32%,#41507a,#151c2e 75%);border:1.5px solid rgba(255,204,77,.55);color:#ffd977;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 6px rgba(0,0,0,.55)}
+body:not(.portrait) .tab:hover svg{transform:translateY(-1px)}
+body:not(.portrait) .tab[aria-selected="true"]{background:none;box-shadow:none;color:var(--gold)}
+body:not(.portrait) .tab[aria-selected="true"] svg{background:radial-gradient(circle at 50% 32%,#fff0b8,#e0a52a 70%);color:#2a1a04;border-color:#fff2c0;box-shadow:0 0 16px rgba(255,204,77,.65)}
+body:not(.portrait) .tab[aria-selected="true"]::before{display:none}
+body:not(.portrait) .tab .dot{top:0;left:calc(50% + 11px);width:10px;height:10px;border:2px solid #0c111d}
+body:not(.portrait) .bigboss{display:grid;position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(6px + env(safe-area-inset-bottom));z-index:8;width:84px;height:84px;border-radius:50%;
+  border:2px solid rgba(255,204,77,.8);background:radial-gradient(circle at 50% 32%,#8a2636,#2a0a12 72%);color:#ffe8b0;place-items:center;align-content:center;gap:1px;cursor:pointer;
+  box-shadow:0 0 0 4px rgba(6,8,14,.75),0 8px 22px rgba(0,0,0,.6);touch-action:manipulation;font-family:inherit}
+.bigboss .ring{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);transform:rotate(-90deg);pointer-events:none}
+.bigboss .rb{fill:none;stroke:rgba(255,255,255,.14);stroke-width:2.6}
+.bigboss .rf{fill:none;stroke:#ffcc4d;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:106.8;stroke-dashoffset:106.8;transition:stroke-dashoffset .3s}
+.bigboss b{font-size:16px;font-weight:900;line-height:1.05;position:relative;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.bigboss i{font-style:normal;font-size:10.5px;font-weight:800;color:#ffd977;position:relative}
+.bigboss.ready{background:radial-gradient(circle at 50% 32%,#ff6b7c,#9a1229 72%);animation:bbpulse 1s ease-in-out infinite}
+.bigboss.fight{background:radial-gradient(circle at 50% 32%,#d8344a,#45101a 72%)}
+.bigboss.fight .rf{stroke:#ff5a6e}
+.bigboss.off{filter:saturate(.4) brightness(.8)}
+@keyframes bbpulse{50%{box-shadow:0 0 0 4px rgba(6,8,14,.75),0 0 30px rgba(255,90,110,.9)}}
+body:not(.portrait) .scene > .btn-boss{display:none}
+body:not(.portrait) .ctrl{bottom:30px}
+body:not(.portrait) .hud{grid-template-columns:54px 1fr;column-gap:9px;padding:7px 10px 8px 7px;align-items:center}
+body:not(.portrait) .hud .face{display:block;grid-row:1/3;width:54px;height:54px;border-radius:50%;overflow:hidden;position:relative;
+  background:radial-gradient(circle at 50% 38%,#4a5a84,#141b2e 75%);border:2px solid rgba(255,204,77,.65);box-shadow:0 0 12px rgba(255,204,77,.22)}
+body:not(.portrait) .hud .face img{position:absolute;left:50%;top:-4px;width:100px;height:94px;transform:translateX(-50%);image-rendering:pixelated}
+body:not(.portrait) .hud-pets{display:flex;grid-column:1/-1;gap:6px;align-items:center;min-height:0}
+body:not(.portrait) .hud-pets:empty{display:none}
+.hud-pets button{display:flex;align-items:center;gap:4px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);border-radius:999px;padding:1px 8px 1px 1px;color:var(--text);font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.hud-pets img{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a4a6e,#121a2c);image-rendering:pixelated;object-fit:contain;border:1px solid rgba(255,255,255,.18)}
+.hud-pets .pt-atk{border-color:rgba(255,120,120,.45)}.hud-pets .pt-def{border-color:rgba(120,180,255,.45)}.hud-pets .pt-sup{border-color:rgba(120,230,160,.45)}
+body:not(.portrait) .qtrack{top:136px}
+body:not(.portrait) .topr .sbtn{width:32px;height:32px;border-radius:10px}
+body:not(.portrait) .mini{top:50px;right:8px;width:156px;height:94px;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+body:not(.portrait) .mini canvas{display:block;width:100%;height:100%}
+body:not(.portrait) .mini span{display:block;position:absolute;left:0;right:0;bottom:0;padding:8px 8px 3px;font-size:11px;font-weight:800;color:var(--gold);text-align:left;line-height:1.2;
+  background:linear-gradient(0deg,rgba(4,6,12,.85),transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body:not(.portrait) .mini .mini-ic{display:none}
+body:not(.portrait) .scene > #chatBtn{left:calc(8px + env(safe-area-inset-left));bottom:8px;width:42px;height:42px;border-radius:50%}
+body:not(.portrait) .log{left:calc(58px + env(safe-area-inset-left));bottom:12px}
+body:not(.portrait) .guide{bottom:56px}
+body.portrait .topr .sbtn{display:none}
+body.portrait .log{bottom:126px}
 </style>
 </head>
 <body>
@@ -793,6 +854,7 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
   <div class="scene" id="scene">
     <canvas id="cv" aria-label="사냥 화면"></canvas>
   <header class="hud">
+    <span class="face" aria-hidden="true"><img id="hudFace" alt=""></span>
     <div class="hud-top">
       <div class="who"><b id="lv">Lv.1</b><b class="nick" id="nick"></b><b class="cls" id="clsName">무사</b><span class="cp">전투력 <b id="cp">0</b></span></div>
     </div>
@@ -800,13 +862,19 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
       <div class="bar hp"><span>체력</span><span class="tr"><i id="hpfill"></i></span><span class="num" id="hpnum">0</span></div>
       <div class="bar xp"><span>경험</span><span class="tr"><i id="xpfill"></i></span><span class="num" id="xpnum">0%</span></div>
     </div>
+    <div class="hud-pets" id="hudPets"></div>
   </header>
     <div class="topr">
       <div class="cur" aria-label="엽전"><span class="coin"></span><span id="gold">0</span></div>
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
-    <button class="btn-chat" id="mapBtn" aria-label="여정 지도"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M3 6.2 9 3.6l6 2.6 6-2.6v14.2l-6 2.6-6-2.6-6 2.6zM9 3.6v14.2M15 6.2v14.2"/></svg></button>
-    <button class="btn-chat" id="chatBtn" aria-pressed="false" aria-label="채팅 열기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18v12H11l-5 4v-4H3zm4 4v2h10V8zm0 3v2h7v-2z"/></svg><i class="dot" id="chatDot"></i></button>
+      <div class="cur" aria-label="쇳가루" id="curDust"><span class="dusti"></span><span id="dustTop">0</span></div>
+      <div class="cur" aria-label="고삐 조각" id="curPiece" hidden><span class="piecei"></span><span id="pieceTop">0</span></div>
+      <button class="btn-chat sbtn" id="newsBtn" aria-label="업데이트 소식"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h13v14H6a2 2 0 0 1-2-2zm13 3h3v9a2 2 0 0 1-2 2h-1zM7 8v3h7V8zm0 5v2h7v-2z"/></svg></button>
+      <button class="btn-chat sbtn" id="helpBtn" aria-label="하는 법"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14v2h2v-2zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1.2.7-2 1.5-2 3.3h2c0-1 .4-1.4 1.2-1.9A4 4 0 0 0 12 6z"/></svg></button>
     </div>
+    <button class="mini" id="mapBtn" aria-label="미니맵 · 누르면 여정 지도"><canvas id="mini" width="300" height="180"></canvas><span id="miniLbl"></span>
+      <svg class="mini-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M3 6.2 9 3.6l6 2.6 6-2.6v14.2l-6 2.6-6-2.6-6 2.6zM9 3.6v14.2M15 6.2v14.2"/></svg></button>
+    <button class="btn-chat" id="chatBtn" aria-pressed="false" aria-label="채팅 열기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18v12H11l-5 4v-4H3zm4 4v2h10V8zm0 3v2h7v-2z"/></svg><i class="dot" id="chatDot"></i></button>
     <div class="qtrack" id="qtrack" hidden><b id="qtCh"></b><span id="qtName"></span><span class="qbar"><i id="qtBar"></i></span><span class="qn" id="qtNum"></span><button class="btn primary sm" id="qtClaim">보상 받기</button></div>
     <div class="log" id="log" role="log" aria-live="polite"></div>
   <button class="btn-boss" id="bossBtn" hidden>보스 도전</button>
@@ -867,6 +935,7 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
     <button class="tab" role="tab" id="tab-rec" data-tab="rec" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h12l2 2v16H5zm3 4v2h8V7zm0 4v2h8v-2zm0 4v2h5v-2z"/></svg>정보</button>
   </nav>
+  <button class="bigboss" id="bigBoss" aria-label="보스 도전"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" class="rb"/><circle cx="20" cy="20" r="17" class="rf" id="bbRing"/></svg><b id="bbTxt">보스</b><i id="bbSub"></i></button>
 </div>
 
 <div class="title" id="title" hidden>
@@ -1946,8 +2015,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-13', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-14', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 새 화면 배치'],
+  ['아래 아이콘 메뉴', '가로 화면에서 메뉴가 아래 줄로 내려가고 금테 동그란 아이콘이 됐어요. 오른쪽 끝 큰 보스 단추는 보스까지 남은 처치를 고리로 보여 주고, 다 차면 눌러서 바로 도전해요.'],
+  ['얼굴 카드 · 펫 얼굴', '왼쪽 위 상태 카드에 용사 얼굴과 데리고 다니는 펫 얼굴이 생겼어요(누르면 펫 화면).'],
+  ['재화 줄 · 미니맵', '오른쪽 위에 엽전·보석·쇳가루(2부부터 고삐 조각)와 소식·하는 법 단추, 그 아래 미니맵(누르면 여정 지도). 채팅은 왼쪽 아래로 옮겼어요.'],
+  ['이름표', '용사 머리 위에 이름표가 떠요. 말풍선은 이름표 위에 나와요.'],
   ['#', '2026-11-10 · 탈것·재련 한도·오프라인 보상'],
   ['탈것 10종', '[장비] → [탈것]. 부상부터 당나귀·누렁소·백마(마구간), 이야기의 과하마·응룡·해태·백록·기린, 고삐 조각으로 천리마·산군 범. 타면 걷기가 빨라지고 고유 능력이 켜져요. 가진 탈것마다 공격력·체력도 올라요.'],
   ['재련 한도', '무기는 이승에서 +25까지, 방어구는 이승 +15 → 저승 +22 → 천계 +25. 2부로 건너가면 무기·방어구가 계승되어 효과는 그대로 두고 +15부터 다시 벼려요(확률은 1부의 70%).'],
@@ -5716,6 +5790,7 @@ function drawEntityHero(){
   }
   if (hero.charge > 1){ for (let i = 0; i < 3; i++){ const a = gtime * 4 + i * 2.1; P(x + Math.cos(a) * 9, hy - 26 + Math.sin(a) * 3, 2, 2, '#ffd24a'); } }
   const r = hero.hp / ST.maxHp;
+  hero.tagY = hy - 34;
   P(x - 8, hy - 33, 16, 3, '#1a1218'); P(x - 7, hy - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
@@ -6190,7 +6265,15 @@ function render(){
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   drawTexts(); drawOverlay(); drawSkCut(cv.width / dpr, cv.height / dpr);
 }
+// 머리 위 이름표(파란 바탕 · 흰 글자). 장터 마을의 다른 용사에게도 같은 모양을 쓴다
+function nameTag(text, x, y, opt = {}){
+  ctx.font = `800 ${opt.size || 10.5}px SamhanSans, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = Math.ceil(ctx.measureText(text).width) + 12, h = (opt.size || 10.5) + 7, X = Math.round(x - w / 2), Y = Math.round(y - h);
+  rrect(X, Y, w, h, 4); ctx.fillStyle = opt.bg || 'rgba(28,64,128,.88)'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = opt.line || 'rgba(160,210,255,.85)'; ctx.stroke();
+  ctx.fillStyle = opt.color || '#ffffff'; ctx.fillText(text, x, Y + h / 2 + 0.5);
+}
 function drawTexts(){
+  if (session && !hero.dead && hero.tagY != null && !cut){ nameTag(S.name, (hero.x - camX) * scale, (hero.tagY - camY) * scale - 2, {color:'#fff6d8'}); ctx.textAlign = 'left'; }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of texts){
     ctx.globalAlpha = 1 - Math.max(0, (t.t - 0.55) / 0.35);
@@ -6209,7 +6292,7 @@ function box(x, y, w, h){
 function drawBuffsAndSay(cw){
   ctx.font = '700 10px SamhanSans, sans-serif'; ctx.textBaseline = 'middle';
   let x = cw - 8;
-  const by0 = document.body.classList.contains('portrait') ? 6 : 52 + Math.max(0, -parseFloat(cv.style.top || '0'));
+  const by0 = document.body.classList.contains('portrait') ? 6 : 152 + Math.max(0, -parseFloat(cv.style.top || '0'));   // 가로 화면은 미니맵 아래
   for (const k of Object.keys(BUFFS)){
     const left = S.buff[k];
     if (!(left > 0) || !session) continue;
@@ -6219,7 +6302,7 @@ function drawBuffsAndSay(cw){
   if (heroSay && !hero.dead){
     ctx.font = '700 11px SamhanSans, sans-serif';
     const txt = heroSay.text.length > 16 ? heroSay.text.slice(0, 16) + '…' : heroSay.text;
-    const w = Math.ceil(ctx.measureText(txt).width) + 12, hx = Math.round((hero.x - camX) * scale), hy = Math.round((hero.y - camY - 34) * scale);
+    const w = Math.ceil(ctx.measureText(txt).width) + 12, hx = Math.round((hero.x - camX) * scale), hy = Math.round(((hero.tagY != null ? hero.tagY : hero.y - 34) - camY) * scale) - 20;   // 이름표 위
     const bx = Math.max(4, Math.min(cw - w - 4, hx - w / 2)), by = Math.max(4, hy - 22);
     ctx.globalAlpha = Math.min(1, heroSay.t);
     ctx.fillStyle = '#fbf4e2'; ctx.fillRect(bx, by, w, 18); ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 2; ctx.strokeRect(bx + 1, by + 1, w - 2, 16);
@@ -6969,7 +7052,9 @@ function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttri
 function updateHud(){
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
   setText(elCp, fmt(power(ST)));
-  setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems));
+  setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems)); setText(elDustTop, fmt(S.dust));
+  const pc = S.world >= 3 || S.mount.piece > 0; if (elCurPiece.hidden === pc) elCurPiece.hidden = !pc; if (pc) setText(elPieceTop, fmt(S.mount.piece));
+  updateFace(); updatePetFaces(); updateBigBoss();
   if (currentTab){ setText($('#pgGold'), fmt(S.gold)); setText($('#pgGems'), fmt(S.gems)); }
   const hr = Math.max(0, hero.hp / ST.maxHp);
   elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmt(hero.hp) + '/' + fmt(ST.maxHp));
@@ -6989,6 +7074,67 @@ function updateHud(){
     if (r.el.getAttribute('aria-label') !== lab) r.el.setAttribute('aria-label', lab);
     r.cd.style.setProperty('--p', locked ? '0%' : Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100).toFixed(1) + '%');
   });
+}
+
+/* --- 가로 화면 새 배치(2026-11 (13)): 얼굴 카드·펫 얼굴·재화 줄·미니맵·큰 보스 단추 --- */
+const elFace = $('#hudFace'), elPets = $('#hudPets'), elBig = $('#bigBoss'), elDustTop = $('#dustTop'), elPieceTop = $('#pieceTop'), elCurPiece = $('#curPiece');
+let faceKey = '', petFaceKey = '';
+function updateFace(){
+  const aG = gradeOf(S.equip.armor), wG = gradeOf(S.equip.weapon), ex = {form:formOf() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape};
+  const k = [S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin, aG, wG, ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape].join('|');
+  if (k === faceKey) return;
+  faceKey = k; elFace.src = lookPreview(S.cls, S.look, aG, wG, 'down', ex);
+}
+function updatePetFaces(){
+  const k = PET_TYPE_ORDER.map(t => { const i = eqPet(t); return i + ':' + (i >= 0 ? S.pets.lv[i] : 0); }).join(',') + S.av.pet;
+  if (k === petFaceKey) return;
+  petFaceKey = k;
+  elPets.innerHTML = PET_TYPE_ORDER.map(t => { const i = eqPet(t); return i < 0 ? '' : `<button type="button" class="pt-${t}" data-pt aria-label="${PET_TYPES[t].name} 펫 ${PETS[i].name} Lv.${S.pets.lv[i]}"><img alt="" src="${petImg(i)}">Lv.${S.pets.lv[i]}</button>`; }).join('');
+  elPets.querySelectorAll('[data-pt]').forEach(b => b.addEventListener('click', () => { if (currentTab !== 'pet') $('#tab-pet').click(); }));
+}
+// 큰 보스 단추: 고리가 보스까지 남은 처치만큼 차오르고, 다 차면 눌러서 바로 도전(보스 수동이어도). 싸우는 중엔 남은 체력
+function updateBigBoss(){
+  let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
+  if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
+  else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
+  if (!session && !window.__game) cls = 'off';
+  const vis = $('#page').hidden ? '' : 'hidden'; if (elBig.style.visibility !== vis) elBig.style.visibility = vis;   // 메뉴 화면이 열려 있으면 숨김
+  if (elBig.className !== 'bigboss ' + cls) elBig.className = 'bigboss ' + cls;
+  setText($('#bbTxt'), txt); setText($('#bbSub'), sub);
+  const off = (106.8 * (1 - p)).toFixed(1); const rf = $('#bbRing'); if (rf.style.strokeDashoffset !== off + 'px') rf.style.strokeDashoffset = off + 'px';
+  const lab = cls === 'ready' ? '보스 도전' : `보스까지 ${Math.max(0, FIELD.kills - S.kills)}마리`; if (elBig.getAttribute('aria-label') !== lab) elBig.setAttribute('aria-label', lab);
+}
+elBig.addEventListener('click', () => {
+  if ((!session && !window.__game) || raid || bossActive) return;
+  if (S.kills >= FIELD.kills){ S.autoBoss = true; bossRetry = 0; sfx('click'); }
+  else { addLog(`몬스터 ${FIELD.kills - S.kills}마리를 더 잡으면 보스가 나와요.`); sfx('blip'); }
+});
+$('#newsBtn').addEventListener('click', () => { if (session) showNotes(); });
+$('#helpBtn').addEventListener('click', () => { if (!session) return; if (currentTab !== 'rec') $('#tab-rec').click(); setTimeout(() => { const g = document.querySelector('.hgrid'); if (g) g.scrollIntoView({block:'center', behavior:'smooth'}); }, 80); });
+// 미니맵: 사냥판(마름모)과 용사·몬스터·동료 점, 지금 보이는 화면 테두리
+const miniCv = $('#mini'), miniG = miniCv.getContext('2d');
+let miniBox = null;
+function drawMini(){
+  if (document.hidden || document.body.classList.contains('portrait') || (currentTab && !$('#page').hidden)) return;
+  if (!miniBox){ const pts = [[0, TOPR], [COLS, TOPR], [0, ROWS], [COLS, ROWS]].map(([tx, ty]) => [isoX(tx, ty), isoY(tx, ty)]); miniBox = {pts, x0:Math.min(...pts.map(p => p[0])), x1:Math.max(...pts.map(p => p[0])), y0:Math.min(...pts.map(p => p[1])), y1:Math.max(...pts.map(p => p[1]))}; }
+  const g = miniG, w = miniCv.width, h = miniCv.height, B = miniBox, sc = Math.min((w - 30) / (B.x1 - B.x0), (h - 46) / (B.y1 - B.y0));
+  const ox = (w - (B.x1 - B.x0) * sc) / 2 - B.x0 * sc, oy = 8 - B.y0 * sc, X = x => ox + x * sc, Y = y => oy + y * sc;
+  const Rg = curRegion(S.stage), th = ISO_THEME[Rg.theme] || ISO_THEME.village;
+  g.clearRect(0, 0, w, h);
+  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, 'rgba(20,28,46,.9)'); bg.addColorStop(1, 'rgba(6,9,16,.95)'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  const c = B.pts; g.beginPath(); g.moveTo(X(c[0][0]), Y(c[0][1])); g.lineTo(X(c[1][0]), Y(c[1][1])); g.lineTo(X(c[3][0]), Y(c[3][1])); g.lineTo(X(c[2][0]), Y(c[2][1])); g.closePath();
+  g.fillStyle = th.top[0]; g.globalAlpha = 0.55; g.fill(); g.globalAlpha = 1; g.strokeStyle = 'rgba(255,204,77,.55)'; g.lineWidth = 2; g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 1;
+  for (let k = 4; k < COLS; k += 4){ g.beginPath(); g.moveTo(X(isoX(k, TOPR)), Y(isoY(k, TOPR))); g.lineTo(X(isoX(k, ROWS)), Y(isoY(k, ROWS))); g.stroke(); }
+  for (let k = TOPR + 4; k < ROWS; k += 4){ g.beginPath(); g.moveTo(X(isoX(0, k)), Y(isoY(0, k))); g.lineTo(X(isoX(COLS, k)), Y(isoY(COLS, k))); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.5; g.strokeRect(X(camX), Y(camY), VW * sc, H * sc);
+  const dot = (x, y, r, col, ring) => { g.beginPath(); g.arc(X(x), Y(y), r, 0, 7); g.fillStyle = col; g.fill(); if (ring){ g.lineWidth = 2; g.strokeStyle = ring; g.stroke(); } };
+  if (raid) for (const a of raid.allies || []) if (!a.down) dot(a.x, a.y, 4, '#7fc8ff');
+  for (const m of mobs) if (!m.dead && m.spawnT <= 0) dot(m.x, m.y, m.boss || m.raid ? 8 : 3.5, m.boss || m.raid ? '#ff3b5a' : '#ff8a7a', m.boss || m.raid ? '#ffffff' : null);
+  const pu = 1 + 0.25 * Math.sin(gtime * 5);
+  dot(hero.x, hero.y, 5.5 * pu, '#ffd24a', '#ffffff');
+  setText($('#miniLbl'), raid ? raid.info.label : `${WORLD_NAME[S.world]} · ${stageLabel(S.stage)}`);
 }
 
 /* --- 수련 --- */
@@ -9195,7 +9341,7 @@ function start(hotData){
   else window.addEventListener('resize', resize);
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
