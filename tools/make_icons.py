@@ -1,6 +1,6 @@
-"""앱 아이콘(icons/*.png)을 게임 속 도트 용사 그림으로 만든다.
+"""앱 아이콘(icons/*.png)을 게임 속 용사 그림(2~3등신)으로 만든다.
 
-빌드된 index.html을 헤드리스 크롬으로 열어 용사 그림을 꺼낸 뒤, 나무색 바탕에 정수 배율로 키워 붙인다.
+빌드된 index.html을 헤드리스 크롬으로 열어 용사 그림을 꺼낸 뒤, 달밤 바탕에 정수 배율로 키워 붙인다.
 용사 모습(직업·옷)을 바꾸고 싶을 때만 다시 돌리면 된다.
 사용: python3 tools/build.py && python3 tools/make_icons.py
 """
@@ -21,26 +21,29 @@ async ([size, mask]) => {
   const G = window.__game;
   G.S.cls = 'musa';
   G.S.look = {outfit:'#b8382f', hair:'#241c26', hat:'sulsa', skin:0};
-  const url = G.sheet().hero[0][0][0];
+  const url = G.sheet().hero[0][2][0];          // 오른쪽 아래를 보는 앞모습(2~3등신, 64×64)
   const im = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = url; });
   const c = document.createElement('canvas'); c.width = c.height = size;
-  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
-  const u = size / 32, F = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x * u), Math.round(y * u), Math.round(w * u), Math.round(h * u)); };
-  F(0, 0, 32, 32, '#2b1f17');
-  for (let y = 1; y < 32; y += 3) F(0, y, 32, 1, '#31241a');
-  if (!mask){ F(1, 1, 30, 30, '#5e4532'); F(2, 2, 28, 28, '#3d2c20'); for (let y = 3; y < 30; y += 3) F(2, y, 28, 1, '#43301f'); }
-  // 금빛 해와 땅
-  const sun = mask ? [16, 12, 7] : [16, 11, 9];
-  g.fillStyle = '#e0b03c'; g.globalAlpha = 0.9;
-  for (let dy = -sun[2]; dy <= sun[2]; dy++){ const w = Math.round(Math.sqrt(sun[2] * sun[2] - dy * dy)); F(sun[0] - w, sun[1] + dy, w * 2, 1, '#e0b03c'); }
-  g.globalAlpha = 1;
-  F(mask ? 7 : 5, mask ? 23 : 25, mask ? 18 : 22, mask ? 2 : 2, '#7a5a3a');
-  F(mask ? 9 : 7, mask ? 25 : 27, mask ? 14 : 18, 1, '#5e4532');
-  // 용사: 정수 배율
-  const s = Math.max(1, Math.floor(size * (mask ? 0.62 : 0.8) / im.width));
-  const w = im.width * s, h = im.height * s;
-  const x = Math.round(size / 2 - 13.5 * s), y = Math.round((mask ? 24.2 : 26.2) * u - h);
-  g.drawImage(im, x, y, w, h);
+  const g = c.getContext('2d');
+  // 밤하늘 + 금빛 달(타이틀 화면과 같은 느낌)
+  const bg = g.createLinearGradient(0, 0, 0, size); bg.addColorStop(0, '#26335a'); bg.addColorStop(1, '#0e1424');
+  g.fillStyle = bg; g.fillRect(0, 0, size, size);
+  const k = size / 32;
+  for (const [x, y, r] of [[5, 6, .5], [9, 3, .35], [25, 4, .4], [28, 12, .35], [4, 14, .3]]){ g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.arc(x * k, y * k, r * k, 0, 7); g.fill(); }
+  const mx = (mask ? 21 : 22) * k, my = (mask ? 11 : 9) * k, mr = (mask ? 5.5 : 7) * k;
+  const glow = g.createRadialGradient(mx, my, mr * .6, mx, my, mr * 2); glow.addColorStop(0, 'rgba(255,214,110,.45)'); glow.addColorStop(1, 'rgba(255,214,110,0)');
+  g.fillStyle = glow; g.fillRect(0, 0, size, size);
+  const moon = g.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .2, mx, my, mr); moon.addColorStop(0, '#fff4c8'); moon.addColorStop(1, '#ffc94a');
+  g.fillStyle = moon; g.beginPath(); g.arc(mx, my, mr, 0, 7); g.fill();
+  // 언덕
+  g.fillStyle = '#1a2a3a'; g.beginPath(); g.moveTo(0, size); g.lineTo(0, 24 * k); g.quadraticCurveTo(8 * k, 20 * k, 16 * k, 23 * k); g.quadraticCurveTo(25 * k, 20 * k, size, 22 * k); g.lineTo(size, size); g.fill();
+  // 용사: 그림 부분만 잘라 정수 배율로
+  g.imageSmoothingEnabled = false;
+  const sx = 6, sy = 2, sw = 52, sh = 60;
+  const s = Math.max(1, Math.floor(size * (mask ? 0.6 : 0.8) / sh));
+  const w = sw * s, h = sh * s, x = Math.round(size / 2 - w / 2), y = Math.round(size * (mask ? 0.86 : 0.96) - h);
+  g.globalAlpha = .35; g.fillStyle = '#000'; g.beginPath(); g.ellipse(size / 2, y + h - 2 * s, w * .3, 3 * s, 0, 0, 7); g.fill(); g.globalAlpha = 1;
+  g.drawImage(im, sx, sy, sw, sh, x, y, w, h);
   return c.toDataURL('image/png');
 }
 """

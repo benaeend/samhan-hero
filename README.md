@@ -1,6 +1,6 @@
 # 삼한 용사 키우기
 
-고구려 건국 신화와 우리 옛이야기 속 세상을 지키는 방치형 RPG입니다. 👉 **https://benaeend.github.io/samhan-hero/**
+고구려 건국 신화와 우리 옛이야기 속 세상을 지키는 방치형 RPG입니다. 비스듬히 내려다보는 쿼터뷰 화면에 2~3등신 캐릭터가 나와요. 👉 **https://benaeend.github.io/samhan-hero/**
 
 📖 플레이 매뉴얼(PDF): [docs/manual.pdf](docs/manual.pdf) · 📝 업데이트 노트: [UPDATE_NOTES.md](UPDATE_NOTES.md)
 

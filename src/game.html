@@ -1105,8 +1105,9 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-09-3', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-09-4', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['그래픽 새 단장', '싸우는 곳을 비스듬히 내려다보는 쿼터뷰로 바꾸고, 용사·몬스터·펫을 2~3등신 귀여운 모습으로 새로 그렸어요. 지역마다 풍경도 새로 놓았어요.'],
   ['새 화면·소리', '요즘 게임처럼 화면을 새로 꾸미고, 국악풍 배경음악·효과음을 넣었어요. 오른쪽 위 ♪ 단추로 켜고 꺼요.'],
   ['이야기 80장', '고구려 건국 신화를 따라가는 17장 이야기. 깰 때마다 짧은 연출이 나오고, [정보]에서 다시 볼 수 있어요.'],
   ['환생·저승', '이승 레벨 100 · 무기 +25 · 다섯 시련을 이루면 환생! 윤회 구슬로 영원한 능력을 올리고 저승(레벨 200까지)으로 가요. [수련] → [환생]'],
@@ -1867,7 +1868,7 @@ function updateMove(e, dt){
 function placeOf(e){
   const k = e.moving ? e.mt : 1;
   const tx = e.moving ? e.fx + (e.tx - e.fx) * k : e.tx, ty = e.moving ? e.fy + (e.ty - e.fy) * k : e.ty;
-  e.x = tx * T + T / 2; e.y = ty * T + T - 2;
+  e.x = isoX(tx, ty); e.y = isoY(tx, ty) + 1;
 }
 function stepToward(e, gx, gy, dur){
   const dx = gx - e.tx, dy = gy - e.ty, opts = [];
@@ -1913,7 +1914,7 @@ function spawnTile(minDist){
 const aliveMobs = () => mobs.filter(m => !m.dead);
 const maxField = () => 3 + (S.stage > 20 ? 1 : 0);
 const mobScale = m => m.sc || (m.boss ? 2 : 1);
-function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return sp.height * sc + (FLOAT[m.type] || 0) * sc; }
+function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return spH(sp) * sc + (FLOAT[m.type] || 0) * sc; }
 
 let logEls = [];
 function addLog(msg, kind){
@@ -2354,7 +2355,7 @@ function updatePets(dt){
   for (const t of PET_TYPE_ORDER){
     const r = petRt[t];
     if (eqPet(t) < 0){ r.init = false; continue; }
-    const gx = Math.max(6, Math.min(W - 6, hero.x + PET_OFF[t][0] * side)), gy = Math.max(2 * T + 10, Math.min(H - 2, hero.y + PET_OFF[t][1]));
+    const gx = Math.max(6, Math.min(W - 6, hero.x + PET_OFF[t][0] * side)), gy = Math.max(IOY + 8, Math.min(H - 2, hero.y + PET_OFF[t][1]));
     if (!r.init){ r.x = gx; r.y = gy; r.init = true; }
     const k = Math.min(1, dt * 5);
     r.x += (gx - r.x) * k; r.y += (gy - r.y) * k;
@@ -2612,7 +2613,6 @@ function mix(a, b, t){
 }
 const darken = (c, f) => mix(c, '#000000', f);
 const EYE = '#1b1420';
-let SKIN = SKINS[0], SKIN_D = '#d9a47a', HAIR = HAIRS[0];   // drawHero가 꾸미기에 맞춰 바꾼다
 let G = null;
 const R = (x, y, w, h, c) => { G.fillStyle = c; G.fillRect(x, y, w, h); };
 
@@ -2633,136 +2633,176 @@ function whiteOf(src){
   return c;
 }
 
-/* 용사: 28×26 판, 발 기준점 (12,25) */
-function headgear(c, view){
-  if (c === 'musa'){
-    const B = '#c0392b';
-    if (view === 'side'){ R(9, 4, 8, 1, B); R(7, 4, 2, 1, B); R(5, 5, 3, 1, B); }
-    else { R(7, 4, 10, 1, B); if (view === 'back'){ R(11, 5, 1, 3, B); R(12, 5, 1, 2, B); } else { R(17, 4, 1, 1, B); R(18, 5, 1, 2, B); } }
-  } else if (c === 'jagaek'){
-    const K = '#2c2638';
-    if (view === 'side'){ R(8, 1, 9, 4, K); R(8, 4, 4, 7, K); R(13, 8, 5, 3, K); }
-    else if (view === 'back'){ R(6, 1, 12, 10, K); }
-    else { R(6, 1, 12, 4, K); R(6, 4, 2, 7, K); R(16, 4, 2, 7, K); R(8, 8, 8, 3, K); }
-  } else if (c === 'sulsa'){
-    const K = '#16131c';
-    if (view === 'side'){ R(9, 0, 6, 3, K); R(5, 3, 15, 1, K); R(10, 1, 4, 1, '#3a3444'); }
-    else { R(9, 0, 6, 3, K); R(4, 3, 16, 1, K); R(10, 1, 4, 1, '#3a3444'); if (view === 'front'){ R(7, 10, 1, 1, '#c98a8a'); R(16, 10, 1, 1, '#c98a8a'); } }
-  } else if (c === 'doin'){
-    const Wc = '#f2efe6';
-    R(9, 0, 6, 3, Wc); R(9, 2, 6, 1, '#b8382f');
-  } else if (c === 'flower'){
-    if (view === 'side'){ R(9, 2, 3, 2, '#ff8ab0'); R(10, 2, 1, 1, '#ffd84a'); }
-    else if (view === 'back'){ R(10, 1, 4, 2, '#ff8ab0'); R(11, 1, 2, 1, '#ffd84a'); }
-    else { R(15, 2, 3, 3, '#ff8ab0'); R(16, 3, 1, 1, '#ffd84a'); R(6, 3, 2, 2, '#ff8ab0'); }
-  }
+/* ================= 2~3등신 캐릭터(HD) =================
+   64×64 캔버스(장면 2배 해상도 기준, 화면에서는 32×32)에 둥근 도형으로 그린 뒤
+   가장자리를 도트처럼 또렷하게 다듬고 1px 외곽선을 두른다. 발 기준점은 (32, 60) → 화면 (16, 30).
+   view: 'front'(오른쪽 아래를 봄) / 'back'(오른쪽 위를 봄). 왼쪽을 보는 그림은 좌우로 뒤집어 만든다 */
+const HD_W = 64, HD_H = 64, HD_AX = 16, HD_AY = 30;
+function hdFinish(c, outline = '#1d1420'){
+  const g = c.getContext('2d'), w = c.width, h = c.height;
+  const id = g.getImageData(0, 0, w, h), d = id.data;
+  for (let i = 3; i < d.length; i += 4) d[i] = d[i] > 120 ? 255 : 0;   // 가장자리를 또렷하게
+  g.putImageData(id, 0, 0);
+  const o = document.createElement('canvas'); o.width = w; o.height = h;
+  const og = o.getContext('2d');
+  const s = document.createElement('canvas'); s.width = w; s.height = h;
+  const sg = s.getContext('2d'); sg.drawImage(c, 0, 0); sg.globalCompositeOperation = 'source-in'; sg.fillStyle = outline; sg.fillRect(0, 0, w, h);
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) og.drawImage(s, dx, dy);
+  og.drawImage(c, 0, 0);
+  o.hd = RS;
+  return o;
 }
-function weaponFront(type, c, back){
-  const r = (x, y, w, h, col) => R(back ? 24 - x - w : x, y, w, h, col);
-  if (type === 'sword'){ r(19, 5, 1, 11, c); r(19, 4, 1, 1, '#ffffff'); r(18, 16, 3, 1, '#e2c26b'); r(19, 17, 1, 2, '#6b4a2b'); }
-  else if (type === 'dagger'){ r(19, 12, 1, 5, c); r(18, 17, 3, 1, '#e2c26b'); r(19, 18, 1, 1, '#6b4a2b'); }
-  else if (type === 'staff'){ r(19, 4, 1, 20, '#7a5230'); r(18, 1, 3, 3, c); r(18, 1, 1, 1, '#ffffff'); }
-  else { r(19, 12, 4, 1, c); r(19, 13, 4, 1, c); r(19, 14, 3, 1, c); r(19, 15, 2, 1, c); r(20, 12, 1, 3, darken(c, 0.3)); r(19, 16, 1, 2, '#7a5230'); }
+const spW = sp => sp.width / (sp.hd || 1), spH = sp => sp.height / (sp.hd || 1);
+function flipCanvas(src){
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  const g = c.getContext('2d'); g.translate(src.width, 0); g.scale(-1, 1); g.drawImage(src, 0, 0);
+  c.hd = src.hd; return c;
 }
-function weaponSide(type, c, atk){
-  if (type === 'sword'){
-    if (atk){ R(21, 13, 7, 2, c); R(21, 13, 7, 1, '#ffffff'); R(20, 12, 1, 4, '#e2c26b'); }
-    else { for (let i = 0; i < 7; i++) R(16 + i, 14 - i, 1, 2, c); R(22, 7, 1, 1, '#ffffff'); R(15, 15, 2, 1, '#e2c26b'); }
-  } else if (type === 'dagger'){
-    if (atk){ R(21, 13, 4, 2, c); R(20, 12, 1, 4, '#e2c26b'); }
-    else { for (let i = 0; i < 3; i++) R(16 + i, 15 - i, 1, 2, c); R(15, 16, 2, 1, '#e2c26b'); }
-  } else if (type === 'staff'){
-    if (atk){ for (let i = 0; i < 7; i++) R(19 + i, 14 - i, 1, 1, '#7a5230'); R(25, 5, 3, 3, c); R(25, 5, 1, 1, '#ffffff'); }
-    else { R(16, 5, 1, 20, '#7a5230'); R(15, 2, 3, 3, c); R(15, 2, 1, 1, '#ffffff'); }
-  } else {
-    const fx0 = atk ? 21 : 16, fy0 = atk ? 10 : 12;
-    R(fx0, fy0, 4, 1, c); R(fx0, fy0 + 1, 4, 1, c); R(fx0, fy0 + 2, 3, 1, c); R(fx0, fy0 + 3, 2, 1, c);
-    R(fx0 + 1, fy0, 1, 3, darken(c, 0.3)); R(fx0 - 1, fy0 + 3, 1, 2, '#7a5230');
-  }
-}
-function drawHero(c, dir, f, col, look){
-  const L = CLASSES[c], outfit = col.outfit, wcol = col.wcol, od = darken(outfit, 0.25);
+
+function drawChibi(g, c, view, f, col, look){
+  const L = CLASSES[c], back = view === 'back', atk = f === 3;
   look = look || defaultLook();
-  HAIR = look.hair; SKIN = SKINS[look.skin] || SKINS[0]; SKIN_D = look.skin ? darken(SKIN, 0.14) : '#d9a47a';
+  const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
+  const O = col.outfit, OD = darken(O, 0.24), OL = mix(O, '#ffffff', 0.18), BELT = col.belt;
+  const aG = col.aG == null ? -1 : col.aG, wG = col.wG == null ? -1 : col.wG, fm = col.form || '';
+  const trim = aG >= 0 ? GRADES[aG].color : '#9a9a9a', capeC = aG >= 0 ? darken(GRADES[aG].color, 0.45) : '#5a2a2a';
   const hat = look.hat === 'class' ? c : look.hat;
-  const headgear2 = view => { if (hat !== 'none') headgear(hat, view); };
-  const Lb = col.belt, aG = col.aG == null ? -1 : col.aG, wG = col.wG == null ? -1 : col.wG, fm = col.form || '';
-  const side = dir === 'left' || dir === 'right', back = dir === 'up', atk = f === 3;
-  const trim = aG >= 0 ? GRADES[aG].color : '#8a8a8a', capeC = aG >= 0 ? darken(GRADES[aG].color, 0.45) : '#5a2a2a';
-  // ── 몸 뒤: 망토(영웅 이상), 변신(날개·등껍질·꼬리)
-  if (aG >= 3 && !back){
-    if (side){ R(5, 12, 3, 11, capeC); R(4, 19, 2, 4, capeC); R(5, 12, 3, 1, trim); }
-    else { R(4, 13, 2, 10, capeC); R(18, 13, 2, 10, capeC); R(4, 13, 1, 1, trim); R(19, 13, 1, 1, trim); }
-  }
+  const E = (x, y, rx, ry, cl, rot = 0) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
+  const Pl = (pts, cl) => { g.fillStyle = cl; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
+  const RR = (x, y, w, h, r, cl) => { g.fillStyle = cl; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const walk = f === 1 || f === 2, bob = walk ? -1 : 0, sway = f === 1 ? 1 : f === 2 ? -1 : 0;
+  const by = bob;                        // 몸 전체 위아래
+  const hx = 32, hy = 24 + by;           // 머리 가운데
+
+  // ── 몸 뒤: 망토·날개·등껍질·꼬리, 뒤로 든 무기
+  if (aG >= 3 && !back){ Pl([[22, 37 + by], [42, 37 + by], [47, 57], [17, 57]], capeC); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], trim); }
   if (fm === 'jujak'){
-    const u = f % 2;
-    const wing = (x0, flip) => { const X = (x, w) => flip ? 27 - x - w : x;
-      R(X(x0, 4), 9 + u, 4, 2, '#e8402a'); R(X(x0 - 1, 5), 11 + u, 5, 2, '#ff6a3a'); R(X(x0, 4), 13 + u, 4, 2, '#ffa040'); R(X(x0 + 1, 3), 15 + u, 3, 1, '#ffd24a'); };
-    if (side) wing(3, false); else { wing(1, false); wing(1, true); }
-  } else if (fm === 'hyeonmu'){
-    const Sh = '#2f6a52', Sd = '#1e4a38';
-    if (side){ R(4, 11, 5, 9, Sh); R(5, 13, 2, 1, Sd); R(5, 16, 3, 1, Sd); R(4, 11, 5, 1, '#5a9a7a'); }
-    else if (!back){ R(4, 12, 2, 8, Sh); R(18, 12, 2, 8, Sh); }
-  } else if (fm === 'baekho'){
-    if (side){ R(3, 17, 5, 1, '#f0f0f4'); R(2, 15, 1, 2, '#f0f0f4'); R(4, 17, 1, 1, '#222'); }
-    else { R(19, 18, 3, 1, '#f0f0f4'); R(21, 16, 1, 2, '#f0f0f4'); R(20, 18, 1, 1, '#222'); }
-  }
-  if (!side){
-    const lUp = f === 1 ? 1 : 0, rUp = f === 2 ? 1 : 0;
-    R(8, 21, 3, 3 - lUp, L.pants); R(13, 21, 3, 3 - rUp, L.pants);
-    R(8, 24 - lUp, 3, 1, '#3a2a20'); R(13, 24 - rUp, 3, 1, '#3a2a20');
-    R(7, 18, 10, 3, od);
-    R(7, 12, 10, 6, outfit); R(7, 12, 1, 6, od);
-    R(7, 16, 10, 1, Lb);
-    if (!back){ R(10, 12, 4, 1, '#efe9da'); R(11, 13, 2, 1, '#efe9da'); }
-    const armUp = atk ? 1 : 0;
-    R(5, 13 - armUp, 2, 4, outfit); R(17, 13 - armUp, 2, 4, outfit); R(5, 17 - armUp, 2, 1, SKIN); R(17, 17 - armUp, 2, 1, SKIN);
-    R(11, 11, 2, 1, SKIN_D);
-    if (back){ R(7, 2, 10, 9, HAIR); }
-    else {
-      R(7, 4, 10, 7, SKIN);
-      R(7, 2, 10, 3, HAIR); R(7, 4, 1, 4, HAIR); R(16, 4, 1, 4, HAIR); R(8, 5, 2, 1, HAIR); R(14, 5, 2, 1, HAIR);
-      R(9, 7, 1, 2, EYE); R(14, 7, 1, 2, EYE);
-      R(8, 9, 1, 1, '#f09a88'); R(15, 9, 1, 1, '#f09a88');
-      R(11, 9, 2, 1, '#b0584a');
+    const u = f % 2 ? -1 : 0;
+    for (const s of [-1, 1]){
+      const bx = 32 + s * 7, W2 = [['#e8402a', 0], ['#ff6a3a', 3], ['#ffa040', 6], ['#ffd24a', 9]];
+      for (const [cl, k] of W2) Pl([[bx, 40 + by], [bx + s * (20 - k), 22 + u + k * 0.6], [bx + s * (22 - k), 33 + u + k * 0.5], [bx + s * (14 - k * 0.6), 46 + by]], cl);
     }
-    R(11, 0, 2, 2, HAIR); R(10, 1, 4, 1, HAIR);
-    headgear2(back ? 'back' : 'front');
-    if (back && aG >= 3){ R(6, 12, 12, 10, capeC); R(6, 12, 12, 1, trim); R(7, 21, 10, 1, darken(capeC, 0.3)); }
-    if (back && fm === 'hyeonmu'){ R(7, 11, 10, 9, '#2f6a52'); R(9, 13, 2, 2, '#1e4a38'); R(13, 13, 2, 2, '#1e4a38'); R(11, 16, 2, 2, '#1e4a38'); R(7, 11, 10, 1, '#5a9a7a'); }
-    if (aG >= 2){ R(5, 11 - (atk ? 1 : 0), 3, 2, trim); R(16, 11 - (atk ? 1 : 0), 3, 2, trim); R(5, 11 - (atk ? 1 : 0), 3, 1, mix(trim, '#ffffff', 0.4)); R(16, 11 - (atk ? 1 : 0), 3, 1, mix(trim, '#ffffff', 0.4)); }
-    if (aG >= 4 && !back){ R(11, 14, 2, 2, '#ffd84a'); R(11, 14, 1, 1, '#ffffff'); }
-    if (fm === 'cheong'){ R(7, 0, 1, 3, '#9fe7ff'); R(16, 0, 1, 3, '#9fe7ff'); R(6, 0, 1, 1, '#9fe7ff'); R(17, 0, 1, 1, '#9fe7ff');
-      if (!back){ R(5, 9, 2, 1, '#9fe7ff'); R(17, 9, 2, 1, '#9fe7ff'); } R(9, 14, 1, 1, '#9fe7ff'); R(14, 14, 1, 1, '#9fe7ff'); }
-    if (fm === 'baekho'){ R(7, 1, 10, 3, '#f0f0f4'); R(7, 0, 2, 1, '#f0f0f4'); R(15, 0, 2, 1, '#f0f0f4'); R(9, 1, 1, 2, '#222'); R(12, 1, 1, 1, '#222'); R(14, 1, 1, 2, '#222'); }
-    if (fm === 'jujak'){ R(12, 0, 2, 1, '#ffd24a'); R(13, 0, 1, 2, '#ffd24a'); R(11, 0, 1, 1, '#ff6a3a'); }
-    if (col.ear >= 0 && !back){ R(7, 9, 1, 1, GRADES[col.ear].color); R(16, 9, 1, 1, GRADES[col.ear].color); }
-    if (col.brace >= 0){ R(5, 16 - (atk ? 1 : 0), 2, 1, GRADES[col.brace].color); R(17, 16 - (atk ? 1 : 0), 2, 1, GRADES[col.brace].color); }
-    weaponFront(L.wtype, wcol, back);
-    if (wG >= 2 && !back){ R(19, 16, 1, 1, GRADES[wG].color); }
-    if (wG >= 3 && !back && (L.wtype === 'sword' || L.wtype === 'staff')){ R(20, 5, 1, 9, mix(wcol, '#ffffff', 0.6)); }
+  }
+  if (fm === 'hyeonmu' && !back){ E(32, 45 + by, 15, 11, '#2f6a52'); E(32, 45 + by, 13, 9, '#3f8a68'); }
+  if (fm === 'baekho'){ const tx = back ? 40 : 21; Pl([[tx, 50], [tx - 9 * (back ? -1 : 1), 44 + sway], [tx - 11 * (back ? -1 : 1), 40 + sway], [tx - 8 * (back ? -1 : 1), 41 + sway], [tx - 6 * (back ? -1 : 1), 47], [tx + 1, 52]], '#f0f0f4');
+    E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
+  if (back) drawWeapon(true);
+
+  // ── 다리·신
+  const lf = f === 1 ? -2 : f === 2 ? 1 : 0, rf = f === 2 ? -2 : f === 1 ? 1 : 0;
+  RR(26, 49 + lf * 0.5, 5.5, 9 - lf * 0.4, 2, col.pants || L.pants);
+  RR(33, 49 + rf * 0.5, 5.5, 9 - rf * 0.4, 2, darken(col.pants || L.pants, 0.12));
+  E(28.6, 58.6 + lf * 0.4, 3.6, 2, '#3a2a20'); E(35.6, 58.6 + rf * 0.4, 3.6, 2, '#2e2018');
+
+  // ── 몸(도포·저고리)
+  Pl([[23, 37 + by], [41, 37 + by], [44, 52], [20, 52]], O);
+  Pl([[20, 52], [44, 52], [43.4, 48.6], [20.6, 48.6]], OD);
+  Pl([[33, 37 + by], [41, 37 + by], [44, 52], [36, 52]], OD);    // 오른쪽 그늘
+  RR(21, 44.6 + by * 0.5, 22, 3, 1.2, BELT);
+  if (!back){
+    Pl([[26, 37 + by], [32, 44.6 + by], [38, 37 + by], [35.5, 37 + by], [32, 41.8 + by], [28.5, 37 + by]], '#efe9da');   // 동정·깃
+    if (aG >= 1) Pl([[26, 37 + by], [27.4, 37 + by], [32, 43.4 + by], [32, 44.6 + by]], trim);
+    if (aG >= 4){ E(32, 46.1 + by * 0.5, 2.2, 2, '#ffd84a'); E(31.4, 45.4 + by * 0.5, 0.8, 0.7, '#ffffff'); }
+  }
+  if (back && aG >= 3){ Pl([[22, 37 + by], [42, 37 + by], [46, 56], [18, 56]], capeC); Pl([[18, 56], [46, 56], [45.6, 54], [18.4, 54]], trim); Pl([[23, 37 + by], [41, 37 + by], [41.4, 39 + by], [22.6, 39 + by]], trim); }
+  if (back && fm === 'hyeonmu'){ E(32, 45 + by, 13, 10, '#2f6a52'); for (const [x, y] of [[27, 42], [37, 42], [32, 47], [26, 49], [38, 49]]) E(x, y + by, 3, 2.4, '#1e4a38'); E(32, 41 + by, 9, 2, '#5a9a7a'); }
+
+  // ── 뒤쪽 팔(왼쪽)
+  if (!back){ RR(19.5, 38 + by, 5, 9, 2.4, OD); E(22, 48 + by, 2.4, 2.2, SKD); }
+  else { RR(39.5, 38 + by, 5, 9, 2.4, OD); E(42, 48 + by, 2.4, 2.2, SKD); }
+  if (aG >= 2){ E(23, 38.4 + by, 4.6, 3, trim); E(41, 38.4 + by, 4.6, 3, trim); E(22, 37.6 + by, 2.2, 1.2, mix(trim, '#ffffff', 0.45)); E(40, 37.6 + by, 2.2, 1.2, mix(trim, '#ffffff', 0.45)); }
+  if (fm === 'cheong'){ for (const x of [23, 41]){ E(x, 38.6 + by, 3.6, 2.2, '#3a8aff'); E(x - 1, 38 + by, 1.6, 0.9, '#9fe7ff'); } }
+
+  // ── 머리
+  if (!back){
+    E(hx - 1, hy - 1, 14, 12.6, HR);                                  // 뒷머리
+    E(hx + 2, hy + 3, 10.6, 9.6, SK);                                // 얼굴(오른쪽으로 돌림)
+    E(hx - 7.4, hy + 4, 2.2, 2.8, SK); E(hx - 7.2, hy + 4.2, 1, 1.5, SKD);   // 귀
+    if (col.ear >= 0){ E(hx - 7.4, hy + 7.6, 1.2, 1.2, GRADES[col.ear].color); }
+    // 앞머리
+    E(hx + 1, hy - 5, 12.4, 6.6, HR);
+    for (const [x, d] of [[-8, 4], [-3, 5], [2, 4.4], [7, 3.6], [11, 2.6]]) Pl([[hx + x - 3, hy - 4], [hx + x + 3, hy - 4], [hx + x + 0.6, hy - 4 + d]], HR);
+    E(hx - 3, hy - 8, 4, 1.6, HRL);
+    // 눈·볼·입
+    if (hat !== 'jagaek'){
+      E(hx + 6.2, hy + 4, 2.2, 3.1, EYE); E(hx - 1.4, hy + 4, 1.9, 2.9, EYE);
+      E(hx + 6.9, hy + 2.8, 1, 1, '#ffffff'); E(hx - 0.8, hy + 2.8, 0.9, 0.9, '#ffffff'); E(hx + 5.6, hy + 5.6, 0.6, 0.6, '#6a5a8a');
+      E(hx + 8.4, hy + 7.6, 2, 1.1, mix(SK, '#ff7a7a', 0.35)); E(hx - 3.2, hy + 7.6, 1.6, 1, mix(SK, '#ff7a7a', 0.3));
+      E(hx + 3.4, hy + 8.4, 1.3, 0.7, '#b0584a');
+    } else {
+      E(hx + 6.2, hy + 3.6, 1.9, 2.2, EYE); E(hx - 1.2, hy + 3.6, 1.6, 2.1, EYE); E(hx + 6.8, hy + 2.8, 0.8, 0.8, '#ffffff');
+    }
   } else {
-    const legs = f === 1 ? [8, 13] : f === 2 ? [10, 11] : [9, 12];
-    for (const lx of legs){ R(lx, 21, 3, 3, L.pants); R(lx, 24, 4, 1, '#3a2a20'); }
-    R(8, 18, 9, 3, od);
-    R(8, 12, 8, 6, outfit); R(8, 12, 2, 6, od); R(8, 16, 8, 1, Lb);
-    R(9, 3, 8, 8, SKIN);
-    R(9, 2, 7, 3, HAIR); R(9, 4, 3, 6, HAIR);
-    R(17, 7, 1, 1, SKIN);
-    R(14, 6, 1, 2, EYE); R(15, 9, 1, 1, '#f09a88');
-    R(11, 0, 2, 2, HAIR); R(10, 1, 4, 1, HAIR);
-    R(12, 11, 2, 1, SKIN_D);
-    headgear2('side');
-    if (aG >= 2){ R(11, 11, 4, 2, trim); R(11, 11, 4, 1, mix(trim, '#ffffff', 0.4)); }
-    if (aG >= 4){ R(14, 14, 1, 2, '#ffd84a'); }
-    if (fm === 'cheong'){ R(11, 0, 1, 2, '#9fe7ff'); R(14, 0, 1, 2, '#9fe7ff'); R(10, 14, 1, 1, '#9fe7ff'); R(13, 15, 1, 1, '#9fe7ff'); }
-    if (fm === 'baekho'){ R(9, 1, 8, 3, '#f0f0f4'); R(10, 0, 2, 1, '#f0f0f4'); R(11, 1, 1, 2, '#222'); R(14, 1, 1, 2, '#222'); }
-    if (fm === 'jujak'){ R(10, 0, 2, 1, '#ffd24a'); R(9, 1, 1, 1, '#ff6a3a'); }
-    if (col.ear >= 0) R(11, 9, 1, 1, GRADES[col.ear].color);
-    if (atk){ R(13, 13, 6, 2, outfit); R(19, 13, 2, 2, SKIN); if (col.brace >= 0) R(18, 13, 1, 2, GRADES[col.brace].color); weaponSide(L.wtype, wcol, true); if (wG >= 3) R(22, 12, 6, 1, mix(wcol, '#ffffff', 0.6)); }
-    else { R(12, 13, 3, 4, outfit); R(14, 16, 2, 2, SKIN); if (col.brace >= 0) R(14, 15, 2, 1, GRADES[col.brace].color); weaponSide(L.wtype, wcol, false); if (wG >= 2) R(15, 15, 1, 1, GRADES[wG].color); }
+    E(hx, hy, 14, 12.8, HR); E(hx + 3, hy + 4, 10, 7, HRD); E(hx - 3, hy - 4, 6, 3, HRL);
+  }
+  // 상투(머리 위 매듭)
+  if (hat !== 'jagaek' && hat !== 'sulsa'){ E(hx - 1, hy - 12.4, 3.6, 3.2, HR); E(hx - 2, hy - 13.4, 1.4, 1, HRL); RR(hx - 4, hy - 10.6, 6, 1.6, 0.8, darken(HR, 0.4)); }
+
+  // ── 머리 장식
+  if (hat === 'musa'){
+    const B = '#d8433a';
+    Pl([[hx - 13.6, hy - 2.4], [hx + 13.4, hy - 4.6], [hx + 13.6, hy - 1.4], [hx - 13.6, hy + 0.8]], B);
+    const kx = back ? hx + 4 : hx - 13;
+    Pl([[kx, hy - 1.6], [kx - 6, hy + 4 + sway], [kx - 4, hy + 5 + sway], [kx + 1, hy]], B); Pl([[kx, hy - 1], [kx - 8, hy + 1 + sway], [kx - 7, hy + 2.6 + sway], [kx + 1, hy + 0.6]], darken(B, 0.2));
+  } else if (hat === 'jagaek'){
+    const K = '#2c2638', KL = '#3e3650';
+    if (!back){ E(hx, hy - 1, 14.6, 13.4, K); E(hx + 2.6, hy + 3.4, 9, 4.4, SK); Pl([[hx - 7, hy + 6.4], [hx + 13, hy + 5.2], [hx + 12, hy + 12], [hx - 6, hy + 12]], K); E(hx - 4, hy - 7, 4, 2, KL);
+      E(hx + 6.2, hy + 3.6, 1.9, 2.2, EYE); E(hx - 1.2, hy + 3.6, 1.6, 2.1, EYE); E(hx + 6.8, hy + 2.8, 0.8, 0.8, '#ffffff'); }
+    else { E(hx, hy, 14.6, 13.4, K); E(hx - 4, hy - 6, 4, 2, KL); Pl([[hx - 4, hy + 10], [hx - 10, hy + 18 + sway], [hx - 6, hy + 18 + sway], [hx - 1, hy + 11]], K); }
+  } else if (hat === 'sulsa'){
+    const K = '#16131c', KL = '#3a3444';
+    E(hx, hy - 7.4, 21, 4.6, K); E(hx - 4, hy - 8.4, 9, 1.4, KL);
+    RR(hx - 6.6, hy - 20, 13.2, 13, 4, K); RR(hx - 5, hy - 18.6, 3.4, 9, 1.6, KL);
+    RR(hx - 6.6, hy - 10.6, 13.2, 2, 1, '#4a3f58');
+    if (!back){ for (let i = 0; i < 4; i++) E(hx - 9 + i * 0.8, hy + 2 + i * 3, 0.8, 0.8, '#c98a8a'); }
+  } else if (hat === 'doin'){
+    RR(hx - 5, hy - 19, 9, 8, 2.4, '#f2efe6'); RR(hx - 5, hy - 13.4, 9, 2, 0.8, '#b8382f'); E(hx - 1, hy - 19.4, 2, 1.6, '#f2efe6');
+  } else if (hat === 'flower'){
+    const fx2 = back ? hx + 9 : hx - 9, fy2 = hy - 6;
+    for (let i = 0; i < 5; i++){ const a = i * 1.257; E(fx2 + Math.cos(a) * 2.4, fy2 + Math.sin(a) * 2.4, 1.8, 1.8, '#ff8ab0'); }
+    E(fx2, fy2, 1.4, 1.4, '#ffd84a');
+  }
+  // ── 변신: 머리 장식
+  if (fm === 'jujak'){ Pl([[hx - 2, hy - 13], [hx - 4, hy - 24], [hx + 1, hy - 17], [hx + 5, hy - 23], [hx + 3, hy - 13]], '#ffd24a'); E(hx, hy - 14, 3, 1.8, '#ff6a3a'); }
+  if (fm === 'cheong'){ for (const s of [-1, 1]){ const x0 = hx + s * 6; Pl([[x0 - 1.4, hy - 9], [x0 + 1.4, hy - 9], [x0 + s * 5, hy - 21], [x0 + s * 3, hy - 15]], '#9fe7ff'); Pl([[x0 + s * 3, hy - 15], [x0 + s * 7, hy - 17], [x0 + s * 4, hy - 13]], '#6ac4ff'); } }
+  if (fm === 'baekho'){
+    E(hx, hy - 4, 14.8, 9.4, '#f0f0f4'); for (const s of [-1, 1]){ E(hx + s * 10, hy - 12, 3.6, 3.6, '#f0f0f4'); E(hx + s * 10, hy - 11.6, 1.8, 1.8, '#f3a0b0'); }
+    for (const x of [-6, 0, 6]) Pl([[hx + x - 1, hy - 12.6], [hx + x + 1, hy - 12.6], [hx + x + 0.4, hy - 6]], '#22202c');
+    if (!back){ E(hx + 6.2, hy + 4.2, 1.9, 2.7, EYE); E(hx - 1.2, hy + 4.2, 1.6, 2.5, EYE); E(hx + 6.8, hy + 3.2, 0.8, 0.8, '#ffffff'); }
+  }
+
+  // ── 앞쪽 팔 + 무기
+  if (!back){
+    drawWeapon(false);
+    if (atk){ RR(37, 39.4 + by, 11, 4.6, 2.2, O); E(49, 41.6 + by, 2.6, 2.4, SK); if (col.brace >= 0) RR(45, 39.6 + by, 1.8, 4.4, 0.6, GRADES[col.brace].color); }
+    else { RR(39.5, 38 + by, 5, 9, 2.4, O); E(42, 48 + by, 2.5, 2.3, SK); if (col.brace >= 0) RR(39.6, 44.6 + by, 4.8, 1.6, 0.6, GRADES[col.brace].color); }
+  } else {
+    RR(19.5, 38 + by, 5, 9, 2.4, O); E(22, 48 + by, 2.4, 2.2, SK);
+    if (col.brace >= 0) RR(19.6, 44.6 + by, 4.8, 1.6, 0.6, GRADES[col.brace].color);
+  }
+
+  // 무기: 앞모습은 오른손에, 뒷모습은 몸 뒤 오른쪽에
+  function drawWeapon(behind){
+    const t = L.wtype, wc = col.wcol, hxw = behind ? 43 : atk ? 49 : 42, hyw = (behind ? 46 : atk ? 41.6 : 48) + by;
+    const ang = behind ? -1.15 : atk ? (t === 'staff' ? -0.5 : 0.18) : (t === 'staff' ? -1.45 : -1.1);
+    g.save(); g.translate(hxw, hyw); g.rotate(ang);
+    const glow = wG >= 3 ? mix(wc, '#ffffff', 0.6) : '#ffffff';
+    if (t === 'sword'){ Pl([[1, -1.6], [22, -1.6], [25, 0], [22, 1.6], [1, 1.6]], wc); Pl([[3, -1.6], [22, -1.6], [24, -0.4], [3, -0.4]], glow); RR(-1, -4, 2.6, 8, 1, '#e2c26b'); RR(-6, -1.2, 5, 2.4, 1, '#6b4a2b');
+      if (wG >= 2) E(0.3, 0, 1.2, 1.2, GRADES[wG].color); }
+    else if (t === 'dagger'){ Pl([[1, -1.4], [11, -1.4], [13, 0], [11, 1.4], [1, 1.4]], wc); Pl([[2, -1.4], [11, -1.4], [12, -0.3], [2, -0.3]], glow); RR(-1, -3, 2.2, 6, 1, '#e2c26b'); RR(-4.6, -1, 3.6, 2, 1, '#6b4a2b');
+      if (wG >= 2) E(0, 0, 1, 1, GRADES[wG].color); }
+    else if (t === 'staff'){ RR(-10, -1.2, 36, 2.4, 1.2, '#7a5230'); RR(-10, -1.2, 36, 0.8, 0.4, '#9a7250'); E(28, 0, 4.2, 4.2, wc); E(27, -1.2, 1.6, 1.4, '#ffffff');
+      if (wG >= 3){ g.globalAlpha = 0.9; E(28, 0, 5.6, 5.6, glow); g.globalAlpha = 1; E(28, 0, 4.2, 4.2, wc); E(27, -1.2, 1.6, 1.4, '#ffffff'); } }
+    else { // 부채
+      g.fillStyle = wc; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 12, -0.75, 0.75); g.closePath(); g.fill();
+      g.fillStyle = mix(wc, '#ffffff', 0.35); g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 12, -0.75, -0.2); g.closePath(); g.fill();
+      for (let k = -3; k <= 3; k++){ const a = k * 0.24; g.strokeStyle = darken(wc, 0.35); g.lineWidth = 0.6; g.beginPath(); g.moveTo(1.5 * Math.cos(a), 1.5 * Math.sin(a)); g.lineTo(11.6 * Math.cos(a), 11.6 * Math.sin(a)); g.stroke(); }
+      RR(-3, -1, 4, 2, 1, '#7a5230');
+    }
+    g.restore();
   }
 }
+
 // 사람(용사·동료) 색: 옷을 '기본'으로 두면 방어구 등급색이 섞이고, 직접 고른 색이면 허리띠가 등급색이 된다
 function personColors(c, look, armorG, weaponG, ex){
   const L = CLASSES[c], custom = look && look.outfit && look.outfit !== 'auto';
@@ -2774,14 +2814,20 @@ function personColors(c, look, armorG, weaponG, ex){
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1};
 }
 const spriteCache = new Map();
+// dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
   const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, armorG, weaponG, col.form, col.ear, col.brace].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
-    const base = buildSprite(28, 26, () => drawHero(c, dir === 'left' ? 'right' : dir, f, col, look));
-    sp = {base, white:whiteOf(base)};
+    const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
+    const cnv = document.createElement('canvas'); cnv.width = HD_W; cnv.height = HD_H;
+    drawChibi(cnv.getContext('2d'), c, view, f, col, look);
+    let base = hdFinish(cnv);
+    if (flip) base = flipCanvas(base);
+    const wh = whiteOf(base); wh.hd = base.hd;
+    sp = {base, white:wh};
     spriteCache.set(key, sp);
   }
   return white ? sp.white : sp.base;
@@ -2790,232 +2836,251 @@ const gradeOf = i => i >= 0 ? Math.floor(i / 4) : -1;
 const heroEx = () => ({form:formOf() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g});
 const heroSprite = (c, dir, f, white) => personSprite(c, S.look, gradeOf(S.equip.armor), gradeOf(S.equip.weapon), dir, f, white, heroEx());
 
-/* 펫 (왼쪽을 봄, 작게) */
-function feline(f, c, stripes){
-  const d = darken(c, 0.3), l = mix(c, '#ffffff', 0.45), o = f ? 1 : 0;
-  R(11, 1 + o, 1, 4, c); R(12, o, 1, 2, c);
-  R(3, 4, 9, 4, c); R(4, 7, 7, 1, l);
-  R(0, 2, 5, 5, c); R(0, 1, 1, 1, c); R(4, 1, 1, 1, c); R(0, 0, 1, 1, d); R(4, 0, 1, 1, d);
-  R(1, 3, 1, 1, EYE); R(3, 3, 1, 1, EYE); R(2, 5, 1, 1, '#d87a8a'); R(1, 6, 3, 1, l);
-  const legs = f ? [[4, 0], [6, 1], [9, 0], [10, 1]] : [[4, 1], [6, 0], [9, 1], [10, 0]];
-  for (const [x, u] of legs) R(x, 8, 1, 2 - u, d);
-  if (stripes){ const K = '#2a2026'; R(6, 4, 1, 3, K); R(8, 4, 1, 3, K); R(10, 4, 1, 2, K); R(2, 2, 1, 1, K); R(11, 2 + o, 1, 1, K); }
-}
-function bird(f, c, o){
-  const d = darken(c, 0.3), tl = o.tailLen || 3;
-  R(9, 5, tl, 2, o.tail || d);
-  if (o.tail2) R(10, 7, tl, 1, o.tail2);
-  R(3, 4, 7, 4, c); R(4, 7, 5, 1, o.belly || mix(c, '#ffffff', 0.4));
-  R(1, 2, 4, 4, c); R(0, 3, 1, 2, o.beak || '#e0b03c'); R(2, 3, 1, 1, o.eye || EYE);
-  if (o.crest){ R(3, 0, 1, 2, o.crest); R(4, 1, 1, 1, o.crest); }
-  if (f) R(5, 1, 4, 3, o.wing || d); else R(5, 6, 4, 2, o.wing || d);
-  const lc = '#c8a050';
-  if (o.legs3){ R(4, 8, 1, 2, lc); R(6, 8, 1, 2, lc); R(8, 8, 1, 2, lc); } else { R(5, 8, 1, 1, lc); R(7, 8, 1, 1, lc); }
-}
-const PET_DRAW = {
-  cat:[13, 10, (f, c) => feline(f, c, false)],
-  tiger:[13, 10, (f, c) => feline(f, c, true)],
-  hawk:[13, 10, (f, c) => bird(f, c, {belly:'#e8dcc0', wing:'#5a4030'})],
-  crow:[13, 10, (f, c) => bird(f, c, {belly:'#3a3440', wing:'#1a141e', beak:'#ffd84a', eye:'#ff6a3a', legs3:true, crest:'#ffd84a'})],
-  magpie:[15, 10, (f, c) => bird(f, c, {belly:'#ffffff', wing:'#2a3a6a', beak:'#3a3440', tailLen:5, tail:'#2a3a6a'})],
-  phoenix:[15, 10, (f, c) => bird(f, c, {belly:'#ffd84a', wing:'#ff8a3a', beak:'#ffd84a', crest:'#ffd84a', tailLen:5, tail:'#ffd84a', tail2:'#7fd0ff'})],
-  turtle:[14, 9, (f, c) => { const d = darken(c, 0.3), dd = darken(c, 0.5), sk = mix(c, '#c8c878', 0.5), o = f ? 1 : 0;
-    R(3, 6, 2, 3 - o, sk); R(9, 6, 2, 2 + o, sk);
-    R(4, 1, 7, 1, c); R(3, 2, 9, 4, c); R(2, 5, 11, 1, dd);
-    R(5, 2, 2, 1, d); R(8, 2, 2, 1, d); R(4, 4, 3, 1, d); R(8, 4, 3, 1, d); R(7, 3, 1, 2, d);
-    R(0, 3, 3, 3, sk); R(0, 4, 1, 1, EYE); R(12, 4, 2, 1, sk); }],
-  bear:[14, 12, (f, c) => { const d = darken(c, 0.3), m = '#c8a888', Wt = '#f4f0e8';
-    R(4, 4, 9, 6, c); R(12, 5, 2, 2, c);
-    const legs = f ? [[4, 0], [7, 1], [9, 0], [11, 1]] : [[4, 1], [7, 0], [9, 1], [11, 0]];
-    for (const [x, u] of legs) R(x, 10, 2, 2 - u, d);
-    R(0, 1, 6, 6, c); R(0, 0, 2, 2, c); R(4, 0, 2, 2, c);
-    R(0, 4, 3, 2, m); R(0, 4, 1, 1, EYE); R(1, 2, 1, 1, Wt); R(4, 2, 1, 1, Wt);
-    R(1, 6, 1, 1, Wt); R(2, 7, 3, 1, Wt); R(5, 6, 1, 1, Wt); }],
-  haetae:[15, 12, (f, c) => { const d = darken(c, 0.3), l = mix(c, '#ffffff', 0.4), Y = '#f3d36b', o = f ? 1 : 0;
-    R(12, 2 + o, 2, 2, d); R(13, 1 + o, 2, 1, d); R(14, o, 1, 1, d);
-    R(5, 5, 8, 4, c); R(6, 8, 6, 1, l);
-    const legs = f ? [[5, 0], [7, 1], [10, 0], [11, 1]] : [[5, 1], [7, 0], [10, 1], [11, 0]];
-    for (const [x, u] of legs) R(x, 9, 2, 3 - u, d);
-    R(3, 1, 4, 7, d);
-    R(0, 2, 5, 5, c); R(2, 0, 1, 2, Y);
-    R(1, 3, 1, 1, EYE); R(3, 3, 1, 1, EYE); R(0, 5, 3, 1, '#8a2a2a'); R(0, 5, 1, 1, '#ffffff'); R(2, 5, 1, 1, '#ffffff');
-    R(4, 7, 1, 1, Y); }],
-  toad:[13, 9, (f, c) => { const d = darken(c, 0.3), l = mix(c, '#f3e6b0', 0.5), y0 = f ? -1 : 0;
-    R(2, 3 + y0, 9, 5, c); R(1, 5 + y0, 11, 3, c); R(3, 6 + y0, 7, 2, l);
-    R(2, 1 + y0, 3, 3, c); R(8, 1 + y0, 3, 3, c); R(3, 2 + y0, 1, 1, EYE); R(9, 2 + y0, 1, 1, EYE);
-    R(4, 5 + y0, 5, 1, d); R(5, 3 + y0, 1, 1, d); R(8, 4 + y0, 1, 1, d); R(6, 4 + y0, 1, 1, '#ffd84a');
-    R(0, 7, 3, 2, d); R(10, 7, 3, 2, d); }],
-  dog:[15, 12, (f, c) => { const d = darken(c, 0.25), o = f ? 1 : 0;
-    R(12, 1 + o, 2, 4, c); R(13, o, 2, 2, d);
-    R(4, 3, 9, 6, c); for (let x = 4; x < 13; x += 2) R(x, 9, 1, 1, d);
-    const legs = f ? [[4, 0], [6, 1], [10, 0], [11, 1]] : [[4, 1], [6, 0], [10, 1], [11, 0]];
-    for (const [x, u] of legs) R(x, 9, 2, 3 - u, d);
-    R(0, 1, 6, 6, c); R(0, 2, 6, 2, d); R(1, 3, 1, 1, EYE); R(4, 3, 1, 1, EYE);
-    R(0, 5, 1, 1, EYE); R(5, 2, 2, 5, d); R(1, 6, 2, 1, '#d87a8a'); }],
-  crane:[12, 15, (f, c) => { const K = '#22202c', Lg = '#3a3036';
-    R(1, 0, 3, 2, c); R(2, 0, 1, 1, '#d8433a'); R(0, 1, 1, 1, '#c8b878'); R(1, 1, 1, 1, EYE);
-    R(2, 2, 2, 4, K);
-    R(3, 5, 7, 4, c); R(8, 6, 4, 3, K); R(4, 6, 4, 1, mix(c, '#b8b8b0', 0.5));
-    if (f){ R(5, 9, 1, 6, Lg); R(7, 9, 1, 3, Lg); R(7, 11, 2, 1, Lg); } else { R(5, 9, 1, 6, Lg); R(7, 9, 1, 6, Lg); } }],
-};
 const petCache = new Map();
 function petSprite(i, f){
   const key = i + ':' + f;
   let sp = petCache.get(key);
-  if (!sp){ const p = PETS[i], [w, h, draw] = PET_DRAW[p.draw]; sp = buildSprite(w, h, () => draw(f, p.c)); petCache.set(key, sp); }
+  if (!sp){
+    const p = PETS[i], hd = PET_HD[p.draw];
+    const [w, h, draw] = hd, cnv = document.createElement('canvas'); cnv.width = w + 4; cnv.height = h + 4; const g = cnv.getContext('2d'); g.translate(2, 2); draw(g, f, p.c); sp = hdFinish(cnv);
+    petCache.set(key, sp);
+  }
   return sp;
 }
 const petImgCache = new Map();
 function petImg(i){ let u = petImgCache.get(i); if (!u){ u = petSprite(i, 0).toDataURL(); petImgCache.set(i, u); } return u; }
 
-/* 몬스터 (왼쪽을 봄) */
-const MOB_DRAW = {
-  frog:[16, 12, (f, c) => { const d = darken(c, 0.25), bl = mix(c, '#ffffff', 0.55), y0 = f ? -1 : 0;
-    R(3, 5 + y0, 10, 6, c); R(2, 7 + y0, 12, 4, c); R(3, 10 + y0, 10, 1, d); R(5, 8 + y0, 6, 3, bl);
-    R(2, 3 + y0, 4, 4, c); R(10, 3 + y0, 4, 4, c);
-    R(3, 4 + y0, 2, 2, '#ffffff'); R(3, 5 + y0, 1, 1, EYE); R(11, 4 + y0, 2, 2, '#ffffff'); R(11, 5 + y0, 1, 1, EYE);
-    R(5, 7 + y0, 6, 1, darken(c, 0.5));
-    if (f){ R(1, 10, 3, 2, d); R(12, 10, 3, 2, d); } else { R(0, 9, 3, 3, d); R(13, 9, 3, 3, d); } }],
-  boar:[20, 14, (f, c) => { const d = darken(c, 0.3);
-    R(6, 3, 11, 7, c); R(7, 2, 9, 1, d); R(6, 9, 11, 1, d);
-    R(2, 4, 5, 5, c); R(0, 6, 2, 3, '#d9a07a'); R(0, 7, 1, 1, EYE); R(2, 8, 1, 2, '#f2efe6'); R(4, 5, 1, 1, EYE); R(5, 2, 2, 2, d);
-    R(17, 4, 2, 1, d);
-    const legs = f ? [[6, 0], [9, 1], [13, 0], [15, 1]] : [[6, 1], [9, 0], [13, 1], [15, 0]];
-    for (const [x, o] of legs) R(x, 10, 2, 3 - o, d); }],
-  raccoon:[18, 16, (f, c) => { const d = darken(c, 0.35), mk = '#3a2f28', b = f ? 1 : 0;
-    R(13, 9 - b, 4, 3, c); R(14, 9 - b, 1, 3, mk); R(16, 9 - b, 1, 3, mk);
-    R(2, 6, 12, 9, c); R(5, 10, 6, 5, '#e2d6bc');
-    R(3, 2, 10, 6, c); R(2, 1, 3, 3, d); R(11, 1, 3, 3, d);
-    R(3, 4, 10, 2, mk); R(4, 4, 1, 1, '#ffffff'); R(9, 4, 1, 1, '#ffffff'); R(6, 6, 2, 1, EYE);
-    R(3, 15, 3, 1, d); R(10, 15, 3, 1, d); }],
-  fox:[20, 16, (f, c, boss) => { const d = darken(c, 0.3), w = '#f6efe4', sw = f ? 1 : 0;
-    const tails = boss ? 4 : 1;
-    for (let i = 0; i < tails; i++){ const ty = (boss ? 1 : 5) + i * 2 + sw; R(15, ty, 4, 3, c); R(18, ty, 2, 2, w); }
-    R(6, 7, 10, 5, c); R(6, 11, 10, 1, d); R(3, 9, 4, 3, w);
-    R(1, 5, 6, 5, c); R(0, 7, 2, 2, c); R(0, 7, 1, 1, EYE);
-    R(1, 2, 2, 3, c); R(4, 2, 2, 3, c); R(1, 2, 1, 1, d); R(4, 2, 1, 1, d);
-    R(3, 6, 1, 1, boss ? '#d8433a' : EYE);
-    const legs = f ? [[6, 0], [9, 1], [12, 0], [14, 1]] : [[6, 1], [9, 0], [12, 1], [14, 0]];
-    for (const [x, o] of legs){ R(x, 12, 2, 3 - o, d); R(x, 14 - o, 2, 1, w); } }],
-  totem:[14, 22, (f, c) => { const d = darken(c, 0.3), K = '#2b2233', y0 = f ? -1 : 1;
-    R(3, 0 + y0, 8, 3, K); R(1, 3 + y0, 12, 1, K);
-    R(2, 4 + y0, 10, 8, c); R(3, 5 + y0, 3, 1, K); R(8, 5 + y0, 3, 1, K);
-    R(3, 6 + y0, 3, 2, '#ffffff'); R(3, 6 + y0, 1, 2, EYE); R(8, 6 + y0, 3, 2, '#ffffff'); R(8, 6 + y0, 1, 2, EYE);
-    R(6, 8 + y0, 2, 2, d);
-    R(3, 10 + y0, 8, 2, K); R(4, 10 + y0, 1, 1, '#ffffff'); R(6, 10 + y0, 1, 1, '#ffffff'); R(8, 10 + y0, 1, 1, '#ffffff');
-    R(4, 12 + y0, 6, 9 - y0, c); R(6, 13 + y0, 2, 6, d); R(3, 21, 8, 1, d); }],
-  bat:[20, 12, (f, c) => { const d = darken(c, 0.3);
-    if (f){ R(1, 5, 6, 2, d); R(2, 7, 4, 2, d); R(13, 5, 6, 2, d); R(14, 7, 4, 2, d); }
-    else { R(1, 1, 6, 2, d); R(3, 3, 4, 2, d); R(13, 1, 6, 2, d); R(13, 3, 4, 2, d); }
-    R(7, 3, 6, 6, c); R(7, 1, 1, 2, c); R(12, 1, 1, 2, c);
-    R(8, 5, 1, 1, '#ff4d4d'); R(11, 5, 1, 1, '#ff4d4d'); R(9, 8, 1, 1, '#ffffff'); R(10, 8, 1, 1, '#ffffff'); }],
-  ghost:[16, 20, (f, c) => { const K = '#1a1620', P = '#e8eef2';
-    R(3, 9, 10, 9, c);
-    for (let i = 0; i < 5; i++){ const up = (i + (f ? 1 : 0)) % 2; R(3 + i * 2, 18 - up, 2, 1 + up, c); }
-    R(1, 11, 2, 3, c); R(13, 11, 2, 3, c); R(1, 14, 2, 1, P); R(13, 14, 2, 1, P);
-    R(3, 0, 10, 11, K); R(2, 3, 1, 9, K); R(13, 3, 1, 9, K);
-    R(5, 3, 6, 6, P); R(6, 5, 1, 2, EYE); R(9, 5, 1, 2, EYE); R(7, 7, 2, 1, '#8a2a2a');
-    R(4, 10, 1, 5, K); R(11, 10, 1, 5, K); }],
-  dokkaebi:[18, 20, (f, c) => { const d = darken(c, 0.3), Y = '#f3d36b', K = '#2a1418', cy = f ? 3 : 6;
-    R(0, cy, 3, 10, '#8a5a2a'); R(1, cy + 1, 1, 1, '#e8e0d0'); R(1, cy + 4, 1, 1, '#e8e0d0'); R(1, cy + 7, 1, 1, '#e8e0d0');
-    R(8, 0, 2, 3, Y);
-    R(4, 3, 12, 12, c); R(3, 5, 1, 8, c); R(16, 5, 1, 8, c);
-    R(5, 3, 3, 2, K); R(12, 3, 3, 2, K);
-    R(5, 6, 3, 3, Y); R(5, 7, 1, 1, K); R(11, 6, 3, 3, Y); R(11, 7, 1, 1, K);
-    R(6, 11, 8, 2, K); R(7, 11, 1, 1, '#ffffff'); R(12, 11, 1, 1, '#ffffff');
-    R(3, 8, 2, 3, d);
-    R(5, 15, 10, 2, Y); R(7, 15, 1, 2, K); R(10, 15, 1, 2, K); R(13, 15, 1, 2, K);
-    R(6, 17, 3, 3, c); R(11, 17, 3, 3, c); R(6, 19, 3, 1, d); R(11, 19, 3, 1, d); }],
-  wisp:[12, 14, (f, c) => { const l = mix(c, '#ffffff', 0.6), t = f ? 1 : 0;
-    R(5 - t, 0, 2, 2, c); R(4, 2, 4, 2, c); R(3, 4, 6, 2, c); R(2, 6, 8, 5, c); R(3, 11, 6, 2, c);
-    R(4, 7, 4, 4, l); R(4, 8, 1, 1, EYE); R(7, 8, 1, 1, EYE); }],
-  wolf:[20, 15, (f, c) => { const d = darken(c, 0.3), w = '#f4f8fb';
-    R(15, 5, 4, 2, c); R(17, 7, 2, 2, c);
-    R(6, 5, 10, 6, c); R(7, 4, 7, 1, d); R(6, 10, 10, 1, d);
-    R(1, 3, 6, 6, c); R(0, 6, 2, 2, c); R(0, 6, 1, 1, EYE); R(1, 8, 2, 1, w);
-    R(2, 1, 2, 2, c); R(5, 1, 2, 2, c); R(2, 1, 1, 1, d); R(5, 1, 1, 1, d);
-    R(3, 5, 1, 1, '#3a6aa8'); R(5, 7, 3, 3, w);
-    const legs = f ? [[6, 0], [9, 1], [12, 0], [14, 1]] : [[6, 1], [9, 0], [12, 1], [14, 0]];
-    for (const [x, o] of legs) R(x, 11, 2, 4 - o, d); }],
-  bulgasari:[18, 18, (f, c) => { const d = darken(c, 0.3), l = mix(c, '#ffffff', 0.3);
-    R(4, 2, 2, 2, d); R(8, 1, 2, 3, d); R(12, 2, 2, 2, d);
-    R(3, 4, 13, 10, c); R(4, 12, 11, 2, l); R(6, 6, 1, 4, d); R(9, 6, 1, 4, d); R(12, 6, 1, 4, d);
-    R(0, 6, 5, 6, c); R(1, 8, 1, 1, '#d8433a'); R(0, 12, 2, 4, c); R(0, 15, 1, 1, d);
-    R(16, 6, 2, 1, d); R(17, 7, 1, 2, d);
-    const o = f ? 1 : 0; R(4, 14, 3, 4 - o, d); R(12, 14, 3, 3 + o, d); }],
-  // 저승
-  agwi:[16, 20, (f, c) => { const d = darken(c, 0.35), l = mix(c, '#ffffff', 0.25), E = '#ffef8a', K = '#1a1218', o = f ? 1 : 0;
-    R(4, 0, 8, 7, c); R(3, 2, 1, 4, c); R(12, 2, 1, 4, c); R(5, 6, 6, 1, d);
-    R(5, 2, 2, 2, K); R(9, 2, 2, 2, K); R(5, 2, 1, 1, E); R(9, 2, 1, 1, E); R(7, 5, 2, 1, '#5a1a22');
-    R(7, 7, 2, 2, c); R(4, 9, 8, 7, c); R(5, 10, 6, 5, l); R(7, 12, 2, 1, d); R(5, 9, 6, 1, d);
-    R(2, 9, 2, 1, c); R(1, 10, 1, 4 + o, c); R(12, 9, 2, 1, c); R(14, 10, 1, 5 - o, c);
-    R(5, 16, 1, 4 - o, d); R(10, 16, 1, 3 + o, d); R(4, 19, 2, 1, d); R(10, 19, 2, 1, d); }],
-  oxhead:[22, 22, (f, c) => { const d = darken(c, 0.3), H = '#e8e0c8', K = '#2a1418', Ar = '#4a4a5a', o = f ? 1 : 0;
-    R(1, 3 + o, 1, 18, '#6b4a2b'); R(0, 2 + o, 3, 1, '#c8c8d0'); R(0, 0 + o, 1, 2, '#c8c8d0'); R(2, 0 + o, 1, 2, '#c8c8d0');
-    R(5, 1, 2, 2, H); R(4, 0, 1, 2, H); R(13, 1, 2, 2, H); R(15, 0, 1, 2, H);
-    R(6, 2, 8, 7, c); R(5, 4, 1, 3, c); R(14, 4, 1, 3, c); R(7, 7, 6, 3, mix(c, '#d8a888', 0.4)); R(8, 8, 1, 1, K); R(11, 8, 1, 1, K);
-    R(7, 4, 2, 1, '#ff4d3a'); R(11, 4, 2, 1, '#ff4d3a'); R(9, 9, 2, 1, '#e0b03c');
-    R(5, 10, 10, 7, Ar); R(6, 11, 8, 1, mix(Ar, '#ffffff', 0.3)); R(5, 14, 10, 1, '#b8382f');
-    R(3, 10, 2, 6, c); R(15, 10, 2, 6, c);
-    R(6, 17, 3, 5 - o, d); R(11, 17, 3, 4 + o, d); R(6, 21, 3, 1, K); R(11, 21, 3, 1, K); }],
-  horsehead:[22, 22, (f, c) => { const d = darken(c, 0.3), K = '#2a1418', Ar = '#4a3a2a', M = '#1a1414', o = f ? 1 : 0;
-    R(1, 4 + o, 1, 17, '#6b4a2b'); R(0, 2 + o, 3, 3, '#a8b0b8');
-    R(11, 0, 4, 9, M);
-    R(7, 1, 6, 6, c); R(4, 5, 6, 5, c); R(4, 9, 5, 1, d); R(5, 7, 1, 1, K); R(7, 3, 2, 1, '#ff4d3a'); R(9, 0, 2, 2, c);
-    R(6, 10, 10, 7, Ar); R(7, 11, 8, 1, mix(Ar, '#ffffff', 0.3)); R(6, 14, 10, 1, '#3a6a8a');
-    R(4, 10, 2, 6, c); R(16, 10, 2, 6, c);
-    R(7, 17, 3, 5 - o, d); R(12, 17, 3, 4 + o, d); R(7, 21, 3, 1, K); R(12, 21, 3, 1, K); }],
-  yaksha:[18, 20, (f, c) => { const d = darken(c, 0.3), Hr = '#d8433a', Y = '#f3d36b', K = '#1a1218', o = f ? 1 : 0;
-    R(4, 0, 2, 3, Hr); R(7, 0, 3, 2, Hr); R(11, 0, 2, 3, Hr); R(3, 2, 12, 2, Hr);
-    R(4, 3, 10, 7, c); R(5, 5, 2, 2, Y); R(10, 5, 2, 2, Y); R(5, 6, 1, 1, K); R(10, 6, 1, 1, K);
-    R(6, 8, 6, 1, K); R(6, 9, 1, 1, '#ffffff'); R(11, 9, 1, 1, '#ffffff');
-    R(4, 10, 10, 5, c); R(5, 11, 3, 2, d); R(10, 11, 3, 2, d);
-    R(1, 10 + o, 3, 2, c); R(0, 12 + o, 2, 2, '#ffffff'); R(14, 10 - o + 1, 3, 2, c); R(16, 12 - o + 1, 2, 2, '#ffffff');
-    R(4, 15, 10, 2, Y); R(6, 15, 1, 2, K); R(9, 15, 1, 2, K); R(12, 15, 1, 2, K);
-    R(5, 17, 3, 3 - o, d); R(10, 17, 3, 2 + o, d); }],
-  judge:[22, 24, (f, c) => { const d = darken(c, 0.35), Sk = '#e8c8a0', K = '#1a1418', Gd = '#e0b03c', W2 = '#f4f0e0', o = f ? 1 : 0;
-    R(3, 0, 16, 2, K); R(4, 2, 1, 2 + o, Gd); R(7, 2, 1, 3, Gd); R(14, 2, 1, 3, Gd); R(17, 2, 1, 2 + o, Gd); R(8, 1, 6, 1, Gd);
-    R(7, 3, 8, 7, Sk); R(8, 5, 2, 1, K); R(12, 5, 2, 1, K); R(8, 6, 2, 1, '#ffffff'); R(12, 6, 2, 1, '#ffffff'); R(8, 6, 1, 1, K); R(12, 6, 1, 1, K);
-    R(8, 8, 6, 4, '#2a2020'); R(10, 8, 2, 1, '#8a2a2a');
-    R(4, 11, 14, 11, c); R(9, 11, 4, 3, W2); R(10, 13, 2, 1, c); R(5, 16, 12, 1, Gd);
-    R(1, 12 + o, 4, 9, c); R(17, 12 - o + 1, 4, 9, c); R(1, 20 + o, 4, 1, d); R(17, 21 - o, 4, 1, d);
-    R(10, 13, 2, 7, '#e8e0c8'); R(10, 13, 2, 1, Gd);
-    R(5, 22, 5, 2, K); R(12, 22, 5, 2, K); R(4, 21, 14, 1, d); }],
-  // 레이드 전용
-  serpent:[24, 20, (f, c) => { const d = darken(c, 0.3), l = mix(c, '#f3e6b0', 0.45), y0 = f ? 1 : 0;
-    R(10, 11, 12, 5, c); R(11, 15, 10, 1, d); R(20, 8 + y0, 3, 4, c); R(22, 7 + y0, 2, 2, d);
-    for (let i = 0; i < 4; i++) R(12 + i * 3, 10, 1, 1, d);
-    R(6, 14, 15, 5, c); R(7, 18, 13, 1, d); R(8, 15, 11, 1, l);
-    R(6, 6 + y0, 4, 10 - y0, c); R(9, 7 + y0, 1, 8, l);
-    R(2, 3 + y0, 8, 4, c); R(3, 2 + y0, 6, 1, c); R(2, 6 + y0, 6, 1, d);
-    R(4, 3 + y0, 2, 1, '#ffd84a'); R(4, 3 + y0, 1, 1, EYE); R(7, 2 + y0, 1, 1, d);
-    R(2, 7 + y0, 1, 1, '#ffffff'); R(5, 7 + y0, 1, 1, '#ffffff');
-    if (f){ R(0, 5 + y0, 2, 1, '#d8433a'); R(0, 4 + y0, 1, 1, '#d8433a'); } }],
-  shade:[20, 22, (f, c) => { const d = darken(c, 0.4), l = mix(c, '#8a7aa8', 0.4), E = '#ff4d6a';
-    R(6, 0, 8, 2, c); R(4, 2, 12, 3, c); R(2, 5, 16, 11, c); R(3, 6, 2, 8, l);
-    R(0, 8 + (f ? 1 : 0), 2, 6, c); R(18, 8 + (f ? 0 : 1), 2, 6, c);
-    for (let i = 0; i < 6; i++){ const up = (i + (f ? 1 : 0)) % 2; R(2 + i * 3, 16, 3, 4 - up * 2, i % 2 ? c : d); }
-    R(6, 7, 3, 2, E); R(12, 7, 3, 2, E); R(7, 7, 1, 1, '#ffd0d8'); R(13, 7, 1, 1, '#ffd0d8');
-    R(7, 12, 7, 1, E); R(8, 13, 1, 1, E); R(10, 13, 1, 1, E); R(12, 13, 1, 1, E); }],
-  haetae:[22, 18, (f, c) => { const d = darken(c, 0.3), l = mix(c, '#ffffff', 0.35), Y = '#f3d36b', o = f ? 1 : 0;
-    R(17, 3 + o, 3, 3, d); R(19, 1 + o, 2, 2, d); R(20, o, 2, 1, d);
-    R(7, 7, 12, 6, c); R(8, 12, 10, 1, l); for (let x = 9; x < 18; x += 3) R(x, 8, 1, 1, l);
-    const legs = f ? [[7, 0], [10, 1], [14, 0], [16, 1]] : [[7, 1], [10, 0], [14, 1], [16, 0]];
-    for (const [x, u] of legs){ R(x, 13, 3, 5 - u, d); R(x, 17 - u, 3, 1, darken(c, 0.5)); }
-    R(4, 1, 6, 11, d); R(5, 2, 1, 1, Y); R(8, 5, 1, 1, Y); R(5, 9, 1, 1, Y);
-    R(0, 3, 7, 7, c); R(3, 0, 2, 3, Y); R(3, 0, 1, 1, '#ffffff');
-    R(1, 4, 2, 2, '#ffffff'); R(1, 5, 1, 1, EYE); R(4, 4, 2, 2, '#ffffff'); R(4, 5, 1, 1, EYE);
-    R(0, 7, 5, 2, '#8a2a2a'); R(0, 7, 1, 1, '#ffffff'); R(2, 7, 1, 1, '#ffffff'); R(4, 7, 1, 1, '#ffffff');
-    R(5, 10, 2, 2, Y); }],
+/* ================= 몬스터·펫 HD 그림 =================
+   둥글고 귀엽게(큰 눈·통통한 몸). 크기는 장면 2배 해상도 픽셀, 모두 왼쪽을 본다. f: 0/1 움직임 두 장 */
+function hdKit(g){
+  const E = (x, y, rx, ry, c, rot = 0) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
+  const Pl = (pts, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
+  const RR = (x, y, w, h, r, c) => { g.fillStyle = c; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const blob = (x, y, rx, ry, c) => { E(x, y, rx, ry, darken(c, 0.2)); E(x - rx * 0.1, y - ry * 0.12, rx * 0.9, ry * 0.86, c); E(x - rx * 0.35, y - ry * 0.42, rx * 0.32, ry * 0.22, mix(c, '#ffffff', 0.32)); };
+  const eye = (x, y, s = 1) => { E(x, y, 1.9 * s, 2.5 * s, EYE); E(x - 0.6 * s, y - 0.9 * s, 0.75 * s, 0.75 * s, '#ffffff'); };
+  const bigEye = (x, y, s = 1, pc = EYE) => { E(x, y, 2.7 * s, 3.1 * s, '#ffffff'); E(x - 0.7 * s, y + 0.3 * s, 1.7 * s, 2.3 * s, pc); E(x - 1.2 * s, y - 0.6 * s, 0.7 * s, 0.7 * s, '#ffffff'); };
+  const angry = (x, y, s = 1, ec = '#ffd84a') => { E(x, y, 2.4 * s, 2.2 * s, ec); E(x - 0.4 * s, y + 0.2 * s, 1.1 * s, 1.5 * s, EYE); Pl([[x - 3 * s, y - 3.4 * s], [x + 3 * s, y - 1.6 * s], [x + 3 * s, y - 0.6 * s], [x - 3 * s, y - 2.2 * s]], '#1d1420'); };
+  const blush = (x, y, c) => E(x, y, 2, 1.1, mix(c, '#ff7a8a', 0.45));
+  const legs = (xs, y, h, w, c, f) => xs.forEach((x, i) => RR(x, y + ((i + f) % 2 ? -1 : 0), w, h, w / 2, c));
+  return {E, Pl, RR, blob, eye, bigEye, angry, blush, legs};
+}
+const MOB_HD = {
+  frog:[34, 28, (g, f, c) => { const {E, blob, bigEye, Pl} = hdKit(g), y = f ? -2 : 0;
+    E(5, 25 + (f ? 0 : 0), 4, 2, darken(c, 0.3)); E(29, 25, 4, 2, darken(c, 0.3));
+    blob(17, 17 + y, 13, 9, c); E(17, 20 + y, 8, 5, mix(c, '#ffffff', 0.55));
+    blob(10, 8 + y, 5, 5, c); blob(23, 8 + y, 5, 5, c); bigEye(10, 8 + y, 0.95); bigEye(23, 8 + y, 0.95);
+    Pl([[9, 16 + y], [25, 16 + y], [24, 17.4 + y], [10, 17.4 + y]], darken(c, 0.5)); E(13, 15 + y, 1.6, 0.8, mix(c, '#ff7a8a', 0.4)); }],
+  boar:[44, 32, (g, f, c) => { const {E, blob, Pl, angry, legs, RR} = hdKit(g), d = darken(c, 0.3);
+    legs([12, 18, 28, 34], 22, 9, 4.4, d, f);
+    blob(25, 16, 16, 11, c);
+    for (let i = 0; i < 6; i++) Pl([[15 + i * 4, 7 - (i % 2)], [19 + i * 4, 6], [17 + i * 4, 1.5 + (i % 2)]], d);
+    blob(10, 17, 9, 8, c); E(3.6, 20, 4, 3.4, '#e8a08a'); E(2.6, 19.4, 0.8, 1, '#7a3a3a'); E(4.8, 19.4, 0.8, 1, '#7a3a3a');
+    Pl([[6, 22], [8, 22], [5, 15.5]], '#f6efe4'); angry(10, 13, 0.9, '#ffffff');
+    E(15, 9, 2.6, 3.4, d, -0.4); RR(40, 12, 3, 1.4, 0.6, d); E(42, 11, 1.4, 1.4, d); }],
+  raccoon:[38, 34, (g, f, c) => { const {E, blob, bigEye, legs} = hdKit(g), d = darken(c, 0.35), mk = '#3a2f28', y = f ? -1 : 0;
+    for (let i = 0; i < 4; i++) E(31 + i * 1.5, 22 - i * 4 + y, 4, 3, i % 2 ? mk : c);
+    legs([10, 16, 22], 27, 6, 4.6, d, f);
+    blob(18, 22, 12, 9, c); E(18, 25, 7, 5, '#e8dcc4');
+    blob(14, 11 + y, 11, 9, c); E(6, 3 + y, 3.6, 4, d); E(21, 3 + y, 3.6, 4, d);
+    E(14, 12 + y, 9, 3.4, mk); bigEye(10, 12 + y, 0.85); bigEye(18, 12 + y, 0.85); E(7, 16 + y, 1.6, 1.2, EYE); }],
+  fox:[46, 36, (g, f, c, boss) => { const {E, blob, Pl, bigEye, legs} = hdKit(g), d = darken(c, 0.3), w = '#f6efe4', sw = f ? 1.5 : 0;
+    const tails = boss ? 5 : 1;
+    for (let i = 0; i < tails; i++){ const a = (boss ? -0.9 + i * 0.42 : -0.3) + sw * 0.05; g.save(); g.translate(30, 22); g.rotate(a);
+      blob(10, 0, 9, 4.6, c); E(17, 0, 3.6, 3, w); g.restore(); }
+    legs([13, 18, 24, 28], 26, 8, 3.8, d, f);
+    blob(21, 23, 11, 7, c); E(16, 26, 5, 3.4, w);
+    blob(11, 15, 9, 8, c); E(7, 19, 5, 3.4, w);
+    Pl([[6, 9], [4, 0], [11, 6]], c); Pl([[14, 8], [17, -0.5], [19, 9]], c); Pl([[6.4, 7], [5.2, 2.4], [9, 6]], '#f3a0b0'); Pl([[15, 7.6], [17, 2], [18, 8]], '#f3a0b0');
+    E(2.2, 17.6, 1.3, 1, EYE);
+    if (boss){ E(8, 13, 2.2, 1.6, '#ff3b5a'); E(15, 13, 2.2, 1.6, '#ff3b5a'); E(7.6, 13, 0.9, 1.2, EYE); E(14.6, 13, 0.9, 1.2, EYE); Pl([[9, 9], [11, 6], [12, 9]], '#d8433a'); }
+    else { bigEye(8, 13, 0.8); bigEye(15, 13, 0.8); } }],
+  totem:[30, 46, (g, f, c) => { const {E, RR, Pl, bigEye} = hdKit(g), d = darken(c, 0.3), K = '#2b2233', y = f ? -2 : 0;
+    E(15, 44, 9, 2, 'rgba(0,0,0,0)');
+    RR(7, 20 + y, 16, 24 - y, 4, c); RR(17, 20 + y, 6, 24 - y, 3, d);
+    for (let k = 0; k < 3; k++) RR(9, 26 + k * 6 + y, 12, 1.2, 0.6, d);
+    RR(4, 6 + y, 22, 18, 7, c); RR(18, 6 + y, 8, 18, 4, d);
+    RR(3, -1 + y, 24, 6, 2, K); RR(8, -5 + y, 14, 6, 2, K); RR(1, 4 + y, 28, 2.4, 1.2, '#3a3046');
+    bigEye(10, 12 + y, 1.15); bigEye(20, 12 + y, 1.15);
+    Pl([[6, 8 + y], [13, 9.6 + y], [13, 8.4 + y]], K); Pl([[24, 8 + y], [17, 9.6 + y], [17, 8.4 + y]], K);
+    E(15, 16 + y, 2.4, 2, darken(c, 0.4));
+    RR(8, 19 + y, 14, 4, 2, '#3a1e1e'); for (let x = 9.5; x < 21; x += 3) RR(x, 19 + y, 2, 2, 0.6, '#ffffff'); }],
+  bat:[44, 28, (g, f, c) => { const {E, Pl, blob, angry} = hdKit(g), d = darken(c, 0.3);
+    const up = f ? -6 : 0;
+    Pl([[16, 13], [2, 4 + up], [4, 12 + up * 0.5], [1, 16 + up * 0.3], [9, 16], [16, 18]], d);
+    Pl([[28, 13], [42, 4 + up], [40, 12 + up * 0.5], [43, 16 + up * 0.3], [35, 16], [28, 18]], d);
+    blob(22, 15, 9, 8, c); Pl([[15, 9], [14, 1], [19, 7]], c); Pl([[29, 9], [30, 1], [25, 7]], c);
+    E(18.6, 13, 2, 2.2, '#ff4d4d'); E(25.4, 13, 2, 2.2, '#ff4d4d'); E(18.2, 13.4, 0.8, 1.1, EYE); E(25, 13.4, 0.8, 1.1, EYE);
+    Pl([[20, 18], [21, 18], [20.5, 20.6]], '#ffffff'); Pl([[23, 18], [24, 18], [23.5, 20.6]], '#ffffff'); }],
+  ghost:[34, 42, (g, f, c) => { const {E, Pl, RR} = hdKit(g), K = '#1a1620', P2 = '#eef2f6';
+    Pl([[6, 18], [28, 18], [30, 34], [27, 40 - (f ? 2 : 0)], [23, 36], [19, 41 - (f ? 0 : 2)], [15, 36], [11, 41 - (f ? 2 : 0)], [7, 36], [4, 39]], c);
+    Pl([[17, 18], [28, 18], [30, 34], [27, 40 - (f ? 2 : 0)], [23, 36], [19, 41 - (f ? 0 : 2)]], darken(c, 0.12));
+    RR(1, 20 + (f ? 1 : 0), 6, 9, 3, c); RR(27, 20 + (f ? 0 : 1), 6, 9, 3, c); E(4, 29, 2.4, 2, P2); E(30, 29, 2.4, 2, P2);
+    E(17, 12, 13, 12, K); RR(5, 12, 5, 22, 2.4, K); RR(24, 12, 5, 22, 2.4, K);
+    E(16, 14, 8, 8.6, P2); E(12.6, 14.6, 1.6, 2.4, EYE); E(19.4, 14.6, 1.6, 2.4, EYE); E(12.2, 13.4, 0.6, 0.6, '#ffffff'); E(19, 13.4, 0.6, 0.6, '#ffffff');
+    E(16, 19, 1.6, 1, '#8a2a3a'); RR(6, 4, 22, 6, 3, K); }],
+  dokkaebi:[40, 44, (g, f, c) => { const {E, RR, Pl, blob, angry} = hdKit(g), d = darken(c, 0.3), Y = '#f3d36b', K = '#2a1418';
+    const cy = f ? 6 : 10;
+    RR(11, 34, 7, 9, 3, d); RR(22, 34, 7, 9, 3, d);
+    blob(20, 27, 14, 11, c); RR(8, 28, 24, 7, 3, Y); for (const x of [11, 17, 23, 28]) RR(x, 28, 1.6, 7, 0.6, K);
+    blob(20, 14, 13, 11, c); Pl([[18, 4], [21, -2], [24, 4]], Y); Pl([[21, -2], [24, 4], [22, 4]], darken(Y, 0.25));
+    E(11, 4, 3, 2, K); E(29, 4, 3, 2, K);
+    angry(14, 13, 1.1); angry(26, 13, 1.1);
+    RR(12, 19, 16, 5, 2.4, K); for (const x of [13.4, 24]) Pl([[x, 19], [x + 2.4, 19], [x + 1.2, 23]], '#ffffff');
+    g.save(); g.translate(5, cy + 14); g.rotate(-0.4 + (f ? -0.25 : 0)); RR(-3, -14, 6, 20, 3, '#8a5a2a'); for (const yy of [-11, -6, -1]) E(-3, yy, 1.2, 1.2, '#e8e0d0'); RR(-1.4, 4, 2.8, 6, 1, '#6b4a2b'); g.restore();
+    E(4.6, 24, 3, 3, c); }],
+  wisp:[26, 30, (g, f, c) => { const {E, Pl, blob, eye} = hdKit(g), l = mix(c, '#ffffff', 0.55), t = f ? 1.5 : 0;
+    Pl([[13 - t, 0], [19, 9], [22, 18], [13, 28], [4, 18], [7, 9]], c); Pl([[13 - t, 4], [17, 11], [19, 18], [13, 25], [7, 18], [9, 11]], l);
+    E(13, 19, 6, 6, mix(c, '#ffffff', 0.8)); eye(10.4, 19, 0.75); eye(15.6, 19, 0.75); }],
+  wolf:[46, 34, (g, f, c) => { const {E, Pl, blob, angry, legs} = hdKit(g), d = darken(c, 0.3), w = '#f4f8fb';
+    g.save(); g.translate(34, 15); g.rotate(-0.5 + (f ? 0.15 : 0)); blob(6, 0, 7, 3.6, c); E(11, 0, 2.4, 2, w); g.restore();
+    legs([13, 18, 26, 31], 23, 10, 4, d, f);
+    blob(23, 18, 13, 8, c); E(17, 21, 6, 4, w);
+    blob(10, 13, 9, 8, c); Pl([[3, 15], [-0.5, 18], [4, 20], [9, 18]], c); E(1, 17, 1.4, 1.2, EYE); Pl([[2, 20], [8, 20], [5, 22]], w);
+    Pl([[6, 7], [5, -1], [11, 5]], c); Pl([[13, 6], [16, -1], [17, 7]], c);
+    angry(9, 12, 0.85, '#7ac8ff'); Pl([[12, 23], [20, 22], [16, 27]], w); }],
+  bulgasari:[40, 40, (g, f, c) => { const {E, Pl, blob, angry, legs} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.35);
+    legs([10, 17, 25, 31], 29, 9, 5.4, d, f);
+    for (let i = 0; i < 5; i++) Pl([[15 + i * 5, 10 - (i % 2) * 2], [19 + i * 5, 10], [17 + i * 5, 2 - (i % 2) * 2]], l);
+    blob(24, 21, 15, 12, c); for (let i = 0; i < 4; i++) E(18 + i * 6, 18 + (i % 2) * 4, 2.2, 1.6, d);
+    blob(10, 19, 10, 9, c); Pl([[4, 13], [2, 6], [8, 11]], l); Pl([[13, 11], [15, 4], [17, 12]], l);
+    angry(8, 17, 1, '#ff6a3a'); E(3.4, 24, 3, 2.4, d); Pl([[2, 26], [7, 26], [4.4, 29]], '#ffffff'); }],
+  agwi:[34, 44, (g, f, c) => { const {E, Pl, RR, blob} = hdKit(g), d = darken(c, 0.35), l = mix(c, '#ffffff', 0.25), K = '#1a1218', o = f ? 1.5 : 0;
+    RR(10, 32, 3, 11 - o, 1.4, d); RR(21, 32, 3, 10 + o, 1.4, d); E(11, 43, 3, 1.2, d); E(23, 43, 3, 1.2, d);
+    RR(3, 20 + o, 3, 13, 1.4, c); RR(28, 20 - o, 3, 13, 1.4, c);
+    blob(17, 27, 11, 9, c); E(17, 29, 7, 5.4, l);
+    RR(15, 16, 4, 5, 2, c);
+    blob(17, 10, 11, 9.6, c); E(12, 9, 3.4, 3, K); E(22, 9, 3.4, 3, K); E(12, 9, 1.4, 1.4, '#ffef8a'); E(22, 9, 1.4, 1.4, '#ffef8a');
+    E(17, 16, 5, 2.6, '#5a1a22'); for (const x of [14, 17, 20]) Pl([[x - 1, 14], [x + 1, 14], [x, 16]], '#e8e0d0'); }],
+  oxhead:[46, 46, (g, f, c) => { const {E, Pl, RR, blob, angry} = hdKit(g), d = darken(c, 0.3), H = '#e8e0c8', Ar = '#4a4a5a', o = f ? 1.5 : 0;
+    RR(2, 6 + o, 2.4, 38, 1, '#6b4a2b'); Pl([[-0.5, 6 + o], [7, 6 + o], [6, 2 + o], [4.6, 5 + o], [3.2, 0 + o], [1.8, 5 + o], [0.4, 2 + o]], '#c8c8d0');
+    RR(13, 34, 7, 11 - o, 3, d); RR(26, 34, 7, 10 + o, 3, d);
+    blob(23, 29, 13, 10, Ar); RR(11, 30, 24, 2.6, 1, '#b8382f'); E(19, 25, 4, 2, mix(Ar, '#ffffff', 0.35));
+    RR(6, 22, 6, 12, 3, c); RR(34, 22, 6, 12, 3, c); E(5, 33, 3, 3, c);
+    Pl([[12, 7], [5, 0], [8, 8]], H); Pl([[33, 7], [40, 0], [37, 8]], H);
+    blob(22, 13, 12, 10, c); E(20, 19, 8, 5, mix(c, '#e8b898', 0.45)); E(17, 19, 1.2, 1.4, EYE); E(23, 19, 1.2, 1.4, EYE);
+    angry(16, 11, 1, '#ff5a3a'); angry(27, 11, 1, '#ff5a3a'); RR(18, 22, 8, 2, 1, '#e0b03c'); }],
+  horsehead:[46, 46, (g, f, c) => { const {E, Pl, RR, blob, angry} = hdKit(g), d = darken(c, 0.3), Ar = '#4a3a2a', M = '#1a1414', o = f ? 1.5 : 0;
+    RR(2, 8 + o, 2.4, 36, 1, '#6b4a2b'); Pl([[3.2, -1 + o], [6, 8 + o], [0.4, 8 + o]], '#a8b0b8');
+    RR(13, 34, 7, 11 - o, 3, d); RR(26, 34, 7, 10 + o, 3, d);
+    blob(23, 29, 13, 10, Ar); RR(11, 30, 24, 2.6, 1, '#3a6a8a');
+    RR(6, 22, 6, 12, 3, c); RR(34, 22, 6, 12, 3, c); E(5, 33, 3, 3, c);
+    Pl([[24, 0], [34, 2], [32, 20], [26, 14]], M);
+    blob(20, 10, 10, 9, c); blob(11, 15, 8, 6, c); E(6, 16, 1.2, 1, EYE); E(9, 20, 3, 1, darken(c, 0.4)); Pl([[23, 2], [25, -4], [27, 3]], c);
+    angry(19, 8, 1, '#ff5a3a'); }],
+  yaksha:[40, 44, (g, f, c) => { const {E, Pl, RR, blob, angry} = hdKit(g), d = darken(c, 0.3), Hr = '#d8433a', Y = '#f3d36b', o = f ? 1.5 : 0;
+    RR(11, 34, 7, 10 - o, 3, d); RR(23, 34, 7, 9 + o, 3, d);
+    RR(2, 20 + o, 6, 12, 3, c); RR(32, 21 - o, 6, 12, 3, c); E(4, 33 + o, 3, 3, '#ffffff'); E(36, 34 - o, 3, 3, '#ffffff');
+    blob(20, 27, 13, 10, c); RR(8, 30, 24, 6, 2, Y); for (const x of [12, 18, 24]) RR(x, 30, 1.6, 6, 0.6, '#1a1218');
+    for (let i = 0; i < 7; i++) Pl([[6 + i * 4.4, 9], [10 + i * 4.4, 9], [7 + i * 4.4 + (i % 2) * 2, -2 + (i % 3)]], Hr);
+    blob(20, 14, 13, 10, c); RR(5, 5, 30, 5, 2.4, Hr);
+    angry(14, 13, 1.05); angry(26, 13, 1.05);
+    RR(13, 19, 14, 4, 2, '#1a1218'); Pl([[14, 19], [16, 19], [15, 24]], '#ffffff'); Pl([[24, 19], [26, 19], [25, 24]], '#ffffff'); }],
+  judge:[48, 50, (g, f, c) => { const {E, Pl, RR, blob} = hdKit(g), d = darken(c, 0.35), Sk = '#f0d4b0', K = '#1a1418', Gd = '#e0b03c', W2 = '#f4f0e0', o = f ? 1 : 0;
+    RR(10, 44, 12, 5, 2, K); RR(26, 44, 12, 5, 2, K);
+    Pl([[10, 24], [38, 24], [44, 46], [4, 46]], c); Pl([[24, 24], [38, 24], [44, 46], [24, 46]], d); RR(6, 34, 36, 3, 1, Gd);
+    Pl([[18, 24], [24, 32], [30, 24]], W2);
+    RR(1, 26 + o, 8, 16, 4, c); RR(39, 26 - o, 8, 16, 4, c); E(5, 42 + o, 3, 3, Sk);
+    RR(21, 24, 6, 18, 2, '#e8e0c8'); RR(21, 24, 6, 2, 1, Gd);
+    blob(24, 16, 11, 10, Sk);
+    E(19, 15, 1.8, 2.4, EYE); E(29, 15, 1.8, 2.4, EYE); Pl([[15, 11], [22, 12.4], [22, 13.6], [15, 12.4]], K); Pl([[33, 11], [26, 12.4], [26, 13.6], [33, 12.4]], K);
+    Pl([[16, 20], [32, 20], [30, 30], [24, 33], [18, 30]], '#2a2020'); E(24, 20, 3, 1.2, '#8a2a2a');
+    RR(8, 2, 32, 4, 1.4, K); RR(13, 5, 22, 4, 1.4, K); for (const x of [10, 15, 33, 38]) RR(x - 0.6, 6, 1.2, 5 + o, 0.6, Gd); RR(16, 3, 16, 1.4, 0.6, Gd); }],
+  serpent:[52, 42, (g, f, c) => { const {E, Pl, blob, angry, RR} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#f3e6b0', 0.45), y0 = f ? 2 : 0;
+    blob(34, 32, 16, 8, c); E(34, 34, 12, 4, l); for (let i = 0; i < 5; i++) E(24 + i * 5, 28, 1.4, 1, d);
+    blob(40, 24, 9, 6, c); Pl([[47, 22], [52, 18], [50, 24]], d);
+    RR(10, 10 + y0, 10, 24 - y0, 5, c); RR(16, 10 + y0, 4, 24 - y0, 2, l);
+    blob(12, 10 + y0, 11, 8, c); E(8, 13 + y0, 7, 4, l);
+    angry(9, 7 + y0, 1, '#ffd84a');
+    for (const x of [3.4, 7]) Pl([[x, 15 + y0], [x + 1.6, 15 + y0], [x + 0.8, 18 + y0]], '#ffffff');
+    if (f){ Pl([[1, 14], [-0.5, 12], [-0.5, 16]], '#d8433a'); }
+    Pl([[14, 2 + y0], [17, -1 + y0], [18, 4 + y0]], d); }],
+  shade:[44, 46, (g, f, c) => { const {E, Pl, blob} = hdKit(g), d = darken(c, 0.4), l = mix(c, '#8a7aa8', 0.4), Ey = '#ff4d6a';
+    const pts = [[4, 24], [8, 8], [22, 0], [36, 8], [40, 24], [42, 40]]; for (let i = 0; i < 7; i++) pts.push([42 - i * 6.4, (i + (f ? 1 : 0)) % 2 ? 44 : 38]); pts.push([2, 40]);
+    Pl(pts, c); E(14, 16, 6, 8, l);
+    Pl([[0, 22 + (f ? 2 : 0)], [6, 18], [7, 30]], c); Pl([[44, 22 + (f ? 0 : 2)], [38, 18], [37, 30]], c);
+    E(15, 20, 4.6, 3.4, Ey); E(29, 20, 4.6, 3.4, Ey); E(14, 19, 1.6, 1.2, '#ffd0d8'); E(28, 19, 1.6, 1.2, '#ffd0d8');
+    Pl([[13, 29], [31, 29], [27, 33], [22, 30], [17, 33]], Ey); }],
+  haetae:[48, 40, (g, f, c) => { const {E, Pl, blob, bigEye, legs, RR} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.35), Y = '#f3d36b';
+    g.save(); g.translate(40, 14); g.rotate(-0.6 + (f ? 0.2 : 0)); blob(4, 0, 6, 3.4, d); blob(9, -2, 3.6, 3.6, d); g.restore();
+    legs([16, 22, 30, 36], 27, 11, 5, d, f);
+    blob(28, 22, 15, 10, c); E(26, 26, 9, 4, l); for (let x = 20; x < 38; x += 5) E(x, 17, 1.6, 1.2, l);
+    for (let i = 0; i < 8; i++){ const a = i * 0.78; blob(13 + Math.cos(a) * 9, 15 + Math.sin(a) * 9, 4.6, 4.6, d); }
+    blob(13, 16, 10, 9, c); Pl([[11, 6], [13, -2], [16, 6]], Y);
+    bigEye(9, 14, 0.85); bigEye(17, 14, 0.85);
+    RR(5, 20, 12, 4.6, 2.2, '#8a2a2a'); for (const x of [6, 9.4, 12.8]) Pl([[x, 20], [x + 2, 20], [x + 1, 22.6]], '#ffffff');
+    E(13, 29, 2.4, 2.4, Y); E(12.4, 28.4, 0.8, 0.8, '#ffffff'); }],
 };
+const PET_HD = {
+  cat:[28, 24, (g, f, c) => petFeline(g, f, c, false)],
+  tiger:[28, 24, (g, f, c) => petFeline(g, f, c, true)],
+  hawk:[28, 24, (g, f, c) => petBird(g, f, c, {belly:'#e8dcc0', wing:'#5a4030'})],
+  crow:[28, 24, (g, f, c) => petBird(g, f, c, {belly:'#3a3440', wing:'#1a141e', beak:'#ffd84a', eye:'#ff6a3a', legs3:true, crest:'#ffd84a'})],
+  magpie:[32, 24, (g, f, c) => petBird(g, f, c, {belly:'#ffffff', wing:'#2a3a6a', beak:'#3a3440', tailLen:12, tail:'#2a3a6a'})],
+  phoenix:[34, 26, (g, f, c) => petBird(g, f, c, {belly:'#ffd84a', wing:'#ff8a3a', beak:'#ffd84a', crest:'#ffd84a', tailLen:13, tail:'#ffd84a', tail2:'#7fd0ff'})],
+  turtle:[30, 22, (g, f, c) => { const {E, blob, bigEye, RR} = hdKit(g), d = darken(c, 0.3), sk = mix(c, '#c8c878', 0.5), o = f ? 1 : 0;
+    RR(7, 15 - o, 5, 6, 2, sk); RR(19, 15 + o, 5, 6, 2, sk); E(27, 15, 3, 2, sk);
+    blob(17, 11, 11, 8, c); for (const [x, y] of [[12, 9], [18, 7], [22, 11], [15, 13]]) E(x, y, 2.6, 2, d); E(17, 17, 11, 2, darken(c, 0.5));
+    blob(5, 11, 5, 4.6, sk); bigEye(4, 10, 0.6); }],
+  bear:[30, 26, (g, f, c) => { const {E, blob, bigEye, legs} = hdKit(g), d = darken(c, 0.3);
+    legs([9, 14, 19, 24], 18, 7, 4, d, f);
+    blob(17, 15, 11, 8, c); E(17, 13, 5, 1.6, '#f4f0e8');
+    blob(9, 9, 8, 7.4, c); E(4, 3, 2.6, 2.6, c); E(14, 2.6, 2.6, 2.6, c); E(4, 12, 4, 3, '#c8a888'); E(2, 11, 1.2, 1, EYE);
+    bigEye(7, 8, 0.6); bigEye(12, 8, 0.6); }],
+  haetae:[32, 26, (g, f, c) => { const {E, Pl, blob, bigEye, legs} = hdKit(g), d = darken(c, 0.3), Y = '#f3d36b';
+    g.save(); g.translate(27, 8); g.rotate(-0.6 + (f ? 0.2 : 0)); blob(3, 0, 4, 2.4, d); g.restore();
+    legs([11, 15, 21, 25], 17, 8, 3.6, d, f);
+    blob(19, 15, 10, 7, c);
+    for (let i = 0; i < 7; i++){ const a = i * 0.9; blob(9 + Math.cos(a) * 6, 10 + Math.sin(a) * 6, 3, 3, d); }
+    blob(9, 10, 7, 6.4, c); Pl([[8, 3], [9.6, -2], [11, 3]], Y); bigEye(6, 9, 0.6); bigEye(11, 9, 0.6); E(9, 14, 3, 1.4, '#8a2a2a'); E(10, 20, 1.8, 1.8, Y); }],
+  toad:[28, 22, (g, f, c) => { const {E, blob, bigEye} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#f3e6b0', 0.5), y = f ? -1.5 : 0;
+    E(4, 19, 4, 2, d); E(24, 19, 4, 2, d);
+    blob(14, 13 + y, 12, 8, c); E(14, 16 + y, 8, 4, l); for (const [x, yy] of [[8, 10], [19, 9], [14, 12]]) E(x, yy + y, 1.4, 1, d);
+    blob(8, 6 + y, 4, 4, c); blob(19, 6 + y, 4, 4, c); bigEye(8, 6 + y, 0.7); bigEye(19, 6 + y, 0.7);
+    E(14, 18 + y, 3, 3, '#ffd84a'); E(14, 18 + y, 1, 1, darken('#ffd84a', 0.4)); }],
+  dog:[30, 26, (g, f, c) => { const {E, blob, legs} = hdKit(g), d = darken(c, 0.25);
+    g.save(); g.translate(26, 8); g.rotate(-0.8 + (f ? 0.3 : 0)); blob(3, 0, 4, 2.6, c); g.restore();
+    legs([9, 13, 19, 23], 18, 7, 3.8, d, f);
+    blob(17, 14, 11, 7.6, c); for (let x = 9; x < 27; x += 3) E(x, 20, 1.6, 1.6, d);
+    blob(9, 10, 8, 7.4, c); E(9, 7, 8, 3.4, d); E(4, 13, 2.4, 2, EYE); E(3, 12, 0.6, 0.6, '#ffffff');
+    E(15, 9, 3, 5, d); E(6, 16, 2, 1.2, '#d87a8a'); }],
+  crane:[26, 32, (g, f, c) => { const {E, Pl, RR, blob} = hdKit(g), K = '#22202c', Lg = '#3a3036';
+    if (f){ RR(11, 22, 1.4, 10, 0.6, Lg); RR(15, 22, 1.4, 6, 0.6, Lg); Pl([[15, 27], [20, 27], [20, 28.4], [15, 28.4]], Lg); }
+    else { RR(11, 22, 1.4, 10, 0.6, Lg); RR(15, 22, 1.4, 10, 0.6, Lg); }
+    blob(15, 17, 9, 6.4, c); Pl([[19, 14], [26, 16], [24, 22], [17, 21]], K); E(13, 18, 5, 2.4, mix(c, '#b8b8b0', 0.4));
+    RR(6, 4, 3.4, 12, 1.6, K); blob(7, 4, 4, 3.6, c); E(7, 1.6, 2, 1.4, '#d8433a'); Pl([[3.4, 3.4], [-1, 5], [3.6, 5.4]], '#c8b878'); E(6, 3.8, 1, 1.2, EYE); }],
+};
+function petFeline(g, f, c, stripes){
+  const {E, Pl, blob, bigEye, legs, RR} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.45), o = f ? 1.5 : 0;
+  RR(22, 2 + o, 3, 12, 1.5, c); E(23.5, 2.4 + o, 2, 2, c);
+  legs([9, 13, 18, 22], 17, 6, 3.4, d, f);
+  blob(16, 14, 9, 6, c); E(14, 17, 5, 2.6, l);
+  blob(8, 9, 8, 7.4, c); Pl([[2, 5], [1, -1], [6, 3]], c); Pl([[10, 3], [13, -1], [14, 5]], c); Pl([[2.6, 4], [2, 0.8], [5, 3]], '#f3a0b0'); Pl([[11, 3], [12.6, 0.8], [13, 4]], '#f3a0b0');
+  bigEye(5, 9, 0.62); bigEye(11, 9, 0.62); E(8, 12.6, 1, 0.7, '#d87a8a'); E(7, 14, 3, 1.4, l);
+  if (stripes){ const K = '#2a2026'; for (const x of [13, 17, 21]) Pl([[x - 1, 9], [x + 1, 9], [x, 14]], K); Pl([[7, 2.4], [9, 2.4], [8, 5]], K); }
+}
+function petBird(g, f, c, o){
+  const {E, Pl, blob, bigEye, RR} = hdKit(g), d = darken(c, 0.3), tl = o.tailLen || 6;
+  Pl([[18, 12], [18 + tl, 9], [18 + tl, 14]], o.tail || d);
+  if (o.tail2) Pl([[18, 14], [17 + tl, 15], [17 + tl, 17]], o.tail2);
+  const lc = '#c8a050';
+  if (o.legs3){ for (const x of [9, 12, 15]) RR(x, 17, 1.2, 5, 0.6, lc); } else { RR(10, 17, 1.2, 4, 0.6, lc); RR(14, 17, 1.2, 4, 0.6, lc); }
+  blob(13, 13, 8, 6, c); E(12, 15, 5, 3, o.belly || mix(c, '#ffffff', 0.4));
+  blob(7, 7, 6, 5.6, c); Pl([[2.4, 6], [-1.6, 8], [2.4, 9]], o.beak || '#e0b03c');
+  if (o.crest){ Pl([[7, 2.4], [5, -2], [9, 1], [10, -2], [10, 3]], o.crest); }
+  if (o.eye) { E(6, 6.6, 1.4, 1.6, o.eye); E(5.6, 6.2, 0.5, 0.5, '#ffffff'); } else bigEye(6, 6.6, 0.55);
+  if (f) Pl([[11, 10], [21, 2], [18, 11]], o.wing || d); else Pl([[11, 11], [21, 16], [17, 10]], o.wing || d);
+}
+
 const mobCache = new Map();
 function mobSprite(type, color, f, boss, white){
   const key = type + color + f + (boss ? 'B' : '');
   let sp = mobCache.get(key);
   if (!sp){
-    const [w, h, draw] = MOB_DRAW[type];
-    const base = buildSprite(w, h, () => draw(f, color, boss), boss ? '#ff3b3b' : '#1a1218');
-    sp = {base, white:whiteOf(base)};
+    const hd = MOB_HD[type];
+    const [w, h, draw] = hd, cnv = document.createElement('canvas'); cnv.width = w + 4; cnv.height = h + 4; const g = cnv.getContext('2d'); g.translate(2, 2); draw(g, f, color, boss);
+    const base = hdFinish(cnv, boss ? '#ff3b3b' : '#1d1420');
+    const wh = whiteOf(base); wh.hd = base.hd;
+    sp = {base, white:wh};
     mobCache.set(key, sp);
   }
   return white ? sp.white : sp.base;
@@ -3185,11 +3250,213 @@ function buildMap(ri, w = S.world){
   return c;
 }
 const mapCache = new Map();
-function getMap(ri){ const key = S.world + ':' + ri; let m = mapCache.get(key); if (!m){ m = buildMap(ri); mapCache.set(key, m); } return m; }
+function getMap(ri){ const key = S.world + ':' + ri; let m = mapCache.get(key); if (!m){ m = buildIsoMap(ri); mapCache.set(key, m); } return m; }
+
+/* ================= 쿼터뷰 지도 =================
+   싸우는 칸(가로 15 × 세로 8)은 그대로 두고, 화면에는 비스듬히 내려다본 마름모 판(디오라마)으로 그린다.
+   +tx는 화면 오른쪽 아래, +ty는 왼쪽 아래. 판 둘레에는 지역 풍경을 둔다. 장면은 RS배 해상도로 그린다 */
+const RS = 2;
+const IW = 18, IH = 9, IOX = 106, IOY = 40, IDEP = 8;
+const isoX = (tx, ty) => IOX + (tx - ty) * IW / 2;
+const isoY = (tx, ty) => IOY + (tx + ty) * IH / 2;
+// 판 가장자리(화면 좌표): 위 꼭짓점·왼쪽·오른쪽·아래
+const ISO_TOP = [isoX(0, TOPR), isoY(0, TOPR) - IH / 2], ISO_LEFT = [isoX(0, ROWS - 1) - IW / 2, isoY(0, ROWS - 1)];
+const ISO_RIGHT = [isoX(COLS - 1, TOPR) + IW / 2, isoY(COLS - 1, TOPR)], ISO_BOT = [isoX(COLS - 1, ROWS - 1), isoY(COLS - 1, ROWS - 1) + IH / 2];
+const edgeTop = x => x < ISO_TOP[0] ? ISO_LEFT[1] - (x - ISO_LEFT[0]) / 2 : ISO_TOP[1] + (x - ISO_TOP[0]) / 2;
+const edgeBot = x => x < ISO_BOT[0] ? ISO_LEFT[1] + (x - ISO_LEFT[0]) / 2 : ISO_BOT[1] - (x - ISO_BOT[0]) / 2;
+
+const ISO_THEME = {
+  village:{top:['#86c262', '#7db95b'], side:['#a07a4a', '#7c5a36'], outer:'#69a74d', sky:['#9fd4ff', '#e2f4ff'], hills:'#7fb7a0'},
+  bamboo:{top:['#6aa852', '#62a04c'], side:['#7a6440', '#5e4c30'], outer:'#4f8a40', sky:['#a8dcc8', '#e6f6ea'], hills:'#5f9a7a'},
+  rock:{top:['#c4ad86', '#bba47e'], side:['#8a7262', '#6e5a4c'], outer:'#a89070', sky:['#f0c8a0', '#fbe8d0'], hills:'#a07e66'},
+  swamp:{top:['#66784f', '#5f7049'], side:['#4c523e', '#3a3f30'], outer:'#3f5a54', sky:['#8aa0a0', '#c8d4cc'], hills:'#4a6260'},
+  cave:{top:['#55433f', '#4e3d39'], side:['#3a2c2a', '#2a1f1e'], outer:'#2e2224', sky:['#1a1214', '#2e2224'], hills:'#3a2a2c'},
+  snow:{top:['#eef5fb', '#e4eef6'], side:['#9ab6cc', '#7a96ae'], outer:'#d6e6f2', sky:['#b8d4ec', '#eef6fc'], hills:'#a8c4dc'},
+  blade:{top:['#4a3c3e', '#443638'], side:['#3a2c30', '#2a1e22'], outer:'#2e2024', sky:['#3a0e14', '#6a1a1a'], hills:'#4a1a1e'},
+  lava:{top:['#3a241e', '#33201a'], side:['#2a1410', '#1e0e0a'], outer:'#ff5a1a', sky:['#1a0806', '#4a1408'], hills:'#2a0e08'},
+  ice:{top:['#a4bed0', '#9ab6ca'], side:['#6a8aa8', '#52708c'], outer:'#5a7a98', sky:['#0e1a2e', '#2a4a6a'], hills:'#1e3450'},
+  bladetree:{top:['#3e5046', '#394a40'], side:['#26362e', '#1a2822'], outer:'#1c2a24', sky:['#0a1210', '#1a2a24'], hills:'#14201a'},
+  poison:{top:['#36362a', '#313125'], side:['#2a2a1e', '#1e1e14'], outer:'#3a2246', sky:['#1a0e22', '#3a2a3a'], hills:'#2a1a30'},
+  dark:{top:['#352d42', '#30293c'], side:['#201a2a', '#15111c'], outer:'#0e0b14', sky:['#050408', '#120e18'], hills:'#0e0a14'},
+};
+function gPoly(g, pts, col){ g.fillStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); }
+function gEll(g, x, y, rx, ry, col){ g.fillStyle = col; g.beginPath(); g.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, Math.PI * 2); g.fill(); }
+function isoTile(g, cx, cy, col, grow = 0.35){ gPoly(g, [[cx, cy - IH / 2 - grow], [cx + IW / 2 + grow * 2, cy], [cx, cy + IH / 2 + grow], [cx - IW / 2 - grow * 2, cy]], col); }
+// 둥근 덩어리(나뭇잎·바위·눈더미): 아래 오른쪽은 어둡게, 위 왼쪽은 밝게
+function gBlob(g, x, y, rx, ry, col){ gEll(g, x, y, rx, ry, darken(col, 0.22)); gEll(g, x - rx * 0.12, y - ry * 0.14, rx * 0.86, ry * 0.84, col); gEll(g, x - rx * 0.35, y - ry * 0.4, rx * 0.32, ry * 0.26, mix(col, '#ffffff', 0.28)); }
+function gShadow(g, x, y, rx){ gEll(g, x, y, rx, rx * 0.45, 'rgba(0,0,0,.22)'); }
+
+/* ── 풍경 소품(화면 좌표, 밑동 기준) ── */
+const PROPS = {
+  tree(g, x, y, s = 1, col = '#4f9a42'){ gShadow(g, x, y, 7 * s); gPoly(g, [[x - 1.6 * s, y], [x + 1.6 * s, y], [x + 1 * s, y - 10 * s], [x - 1 * s, y - 10 * s]], '#6b4a2b');
+    gBlob(g, x - 4 * s, y - 12 * s, 6 * s, 5 * s, darken(col, 0.08)); gBlob(g, x + 4 * s, y - 12 * s, 6 * s, 5 * s, darken(col, 0.04)); gBlob(g, x, y - 17 * s, 7 * s, 6 * s, col); },
+  pine(g, x, y, s = 1, snow){ gShadow(g, x, y, 6 * s); gPoly(g, [[x - 1.2 * s, y], [x + 1.2 * s, y], [x + 1.2 * s, y - 5 * s], [x - 1.2 * s, y - 5 * s]], '#5a4030');
+    for (let i = 0; i < 3; i++){ const w = (7 - i * 1.8) * s, yy = y - (4 + i * 6) * s; gPoly(g, [[x - w, yy], [x + w, yy], [x, yy - 9 * s]], i % 2 ? '#2f6a5a' : '#2a5e50'); gPoly(g, [[x, yy - 9 * s], [x + w, yy], [x + w * 0.2, yy]], '#22504a');
+      if (snow) gPoly(g, [[x - w * 0.55, yy - 3 * s], [x, yy - 9 * s], [x + w * 0.55, yy - 3 * s], [x, yy - 5 * s]], '#f4f9fd'); } },
+  bamboo(g, x, y, s = 1){ for (let i = 0; i < 3; i++){ const bx = x + (i - 1) * 3 * s, h = (22 + ((i * 7) % 9)) * s, col = ['#7cc05a', '#6ab04a', '#8ad06a'][i];
+    gPoly(g, [[bx - 1 * s, y], [bx + 1 * s, y], [bx + 1 * s, y - h], [bx - 1 * s, y - h]], col); gPoly(g, [[bx + 0.3 * s, y], [bx + 1 * s, y], [bx + 1 * s, y - h], [bx + 0.3 * s, y - h]], darken(col, 0.2));
+    for (let k = 5; k < h / s; k += 6) gPoly(g, [[bx - 1.4 * s, y - k * s], [bx + 1.4 * s, y - k * s], [bx + 1.4 * s, y - k * s - 0.8], [bx - 1.4 * s, y - k * s - 0.8]], darken(col, 0.35));
+    gEll(g, bx + 3 * s, y - h + 3 * s, 3.5 * s, 1.2 * s, '#4f9a3f'); gEll(g, bx - 3 * s, y - h + 6 * s, 3 * s, 1 * s, '#5aa850'); } },
+  rock(g, x, y, s = 1, col = '#9a8a7a'){ gShadow(g, x, y, 6 * s); gPoly(g, [[x - 6 * s, y], [x - 4 * s, y - 5 * s], [x + 1 * s, y - 7 * s], [x + 6 * s, y - 3 * s], [x + 5 * s, y]], darken(col, 0.25));
+    gPoly(g, [[x - 6 * s, y], [x - 4 * s, y - 5 * s], [x + 1 * s, y - 7 * s], [x + 1 * s, y - 1 * s]], col); gPoly(g, [[x - 4 * s, y - 5 * s], [x + 1 * s, y - 7 * s], [x - 1 * s, y - 4 * s]], mix(col, '#ffffff', 0.3)); },
+  flowers(g, x, y, rnd){ for (let i = 0; i < 5; i++){ const fx = x + (rnd() - 0.5) * 10, fy = y + (rnd() - 0.5) * 5; gEll(g, fx, fy + 1, 1.2, 0.6, '#3f7a35'); gEll(g, fx, fy, 1, 1, ['#ffd84a', '#ff8ab0', '#ffffff', '#b98aff'][(rnd() * 4) | 0]); } },
+  grass(g, x, y, col = '#4f8a3f'){ for (let i = -2; i <= 2; i++) gPoly(g, [[x + i * 1.2 - 0.6, y], [x + i * 1.2 + 0.6, y], [x + i * 1.8, y - 4 + Math.abs(i)]], i % 2 ? col : darken(col, 0.15)); },
+  house(g, x, y, roof){   // 밑동 가운데 (x, y), 가로로 긴 초가·기와집
+    const w = 26, d = 12, h = 10;
+    gShadow(g, x, y + 1, 22);
+    // 앞(왼쪽 아래) 벽과 옆(오른쪽 아래) 벽
+    gPoly(g, [[x - w / 2, y - 4], [x + 4, y + 3], [x + 4, y + 3 - h], [x - w / 2, y - 4 - h]], '#efe6d0');
+    gPoly(g, [[x + 4, y + 3], [x + w / 2, y - 3], [x + w / 2, y - 3 - h], [x + 4, y + 3 - h]], '#d8ccb0');
+    for (const t of [0, 0.5, 1]){ const px = x - w / 2 + (x + 4 - (x - w / 2)) * t, py = y - 4 + 7 * t; gPoly(g, [[px - 0.6, py], [px + 0.6, py], [px + 0.6, py - h], [px - 0.6, py - h]], '#6b4a2b'); }
+    gPoly(g, [[x - w / 2, y - 4 - h * 0.45], [x + 4, y + 3 - h * 0.45], [x + 4, y + 2.4 - h * 0.45], [x - w / 2, y - 4.6 - h * 0.45]], '#6b4a2b');
+    gPoly(g, [[x - 6, y - 1.2], [x - 2, y + 0.4], [x - 2, y - 6], [x - 6, y - 7.6]], '#4a3423');
+    gPoly(g, [[x + 8, y + 1], [x + 11, y - 0.6], [x + 11, y - 5.6], [x + 8, y - 4]], '#c9b48a');
+    // 지붕
+    const top = y - 4 - h, ridge = top - (roof === 'tile' ? 9 : 11);
+    if (roof === 'tile'){
+      gPoly(g, [[x - w / 2 - 4, top + 2], [x + 5, top + 10], [x + w / 2 + 4, top + 2], [x + w / 2 - 2, ridge + 2], [x - 4, ridge - 4], [x - w / 2 - 1, ridge + 1]], '#3c4652');
+      gPoly(g, [[x - w / 2 - 4, top + 2], [x + 5, top + 10], [x + 6, top + 7], [x - w / 2 - 1, ridge + 1]], '#4a5664');
+      for (let i = 1; i < 6; i++){ const t = i / 6; gPoly(g, [[x - w / 2 - 4 + (9 + w / 2) * t, top + 2 + 8 * t], [x - w / 2 - 1 + (w / 2 - 3) * t, ridge + 1 - 5 * t], [x - w / 2 - 0.4 + (w / 2 - 3) * t, ridge + 1 - 5 * t], [x - w / 2 - 3.4 + (9 + w / 2) * t, top + 2 + 8 * t]], '#2e3640'); }
+      gPoly(g, [[x - w / 2 - 2, ridge], [x - 4, ridge - 5], [x + w / 2 - 1, ridge + 1], [x + w / 2 - 1, ridge + 2.6], [x - 4, ridge - 3.4], [x - w / 2 - 2, ridge + 1.6]], '#2a3038');
+    } else {
+      gPoly(g, [[x - w / 2 - 3, top + 3], [x + 5, top + 10], [x + w / 2 + 3, top + 3], [x + w / 2 - 3, ridge + 3], [x - 3, ridge - 2], [x - w / 2, ridge + 2]], '#a8823a');
+      gPoly(g, [[x - w / 2 - 3, top + 3], [x + 5, top + 10], [x + 5, top + 7], [x - w / 2, ridge + 2]], '#c9a050');
+      for (let i = 1; i < 4; i++) gPoly(g, [[x - w / 2 - 3 + 2 * i, top + 3 - 2.6 * i], [x + 5 - 0.5 * i, top + 10 - 2.4 * i], [x + 5 - 0.5 * i, top + 9.4 - 2.4 * i], [x - w / 2 - 3 + 2 * i, top + 2.4 - 2.6 * i]], '#b08a40');
+    }
+  },
+  fence(g, x0, y0, n){ for (let i = 0; i <= n; i++){ const x = x0 + i * 5, y = y0 + i * 2.5; gPoly(g, [[x - 0.7, y], [x + 0.7, y], [x + 0.7, y - 6], [x - 0.7, y - 6]], '#8a6a4a'); }
+    for (const h of [2, 4.5]) gPoly(g, [[x0, y0 - h], [x0 + n * 5, y0 + n * 2.5 - h], [x0 + n * 5, y0 + n * 2.5 - h - 0.8], [x0, y0 - h - 0.8]], '#a88a62'); },
+  pond(g, x, y, rx, col = '#5a9ac8'){ gEll(g, x, y, rx + 1.5, rx * 0.5 + 1, darken(col, 0.3)); gEll(g, x, y, rx, rx * 0.5, col); gEll(g, x - rx * 0.3, y - rx * 0.12, rx * 0.35, rx * 0.1, mix(col, '#ffffff', 0.45)); },
+  reeds(g, x, y){ for (let i = -2; i <= 2; i++){ const h = 8 + (i * 3 + 9) % 5; gPoly(g, [[x + i * 1.5 - 0.4, y], [x + i * 1.5 + 0.4, y], [x + i * 2, y - h]], '#6a8a4a'); if (i % 2) gEll(g, x + i * 2, y - h + 1, 0.8, 2, '#7a5a3a'); } },
+  deadtree(g, x, y, col = '#2a3a30'){ gShadow(g, x, y, 5); const L = (x0, y0, x1, y1, w) => gPoly(g, [[x0 - w, y0], [x0 + w, y0], [x1 + w * 0.4, y1], [x1 - w * 0.4, y1]], col);
+    L(x, y, x + 1, y - 20, 1.6); L(x + 1, y - 12, x - 6, y - 18, 0.8); L(x + 1, y - 15, x + 7, y - 22, 0.8); L(x - 3, y - 15, x - 4, y - 21, 0.5); },
+  stalag(g, x, y, s = 1, col = '#4a3a3a'){ gShadow(g, x, y, 4 * s); gPoly(g, [[x - 4 * s, y], [x + 4 * s, y], [x + 0.5 * s, y - 14 * s]], col); gPoly(g, [[x + 0.5 * s, y - 14 * s], [x + 4 * s, y], [x + 1.5 * s, y]], darken(col, 0.3)); },
+  crystal(g, x, y, col = '#9a6ad8'){ gPoly(g, [[x - 2, y], [x + 2, y], [x + 1, y - 7], [x - 1, y - 8]], col); gPoly(g, [[x - 1, y - 8], [x - 2, y], [x - 0.6, y]], mix(col, '#ffffff', 0.5)); gPoly(g, [[x + 2, y], [x + 4, y - 4], [x + 3.4, y - 5], [x + 1, y - 1]], darken(col, 0.2)); },
+  torch(g, x, y){ gPoly(g, [[x - 0.8, y], [x + 0.8, y], [x + 0.8, y - 10], [x - 0.8, y - 10]], '#6b4a2b'); gPoly(g, [[x - 2.5, y - 10], [x + 2.5, y - 10], [x + 2, y - 12], [x - 2, y - 12]], '#4a3423'); },
+  snowmound(g, x, y, s = 1){ gBlob(g, x, y - 2 * s, 8 * s, 3.5 * s, '#f4f9fd'); },
+  bladespike(g, x, y, s = 1){ gShadow(g, x, y, 4 * s); for (const [dx, h, w] of [[-3, 16, 1.6], [2, 22, 2], [5, 12, 1.4]]){ const bx = x + dx * s;
+    gPoly(g, [[bx - w * s, y], [bx + w * s, y], [bx, y - h * s]], '#9aa2ae'); gPoly(g, [[bx, y - h * s], [bx + w * s, y], [bx + 0.2, y]], '#6a727e'); gPoly(g, [[bx - w * 0.3 * s, y - h * 0.5 * s], [bx, y - h * s], [bx - w * 0.6 * s, y - h * 0.6 * s]], '#e8eef4'); } },
+  bones(g, x, y){ gEll(g, x, y, 2.4, 2, '#d8d0c0'); gEll(g, x - 0.8, y - 0.2, 0.5, 0.6, '#1a1418'); gEll(g, x + 0.8, y - 0.2, 0.5, 0.6, '#1a1418'); gPoly(g, [[x + 3, y + 1], [x + 8, y + 2], [x + 8, y + 2.8], [x + 3, y + 1.8]], '#d8d0c0'); },
+  cauldron(g, x, y){ gShadow(g, x, y, 10); gEll(g, x, y - 6, 10, 7, '#1a1414'); gEll(g, x, y - 11, 10, 3, '#2a2222'); gEll(g, x, y - 11, 8, 2.2, '#ff7a2a'); gEll(g, x - 2, y - 11.4, 3, 0.8, '#ffd24a');
+    for (const dx of [-6, 6]) gPoly(g, [[x + dx - 1, y - 1], [x + dx + 1, y - 1], [x + dx + 1, y + 2], [x + dx - 1, y + 2]], '#1a1414'); },
+  icespike(g, x, y, s = 1){ gShadow(g, x, y, 4 * s); gPoly(g, [[x - 3 * s, y], [x + 3 * s, y], [x + 0.5 * s, y - 15 * s]], '#cfeaff'); gPoly(g, [[x + 0.5 * s, y - 15 * s], [x + 3 * s, y], [x + 1.2 * s, y]], '#8fb8d8'); gPoly(g, [[x - 1.6 * s, y - 5 * s], [x + 0.5 * s, y - 15 * s], [x - 0.8 * s, y - 5 * s]], '#ffffff'); },
+  bladetree(g, x, y){ gShadow(g, x, y, 7); gPoly(g, [[x - 1.4, y], [x + 1.4, y], [x + 0.8, y - 18], [x - 0.8, y - 18]], '#2a1e18');
+    for (let i = 0; i < 14; i++){ const a = i * 2.4, r = 3 + (i % 4) * 2, lx = x + Math.cos(a) * r, ly = y - 20 + Math.sin(a) * r * 0.7; gPoly(g, [[lx, ly - 3], [lx + 0.9, ly], [lx, ly + 1.4], [lx - 0.9, ly]], i % 3 ? '#c8d0d8' : '#ffffff'); } },
+  pillar(g, x, y){ gShadow(g, x, y, 5); gPoly(g, [[x - 3, y], [x + 3, y], [x + 3, y - 22], [x - 3, y - 22]], '#2a1a2a'); gPoly(g, [[x + 1, y], [x + 3, y], [x + 3, y - 22], [x + 1, y - 22]], '#1a1018');
+    gPoly(g, [[x - 4.5, y - 22], [x + 4.5, y - 22], [x + 3.5, y - 25], [x - 3.5, y - 25]], '#3a2234'); gEll(g, x - 1, y - 14, 0.8, 0.5, '#ff2a4a'); gEll(g, x + 1.4, y - 14, 0.8, 0.5, '#ff2a4a'); },
+  mushroom(g, x, y, col = '#9a4ad8'){ gPoly(g, [[x - 0.8, y], [x + 0.8, y], [x + 0.6, y - 4], [x - 0.6, y - 4]], '#e8e0d0'); gBlob(g, x, y - 4.5, 3.4, 2, col); gEll(g, x - 1, y - 5, 0.5, 0.4, '#ffffff'); },
+};
+
+/* 지역별 풍경: 판 뒤(위쪽)와 앞(아래쪽) 빈터에 소품을 놓는다 */
+function isoScenery(t, rnd){
+  const back = [], front = [];
+  const spotBack = (n, minX = 4, maxX = W - 4, gap = 6) => { const out = []; for (let k = 0; k < n * 6 && out.length < n; k++){ const x = minX + rnd() * (maxX - minX), y = 18 + rnd() * (edgeTop(x) - 18 - gap); if (y > 18) out.push([x, y]); } return out; };
+  const spotFront = (n, gap = IDEP + 5) => { const out = []; for (let k = 0; k < n * 8 && out.length < n; k++){ const x = 2 + rnd() * (W - 4), y = edgeBot(x) + gap + rnd() * (H - edgeBot(x) - gap); if (y < H - 1 && y > edgeBot(x) + gap) out.push([x, y]); } return out; };
+  const P2 = (arr, fn) => { for (const [x, y] of arr) back.push([y, g => fn(g, x, y)]); };
+  const F2 = (arr, fn) => { for (const [x, y] of arr) front.push([y, g => fn(g, x, y)]); };
+  if (t === 'village'){
+    back.push([30, g => PROPS.house(g, 40, 30, 'thatch')], [36, g => PROPS.house(g, 178, 36, 'tile')]);
+    P2(spotBack(6), (g, x, y) => PROPS.tree(g, x, y, 0.8 + rnd() * 0.3));
+    back.push([40, g => PROPS.fence(g, 104, 36, 9)]);
+    P2(spotBack(5), (g, x, y) => PROPS.flowers(g, x, y, rnd));
+    F2(spotFront(8), (g, x, y) => rnd() < 0.5 ? PROPS.flowers(g, x, y, rnd) : PROPS.grass(g, x, y));
+  } else if (t === 'bamboo'){
+    P2(spotBack(16, 4, W - 4, 3), (g, x, y) => PROPS.bamboo(g, x, y, 0.8 + rnd() * 0.4));
+    F2(spotFront(6), (g, x, y) => PROPS.grass(g, x, y, '#4f8a3f'));
+  } else if (t === 'rock'){
+    P2(spotBack(9), (g, x, y) => PROPS.rock(g, x, y, 0.9 + rnd() * 0.8, ['#9a8a7a', '#8a7a6a', '#a89a88'][(rnd() * 3) | 0]));
+    P2(spotBack(4), (g, x, y) => PROPS.pine(g, x, y, 0.7));
+    F2(spotFront(6), (g, x, y) => PROPS.rock(g, x, y, 0.5 + rnd() * 0.4));
+  } else if (t === 'swamp'){
+    P2(spotBack(4), (g, x, y) => PROPS.deadtree(g, x, y));
+    P2(spotBack(10), (g, x, y) => PROPS.reeds(g, x, y));
+    F2(spotFront(8), (g, x, y) => PROPS.reeds(g, x, y));
+  } else if (t === 'cave'){
+    for (const tx of [40, 120, 200]) back.push([22, g => PROPS.torch(g, tx, 22)]);
+    P2(spotBack(10), (g, x, y) => PROPS.stalag(g, x, y, 0.7 + rnd() * 0.6));
+    P2(spotBack(4), (g, x, y) => PROPS.crystal(g, x, y, '#7a8ad8'));
+    F2(spotFront(6), (g, x, y) => PROPS.stalag(g, x, y, 0.5));
+  } else if (t === 'snow'){
+    P2(spotBack(10), (g, x, y) => PROPS.pine(g, x, y, 0.75 + rnd() * 0.3, true));
+    P2(spotBack(4), (g, x, y) => PROPS.snowmound(g, x, y));
+    F2(spotFront(6), (g, x, y) => PROPS.snowmound(g, x, y, 0.6));
+  } else if (t === 'blade'){
+    P2(spotBack(10), (g, x, y) => PROPS.bladespike(g, x, y, 0.8 + rnd() * 0.5));
+    P2(spotBack(4), (g, x, y) => PROPS.bones(g, x, y));
+    F2(spotFront(6), (g, x, y) => PROPS.bones(g, x, y));
+  } else if (t === 'lava'){
+    back.push([26, g => PROPS.cauldron(g, 60, 26)], [24, g => PROPS.cauldron(g, 190, 24)]);
+    P2(spotBack(6), (g, x, y) => PROPS.rock(g, x, y, 0.7, '#3a2420'));
+  } else if (t === 'ice'){
+    P2(spotBack(10), (g, x, y) => PROPS.icespike(g, x, y, 0.7 + rnd() * 0.5));
+    F2(spotFront(5), (g, x, y) => PROPS.icespike(g, x, y, 0.5));
+  } else if (t === 'bladetree'){
+    P2(spotBack(7), (g, x, y) => PROPS.bladetree(g, x, y));
+    F2(spotFront(4), (g, x, y) => PROPS.bladespike(g, x, y, 0.4));
+  } else if (t === 'poison'){
+    P2(spotBack(4), (g, x, y) => PROPS.deadtree(g, x, y, '#140e10'));
+    P2(spotBack(8), (g, x, y) => PROPS.mushroom(g, x, y, rnd() < 0.5 ? '#9a4ad8' : '#7aa83a'));
+    F2(spotFront(6), (g, x, y) => PROPS.mushroom(g, x, y));
+  } else if (t === 'dark'){
+    for (const px of [60, 180]) back.push([24, g => PROPS.pillar(g, px, 24)]);
+    P2(spotBack(5), (g, x, y) => PROPS.bones(g, x, y));
+  }
+  return {back, front};
+}
+function buildIsoMap(ri, w = S.world){
+  const Rg = regionsOf(w)[ri], t = Rg.theme, th = ISO_THEME[t] || ISO_THEME.village, old = THEMES[t] || THEMES.village, rnd = rng(ri * 977 + 13 + w * 7919);
+  const c = document.createElement('canvas'); c.width = W * RS; c.height = H * RS;
+  const g = c.getContext('2d'); g.scale(RS, RS);
+  // 바깥 땅 + 먼 하늘·산
+  g.fillStyle = th.outer; g.fillRect(0, 0, W, H);
+  const sky = g.createLinearGradient(0, 0, 0, 24); sky.addColorStop(0, th.sky[0]); sky.addColorStop(1, th.sky[1]);
+  g.fillStyle = sky; g.fillRect(0, 0, W, 22);
+  g.fillStyle = th.hills; g.beginPath(); g.moveTo(0, 22);
+  for (let x = 0; x <= W; x += 6) g.lineTo(x, 13 + Math.sin(x * 0.045 + ri) * 4 + Math.sin(x * 0.13 + w) * 2);
+  g.lineTo(W, 22); g.closePath(); g.fill();
+  gPoly(g, [[0, 20], [W, 20], [W, 23], [0, 23]], darken(th.hills, 0.15));
+  // 바깥 땅 무늬(비스듬한 칸)
+  for (let i = -16; i < 34; i++) for (let j = -16; j < 30; j++){
+    const cx = isoX(i, j), cy = isoY(i, j);
+    if (cx < -IW || cx > W + IW || cy < 18 || cy > H + IH) continue;
+    if (rnd() < 0.5) isoTile(g, cx, cy, darken(th.outer, 0.04 + rnd() * 0.05), 0);
+    if (rnd() < 0.5){ g.fillStyle = darken(th.outer, 0.12); g.fillRect(cx + (rnd() - 0.5) * 10, cy + (rnd() - 0.5) * 4, 0.8, 0.8); }
+  }
+  if (t === 'lava'){ for (let k = 0; k < 60; k++){ const x = rnd() * W, y = 22 + rnd() * (H - 22); gEll(g, x, y, 2 + rnd() * 5, 0.8 + rnd(), rnd() < 0.5 ? '#ffd24a' : '#ff8a2a'); } }
+  if (t === 'swamp' || t === 'poison'){ for (let k = 0; k < 18; k++){ const x = rnd() * W, y = 24 + rnd() * (H - 24); gEll(g, x, y, 3 + rnd() * 6, 1 + rnd() * 1.5, mix(th.outer, '#ffffff', 0.12)); } }
+  const sc = isoScenery(t, rnd);
+  sc.back.sort((a, b2) => a[0] - b2[0]).forEach(([, fn]) => fn(g));
+  // 판: 앞 두 벽(흙·돌) → 윗면 칸
+  const [lx, ly] = ISO_LEFT, [bx, by] = ISO_BOT, [rx, ry] = ISO_RIGHT;
+  gPoly(g, [[lx, ly], [bx, by], [bx, by + IDEP], [lx, ly + IDEP]], th.side[0]);
+  gPoly(g, [[bx, by], [rx, ry], [rx, ry + IDEP], [bx, by + IDEP]], th.side[1]);
+  for (let k = 1; k < 3; k++){ const yy = IDEP * k / 3; g.globalAlpha = 0.25;
+    gPoly(g, [[lx, ly + yy], [bx, by + yy], [bx, by + yy + 0.7], [lx, ly + yy + 0.7]], darken(th.side[0], 0.35));
+    gPoly(g, [[bx, by + yy], [rx, ry + yy], [rx, ry + yy + 0.7], [bx, by + yy + 0.7]], darken(th.side[1], 0.35)); g.globalAlpha = 1; }
+  if (t === 'lava') for (let k = 0; k < 8; k++){ const u = rnd(), x = lx + (bx - lx) * u, y = ly + (by - ly) * u; gPoly(g, [[x, y + 2], [x + 1, y + 2], [x + 2, y + IDEP], [x + 1, y + IDEP]], '#ff6a1a'); }
+  for (let ty = TOPR; ty < ROWS; ty++) for (let tx = 0; tx < COLS; tx++){
+    const cx = isoX(tx, ty), cy = isoY(tx, ty);
+    let col = th.top[(tx + ty) % 2];
+    if (rnd() < 0.35) col = mix(col, old.ground[(rnd() * old.ground.length) | 0], 0.5);
+    if (t === 'village' && (ty === 6 || ty === 7)) col = (tx + ty) % 2 ? '#d2ae76' : '#c9a36a';
+    isoTile(g, cx, cy, col);
+    for (let k = 0; k < 3; k++){ g.fillStyle = old.speck[(rnd() * old.speck.length) | 0]; g.fillRect(cx + (rnd() - 0.5) * IW * 0.6, cy + (rnd() - 0.5) * IH * 0.5, 0.8, 0.8); }
+  }
+  // 칸 테두리(아주 옅게)와 판 가장자리 빛
+  g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 0.4; g.beginPath();
+  for (let ty = TOPR; ty <= ROWS; ty++){ const x0 = isoX(-0.5, ty - 0.5), y0 = isoY(-0.5, ty - 0.5), x1 = isoX(COLS - 0.5, ty - 0.5), y1 = isoY(COLS - 0.5, ty - 0.5); g.moveTo(x0, y0); g.lineTo(x1, y1); }
+  for (let tx = 0; tx <= COLS; tx++){ const x0 = isoX(tx - 0.5, TOPR - 0.5), y0 = isoY(tx - 0.5, TOPR - 0.5), x1 = isoX(tx - 0.5, ROWS - 0.5), y1 = isoY(tx - 0.5, ROWS - 0.5); g.moveTo(x0, y0); g.lineTo(x1, y1); }
+  g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(lx, ly); g.lineTo(ISO_TOP[0], ISO_TOP[1]); g.lineTo(rx, ry); g.stroke();
+  g.strokeStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.moveTo(lx, ly + 0.4); g.lineTo(bx, by + 0.4); g.lineTo(rx, ry + 0.4); g.stroke();
+  sc.front.sort((a, b2) => a[0] - b2[0]).forEach(([, fn]) => fn(g));
+  return c;
+}
+
 
 /* ================= 그리기 ================= */
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-const buf = document.createElement('canvas'); buf.width = W; buf.height = H;
+const buf = document.createElement('canvas'); buf.width = W * RS; buf.height = H * RS;
 const b = buf.getContext('2d');
 let dpr = 1, scale = 1;
 function resize(){
@@ -3211,17 +3478,17 @@ function parc(cx, cy, r, a0, a1, c, ry){
   for (let i = 0; i <= steps; i++){ const a = a0 + (a1 - a0) * i / steps; b.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * ry), 1, 1); }
 }
 function pdisk(cx, cy, r, c){ b.fillStyle = c; for (let y = -r; y <= r; y++){ const w = Math.round(Math.sqrt(r * r - y * y)); b.fillRect(Math.round(cx) - w, Math.round(cy) + y, w * 2 + 1, 1); } }
-const DIRANG = {right:0, down:Math.PI / 2, left:Math.PI, up:-Math.PI / 2};
+// 쿼터뷰에서 칸 방향 → 화면 각도(오른쪽=오른쪽 아래, 아래=왼쪽 아래…)
+const ISO_A = Math.atan2(IH, IW), DIRANG = {right:ISO_A, down:Math.PI - ISO_A, left:Math.PI + ISO_A, up:-ISO_A};
 
 function drawShadow(x, y, w){ P(x - w / 2, y - 1, w, 2, 'rgba(0,0,0,.25)'); P(x - w / 2 + 1, y + 1, w - 2, 1, 'rgba(0,0,0,.15)'); }
 function drawEntityHero(){
   const C = S.cls;
   let f = 0;
-  if (hero.swing > 0) f = (hero.dir === 'left' || hero.dir === 'right') ? 3 : 1;
+  if (hero.swing > 0) f = 3;
   else if (hero.moving) f = hero.mt < 0.5 ? 1 : 2;
   const sp = heroSprite(C, hero.dir, f, hero.hurt > 0);
   const bob = !hero.moving && hero.swing <= 0 && Math.floor(gtime * 1.6) % 2 ? 1 : 0;
-  const flip = hero.dir === 'left';
   const x = Math.round(hero.x), y = Math.round(hero.y);
   drawShadow(x, y, 12);
   const F = formOf(), wg = gradeOf(S.equip.weapon);
@@ -3236,20 +3503,19 @@ function drawEntityHero(){
   b.save();
   if (hero.dead){
     b.globalAlpha = hero.deadT < 0.8 ? (Math.floor(gtime * 12) % 2 ? 0.3 : 0.8) : 0.7;
-    b.translate(x, y); b.rotate(-Math.PI / 2); b.drawImage(sp, -13, -26 + 6);
+    b.translate(x, y); b.rotate(-Math.PI / 2); b.drawImage(sp, -HD_AX, -HD_AY + 6, spW(sp), spH(sp));
     b.restore();
     return;
   }
-  if (flip){ b.translate(x, 0); b.scale(-1, 1); b.drawImage(sp, -13, y - 26 + bob); }
-  else b.drawImage(sp, x - 13, y - 26 + bob);
+  b.drawImage(sp, x - HD_AX, y - HD_AY + bob, spW(sp), spH(sp));
   b.restore();
   const r = hero.hp / ST.maxHp;
-  P(x - 8, y - 30, 16, 3, '#1a1218'); P(x - 7, y - 29, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
+  P(x - 8, y - 33, 16, 3, '#1a1218'); P(x - 7, y - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
   const fr = m.moving ? (m.mt < 0.5 ? 1 : 0) : (Math.floor(m.anim * 2.5) % 2);
   const sp = mobSprite(m.type, m.color, fr, m.boss, m.flash > 0);
-  const sc = mobScale(m), w = sp.width * sc, h = sp.height * sc;
+  const sc = mobScale(m), w = spW(sp) * sc, h = spH(sp) * sc;
   const fl = (FLOAT[m.type] || 0) * sc;
   const bobF = fl ? Math.round(Math.sin(m.anim * 4) * 1.5) : 0;
   let x = Math.round(m.x), y = Math.round(m.y);
@@ -3259,7 +3525,7 @@ function drawMob(m){
   if (m.dead){ b.globalAlpha = Math.floor(m.deathT * 20) % 2 ? 0.2 : Math.max(0, m.deathT / 0.4); }
   drawShadow(x, y, Math.min(m.raid ? 46 : 20, w * 0.7));
   if (m.raid && !m.dead){ b.globalAlpha = 0.18 + 0.08 * Math.sin(gtime * 4); pdisk(x, y - h * 0.45, Math.round(w * 0.42), '#ff5a3a'); b.globalAlpha = m.spawnT > 0 ? Math.max(0, 1 - m.spawnT / 0.35) : 1; }
-  const flip = m.dir === 'right';
+  const flip = m.dir === 'right' || m.dir === 'up';   // 몬스터 그림은 왼쪽을 본다
   const dy = y - h - fl + bobF + 1;
   if (flip){ b.translate(x, 0); b.scale(-1, 1); b.drawImage(sp, -Math.round(w / 2), dy, w, h); }
   else b.drawImage(sp, x - Math.round(w / 2), dy, w, h);
@@ -3271,21 +3537,20 @@ function drawMob(m){
 }
 function drawAlly(a){
   let f = 0;
-  if (a.swing > 0) f = (a.dir === 'left' || a.dir === 'right') ? 3 : 1;
+  if (a.swing > 0) f = 3;
   const sp = personSprite(a.cls, a.look, a.armorG, a.weaponG, a.dir, f, a.hurt > 0);
   const x = Math.round(a.x), y = Math.round(a.y);
   drawShadow(x, y, 12);
   b.save();
   if (a.down){
-    b.globalAlpha = 0.55; b.translate(x, y); b.rotate(-Math.PI / 2); b.drawImage(sp, -13, -20); b.restore();
+    b.globalAlpha = 0.55; b.translate(x, y); b.rotate(-Math.PI / 2); b.drawImage(sp, -HD_AX, -HD_AY + 6, spW(sp), spH(sp)); b.restore();
     return;
   }
   const bob = a.swing <= 0 && Math.floor(gtime * 1.6 + a.seed * 0.37) % 2 ? 1 : 0;
-  if (a.dir === 'left'){ b.translate(x, 0); b.scale(-1, 1); b.drawImage(sp, -13, y - 26 + bob); }
-  else b.drawImage(sp, x - 13, y - 26 + bob);
+  b.drawImage(sp, x - HD_AX, y - HD_AY + bob, spW(sp), spH(sp));
   b.restore();
   const r = a.hp / a.maxHp;
-  P(x - 8, y - 30, 16, 3, '#1a1218'); P(x - 7, y - 29, Math.max(0, Math.round(14 * r)), 1, a.own ? '#7fc8ff' : '#5fd07c');
+  P(x - 8, y - 33, 16, 3, '#1a1218'); P(x - 7, y - 32, Math.max(0, Math.round(14 * r)), 1, a.own ? '#7fc8ff' : '#5fd07c');
 }
 function drawPet(t){
   const i = eqPet(t), r = petRt[t];
@@ -3299,8 +3564,9 @@ function drawPet(t){
   const xx = Math.round(x), yy = Math.round(y), bob = fly ? Math.round(Math.sin(gtime * 5 + i) * 1.5) : 0;
   drawShadow(xx, yy, 8);
   b.save();
-  if (r.faceRight){ b.translate(xx, 0); b.scale(-1, 1); b.drawImage(sp, -Math.round(sp.width / 2), yy - sp.height - fly + bob + 1); }
-  else b.drawImage(sp, xx - Math.round(sp.width / 2), yy - sp.height - fly + bob + 1);
+  const pw = spW(sp), ph = spH(sp);
+  if (r.faceRight){ b.translate(xx, 0); b.scale(-1, 1); b.drawImage(sp, -Math.round(pw / 2), yy - ph - fly + bob + 1, pw, ph); }
+  else b.drawImage(sp, xx - Math.round(pw / 2), yy - ph - fly + bob + 1, pw, ph);
   b.restore();
   if (t === 'def' && r.glow > 0){ b.globalAlpha = r.glow / 0.25; parc(hero.x, hero.y - 12, 11, 0, Math.PI * 2, '#9fe7ff', 14); b.globalAlpha = 1; }
 }
@@ -3445,8 +3711,8 @@ function render(){
   if (cut){ renderCut(); return; }
   const ri = raid ? raid.info.region : regionIndex(S.stage), Rg = regionsOf(S.world)[ri];
   b.imageSmoothingEnabled = false;
-  b.setTransform(1, 0, 0, 1, 0, 0);
-  b.drawImage(getMap(ri), 0, 0);
+  b.setTransform(RS, 0, 0, RS, 0, 0);
+  b.drawImage(getMap(ri), 0, 0, W, H);
   for (const p of parts) if (p.type === 'coin' && p.t < p.dur){ const a = p.t > p.dur * 0.7 ? 0.5 : 1; b.globalAlpha = a; P(p.x - 1, p.y - 1, 2, 2, '#e0b03c'); P(p.x - 1, p.y - 1, 1, 1, '#fff2a0'); b.globalAlpha = 1; }
   const ents = mobs.map(m => ({y:m.y, m}));
   if (raid) for (const a of raid.allies) ents.push({y:a.y, a});
@@ -3658,7 +3924,7 @@ const WHO = {'까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백
   '주작':'g:jujak', '청룡':'g:cheong', '백호':'g:baekho', '현무':'g:hyeonmu'};
 let cut = null;
 function castSprite(k, f, dir){
-  if (k === 'hero') return {sp:heroSprite(S.cls, dir, f), sc:2, flip:dir === 'left'};
+  if (k === 'hero') return {sp:heroSprite(S.cls, dir === 'left' ? 'down' : 'right', f), sc:1.7, flip:false};
   if (k.startsWith('m:')){ const [, t, c] = k.split(':'); return {sp:mobSprite(t, c, f % 2, true), sc:3, flip:dir === 'right'}; }
   if (k.startsWith('k:')){ const K = KINGS[+k.slice(2)] || KINGS[0]; return {sp:mobSprite('judge', K.color, f % 2, true), sc:3, flip:dir === 'right'}; }
   if (k.startsWith('g:')){ const g = GUARD[k.slice(2)]; if (g.pet != null) return {sp:petSprite(g.pet, f % 2), sc:3, flip:dir === 'right', fly:PET_FLY[PETS[g.pet].draw] ? 10 : 0};
@@ -3667,7 +3933,7 @@ function castSprite(k, f, dir){
   if (!d) return null;
   if (d.pet != null) return {sp:petSprite(d.pet, f % 2), sc:d.sc || 2, flip:dir === 'right', fly:8};
   const [c, look, aG, wG] = d.p;
-  return {sp:personSprite(c, look, aG, wG, dir, f, false), sc:2, flip:dir === 'left'};
+  return {sp:personSprite(c, look, aG, wG, dir === 'left' ? 'down' : 'right', f, false), sc:1.7, flip:false};
 }
 const castName = k => k.startsWith('k:') ? (KINGS[+k.slice(2)] || KINGS[0]).boss : k.startsWith('g:') ? GUARD[k.slice(2)].name : k.startsWith('m:') ? '' : CAST[k] ? (typeof CAST[k].name === 'function' ? CAST[k].name() : CAST[k].name) : '';
 const CUT_X = {1:[120], 2:[72, 170], 3:[52, 122, 192], 4:[40, 96, 152, 206], 5:[30, 75, 120, 165, 210]};
@@ -3782,8 +4048,8 @@ function cutBg(key){
 }
 function renderCut(){
   const c = cut;
-  b.setTransform(1, 0, 0, 1, 0, 0); b.imageSmoothingEnabled = false;
-  b.drawImage(cutBg(c.bg), 0, 0);
+  b.setTransform(RS, 0, 0, RS, 0, 0); b.imageSmoothingEnabled = false;
+  b.drawImage(cutBg(c.bg), 0, 0, W, H);
   const t = c.shotT, fx = c.fx;
   if (fx === 'light' || fx === 'transform'){ b.globalAlpha = 0.35 + 0.15 * Math.sin(t * 4); P(108, 0, 24, 128, '#fff6c8'); P(116, 0, 8, 128, '#ffffff'); b.globalAlpha = 1; }
   if (fx === 'egg'){ const r = 14 + Math.sin(t * 3) * 3; b.globalAlpha = 0.35; pdisk(120, 108, r, '#ffe08a'); b.globalAlpha = 1; P(115, 98, 10, 14, '#fff4d8'); P(113, 102, 14, 8, '#fff4d8'); P(116, 99, 3, 3, '#ffffff'); }
@@ -3797,7 +4063,7 @@ function renderCut(){
     if (!spr) continue;
     const talk = c.speaker === a.k && !c.waitShot;
     const bob = (!walking && Math.floor(c.t * 2 + a.delay * 7) % 2 ? 1 : 0) + (talk ? Math.round(Math.abs(Math.sin(c.t * 9)) * -2) : 0);
-    const w = spr.sp.width * spr.sc, h = spr.sp.height * spr.sc, gy = 132 - (spr.fly || 0) + bob;
+    const w = spW(spr.sp) * spr.sc, h = spH(spr.sp) * spr.sc, gy = 132 - (spr.fly || 0) + bob;
     b.globalAlpha = 0.3; P(x - w * 0.3, 132, w * 0.6, 3, '#000000'); b.globalAlpha = 1;
     b.save();
     if (spr.flip){ b.translate(Math.round(x), 0); b.scale(-1, 1); b.drawImage(spr.sp, -Math.round(w / 2), gy - h, w, h); }
@@ -4676,11 +4942,9 @@ function lookPreview(c, look, aG, wG, dir = 'down', ex){
   let u = prevCache.get(key);
   if (!u){
     const sp = personSprite(c, look, aG, wG, dir, 0, false, ex);
-    if (dir === 'left'){
-      const cc = document.createElement('canvas'); cc.width = sp.width; cc.height = sp.height;
-      const g = cc.getContext('2d'); g.translate(sp.width, 0); g.scale(-1, 1); g.drawImage(sp, 0, 0);
-      u = cc.toDataURL();
-    } else u = sp.toDataURL();
+    const cc = document.createElement('canvas'); cc.width = 64; cc.height = 60;
+    cc.getContext('2d').drawImage(sp, 0, 2, 64, 60, 0, 0, 64, 60);
+    u = cc.toDataURL();
     if (prevCache.size > 200) prevCache.clear();
     prevCache.set(key, u);
   }
@@ -5367,7 +5631,7 @@ if (location.search.indexOf('simtest') >= 0){
     claimAll, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
-    sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_DRAW).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
+    sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
