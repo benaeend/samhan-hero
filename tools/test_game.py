@@ -4,6 +4,7 @@
 사용:
   python3 tools/test_game.py          # 화면 캡처(tools/out/) + 오류 확인 + 계정·레이드·클라우드 저장 점검
   python3 tools/test_game.py --sim    # + 직업별 30분 빠른 진행 시뮬레이션(밸런스 확인)
+  python3 tools/test_game.py --long 100 [직업…] ['{"hp2":1.07}']   # 화면 점검 없이 100시간 진행 시뮬레이션만(이정표 표)
 
 주소 끝에 ?simtest 를 붙이면 게임이 window.__game 테스트 훅을 연다.
 """
@@ -23,27 +24,32 @@ ROOT = Path(__file__).resolve().parent.parent
 URL = (ROOT / 'index.html').as_uri() + '?simtest'
 OUT = ROOT / 'tools' / 'out'
 
-# 사람처럼 굴리는 30분 시뮬레이션: 퀘스트 보상 받기 → 재련·펫 강화(지갑의 일부만) → 능력치·기술 → 남은 보석으로 소환 → 레이드
+# 사람처럼 굴리는 시뮬레이션: 퀘스트 보상 받기 → 재련(무기 먼저)·펫 강화(지갑의 일부만) → 능력치·기술 → 남은 보석으로 소환 → 레이드
+# → 시련·환생(윤회 구슬은 무력부터). opts: {dt, marks:[분…], curve:{CURVE 덮어쓰기}}
 SIM = r"""
 (args) => {
-  const [minutes, cls] = args;
+  const [minutes, cls, opts = {}] = args;
   const G = window.__game;
   G.quiet = true;
   G.setClass(cls);
+  if (opts.curve) Object.assign(G.CURVE, opts.curve);
   G.S.buyMode = 1;
-  const dt = 0.05, steps = Math.round(minutes * 60 / dt);
-  const marks = new Set([5, 10, 20, 30].map(m => Math.round(m * 60 / dt)));
-  const log = [];
-  let nextShop = 0, nextRetry = 60;
+  const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
+  const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
+  const log = [], first = {};
+  let nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0;
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
+  const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   for (let i = 1; i <= steps; i++) {
+    const g0 = G.S.gold, e0 = G.S.gems;
     G.update(dt); G.addTime(dt * 1000);
+    goldIn += Math.max(0, G.S.gold - g0); gemIn += Math.max(0, G.S.gems - e0);
     const t = i * dt;
     if (t >= nextShop) {
       nextShop = t + 2;
-      G.claimAll();
+      const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
       for (let k = 0; k < 20; k++) {
-        const slot = G.S.refine.weapon.lv <= G.S.refine.armor.lv ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
+        const slot = G.S.refine.weapon.lv < G.REFINE_MAX && G.S.refine.weapon.lv <= G.S.refine.armor.lv + 3 ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
         if (lv >= G.REFINE_MAX || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.2) break;
         G.refineTry(slot);
       }
@@ -69,15 +75,47 @@ SIM = r"""
         if (G.S.rec.psum * 2 < G.S.rec.summons) { if (G.S.gems < 900) break; G.petSummon(10); }
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
+      for (let q = 0; q < 5; q++) G.claimTrial(q);
+      if (G.rebirthReady() && (!G.S.world || G.S.raid.first.h9)) {  // 저승에서는 마지막 시왕 레이드를 깬 뒤에
+        G.doRebirth();
+        for (const k of ['atk', 'hp', 'luck', 'spd', 'eye']) for (let z = 0; z < 50; z++) if (!G.rebUp(k)) break;
+      }
       G.mergeAll('weapon'); G.mergeAll('armor'); G.equipBest('weapon'); G.equipBest('armor');
-      if (!G.raid && !G.bossActive) { const r = G.firstReadyRaid(); if (r >= 0) G.startRaid(r); }
+      if (!G.raid && !G.bossActive) {
+        // 실패하면 30분 동안은 그보다 낮은 레이드를 돌고, 첫 클리어 보상이 남은 레이드를 먼저 한다
+        if (raidPend && G.S.rec.raids === raidPend[0]) raidHold = [raidPend[1], t + 1800];
+        raidPend = null;
+        let r = G.firstReadyRaid();
+        if (r >= 0 && t < raidHold[1]) r = Math.min(r, raidHold[0] - 1);
+        for (let j = r; j >= 0; j--) if (!G.S.raid.first[(G.S.world ? 'h' : '') + j]) { r = j; break; }
+        if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
+      }
     }
     if (t >= nextRetry) { nextRetry = t + 60; G.S.autoBoss = true; }
-    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: 스테이지 ${G.S.stage}, Lv ${G.S.level}, 레이드 ${G.S.rec.raids}회, 재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}`);
+    mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t);
+    for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
+    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${G.S.world ? '저승' : '이승'} ${G.S.stage}단계, Lv ${G.S.level}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/80, 레이드 ${G.S.rec.raids}회, `
+      + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
+      + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
   }
-  return log;
+  return {log, first};
 }
 """
+
+# --long: 이정표(처음 닿은 시각) 표
+LONG_S0 = [31, 51, 61, 71, 81, 86, 91, 94, 97, 101]
+LONG_S1 = [11, 21, 31, 41, 51, 61, 71, 81, 91, 101]
+LONG_L = [('L0', 50), ('L0', 80), ('L0', 100), ('L1', 50), ('L1', 100), ('L1', 150), ('L1', 200)]
+LONG_Q = [10, 20, 30, 35, 36, 45, 55, 65, 70, 75, 79, 80]
+
+
+def long_table(cls, first):
+    h = lambda m: '-' if m is None else (f'{m / 60:.1f}h' if m >= 60 else f'{m}m')
+    print(f'[{cls}] 이승 ' + ' '.join(f'{x}:{h(first.get(f"0:{x}"))}' for x in LONG_S0))
+    print(f'        저승 ' + ' '.join(f'{x}:{h(first.get(f"1:{x}"))}' for x in LONG_S1))
+    print('        레벨 ' + ' '.join(f'{"이승" if k == "L0" else "저승"}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
+    print('        이야기 ' + ' '.join(f'{q}:{h(first.get(f"Q{q}"))}' for q in LONG_Q))
+
 
 # claude.ai 아티팩트의 계정 저장소(window.claude db)를 흉내 낸다. 문서는 window.__store 에 쌓인다.
 MOCK_CLAUDE = r"""
@@ -161,6 +199,38 @@ async def create_char(page, name, cls='musa', outfit=None, hat=None, shot=None):
         await page.screenshot(path=str(OUT / shot))
     await page.click('#modal-btn-1')      # 만들기
     await page.wait_for_function('() => window.__game.session && document.querySelector("#modal").hidden')
+    await skip_cut(page)
+
+
+async def skip_cut(page, wait=700):
+    '''연출(프롤로그·이야기)이 나오면 건너뛴다'''
+    await page.wait_for_timeout(wait)
+    if await page.is_visible('#cut'):
+        await page.click('#cutSkip')
+
+
+async def run_long():
+    """--long 시간 [직업…] ['{CURVE JSON}']: 직업마다 따로 띄워 함께 돌린다(0.2초 간격)."""
+    k = sys.argv.index('--long')
+    hours = float(sys.argv[k + 1])
+    rest = sys.argv[k + 2:]
+    classes = [a for a in rest if not a.startswith('{')] or ['musa', 'jagaek', 'sulsa', 'doin']
+    curve = next((json.loads(a) for a in rest if a.startswith('{')), None)
+    marks = [m for m in (30, 60, 120, 240, 480, 720, 1440, 2160, 2880, 3600, 4320, 5040, 5760) if m <= hours * 60]
+    async with async_playwright() as p:
+        browser = await launch(p)
+
+        async def one(c):
+            ctx = await browser.new_context()
+            page = await ctx.new_page()
+            await fresh(page)
+            r = await page.evaluate(SIM, [hours * 60, c, {'dt': 0.2, 'marks': marks, 'curve': curve}])
+            await ctx.close()
+            return c, r
+        for c, r in await asyncio.gather(*[one(c) for c in classes]):
+            print('\n'.join(r['log']))
+            long_table(c, r['first'])
+        await browser.close()
 
 
 async def main():
@@ -180,8 +250,9 @@ async def main():
         await page.goto(URL)
         await page.wait_for_timeout(1200)
 
-        # 1) 로그인·계정 만들기
+        # 1) 타이틀·로그인·계정 만들기
         await page.screenshot(path=str(OUT / '1_로그인.png'))
+        check(await page.is_visible('#title'), '로그인 전에는 타이틀 화면이 보인다')
         await page.click('#lg-tab-signup')
         await page.fill('#lg-id', 'tester')
         await page.fill('#lg-pw', '1234')
@@ -191,7 +262,19 @@ async def main():
         await page.fill('#lg-pw2', '1234')
         await page.click('#modal-btn-0')
         await page.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
-        await create_char(page, '홍길동', 'musa', outfit=5, hat=3, shot='2_캐릭터만들기.png')
+        await page.click('#modal-btn-0')
+        await page.wait_for_selector('#cc-name')
+        await page.fill('#cc-name', '홍길동'); await page.click('#cc-musa')
+        await page.click('.lookwrap [data-k="outfit"][data-v="5"]'); await page.click('.lookwrap [data-k="hat"][data-v="3"]')
+        await page.screenshot(path=str(OUT / '2_캐릭터만들기.png'))
+        await page.click('#modal-btn-1')
+        await page.wait_for_function('() => window.__game.session && document.querySelector("#modal").hidden')
+        await page.wait_for_timeout(2500)
+        check(await page.evaluate('() => !!window.__game.cut') and not await page.is_visible('#title'), '새 캐릭터는 프롤로그 연출로 시작하고 타이틀이 사라진다')
+        await page.screenshot(path=str(OUT / '2b_프롤로그.png'))
+        await page.click('#cutSkip')
+        aud = await page.evaluate('() => { document.body.dispatchEvent(new PointerEvent("pointerdown", {bubbles: true})); return new Promise(r => setTimeout(() => { const A = window.__game.aud; r({ctx: !!A.ctx, track: A.track}); }, 800)); }')
+        check(aud['ctx'] and aud['track'] in ('field', 'title'), f'화면을 누르면 배경음악이 켜진다 {aud}')
         await page.wait_for_timeout(4000)
         await page.screenshot(path=str(OUT / '3_플레이_튜토리얼.png'))
         check(await page.is_visible('#guide'), '새 캐릭터는 길잡이(튜토리얼)가 보인다')
@@ -226,6 +309,10 @@ async def main():
         await page.screenshot(path=str(OUT / '7_퀘스트.png'))
         await page.click('#mainClaim')
         check(await page.evaluate('() => window.__game.S.quest.main') >= 1, '이야기 퀘스트 보상을 받을 수 있다')
+        await page.wait_for_timeout(1800)
+        check(await page.evaluate('() => !!window.__game.cut'), '이야기 퀘스트를 깨면 연출이 나온다')
+        await (await page.query_selector('#scene')).screenshot(path=str(OUT / '7b_이야기연출.png'))
+        await page.click('#cutSkip')
 
         # 4) 레이드: 화면 캡처 후 끝까지 자동 진행
         await page.click('#tab-raid')
@@ -335,6 +422,35 @@ async def main():
             await page.wait_for_timeout(2500)
             el = await page.query_selector('#scene')
             await el.screenshot(path=str(OUT / f'14_지역{i + 2}.png'))
+
+        # 6-2) 환생 → 저승: 조건 맞추고 환생, 저승 지역·시왕 레이드·초각성·타임 보스
+        await page.evaluate("() => { const G = window.__game; G.setWorld(0); G.S.level = 100; G.S.refine.weapon.lv = 25; G.S.quest.trials = [true, true, true, true, true]; G.S.gear.weapon.count[16] = 2; G.S.gear.weapon.seen[16] = true; G.equipBest('weapon'); G.buildTab('grow'); }")
+        await page.click('#gv-reb'); await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '16_환생.png'), full_page=True)
+        await page.click('#rebBtn'); await page.click('#modal-btn-1')
+        await page.wait_for_timeout(600)
+        rb = await page.evaluate('() => ({w: window.__game.S.world, lv: window.__game.S.level, pts: window.__game.S.reb.pts, eq: window.__game.S.equip.weapon, hell: document.body.classList.contains("hell")})')
+        check(rb['w'] == 1 and rb['lv'] == 1 and rb['pts'] > 0 and rb['eq'] >= 16 and rb['hell'], f'환생하면 저승 Lv.1로 다시 시작하고 장비는 남는다 {rb}')
+        await skip_cut(page, 300)
+        await page.evaluate("() => { const G = window.__game; G.quiet = true; G.S.up.atk = 400; G.S.up.hp = 400; G.refreshStats(); }")
+        for i, st in enumerate([1, 21, 41]):
+            await page.evaluate(f"() => window.__game.setStage({st})")
+            await page.wait_for_timeout(1500)
+            await (await page.query_selector('#scene')).screenshot(path=str(OUT / f'17_저승{i + 1}.png'))
+        hr = await page.evaluate("""() => { const G = window.__game; G.S.level = 60; G.S.awaken = true; G.S.raid.tk = 3; const ok = G.startRaid(0);
+          const B = G.raid.boss; B.hp = B.maxHp = Math.max(B.hp, G.ST.atk * G.ST.aspd * 30);   // 너무 빨리 끝나지 않게(초각성은 12초 뒤에 쓴다)
+          let cast = false; for (let i = 0; i < 2400 && G.raid; i++){ G.update(0.05); if (G.raid && G.raid.awk && G.raid.awk.used) cast = true; } return {ok, cast, h0: !!G.S.raid.first.h0}; }""")
+        check(hr['ok'] and hr['cast'] and hr['h0'], f'저승 시왕 레이드에서 초각성기를 쓰고 토벌한다 {hr}')
+        tb = await page.evaluate("""() => { const G = window.__game;
+          G.REG.accounts.friend1 = {salt: 'x', hash: 'p:x', t: 1, chars: [{cid: 'cf', name: '벗님', cls: 'doin', level: 50, maxStage: 50, look: {}, armorG: 3, weaponG: 3, ally: {dps: G.ST.atk * 3, maxHp: G.ST.maxHp}}]};
+          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000);
+          const g0 = G.S.gold, why = G.tbCan('normal'), ok = G.startTimeBoss('normal');
+          for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
+          const res = {why, ok, gold: G.S.gold > g0, done: G.S.tb.normal === G.tbWindow().id};
+          delete G.REG.accounts.friend1; return res; }""")
+        check(tb['ok'] and tb['gold'] and tb['done'], f'타임 보스: 2명 이상이면 도전하고 엽전을 받는다 {tb}')
+        await page.click('#tab-raid'); await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '18_레이드_저승.png'))
 
         # 7) 도트 그림 모음(펫·몬스터)
         data = await page.evaluate("""() => { const sh = window.__game.sheet(); const rows = [sh.pets.map(p => p[0]).concat(sh.pets.map(p => p[1])), sh.mobs.map(m => m[0])];
@@ -447,7 +563,7 @@ async def main():
             watch(page, errors, 'sim ')
             for c in ['musa', 'jagaek', 'sulsa', 'doin']:
                 await fresh(page)
-                for line in await page.evaluate(SIM, [30, c]):
+                for line in (await page.evaluate(SIM, [30, c]))['log']:
                     print(line)
             await ctx.close()
         await browser.close()
@@ -459,4 +575,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(run_long() if '--long' in sys.argv else main())
