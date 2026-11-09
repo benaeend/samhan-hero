@@ -629,6 +629,22 @@ async def main():
         check(kl['jr'] and kl['tr'] and len(kl['steps']) == 3 and kl['job'] == 4 and kl['jobD'] >= 1 and kl['cape'] == 'j_musa_4',
               f'3부: 세 스승의 시험(세 판)을 넘으면 4차 전직(개천왕)과 10번째 기술 {kl}')
 
+        # 6-7) 탈것: 지난 이야기 보상으로 받기, 마구간(엽전)·고삐 조각으로 얻기, 별 올리기, 타면 걷기·능력
+        mt = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true;
+          const st0 = G.heroStep(), atk0 = G.ST.atk; G.mountCatchUp(); const own = Object.keys(S.mount.own).sort();
+          S.gold = 1e300; const bd = G.buyMount('donkey'); S.mount.piece = 100; const bc = G.buyMount('cheolli'); const su = G.mountStarUp('girin');
+          G.rideMount('girin'); G.refreshStats();
+          return {own, bd, bc, su, star: S.mount.star.girin, ride: S.mount.ride, st0, st1: G.heroStep(), atk0, atk1: G.ST.atk, col: G.mountCol(), cdr: G.rideAb('cdr')}; }""")
+        check(all(k in mt['own'] for k in ['kwaha', 'eunglong', 'haetae', 'baekrok', 'girin']) and mt['bd'] and mt['bc'] and mt['su'] and mt['star'] == 1,
+              f'탈것: 이야기에서 받은 탈것이 채워지고, 마구간·고삐 조각으로 얻고, 별을 올린다 {mt}')
+        check(mt['ride'] == 'girin' and mt['st1'] < mt['st0'] * 0.7 and mt['atk1'] > mt['atk0'] and mt['cdr'] > 12,
+              f'탈것: 기린을 타면 걷기가 빨라지고 공격력(모음 효과)·재사용 줄이기가 붙는다 {mt}')
+        await page.evaluate("() => { const G = window.__game; G.quiet = false; G.buildTab('gear'); }")
+        await page.click('#seg-mount')
+        await page.wait_for_timeout(400)
+        await page.screenshot(path=str(OUT / '33_탈것.png'))
+        await page.evaluate("() => window.__game.closePage()")
+
         # 7) 도트 그림 모음(펫·몬스터)
         data = await page.evaluate("""() => { const sh = window.__game.sheet(); const rows = [sh.pets.map(p => p[0]).concat(sh.pets.map(p => p[1])), sh.mobs.map(m => m[0])];
           const c = document.createElement('canvas'); c.width = 30 * 22 * 3; c.height = 2 * 30 * 3 + 10; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;

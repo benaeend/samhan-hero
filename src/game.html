@@ -169,7 +169,7 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .seg button[aria-pressed="true"]{background:linear-gradient(180deg,var(--panel-3),var(--panel-2));color:var(--gold);box-shadow:inset 0 0 0 1px rgba(255,204,77,.35),0 0 12px rgba(255,204,77,.15)}
 .seg.three{grid-template-columns:repeat(3,1fr)}
 .seg.four{grid-template-columns:repeat(4,1fr)}
-.seg.six{grid-template-columns:repeat(4,1fr)}
+.seg.six{grid-template-columns:repeat(5,1fr)}
 .card.hidq{border-color:rgba(169,139,255,.55);box-shadow:0 0 0 1px rgba(169,139,255,.25),0 0 22px rgba(169,139,255,.18)}
 .card.hidq .ct span:first-child{color:#c8b4ff}
 .matrow{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px}
@@ -458,6 +458,8 @@ body.hell .sheet{background:linear-gradient(180deg,#2a161c,#170b0f)}
 .ccard b{font-size:15px;font-weight:800}
 .ccard span{font-size:11px;color:var(--text-soft);line-height:1.4}
 .ccard em{font-style:normal;font-size:11px;font-weight:800;color:var(--gold)}
+.classes.mounts{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.mounts .ccard img{width:68px;height:52px}.mounts .ccard.on{border-color:var(--g);box-shadow:0 0 0 1px var(--g),0 0 14px -4px var(--g)}
+.mstar{font-style:normal;font-size:11px;color:#ffd24a;letter-spacing:1px;min-height:12px}.mbtns{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
 
 @media (prefers-reduced-motion: reduce){
   .btn-boss,.res,.guide.flash,.rres.pop,.modal,.sheet{animation:none}
@@ -2128,6 +2130,7 @@ function defaultState(){
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, useProtect:false,
+    mount:{own:{}, star:{}, piece:0, ride:''},
   };
 }
 function mergeState(d){
@@ -2216,6 +2219,10 @@ function mergeState(d){
   out.dust = Math.max(0, d.dust == null ? 40 : +d.dust || 0);
   out.dummy = Object.assign({day:'', n:0, best:0}, d.dummy || {});
   out.sub = {act:Object.assign({}, (d.sub || {}).act), done:Object.assign({}, (d.sub || {}).done)};
+  const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
+  out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
+  for (const m of MOUNTS) if (mt.own && mt.own[m.k]){ out.mount.own[m.k] = true; out.mount.star[m.k] = Math.min(MOUNT_STAR_MAX, Math.max(0, Math.floor(+(mt.star && mt.star[m.k])) || 0)); }
+  if (out.mount.own[mt.ride]) out.mount.ride = mt.ride;
   if (out.mode !== 'semi') out.mode = 'auto';
   out.bossAuto = out.bossAuto !== false;
   if (![1, 10, 'max'].includes(out.buyMode)) out.buyMode = 1;
@@ -2277,17 +2284,17 @@ function computeStats(up = S.up){
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
   return {
     atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
-      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100),
+      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
-      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100),
+      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
-    crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell),
+    crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100),
     critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100);
+const skillMulX = () => (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 function power(st){
   const pi = eqPet('atk'), petDps = pi >= 0 ? st.atk * petInfo(pi).pct / 100 / 1.5 : 0;
@@ -2312,7 +2319,7 @@ function statValue(k, st){
 const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1.5 : 1) * (hero.shinT > 0 ? 1.2 : 1);
 const spdBuff = () => (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0) + rideAb(k)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -2671,6 +2678,7 @@ function storyReward(q){
   if (q.myth && !S.myth[q.myth]) dropMyth(questDiff(q), q.myth);
   if (q.av && !S.av.own[q.av]) giveAvatar(q.av);
   if (q.acc && S.acc[q.acc[0]].g < q.acc[1]) giveAcc(q.acc[0], q.acc[1]);
+  if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount);
 }
 // 예전 이야기(15장)로 하던 저장: 이미 이룬 퀘스트는 보상 없이 넘기고(변신 등은 줌) 새 이야기에 이어 붙인다
 function migrateStory(){
@@ -2743,7 +2751,7 @@ function autoPotion(dt){
   else if (S.inv.potion > 0){ k = 'potion'; h = 0.4; }
   if (!k) return;
   S.inv[k]--; potCd = 3; sfx('potion');
-  const amt = ST.maxHp * h;
+  const amt = ST.maxHp * h * (1 + rideAb('pot') / 100);
   hero.hp = Math.min(ST.maxHp, hero.hp + amt);
   addText(k === 'elixir' ? '산삼 탕약!' : '인삼 탕약', hero.x, hero.y - 40, '#8ff0a0', 11, true);
   fx.push({type:'heal', t:0, dur:0.7});
@@ -2897,7 +2905,7 @@ function hit(m, base, kind, sure){
   const C = cls(), mine = kind !== 'ally';
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit;
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0);
-  const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) : 1) * (0.92 + Math.random() * 0.16);
+  const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) : 1) * (0.92 + Math.random() * 0.16);
   if (mine){ dmgMeter += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
@@ -2934,7 +2942,7 @@ function damageHero(d){
   if (hero.invisT > 0) return;   // 무영 월광살: 모습을 감춘 동안
   if (cls().evade && Math.random() < cls().evade){ addText('회피', hero.x + Math.random() * 8 - 4, hero.y - 30, '#d8d0ff', 10, true); return; }
   const dr = petDR();
-  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (0.9 + Math.random() * 0.2);
+  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (1 - rideAb('dr') / 100) * (0.9 + Math.random() * 0.2);
   if (dr > 0) petRt.def.glow = 0.25;
   if (hero.shield > 0){
     const a = Math.min(hero.shield, dmg);
@@ -3188,7 +3196,7 @@ function finishTimeBoss(R){
   S.tb[info.diff] = info.w;
   const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold');
   S.gold += gold; S.rec.tb = (S.rec.tb || 0) + 1;
-  gainMat(MAT_DROP.tb);
+  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb);
   const luck = window.__game && window.__game.tbLuck || 1, drops = [];
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck){
     let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
@@ -3302,13 +3310,14 @@ function raidReward(info){
   for (const r of items) r.isNew = giveItem(r.slot, r.it);
   S.gems += gems; S.gold += gold;
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
+  const piece = info.busang || info.kunlun ? gainPiece((info.kunlun ? MOUNT_PIECE.kunlun : MOUNT_PIECE.busang) + (first ? MOUNT_PIECE.first : 0), true) : 0;
   S.raid.first[info.key] = true; S.rec.raids++;
   if (info.hell) S.rec.hraids = (S.rec.hraids || 0) + 1;
   if (raidTickets() >= TICKET_MAX) S.raid.tkT = now();
   S.raid.tk = Math.max(0, S.raid.tk - 1);
   refreshStats();
   ev('raid');
-  return {gems, gold, items, first, mat};
+  return {gems, gold, items, first, mat, piece};
 }
 /* 허수아비 수련(솔로 레이드): 하루 3번, 30초 동안 허수아비에게 넣은 피해로 1~5등급 보상(엽전·보석·재료·장신구) */
 const DUMMY_TRIES = 3, DUMMY_TIME = 30, DUMMY_T = [2, 5, 10, 20, 40];   // 등급 기준 = 지금 세계 최고 단계 몹 체력 ×
@@ -3329,13 +3338,14 @@ function finishDummy(){
   const dmg = dmgMeter, tier = dummyTier(dmg), w = Math.min(4, S.world + 1);
   const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 150 * gainMul('gold', true)) : 0, gems = [0, 0, 30, 60, 100, 150][tier], mats = [0, 0, 0, 2, 4, 6][tier];
   S.gold += gold; S.gems += gems; if (mats) gainMat(mats, true);
+  const piece = tier >= 4 ? gainPiece(tier - 3, true) : 0;
   let acc = '';
   if (tier >= 4){ const k = tier >= 5 ? (Math.random() < 0.5 ? 'ear' : 'brace') : 'ring', gg = Math.min(4, tier >= 5 ? w : w - 1); const r = giveAcc(k, Math.max(0, gg)); acc = ACC[k].names[Math.max(0, gg)] + (r ? '' : ' (이미 더 좋은 것)'); }
   if (dmg > (S.dummy.best || 0)) S.dummy.best = dmg;
   addLog(`허수아비 수련 끝! 피해 ${fmt(dmg)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
   if (!(window.__game && window.__game.quiet)) showModal('허수아비 수련', `<p>${DUMMY_TIME}초 동안 넣은 피해 <b>${fmt(dmg)}</b></p>
     <div class="dtier">${[1, 2, 3, 4, 5].map(t => `<span class="${t <= tier ? 'on' : ''}">${t}</span>`).join('')}</div>
-    <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${gems}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${acc ? `<span class="rchip rc-acc">${acc}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`,
+    <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${gems}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${acc ? `<span class="rchip rc-acc">${acc}</span>` : ''}${piece ? `<span class="rchip rc-mount">고삐 조각 ${piece}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`,
     [{label:'확인', primary:true}]);
   ev('raid');
   return {dmg, tier, gold, gems};
@@ -3364,6 +3374,7 @@ function finishRaid(){
         <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
         <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
         <li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(rw.mat)}<span>${MATS[Math.min(2, S.world)].name} (조합 재료)</span></li>
+        ${rw.piece ? `<li style="color:#c8b0ff">${rw.piece}<span>고삐 조각 (탈것 별·천리마·산군 범)</span></li>` : ''}
         ${rw.items.map(r => `<li style="color:${GRADES[Math.floor(r.it / 4)].color}">${gearName(r.slot, r.it)}<span>${GRADES[Math.floor(r.it / 4)].name} ${GEAR[r.slot].label}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
       </ul>
       <p class="small" style="margin-top:8px">토벌패 1개를 썼어요(남은 토벌패 ${raidTickets()}/${TICKET_MAX}). 토벌패는 ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요.</p>`,
@@ -3422,6 +3433,11 @@ function updatePets(dt){
         fx.push({type:'heal', t:0, dur:0.7});
       }
     }
+  }
+  const mh = rideAb('heal');   // 백록: 5초마다 체력 회복
+  if (mh > 0){
+    hero.mHealT = (hero.mHealT == null ? 5 : hero.mHealT) - dt;
+    if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; hero.hp = Math.min(ST.maxHp, hero.hp + h); addText('+' + fmt(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
   }
 }
 function attack(tg){
@@ -3624,7 +3640,7 @@ function jobCCast(lv, alive, tg, mul){
   return true;
 }
 // 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
-const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100);
+const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100);
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
@@ -3717,7 +3733,7 @@ function update(dt){
           if (hero.atkT <= 0) attack(tg);
         } else {
           hero.engaged = false;
-          if (!stepToward(hero, tg.tx, tg.ty, STEP_HERO)){
+          if (!stepToward(hero, tg.tx, tg.ty, heroStep())){
             const other = nearestOther(tg);
             if (other) hero.target = other;
           }
@@ -3725,7 +3741,7 @@ function update(dt){
       } else {
         hero.engaged = false;
         hero.idleT += dt;
-        if (hero.idleT > 1.2){ hero.idleT = 0; randomStep(hero, STEP_HERO * 1.5); }
+        if (hero.idleT > 1.2){ hero.idleT = 0; randomStep(hero, heroStep() * 1.5); }
       }
     }
   }
@@ -4489,6 +4505,178 @@ const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
 const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기']];
 const AV_PCT = 2, AV_BOX = 1000, AV_DUP_GEMS = 30, AV_PITY = 40;
 const AV_ODDS = [['char', 6], ['cape', 11], ['pet', 28], ['miss', 55]];   // 꾸미기 상자 확률(%)
+/* ================= 탈것(2부 부상부터) =================
+   타면 걷는 속도가 빨라지고 고유 능력이 켜진다(하나만 탈 수 있음). 가진 탈것마다 공격력·체력 +(등급별 모음 효과).
+   별(고삐 조각으로 올림, 최대 5)마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상·곤륜 레이드·타임 보스·허수아비에서 */
+const MOUNT_G = [{name:'일반', pct:1, color:'#c8c0b0'}, {name:'고급', pct:2, color:'#7fdc7f'}, {name:'희귀', pct:3, color:'#6ab8ff'}, {name:'전설', pct:5, color:'#c08bff'}, {name:'신화', pct:8, color:'#ffb347'}];
+const MOUNTS = [
+  {k:'donkey', name:'당나귀', g:0, spd:10, ab:{gold:10}, src:'stable', d:'고집은 세도 짐은 잘 날라요.'},
+  {k:'ox', name:'누렁소', g:0, spd:10, ab:{hp:10}, src:'stable', d:'느긋하지만 든든한 밭갈이 소.'},
+  {k:'kwaha', name:'과하마', g:1, spd:20, ab:{exp:8}, src:'story', from:'35장 이야기', d:'과일나무 밑으로도 지나간다는 작고 단단한 말.'},
+  {k:'baekma', name:'백마', g:1, spd:20, ab:{boss:8}, src:'gems', d:'눈처럼 흰 장수의 말.'},
+  {k:'cheolli', name:'천리마', g:2, spd:30, ab:{off:15}, src:'piece', cost:30, d:'하루에 천 리를 달린다는 바람의 말.'},
+  {k:'beom', name:'산군 범', g:2, spd:30, ab:{crit:8}, src:'piece', cost:60, d:'산을 다스리는 범. 용사를 태워 주기로 했어요.'},
+  {k:'baekrok', name:'백록', g:3, spd:40, ab:{heal:3, pot:50}, src:'story', from:'41장 이야기', d:'신선이 타고 다닌다는 흰 사슴.'},
+  {k:'eunglong', name:'응룡', g:3, spd:40, ab:{skill:15}, src:'story', from:'36장 이야기', d:'날개 달린 용. 물길을 다스려요.', fly:true},
+  {k:'haetae', name:'해태', g:4, spd:50, ab:{dr:15, boss:10}, src:'story', from:'40장 이야기', d:'옳고 그름을 가리는 신령한 짐승.'},
+  {k:'girin', name:'기린', g:4, spd:50, ab:{cdr:12, exp:10, gold:10}, src:'story', from:'43장 이야기', d:'어진 이가 나타날 때 온다는 상서로운 짐승.'},
+];
+const MT = Object.fromEntries(MOUNTS.map(m => [m.k, m]));
+const MOUNT_STAR_MAX = 5, MOUNT_GEMS = 15000, MOUNT_PIECE = {busang:1, kunlun:2, first:2, tb:3};
+const mountStarCost = m => Math.ceil([5, 10, 15, 20, 30][S.mount.star[m.k] || 0] * (2 + m.g) / 2);   // 다음 별에 드는 고삐 조각
+const mountStableGold = () => Math.round(mGold(Math.max(1, S.maxStage)) * 1500);
+const mountOpen = () => S.world >= 3;
+const mountK = k => 1 + 0.2 * (S.mount.star[k] || 0);
+const mountN = () => MOUNTS.filter(m => S.mount.own[m.k]).length;
+function mountCol(){ let p = 0; for (const m of MOUNTS) if (S.mount.own[m.k]) p += MOUNT_G[m.g].pct * mountK(m.k); return p; }   // 모음 효과 %
+const rideM = () => S.mount.ride && S.mount.own[S.mount.ride] ? MT[S.mount.ride] : null;
+const rideAb = k => { const m = rideM(); return m && m.ab[k] ? m.ab[k] * mountK(m.k) : 0; };
+const heroStep = () => { const m = rideM(); return STEP_HERO / (m ? 1 + m.spd / 100 : 1); };
+const MOUNT_AB = {gold:'엽전 +%', exp:'경험치 +%', hp:'체력 +%', boss:'보스 피해 +%', off:'오프라인 보상 +%', crit:'치명타 확률 +%', heal:'5초마다 체력 %', pot:'탕약 회복 +%', skill:'기술 피해 +%', dr:'받는 피해 -%', cdr:'기술 재사용 -%'};
+const mountAbText = (m, k = 1) => Object.entries(m.ab).map(([a, v]) => MOUNT_AB[a].replace('%', (Math.round(v * k * 10) / 10) + '%')).join(' · ');
+function giveMount(k, quiet){
+  const m = MT[k];
+  if (!m || S.mount.own[k]) return false;
+  S.mount.own[k] = true;
+  if (!rideM()) S.mount.ride = k;
+  refreshStats();
+  if (!quiet){ addLog(`새 탈것! ${m.name} — [장비] → [탈것]`, 'good'); announce(`${S.name}님이 탈것 「${m.name}」${josa(m.name, '을', '를')} 얻었어요!`); }
+  return true;
+}
+function gainPiece(n, quiet){
+  if (!n || S.world < 3) return 0;
+  S.mount.piece += n;
+  if (!quiet) addLog(`고삐 조각 +${n}`, 'gain');
+  return n;
+}
+// 마구간·조각으로 얻기: 'gold' 엽전 · 'gems' 보석 · 'piece' 고삐 조각
+function mountBuyCost(m){
+  if (m.src === 'stable') return {cur:'gold', n:mountStableGold()};
+  if (m.src === 'gems') return {cur:'gems', n:MOUNT_GEMS};
+  if (m.src === 'piece') return {cur:'piece', n:m.cost};
+  return null;
+}
+function buyMount(k){
+  const m = MT[k], c = m && mountBuyCost(m);
+  if (!c || S.mount.own[k] || !mountOpen()) return false;
+  const have = c.cur === 'gold' ? S.gold : c.cur === 'gems' ? S.gems : S.mount.piece;
+  if (have < c.n) return false;
+  if (c.cur === 'gold') S.gold -= c.n; else if (c.cur === 'gems') S.gems -= c.n; else S.mount.piece -= c.n;
+  return giveMount(k);
+}
+function mountStarUp(k){
+  const m = MT[k];
+  if (!m || !S.mount.own[k] || (S.mount.star[k] || 0) >= MOUNT_STAR_MAX) return false;
+  const c = mountStarCost(m);
+  if (S.mount.piece < c) return false;
+  S.mount.piece -= c; S.mount.star[k] = (S.mount.star[k] || 0) + 1;
+  refreshStats();
+  return true;
+}
+function rideMount(k){
+  if (k && !S.mount.own[k]) return false;
+  S.mount.ride = S.mount.ride === k ? '' : k || '';
+  refreshStats();
+  return true;
+}
+// 이야기에서 받았어야 할 탈것(탈것이 생기기 전에 그 이야기를 지난 저장)
+function mountCatchUp(){
+  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); }
+}
+
+/* 탈것 그림: 64×48 HD, 왼쪽을 본다. 안장 가운데 (33.5, 16)에 용사가 앉는다 */
+function mountQuad(g, f, o){
+  const {E, Pl, RR, blob, bigEye} = hdKit(g), c = o.c, d = darken(c, 0.28), l = o.belly || mix(c, '#ffffff', 0.45), mn = o.mane || darken(c, 0.45), hf = o.hoof || '#3a2a26', run = f ? 1 : 0;
+  // 꼬리
+  if (o.tail === 'tiger'){ g.save(); g.translate(48, 25); g.rotate(-0.8 + run * 0.25); RR(0, -2.2, 15, 4.4, 2.2, c); for (const x of [4, 8, 12]) RR(x, -2.2, 1.6, 4.4, 0.8, o.stripes); g.restore(); }
+  else if (o.tail === 'tuft'){ g.save(); g.translate(48, 24); g.rotate(0.6 + run * 0.2); RR(0, -1.1, 12, 2.2, 1.1, d); E(13, 0, 3, 2.4, mn); g.restore(); }
+  else if (o.tail === 'flame'){ for (let i = 0; i < 4; i++) E(51 + i * 2.8, 22 - i * 2.6 + run, 3.6 - i * 0.5, 2.6 - i * 0.3, i % 2 ? '#ffd24a' : mn); }
+  else if (o.tail === 'deer'){ E(50, 22, 3, 2.4, c); E(51, 22.5, 1.8, 1.4, '#ffffff'); }
+  else { g.save(); g.translate(48, 22); g.rotate(0.5 + run * 0.25); E(6, 1, 7.5, 3.2, mn); E(11, 2.5, 4.5, 2.4, darken(mn, 0.15)); g.restore(); }
+  const leg = (x, i, col) => { const up = (i + run) % 2 ? -1.6 : 0; RR(x, 31 + up, 5, 13, 2.5, col); RR(x - 0.3, 41.5 + up, 5.6, 3.2, 1.4, hf); if (o.glow) E(x + 2.5, 45 + up, 4.2, 1.5, o.glow); };
+  leg(20, 0, d); leg(44, 1, d);
+  blob(33, 27, 17, 9.5, c); E(33, 32.4, 12, 3.4, l);
+  if (o.stripes) for (const x of [25, 30.5, 36, 41.5]) Pl([[x, 18.8], [x + 2.4, 18.8], [x + 0.8, 26]], o.stripes);
+  if (o.spots) for (const [x, y] of [[26, 23], [33, 21], [40, 23.5], [29.5, 27.5], [43, 28]]) E(x, y, 1.4, 1.1, o.spots);
+  if (o.scales) for (let x = 21; x < 47; x += 4) for (const y of [23, 28]) E(x + (y > 25 ? 2 : 0), y, 1.9, 1.3, o.scales);
+  leg(15, 1, mix(c, d, 0.35)); leg(39, 0, mix(c, d, 0.35));
+  // 목·머리
+  if (o.head === 'ox'){
+    Pl([[12, 13], [8, 6], [5.5, 7.5], [10, 15]], '#f4ead0'); Pl([[18, 13], [21, 6], [23.5, 7.5], [19.5, 15]], '#e8dcc0');
+    E(21, 16, 3.4, 1.8, c, 0.3); blob(13, 20, 9.5, 8.2, c); E(7, 24.5, 5.2, 3.8, l); E(4.6, 24, 0.8, 0.7, '#3a2a26'); E(8, 24.4, 0.8, 0.7, '#3a2a26');
+    bigEye(12.5, 18, 0.66);
+  } else if (o.head === 'cat'){
+    blob(13, 19, 9.5, 8.6, c); E(15, 12, 2.8, 2.8, c); E(15, 12.3, 1.4, 1.4, '#f6c8b8'); E(8.5, 12.6, 2.6, 2.6, c);
+    E(8.5, 23, 5, 3.4, '#fff6e8'); E(5, 21, 1.4, 1.1, '#2a1a1a');
+    Pl([[12, 11.5], [14, 11.5], [13, 15]], o.stripes); Pl([[18, 15], [21.5, 16], [18, 17.4]], o.stripes); Pl([[18, 19.5], [21.5, 21], [18, 21.8]], o.stripes);
+    bigEye(10.5, 18, 0.72);
+  } else if (o.head === 'lion'){
+    for (let i = 0; i < 9; i++){ const a = i * 0.7 - 0.4; blob(13 + Math.cos(a) * 8.6, 18 + Math.sin(a) * 8.6, 4.4, 4.4, mn); }
+    blob(13, 18.5, 8.6, 8, c); Pl([[12, 9], [14, 1.5], [16.5, 9]], '#f3d36b');
+    E(8, 22.5, 5, 3.4, l); E(5, 21.4, 1.3, 1, '#2a1a1a'); RR(5.5, 24.5, 6, 2.4, 1.2, '#8a2a2a');
+    bigEye(10, 17, 0.7); bigEye(16.5, 16.6, 0.66);
+  } else {
+    // 말·사슴·기린: 긴 목
+    Pl([[23.5, 22], [16.5, 8.5], [9, 10], [13.5, 30]], c);
+    if (o.mane){ for (let i = 0; i < 6; i++) E(17.6 + i * 1.25 + (run ? 0.4 : 0), 8.6 + i * 2.4, o.flameMane ? 3.2 : 2.7, 2.3, i % 2 && o.flameMane ? '#ffd24a' : mn); if (o.flameMane) Pl([[16, 8], [19, 1.5], [21, 7]], mn); }
+    blob(10, 12, 7, 6, c);
+    E(4.4, 15.4, 4, 3.3, o.muzzle || mix(c, '#2a2026', 0.25)); E(2.3, 15, 0.7, 0.6, '#1d1420');
+    if (o.ears === 'long'){ Pl([[12, 8], [16, -0.5], [18, 1], [14.6, 9]], c); E(16, 3, 0.8, 2.4, mix(c, '#ffb0b8', 0.55)); }
+    else if (o.ears === 'deer'){ E(15.5, 8.5, 3.4, 1.6, c, -0.5); E(15.5, 8.6, 1.8, 0.8, '#f6c8b8', -0.5); }
+    else Pl([[11.4, 7.6], [13.4, 1.6], [15.2, 8]], c);
+    if (o.antler){ g.strokeStyle = o.antler; g.lineWidth = 1.4; g.lineCap = 'round'; g.beginPath(); g.moveTo(12, 6.5); g.lineTo(14, -0.5); g.moveTo(13.3, 2.5); g.lineTo(10.4, 0); g.moveTo(14, -0.5); g.lineTo(17, -1); g.moveTo(10, 7); g.lineTo(8.5, 1); g.moveTo(9, 3); g.lineTo(6, 2); g.stroke(); }
+    if (o.horn) Pl([[10.5, 7], [12.6, -1], [13.6, 7]], o.horn);
+    bigEye(9.4, 11, 0.62);
+  }
+  // 안장
+  const sd = o.saddle || '#b8382f';
+  RR(27.5, 21, 12, 9.5, 2, darken(sd, 0.12)); RR(28.5, 28.5, 10, 1.4, 0.6, o.trim || '#e0b03c');
+  RR(26.5, 16.2, 14, 5.2, 2.4, sd); E(33.5, 17, 5, 1.3, mix(sd, '#ffffff', 0.3));
+}
+function mountDragon(g, f, o){
+  const {E, Pl, RR, blob, bigEye} = hdKit(g), c = o.c, d = darken(c, 0.3), l = o.belly, wy = f ? 3 : 0, wing = o.wing;
+  Pl([[27, 21], [34, 5 + wy], [44, 0 + wy], [58, 2 + wy], [51, 8 + wy], [60, 10 + wy], [50, 14 + wy], [55, 18 + wy], [42, 21]], wing);
+  g.strokeStyle = darken(wing, 0.3); g.lineWidth = 1; g.beginPath(); g.moveTo(33, 19); g.lineTo(44, 1 + wy); g.moveTo(36, 20); g.lineTo(52, 8 + wy); g.moveTo(39, 21); g.lineTo(51, 14 + wy); g.stroke();
+  for (let i = 0; i < 6; i++){ const t = i / 5; blob(48 + t * 13, 29 - t * 9 + Math.sin(t * 4 + f) * 1.5, 5.4 - t * 3, 4.4 - t * 2.4, i % 2 ? c : darken(c, 0.08)); }
+  Pl([[61, 19], [64, 14], [63, 21]], o.mane);
+  RR(20, 31, 4.4, 8, 2.2, d); RR(41, 31, 4.4, 8, 2.2, d); for (const x of [19.5, 40.5]) E(x + 2.2, 39.4, 3, 1.4, '#f4ead0');
+  blob(33, 27, 16, 8.5, c); E(33, 31.5, 12, 3, l);
+  for (let x = 21; x < 46; x += 4) E(x, 25, 1.8, 1.2, darken(c, 0.12));
+  for (let x = 22; x < 48; x += 5) Pl([[x, 19.5], [x + 2, 15.5], [x + 4, 19.5]], o.mane);
+  RR(17, 30, 4.4, 9, 2.2, mix(c, d, 0.4)); RR(37, 30, 4.4, 9, 2.2, mix(c, d, 0.4)); for (const x of [16.5, 36.5]) E(x + 2.2, 39, 3, 1.4, '#f4ead0');
+  Pl([[23, 21], [16, 9], [9, 11], [14, 30]], c); for (let i = 0; i < 5; i++) Pl([[16.6 + i * 1.3, 9 + i * 2.4], [20.5 + i * 1.3, 7 + i * 2.4], [18.4 + i * 1.3, 11.5 + i * 2.4]], o.mane);
+  g.strokeStyle = o.horn; g.lineWidth = 1.5; g.lineCap = 'round'; g.beginPath(); g.moveTo(12, 7); g.lineTo(15, 0); g.moveTo(14, 3); g.lineTo(17.5, 2); g.moveTo(9.5, 7.5); g.lineTo(9, 1); g.stroke();
+  blob(10, 13, 7.6, 6.4, c); E(3.8, 16, 4.6, 3.4, l); E(1.8, 15.2, 0.7, 0.6, '#1d1420'); RR(1.5, 18, 6, 1.6, 0.8, '#8a2a2a');
+  g.strokeStyle = o.horn; g.lineWidth = 0.9; g.beginPath(); g.moveTo(3, 17.5); g.quadraticCurveTo(-1, 21, 1, 24 + wy * 0.3); g.stroke();
+  bigEye(9.6, 11.4, 0.62, '#c83a2a');
+  const sd = o.saddle;
+  RR(27.5, 20.5, 12, 8.5, 2, darken(sd, 0.12)); RR(26.5, 16.2, 14, 5.2, 2.4, sd); E(33.5, 17, 5, 1.3, mix(sd, '#ffffff', 0.3));
+}
+const MOUNT_HD = {
+  donkey:(g, f) => mountQuad(g, f, {c:'#9a948c', belly:'#e4ded4', mane:'#4a4440', muzzle:'#e4ded4', ears:'long', tail:'tuft', saddle:'#7a5a3a', trim:'#c8a060'}),
+  ox:(g, f) => mountQuad(g, f, {c:'#c8903c', belly:'#f0d8a8', mane:'#6a4a24', head:'ox', tail:'tuft', saddle:'#5a6a8a', trim:'#e0c070'}),
+  kwaha:(g, f) => mountQuad(g, f, {c:'#a0582c', mane:'#3a2016', tail:'horse', saddle:'#2a6a5a'}),
+  baekma:(g, f) => mountQuad(g, f, {c:'#f4f2ec', belly:'#ffffff', mane:'#c8ccd8', muzzle:'#d8d4cc', tail:'horse', saddle:'#b8382f', hoof:'#7a7068'}),
+  cheolli:(g, f) => mountQuad(g, f, {c:'#3a4a7a', belly:'#8a9ac8', mane:'#9fe7ff', muzzle:'#2a3460', tail:'horse', saddle:'#e0b03c', trim:'#ffffff', glow:'#bfefff', hoof:'#9fe7ff'}),
+  beom:(g, f) => mountQuad(g, f, {c:'#f08a2a', belly:'#fff4e0', stripes:'#2a1a14', head:'cat', tail:'tiger', saddle:'#3a3a6a', hoof:'#f08a2a'}),
+  baekrok:(g, f) => mountQuad(g, f, {c:'#f0ece2', belly:'#ffffff', spots:'#d8cfc0', muzzle:'#d8cfc0', ears:'deer', antler:'#e0b03c', tail:'deer', saddle:'#6a8ac8', trim:'#ffffff', hoof:'#a08a6a'}),
+  eunglong:(g, f) => mountDragon(g, f, {c:'#3aa07a', belly:'#f3e6b0', mane:'#ffd24a', wing:'#7ad0b0', horn:'#f4ead0', saddle:'#c83a2a'}),
+  haetae:(g, f) => mountQuad(g, f, {c:'#4ab0a8', belly:'#d0f0e8', mane:'#2a6a7a', head:'lion', tail:'flame', saddle:'#e0b03c', trim:'#c83a2a', hoof:'#2a6a7a'}),
+  girin:(g, f) => mountQuad(g, f, {c:'#f0c048', belly:'#fff4d0', mane:'#ff7a3a', flameMane:true, scales:'#d8a030', ears:'deer', horn:'#ffffff', tail:'flame', saddle:'#c83a2a', trim:'#ffffff', glow:'#ffe8a0', hoof:'#c86a2a'}),
+};
+const mountCache = new Map();
+function mountSprite(k, f, flip){
+  const key = k + f + (flip ? 'R' : 'L');
+  let sp = mountCache.get(key);
+  if (!sp){
+    if (flip) sp = flipCanvas(mountSprite(k, f, false));
+    else { const cnv = document.createElement('canvas'); cnv.width = 68; cnv.height = 52; const g = cnv.getContext('2d'); g.translate(2, 2); MOUNT_HD[k](g, f); sp = hdFinish(cnv); }
+    mountCache.set(key, sp);
+  }
+  return sp;
+}
+const mountImgCache = new Map();
+function mountImg(k){ let u = mountImgCache.get(k); if (!u){ u = mountSprite(k, 0, false).toDataURL(); mountImgCache.set(k, u); } return u; }
 const avCount = () => AVATARS.filter(a => S.av.own[a.k] && (!a.job || a.cls === S.cls)).length;   // 전직 망토는 지금 직업 것만 센다
 function giveAvatar(k, quiet){
   const a = AV[k];
@@ -5473,18 +5661,29 @@ function drawEntityHero(){
     b.restore();
     return;
   }
-  b.drawImage(sp, x - HD_AX, y - HD_AY + bob, spW(sp), spH(sp));
+  const M = rideM();
+  let hy = y;
+  if (M){
+    // 탈것: 용사 발밑에 그리고 용사를 안장 높이로 올린다. 응룡은 떠서 난다
+    const flip = hero.dir === 'right' || hero.dir === 'up', mf = hero.moving ? Math.floor(gtime * 7) % 2 : 0;
+    const fly = M.fly ? 6 + Math.round(Math.sin(gtime * 2.6) * 1.5) : 0, ms = mountSprite(M.k, M.fly ? Math.floor(gtime * 3) % 2 : mf, flip);
+    if (fly) drawShadow(x, y, 18);
+    const K = 1.3;   // 용사보다 조금 크게
+    b.drawImage(ms, x - (flip ? 21 : 23), y - 31 - fly + (hero.moving && !M.fly ? mf : 0), spW(ms) * K, spH(ms) * K);
+    hy = y - 16 - fly;
+  }
+  b.drawImage(sp, x - HD_AX, hy - HD_AY + bob, spW(sp), spH(sp));
   b.restore();
   if (hero.cloneT > 0){ b.save(); b.globalAlpha = 0.38 + 0.12 * Math.sin(gtime * 8); for (const [ox, oy] of [[-12, 3], [12, 3], [0, -6]]) b.drawImage(sp, x + ox - HD_AX, y + oy - HD_AY, spW(sp), spH(sp)); b.restore(); }
   if (hero.shield > 0){
     // 술사 마력 보호막: 몸을 감싸는 하늘빛 방울(남은 양만큼 진하게)
     const k = Math.min(1, hero.shield / (ST.maxHp * 0.4)), pu = 0.5 + 0.5 * Math.sin(gtime * 5);
-    b.save(); b.globalAlpha = 0.18 + 0.2 * k; b.fillStyle = '#9fe7ff'; b.beginPath(); b.ellipse(x, y - 13, 14, 18, 0, 0, 7); b.fill();
-    b.globalAlpha = 0.55 + 0.3 * pu * k; b.strokeStyle = '#dff6ff'; b.lineWidth = 1; b.beginPath(); b.ellipse(x, y - 13, 14, 18, 0, 0, 7); b.stroke(); b.restore();
+    b.save(); b.globalAlpha = 0.18 + 0.2 * k; b.fillStyle = '#9fe7ff'; b.beginPath(); b.ellipse(x, hy - 13, 14, 18, 0, 0, 7); b.fill();
+    b.globalAlpha = 0.55 + 0.3 * pu * k; b.strokeStyle = '#dff6ff'; b.lineWidth = 1; b.beginPath(); b.ellipse(x, hy - 13, 14, 18, 0, 0, 7); b.stroke(); b.restore();
   }
-  if (hero.charge > 1){ for (let i = 0; i < 3; i++){ const a = gtime * 4 + i * 2.1; P(x + Math.cos(a) * 9, y - 26 + Math.sin(a) * 3, 2, 2, '#ffd24a'); } }
+  if (hero.charge > 1){ for (let i = 0; i < 3; i++){ const a = gtime * 4 + i * 2.1; P(x + Math.cos(a) * 9, hy - 26 + Math.sin(a) * 3, 2, 2, '#ffd24a'); } }
   const r = hero.hp / ST.maxHp;
-  P(x - 8, y - 33, 16, 3, '#1a1218'); P(x - 7, y - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
+  P(x - 8, hy - 33, 16, 3, '#1a1218'); P(x - 7, hy - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
   const fr = m.moving ? (m.mt < 0.5 ? 1 : 0) : (Math.floor(m.anim * 2.5) % 2);
@@ -6860,11 +7059,12 @@ function gearSegHTML(){
       <button id="seg-acc" aria-pressed="${gearSlot === 'acc'}">장신구</button>
       <button id="seg-form" aria-pressed="${gearSlot === 'form'}">변신</button>
       <button id="seg-av" aria-pressed="${gearSlot === 'av'}">아바타</button>
+      <button id="seg-mount" aria-pressed="${gearSlot === 'mount'}">탈것${mountNew() ? ' •' : ''}</button>
       <button id="seg-craft" aria-pressed="${gearSlot === 'craft'}">조합${craftReady() ? ' •' : ''}</button>
     </div>`;
 }
 function wireGearSeg(){
-  for (const k of ['weapon', 'armor', 'refine', 'myth', 'acc', 'form', 'av', 'craft']) $('#seg-' + k).addEventListener('click', () => { gearSlot = k; gearSel = -1; buildTab('gear', true); });
+  for (const k of ['weapon', 'armor', 'refine', 'myth', 'acc', 'form', 'av', 'mount', 'craft']) $('#seg-' + k).addEventListener('click', () => { gearSlot = k; gearSel = -1; buildTab('gear', true); });
 }
 function buildGear(){
   if (gearSlot === 'refine') return buildRefine();
@@ -6872,6 +7072,7 @@ function buildGear(){
   if (gearSlot === 'acc') return buildAcc();
   if (gearSlot === 'form') return buildForm();
   if (gearSlot === 'av') return buildAvatar();
+  if (gearSlot === 'mount') return buildMount();
   if (gearSlot === 'craft') return buildCraft();
   const slot = gearSlot, Gd = S.gear[slot], eq = S.equip[slot], def = GEAR[slot];
   let grid = '';
@@ -7049,6 +7250,46 @@ function buildForm(){
       setText(card.querySelector('[data-r=from]'), own ? (on ? '변신 중' : '') : `얻는 곳: ${FORM_FROM[F.k]}`);
       const bt = card.querySelector('.btn'); setText(bt, on ? '풀기' : own ? '변신하기' : '잠김'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
       card.setAttribute('aria-pressed', String(on));
+    }
+  };
+}
+
+/* --- 탈것 --- */
+// 살 수 있거나 별을 올릴 수 있으면 메뉴에 점
+const mountNew = () => mountOpen() && MOUNTS.some(m => S.mount.own[m.k] ? (S.mount.star[m.k] || 0) < MOUNT_STAR_MAX && S.mount.piece >= mountStarCost(m) : (() => { const c = mountBuyCost(m); return c && c.cur === 'piece' && S.mount.piece >= c.n; })());
+function buildMount(){
+  panel.innerHTML = `${gearSegHTML()}
+    <div class="ph" style="margin-top:10px"><h2>탈것</h2><span class="small">모음 효과 공격력·체력 <b id="mtCol"></b> · 고삐 조각 <b id="mtPiece"></b></span></div>
+    <p class="hint">${mountOpen() ? '타면 걷는 속도가 빨라지고 <b>고유 능력</b>이 켜져요(한 번에 하나). 가진 탈것마다 공격력·체력이 올라요(일반 1%·고급 2%·희귀 3%·전설 5%·신화 8%). 별 하나마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상·곤륜 레이드, 타임 보스, 허수아비 4등급 이상에서 얻어요.' : '2부 부상으로 건너가면 <b>마구간</b>이 열려요. 탈것은 이야기·마구간·고삐 조각으로 얻어요.'}</p>
+    <div class="classes mounts">${MOUNTS.map(m => `<div class="ccard" id="mt-${m.k}" style="cursor:default;--g:${MOUNT_G[m.g].color}">
+      <img alt="" src="${mountImg(m.k)}"><b style="color:${MOUNT_G[m.g].color}">${m.name}</b><i class="mstar" data-r="star"></i>
+      <span>${MOUNT_G[m.g].name} · 걷기 +${m.spd}%<br><span data-r="ab"></span></span>
+      <em data-r="from"></em>
+      <div class="mbtns"><button class="btn sm" data-k="${m.k}" data-a="main"></button><button class="btn sm" data-k="${m.k}" data-a="star"></button></div></div>`).join('')}</div>`;
+  wireGearSeg();
+  panel.querySelectorAll('.mounts .btn').forEach(bt => bt.addEventListener('click', () => {
+    const k = bt.dataset.k, m = MT[k];
+    if (bt.dataset.a === 'star'){ if (mountStarUp(k)){ upFx(bt.closest('.ccard'), `★${S.mount.star[k]}`, '#ffd24a'); sfx('rare'); addLog(`${m.name} 별 ${S.mount.star[k]}개!`, 'good'); } }
+    else if (S.mount.own[k]){ rideMount(k); sfx('click'); addLog(S.mount.ride ? `${m.name}${josa(m.name, '을', '를')} 탔어요!` : `${m.name}에서 내렸어요.`); }
+    else if (buyMount(k)){ sfx('rare'); playFx('box', {el:bt.closest('.ccard'), rare:m.g >= 2, sub:m.name}); }
+    refreshPanel();
+  }));
+  return () => {
+    setText($('#mtCol'), `+${fmt(mountCol())}% (${mountN()}/${MOUNTS.length})`); setText($('#mtPiece'), fmt(S.mount.piece));
+    for (const m of MOUNTS){
+      const card = $('#mt-' + m.k), own = !!S.mount.own[m.k], on = S.mount.ride === m.k, st = S.mount.star[m.k] || 0, c = mountBuyCost(m);
+      card.querySelector('img').style.filter = own ? '' : 'brightness(0) opacity(.4)';
+      setText(card.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(MOUNT_STAR_MAX - st) : '');
+      setText(card.querySelector('[data-r=ab]'), mountAbText(m, own ? mountK(m.k) : 1));
+      const cost = c ? (c.cur === 'gold' ? `엽전 ${fmt(c.n)}` : c.cur === 'gems' ? `보석 ${fmt(c.n)}` : `고삐 조각 ${c.n}`) : '';
+      setText(card.querySelector('[data-r=from]'), own ? (on ? '타는 중' : '') : c ? (m.src === 'piece' ? `고삐 조각 ${c.n}개로 길들이기` : `마구간: ${cost}`) : `얻는 곳: ${m.from}`);
+      const bt = card.querySelector('[data-a=main]'), sb = card.querySelector('[data-a=star]');
+      const have = c ? (c.cur === 'gold' ? S.gold : c.cur === 'gems' ? S.gems : S.mount.piece) : 0;
+      setText(bt, on ? '내리기' : own ? '타기' : c ? (mountOpen() ? '얻기' : '잠김') : '잠김');
+      bt.disabled = !own && !(c && mountOpen() && have >= c.n); bt.classList.toggle('primary', !on && !bt.disabled);
+      const sc = mountStarCost(m);
+      sb.hidden = !own; setText(sb, st >= MOUNT_STAR_MAX ? '별 가득' : `★+ ${sc}`); sb.disabled = st >= MOUNT_STAR_MAX || S.mount.piece < sc;
+      card.setAttribute('aria-pressed', String(on)); card.classList.toggle('on', on);
     }
   };
 }
@@ -8299,7 +8540,7 @@ async function enterChar(cid, opts = {}){
     }
   }
   S = data ? mergeState(data) : defaultState();
-  migrateStory();
+  migrateStory(); mountCatchUp();
   if (!S.name) S.name = ch.name;
   if (!S.chosen){ S.chosen = true; S.cls = CLASSES[ch.cls] ? ch.cls : 'musa'; }
   session = {acc, cid}; A.lastChar = cid;
@@ -8547,7 +8788,7 @@ function resetGame(){
 function offlineReward(sec){
   sec = Math.min(sec, OFFLINE_CAP);
   if (sec < 60) return;
-  const s = S.stage, bonus = gainMul('gold', true);
+  const s = S.stage, bonus = gainMul('gold', true) * (1 + rideAb('off') / 100);
   const kps = Math.min(0.6, dpsOf(ST) / mHp(s) * 0.5) * 0.5;
   const kills = Math.floor(kps * sec);
   const gold = kills * mGold(s) * bonus, exp = (kills * mExp(s) + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * sec * 0.5 : 0)) * bonus;
@@ -8853,6 +9094,7 @@ if (location.search.indexOf('simtest') >= 0){
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
+    MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
   };
 }
