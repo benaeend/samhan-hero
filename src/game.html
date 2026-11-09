@@ -1946,12 +1946,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-12', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-13', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
   ['#', '2026-11-10 · 탈것·재련 한도·오프라인 보상'],
   ['탈것 10종', '[장비] → [탈것]. 부상부터 당나귀·누렁소·백마(마구간), 이야기의 과하마·응룡·해태·백록·기린, 고삐 조각으로 천리마·산군 범. 타면 걷기가 빨라지고 고유 능력이 켜져요. 가진 탈것마다 공격력·체력도 올라요.'],
   ['재련 한도', '무기는 이승에서 +25까지, 방어구는 이승 +15 → 저승 +22 → 천계 +25. 2부로 건너가면 무기·방어구가 계승되어 효과는 그대로 두고 +15부터 다시 벼려요(확률은 1부의 70%).'],
   ['오프라인 보상 고침', '자리를 비우면 잡은 수가 너무 적게 나오던 문제를 고쳤어요. 이제 켜 둘 때 스킬 자동 사냥 속도로 계산하고, 경험치는 1.25배·엽전·보석은 0.85배예요.'],
+  ['마을 부탁 100개', '이승 10 · 저승 10 · 천계 10 · 부상 30 · 곤륜 40. 각 세계 이야기를 따라 고르게 열려요. 저승은 원귀·저승 옛이야기, 천계는 하늘·별 이야기, 부상은 일본 옛이야기, 곤륜은 중국 고사·민담과 이야기꾼의 삼국지. 뒤 세계일수록 보석·쇳가루가 커지고 부상부터는 고삐 조각도 줘요.'],
   ['쇳가루 더 많이', '쇳가루가 모자라 무기 +25가 너무 오래 걸리던 문제를 고쳤어요. 일반 몬스터도 가끔 기본 장비를 떨구고, 지금 낀 것보다 높지 않은 등급이면 바로 쇳가루로 바뀌어요. 재련 한 번에 드는 쇳가루도 줄였어요.'],
   ['처치 퀘스트 줄임', '이야기 「알을 지킨 짐승들」의 요괴 처치를 4,500 → 1,500마리로 줄였어요. 이야기 처치 퀘스트는 1,500마리를 넘지 않아요.'],
   ['오프라인 신화 보물', '오프라인 시간을 모두 더해 24시간이 될 때마다 3% 확률로 신화 보물이 떨어져요. 퀘스트 보상의 신화 보물 확률은 6% → 3%로 낮췄어요.'],
@@ -6289,40 +6290,131 @@ function drawOverlay(){
    옛이야기 줄거리만 빌리고 대사는 새로 썼어요. 실제 인물은 이야기 속 인물로만 이야기꾼이 들려줘요.
    조건은 받은 뒤부터 센다: kills 처치 · bosses 단계 보스 · raids 레이드 · refines 재련 시도 · summons 소환 · stage 지금 세계 최고 단계를 n 더. 한 번에 3개까지 */
 const SUB_Q = [
-  {k:'f1', who:'오누이', t:'해와 달이 된 오누이', hook:'떡 고개를 넘던 어머니가 아직 안 오셨어요…', story:'고개의 호랑이 무리가 길을 막고 있대요. 쫓아 주시면 동아줄 대신 보석을 드릴게요.', c:'kills', n:150, gems:80},
-  {k:'f2', who:'흥부', t:'제비가 물어 온 박씨', hook:'제비가 박씨를 물어 왔어요! 그런데…', story:'박을 타는 동안 박 냄새를 맡은 요괴들이 몰려와요. 200마리만 막아 주세요.', c:'kills', n:200, gems:90, gold:300},
-  {k:'f3', who:'혹부리 영감', t:'도깨비의 노래 값', hook:'도깨비들이 제 노래를 또 듣고 싶대요. 허허.', story:'노래 값으로 혹을 떼 갔는데, 이번엔 보스 도깨비가 시비를 걸어요. 단계 보스를 3번 혼내 주세요.', c:'bosses', n:3, gems:100},
-  {k:'f4', who:'나무꾼', t:'날개옷 실', hook:'선녀님 날개옷 실이 다 해졌대요.', story:'레이드 보스가 지키는 하늘 실을 구해 와 주세요. 레이드 2번이면 충분해요.', c:'raids', n:2, gems:150, mat:3},
-  {k:'f5', who:'자라', t:'토끼의 간', hook:'용왕님 병에 토끼 간이 좋다는데요…', story:'토끼는 간을 두고 왔대요. 대신 약초밭 가는 길의 요괴 250마리를 물리쳐 주세요.', c:'kills', n:250, gems:100, gold:200},
-  {k:'f6', who:'나무꾼 막쇠', t:'금도끼 은도끼', hook:'연못에 쇠도끼를 빠뜨렸어요!', story:'산신령님이 정직하게 쇠를 다루는 사람을 좋아하신대요. 재련을 5번 해 보세요.', c:'refines', n:5, gems:120},
-  {k:'f7', who:'콩쥐', t:'깨진 독', hook:'깨진 독에 물을 채워야 잔치에 갈 수 있어요.', story:'두꺼비가 독을 막는 동안 몰려드는 요괴 300마리를 막아 주세요.', c:'kills', n:300, gems:110, gold:300},
-  {k:'f8', who:'까치 무리', t:'오작교', hook:'칠석날 다리를 놓을 까치가 모자라요!', story:'하늘길을 막는 보스를 5번 물리치면 동무들이 날아올 수 있어요.', c:'bosses', n:5, gems:150},
-  {k:'f9', who:'선비', t:'은혜 갚은 까치', hook:'종을 울려 저를 살린 까치 가족이 있어요.', story:'까치 둥지 근처에 뱀 요괴가 또 나타났대요. 200마리를 쫓아 주세요.', c:'kills', n:200, gems:90, mat:2},
-  {k:'f10', who:'착한 아우', t:'도깨비 방망이', hook:'개암을 깨물었더니 도깨비들이 방망이를 두고 갔어요!', story:'형님이 따라 하기 전에 방망이로 좋은 걸 불러내 봐요. 소환 10번!', c:'summons', n:10, gems:120},
-  {k:'f11', who:'총각', t:'우렁 각시', hook:'누가 몰래 밥을 지어 놓고 가요…', story:'우렁이를 데려가려는 원님의 졸개들이 와요. 150마리를 막아 주세요.', c:'kills', n:150, gems:80, gold:200},
-  {k:'f12', who:'팥죽 할멈', t:'팥죽 할멈과 호랑이', hook:'동짓날 호랑이가 팥죽 먹으러 온대요.', story:'알밤·자라·멍석이 도와준다지만 보스 호랑이 둘은 벅차요. 단계 보스 2번!', c:'bosses', n:2, gems:90},
-  {k:'f13', who:'비단 장수', t:'망주석 재판', hook:'고갯마루에서 비단을 몽땅 도둑맞았어요.', story:'사또님이 망주석을 데려오라네요. 도둑 소굴(레이드)을 1번 털어 주세요.', c:'raids', n:1, gems:120, mat:2},
-  {k:'f14', who:'반쪽이', t:'반쪽이의 호랑이', hook:'몸이 반쪽이라고 놀려도 호랑이는 잡았어요!', story:'이번엔 산군이 셋이래요. 같이 보스를 3번 잡아요.', c:'bosses', n:3, gems:110},
-  {k:'f15', who:'할아버지', t:'개와 고양이의 구슬', hook:'용왕이 준 구슬을 잃어버렸어요.', story:'개와 고양이가 강을 건너 찾는 동안 강가 요괴 250마리를 막아 주세요.', c:'kills', n:250, gems:120, mat:3},
-  {k:'s1', who:'이야기꾼 노인', t:'복숭아밭의 맹세', hook:'복숭아꽃 아래 세 사람이 형제를 맺은 이야기, 들어 볼 텐가?', story:'함께 싸우는 법을 아는 이가 큰일을 하지. 동료와 함께 레이드를 3번 해 보게.', c:'raids', n:3, gems:180},
-  {k:'s2', who:'초가집 서생', t:'세 번 찾아가기', hook:'세 번 찾아와야 마음을 연다는 이야기가 있지요.', story:'정성을 보이시오. 보스를 3번 쓰러뜨리고 다시 오시오.', c:'bosses', n:3, gems:120},
-  {k:'s3', who:'바람 읽는 사공', t:'동남풍', hook:'강 위에 동남풍을 불러 불배를 띄운 이야기 아나?', story:'바람이 바뀌는 순간을 놓치지 말게. 요괴 400마리를 쓸어 보게.', c:'kills', n:400, gems:150, gold:400},
-  {k:'s4', who:'짚단 장수', t:'풀배로 빌린 화살', hook:'안개 낀 강에서 풀배로 화살 십만 개를 빌렸다지.', story:'모자란 건 빌려서라도 채우는 법. 소환 20번으로 장비를 모아 보게.', c:'summons', n:20, gems:160},
-  {k:'s5', who:'남쪽 장수', t:'일곱 번 잡고 일곱 번 놓아주기', hook:'일곱 번 잡고 일곱 번 놓아줘서 마음을 얻었다더군.', story:'힘으로만 이기는 게 다가 아니라네. 보스를 7번 잡아 보게.', c:'bosses', n:7, gems:200},
-  {k:'s6', who:'다리 지키는 장수', t:'다리 위의 호통', hook:'다리 하나를 홀로 막아 세운 호통 이야기!', story:'물러서지 말게. 요괴 300마리를 막아 내게.', c:'kills', n:300, gems:140, gold:300},
-  {k:'s7', who:'말 탄 나그네', t:'다섯 관문 천 리 길', hook:'다섯 관문을 지나 천 리를 간 이야기가 있소.', story:'길은 걸어야 줄어드는 법. 지금 세계에서 단계를 5개 더 올라가 보시오.', c:'stage', n:5, gems:180},
-  {k:'s8', who:'거문고 타는 선비', t:'빈 성의 거문고', hook:'성문을 활짝 열고 거문고를 탔다는 이야기 아시오?', story:'떨지 않는 마음이 가장 센 갑옷이오. 재련을 10번 해 보시오.', c:'refines', n:10, gems:160},
-  {k:'s9', who:'은혜 갚는 장수', t:'좁은 길에서 비켜 주기', hook:'옛 은혜를 잊지 않고 길을 비켜 준 이야기라네.', story:'받은 건 갚아야지. 레이드를 2번 깨고 오게.', c:'raids', n:2, gems:150, mat:3},
-  {k:'s10', who:'먹 가는 동자', t:'떠나는 글', hook:'충심을 글로 적고 먼 길을 떠났대요.', story:'마음을 글로 남기려면 힘이 있어야 해요. 보스를 5번 물리쳐 주세요.', c:'bosses', n:5, gems:150},
-  {k:'s11', who:'아이 업은 장수', t:'아이를 품고 적진을 뚫다', hook:'아이를 품에 안고 적진을 뚫은 장수 이야기!', story:'지킬 게 있으면 더 강해지는 법. 요괴 500마리.', c:'kills', n:500, gems:200, gold:500},
-  {k:'s12', who:'의원', t:'뼈를 긁는 치료', hook:'뼈를 긁는 치료에도 바둑을 두었다는 장수가 있었지요.', story:'아파도 버티는 힘을 보여 주시오. 보스 4번.', c:'bosses', n:4, gems:140},
-  {k:'s13', who:'닭 파는 상인', t:'닭갈비', hook:'버리기 아깝고 먹자니 살이 없는 닭갈비 이야기 아쇼?', story:'쓸 만한 걸 고르는 눈이 중요하지. 소환 15번 해서 골라 보쇼.', c:'summons', n:15, gems:130},
-  {k:'s14', who:'백발 활잡이', t:'늙어도 녹슬지 않는 활', hook:'늙었다고 활이 녹스나!', story:'한 걸음씩이면 된다네. 지금 세계에서 단계를 3개 더.', c:'stage', n:3, gems:150},
-  {k:'s15', who:'고리 엮는 대장장이', t:'배를 고리로 엮다', hook:'배를 고리로 엮으면 흔들리지 않는다던데…', story:'단단하게 엮을수록 좋지. 재련 8번.', c:'refines', n:8, gems:140},
+  // ── 이승(w 0): 우리 전래동화 ──
+  {k:'f2', w:0, who:'흥부', t:'제비가 물어 온 박씨', hook:'제비가 박씨를 물어 왔어요! 그런데…', story:'박을 타는 동안 박 냄새를 맡은 요괴들이 몰려와요. 200마리만 막아 주세요.', c:'kills', n:200, gems:90, gold:300},
+  {k:'f3', w:0, who:'혹부리 영감', t:'도깨비의 노래 값', hook:'도깨비들이 제 노래를 또 듣고 싶대요. 허허.', story:'노래 값으로 혹을 떼 갔는데, 이번엔 보스 도깨비가 시비를 걸어요. 단계 보스를 3번 혼내 주세요.', c:'bosses', n:3, gems:100},
+  {k:'f5', w:0, who:'자라', t:'토끼의 간', hook:'용왕님 병에 토끼 간이 좋다는데요…', story:'토끼는 간을 두고 왔대요. 대신 약초밭 가는 길의 요괴 250마리를 물리쳐 주세요.', c:'kills', n:250, gems:100, gold:200},
+  {k:'f6', w:0, who:'나무꾼 막쇠', t:'금도끼 은도끼', hook:'연못에 쇠도끼를 빠뜨렸어요!', story:'산신령님이 정직하게 쇠를 다루는 사람을 좋아하신대요. 재련을 5번 해 보세요.', c:'refines', n:5, gems:120},
+  {k:'f7', w:0, who:'콩쥐', t:'깨진 독', hook:'깨진 독에 물을 채워야 잔치에 갈 수 있어요.', story:'두꺼비가 독을 막는 동안 몰려드는 요괴 300마리를 막아 주세요.', c:'kills', n:300, gems:110, gold:300},
+  {k:'f9', w:0, who:'선비', t:'은혜 갚은 까치', hook:'종을 울려 저를 살린 까치 가족이 있어요.', story:'까치 둥지 근처에 뱀 요괴가 또 나타났대요. 200마리를 쫓아 주세요.', c:'kills', n:200, gems:90, mat:2},
+  {k:'f10', w:0, who:'착한 아우', t:'도깨비 방망이', hook:'개암을 깨물었더니 도깨비들이 방망이를 두고 갔어요!', story:'형님이 따라 하기 전에 방망이로 좋은 걸 불러내 봐요. 소환 10번!', c:'summons', n:10, gems:120},
+  {k:'f11', w:0, who:'총각', t:'우렁 각시', hook:'누가 몰래 밥을 지어 놓고 가요…', story:'우렁이를 데려가려는 원님의 졸개들이 와요. 150마리를 막아 주세요.', c:'kills', n:150, gems:80, gold:200},
+  {k:'f12', w:0, who:'팥죽 할멈', t:'팥죽 할멈과 호랑이', hook:'동짓날 호랑이가 팥죽 먹으러 온대요.', story:'알밤·자라·멍석이 도와준다지만 보스 호랑이 둘은 벅차요. 단계 보스 2번!', c:'bosses', n:2, gems:90},
+  {k:'f14', w:0, who:'반쪽이', t:'반쪽이의 호랑이', hook:'몸이 반쪽이라고 놀려도 호랑이는 잡았어요!', story:'이번엔 산군이 셋이래요. 같이 보스를 3번 잡아요.', c:'bosses', n:3, gems:110},
+  // ── 저승(w 1): 원귀·저승 옛이야기 ──
+  {k:'f13', w:1, who:'비단 장수', t:'망주석 재판', hook:'고갯마루에서 비단을 몽땅 도둑맞았어요.', story:'사또님이 망주석을 데려오라네요. 도둑 소굴(레이드)을 2번 털어 주세요.', c:'raids', n:2, gems:120, mat:2},
+  {k:'h1', w:1, who:'철산 고을 사또', t:'장화와 홍련', hook:'밤마다 동헌에 자매 원귀가 나타나 억울함을 호소한대요…', story:'두 자매의 억울함을 풀려면 늪에 숨은 요괴부터 쫓아야 해요. 요괴 400마리!', c:'kills', n:400, gems:110},
+  {k:'h2', w:1, who:'밀양 관아 아전', t:'아랑의 부탁', hook:'새 사또마다 첫날 밤을 못 넘긴대요.', story:'아랑 아가씨는 억울함을 들어 줄 사람을 기다렸던 거래요. 범인을 찾게 단계 보스를 4번 물리쳐 주세요.', c:'bosses', n:4, gems:120},
+  {k:'h3', w:1, who:'주막 주인 덕진', t:'덕진 다리', hook:'저승 곳간이 텅 빈 원님이 제 곳간에서 쌀을 빌려 갔대요.', story:'원님이 살아 돌아와 갚은 쌀로 다리를 놓으려 해요. 다리에 쓸 쇠를 벼려 주세요. 재련 10번!', c:'refines', n:10, gems:130},
+  {k:'h4', w:1, who:'한량', t:'땅속 나라 도적', hook:'땅속 나라 도적이 공주님들을 잡아갔어요!', story:'도적의 소굴로 내려가려면 동료가 필요해요. 레이드 2번.', c:'raids', n:2, gems:140, mat:2},
+  {k:'h5', w:1, who:'막내아들', t:'여우 누이', hook:'누이가 밤마다 외양간에 나가요…', story:'흰·빨강·파랑 병을 던지며 달아나는 동안 뒤쫓는 요괴 500마리를 막아 주세요.', c:'kills', n:500, gems:120},
+  {k:'h6', w:1, who:'가난한 선비', t:'도깨비 감투', hook:'쓰면 안 보이는 감투를 주웠어요!', story:'감투를 찾으러 도깨비들이 몰려와요. 도깨비 마을까지 단계를 5개 더 올라가 주세요.', c:'stage', n:5, gems:130},
+  {k:'h7', w:1, who:'효자', t:'사자밥 한 상', hook:'저승사자가 어머니를 데리러 온대요.', story:'사자밥을 차려 대접하면 사정을 봐준대요. 그 사이 몰려드는 잡귀 600마리를 막아 주세요.', c:'kills', n:600, gems:130},
+  {k:'h8', w:1, who:'셋째 딸', t:'구렁덩덩 신선비', hook:'구렁이 허물을 벗은 신랑이 떠나 버렸어요.', story:'신랑을 찾아 저승 끝까지 가야 해요. 보스를 6번 물리치면 길이 열린대요.', c:'bosses', n:6, gems:150},
+  {k:'f15', w:1, who:'할아버지', t:'개와 고양이의 구슬', hook:'용왕이 준 구슬을 잃어버렸어요.', story:'개와 고양이가 강을 건너 찾는 동안 강가 요괴 500마리를 막아 주세요.', c:'kills', n:500, gems:120, mat:3},
+  // ── 천계(w 2): 하늘·별 옛이야기 ──
+  {k:'f1', w:2, who:'오누이', t:'해와 달이 된 오누이', hook:'떡 고개를 넘던 어머니가 아직 안 오셨어요…', story:'고개의 호랑이 무리가 하늘 동아줄을 노려요. 600마리를 쫓아 주세요.', c:'kills', n:600, gems:110},
+  {k:'f4', w:2, who:'나무꾼', t:'날개옷 실', hook:'선녀님 날개옷 실이 다 해졌대요.', story:'레이드 보스가 지키는 하늘 실을 구해 와 주세요. 레이드 3번.', c:'raids', n:3, gems:150, mat:3},
+  {k:'f8', w:2, who:'까치 무리', t:'오작교', hook:'칠석날 다리를 놓을 까치가 모자라요!', story:'하늘길을 막는 보스를 6번 물리치면 동무들이 날아올 수 있어요.', c:'bosses', n:6, gems:150},
+  {k:'c1', w:2, who:'바닷가 어부', t:'연오랑 세오녀', hook:'연오랑과 세오녀가 바다 건너 떠나자 해와 달이 빛을 잃었대요.', story:'세오녀가 짠 비단으로 하늘에 제를 올리면 빛이 돌아온대요. 비단을 지키게 레이드 3번.', c:'raids', n:3, gems:150},
+  {k:'c2', w:2, who:'심 봉사', t:'연꽃 타고 온 딸', hook:'딸 청이가 공양미 삼백 석에 인당수로 갔어요…', story:'연꽃을 타고 돌아올 길을 지켜 주세요. 바다 요괴 700마리!', c:'kills', n:700, gems:140},
+  {k:'c3', w:2, who:'어머니 별', t:'북두칠성 일곱 형제', hook:'일곱 아들이 하늘에 올라 별이 되었대요.', story:'형제 별을 가리는 구름 요괴를 걷어 주세요. 보스 7번.', c:'bosses', n:7, gems:150},
+  {k:'c4', w:2, who:'절 동자승', t:'쌀바위', hook:'바위 구멍에서 하루 먹을 쌀만 똑똑 나왔대요.', story:'욕심부려 구멍을 넓히자 물만 나왔대요. 욕심 없이 연장을 손질해요. 재련 15번.', c:'refines', n:15, gems:140},
+  {k:'c5', w:2, who:'제주 할망', t:'두 개의 해', hook:'하늘에 해와 달이 둘씩 떠서 낮엔 뜨겁고 밤엔 얼어붙었대요.', story:'대별왕·소별왕 형제가 활로 하나씩 떨어뜨렸대요. 활 솜씨를 보여 주게 단계 6개 더.', c:'stage', n:6, gems:150},
+  {k:'c6', w:2, who:'한라산 신선', t:'흰 사슴의 못', hook:'흰 사슴이 물 마시던 못이 말라 간다네.', story:'못을 더럽히는 요괴 800마리를 물리쳐 주게.', c:'kills', n:800, gems:150},
+  {k:'c7', w:2, who:'제주 어부', t:'설문대 할망의 다리', hook:'치마폭으로 흙을 날라 섬을 만든 할망이 육지까지 다리를 놓아 준대요.', story:'대신 명주 속옷 한 벌을 지어 달랬는데 한 필이 모자랐대요. 명주를 모으게 소환 25번.', c:'summons', n:25, gems:140},
+  // ── 부상(w 3): 일본 옛이야기 ──
+  {k:'j1', w:3, who:'복숭아 할머니', t:'복숭아에서 태어난 아이', hook:'강에서 떠내려온 큰 복숭아에서 사내아이가 나왔어요!', story:'오니 섬으로 떠난 아이를 도와요. 개·원숭이·꿩 대신 동료와 레이드 3번.', c:'raids', n:3, gems:160},
+  {k:'j2', w:3, who:'바닷가 어부', t:'거북이 데려간 용궁', hook:'괴롭힘당하던 거북을 살려 줬더니 용궁에 초대받았어요.', story:'돌아와 보니 삼백 년이 흘렀대요. 상자를 열기 전에 바닷가 요괴 800마리를 막아 주세요.', c:'kills', n:800, gems:140},
+  {k:'j3', w:3, who:'눈 오는 날 노인', t:'학이 짠 비단', hook:'덫에 걸린 학을 풀어 줬더니 낯선 아가씨가 찾아왔어요.', story:'베 짜는 방을 들여다보지 말래요. 그동안 문 앞을 노리는 보스를 6번 막아 주세요.', c:'bosses', n:6, gems:150},
+  {k:'j4', w:3, who:'한 치 동자', t:'바늘 칼 한 자루', hook:'키가 한 치뿐이지만 바늘 칼로 오니를 물리쳤어요!', story:'오니가 떨군 요술 방망이로 키를 키우려면 쇠를 벼려야 해요. 재련 15번.', c:'refines', n:15, gems:150},
+  {k:'j5', w:3, who:'대나무 베는 노인', t:'빛나는 대나무', hook:'빛나는 대나무 속에서 나온 아기를 달에서 데리러 온대요.', story:'구혼자에게 낸 다섯 보물처럼 진귀한 것을 모아 와요. 소환 30번.', c:'summons', n:30, gems:150},
+  {k:'j6', w:3, who:'착한 할아버지', t:'마른 나무에 꽃을', hook:'재를 뿌렸더니 마른 나무에 벚꽃이 활짝 폈어요!', story:'욕심쟁이 이웃이 따라 하다 재를 날렸대요. 꽃길을 지키게 단계 8개 더.', c:'stage', n:8, gems:160},
+  {k:'j7', w:3, who:'아기 게', t:'감씨와 주먹밥', hook:'원숭이가 덜 익은 감을 던져 엄마 게를 다치게 했어요!', story:'밤·벌·절구가 도와주기로 했어요. 심술궂은 원숭이 무리 900마리를 쫓아 주세요.', c:'kills', n:900, gems:140},
+  {k:'j8', w:3, who:'마음씨 고운 할아버지', t:'참새 집의 고리짝', hook:'혼나고 달아난 참새를 찾아가 사과하고 싶어요.', story:'참새 집 가는 길의 요괴를 물리쳐 주세요. 보스 5번. 작은 고리짝이 좋은 거래요.', c:'bosses', n:5, gems:140},
+  {k:'j9', w:3, who:'고물 장수', t:'춤추는 찻솥', hook:'사 온 찻솥이 너구리로 변해 줄타기를 해요!', story:'구경꾼을 따라 요괴도 몰려왔어요. 1,000마리를 막아 주면 너구리가 쉴 수 있어요.', c:'kills', n:1000, gems:150},
+  {k:'j10', w:3, who:'토끼', t:'딱딱 산의 불씨', hook:'할머니를 속인 너구리를 혼내 줘야 해요.', story:'진흙 배를 띄우기 전에 너구리 패거리 보스를 7번 잡아 주세요.', c:'bosses', n:7, gems:150},
+  {k:'j11', w:3, who:'삿갓 장수 할아버지', t:'눈 맞은 돌부처', hook:'팔지 못한 삿갓을 눈 맞은 돌부처님들께 씌워 드렸어요.', story:'그날 밤 집 앞에 쌀가마가 놓였대요. 은혜를 나누게 마을 연장을 고쳐 드려요. 재련 12번.', c:'refines', n:12, gems:140},
+  {k:'j12', w:3, who:'나무꾼 할아버지', t:'굴러간 주먹밥', hook:'주먹밥이 쥐 구멍에 굴러 들어갔더니 노랫소리가 들려요.', story:'쥐들의 떡방아 잔치를 지키게 요괴 700마리를 막아 주세요.', c:'kills', n:700, gems:130},
+  {k:'j13', w:3, who:'산골 소년', t:'곰과 씨름한 아이', hook:'도끼를 멘 아이가 곰과 씨름해 이겼대요!', story:'힘을 보여 줄 차례예요. 보스를 8번 쓰러뜨려 주세요.', c:'bosses', n:8, gems:160},
+  {k:'j14', w:3, who:'나룻배 사공', t:'눈보라 밤의 약속', hook:'눈보라 치던 밤 하얀 여인을 봤다는 말, 아무에게도 하지 말래요.', story:'약속을 지키는 동안 눈 요괴 1,000마리가 몰려와요.', c:'kills', n:1000, gems:150},
+  {k:'j15', w:3, who:'비파 타는 호이치', t:'경문을 쓴 몸', hook:'밤마다 무사 영혼들이 제 비파를 들으러 와요.', story:'온몸에 경문을 썼는데 귀에만 못 썼대요. 영혼들을 달래게 레이드 3번.', c:'raids', n:3, gems:160},
+  {k:'j16', w:3, who:'꾀 많은 소년', t:'숨는 도롱이', hook:'대나무 통을 멀리 보는 통이라 속여 덴구의 도롱이를 얻었어요!', story:'도롱이를 되찾으려는 덴구들을 돌려보내 주세요. 보스 6번.', c:'bosses', n:6, gems:150},
+  {k:'j17', w:3, who:'강가 의원', t:'팔을 돌려준 값', hook:'말을 끌고 가려던 갓파의 팔을 붙잡았더니 고약 비법을 알려 준대요.', story:'약초를 캐는 동안 강가 요괴 800마리를 막아 주세요.', c:'kills', n:800, gems:140},
+  {k:'j18', w:3, who:'논두렁 아이', t:'해 뜬 날의 비', hook:'해가 쨍한데 비가 와요! 여우 시집가는 날이래요.', story:'여우불 행렬을 놀래키지 않게 길을 열어요. 단계 6개 더.', c:'stage', n:6, gems:140},
+  {k:'j19', w:3, who:'밤길 상인', t:'얼굴 없는 손님', hook:'울던 아가씨가 돌아보니 얼굴이 없었어요!', story:'포장마차 주인도 얼굴이 없었대요… 밤길 요괴 보스를 5번 잡아 주세요.', c:'bosses', n:5, gems:140},
+  {k:'j20', w:3, who:'호수의 용궁 아가씨', t:'산을 감은 지네', hook:'산을 일곱 바퀴 감은 큰 지네가 호수를 괴롭혀요.', story:'활 잘 쏘는 무사가 화살 한 대로 끝냈대요. 함께 레이드 4번!', c:'raids', n:4, gems:170},
+  {k:'j21', w:3, who:'우물가 하녀들', t:'아홉 장의 접시', hook:'밤마다 우물에서 접시 세는 소리가 들려요. 하나, 둘… 아홉.', story:'열 번째 접시를 찾아 주면 쉴 수 있대요. 소환 25번으로 찾아봐요.', c:'summons', n:25, gems:140},
+  {k:'j22', w:3, who:'그릇 쓴 아가씨', t:'머리에 쓴 그릇', hook:'어머니가 씌워 준 그릇이 벗겨지지 않아요.', story:'그릇이 벗겨지는 날 보물이 쏟아진대요. 재련 18번으로 마음을 닦아요.', c:'refines', n:18, gems:160},
+  {k:'j23', w:3, who:'다리 아래 뱃사공', t:'고조 다리의 천 자루 칼', hook:'칼 천 자루를 모으겠다는 큰 승려가 다리를 막고 있어요.', story:'피리 부는 소년이 날렵하게 이겼대요. 보스 9번으로 날렵함을 보여 줘요.', c:'bosses', n:9, gems:170},
+  {k:'j24', w:3, who:'가난한 할아버지', t:'쥐의 씨름', hook:'산에서 쥐들이 씨름을 하는데 우리 집 쥐가 늘 져요.', story:'떡을 먹이면 힘이 난대요. 떡방앗간을 지키게 요괴 1,200마리를 막아 주세요.', c:'kills', n:1200, gems:160},
+  {k:'j25', w:3, who:'절 동자승', t:'세 장의 부적', hook:'밤 따러 간 산에서 산할멈에게 쫓기고 있어요!', story:'부적 세 장으로 강·산·불을 만들며 달아나요. 뒤쫓는 보스를 7번 막아 주세요.', c:'bosses', n:7, gems:160},
+  {k:'j26', w:3, who:'마을 촌장', t:'삼 년 잠꾸러기', hook:'삼 년 내내 자던 다로가 일어나 바위를 굴려 물길을 냈어요!', story:'새 물길을 지키게 단계 10개 더 올라가 주세요.', c:'stage', n:10, gems:170},
+  {k:'j27', w:3, who:'가난한 젊은이', t:'짚 한 가닥', hook:'짚 한 가닥이 귤이 되고, 귤이 비단이 되고…', story:'마지막엔 큰 집이 됐대요. 소환 30번으로 바꿔 봐요.', c:'summons', n:30, gems:150},
+  {k:'j28', w:3, who:'밭 가는 할아버지', t:'원숭이들의 가마', hook:'밭에서 자던 저를 원숭이들이 돌부처로 여겨 강 건너로 모셨어요.', story:'흉내 낸 욕심쟁이는 강에 빠졌대요. 원숭이 떼 1,000마리 사이를 지나가게 도와주세요.', c:'kills', n:1000, gems:150},
+  {k:'j29', w:3, who:'산골 아들', t:'버리지 않은 어머니', hook:'늙은 부모를 산에 버리라는 명령이 내렸어요.', story:'몰래 모신 어머니의 지혜로 이웃 나라의 수수께끼를 풀었대요. 레이드 5번으로 지혜를 보여 줘요.', c:'raids', n:5, gems:180},
+  {k:'j30', w:3, who:'바닷가 총각', t:'조개 아내의 국', hook:'살려 준 큰 조개가 아내가 되어 찾아왔어요.', story:'맛있는 국의 비밀은 묻지 않기로 해요. 바다 요괴 보스 10번!', c:'bosses', n:10, gems:180},
+  // ── 곤륜(w 4): 중국 옛이야기(고사·민담) + 이야기꾼의 삼국지연의 ──
+  {k:'z1', w:4, who:'흰 수염 노인', t:'산을 옮긴 노인', hook:'집 앞 산 두 개를 대대로 퍼 옮기겠다고 했더니 다들 웃어요.', story:'하늘이 감동해 산을 옮겨 줬대요. 우리도 꾸준히 — 요괴 1,500마리!', c:'kills', n:1500, gems:170},
+  {k:'s1', w:4, who:'이야기꾼 노인', t:'복숭아밭의 맹세', hook:'복숭아꽃 아래 세 사람이 형제를 맺은 이야기, 들어 볼 텐가?', story:'함께 싸우는 법을 아는 이가 큰일을 하지. 동료와 함께 레이드를 5번 해 보게.', c:'raids', n:5, gems:180},
+  {k:'z2', w:4, who:'바닷가 소녀', t:'바다를 메우는 새', hook:'바다에 빠진 공주가 작은 새가 되어 돌을 물어 나른대요.', story:'정위새를 돕게 단계 12개 더 올라가 주세요.', c:'stage', n:12, gems:180},
+  {k:'s2', w:4, who:'초가집 서생', t:'세 번 찾아가기', hook:'세 번 찾아와야 마음을 연다는 이야기가 있지요.', story:'정성을 보이시오. 보스를 8번 쓰러뜨리고 다시 오시오.', c:'bosses', n:8, gems:150},
+  {k:'z3', w:4, who:'성벽 아래 아낙', t:'성벽을 무너뜨린 울음', hook:'성 쌓으러 간 남편이 돌아오지 않아요.', story:'겨울옷을 전해 주러 가는 길이에요. 성벽의 요괴 보스 10번을 물리쳐 주세요.', c:'bosses', n:10, gems:170},
+  {k:'s3', w:4, who:'바람 읽는 사공', t:'동남풍', hook:'강 위에 동남풍을 불러 불배를 띄운 이야기 아나?', story:'바람이 바뀌는 순간을 놓치지 말게. 요괴 1,200마리를 쓸어 보게.', c:'kills', n:1200, gems:160, gold:400},
+  {k:'z4', w:4, who:'서호 뱃사공', t:'서호의 흰 뱀', hook:'비 오는 서호에서 우산을 빌려 간 아가씨가 흰 뱀이었대요.', story:'탑에 갇힌 아가씨를 위해 레이드 5번.', c:'raids', n:5, gems:180},
+  {k:'s4', w:4, who:'짚단 장수', t:'풀배로 빌린 화살', hook:'안개 낀 강에서 풀배로 화살 십만 개를 빌렸다지.', story:'모자란 건 빌려서라도 채우는 법. 소환 35번으로 장비를 모아 보게.', c:'summons', n:35, gems:160},
+  {k:'z5', w:4, who:'서당 훈장', t:'나비가 된 두 사람', hook:'남장하고 서당에 온 영대와 산백이 함께 공부했대요.', story:'두 마리 나비가 날아오르는 무덤가를 지켜요. 요괴 1,200마리.', c:'kills', n:1200, gems:160},
+  {k:'s5', w:4, who:'남쪽 장수', t:'일곱 번 잡고 일곱 번 놓아주기', hook:'일곱 번 잡고 일곱 번 놓아줘서 마음을 얻었다더군.', story:'힘으로만 이기는 게 다가 아니라네. 보스를 7번 잡고 놓아 보게… 아니, 잡아 보게.', c:'bosses', n:7, gems:200},
+  {k:'z6', w:4, who:'베틀 앞 아버지', t:'아버지 대신 간 딸', hook:'군첩에 늙은 제 이름이 있어요…', story:'딸 목란이 말을 사서 대신 떠났대요. 열두 해 싸움처럼 보스 12번!', c:'bosses', n:12, gems:190},
+  {k:'s6', w:4, who:'다리 지키는 장수', t:'다리 위의 호통', hook:'다리 하나를 홀로 막아 세운 호통 이야기!', story:'물러서지 말게. 요괴 1,000마리를 막아 내게.', c:'kills', n:1000, gems:150, gold:300},
+  {k:'z7', w:4, who:'늙은 병사', t:'섶에 눕고 쓸개를 핥다', hook:'패한 왕이 섶에 눕고 쓸개를 핥으며 때를 기다렸소.', story:'참는 힘을 기르게. 재련 25번.', c:'refines', n:25, gems:180},
+  {k:'s7', w:4, who:'말 탄 나그네', t:'다섯 관문 천 리 길', hook:'다섯 관문을 지나 천 리를 간 이야기가 있소.', story:'길은 걸어야 줄어드는 법. 지금 세계에서 단계를 10개 더 올라가 보시오.', c:'stage', n:10, gems:180},
+  {k:'z8', w:4, who:'피리꾼', t:'사방에서 들리는 고향 노래', hook:'밤마다 사방에서 우리 고향 노래가 들려요…', story:'포위를 뚫게 동료와 레이드 6번.', c:'raids', n:6, gems:190},
+  {k:'s8', w:4, who:'거문고 타는 선비', t:'빈 성의 거문고', hook:'성문을 활짝 열고 거문고를 탔다는 이야기 아시오?', story:'떨지 않는 마음이 가장 센 갑옷이오. 재련을 20번 해 보시오.', c:'refines', n:20, gems:160},
+  {k:'z9', w:4, who:'밭 가는 농부', t:'그루터기만 지키는 사람', hook:'토끼가 그루터기에 부딪힌 뒤로 이웃이 밭을 버리고 기다려요.', story:'기다리기만 하면 안 되죠. 단계 10개 더!', c:'stage', n:10, gems:170},
+  {k:'s9', w:4, who:'은혜 갚는 장수', t:'좁은 길에서 비켜 주기', hook:'옛 은혜를 잊지 않고 길을 비켜 준 이야기라네.', story:'받은 건 갚아야지. 레이드를 4번 깨고 오게.', c:'raids', n:4, gems:150, mat:3},
+  {k:'z10', w:4, who:'변방 노인', t:'말을 잃은 노인', hook:'말을 잃었는데 그 말이 좋은 말을 데리고 돌아왔다네.', story:'좋은 일 나쁜 일은 돌고 도는 법. 소환 40번으로 운을 시험해 보게.', c:'summons', n:40, gems:170},
+  {k:'s10', w:4, who:'먹 가는 동자', t:'떠나는 글', hook:'충심을 글로 적고 먼 길을 떠났대요.', story:'마음을 글로 남기려면 힘이 있어야 해요. 보스를 9번 물리쳐 주세요.', c:'bosses', n:9, gems:150},
+  {k:'z11', w:4, who:'나루터 사공', t:'뱃전에 새긴 표시', hook:'칼을 떨어뜨린 자리를 뱃전에 새긴 손님이 있었지.', story:'배는 움직이는데 말이야! 칼은 제대로 벼려 두게. 재련 20번.', c:'refines', n:20, gems:160},
+  {k:'s11', w:4, who:'아이 업은 장수', t:'아이를 품고 적진을 뚫다', hook:'아이를 품에 안고 적진을 뚫은 장수 이야기!', story:'지킬 게 있으면 더 강해지는 법. 요괴 1,500마리.', c:'kills', n:1500, gems:200, gold:500},
+  {k:'z12', w:4, who:'절 화공', t:'눈동자를 그리면', hook:'벽에 그린 용에 눈동자를 찍었더니 하늘로 날아갔대요.', story:'날아간 용이 남긴 비늘을 찾아 레이드 5번.', c:'raids', n:5, gems:180},
+  {k:'s12', w:4, who:'의원', t:'뼈를 긁는 치료', hook:'뼈를 긁는 치료에도 바둑을 두었다는 장수가 있었지요.', story:'아파도 버티는 힘을 보여 주시오. 보스 10번.', c:'bosses', n:10, gems:160},
+  {k:'z13', w:4, who:'가난한 선비', t:'반딧불과 눈빛', hook:'기름 살 돈이 없어 반딧불과 눈빛으로 글을 읽어요.', story:'밤길 요괴 1,000마리를 막아 주시면 마저 읽을게요.', c:'kills', n:1000, gems:150},
+  {k:'s13', w:4, who:'닭 파는 상인', t:'닭갈비', hook:'버리기 아깝고 먹자니 살이 없는 닭갈비 이야기 아쇼?', story:'쓸 만한 걸 고르는 눈이 중요하지. 소환 30번 해서 골라 보쇼.', c:'summons', n:30, gems:150},
+  {k:'z14', w:4, who:'이사 다니는 어머니', t:'세 번 옮긴 집', hook:'아이 공부를 위해 세 번이나 이사했어요.', story:'서당 옆 길의 요괴 보스를 8번 물리쳐 주세요.', c:'bosses', n:8, gems:160},
+  {k:'s14', w:4, who:'백발 활잡이', t:'늙어도 녹슬지 않는 활', hook:'늙었다고 활이 녹스나!', story:'한 걸음씩이면 된다네. 지금 세계에서 단계를 8개 더.', c:'stage', n:8, gems:160},
+  {k:'z15', w:4, who:'동무를 구한 아이', t:'독을 깬 아이', hook:'큰 물독에 동무가 빠졌는데 어른들은 사다리만 찾아요!', story:'돌로 독을 깨 동무를 살렸대요. 망설이지 말고 보스 9번!', c:'bosses', n:9, gems:170},
+  {k:'s15', w:4, who:'고리 엮는 대장장이', t:'배를 고리로 엮다', hook:'배를 고리로 엮으면 흔들리지 않는다던데…', story:'단단하게 엮을수록 좋지. 재련 18번.', c:'refines', n:18, gems:150},
+  {k:'z16', w:4, who:'저울 장수', t:'배로 잰 코끼리', hook:'코끼리를 배에 태워 물 높이를 새기고 돌로 무게를 쟀대요.', story:'머리를 쓰면 무거운 것도 거뜬해요. 재련 20번.', c:'refines', n:20, gems:170},
+  {k:'z17', w:4, who:'장사꾼 포숙', t:'나를 알아준 벗', hook:'벗이 이익을 더 가져가도 사정을 알았기에 탓하지 않았소.', story:'벗과 함께 레이드 6번을 해 보시오.', c:'raids', n:6, gems:190},
+  {k:'z18', w:4, who:'조나라 사신', t:'구슬을 온전히 돌려보내다', hook:'성 열다섯 개와 바꾸자던 구슬을 끝내 온전히 지켜 왔소.', story:'지키는 힘을 보여 주시오. 보스 10번.', c:'bosses', n:10, gems:180},
+  {k:'z19', w:4, who:'거문고 타는 백아', t:'줄을 끊은 거문고', hook:'내 소리를 알아주던 벗이 떠나 거문고 줄을 끊었소.', story:'벗의 무덤 가는 산길 요괴 1,200마리를 막아 주오.', c:'kills', n:1200, gems:170},
+  {k:'z20', w:4, who:'주막의 도사', t:'좁쌀 밥이 익는 동안의 꿈', hook:'좁쌀 밥이 익는 동안 평생의 꿈을 꾼 젊은이가 있었지.', story:'꿈이 아닌 진짜 길을 걸어 보게. 단계 12개 더.', c:'stage', n:12, gems:190},
+  {k:'z21', w:4, who:'홰나무 아래 선비', t:'개미 나라의 꿈', hook:'홰나무 아래 잠들어 개미 나라 사위가 됐다네.', story:'개미 나라를 지켜 준 것처럼 보스 11번!', c:'bosses', n:11, gems:180},
+  {k:'z22', w:4, who:'도관의 젊은이', t:'벽을 뚫는 술법', hook:'벽 뚫는 술법을 배웠는데 집에서 해 보니 머리만 부딪혀요.', story:'꾸준히 닦지 않으면 술법도 소용없대요. 재련 30번.', c:'refines', n:30, gems:190},
+  {k:'z23', w:4, who:'고갯마루 주막 주인', t:'고개의 호랑이', hook:'세 잔 마시면 고개를 못 넘는다는 술을 열여덟 잔 마신 장사가 있었어요.', story:'맨손으로 호랑이를 잡았대요. 고개 요괴 보스 12번!', c:'bosses', n:12, gems:200},
+  {k:'z24', w:4, who:'숲속 사슴', t:'호랑이 위세를 빌린 여우', hook:'여우가 호랑이 앞을 걸으니 짐승들이 다 도망쳐요.', story:'빌린 힘 말고 진짜 힘을 보여 주세요. 레이드 7번.', c:'raids', n:7, gems:200},
+  {k:'z25', w:4, who:'술내기 하던 하인', t:'뱀에 다리를 그리다', hook:'뱀을 먼저 그리면 술을 마시기로 했는데, 다리까지 그리다 졌어요.', story:'쓸데없는 건 빼고 핵심만! 요괴 1,500마리.', c:'kills', n:1500, gems:200},
 ];
 const SUB_MAX = 3;
 const subRec = c => c === 'kills' ? S.rec.kills : c === 'bosses' ? S.rec.bosses : c === 'raids' ? S.rec.raids : c === 'refines' ? S.rec.refines : c === 'summons' ? S.rec.summons : S.maxStage;
-const subOpen = q => SUB_Q.indexOf(q) * 3 <= S.quest.main;   // 이야기 퀘스트 3개마다 하나씩 열린다
+/* 세계마다 부탁이 그 세계 이야기 구간에 고르게 열린다(이승 10·저승 10·천계 10·부상 30·곤륜 40)
+   구간: 이승 = 첫 환생 퀘스트까지, 저승 = 두 번째 환생까지, 천계 = 1부 끝까지, 부상 = 2부 끝까지, 곤륜 = 끝까지 */
+const SUB_K = [1, 2.5, 5, 20, 40], SUB_DUST = [20, 60, 120, 250, 400];
+let subAt = null;
+function subSchedule(){
+  const r1 = MAIN_Q.findIndex(q => q.k === 'reb' && q.n === 1) + 1, r2 = MAIN_Q.findIndex(q => q.k === 'reb' && q.n === 2) + 1;
+  const edge = [0, r1, r2, PART1_END, PART2_END, MAIN_Q.length], at = {};
+  for (let w = 0; w < 5; w++){ const L = SUB_Q.filter(q => q.w === w); L.forEach((q, i) => { at[q.k] = edge[w] + Math.floor(i * (edge[w + 1] - edge[w]) / L.length); }); }
+  return at;
+}
+const subOpen = q => { if (!subAt) subAt = subSchedule(); return S.quest.main >= subAt[q.k]; };
+const subGems = q => Math.round(q.gems * SUB_K[q.w] / 10) * 10;
+const subDust = q => Math.round(SUB_DUST[q.w] * q.gems / 150);
+const subPiece = q => q.w >= 3 ? (q.gems >= 170 ? 3 : 2) : 0;
+function subRewHTML(q){
+  return `<span class="rchip rc-gem">보석 ${fmt(subGems(q))}</span><span class="rchip">쇳가루 ${fmt(subDust(q))}</span>${subPiece(q) ? `<span class="rchip rc-mount">고삐 조각 ${subPiece(q)}</span>` : ''}${q.gold ? `<span class="rchip rc-gold">엽전</span>` : ''}${q.mat ? `<span class="rchip rc-mat">재료 ${q.mat}</span>` : ''}`;
+}
 const subAvail = () => SUB_Q.filter(q => subOpen(q) && !S.sub.done[q.k] && !S.sub.act[q.k]);
 function subProg(q){
   const a = S.sub.act[q.k]; if (!a) return 0;
@@ -6337,7 +6429,7 @@ function offerSub(k){
   const full = Object.keys(S.sub.act).length >= SUB_MAX;
   showModal(`${q.who}의 부탁`, `<p class="story">「${q.hook}」</p><p>${q.story}</p>
     <div class="dl"><span>할 일</span><b>${q.c === 'stage' ? `단계 ${q.n}개 더` : `${q.n}${SUB_UNIT[q.c]}`}</b></div>
-    <div class="dl"><span>보상</span><b>보석 ${q.gems}${q.gold ? ` · 엽전 ${fmt(subGold(q))}` : ''}${q.mat ? ` · 재료 ${q.mat}` : ''}</b></div>
+    <div class="dl"><span>보상</span><b>보석 ${fmt(subGems(q))} · 쇳가루 ${fmt(subDust(q))}${subPiece(q) ? ` · 고삐 조각 ${subPiece(q)}` : ''}${q.gold ? ` · 엽전 ${fmt(subGold(q))}` : ''}${q.mat ? ` · 재료 ${q.mat}` : ''}</b></div>
     ${full ? `<p class="small" style="color:var(--seal)">부탁은 한 번에 ${SUB_MAX}개까지 들어 줄 수 있어요.</p>` : ''}`,
     [{label:'다음에'}, {label:'들어 줄게요', primary:true, fn:() => { if (!full) acceptSub(k); }}]);
 }
@@ -6351,10 +6443,10 @@ function acceptSub(k){
 function claimSub(k){
   const q = SUB_Q.find(x => x.k === k);
   if (!q || !S.sub.act[k] || subProg(q) < q.n) return false;
-  const g = subGold(q);
-  S.gems += q.gems; S.gold += g; if (q.mat) gainMat(q.mat, true);
+  const g = subGold(q), gm = subGems(q), du = subDust(q);
+  S.gems += gm; S.gold += g; S.dust += du; if (q.mat) gainMat(q.mat, true); gainPiece(subPiece(q), true);
   delete S.sub.act[k]; S.sub.done[k] = 1;
-  addLog(`「${q.t}」 부탁을 마쳤어요! 보석 +${q.gems}${g ? ` · 엽전 +${fmt(g)}` : ''}`, 'gain'); sfx('quest');
+  addLog(`「${q.t}」 부탁을 마쳤어요! 보석 +${fmt(gm)} · 쇳가루 +${fmt(du)}${subPiece(q) ? ` · 고삐 조각 +${subPiece(q)}` : ''}${g ? ` · 엽전 +${fmt(g)}` : ''}`, 'gain'); sfx('quest');
   addChat('npc', q.who, '정말 고마워요! 이 은혜 잊지 않을게요.');
   ev('quest');
   return true;
@@ -7637,9 +7729,10 @@ function buildQuest(){
       const act = SUB_Q.filter(q => S.sub.act[q.k]), doneN = SUB_Q.filter(q => S.sub.done[q.k]).length;
       panel.innerHTML = top + `
         <div class="ph"><h2>마을 부탁</h2><span class="small">마친 부탁 <b>${doneN}</b> / ${SUB_Q.length}</span></div>
-        <p class="hint">채팅의 <b>마을</b>에서 <b class="sqtag">부탁 ▶</b>이 붙은 말을 누르면 부탁을 들어줄 수 있어요. 한 번에 ${SUB_MAX}개까지. 이야기가 진행될수록 새 부탁이 열려요.</p>
+        <p class="hint">채팅의 <b>마을</b>에서 <b class="sqtag">부탁 ▶</b>이 붙은 말을 누르면 부탁을 들어줄 수 있어요. 한 번에 ${SUB_MAX}개까지. 이야기가 진행될수록 새 부탁이 열려요(이승 10 · 저승 10 · 천계 10 · 부상 30 · 곤륜 40). 뒤 세계일수록 보상이 커요.</p>
+        <div class="matrow small">${['이승', '저승', '천계', '부상', '곤륜'].map((nm, w) => { const L = SUB_Q.filter(q => q.w === w); return `<span>${nm} <b>${L.filter(q => S.sub.done[q.k]).length}</b>/${L.length}</span>`; }).join('')}</div>
         <button class="btn" id="subFind" ${subAvail().length ? '' : 'disabled'}>${subAvail().length ? '마을 사람에게 부탁 묻기' : '지금은 새 부탁이 없어요'}</button>
-        ${act.length ? act.map(q => `<div class="card qsub" id="sq-${q.k}"><div class="ct"><span><span class="qbadge sub">${q.who}</span> ${q.t}</span><span class="rchips">${`<span class="rchip rc-gem">보석 ${q.gems}</span>`}${q.gold ? `<span class="rchip rc-gold">엽전</span>` : ''}${q.mat ? `<span class="rchip rc-mat">재료 ${q.mat}</span>` : ''}</span></div>
+        ${act.length ? act.map(q => `<div class="card qsub" id="sq-${q.k}"><div class="ct"><span><span class="qbadge sub">${q.who}</span> ${q.t}</span><span class="rchips">${subRewHTML(q)}</span></div>
           <p class="story">${q.story}</p><div class="qbar"><div class="meter gold big"><i></i></div><span class="pr"></span></div>
           <button class="btn primary" data-sq="${q.k}">보상 받기</button></div>`).join('') : '<div class="card"><p class="small" style="margin:0">들어 주는 부탁이 없어요.</p></div>'}
         ${doneN ? `<details class="ngrp"><summary><b>마친 부탁</b><span>${doneN}개</span></summary><ul class="rewards notes">${SUB_Q.filter(q => S.sub.done[q.k]).map(q => `<li><b>${q.t}</b><span>${q.who}</span></li>`).join('')}</ul></details>` : ''}`;
@@ -9155,6 +9248,7 @@ if (location.search.indexOf('simtest') >= 0){
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
+    subOpen, subGems, get PART1_END(){ return PART1_END; }, get PART2_END(){ return PART2_END; },
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },

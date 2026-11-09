@@ -664,6 +664,17 @@ async def main():
               f'탈것: 이야기에서 받은 탈것이 채워지고, 마구간·고삐 조각으로 얻고, 별을 올린다 {mt}')
         check(mt['ride'] == 'girin' and mt['st1'] < mt['st0'] * 0.7 and mt['atk1'] > mt['atk0'] and mt['cdr'] > 12,
               f'탈것: 기린을 타면 걷기가 빨라지고 공격력(모음 효과)·재사용 줄이기가 붙는다 {mt}')
+        # 6-8) 마을 부탁 100개: 세계별 개수, 이야기 진행에 맞춰 열림, 곤륜 부탁은 보상이 크고 고삐 조각도
+        sq = await page.evaluate("""() => { const G = window.__game, S = G.S, m0 = S.quest.main;
+          const cnt = [0, 1, 2, 3, 4].map(w => G.SUB_Q.filter(q => q.w === w).length);
+          const openAt = n => { S.quest.main = n; return G.SUB_Q.filter(q => G.subOpen(q)).length; };
+          const o0 = openAt(0), o1 = openAt(G.PART1_END), o2 = openAt(G.PART2_END), o3 = openAt(G.MAIN_Q.length);
+          S.quest.main = m0; S.sub.act = {}; delete S.sub.done.z1; G.acceptSub('z1'); S.rec.kills += 1500;
+          const g0 = S.gems, p0 = S.mount.piece, d0 = S.dust, ok = G.claimSub('z1');
+          return {cnt, o0, o1, o2, o3, ok, gem: S.gems - g0, piece: S.mount.piece - p0, dust: S.dust - d0, kmax: Math.max(...G.SUB_Q.filter(q => q.c === 'kills').map(q => q.n))}; }""")
+        check(sq['cnt'] == [10, 10, 10, 30, 40] and sq['o0'] == 1 and 30 <= sq['o1'] <= 31 and 60 <= sq['o2'] <= 62 and sq['o3'] == 100 and sq['kmax'] <= 1500,
+              f'마을 부탁 100개: 이승 10·저승 10·천계 10·부상 30·곤륜 40, 이야기 진행에 맞춰 열린다 {sq}')
+        check(sq['ok'] and sq['gem'] >= 6000 and sq['piece'] >= 2 and sq['dust'] > 0, f'마을 부탁: 곤륜 부탁은 보석·쇳가루·고삐 조각을 크게 준다 {sq}')
         await page.evaluate("() => { const G = window.__game; G.quiet = false; G.buildTab('gear'); }")
         await page.click('#seg-mount')
         await page.wait_for_timeout(400)
