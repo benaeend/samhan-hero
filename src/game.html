@@ -967,7 +967,9 @@ body.portrait .log{bottom:126px}
 'use strict';
 
 /* ================= 기본 설정 ================= */
-const T = 16, COLS = 20, ROWS = 14, W = 240, H = 160, TOPR = 2;   // 싸우는 칸 20×12(위 2줄은 못 걷는다), 화면은 240×160
+const T = 16, COLS = 28, ROWS = 21, W = 240, H = 160, TOPR = 2;   // 싸우는 칸 28×19(위 2줄은 못 걷는다, 2026-11 (15)에 20×12에서 넓힘), 화면은 240×160
+const FOX = 4, FOY = 3;   // 예전 20×12 판에 맞춰 둔 고정 자리(레이드·부활)를 넓힌 판 가운데로 옮기는 만큼
+const SPAWN_R = 11;       // 사냥터 몹은 용사에게서 이 칸 수 안쪽에 나온다(판이 넓어져도 걷는 시간이 늘지 않게)
 const BOSS_TIME = 30, OFFLINE_CAP = 12 * 3600;
 // 사냥터: 몹 수(기본+단계마다, 저승부터 더), 나오는 간격, 보스까지 잡을 수(kills), 잡몹 한 마리 보상 배율(rew: 몹이 많아진 만큼 엽전·경험치·보석을 나눠 줌)
 const FIELD = {base:7, step:12, max:16, world:3, gap:0.25, rand:0.2, kills:25, rew:0.75};   // 2026-11 (9): 몹 2배쯤·보스까지 25마리, 한 마리 보상은 0.75배(벽에서 시간당 수입이 예전과 비슷하게)
@@ -1506,8 +1508,8 @@ const NPCS = [
 const NPC_SHARE = {musa:0.35, doin:0.3, sulsa:0.55, jagaek:0.55};
 const RAID_PARTY_MAX = 5;   // 레이드 파티는 나 + 동료 4명까지(동료가 다 잡아 주지 않게)
 const partyOf = info => Math.min(info.party, RAID_PARTY_MAX);   // 용사 초당 피해 대비 동료 몫
-const RAID_MELEE = [[13, 9], [15, 9], [16, 8], [14, 10], [12, 9], [16, 10]];
-const RAID_RANGED = [[10, 6], [10, 10], [8, 5], [8, 11], [11, 11], [7, 7], [7, 9], [17, 10]];
+const RAID_MELEE = [[13, 9], [15, 9], [16, 8], [14, 10], [12, 9], [16, 10]].map(([x, y]) => [x + FOX, y + FOY]);
+const RAID_RANGED = [[10, 6], [10, 10], [8, 5], [8, 11], [11, 11], [7, 7], [7, 9], [17, 10]].map(([x, y]) => [x + FOX, y + FOY]);
 
 /* ================= 퀘스트·튜토리얼 ================= */
 /* ================= 메인 스토리: 고구려 건국 신화(주몽 이야기)에서 저승까지 =================
@@ -2015,9 +2017,10 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-14', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-15', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
   ['#', '2026-11-10 · 새 화면 배치'],
+  ['넓은 사냥터', '사냥터가 20×12칸에서 28×19칸으로 넓어졌어요. 카메라가 용사를 따라 더 멀리 움직이고, 몬스터는 용사 근처에 나와서 사냥 속도는 그대로예요.'],
   ['아래 아이콘 메뉴', '가로 화면에서 메뉴가 아래 줄로 내려가고 금테 동그란 아이콘이 됐어요. 오른쪽 끝 큰 보스 단추는 보스까지 남은 처치를 고리로 보여 주고, 다 차면 눌러서 바로 도전해요.'],
   ['얼굴 카드 · 펫 얼굴', '왼쪽 위 상태 카드에 용사 얼굴과 데리고 다니는 펫 얼굴이 생겼어요(누르면 펫 화면).'],
   ['재화 줄 · 미니맵', '오른쪽 위에 엽전·보석·쇳가루(2부부터 고삐 조각)와 소식·하는 법 단추, 그 아래 미니맵(누르면 여정 지도). 채팅은 왼쪽 아래로 옮겼어요.'],
@@ -2340,7 +2343,7 @@ let ST = null;
 let mobs = [], texts = [], parts = [], fx = [], projs = [];
 let later = [];   // 게임 시간으로 잠시 뒤에 할 일(여러 번 나눠 치는 기술). 연출·멈춤·빨리 감기에서도 게임 시간에 맞춰 돈다
 const after = (sec, fn) => later.push({t:sec, fn});
-const hero = {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
+const hero = {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
   engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0, shinT:0, cloneT:0, cloneAcc:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
 const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7, jobC:8, jobD:9};
@@ -2974,10 +2977,11 @@ function makeMob(boss, tx, ty){
   placeOf(m);
   return m;
 }
-function spawnTile(minDist){
-  for (let k = 0; k < 60; k++){
-    const x = (Math.random() * COLS) | 0, y = TOPR + ((Math.random() * (ROWS - TOPR)) | 0);
-    if (Math.abs(x - hero.tx) + Math.abs(y - hero.ty) >= minDist && tileFree(x, y, null)) return [x, y];
+function spawnTile(minDist, maxDist = SPAWN_R){
+  for (let k = 0; k < 80; k++){
+    const x = Math.max(0, Math.min(COLS - 1, hero.tx + Math.round((Math.random() * 2 - 1) * maxDist))), y = Math.max(TOPR, Math.min(ROWS - 1, hero.ty + Math.round((Math.random() * 2 - 1) * maxDist)));
+    const d = Math.abs(x - hero.tx) + Math.abs(y - hero.ty);
+    if (d >= minDist && d <= maxDist && tileFree(x, y, null)) return [x, y];
   }
   return null;
 }
@@ -3084,13 +3088,13 @@ function heroDie(){
 }
 function respawn(){
   hero.dead = false; hero.hp = ST.maxHp; hero.atkT = 0.3; spawnT = 0.8;
-  hero.tx = hero.fx = 7; hero.ty = hero.fy = 6; hero.moving = false; hero.dir = 'down';
+  hero.tx = hero.fx = 7 + FOX; hero.ty = hero.fy = 6 + FOY; hero.moving = false; hero.dir = 'down';
   placeOf(hero);
   fx.push({type:'poof', t:0, dur:0.4, x:hero.x, y:hero.y - 8});
 }
 function startBoss(){
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
-  const spot = spawnTile(6) || spawnTile(3) || [13, 5];
+  const spot = spawnTile(6) || spawnTile(3) || [13 + FOX, 5 + FOY];
   const b = makeMob(true, spot[0], spot[1]);
   mobs.push(b); bossRef = b; bossActive = true; bossTime = BOSS_TIME; hero.elixirUsed = false;
   fx.push({type:'poof', t:0, dur:0.5, x:b.x, y:b.y - 10, big:true});
@@ -3188,12 +3192,12 @@ function startFight(info, party, o){
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
-  Object.assign(hero, {tx:6, ty:8, fx:6, fy:8, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false});
+  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false});
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
     const near = a.cls === 'musa' || a.cls === 'jagaek';
-    const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || [2, 3 + k];
+    const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || [2 + FOX, 3 + k + FOY];
     const C = CLASSES[a.cls], aspd = C.spdMul;
     const e = Object.assign(a, {tx:spot[0], ty:spot[1], fx:spot[0], fy:spot[1], mt:0, moving:false, x:0, y:0, dir:'right',
       hp:a.maxHp, aspd, hit:a.dps / aspd, atkT:Math.random(), swing:0, hurt:0, down:false, downT:0, healT:2 + k, seed:k});
@@ -3202,7 +3206,7 @@ function startFight(info, party, o){
     return e;
   });
   const B = {type:info.type, color:info.color, name:info.bossName, boss:true, raid:true, sc:3,
-    tx:14, ty:8, fx:14, fy:8, mt:0, moving:false, stepDur:1, dir:'left', x:0, y:0,
+    tx:14 + FOX, ty:8 + FOY, fx:14 + FOX, fy:8 + FOY, mt:0, moving:false, stepDur:1, dir:'left', x:0, y:0,
     hp:o.hp, atk:o.atk, aoe:o.aoe, markT:0, markP:0,
     atkT:2, aoeT:6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.6, anim:0, aggro:true, gold:0, exp:0};
   B.maxHp = B.hp;
@@ -3459,7 +3463,7 @@ function finishRaid(){
   const R = raid;
   raid = null;
   mobs = []; projs = []; bossActive = false; bossRef = null; spawnT = 1;
-  Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false});
   placeOf(hero);
   fx.push({type:'poof', t:0, dur:0.4, x:hero.x, y:hero.y - 8});
   if (currentTab === 'raid') buildTab('raid', true);
@@ -5273,7 +5277,7 @@ function getMap(ri){ const key = S.world + ':' + ri; let m = mapCache.get(key); 
    싸우는 칸(가로 15 × 세로 8)은 그대로 두고, 화면에는 비스듬히 내려다본 마름모 판(디오라마)으로 그린다.
    +tx는 화면 오른쪽 아래, +ty는 왼쪽 아래. 판 둘레에는 지역 풍경을 둔다. 장면은 RS배 해상도로 그린다 */
 const RS = 2;
-const IW = 18, IH = 9, IOX = 162, IOY = 40, IDEP = 8, MW = 360, MH = 216;   // MW×MH: 지도 전체 크기(화면보다 커서 카메라가 따라간다)
+const IW = 18, IH = 9, IOX = 222, IOY = 40, IDEP = 8, MW = 470, MH = 276, VW_MAX = 360;   // MW×MH: 지도 전체 크기(화면보다 커서 카메라가 따라간다)
 const CAVE_TORCH = [[65, 32], [180, 30], [295, 34]];
 // 화면에 보이는 너비(화면 단위). 높이는 늘 H(160)이고, 가로 화면에서는 화면 비율만큼 넓게(최대 지도 너비) 보인다
 let VW = W;
@@ -5689,7 +5693,7 @@ function resize(){
   const sc = cv.parentElement, sw = sc.clientWidth || 480, sh = sc.clientHeight || 320;
   const land = sw / sh >= 1.25;
   document.body.classList.toggle('portrait', !land);
-  VW = land ? Math.max(W, Math.min(MW, Math.round(H * sw / sh))) : W;
+  VW = land ? Math.max(W, Math.min(VW_MAX, Math.round(H * sw / sh))) : W;   // 넓힌 판(MW)과 따로, 보이는 너비는 예전 최대 360 그대로
   scale = land ? Math.max(sw / VW, sh / H) : sw / VW;
   dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   const cw = Math.round(VW * scale), ch = Math.round(H * scale);
@@ -9046,7 +9050,7 @@ async function pushCloud(){
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
-  Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
