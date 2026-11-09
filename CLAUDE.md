@@ -23,6 +23,7 @@
 | `icons/` | 앱 아이콘 192·512·maskable 512. `tools/make_icons.py`가 게임 속 용사 도트로 만든다 |
 | `UPDATE_NOTES.md` | 플레이어용 업데이트 노트. 게임 안 '업데이트 소식'(`NOTE_VER`, `NOTES`)과 내용을 맞춘다 |
 | `docs/manual.pdf` | 플레이 매뉴얼(PDF). `tools/make_manual.py`가 게임 화면을 직접 찍어 만든다 |
+| `docs/guide.pdf` | 플레이어에게 나눠 줄 4쪽 안내서(이야기·조작·성장·직업·플레이 시간, 결말·숨은 요소는 빼고). `tools/make_guide.py`가 매뉴얼 캡처를 재사용해 만든다(매뉴얼을 먼저 만들고) |
 | `tools/build.py` | `src/game.html` → `index.html`. 게임에 쓰인 글자 + ASCII + 한글 자모만 Pretendard(3가지 굵기)에서 뽑아 woff2·base64로 내장. OFL 예약 이름 규칙 때문에 글꼴 이름을 `SamhanSans`로 바꿔 넣는다. 게임에 없는 글자(캐릭터 이름의 드문 글자)는 기기 기본 글꼴로 보인다 |
 | `tools/test_game.py` | 헤드리스 크롬으로 타이틀·계정 만들기·프롤로그부터 튜토리얼·펫·재련·퀘스트·이야기 연출·레이드·환생·저승·시왕 레이드·초각성·타임 보스·다시 로그인·예전 저장 이어받기·claude.ai 저장(흉내)·앱 설치·오프라인까지 자동 점검하고 캡처(`tools/out/`). `--sim`이면 직업별 30분 시뮬, `--long 100`이면 화면 점검 없이 100시간 진행 시뮬(이정표 표) |
 | `tools/make_manual.py` | 매뉴얼 PDF 생성. 본문(진행 시간표 포함)이 이 파일 안에 있으니 게임 수치를 바꾸면 같이 고친다 |
@@ -39,7 +40,7 @@
 3. `python3 tools/test_game.py` — 오류가 없어야 하고, `tools/out/` 캡처를 열어 화면을 눈으로 확인
 4. 계정·저장·채팅·타임 보스(온라인) 코드를 건드렸으면 `python3 tools/test_online.py`(PostgreSQL·psycopg2 필요)
 5. 밸런스(성장 곡선·직업 수치·드롭·비용·이야기 조건)를 건드렸으면 `python3 tools/test_game.py --long 100` (네 직업을 함께 돌려 10분 안팎)
-6. 플레이어에게 보일 변화가 있으면 `UPDATE_NOTES.md`와 게임 안 `NOTE_VER`·`NOTES`를 고친다(`NOTE_VER`를 바꾸면 기존 플레이어에게 한 번 뜬다). 화면·규칙이 바뀌었으면 `python3 tools/make_manual.py`로 매뉴얼도 다시 만든다
+6. 플레이어에게 보일 변화가 있으면 `UPDATE_NOTES.md`와 게임 안 `NOTE_VER`·`NOTES`를 고친다(`NOTE_VER`를 바꾸면 기존 플레이어에게 한 번 뜬다). 화면·규칙이 바뀌었으면 `python3 tools/make_manual.py`로 매뉴얼도 다시 만들고, 조작·직업·플레이 시간이 바뀌었으면 `python3 tools/make_guide.py`(안내서)도
 7. 커밋 후 `main`에 push → 1~2분 뒤 공개 주소에 반영
 
 준비물: `pip install fonttools brotli playwright pillow psycopg2-binary` 와 `python3 -m playwright install chromium` (크롬이 이미 있으면 그걸 씀)

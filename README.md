@@ -2,7 +2,7 @@
 
 고구려 건국 신화와 우리 옛이야기 속 세상을 지키는 방치형 RPG입니다. 비스듬히 내려다보는 쿼터뷰 화면에 2~3등신 캐릭터가 나와요. 👉 **https://benaeend.github.io/samhan-hero/**
 
-📖 플레이 매뉴얼(PDF): [docs/manual.pdf](docs/manual.pdf) · 📝 업데이트 노트: [UPDATE_NOTES.md](UPDATE_NOTES.md)
+📖 플레이 매뉴얼(PDF): [docs/manual.pdf](docs/manual.pdf) · 📄 4쪽 안내서: [docs/guide.pdf](docs/guide.pdf) · 📝 업데이트 노트: [UPDATE_NOTES.md](UPDATE_NOTES.md)
 
 휴대폰을 가로로 들고 하는 게임이에요. 홈 화면에 앱으로 설치하면 가로·전체 화면으로 열리고, 인터넷 없이도 돌아가요.
 
