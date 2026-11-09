@@ -1600,12 +1600,12 @@ const MYTHS = [
   {k:'bell', name:'천부인 방울', stat:'치명타 피해', icon:'bell', mul:1},
   {k:'pearl', name:'여의주', stat:'엽전·경험치', icon:'pearl', mul:0.6},
   {k:'flute', name:'만파식적', stat:'기술 피해', icon:'flute', mul:1.5},
-  {k:'kusa', name:'구사나기 검', stat:'공격력', icon:'sword', mul:1.4, story:true},
-  {k:'yata', name:'야타 거울', stat:'체력', icon:'mirror', mul:1.6, story:true},
-  {k:'maga', name:'야사카니 곡옥', stat:'치명타 피해', icon:'pearl', mul:1.2, story:true},
-  {k:'uchi', name:'요술 방망이', stat:'엽전·경험치', icon:'flute', mul:0.6, story:true},
+  {k:'kusa', name:'구사나기 검', stat:'공격력', icon:'sword', mul:1.4, pow:80, story:true},
+  {k:'yata', name:'야타 거울', stat:'체력', icon:'mirror', mul:1.6, pow:100, story:true},
+  {k:'maga', name:'야사카니 곡옥', stat:'치명타 피해', icon:'pearl', mul:1.2, pow:150, story:true},
+  {k:'uchi', name:'요술 방망이', stat:'엽전·경험치', icon:'flute', mul:0.6, pow:80, story:true},
 ];
-const mythPower = (m, D) => Math.round((10 + D) * m.mul);
+const mythPower = (m, D) => m.pow || Math.round((10 + D) * m.mul);   // 2부 이야기 보물은 정해진 값(1부 보물과 따로 곱해지므로 작게)
 const diffName = D => D < 20 ? '쉬움' : D < 50 ? '보통' : D < 90 ? '어려움' : '매우 어려움';
 
 /* ================= 채팅 ================= */
@@ -1729,10 +1729,10 @@ const FLOAT = {bat:8, ghost:3, wisp:6};
 /* 성장 곡선(단계·레벨마다 곱해지는 배율). 2026-11 재조정: 숫자가 '조·경'까지 치솟지 않게 낮추고,
    몬스터 체력이 능력치보다 빨리 커져서 초반은 금방 밀리고 중반부터 오래 방치해야 넘는 벽이 생기게 했다 */
 const HEAVEN_K = 1.5;   // 천계 몬스터 체력 배율(2차 전직만큼 세게, 밸런스용)
-const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.015, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
+const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.02, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
 const mobHp   = s => 20 * Math.pow(CURVE.hp, s - 1) * Math.pow(CURVE.hp2, Math.max(0, s - CURVE.knee));
 const mobGold = s => 3 * Math.pow(CURVE.gold, s - 1);
-const EXP_K = [0.12, 0.4, 0.5, 10];
+const EXP_K = [0.12, 0.4, 0.5, 11];
 // 몬스터 공격력: 시뮬로 잰 '그 단계에 처음 닿을 때의 용사 체력'(체력 배율 1 기준, log10) 표를 따라간다.
 // 새 단계의 보스는 평범한 용사를 맨몸으로 MOB_TTK초쯤에 쓰러뜨린다 → 체력·방어 펫·보호막·물약이 중요해지고,
 // 술사처럼 몸이 약한 직업은 생존 기술을 잘 써야 한다. 오래 머물러 강해지면 그만큼 덜 아프다
@@ -1871,7 +1871,7 @@ function mergeState(d){
   out.shop = {day:d.shop && typeof d.shop.day === 'string' ? d.shop.day : '', got:Object.assign({}, (d.shop && d.shop.got) || {})};
   out.useWhet = !!d.useWhet;
   out.myth = {};
-  for (const m of MYTHS) out.myth[m.k] = Math.max(0, Math.round(+(d.myth && d.myth[m.k]) || 0));
+  for (const m of MYTHS) out.myth[m.k] = Math.min(m.pow || Infinity, Math.max(0, Math.round(+(d.myth && d.myth[m.k]) || 0)));
   // 환생·저승·변신·장신구 (2026-11 추가)
   out.world = [0, 1, 2, 3].includes(d.world) ? d.world : 0;
   const bd = d.best || {};
@@ -4137,7 +4137,7 @@ const BUSANG_RAIDS = [
   {name:'여덟 머리의 뱀', boss:'야마타노오로치', type:'serpent', color:'#2a4a2a', region:4},
   {name:'황천의 바위 문', boss:'이자나미', type:'izanami', color:'#4a3a5a', region:5},
 ];
-const BUSANG_RAID_REF = [6, 14, 22, 30, 38, 46, 54, 62];
+const BUSANG_RAID_REF = [6, 14, 22, 26, 30, 34, 40, 46];   // 부상 앞 40여 단계는 쉬워서, 레이드는 그때 용사보다 30단계쯤 아래 세기
 function busangRaidInfo(i){
   const d = BUSANG_RAIDS[i % BUSANG_RAIDS.length], round = Math.floor(i / BUSANG_RAIDS.length);
   const suffix = round ? ` ${round + 1}단` : '';
