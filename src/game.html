@@ -1647,7 +1647,7 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
 const NOTE_VER = '2026-11-09-8', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
-  ['제2부 · 부상', '천계 이야기를 마치면 동해 용왕의 거북을 타고 해 뜨는 섬 「부상」으로 건너가요([수련] → [환생] → 바다 건너기). 레벨·장비·능력치는 그대로, 단계만 1부터! 레벨 상한 400, 이야기 26~34장, 부상 레이드 8곳, 신화 보물 4종.'],
+  ['제2부 · 부상', '천계 이야기를 마치면 동해 용왕의 거북을 타고 해 뜨는 섬 「부상」으로 건너가요([수련] → [환생] → 바다 건너기). 레벨·장비·능력치는 그대로, 단계만 1부터! 레벨 상한 400, 이야기 26~34장, 부상 레이드 8곳, 신화 보물 4종. 부상에서는 「해돋이 기운」이 흘러 사냥이 느려도 지금까지 나아간 단계만큼 경험치가 조금씩 쌓여요.'],
   ['3차 전직', '부상에서 Lv.350이 되고 스승이 나오는 장을 마치면 3차 전직(풍뢰장·익영·식신사·신명)과 새 기술(팔갈래 폭풍·깃바람 분신·식신 행렬·신명 굿춤)이 열려요.'],
   ['장 제목 카드', '이야기의 장이 바뀔 때마다 붓글씨 장 제목이 나오고, 2부의 장은 여는 연출도 있어요.'],
   ['가로 화면', '휴대폰을 가로로 들면 사냥 장면이 화면을 가득 채워요. 오른쪽 메뉴를 누르면 장면 위에 별도 화면이 열리고, 같은 메뉴나 ✕로 닫아요. 왼쪽 위에는 지금 이야기 퀘스트가 떠 있어요.'],
@@ -1766,7 +1766,7 @@ const WORLD_NAME = ['이승', '저승', '천계', '부상'];
 const levelCap = () => LV_CAP[S.world] || 100;
 const regionsOf = w => w === 3 ? BUSANG_REGIONS : w === 2 ? HEAVEN_REGIONS : w ? HELL_REGIONS : REGIONS;
 const effStage = s => S.world === 3 ? HEAVEN_OFF + busE(s) : s + (S.world === 2 ? HEAVEN_OFF : S.world ? HELL_OFF : 0);
-const mHp = s => S.world === 3 ? heavenHp(busE(s)) : mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1) * craftComp(S.world, s), mAtk = s => (S.world === 3 ? heroRef(2, busE(s)) : heroRef(S.world, s)) / (2 * MOB_TTK), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(effStage(s));
+const mHp = s => S.world === 3 ? heavenHp(busE(s)) : mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1) * craftComp(S.world, s), mAtk = s => (S.world === 3 ? heroRef(2, busE(s)) : heroRef(S.world, s)) / (2 * MOB_TTK), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(S.world === 3 ? 60 + BUSANG.e0 + BUSANG.xr * (s - 1) : effStage(s));
 // 저승은 이야기 순서대로: 도산 1~20 · 화탕 21~40 · 한빙 41~55 · 검수 56~70 · 독사 71~80 · 흑암 81~
 const HELL_SPAN = [20, 40, 55, 70, 80];
 const regionIndex = s => S.world ? (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(S.world === 3 ? BUSANG_SPAN : S.world === 2 ? HEAVEN_SPAN : HELL_SPAN) : Math.floor((s - 1) / 10) % REGIONS.length;
@@ -1918,6 +1918,8 @@ function titleState(){ const s = defaultState(); s.quest.tut = -1; return s; }
 let S = titleState();
 let ST = null;
 let mobs = [], texts = [], parts = [], fx = [], projs = [];
+let later = [];   // 게임 시간으로 잠시 뒤에 할 일(여러 번 나눠 치는 기술). 연출·멈춤·빨리 감기에서도 게임 시간에 맞춰 돈다
+const after = (sec, fn) => later.push({t:sec, fn});
 const hero = {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
   engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0, shinT:0, cloneT:0, cloneAcc:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
@@ -2772,7 +2774,7 @@ function castAwaken(){
   fx.push({type:'awaken', t:0, dur:1.3, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5});
   fx.push({type:C.nukeFx, t:0, dur:1, pts:[[B.x - 22, B.y - 8], [B.x, B.y - 24], [B.x + 22, B.y - 8], [B.x - 12, B.y - 36], [B.x + 12, B.y - 36], [B.x, B.y - 2]], seed:Math.random() * 1000});
   shake = 0.7;
-  for (let k = 0; k < 5; k++) setTimeout(() => { if (raid === R && !B.dead) hit(B, dmg / 5, 'skill'); }, k * 140 / (S.speed || 1));
+  for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead) hit(B, dmg / 5, 'skill'); });
   addLog(`초각성기 · ${C.awaken}!`, 'gain'); sfx('awaken');
 }
 /* ================= 타임 보스 =================
@@ -3100,11 +3102,11 @@ function tryCast(i, lv, manual){
   if (i === 4){
     // 연타: 가장 튼튼한 적을 6번
     const t2 = alive.reduce((a, b2) => b2.hp > a.hp ? b2 : a);
-    for (let k = 0; k < 6; k++) setTimeout(() => {
+    for (let k = 0; k < 6; k++) after(k * 0.07, () => {
       if (t2.dead) return;
       fx.push({type:k % 2 ? 'cross' : 'hit', t:0, dur:0.2, x:t2.x + (k - 3) * 2, y:t2.y - mobHeight(t2) * 0.5});
       hit(t2, ST.atk * mul * comboPct(lv) / 100, 'skill');
-    }, k * 70 / (S.speed || 1));
+    });
     sfx('skill');
     return true;
   }
@@ -3194,17 +3196,24 @@ function jobCCast(lv, alive, tg, mul){
   const C = cls();
   fx.push({type:'awaken', t:0, dur:1, color:C.fx, x:hero.x, y:hero.y - 12});
   addText(skillName(8) + '!', hero.x, hero.y - 40, '#ffd24a', 12, true); sfx('awaken');
-  if (S.cls === 'jagaek'){ hero.cloneT = 12; hero.cloneLv = lv; hero.cloneAcc = 0; return true; }
+  if (S.cls === 'jagaek'){   // 깃바람: 둘레의 적을 세 번 휩쓸고, 분신 셋이 12초 함께 싸운다
+    hero.cloneT = 12; hero.cloneLv = lv; hero.cloneAcc = 0;
+    for (let k = 0; k < 3; k++) after(k * 0.11, () => {
+      fx.push({type:'ring', t:0, dur:0.3, x:hero.x, y:hero.y - 6, color:'#c8d0ff', r:24 + k * 6});
+      for (const m of mobs.filter(m => !m.dead && m.spawnT <= 0)) hit(m, ST.atk * mul * jobCPct(lv) * 0.5 / 100, 'skill');
+    });
+    return true;
+  }
   if (S.cls === 'sulsa'){
     const dmg = ST.atk * mul * jobCPct(lv) * 0.67 / 100;
     for (let k = 0; k < 12; k++){ const m = alive[k % alive.length]; projs.push({kind:'charm', x:hero.x + (k % 4 - 1.5) * 6, y:hero.y - 18 - (k % 3) * 4, tg:m, trail:[], dmg, hk:'skill'}); }
     return true;
   }
-  for (let k = 0; k < 8; k++) setTimeout(() => {
+  for (let k = 0; k < 8; k++) after(k * 0.09, () => {
     const live = mobs.filter(m => !m.dead && m.spawnT <= 0);
     fx.push({type:'ring', t:0, dur:0.3, x:hero.x, y:hero.y - 6, color:'#9fe7ff', r:30 + k * 4});
     for (const m of live) hit(m, ST.atk * mul * jobCPct(lv) / 100, 'skill');
-  }, k * 90 / (S.speed || 1));
+  });
   shake = 0.5;
   return true;
 }
@@ -3239,6 +3248,7 @@ function nearestMob(){
 
 function update(dt){
   gtime += dt; S.rec.play += dt;
+  if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
   for (const p of parts){
@@ -3254,6 +3264,9 @@ function update(dt){
   hero.hurt = Math.max(0, hero.hurt - dt);
   if (hero.buffT > 0) hero.buffT -= dt;
   if (hero.jobBuffT > 0) hero.jobBuffT -= dt;
+
+  // 부상의 해돋이 기운: 사냥 속도와 상관없이 지금까지 나아간 단계만큼 경험치가 조금씩 쌓인다
+  if (S.world === 3 && !hero.dead) gainExp(mExp(S.maxStage) * BUSANG.sun * gainMul('exp') * dt);
 
   // 레이드 / 보스·소환
   if (raid) updateRaid(dt);
@@ -3360,7 +3373,10 @@ function update(dt){
     const tg = hero.target && !hero.target.dead ? hero.target : null;
     if (tg && !hero.dead && hero.engaged){
       hero.cloneAcc = (hero.cloneAcc || 0) + dt * ST.aspd * spdBuff();
-      while (hero.cloneAcc >= 1){ hero.cloneAcc -= 1; for (let k = 0; k < 3; k++) hit(tg, ST.atk * atkBuff() * skillMulX() * 0.6 * (1 + 0.03 * ((hero.cloneLv || 1) - 1)), 'skill'); }
+      // 분신 셋은 용사의 적과 그 가까이 있는 다른 적을 나눠 친다(보스 하나뿐이면 모두 보스를)
+      const near = mobs.filter(m => !m.dead && m !== tg && m.spawnT <= 0).sort((a, b) => (Math.abs(a.tx - tg.tx) + Math.abs(a.ty - tg.ty)) - (Math.abs(b.tx - tg.tx) + Math.abs(b.ty - tg.ty)));
+      const tgs = [tg, near[0] || tg, near[1] || tg];
+      while (hero.cloneAcc >= 1){ hero.cloneAcc -= 1; for (let k = 0; k < 3; k++) if (!tgs[k].dead) hit(tgs[k], ST.atk * atkBuff() * skillMulX() * 0.6 * (1 + 0.03 * ((hero.cloneLv || 1) - 1)), 'skill'); }
     }
   }
   if (!hero.dead){
@@ -4115,7 +4131,7 @@ function godRaidInfo(i){
    천계 이야기를 마치면 동해 용왕의 거북을 타고 '건너기'(환생이 아님): 레벨·장비·능력치는 그대로, 단계만 1부터. 레벨 상한 400.
    몬스터는 천계 85단계에서 이어지는 세기로 시작한다. 신들은 악당이 아니라 원한에 흔들린 존재로 그린다 */
 // 부상 단계 s의 세기 = 천계 '같은 세기 단계' busE(s) = e0 + r × (s - 1). 새 땅이라 조금 쉽게 시작하고, 한 단계마다 천계의 r단계만큼만 세진다
-const BUSANG = {e0:76, r:0.3};
+const BUSANG = {e0:76, r:0.3, xr:0.1, sun:1};   // xr: 경험치는 단계마다 천계 0.1단계만큼만 늘어(앞서 간 직업이 눈덩이처럼 빨라지지 않게), sun: 해돋이 기운(초당 몹 몇 마리분 경험치)
 const busE = s => BUSANG.e0 + BUSANG.r * (s - 1);
 const BUSANG_SPAN = [12, 24, 36, 48, 60];
 const BUSANG_REGIONS = [
@@ -7230,7 +7246,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
-  mobs = []; texts = []; parts = []; fx = []; projs = [];
+  mobs = []; texts = []; parts = []; fx = []; projs = []; later = [];
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
   Object.assign(hero, {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
@@ -7251,7 +7267,7 @@ function offlineReward(sec){
   const s = S.stage, bonus = gainMul('gold', true);
   const kps = Math.min(0.6, dpsOf(ST) / mHp(s) * 0.5) * 0.5;
   const kills = Math.floor(kps * sec);
-  const gold = kills * mGold(s) * bonus, exp = kills * mExp(s) * bonus;
+  const gold = kills * mGold(s) * bonus, exp = (kills * mExp(s) + (S.world === 3 ? mExp(S.maxStage) * BUSANG.sun * sec * 0.5 : 0)) * bonus;
   const gems = Math.floor(sec / 600) + Math.floor(kills * GEM_DROP * 0.5);
   const lv0 = S.level;
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
