@@ -517,6 +517,7 @@ body.portrait .scene > .btn-boss{bottom:auto;top:calc(var(--cvt) + var(--cvh) - 
     linear-gradient(180deg,#121a2c,#090d17)}
 body.hell .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,120,60,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#24121a,#0f070a)}
 body.busang .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,150,90,.16),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1e1a2c,#0e0c18)}
+body.kunlun .page{background:radial-gradient(60% 50% at 85% 0%,rgba(150,230,200,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#16242a,#0b1216)}
 body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.015) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1c2238,#0e1222)}
 /* 여정 지도: 이승→저승→천계→부상(→곤륜) 땅을 디오라마 그림으로 이어 보여 준다 */
 .jm-top{display:grid;gap:6px;margin:0 0 8px}
@@ -860,6 +861,7 @@ const now = () => Date.now() + clockSkew;
 const SVG = {
   jobA:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2l2.6 6.4L21 9l-5 4.4L17.6 20 12 16.6 6.4 20 8 13.4 3 9l6.4-.6z"/></svg>',
   jobC:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 12c4-1 6-5 6-9 2 3 2 6 1 8 3-2 6-2 9-1-3 1-5 3-6 6 3 0 5 1 7 3-4 1-8 0-10-3-1 3-4 5-7 5 2-2 3-4 3-6-1 0-2-1-3-3z"/></svg>',
+  jobD:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 1h2v6l3-3 1.4 1.4L14 9h7v2h-7l3.4 3.6L16 16l-3-3v10h-2V13l-3 3-1.4-1.4L10 11H3V9h7L6.6 5.4 8 4l3 3z"/></svg>',
   jobB:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1l3 6 6-2-2 6 4 3-6 1-1 7-4-5-4 5-1-7-6-1 4-3-2-6 6 2z"/></svg>',
   sword:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3h2v2h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v1h-1v-2h-1v-1h1v-1h1v-1h1V9h1V8h1V7h1V6h1V5h1V4h1zM6 12h2v1h1v1h1v1h1v1h1v2h-2v-1H9v-1H8v1H7v1H6v1H5v1H3v-2h1v-1h1v-1h1v-1H5v-1H4v-2h2z"/></svg>',
   armor:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h4v2h2V3h4l4 3-2 5h-2v10H7V11H5L3 6z"/></svg>',
@@ -907,24 +909,24 @@ const CLASSES = {
   musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'균형 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0.003, range:1, skillMul:1.1, dr:10,
     role:'균형', traits:['체력이 높고 받는 피해 -10%, 체력 회복도 조금 더 빨라요', '여럿을 베는 기술·한 적을 노리는 기술·힘을 북돋는 기술을 고루 써요', '레이드에서는 보스의 눈길을 끌어 동료를 지켜요'],
     weapon:'검', armor:'갑옷', wtype:'sword', base:'#8a5a3a', pants:'#4a3a2e', belt:'#d8b34a', fx:'#ffffff', boltFx:'flash', nukeFx:'slashes', proj:null,
-    skills:['회오리 베기', '일섬', '투혼', '천지 가르기', '천둥 연격', '기세 꺾기', '장군의 호령', '신장 강림', '팔갈래 폭풍'], awaken:'개천 일격'},
+    skills:['회오리 베기', '일섬', '투혼', '천지 가르기', '천둥 연격', '기세 꺾기', '장군의 호령', '신장 강림', '팔갈래 폭풍', '개천벽지'], awaken:'개천 일격', awaken4:'반고의 개천'},
   jagaek:{name:'자객', desc:'보스의 급소를 노리는 그림자 사냥꾼', tags:'보스 특화 · 근접', hpMul:0.95, atkMul:1, spdMul:1.25, critAdd:0.08, regenAdd:0, range:1, skillMul:1,
     bossMul:1.3, aoeMul:0.8, oneMul:1.15, petMul:1.6, accMul:1.2, evade:0.2,
     role:'보스 특화', traits:['보스·수문장·레이드 보스에게 주는 피해 +30%, 한 적을 노리는 기술 +15%, 몸놀림이 빨라 공격의 20%를 피해요', '여럿을 치는 기술은 80%만 들어가서 몬스터 떼를 치우는 건 느려요', '공격 펫 피해 1.6배, 장신구 효과 1.2배 — 펫·장신구를 잘 맞춰야 사냥터를 빨리 밀어요'],
     weapon:'단검', armor:'야행복', wtype:'dagger', base:'#3a3450', pants:'#22202c', belt:'#8a2b2b', fx:'#e0607a', boltFx:'cross', nukeFx:'rain', proj:null,
-    skills:['그림자 베기', '급소 찌르기', '바람 걸음', '비도 난무', '그림자 연환', '급소 낙인', '월영 난무', '귀영 천살', '깃바람 분신'], awaken:'월하 만영참'},
+    skills:['그림자 베기', '급소 찌르기', '바람 걸음', '비도 난무', '그림자 연환', '급소 낙인', '월영 난무', '귀영 천살', '깃바람 분신', '무영 월광살'], awaken:'월하 만영참', awaken4:'광한 무영참'},
   sulsa:{name:'술사', desc:'처음엔 약하지만 갈수록 무서워지는 마력', tags:'후반 강함 · 원거리', hpMul:0.7, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0, range:4, skillMul:1.1,
     grow:[0.6, 1.5], shield:true,
     role:'늦게 피는 꽃', traits:['마력 성장: 공격력이 처음 60%에서 레벨을 올릴수록 커져 천계 만렙에 150%(이승 100 → 저승 200 → 천계 300을 모두 셈)', '체력이 가장 낮아요(70%). 보스 앞에서 쉽게 쓰러져요', '「마력 보호막」이 최대 체력의 40%(기술 레벨마다 +1%)를 막아요 — 보스가 나올 때 맞춰 쓰면 좋아요'],
     weapon:'지팡이', armor:'도포', wtype:'staff', base:'#3f5f9a', pants:'#2e3555', belt:'#d8b34a', fx:'#ff8a3a', boltFx:'zig', nukeFx:'meteor', proj:'fire',
-    skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌', '식신 행렬'], awaken:'천화 강림'},
+    skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌', '식신 행렬', '구천 현뢰'], awaken:'천화 강림', awaken4:'구천 천화'},
   doin:{name:'도인', desc:'준비 부적을 겹겹이 쌓아 한 방에 터뜨려요', tags:'한방 · 원거리', hpMul:1.1, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0.003, range:3, skillMul:1,
     role:'한방', traits:['공격 기술은 3개뿐(Lv.5 · 1차 전직 · 환생 뒤). 대신 늘 치명타로 크게 터져요', '나머지는 준비 기술: 봉인(받는 피해↑)·회복·도력(다음 공격 2.5배↑)·팔괘(치명타 피해↑)·대굿(공격 기술 다시 쓰기)', '준비 기술을 다 건 뒤 공격 기술을 직접 누르면 게임에서 가장 큰 한 방이 나와요(자동은 그때그때 써요)'],
     sk:[{kind:'d_atk1', cd:10, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, icon:'pearl'},
       {kind:'d_bagua', cd:30, icon:'crit'}, {kind:'d_atk3', cd:40, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}, {kind:'d_shin', cd:30, icon:'jobC', job:3}],
-    order:[7, 8, 1, 2, 4, 3, 0, 6, 5],
+    order:[7, 8, 1, 2, 4, 3, 0, 6, 5, 9],
     weapon:'부채', armor:'도포', wtype:'fan', base:'#e6e0cc', pants:'#bdb59c', belt:'#b8382f', fx:'#f3d36b', boltFx:'pillar', nukeFx:'pillars', proj:'charm',
-    skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 모으기', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿', '신명 굿춤'], awaken:'사신 강림'},
+    skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 모으기', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿', '신명 굿춤', '오색 보천'], awaken:'사신 강림', awaken4:'삼국 신수 강림'},
 };
 const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin'];
 const W_PRE = ['나무', '무쇠', '청동', '백은', '신령'];
@@ -958,9 +960,10 @@ const SKILLS = [
   {key:'jobA',   unlock:1,  job:1, cd:18, base:2e6, growth:1.9, max:30},   // 1차 전직 기술
   {key:'jobB',   unlock:1,  job:2, cd:32, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
   {key:'jobC',   unlock:1,  job:3, cd:26, base:5e10, growth:1.9, max:30},  // 3차 전직 기술(부상)
+  {key:'jobD',   unlock:1,  job:4, cd:40, base:5e12, growth:1.9, max:30},  // 4차 전직 기술(곤륜)
 ];
 // 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
-const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'jobD'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
@@ -994,6 +997,12 @@ function skillDesc(i, l){
   if (d.kind === 'd_bagua') return `준비: 10초 동안 치명타 피해 +${dBaguaAdd(l)}%`;
   if (d.kind === 'd_gut') return `준비: 공격 기술 재사용 시간을 모두 없애고 12초 동안 공격력 +50%`;
   if (d.kind === 'd_shin') return `준비: 12초 동안 공격 속도 +30%·공격력 +20%, 1초마다 체력 3% 회복`;
+  if (d.kind === 'jobD'){
+    if (S.cls === 'jagaek') return `2초 동안 모습을 감추고(맞지 않음) 보이는 적 모두를 12번 연달아 공격력의 ${fmt(Math.round(jobDPct(l) * 0.08 * sm))}%씩, 모두 치명타`;
+    if (S.cls === 'sulsa') return `우레 아홉 줄기가 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * 0.17 * sm))}%씩, 마지막 줄기는 보이는 적 모두`;
+    if (S.cls === 'doin') return `오색 빛이 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobDPct(l) * 0.9 * sm))}%, 10초 동안 최대 체력 50%만큼 막는 방패`;
+    return `하늘과 땅을 가르는 일격: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
+  }
   if (d.kind === 'jobC'){
     if (S.cls === 'jagaek') return `깃털 분신 셋이 12초 동안 함께 싸워요(분신 하나가 칠 때마다 공격력의 ${Math.round(60 * (1 + 0.03 * (l - 1)))}%, 치명타 그대로)`;
     if (S.cls === 'sulsa') return `종이 식신 12장이 날아가 하나에 공격력의 ${fmt(Math.round(jobCPct(l) * 0.67 * sm))}%`;
@@ -1126,7 +1135,7 @@ function hellRaidInfo(i){
 }
 // 시왕 레이드 보스 세기(저승 단계 기준): 그 레벨에 보통 닿아 있는 단계보다 조금 아래
 const HELL_RAID_REF = [5, 15, 30, 42, 55, 66, 72, 76, 80, 84];
-const raidAt = i => S.world === 3 ? busangRaidInfo(i) : S.world === 2 ? godRaidInfo(i) : S.world ? hellRaidInfo(i) : raidInfo(i);
+const raidAt = i => S.world === 4 ? kunlunRaidInfo(i) : S.world === 3 ? busangRaidInfo(i) : S.world === 2 ? godRaidInfo(i) : S.world ? hellRaidInfo(i) : raidInfo(i);
 
 /* 변신: 고구려 고분벽화의 사신(四神) */
 const FORMS = [
@@ -1318,6 +1327,7 @@ const CHAPTERS = [
   '13장 · 빛 없는 곳의 현무', '14장 · 시왕의 심판', '15장 · 윤회의 바퀴', '16장 · 다시 고구려로',
   '17장 · 하늘의 선전포고', '18장 · 구름 위의 도술', '19장 · 활빈의 깃발', '20장 · 살수의 물결', '21장 · 명량의 바다', '22장 · 염라의 심판', '23장 · 제천대성', '24장 · 영소보전', '25장 · 신화',
   '26장 · 바다 건너 온 원한', '27장 · 강의 갓파', '28장 · 여우불 들판', '29장 · 구라마의 날개', '30장 · 눈의 여인', '31장 · 오니 섬', '32장 · 해가 숨은 날', '33장 · 여덟 머리의 뱀', '34장 · 황천 비탈',
+  '35장 · 열 개의 해', '36장 · 황하의 큰물', '37장 · 서호의 흰 뱀', '38장 · 버려진 절의 밤', '39장 · 달의 궁전', '40장 · 사흉', '41장 · 곤륜의 문', '42장 · 무너진 기둥', '43장 · 오색 돌', '44장 · 혼돈', '45장 · 세 하늘의 신화',
 ];
 const STORY_GEM_K = 0.6;   // 이야기 보상 보석 배율(보석이 너무 흔하지 않게)
 const MAIN_Q = [
@@ -1638,8 +1648,84 @@ const MAIN_Q = [
     c:['shore', 'hero,kkachi', 'light', [['까치', '해가… 열 개예요! 서쪽 하늘로 날아가요!'], ['', '다마모노마에도 서쪽으로 사라졌어요. 이야기는 곤륜으로 이어져요.']]]},
   {ch:34, t:'부상의 신화', s:'레벨 400(부상 만렙)에 닿아요.', k:'l3', n:400, gems:20000,
     c:['shore', 'susanoo,amaterasu,seimei,uzume,hero', 'sparkle', [['', '부상의 신들이 바닷가에 모여 용사를 배웅했어요.'], ['아마테라스', '동쪽 하늘의 신화가 된 용사여, 서쪽으로 가거든 해들을 달래 주오.']]]},
+  // ===== 3부 곤륜 =====
+  {ch:35, t:'서쪽으로 간 해', s:'[수련] → [환생]의 「서쪽 하늘로 건너기」로 곤륜에 건너가요. 레벨·장비·능력치는 그대로예요. 탈것 「과하마」를 얻어요.', k:'world', n:4, gems:15000, mount:'kwaha',
+    c:['burnfield', 'hero,kkachi', 'light', [['까치', '{name}님! 주몽님이 기르던 말의 손자의 손자의… 아무튼 후손이에요!'], ['', '까치가 데려온 작은 말 과하마가 첫 탈것이 됐어요.']]]},
+  {ch:35, t:'타는 들판', s:'곤륜 1-5에 닿아요.', k:'s4', n:5, gems:15000,
+    c:['burnfield', 'hero,m:crow:#ff7a2a', 'fire', [['', '하늘에 해가 열 개! 땅이 갈라지고 강물이 말랐어요.'], ['나', '이 해들… 생김새가 삼족오를 닮았어.']]]},
+  {ch:35, t:'활을 든 사내', s:'레벨 410을 달성해요.', k:'l4', n:410, gems:15500,
+    c:['burnfield', 'houyi,hero', '', [['후예', '해는 하나면 충분하다. 아홉은 떨어뜨리겠다.'], ['나', '잠깐만요! 저 해들은 길을 잃은 형제들이에요.']]]},
+  {ch:35, t:'열 개의 해', s:'곤륜 레이드 「열 개의 해」에서 해 까마귀 형제를 달래요(곤륜 8단계에서 열려요). 신화 보물 「사일궁」을 얻어요.', k:'raidK', key:'k0', n:1, gems:16000, myth:'sail',
+    c:['burnfield', 'hero,houyi,m:crow:#ff8a2a', 'light', [['', '주몽의 활 이야기와 삼족오의 노래에 해들이 하나둘 제자리로 돌아갔어요.'], ['후예', '쏘지 않고도 이길 수 있군. 이 활은 네가 가져라.']]]},
+  {ch:35, t:'가뭄 귀신', s:'곤륜 2-1에 닿아요(한발을 물리쳐요).', k:'s4', n:13, gems:16000,
+    c:['burnfield', 'hero,wukong', 'sparkle', [['손오공', '또 만났군! 이번엔 내가 길잡이다.'], ['', '구름을 타고 온 손오공이 서쪽 곤륜산을 가리켰어요.']]]},
+  {ch:36, t:'터진 둑', s:'곤륜 2-6에 닿아요.', k:'s4', n:18, gems:16500,
+    c:['yellowriver', 'hero,kkachi', 'shake', [['', '해가 잠잠해지자 이번엔 황하의 둑이 터졌어요.'], ['까치', '마을이 물에 잠겨요!']]]},
+  {ch:36, t:'물길을 내는 사람', s:'레벨 420을 달성해요.', k:'l4', n:420, gems:17000,
+    c:['yellowriver', 'yu,hero', '', [['우', '물을 막으면 넘치고, 길을 내 주면 바다로 간다.'], ['나', '삽 한 자루로 강을 다스리시는군요.']]]},
+  {ch:36, t:'상류', s:'곤륜 레이드 「상류」에서 아홉 머리 뱀을 막아요. 탈것 「응룡」을 얻어요.', k:'raidK', key:'k1', n:1, gems:17500, mount:'eunglong',
+    c:['yellowriver', 'yu,hero,m:serpent:#3a6a8a', 'shake', [['', '아홉 머리 뱀이 물러가자 날개 달린 용이 꼬리로 땅을 그어 물길을 냈어요.'], ['우', '응룡이 너를 따르겠다는구나.']]]},
+  {ch:36, t:'자라 장수', s:'곤륜 3-1에 닿아요(자라 장수를 물리쳐요).', k:'s4', n:25, gems:18000,
+    c:['yellowriver', 'hero,kkachi', 'sparkle', [['까치', '물이 빠졌어요! 마을 사람들이 돌아와요.']]]},
+  {ch:37, t:'비 오는 다리', s:'곤륜 3-5에 닿아요.', k:'s4', n:29, gems:18000,
+    c:['westlake', 'baisuzhen,hero', '', [['', '비 오는 다리 위에 흰 옷 여인과 푸른 옷 여인이 서 있었어요.'], ['흰 뱀', '사람이 되고 싶었을 뿐이에요. 그게 죄인가요?']]]},
+  {ch:37, t:'뇌봉탑의 원한', s:'곤륜 레이드 「뇌봉탑의 원한」에서 탑에 엉긴 원한을 풀어요.', k:'raidK', key:'k2', n:1, gems:18500,
+    c:['westlake', 'hero,baisuzhen', 'light', [['', '탑을 휘감던 검은 원한이 흩어지고, 흰 뱀이 탑 밖으로 걸어 나왔어요.'], ['흰 뱀', '고마워요. 이 은혜는 꼭 갚을게요.']]]},
+  {ch:37, t:'탑 돌사자', s:'곤륜 4-1에 닿아요(탑 돌사자를 물리쳐요).', k:'s4', n:37, gems:19000,
+    c:['westlake', 'hero,kkachi', 'sparkle', [['까치', '서호에 다시 연꽃이 피었어요!']]]},
+  {ch:38, t:'꺼진 촛불', s:'곤륜 4-5에 닿아요.', k:'s4', n:41, gems:19000,
+    c:['oldtemple', 'zhongkui,hero', 'dark', [['', '촛불이 저절로 꺼진 폐사. 붉은 옷에 큰 수염의 사내가 귀신을 잡고 있었어요.'], ['종규', '귀신 잡는 일엔 이골이 났는데, 이건 처음 맡는 냄새로군.']]]},
+  {ch:38, t:'불 바퀴의 소년', s:'레벨 430을 달성해요.', k:'l4', n:430, gems:19500,
+    c:['oldtemple', 'nezha,hero', 'fire', [['나타', '꼬리가 아홉이면 아홉 번 찌르면 돼!'], ['나', '같이 가자. 벽에 비친 저 그림자, 아홉 꼬리야.']]]},
+  {ch:38, t:'달기', s:'곤륜 레이드 「달기」에서 다시 태어나려는 아홉 꼬리 여우를 막아요.', k:'raidK', key:'k3', n:1, gems:20000,
+    c:['oldtemple', 'hero,nezha,m:fox:#f0d070', 'flash', [['', '부상에서 달아난 아홉 꼬리 여우가 마침내 꼬리를 거두었어요.'], ['여우', '…이번엔 정말 졌구나. 나도 원한에 끌려다녔을 뿐이야.']]]},
+  {ch:38, t:'강시 왕', s:'곤륜 5-1에 닿아요(강시 왕을 물리쳐요).', k:'s4', n:49, gems:20000,
+    c:['oldtemple', 'zhongkui,hero', 'sparkle', [['종규', '술 내기는 내가 졌다. 자, 한 잔 받게.']]]},
+  {ch:39, t:'계수나무 아래', s:'레벨 440을 달성해요.', k:'l4', n:440, gems:20500,
+    c:['moonpalace', 'change,hero', 'sparkle', [['', '계수나무 아래에서 옥토끼가 방아를 찧고, 항아가 홀로 땅을 내려다보았어요.'], ['항아', '그림자는 빛이 있어야 생기지. 너는 어떤 빛의 그림자니?']]]},
+  {ch:39, t:'옥토끼의 약', s:'곤륜 5-4에 닿아요.', k:'s4', n:52, gems:21000,
+    c:['moonpalace', 'change,houyi,hero', 'light', [['', '옥토끼가 빻은 약 한 줌이 땅의 후예에게 닿았어요.'], ['후예', '…달이 오늘따라 밝구나.']]]},
+  {ch:40, t:'도철', s:'곤륜 레이드 「도철」에서 무엇이든 삼키는 흉수를 물리쳐요.', k:'raidK', key:'k4', n:1, gems:21500,
+    c:['kunlunmt', 'hero,m:bear:#6a4a3a', 'shake', [['', '황야에 나타난 도철이 바위까지 삼켰어요.'], ['나', '배고픔도 원한이었구나. 이제 쉬어.']]]},
+  {ch:40, t:'궁기', s:'곤륜 레이드 「궁기」를 물리쳐요.', k:'raidK', key:'k5', n:1, gems:22000,
+    c:['kunlunmt', 'hero,m:tiger:#8a3a3a', 'dark', [['궁기', '착한 놈부터 잡아먹는 게 내 법이다.'], ['', '그때 뿔이 빛나는 해태가 궁기와 용사 사이를 가로막았어요.']]]},
+  {ch:40, t:'도올', s:'곤륜 레이드 「도올」을 물리쳐요. 탈것 「해태」를 얻어요.', k:'raidK', key:'k6', n:1, gems:22500, mount:'haetae',
+    c:['kunlunmt', 'hero,kkachi,m:haetae:#d8c070', 'sparkle', [['까치', '해태가 {name}님을 골랐어요!'], ['', '옳고 그름을 가리는 짐승이 사흉을 심판하고 용사 곁에 섰어요.']]]},
+  {ch:40, t:'곤륜 가는 길', s:'곤륜 5-10에 닿아요.', k:'s4', n:58, gems:23000,
+    c:['kunlunmt', 'hero,wukong', '', [['손오공', '저 위가 곤륜이다. 아홉 문이 있지. 셈 잘하냐?']]]},
+  {ch:41, t:'아홉 문의 문지기', s:'곤륜 6-1에 닿아요(육오를 물리쳐요).', k:'s4', n:61, gems:23500,
+    c:['kunlunmt', 'hero,m:tiger:#e8c070', '', [['육오', '곤륜의 아홉 문은 셈할 줄 아는 자에게만 열린다.'], ['나', '싸워서 열 문이 아니라면, 셈부터 하죠.']]]},
+  {ch:41, t:'구천현녀의 두루마리', s:'레벨 450을 달성해요.', k:'l4', n:450, gems:24000,
+    c:['kunlunmt', 'jiutian,hero', 'light', [['구천현녀', '이기는 법보다 싸우지 않고 이기는 법이 먼저다.']]]},
+  {ch:41, t:'서왕모의 잔치', s:'곤륜 6-3에 닿아요. 신화 보물 「서왕모의 불사약」과 탈것 「백록」을 얻어요.', k:'s4', n:63, gems:24500, myth:'elixir', mount:'baekrok',
+    c:['palace', 'xiwangmu,hero,kkachi', 'sparkle', [['서왕모', '하늘 기둥이 다시 흔들리고 있다. 이 약과 흰 사슴을 가져가거라.'], ['까치', '흰 사슴이 {name}님 손을 핥아요!']]]},
+  {ch:42, t:'부주산', s:'곤륜 6-6에 닿아요.', k:'s4', n:66, gems:25000,
+    c:['buzhou', 'hero,kkachi', 'shake', [['', '하늘을 받치던 기둥, 부주산. 물의 신의 군사들이 몰려왔어요.']]]},
+  {ch:42, t:'공공', s:'곤륜 레이드 「공공」에서 물의 신을 막아요. 신화 보물 「반고의 도끼」를 얻어요.', k:'raidK', key:'k7', n:1, gems:25500, myth:'pangu',
+    c:['buzhou', 'gonggong,hero,pangu', 'shake', [['공공', '이겼어야 했다… 그 원한이 아직도 머리를 울린다.'], ['반고의 넋', '하늘과 땅을 가른 도끼다. 무너뜨리는 데가 아니라 지키는 데 써라.']]]},
+  {ch:42, t:'하늘의 금', s:'레벨 455를 달성해요.', k:'l4', n:455, gems:26000,
+    c:['skyrift', 'hero,kkachi', 'dark', [['까치', '이 금… 우리가 처음 본 하늘 문 금이랑 똑같아요.'], ['나', '그날의 금은 아주 옛날 이 기둥에서 시작됐구나.']]]},
+  {ch:43, t:'곤륜 꼭대기', s:'곤륜 6-9에 닿아요.', k:'s4', n:69, gems:26500,
+    c:['kunlunmt', 'nuwa,hero', 'light', [['여와', '깨진 것을 버리지 않고 기우는 것, 그게 사람을 빚은 까닭이란다.']]]},
+  {ch:43, t:'모자란 돌 하나', s:'레벨 460을 달성해요.', k:'l4', n:460, gems:27000,
+    c:['kunlunmt', 'nuwa,hero,kkachi', 'sparkle', [['', '오색 돌이 하나 모자랐어요. 용사는 세 나라에서 모은 보물을 꺼냈어요.'], ['여와', '천부인과 삼종신기와 곤륜의 신기… 이것이면 되겠다.']]]},
+  {ch:43, t:'오색 돌', s:'곤륜 7-1에 닿아요(부유를 물리쳐요). 신화 보물 「오색 돌」과 탈것 「기린」을 얻어요.', k:'s4', n:73, gems:28000, myth:'ose', mount:'girin',
+    c:['kunlunmt', 'nuwa,hero,m:haetae:#ffd860', 'sparkle', [['', '하늘이 기워진 날, 무지개 아래 기린이 나타났어요.'], ['까치', '{name}님, 세 스승님의 시험이 기다리고 있어요!']]]},
+  {ch:44, t:'세 스승의 시험', s:'[수련] → [전직]에서 세 스승의 시험(1차 스승 → 강림도령 → 3차 스승)을 넘어 4차 전직해요.', k:'job', n:4, gems:30000,
+    c:['kunlunmt', 'hero,gangrim,kkachi', 'flash', [['강림도령', '저승에서 처음 본 아이가 여기까지 왔구나.'], ['나', '모두 덕분이에요.']]]},
+  {ch:44, t:'빛도 색도 없는 곳', s:'곤륜 7-3에 닿아요.', k:'s4', n:75, gems:31000,
+    c:['skyrift', 'hero,m:chaos:#4a3a5a', 'dark', [['혼돈', '눈도 귀도 없던 나에게 구멍을 뚫어 준 건 너희였다.'], ['', '혼돈의 목소리에 천마의 목소리가 섞여 들렸어요.']]]},
+  {ch:44, t:'혼돈', s:'곤륜 레이드 「혼돈」에서 하늘 틈의 혼돈을 다시 잠재워요.', k:'raidK', key:'k8', n:1, gems:33000,
+    c:['skyrift', 'hero,wukong,gangrim,kkachi', 'light', [['손오공', '베지 마! 혼돈은 구멍을 뚫으면 죽는다는 얘기, 몰라?'], ['나', '알아. 그래서 다시 재우는 거야. 하늘을 꿰매면서.']]]},
+  {ch:45, t:'하늘을 꿰매다', s:'곤륜 7-8에 닿아요.', k:'s4', n:80, gems:34000,
+    c:['sky', 'hero,kkachi', 'sparkle', [['', '세 나라의 하늘이 하나로 이어지고, 천마의 원한이 맑게 개었어요.']]]},
+  {ch:45, t:'다리를 놓는 새', s:'레벨 480을 달성해요.', k:'l4', n:480, gems:36000,
+    c:['sky', 'kkachi,hero', 'light', [['까치', '저는 원래 다리를 놓는 새예요. 하늘과 하늘 사이에요.'], ['나', '그래서 늘 길을 먼저 알았구나.']]]},
+  {ch:45, t:'세 하늘의 신화', s:'레벨 500(곤륜 만렙)에 닿아요.', k:'l4', n:500, gems:40000,
+    c:['palace', 'xiwangmu,amaterasu,jumong,hero,kkachi', 'sparkle', [['', '세 나라의 신들이 하늘 문 앞에 모여 용사를 배웅했어요.'], ['까치', '{name}, 이제 세 하늘의 신화예요.']]]},
 ];
-const PART1_END = MAIN_Q.findIndex(q => q.ch >= 26);   // 1부 이야기 수(113)
+const PART1_END = MAIN_Q.findIndex(q => q.ch >= 26);
+const PART2_END = MAIN_Q.findIndex(q => q.ch >= 35);   // 2부까지 이야기 수(145)   // 1부 이야기 수(113)
 // 저승 이야기가 끝나는 곳(히든 퀘스트·두 번째 환생 조건)
 const HELL_END_Q = MAIN_Q.findIndex(q => q.t === '다시 고구려로') + 1;
 const DAILY = [
@@ -1691,6 +1777,10 @@ const MYTHS = [
   {k:'yata', name:'야타 거울', stat:'체력', icon:'mirror', mul:1.6, pow:100, story:true},
   {k:'maga', name:'야사카니 곡옥', stat:'치명타 피해', icon:'pearl', mul:1.2, pow:150, story:true},
   {k:'uchi', name:'요술 방망이', stat:'엽전·경험치', icon:'flute', mul:0.6, pow:80, story:true},
+  {k:'pangu', name:'반고의 도끼', stat:'공격력', icon:'sword', mul:1.4, pow:100, story:true},
+  {k:'sail', name:'사일궁', stat:'치명타 피해', icon:'bell', mul:1.2, pow:200, story:true},
+  {k:'elixir', name:'서왕모의 불사약', stat:'체력(싸움마다 한 번 되살아남)', icon:'mirror', mul:1, pow:60, story:true},
+  {k:'ose', name:'오색 돌', stat:'기술 피해(세 나라 세트 효과 1.5배)', icon:'flute', mul:1, pow:60, story:true},
 ];
 const mythPower = (m, D) => m.pow || Math.round((10 + D) * m.mul);   // 2부 이야기 보물은 정해진 값(1부 보물과 따로 곱해지므로 작게)
 const diffName = D => D < 20 ? '쉬움' : D < 50 ? '보통' : D < 90 ? '어려움' : '매우 어려움';
@@ -1732,8 +1822,9 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-09-9', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-10', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['제3부 · 곤륜', '부상 이야기를 마치면 열 개의 해를 쫓아 서쪽 끝 곤륜으로 건너가요. 레벨 상한 500, 지역 6곳·레이드 9곳·이야기 35~45장, 4차 전직(세 스승의 시험)과 10번째 기술, 곤륜의 신화 보물과 세 나라 세트!'],
   ['자동 / 반자동 · 보스 수동', '기술 칸 위 [자동]/[반자동]: 반자동은 사냥은 알아서, 기술은 직접 눌러요. [보스 자동]/[보스 수동]: 수동이면 가운데 아래 [보스 도전!]을 눌러야 보스가 나와요(자동은 지면 45초 뒤 다시).'],
   ['몬스터가 많아졌어요', '사냥터에 몹이 7~16마리, 보스까지 25마리. 대신 잡몹 한 마리 보상은 0.75배라 시간당 수입은 비슷하고 쉬운 단계는 훨씬 빨라요.'],
   ['기술 연출', '기술을 쓰면 바닥 마법진·충격파·빛기둥·유성 폭발이, 큰 기술은 화면에 빛과 기술 이름 띠가 나와요.'],
@@ -1823,7 +1914,7 @@ const HEAVEN_K = 1.5;   // 천계 몬스터 체력 배율(2차 전직만큼 세�
 const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.02, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
 const mobHp   = s => 20 * Math.pow(CURVE.hp, s - 1) * Math.pow(CURVE.hp2, Math.max(0, s - CURVE.knee));
 const mobGold = s => 3 * Math.pow(CURVE.gold, s - 1);
-const EXP_K = [0.12, 0.4, 0.5, 3.3];
+const EXP_K = [0.12, 0.4, 0.5, 3.3, 3];
 // 몬스터 공격력: 시뮬로 잰 '그 단계에 처음 닿을 때의 용사 체력'(체력 배율 1 기준, log10) 표를 따라간다.
 // 새 단계의 보스는 평범한 용사를 맨몸으로 MOB_TTK초쯤에 쓰러뜨린다 → 체력·방어 펫·보호막·물약이 중요해지고,
 // 술사처럼 몸이 약한 직업은 생존 기술을 잘 써야 한다. 오래 머물러 강해지면 그만큼 덜 아프다
@@ -1852,15 +1943,15 @@ const HELL_REGIONS = [
   {name:'흑암지옥', theme:'dark', mobs:[['shade', '#3a2c4a', '어둑 원혼'], ['agwi', '#6a5a7a', '굶주린 아귀']], bossIdx:0, boss:'흑암 대왕', bossColor:'#1a1424'},
 ];
 const HELL_OFF = 30;                         // 저승 1단계 = 이승 31단계만큼 센 몬스터
-const LV_CAP = [100, 200, 300, 400];         // 이승·저승·천계·부상 레벨 상한(부상은 레벨을 이어 간다)
-const WORLD_NAME = ['이승', '저승', '천계', '부상'];
+const LV_CAP = [100, 200, 300, 400, 500];    // 이승·저승·천계·부상·곤륜 레벨 상한(부상·곤륜은 레벨을 이어 간다)
+const WORLD_NAME = ['이승', '저승', '천계', '부상', '곤륜'];
 const levelCap = () => LV_CAP[S.world] || 100;
-const regionsOf = w => w === 3 ? BUSANG_REGIONS : w === 2 ? HEAVEN_REGIONS : w ? HELL_REGIONS : REGIONS;
-const effStage = s => S.world === 3 ? HEAVEN_OFF + busE(s) : s + (S.world === 2 ? HEAVEN_OFF : S.world ? HELL_OFF : 0);
-const mHp = s => S.world === 3 ? heavenHp(busE(s)) : mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1) * craftComp(S.world, s), mAtk = s => (S.world === 3 ? heroRef(2, busE(s)) : heroRef(S.world, s)) / (2 * MOB_TTK), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(S.world === 3 ? 60 + BUSANG.e0 + BUSANG.xr * (s - 1) : effStage(s));
+const regionsOf = w => w === 4 ? KUNLUN_REGIONS : w === 3 ? BUSANG_REGIONS : w === 2 ? HEAVEN_REGIONS : w ? HELL_REGIONS : REGIONS;
+const effStage = s => S.world >= 3 ? HEAVEN_OFF + contE(s) : s + (S.world === 2 ? HEAVEN_OFF : S.world ? HELL_OFF : 0);
+const mHp = s => S.world >= 3 ? heavenHp(contE(s)) : mobHp(effStage(s)) * (S.world === 2 ? Math.pow(CURVE.heavenG, s - 1) * HEAVEN_K : S.world ? Math.pow(CURVE.hellG, s - 1) : 1) * craftComp(S.world, s), mAtk = s => (S.world >= 3 ? heroRef(2, contE(s)) : heroRef(S.world, s)) / (2 * MOB_TTK), mGold = s => mobGold(effStage(s)), mExp = s => mobExp(S.world >= 3 ? 60 + CONT[S.world].e0 + CONT[S.world].xr * (s - 1) : effStage(s));
 // 저승은 이야기 순서대로: 도산 1~20 · 화탕 21~40 · 한빙 41~55 · 검수 56~70 · 독사 71~80 · 흑암 81~
 const HELL_SPAN = [20, 40, 55, 70, 80];
-const regionIndex = s => S.world ? (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(S.world === 3 ? BUSANG_SPAN : S.world === 2 ? HEAVEN_SPAN : HELL_SPAN) : Math.floor((s - 1) / 10) % REGIONS.length;
+const regionIndex = s => S.world ? (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(S.world === 4 ? KUNLUN_SPAN : S.world === 3 ? BUSANG_SPAN : S.world === 2 ? HEAVEN_SPAN : HELL_SPAN) : Math.floor((s - 1) / 10) % REGIONS.length;
 const curRegion = s => regionsOf(S.world)[regionIndex(s)];
 const stageLabel = s => `${curRegion(s).name} ${Math.floor((s - 1) / 10) + 1}-${(s - 1) % 10 + 1}`;
 const stageLabelW = (w, s) => w === S.world ? stageLabel(s) : `${Math.floor((s - 1) / 10) + 1}-${(s - 1) % 10 + 1}`;
@@ -1897,7 +1988,7 @@ function defaultState(){
   return {
     v:1, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
     up:{atk:0, hp:0, crit:0, critDmg:0, aspd:0, regen:0},
-    skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0},
+    skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0},
     gear:{weapon:{count:Array(20).fill(0), seen:Array(20).fill(false)}, armor:{count:Array(20).fill(0), seen:Array(20).fill(false)}},
     equip:{weapon:-1, armor:-1},
     rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0},
@@ -1905,10 +1996,10 @@ function defaultState(){
     name:'', look:defaultLook(),
     refine:{weapon:{lv:0, drops:0}, armor:{lv:0, drops:0}},
     pets:{lv:Array(PET_N).fill(0), star:Array(PET_N).fill(0)}, petEq:{atk:-1, def:-1, sup:-1},
-    quest:{main:0, tut:0, tutN:0, day:'', dp:{}, dgot:[], dall:false, sv:4, trials:[], hid:0, hidBase:0},
+    quest:{main:0, tut:0, tutN:0, day:'', dp:{}, dgot:[], dall:false, sv:5, trials:[], hid:0, hidBase:0},
     raid:{first:{}, tk:TICKET_MAX, tkT:0},
     inv:{potion:0, elixir:0, whet:0}, buff:{atk:0, spd:0, def:0, gold:0, exp:0}, shop:{day:'', got:{}}, useWhet:false,
-    myth:{sword:0, mirror:0, bell:0, pearl:0, flute:0, kusa:0, yata:0, maga:0, uchi:0},
+    myth:{sword:0, mirror:0, bell:0, pearl:0, flute:0, kusa:0, yata:0, maga:0, uchi:0, pangu:0, sail:0, elixir:0, ose:0},
     world:0, best:{s0:1, l0:1, s1:0, l1:0, s2:0, l2:0, s3:0, l3:0},
     job:0, av:{own:{}, char:'', cape:'', pet:''},
     reb:{n:0, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}},
@@ -1969,7 +2060,8 @@ function mergeState(d){
   out.best = {s0:Math.max(1, Math.floor(+bd.s0) || 0, out.world ? 0 : out.maxStage), l0:Math.max(1, Math.floor(+bd.l0) || 0, out.world ? 0 : out.level),
     s1:Math.max(0, Math.floor(+bd.s1) || 0, out.world === 1 ? out.maxStage : 0), l1:Math.max(0, Math.floor(+bd.l1) || 0, out.world === 1 ? out.level : 0),
     s2:Math.max(0, Math.floor(+bd.s2) || 0, out.world === 2 ? out.maxStage : 0), l2:Math.max(0, Math.floor(+bd.l2) || 0, out.world === 2 ? out.level : 0),
-    s3:Math.max(0, Math.floor(+bd.s3) || 0, out.world === 3 ? out.maxStage : 0), l3:Math.max(0, Math.floor(+bd.l3) || 0, out.world === 3 ? out.level : 0)};
+    s3:Math.max(0, Math.floor(+bd.s3) || 0, out.world === 3 ? out.maxStage : 0), l3:Math.max(0, Math.floor(+bd.l3) || 0, out.world === 3 ? out.level : 0),
+    s4:Math.max(0, Math.floor(+bd.s4) || 0, out.world === 4 ? out.maxStage : 0), l4:Math.max(0, Math.floor(+bd.l4) || 0, out.world === 4 ? out.level : 0)};
   out.job = Math.min(3, Math.max(0, Math.floor(+d.job) || 0));
   const av = d.av && typeof d.av === 'object' ? d.av : {};
   out.av = {own:{}, char:'', cape:'', pet:''};
@@ -2016,7 +2108,7 @@ const after = (sec, fn) => later.push({t:sec, fn});
 const hero = {tx:10, ty:8, fx:10, fy:8, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
   engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0, shinT:0, cloneT:0, cloneAcc:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
-const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7, jobC:8};
+const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7, jobC:8, jobD:9};
 let raid = null;      // 레이드 진행 중일 때만 채워진다
 let session = null;   // {acc, cid}: 지금 플레이 중인 계정·캐릭터
 
@@ -2050,23 +2142,28 @@ const petBonus = () => { const i = eqPet('sup'); return i < 0 ? 0 : petInfo(i).b
 // 장신구 효과 %
 const accP = k => S.acc[k].g >= 0 ? S.acc[k].p * (cls().accMul || 1) : 0;   // 자객은 장신구 효과 1.5배
 // 술사 마력 성장: 지금까지 오른 레벨(이승 100 + 저승 200 + 천계 300 = 600)에 따라 공격력 배율이 커진다
-const cumLv = () => S.level + [0, 100, 300, 300][S.world];
+const cumLv = () => S.level + [0, 100, 300, 300, 300][S.world];
 const classAtk = () => { const C = cls(); return C.grow ? C.grow[0] + (C.grow[1] - C.grow[0]) * Math.min(1, cumLv() / 600) : C.atkMul; };
+// 세 나라 세트: 같은 줄 보물 셋(이승·부상·곤륜)을 모두 가지면 추가 효과. 오색 돌이 있으면 1.5배
+function mythSets(){
+  const m = S.myth, k = m.ose > 0 ? 1.5 : 1;
+  return {sword:m.sword > 0 && m.kusa > 0 && m.pangu > 0 ? k : 0, mirror:m.mirror > 0 && m.yata > 0 && m.elixir > 0 ? k : 0, bell:m.bell > 0 && m.maga > 0 && m.sail > 0 ? k : 0};
+}
 function computeStats(up = S.up){
-  const C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
+  const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
   return {
-    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100)
+    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100),
-    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100)
+    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
-    crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100),
-    critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
+    crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell),
+    critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => (1 + S.myth.flute / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100);
+const skillMulX = () => (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 function power(st){
   const pi = eqPet('atk'), petDps = pi >= 0 ? st.atk * petInfo(pi).pct / 100 / 1.5 : 0;
@@ -2298,7 +2395,7 @@ function rebirthCheck(){
 }
 const rebirthReady = () => rebirthCheck().every(c => c.ok);
 const rebirthPts = () => Math.floor(S.level / 10) + Math.floor(S.maxStage / 20);
-function applyWorld(){ document.body.classList.toggle('hell', S.world === 1); document.body.classList.toggle('heaven', S.world === 2); document.body.classList.toggle('busang', S.world === 3); }
+function applyWorld(){ document.body.classList.toggle('hell', S.world === 1); document.body.classList.toggle('heaven', S.world === 2); document.body.classList.toggle('busang', S.world === 3); document.body.classList.toggle('kunlun', S.world === 4); }
 function doRebirth(){
   if (!rebirthReady()) return null;
   const pts = rebirthPts(), first = S.world === 0;
@@ -2329,7 +2426,7 @@ function mainQuest(){
   const i = S.quest.main;
   if (i < MAIN_Q.length) return Object.assign({i}, MAIN_Q[i]);
   const k = i - MAIN_Q.length + 1, last = MAIN_Q[MAIN_Q.length - 1];
-  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'해 뜨는 섬 너머 서쪽 하늘이 기다려요. 부상에서 더 깊이 나아가 신화를 이어 가요.', k:'s3', n:75 + 3 * k, gems:3000 + 200 * k};
+  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'세 하늘이 이어진 뒤에도 신화는 계속돼요. 곤륜에서 더 깊이 나아가요.', k:'s4', n:80 + 3 * k, gems:4000 + 250 * k};
 }
 const awakenOk = () => S.reb.n >= 1 && S.best.l1 >= 60 && !!S.raid.first.h2;
 function questCur(q){
@@ -2353,6 +2450,8 @@ function questCur(q){
     case 'l2': return S.best.l2;
     case 's3': return S.best.s3 || 0;
     case 'l3': return S.world >= 3 ? S.level : 0;
+    case 's4': return S.best.s4 || 0;
+    case 'l4': return S.world >= 4 ? S.level : 0;
     case 'world': return S.world;
     case 'job': return S.job;
     case 'trials': return S.quest.trials.filter(Boolean).length;
@@ -2388,8 +2487,10 @@ function questDiff(q){
   if (q.k === 'l2') return Math.round(q.n * 0.8) + 150;
   if (q.k === 's3') return q.n + 230;
   if (q.k === 'l3') return Math.round((q.n - 300) * 0.8) + 240;
-  if (q.k === 'world') return 230;
-  if (q.k === 'raidK') return ({g:180, b:240}[String(q.key)[0]] || 80) + 15 * (+String(q.key).slice(1) || 0);
+  if (q.k === 's4') return q.n + 300;
+  if (q.k === 'l4') return Math.round((q.n - 400) * 0.8) + 320;
+  if (q.k === 'world') return q.n >= 4 ? 300 : 230;
+  if (q.k === 'raidK') return ({g:180, b:240, k:300}[String(q.key)[0]] || 80) + 15 * (+String(q.key).slice(1) || 0);
   return Math.min(250, 10 + q.i * 3);
 }
 const luckRoll = () => window.__game && window.__game.luck != null ? window.__game.luck : Math.random();
@@ -2449,13 +2550,14 @@ function storyReward(q){
 }
 // 예전 이야기(15장)로 하던 저장: 이미 이룬 퀘스트는 보상 없이 넘기고(변신 등은 줌) 새 이야기에 이어 붙인다
 function migrateStory(){
-  if (S.quest.sv === 4) return;
-  if (S.quest.sv === 3){ if (S.quest.main > PART1_END) S.quest.main = PART1_END; S.quest.sv = 4; return; }
+  if (S.quest.sv === 5) return;
+  if (S.quest.sv === 4){ if (S.quest.main > PART2_END) S.quest.main = PART2_END; S.quest.sv = 5; return; }
+  if (S.quest.sv === 3){ if (S.quest.main > PART1_END) S.quest.main = PART1_END; S.quest.sv = 5; return; }
   // 이야기 2판(80개) → 3판: 전직 퀘스트 2개(16번 뒤)와 시련 이야기 5개(34번 뒤)가 끼어들었다
-  if (S.quest.sv === 2){ const i = S.quest.main; S.quest.main = i <= 15 ? i : i <= 34 ? i + 2 : i + 7; S.quest.sv = 4; return; }
+  if (S.quest.sv === 2){ const i = S.quest.main; S.quest.main = i <= 15 ? i : i <= 34 ? i + 2 : i + 7; S.quest.sv = 5; return; }
   S.quest.main = 0;
   while (S.quest.main < MAIN_Q.length){ const q = mainQuest(); if (questCur(q) < q.n) break; storyReward(q); S.quest.main++; }
-  S.quest.sv = 4;
+  S.quest.sv = 5;
 }
 const dailyReady = d => !S.quest.dgot.includes(d.key) && (S.quest.dp[d.key] || 0) >= d.goal;
 function claimDaily(key){
@@ -2555,7 +2657,7 @@ function gainExp(x){
   const lv0 = S.level;
   while (S.level < cap && S.exp >= expNeed(S.level)){ S.exp -= expNeed(S.level); S.level++; up++; }
   if (S.level >= cap) S.exp = 0;
-  const bk = ['l0', 'l1', 'l2', 'l3'][S.world];
+  const bk = ['l0', 'l1', 'l2', 'l3', 'l4'][S.world];
   if (S.level > S.best[bk]) S.best[bk] = S.level;
   if (!up) return;
   refreshStats();
@@ -2702,9 +2804,10 @@ function killMob(m){
   }
 }
 function damageHero(d){
+  if (hero.invisT > 0) return;   // 무영 월광살: 모습을 감춘 동안
   if (cls().evade && Math.random() < cls().evade){ addText('회피', hero.x + Math.random() * 8 - 4, hero.y - 30, '#d8d0ff', 10, true); return; }
   const dr = petDR();
-  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (0.9 + Math.random() * 0.2);
+  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (0.9 + Math.random() * 0.2);
   if (dr > 0) petRt.def.glow = 0.25;
   if (hero.shield > 0){
     const a = Math.min(hero.shield, dmg);
@@ -2716,6 +2819,11 @@ function damageHero(d){
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
 }
 function heroDie(){
+  if (S.myth.elixir > 0 && !hero.elixirUsed && (raid || bossActive)){   // 서왕모의 불사약: 싸움마다 한 번
+    hero.elixirUsed = true; hero.hp = ST.maxHp * 0.5; hero.hurt = 0;
+    addText('불사약!', hero.x, hero.y - 40, '#ffe08a', 12, true); fx.push({type:'awaken', t:0, dur:0.9, color:'#ffe08a', x:hero.x, y:hero.y - 12}); sfx('awaken');
+    return;
+  }
   hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
   if (raid){ hero.deadT = 3; addLog('용사가 쓰러졌습니다… 동료들이 버티는 사이 다시 일어나요.', 'warn'); return; }
   const wasBoss = bossActive;
@@ -2740,7 +2848,7 @@ function startBoss(){
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   const spot = spawnTile(6) || spawnTile(3) || [13, 5];
   const b = makeMob(true, spot[0], spot[1]);
-  mobs.push(b); bossRef = b; bossActive = true; bossTime = BOSS_TIME;
+  mobs.push(b); bossRef = b; bossActive = true; bossTime = BOSS_TIME; hero.elixirUsed = false;
   fx.push({type:'poof', t:0, dur:0.5, x:b.x, y:b.y - 10, big:true});
   addLog(`${b.name}${josa(b.name, '이', '가')} 나타났습니다! 30초 안에 쓰러뜨리세요.`, 'warn'); sfx('boss');
 }
@@ -2759,14 +2867,14 @@ function bossWin(){
   gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
   if (!S.bossAuto) S.autoBoss = false;   // 보스 수동: 다음 보스도 [보스 도전]을 눌러야
-  const bk = ['s0', 's1', 's2', 's3'][S.world];
+  const bk = ['s0', 's1', 's2', 's3', 's4'][S.world];
   if (S.maxStage > S.best[bk]) S.best[bk] = S.maxStage;
   bossActive = false; bossRef = null; spawnT = 1.4;
   const ri = regionIndex(S.stage);
   addLog(`보스를 물리쳤습니다! 보석 +${gems}`, 'gain'); sfx('win');
   if (ri !== prev){ const nm = curRegion(S.stage).name; addLog(`새 지역에 들어섰습니다: ${nm}`, 'good'); announce(`${S.name}님이 ${nm}에 들어섰어요.`); }
   if (isGateStage(S.stage)) addLog('이 단계 보스는 수문장! 장신구가 떨어질 수 있어요.', 'warn');
-  if (S.world === 3 && (S.stage - 1) % 8 === 0 && S.stage - 1 === S.maxStage - 1 && (S.stage - 1) / 8 <= BUSANG_RAIDS.length){ const info = raidAt((S.stage - 1) / 8 - 1); if (info) addLog(`새 레이드가 열렸습니다: ${info.label}`, 'good'); }
+  if (S.world >= 3 && (S.stage - 1) % 8 === 0 && S.stage - 1 === S.maxStage - 1 && (S.stage - 1) / 8 <= (S.world === 4 ? KUNLUN_RAIDS : BUSANG_RAIDS).length){ const info = raidAt((S.stage - 1) / 8 - 1); if (info) addLog(`새 레이드가 열렸습니다: ${info.label}`, 'good'); }
   ev('boss');
 }
 /* --- 장신구 --- */
@@ -2798,7 +2906,7 @@ function giveAcc(k, g){
 }
 
 /* ================= 레이드 ================= */
-const raidUnlocked = () => S.world === 3 ? busangRaidsOpen() : Math.floor(S.level / [10, 20, 30][S.world]);   // 열린 레이드 수(이승 10레벨, 저승 20레벨, 천계 30레벨마다)
+const raidUnlocked = () => S.world === 4 ? kunlunRaidsOpen() : S.world === 3 ? busangRaidsOpen() : Math.floor(S.level / [10, 20, 30][S.world]);   // 열린 레이드 수(이승 10레벨, 저승 20레벨, 천계 30레벨마다)
 // 토벌패 수를 지금 시각에 맞춰 채운다
 function raidTickets(){
   const R2 = S.raid, t = now();
@@ -2835,7 +2943,7 @@ function startFight(info, party, o){
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
-  Object.assign(hero, {tx:6, ty:8, fx:6, fy:8, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5});
+  Object.assign(hero, {tx:6, ty:8, fx:6, fy:8, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false});
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
@@ -2865,12 +2973,12 @@ const AWAKEN_PCT = 15000;
 function castAwaken(){
   const R = raid, B = R.boss, C = cls();
   R.awk.used = true; R.awk.show = 1.8;
-  const dmg = ST.atk * atkBuff() * skillMulX() * C.skillMul * AWAKEN_PCT / 100;
+  const dmg = ST.atk * atkBuff() * skillMulX() * C.skillMul * AWAKEN_PCT * (S.job >= 4 ? 25000 / 15000 : 1) / 100;
   fx.push({type:'awaken', t:0, dur:1.3, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5});
   fx.push({type:C.nukeFx, t:0, dur:1, pts:[[B.x - 22, B.y - 8], [B.x, B.y - 24], [B.x + 22, B.y - 8], [B.x - 12, B.y - 36], [B.x + 12, B.y - 36], [B.x, B.y - 2]], seed:Math.random() * 1000});
   shake = 0.7;
   for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead) hit(B, dmg / 5, 'skill'); });
-  addLog(`초각성기 · ${C.awaken}!`, 'gain'); sfx('awaken');
+  addLog(`초각성기 · ${S.job >= 4 ? C.awaken4 : C.awaken}!`, 'gain'); sfx('awaken');
 }
 /* ================= 타임 보스 =================
    00시부터 3시간마다(이 기기 시계) 30분 동안 나타난다. 2명 이상 모여야 도전할 수 있다.
@@ -3052,7 +3160,7 @@ function raidReward(info){
   const items = [];
   const roll = () => { let r = Math.random(), t = 0; for (; t < 3; t++){ if (r < TIER_P[t]) break; r -= TIER_P[t]; } return t; };
   items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:info.g * 4 + roll()});
-  if (first) items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:Math.min(info.hell || info.god || info.busang ? 4 : 3, info.g + 1) * 4 + roll()});
+  if (first) items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:Math.min(info.hell || info.god || info.busang || info.kunlun ? 4 : 3, info.g + 1) * 4 + roll()});
   for (const r of items) r.isNew = giveItem(r.slot, r.it);
   S.gems += gems; S.gold += gold;
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
@@ -3175,6 +3283,7 @@ function castSkill(i, lv, manual){
   const tg = hero.target && !hero.target.dead ? hero.target : alive[0];
   if (kind.startsWith('d_')) return doinCast(kind, lv, alive, tg, mul);
   if (kind === 'jobC') return jobCCast(lv, alive, tg, mul);
+  if (kind === 'jobD') return jobDCast(lv, alive, tg, mul);
   if (i === 0){
     const cx = C.range > 1 ? tg.x : hero.x, cy = C.range > 1 ? tg.y : hero.y;
     const hits = alive.filter(m => Math.hypot(m.x - cx, m.y - cy) <= 34);
@@ -3290,6 +3399,35 @@ function doinCast(kind, lv, alive, tg, mul){
   }
   return false;
 }
+// 4차 전직 기술(직업마다 다르게): 무사 개천벽지 / 자객 무영 월광살 / 술사 구천 현뢰 / 도인 오색 보천
+function jobDCast(lv, alive, tg, mul){
+  const P = jobDPct(lv) / 100, atk = ST.atk * mul;
+  shake = 0.6;
+  if (S.cls === 'jagaek'){
+    hero.invisT = 2;
+    for (let k = 0; k < 12; k++) after(k * 0.16, () => { for (const m of mobs.filter(m => !m.dead && m.spawnT <= 0)) hit(m, atk * P * 0.08, 'skill', true); });
+    return true;
+  }
+  if (S.cls === 'sulsa'){
+    const order = alive.slice().sort((a, b2) => b2.hp - a.hp);
+    for (let k = 0; k < 9; k++) after(k * 0.12, () => {
+      const live = mobs.filter(m => !m.dead && m.spawnT <= 0); if (!live.length) return;
+      if (k === 8){ for (const m of live) hit(m, atk * P * 0.17, 'skill'); return; }
+      const m = order.find(x => !x.dead) || live[0];
+      fx.push({type:cls().boltFx || 'zig', t:0, dur:0.35, x:m.x, y:m.y - mobHeight(m) * 0.5, seed:Math.random() * 1000});
+      hit(m, atk * P * 0.17, 'skill');
+    });
+    return true;
+  }
+  if (S.cls === 'doin'){
+    for (const m of alive) hit(m, atk * P * 0.9, 'skill', true);
+    hero.shield = Math.max(hero.shield || 0, ST.maxHp * 0.5); hero.shieldT = 10;
+    return true;
+  }
+  for (const m of alive) hit(m, atk * P * (m.boss || m.raid ? 2 : 1), 'skill');
+  hero.dr4T = 10;
+  return true;
+}
 // 3차 전직 기술(직업마다 다르게)
 function jobCCast(lv, alive, tg, mul){
   const C = cls();
@@ -3364,9 +3502,11 @@ function update(dt){
   hero.hurt = Math.max(0, hero.hurt - dt);
   if (hero.buffT > 0) hero.buffT -= dt;
   if (hero.jobBuffT > 0) hero.jobBuffT -= dt;
+  if (hero.dr4T > 0) hero.dr4T -= dt;
+  if (hero.invisT > 0) hero.invisT -= dt;
 
   // 부상의 해돋이 기운: 사냥 속도와 상관없이 지금까지 나아간 단계만큼 경험치가 조금씩 쌓인다
-  if (S.world === 3 && !hero.dead) gainExp(mExp(S.maxStage) * BUSANG.sun * gainMul('exp') * dt);
+  if (S.world >= 3 && !hero.dead) gainExp(mExp(S.maxStage) * CONT[S.world].sun * gainMul('exp') * dt);
 
   // 레이드 / 보스·소환
   if (raid) updateRaid(dt);
@@ -3985,6 +4125,8 @@ const PET_HD = {
     blob(15, 17, 9, 6.4, c); Pl([[19, 14], [26, 16], [24, 22], [17, 21]], K); E(13, 18, 5, 2.4, mix(c, '#b8b8b0', 0.4));
     RR(6, 4, 3.4, 12, 1.6, K); blob(7, 4, 4, 3.6, c); E(7, 1.6, 2, 1.4, '#d8433a'); Pl([[3.4, 3.4], [-1, 5], [3.6, 5.4]], '#c8b878'); E(6, 3.8, 1, 1.2, EYE); }],
 };
+// 펫 그림을 몹으로도 쓴다(곤륜의 금오 새끼·큰 자라·육오·도철·독침 새): 1.5배로 키운다
+for (const t of ['crow', 'turtle', 'tiger', 'bear', 'hawk']) if (!MOB_HD[t] && PET_HD[t]){ const [w, h, dr] = PET_HD[t]; MOB_HD[t] = [Math.round(w * 1.5), Math.round(h * 1.5), (g, f, c) => { g.save(); g.scale(1.5, 1.5); dr(g, f, c); g.restore(); }]; }
 function petFeline(g, f, c, stripes){
   const {E, Pl, blob, bigEye, legs, RR} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.45), o = f ? 1.5 : 0;
   RR(22, 2 + o, 3, 12, 1.5, c); E(23.5, 2.4 + o, 2, 2, c);
@@ -4013,16 +4155,20 @@ function petBird(g, f, c, o){
    전직하면 능력이 오르고, 전직 기술이 열리고, 전직 무기 모양과 전직 망토(아바타)를 받는다. 직업을 바꿔도 전직 단계는 남는다 */
 const JOBS = {
   musa:[{name:'장군', weapon:'범날 장검', cape:'장군 홍포', capeC:'#a8282a'}, {name:'신장', weapon:'천뢰 신검', cape:'신장 금포', capeC:'#d8a83a'},
-    {name:'풍뢰장', weapon:'폭풍 장검', cape:'뇌운 갑포', capeC:'#3a4a7a', teacher:'스사노오', type:'m3_musa', ch:33}],
+    {name:'풍뢰장', weapon:'폭풍 장검', cape:'뇌운 갑포', capeC:'#3a4a7a', teacher:'스사노오', type:'m3_musa', ch:33},
+    {name:'개천왕', weapon:'개천 대검', cape:'반고 금포', capeC:'#c89a3a', teacher:'반고의 넋', ch:43}],
   jagaek:[{name:'월영', weapon:'초승달 쌍비수', cape:'월영 흑포', capeC:'#2e2848'}, {name:'귀영', weapon:'귀화 쌍비수', cape:'귀영 야포', capeC:'#5a2a6a'},
-    {name:'익영', weapon:'깃바람 쌍비수', cape:'흑익 망토', capeC:'#1a1a2a', teacher:'대텐구 소조보', type:'tengu', color:'#c83a2a', ch:29}],
+    {name:'익영', weapon:'깃바람 쌍비수', cape:'흑익 망토', capeC:'#1a1a2a', teacher:'대텐구 소조보', type:'tengu', color:'#c83a2a', ch:29},
+    {name:'무영', weapon:'월광 쌍비수', cape:'광한 비포', capeC:'#cfd8ff', teacher:'항아', ch:43}],
   sulsa:[{name:'방사', weapon:'칠성 지팡이', cape:'방사 청포', capeC:'#2a4a8a'}, {name:'천사', weapon:'태극 천장', cape:'천사 학창의', capeC:'#e8ecf4'},
-    {name:'식신사', weapon:'식신 지팡이', cape:'흰 종이 학창의', capeC:'#f4f4f8', teacher:'아베노 세이메이', type:'m3_sulsa', ch:28}],
+    {name:'식신사', weapon:'식신 지팡이', cape:'흰 종이 학창의', capeC:'#f4f4f8', teacher:'아베노 세이메이', type:'m3_sulsa', ch:28},
+    {name:'진인', weapon:'구천 현장', cape:'현녀 운포', capeC:'#4a4a8a', teacher:'구천현녀', ch:43}],
   doin:[{name:'무당', weapon:'방울 부채', cape:'무당 오방포', capeC:'#c8382f'}, {name:'만신', weapon:'오방신 부채', cape:'만신 홍철릭', capeC:'#e0a03a'},
-    {name:'신명', weapon:'신명 방울 부채', cape:'해돋이 무복', capeC:'#ff8a4a', teacher:'아메노우즈메', type:'m3_doin', ch:32}],
+    {name:'신명', weapon:'신명 방울 부채', cape:'해돋이 무복', capeC:'#ff8a4a', teacher:'아메노우즈메', type:'m3_doin', ch:32},
+    {name:'천무', weapon:'오색 천선', cape:'오색 날개옷', capeC:'#ff8ad0', teacher:'여와', ch:43}],
 };
-const JOB_BONUS = [{atk:0, hp:0, skill:0}, {atk:30, hp:30, skill:20}, {atk:80, hp:80, skill:50}, {atk:150, hp:150, skill:90}];
-const JOB3_LV = 350;
+const JOB_BONUS = [{atk:0, hp:0, skill:0}, {atk:30, hp:30, skill:20}, {atk:80, hp:80, skill:50}, {atk:150, hp:150, skill:90}, {atk:250, hp:250, skill:140}];
+const JOB3_LV = 350, JOB4_LV = 460;
 // 3차 전직: 부상에서 Lv.350 + 내 직업 스승이 나오는 장을 마치면
 const chapterDone = ch => { let last = -1; MAIN_Q.forEach((q, i) => { if (q.ch === ch) last = i; }); return last >= 0 && S.quest.main > last; };
 const JOB_LV = 50;
@@ -4033,12 +4179,23 @@ function jobReady(tier){
   if (S.job !== tier - 1) return false;
   if (tier === 1) return Math.max(S.level, S.best.l0) >= JOB_LV || S.reb.n > 0;
   if (tier === 3) return S.world >= 3 && S.level >= JOB3_LV && chapterDone(JOBS[S.cls][2].ch);
+  if (tier === 4) return S.world >= 4 && S.level >= JOB4_LV && chapterDone(JOBS[S.cls][3].ch);
   return hiddenTrialOpen();
 }
 // 전직 시험: 스승(1차)·강림도령(2차)과 동료 둘이 함께 90초 안에 이긴다
-function startJobTrial(tier){
-  if (raid || !jobReady(tier)) return false;
+// 4차 「세 스승의 시험」: 1차 스승 → 강림도령 → 3차 스승과 연달아 싸운다(한 판마다 체력 0.7배)
+const TRIAL4 = c => [{name:`${CLASSES[c].name}의 스승`, type:'m_' + c, color:JOBS[c][0].capeC}, {name:'강림도령', type:'gangrim', color:'#b8282a'},
+  {name:JOBS[c][2].teacher, type:JOBS[c][2].type, color:JOBS[c][2].color || JOBS[c][2].capeC}];
+function startJobTrial(tier, step = 0){
+  if (raid || (!step && !jobReady(tier))) return false;
   const c = S.cls, J = JOBS[c][tier - 1];
+  if (tier === 4){
+    const T = TRIAL4(c)[step], ref = Math.max(8, S.maxStage - 25);
+    const info = {job:4, step, label:`세 스승의 시험 ${step + 1}/3`, bossName:T.name, type:T.type, color:T.color, region:regionIndex(S.stage), party:3, ref, g:2};
+    startFight(info, raidParty(Object.assign({}, info, {party:3})), {hp:10 * mHp(ref) / 15 * 1.9 * 40 * 0.7, atk:mAtk(ref) * 2.5, aoe:mAtk(ref) * 1.6, time:RAID_TIME});
+    addLog(`${info.label}! ${T.name}${josa(T.name, '을', '를')} ${RAID_TIME}초 안에 이겨요.`, 'warn');
+    return true;
+  }
   const ref = tier === 1 ? 44 : tier === 3 ? Math.max(8, S.maxStage - 25) : Math.max(60, Math.round(S.maxStage * 0.9));
   const info = {job:tier, label:`${J.name} 전직 시험`, bossName:tier === 1 ? `${CLASSES[c].name}의 스승` : tier === 3 ? J.teacher : '강림도령', type:tier === 1 ? 'm_' + c : tier === 3 ? J.type : 'gangrim',
     color:tier === 1 ? J.capeC : tier === 3 ? (J.color || J.capeC) : '#b8282a', region:regionIndex(S.stage), party:3, ref, g:2};
@@ -4052,6 +4209,12 @@ function finishJobTrial(R){
   if (!R.win){
     addLog(`${R.info.label} 실패… 더 강해져서 다시 도전해요.`, 'warn'); sfx('fail');
     if (!(window.__game && window.__game.quiet)) showModal('전직 시험 실패', `<p><b>${R.info.bossName}</b>${josa(R.info.bossName, '을', '를')} 이기지 못했어요. 능력치·장비를 키워 다시 도전해요. (시험은 몇 번이든 볼 수 있어요)</p>`, [{label:'확인', primary:true}]);
+    return;
+  }
+  if (tier === 4 && (R.info.step || 0) < 2){
+    const nx = (R.info.step || 0) + 1;
+    addLog(`${R.info.bossName}${josa(R.info.bossName, '이', '가')} 길을 비켜 줬어요. 다음 스승이 기다려요! (${nx + 1}/3)`, 'good');
+    after(1.6, () => { if (!raid) startJobTrial(4, nx); });
     return;
   }
   grantJob(tier);
@@ -4068,10 +4231,13 @@ function grantJob(tier){
   announce(`${S.name}님이 ${J.name}${josa(J.name, '으로', '로')} ${tier}차 전직했어요!`);
   sfx('rebirth'); fx.push({type:'awaken', t:0, dur:1.3, color:J.capeC, x:hero.x, y:hero.y - 12}); shake = 0.4;
   ev('job');
-  if (!(window.__game && window.__game.quiet)) playCut(tier === 1 ? [JOB_CUT1(c)] : [JOB_CUT2(c)], {title:`${tier}차 전직 · ${J.name}`});
+  if (!(window.__game && window.__game.quiet)) playCut([tier === 1 ? JOB_CUT1(c) : tier === 2 ? JOB_CUT2(c) : tier === 3 ? JOB_CUT3(c) : JOB_CUT4(c)], {title:`${tier}차 전직 · ${J.name}`});
 }
 const JOB_CUT1 = c => ['village', 'hero,kkachi', 'transform', [['까치', `스승님이 인정하셨어요! 이제 ${JOBS[c][0].name}예요!`], ['나', `「${JOBS[c][0].weapon}」… 손에 착 감겨요.`]]];
 const JOB_CUT2 = c => ['court', 'gangrim,hero', 'transform', [['강림도령', `염라대왕도 붙잡아 온 나를 이겼구나. 이제 너는 ${JOBS[c][1].name}다.`], ['나', '이 힘으로 하늘 문까지 지켜 낼게요.']]];
+const JOB_TEACHER3 = {musa:'susanoo', jagaek:'m:tengu:#c83a2a', sulsa:'seimei', doin:'uzume'}, JOB_TEACHER4 = {musa:'pangu', jagaek:'change', sulsa:'jiutian', doin:'nuwa'};
+const JOB_CUT3 = c => ['shore', `${JOB_TEACHER3[c]},hero`, 'transform', [[JOBS[c][2].teacher, `해 뜨는 섬의 바람이 너를 알아보는구나. 이제 너는 ${JOBS[c][2].name}다.`], ['나', `「${JOBS[c][2].weapon}」… 바다 냄새가 나요.`]]];
+const JOB_CUT4 = c => ['kunlunmt', `${JOB_TEACHER4[c]},hero,kkachi`, 'transform', [[JOBS[c][3].teacher, `세 나라의 스승을 모두 넘었구나. 이제 너는 ${JOBS[c][3].name}다.`], ['까치', '{name}님, 넋 주머니가 두 칸이 됐어요!'], ['나', '하늘을 꿰매러 가요.']]];
 function unlockSkills(){
   for (let i = 0; i < SKILLS.length; i++){
     const sk = SKILLS[i];
@@ -4084,7 +4250,8 @@ function unlockSkills(){
 }
 function jobAPct(l){ return 1600 + 160 * (l - 1); }
 function jobBPct(l){ return 4000 + 400 * (l - 1); }
-function jobCPct(l){ return 900 + 90 * (l - 1); }   // 3차 전직 기술 한 번(무사 8번·술사 12장·자객 분신 1타 60%)
+function jobCPct(l){ return 900 + 90 * (l - 1); }
+function jobDPct(l){ return 9000 + 450 * (l - 1); }   // 4차 전직 기술(무사 기준, 직업마다 나눠 씀)   // 3차 전직 기술 한 번(무사 8번·술사 12장·자객 분신 1타 60%)
 
 /* ================= 히든 퀘스트: 강림도령 =================
    저승 이야기(80장)를 마치고 저승 레벨 200이 되면 그때서야 나타난다. 옛이야기 '차사본풀이'의 강림도령과 '바리공주'에서 따왔다 */
@@ -4148,7 +4315,7 @@ const AVATARS = [
   {k:'q_snow', type:'pet', name:'눈꽃빛', tint:'#dff0ff', src:'box'},
   {k:'q_gold', type:'pet', name:'황금빛', tint:'#ffd24a', src:'이야기(화과산)'},
 ];
-for (const c of CLASS_ORDER) for (const j of [1, 2, 3]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
+for (const c of CLASS_ORDER) for (const j of [1, 2, 3, 4]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
 const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기']];
 const AV_PCT = 2, AV_BOX = 1000, AV_DUP_GEMS = 30, AV_PITY = 40;
@@ -4234,6 +4401,10 @@ function godRaidInfo(i){
 // 부상 단계 s의 세기 = 천계 '같은 세기 단계' busE(s) = e0 + r × (s - 1). 새 땅이라 조금 쉽게 시작하고, 한 단계마다 천계의 r단계만큼만 세진다
 const BUSANG = {e0:76, r:0.3, xr:0.1, sun:1};   // xr: 경험치는 단계마다 천계 0.1단계만큼만 늘어(앞서 간 직업이 눈덩이처럼 빨라지지 않게), sun: 해돋이 기운(초당 몹 몇 마리분 경험치)
 const busE = s => BUSANG.e0 + BUSANG.r * (s - 1);
+// 3부 곤륜: 부상 끝자락에서 이어지는 세기(같은 꼴). 이어 가는 세계마다 세기·경험치·해돋이(곤륜은 서왕모의 복숭아 향기) 값
+const KUNLUN = {e0:106, r:0.3, xr:0.1, sun:1};
+const CONT = {3:BUSANG, 4:KUNLUN};
+const contE = (s, w = S.world) => CONT[w].e0 + CONT[w].r * (s - 1);
 const BUSANG_SPAN = [12, 24, 36, 48, 60];
 const BUSANG_REGIONS = [
   {name:'갓파 강', theme:'kappa', mobs:[['kappa', '#5aa86a', '갓파'], ['azuki', '#8a6a4a', '팥 씻는 요괴']], bossIdx:0, boss:'갓파 대장', bossColor:'#2f7a44'},
@@ -4243,6 +4414,38 @@ const BUSANG_REGIONS = [
   {name:'오니 섬', theme:'oniisle', mobs:[['oni', '#d8433a', '붉은 오니'], ['oni', '#3a6ad8', '푸른 오니']], bossIdx:0, boss:'이바라키도지', bossColor:'#e8a03a'},
   {name:'황천 비탈', theme:'yomi', mobs:[['agwi', '#6a5a7a', '황천 귀녀'], ['skel', '#d8d0c0', '큰 해골']], bossIdx:1, boss:'가샤도쿠로', bossColor:'#efe6d0'},
 ];
+/* ================= 3부 곤륜(崑崙): 무너진 하늘 기둥(중국 옛 신화·소설: 산해경·회남자·서유기·봉신연의·요재지이·백사전) =================
+   부상 이야기를 마치면 열 개의 해를 쫓아 한 번 더 건너기(레벨·장비·능력치 그대로, 단계만 1부터). 레벨 상한 500.
+   치우·황제처럼 기원 논쟁이 있는 소재는 쓰지 않고, 옛 원전 줄거리만 따른다(최근 영화·애니메이션 인물 디자인은 따라 그리지 않음) */
+const KUNLUN_SPAN = [12, 24, 36, 48, 60];
+const KUNLUN_REGIONS = [
+  {name:'타는 들판', theme:'burnfield', mobs:[['crow', '#ff7a2a', '금오 새끼'], ['ghost', '#d8c08a', '모래 귀신']], bossIdx:1, boss:'한발', bossType:'agwi', bossColor:'#e0b060'},
+  {name:'황하 강가', theme:'yellowriver', mobs:[['frog', '#4a8a9a', '물괴'], ['turtle', '#5a7a4a', '큰 자라']], bossIdx:1, boss:'자라 장수', bossType:'turtle', bossColor:'#3a5a3a'},
+  {name:'서호', theme:'westlake', mobs:[['serpent', '#9ad0c0', '물뱀'], ['peachling', '#8ad08a', '연잎 정령']], bossIdx:0, boss:'탑 돌사자', bossType:'haetae', bossColor:'#a8a0a0'},
+  {name:'버려진 절', theme:'oldtemple', mobs:[['jiangshi', '#3a5a4a', '강시'], ['fox', '#e8e0ff', '여우 귀신']], bossIdx:0, boss:'강시 왕', bossType:'jiangshi', bossColor:'#2a3a6a'},
+  {name:'곤륜산', theme:'kunlunmt', mobs:[['tulu', '#e0d8c8', '뿔 넷 양'], ['hawk', '#5a8a3a', '독침 새']], bossIdx:0, boss:'육오', bossType:'tiger', bossColor:'#e8c070'},
+  {name:'부주산', theme:'buzhou', mobs:[['soldier', '#3a6aa8', '공공의 물 군사'], ['chaos', '#6a5a7a', '혼돈 조각']], bossIdx:1, boss:'부유', bossType:'serpent', bossColor:'#2a4a6a'},
+];
+// 곤륜 레이드: 곤륜 8단계마다 하나씩(사흉 셋·공공·혼돈)
+const KUNLUN_RAIDS = [
+  {name:'열 개의 해', boss:'해 까마귀 형제', type:'crow', color:'#ff8a2a', region:0},
+  {name:'상류', boss:'아홉 머리 뱀 상류', type:'serpent', color:'#3a6a8a', region:1},
+  {name:'뇌봉탑의 원한', boss:'탑에 엉긴 원한', type:'shade', color:'#c8b88a', region:2},
+  {name:'달기', boss:'달기(아홉 꼬리)', type:'fox', color:'#f0d070', region:3},
+  {name:'도철', boss:'도철', type:'bear', color:'#6a4a3a', region:4},
+  {name:'궁기', boss:'궁기', type:'tiger', color:'#8a3a3a', region:4},
+  {name:'도올', boss:'도올', type:'wolf', color:'#5a5a6a', region:4},
+  {name:'공공', boss:'물의 신 공공', type:'gonggong', color:'#2a5a8a', region:5},
+  {name:'혼돈', boss:'혼돈', type:'chaos', color:'#4a3a5a', region:5},
+];
+const KUNLUN_RAID_REF = [6, 14, 20, 26, 32, 36, 40, 46, 50];   // 부상처럼 그 이야기 때 용사보다 30단계쯤 아래
+function kunlunRaidInfo(i){
+  const d = KUNLUN_RAIDS[i % KUNLUN_RAIDS.length], round = Math.floor(i / KUNLUN_RAIDS.length);
+  const suffix = round ? ` ${round + 1}단` : '';
+  return Object.assign({}, d, {i, key:'k' + i, kunlun:true, round, req:8 * (i + 1), party:Math.min(10, 7 + i), ref:KUNLUN_RAID_REF[i] || 50 + 6 * (i - 8),
+    g:4, label:d.name + suffix, bossName:d.boss + suffix, gems:180 + 30 * (i + 1), firstGems:350 * (i + 1)});
+}
+const kunlunRaidsOpen = () => Math.min(KUNLUN_RAIDS.length, Math.floor((S.best.s4 || 0) / 8));
 // 부상 레이드: 부상 8단계마다 하나씩
 const BUSANG_RAIDS = [
   {name:'갓파 대왕', boss:'갓파 대왕', type:'kappa', color:'#2a7a4a', region:0},
@@ -4265,15 +4468,17 @@ const busangRaidsOpen = () => Math.min(BUSANG_RAIDS.length, Math.floor((S.best.s
 // 천계 세기 공식(부상은 천계 BUSANG_SHIFT단계 뒤에서 이어진다)
 const heavenHp = x => mobHp(x + HEAVEN_OFF) * Math.pow(CURVE.heavenG, x - 1) * HEAVEN_K * craftComp(2, x);
 // 건너기: 천계 이야기를 마치고 「동해 용왕의 거북」 퀘스트가 되면
-const CROSS_Q = MAIN_Q.findIndex(q => q.k === 'world');
-const crossReady = () => S.world === 2 && S.quest.main >= CROSS_Q;
+const CROSS_Q = MAIN_Q.findIndex(q => q.k === 'world' && q.n === 3), CROSS_Q4 = MAIN_Q.findIndex(q => q.k === 'world' && q.n === 4);
+// 건너기: 천계 → 부상(2부), 부상 → 곤륜(3부). 그 퀘스트가 '지금 이야기'가 되면
+const crossReady = () => (S.world === 2 && S.quest.main >= CROSS_Q) || (S.world === 3 && CROSS_Q4 >= 0 && S.quest.main >= CROSS_Q4);
 function doCross(){
   if (!crossReady()) return false;
-  S.world = 3; S.stage = 1; S.maxStage = 1; S.kills = 0; S.autoBoss = true; S.deathsHere = 0;
-  S.best.s3 = Math.max(S.best.s3 || 0, 1); S.best.l3 = Math.max(S.best.l3 || 0, S.level);
+  const w = S.world + 1;
+  S.world = w; S.stage = 1; S.maxStage = 1; S.kills = 0; S.autoBoss = S.bossAuto !== false; S.deathsHere = 0;
+  S.best['s' + w] = Math.max(S.best['s' + w] || 0, 1); S.best['l' + w] = Math.max(S.best['l' + w] || 0, S.level);
   raid = null; ST = null; refreshStats(); resetRuntime(); mapCache.clear(); applyWorld(); unlockSkills();
-  addLog('동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
-  announce(`${S.name}님이 바다 건너 부상에 닿았어요!`);
+  addLog(w === 4 ? '열 개의 해를 쫓아 서쪽 하늘 끝으로 건넜어요. 신들의 산 「곤륜」이에요!' : '동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
+  announce(w === 4 ? `${S.name}님이 서쪽 끝 곤륜에 닿았어요!` : `${S.name}님이 바다 건너 부상에 닿았어요!`);
   sfx('rebirth'); saveLocal();
   return true;
 }
@@ -4350,6 +4555,25 @@ Object.assign(MOB_HD, {
     angry(15, 14 + y, 1.1); angry(27, 14 + y, 1.1);
     RR(13, 20 + y, 16, 4.4, 2, K); Pl([[14, 20 + y], [16.4, 20 + y], [15, 24 + y]], '#ffffff'); Pl([[25.6, 20 + y], [28, 20 + y], [27, 24 + y]], '#ffffff');
     g.save(); g.translate(5, 30 + y); g.rotate(-0.5 + (f ? -0.3 : 0)); RR(-3, -22, 7, 24, 3, '#5a5a6a'); for (const yy of [-19, -14, -9]) for (const xx of [-2, 2]) E(xx, yy, 1, 1, '#c8c8d0'); g.restore(); }],
+  jiangshi:[40, 48, (g, f, c) => { const {E, RR} = hdKit(g), d = darken(c, 0.3), y = f ? -3 : 0, skin = '#b8d0a8', K = '#1a1418';
+    RR(14, 40 + y, 5, 7, 2, K); RR(21, 40 + y, 5, 7, 2, K);
+    RR(11, 22 + y, 18, 20, 4, c); RR(11, 36 + y, 18, 3, 1, d); RR(18, 22 + y, 4, 20, 1, darken(c, 0.15));
+    RR(1, 25 + y, 14, 4, 2, c); RR(1, 32 + y, 14, 4, 2, c); E(2, 27 + y, 2.4, 2.4, skin); E(2, 34 + y, 2.4, 2.4, skin);
+    E(20, 14 + y, 10, 9, skin);
+    RR(10, 2 + y, 20, 6, 2, K); RR(12, 0 + y, 16, 3, 1.5, K); E(20, 0.8 + y, 2.2, 2, '#c8282a');
+    RR(17, 5 + y, 6, 13, 1, '#f0d050'); RR(18.5, 7 + y, 3, 1, 0.3, '#c8282a'); RR(18.5, 10 + y, 3, 1, 0.3, '#c8282a'); RR(19.5, 12 + y, 1, 4, 0.3, '#c8282a');
+    E(13, 15 + y, 2.2, 1.4, K); E(27, 15 + y, 2.2, 1.4, K); }],
+  tulu:[46, 40, (g, f, c) => { const {E, RR, Pl} = hdKit(g), y = f ? -1 : 0, K = '#2a2026';
+    for (const lx of [12, 18, 28, 34]) RR(lx, 29, 4, 10 + (f && lx % 4 ? -1 : 0), 2, darken(c, 0.45));
+    E(26, 24 + y, 15, 10, c); for (let i = 0; i < 6; i++) E(15 + i * 4.5, 18 + y + (i % 2) * 2, 4.5, 4, mix(c, '#ffffff', 0.3));
+    for (const [hx, hy, sx] of [[5, 14, -1], [8, 12, -1], [12, 12, 1], [15, 14, 1]]) Pl([[hx, hy + y], [hx + 2.4, hy + y], [hx + 1 + sx * 3, hy - 9 + y]], '#ead8a8');
+    E(10, 20 + y, 7, 7, darken(c, 0.12));
+    E(7, 20 + y, 1.8, 2, K); E(12.5, 20 + y, 1.8, 2, K); E(9.5, 25 + y, 2.5, 1.4, '#d89aa0'); }],
+  chaos:[46, 46, (g, f, c) => { const {E, RR, Pl} = hdKit(g), d = darken(c, 0.35), y = f ? -2 : 0;
+    for (let i = 0; i < 6; i++) RR(8 + i * 5.5, 34 + y * 0.5, 3, 10, 1.5, d);
+    for (const [wx, wy, sx] of [[7, 14, -1], [8, 22, -1], [37, 14, 1], [36, 22, 1]]) Pl([[wx, wy + y], [wx + sx * 8, wy - 8 + y + (f ? 2 : 0)], [wx + sx * 2, wy + 6 + y]], mix(c, '#ffffff', 0.18));
+    E(23, 24 + y, 16, 14, c); E(18, 17 + y, 9, 6, mix(c, '#ffffff', 0.28));
+    for (let i = 0; i < 5; i++) E(14 + i * 4.5, 26 + y + Math.sin(i * 1.7) * 3, 1.6, 1.6, mix(c, '#ffd0ff', 0.45)); }],
   skel:[42, 46, (g, f, c) => { const {E, RR, Pl} = hdKit(g), B = c, d = darken(c, 0.3), K = '#1a1418', y = f ? -1 : 0;
     RR(14, 36, 4, 10, 2, B); RR(24, 36, 4, 10, 2, B); E(16, 45, 4, 1.6, d); E(26, 45, 4, 1.6, d);
     RR(19, 22 + y, 4, 15, 2, B);
@@ -4360,6 +4584,7 @@ Object.assign(MOB_HD, {
     Pl([[20, 16 + y], [22, 16 + y], [21, 19 + y]], K);
     RR(14, 20 + y, 14, 3, 1, d); for (let i = 0; i < 6; i++) RR(14.6 + i * 2.2, 20 + y, 1, 3, 0.3, K); }],
   yukionna:chibiMob('doin', {outfit:'#eef4ff', hair:'#1a1a2a', hat:'none', skin:0}, {wtype:'none', capeC:'#cfe4ff'}),
+  gonggong:chibiMob('musa', {outfit:'#2a5a8a', hair:'#3a8ab8', hat:'none', skin:1, beard:true}, {capeC:'#1a3a5a'}),
   izanami:chibiMob('doin', {outfit:'#4a3a5a', hair:'#1a1424', hat:'none', skin:2}, {wtype:'none', capeC:'#2a1a34'}),
   m3_musa:chibiMob('musa', {outfit:'#2a4a6a', hair:'#1a1a22', hat:'none', skin:1, beard:true}, {job:2, capeC:'#3a4a7a'}),
   m3_sulsa:chibiMob('sulsa', {outfit:'#f4f4f8', hair:'#1a1a22', hat:'sulsa', skin:0}, {job:2}),
@@ -4613,6 +4838,12 @@ const ISO_THEME = {
   blizzard:{top:['#e8f0f8', '#dee8f2'], side:['#8aa6c0', '#6a86a0'], outer:'#c8daea', sky:['#9ab8d0', '#dce8f2'], hills:'#9ab4cc'},
   oniisle:{top:['#5a4a4a', '#544444'], side:['#3a2a2a', '#2a1e1e'], outer:'#1a2a4a', sky:['#3a1018', '#8a3a2a'], hills:'#2a1414'},
   yomi:{top:['#5a5660', '#54505a'], side:['#3a3640', '#2a2830'], outer:'#1e1c22', sky:['#14121a', '#2e2a36'], hills:'#1a181e'},
+  burnfield:{top:['#c88a4a', '#bf8244'], side:['#7a4a2a', '#5e3820'], outer:'#a86a3a', sky:['#ff9a4a', '#ffd8a0'], hills:'#b8603a'},
+  yellowriver:{top:['#c8b070', '#bfa868'], side:['#7a6a4a', '#5e503a'], outer:'#b8984a', sky:['#e8d8a8', '#fbf4e0'], hills:'#a8986a'},
+  westlake:{top:['#7ab88a', '#72b082'], side:['#6a6a5a', '#4e4e42'], outer:'#4a9aa8', sky:['#bfe0e8', '#f0f8f8'], hills:'#7ab0a0'},
+  oldtemple:{top:['#5a5a52', '#54544c'], side:['#3a3a34', '#2a2a26'], outer:'#2a2e2a', sky:['#14181e', '#2e343c'], hills:'#1e2426'},
+  kunlunmt:{top:['#e8efe8', '#dfe8e0'], side:['#9ab8a8', '#7a9a8a'], outer:'#c8dccc', sky:['#a8e0d0', '#f0fbf6'], hills:'#b8d8c8'},
+  buzhou:{top:['#4a5a6a', '#445464'], side:['#2a3440', '#1e2630'], outer:'#1a2a3a', sky:['#1a2030', '#4a3a5a'], hills:'#2a3040'},
   dark:{top:['#352d42', '#30293c'], side:['#201a2a', '#15111c'], outer:'#0e0b14', sky:['#050408', '#120e18'], hills:'#0e0a14'},
 };
 function gPoly(g, pts, col){ g.fillStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); }
@@ -4801,6 +5032,33 @@ function isoScenery(t, rnd){
     P2(spotBack(5), (g, x, y) => PROPS.deadtree(g, x, y, '#1a1820'));
     P2(spotBack(6), (g, x, y) => PROPS.bones(g, x, y));
     F2(spotFront(6), (g, x, y) => PROPS.bones(g, x, y));
+  } else if (t === 'burnfield'){
+    P2(spotBack(6), (g, x, y) => PROPS.deadtree(g, x, y, '#5a3a22'));
+    P2(spotBack(6), (g, x, y) => PROPS.rock(g, x, y, 0.6 + rnd() * 0.5, '#a8603a'));
+    F2(spotFront(6), (g, x, y) => PROPS.rock(g, x, y, 0.4, '#8a4a2a'));
+  } else if (t === 'yellowriver'){
+    back.push([46, g => PROPS.boat(g, 90, 46)]);
+    P2(spotBack(9), (g, x, y) => PROPS.reeds(g, x, y));
+    F2(spotFront(6), (g, x, y) => rnd() < 0.5 ? PROPS.reeds(g, x, y) : PROPS.grass(g, x, y, '#9a8a4a'));
+  } else if (t === 'westlake'){
+    back.push([44, g => PROPS.pond(g, 96, 44, 20, '#5ab0c0')], [56, g => PROPS.pavilion(g, 250, 56)]);
+    P2(spotBack(6), (g, x, y) => PROPS.tree(g, x, y, 0.7 + rnd() * 0.3));
+    F2(spotFront(7), (g, x, y) => rnd() < 0.5 ? PROPS.flowers(g, x, y, rnd) : PROPS.reeds(g, x, y));
+  } else if (t === 'oldtemple'){
+    for (const [px, py] of [[60, 42], [270, 56]]) back.push([py, g => PROPS.redpillar(g, px, py)]);
+    P2(spotBack(5), (g, x, y) => PROPS.lantern(g, x, y, 0.8));
+    P2(spotBack(5), (g, x, y) => PROPS.deadtree(g, x, y, '#1e2220'));
+    F2(spotFront(5), (g, x, y) => PROPS.grass(g, x, y, '#3a4a3a'));
+  } else if (t === 'kunlunmt'){
+    P2(spotBack(8), (g, x, y) => PROPS.pine(g, x, y, 0.7 + rnd() * 0.4, true));
+    P2(spotBack(5), (g, x, y) => PROPS.cloudpuff(g, x, y));
+    back.push([50, g => PROPS.waterfall(g, 230, 50)]);
+    F2(spotFront(6), (g, x, y) => rnd() < 0.5 ? PROPS.cloudpuff(g, x, y) : PROPS.flowers(g, x, y, rnd));
+  } else if (t === 'buzhou'){
+    for (const [px, py] of [[66, 42], [180, 38], [262, 58]]) back.push([py, g => PROPS.pillar(g, px, py)]);
+    P2(spotBack(6), (g, x, y) => PROPS.crystal(g, x, y));
+    P2(spotBack(5), (g, x, y) => PROPS.rock(g, x, y, 0.8 + rnd() * 0.5, '#3a4450'));
+    F2(spotFront(5), (g, x, y) => PROPS.rock(g, x, y, 0.5, '#2a3440'));
   } else if (t === 'dark'){
     for (const [px, py] of [[70, 40], [250, 60]]) back.push([py, g => PROPS.pillar(g, px, py)]);
     P2(spotBack(5), (g, x, y) => PROPS.bones(g, x, y));
@@ -5228,7 +5486,7 @@ function skillVfx(i, manual){
   const ts = vTargets(), tg = hero.target && !hero.target.dead ? hero.target : ts[0];
   const tank = ts.length ? ts.reduce((a, b2) => b2.maxHp > a.maxHp ? b2 : a) : null;
   const hx = hero.x, hy = hero.y;
-  const big = ['meteor', 'jobA', 'jobB', 'jobC', 'd_atk3', 'd_gut'].includes(kind);
+  const big = ['meteor', 'jobA', 'jobB', 'jobC', 'jobD', 'd_atk3', 'd_gut'].includes(kind);
   vadd({type:'rune', x:hx, y:hy, r:big ? 30 : 18, col, dur:big ? 1.1 : 0.7, ground:true, spin:Math.random() * 6});
   if (big || manual) skCut = {name:skillName(i), col, t:0, dur:1.15};
   else addText(skillName(i), hx, hy - 44, col, 10, true);
@@ -5275,7 +5533,7 @@ function skillVfx(i, manual){
         else vBeam(x, y, col, 10, 0.55);
       });
       break; }
-    case 'jobA': case 'jobB': case 'jobC': case 'd_gut': {
+    case 'jobA': case 'jobB': case 'jobC': case 'jobD': case 'd_gut': {
       vadd({type:'flash', col, a:kind === 'jobA' ? 0.14 : 0.22, dur:0.4});
       vadd({type:'nova', x:hx, y:hy - 10, col, dur:0.8});
       vadd({type:'rays', x:hx, y:hy - 12, col, dur:0.9, rot:Math.random() * 6});
@@ -5573,7 +5831,7 @@ function drawOverlay(){
       box(px, y1 + 28, pw + 14, 18); ctx.fillStyle = '#c8f0c8'; ctx.fillText(pl, px + 7, y1 + 37.5);
       if (al){ box(px + pw + 24, y1 + 28, aw - 10, 18); ctx.fillStyle = '#ffd96a'; ctx.fillText(al, px + pw + 31, y1 + 37.5); }
       if (raid.awk && raid.awk.show > 0){
-        const k2 = Math.min(1, raid.awk.show / 0.4), name = `초각성 · ${cls().awaken}`;
+        const k2 = Math.min(1, raid.awk.show / 0.4), name = `초각성 · ${S.job >= 4 ? cls().awaken4 : cls().awaken}`;
         ctx.save(); ctx.globalAlpha = k2; ctx.textAlign = 'center'; ctx.font = '800 26px SamhanSans, sans-serif';
         const ch = cv.height / dpr, gy = ch * 0.45;
         ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, gy - 26, cw, 52);
@@ -5701,10 +5959,21 @@ const CAST = {
   susanoo:{name:'스사노오', p:['musa', {outfit:'#2a4a6a', hair:'#1a1a22', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:2, capeC:'#3a4a7a'}},
   seimei:{name:'세이메이', p:['sulsa', {outfit:'#f4f4f8', hair:'#1a1a22', hat:'sulsa', skin:0}, 3, 3], ex:{job:2}},
   uzume:{name:'아메노우즈메', p:['doin', {outfit:'#e8506a', hair:'#1a1a22', hat:'flower', skin:0}, 2, 2], ex:{wtype:'none'}},
+  houyi:{name:'후예', p:['musa', {outfit:'#8a5a2a', hair:'#1a1a22', hat:'musa', skin:1, beard:true}, 3, 3]},
+  yu:{name:'우', p:['doin', {outfit:'#6a7a4a', hair:'#241c26', hat:'none', skin:1}, 2, -1], ex:{wtype:'spear'}},
+  baisuzhen:{name:'흰 뱀', p:['doin', {outfit:'#f4f4f8', hair:'#1a1a22', hat:'flower', skin:0}, 2, -1], ex:{wtype:'none'}},
+  zhongkui:{name:'종규', p:['musa', {outfit:'#b8282a', hair:'#1a1a22', hat:'sulsa', skin:2, beard:true}, 3, 3]},
+  nezha:{name:'나타', p:['jagaek', {outfit:'#e84a3a', hair:'#1a1a22', hat:'none', skin:0}, 2, 3], ex:{wtype:'spear', capeC:'#ff7a4a'}},
+  change:{name:'항아', p:['doin', {outfit:'#dfe8ff', hair:'#1a1a22', hat:'flower', skin:0}, 4, -1], ex:{wtype:'none', capeC:'#bfd0ff'}},
+  xiwangmu:{name:'서왕모', p:['doin', {outfit:'#e8c050', hair:'#c8c8d0', hat:'mcrown', skin:0}, 4, -1], ex:{wtype:'none', capeC:'#b8382f'}},
+  nuwa:{name:'여와', p:['doin', {outfit:'#8ad8c0', hair:'#1a1a22', hat:'flower', skin:0}, 4, -1], ex:{wtype:'none', capeC:'#ff8ad0'}},
+  gonggong:{name:'공공', p:['musa', {outfit:'#2a5a8a', hair:'#3a8ab8', hat:'none', skin:1, beard:true}, 4, 4], ex:{capeC:'#1a3a5a'}},
+  jiutian:{name:'구천현녀', p:['sulsa', {outfit:'#3a3a6a', hair:'#1a1a22', hat:'flower', skin:0}, 4, 4], ex:{capeC:'#6a5aa8'}},
+  pangu:{name:'반고의 넋', p:['musa', {outfit:'#a88a5a', hair:'#5a4a3a', hat:'none', skin:2, beard:true}, 4, 4], ex:{capeC:'#d8a83a'}},
   amaterasu:{name:'아마테라스', p:['doin', {outfit:'#ffd060', hair:'#1a1a22', hat:'mcrown', skin:0}, 4, 4], ex:{wtype:'none', capeC:'#ff9a4a'}},
 };
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
-const WHO = {'스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
+const WHO = {'후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
   '까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백':'habaek', '금와왕':'geumwa', '대소':'daeso', '주몽':'jumong', '송양왕':'songyang', '저승사자':'saja', '나':'hero',
   '주작':'g:jujak', '청룡':'g:cheong', '백호':'g:baekho', '현무':'g:hyeonmu'};
 let cut = null;
@@ -5871,6 +6140,44 @@ function cutBg(key){
     for (let x = 0; x < W; x += 2){ const h2 = 14 + Math.round(Math.sin(x * 0.04) * 8 + Math.sin(x * 0.17) * 3); R(x, 54 - h2, 2, h2, '#5a8a6a'); }
     R(0, 54, W, 56, '#3a7aa8'); for (let k = 0; k < 50; k++) R((rnd() * W) | 0, 56 + ((rnd() * 52) | 0), 5, 1, '#6aaad8');
     R(0, 110, W, 50, '#7ab070'); for (const bx of [30, 60, 90, 130, 160, 190, 214]){ R(bx, 98, 14, 14, '#7a5030'); R(bx, 98, 14, 3, '#9a6a40'); }
+  } else if (key === 'burnfield'){
+    for (let y = 0; y < 80; y++) R(0, y, W, 1, mix('#ff7a2a', '#ffd890', y / 80));
+    for (let k = 0; k < 10; k++){ const x = 14 + k * 23, y = 12 + ((rnd() * 30) | 0); disk(x, y, 6, '#fff0a0'); disk(x, y, 4, '#ffffff'); }
+    R(0, 80, W, 80, '#b86a3a'); for (let k = 0; k < 26; k++){ const x = (rnd() * W) | 0, y = 84 + ((rnd() * 70) | 0); R(x, y, 10 + ((rnd() * 14) | 0), 1, '#7a3a1a'); R(x + 4, y + 1, 1, 4, '#7a3a1a'); }
+  } else if (key === 'yellowriver'){
+    for (let y = 0; y < 52; y++) R(0, y, W, 1, mix('#c8b890', '#f4ead0', y / 52));
+    for (let x = 0; x < W; x += 2){ const h2 = 10 + Math.round(Math.sin(x * 0.05) * 6); R(x, 54 - h2, 2, h2, '#8a7a5a'); }
+    R(0, 54, W, 60, '#b8984a'); for (let k = 0; k < 50; k++) R((rnd() * W) | 0, 56 + ((rnd() * 56) | 0), 6, 1, '#d8b86a');
+    R(0, 114, W, 46, '#8a7a4a'); for (const bx of [40, 120, 200]) R(bx, 104, 24, 10, '#6a5030');
+  } else if (key === 'westlake'){
+    for (let y = 0; y < 60; y++) R(0, y, W, 1, mix('#9ab8c8', '#e8f2f4', y / 60));
+    R(150, 14, 14, 46, '#a8988a'); for (let i = 0; i < 6; i++) R(146 + i, 14 + i * 7, 22 - i * 2, 3, '#7a5a4a');
+    R(0, 60, W, 60, '#5aa0b0'); for (let k = 0; k < 18; k++){ const x = (rnd() * W) | 0, y = 64 + ((rnd() * 50) | 0); disk(x, y, 4, '#5a9a5a'); R(x - 1, y - 6, 2, 3, '#e8a0c0'); }
+    R(0, 120, W, 40, '#7aa070'); R(30, 96, 180, 6, '#c8b8a0'); for (const px of [40, 100, 160, 200]) R(px, 102, 3, 18, '#a8988a');
+  } else if (key === 'oldtemple'){
+    for (let y = 0; y < H; y++) R(0, y, W, 1, mix('#10141a', '#2a3038', y / H));
+    R(50, 30, 140, 70, '#3a3a3a'); R(40, 24, 160, 10, '#2a2a2a'); for (const px of [62, 110, 160]) R(px, 34, 8, 66, '#6a2a24');
+    for (let k = 0; k < 5; k++){ const x = 30 + k * 44; R(x, 104, 6, 10, '#d8a83a'); disk(x + 3, 102, 3, '#ffd860'); }
+    R(0, 114, W, 46, '#2a2e2a'); for (let k = 0; k < 20; k++) R((rnd() * W) | 0, 116 + ((rnd() * 40) | 0), 3, 1, '#4a5a4a');
+  } else if (key === 'moonpalace'){
+    for (let y = 0; y < H; y++) R(0, y, W, 1, mix('#060a20', '#1a2a5a', y / H));
+    for (let k = 0; k < 50; k++) R((rnd() * W) | 0, (rnd() * 100) | 0, 1, 1, '#ffffff');
+    disk(120, 70, 46, '#e8eef8'); disk(120, 70, 42, '#f8fbff'); for (let k = 0; k < 8; k++) disk(96 + ((rnd() * 48) | 0), 52 + ((rnd() * 36) | 0), 3 + ((rnd() * 4) | 0), '#dfe6f2');
+    R(150, 60, 4, 40, '#6a4a3a'); disk(152, 56, 14, '#5a8a5a'); R(0, 124, W, 36, '#c8d4e8');
+  } else if (key === 'kunlunmt'){
+    for (let y = 0; y < 70; y++) R(0, y, W, 1, mix('#7ac8b8', '#eaf8f4', y / 70));
+    for (let x = 0; x < W; x += 2){ const h2 = 40 + Math.round(Math.sin(x * 0.03) * 22 + Math.sin(x * 0.11) * 6); R(x, 110 - h2, 2, h2, '#d8e8e0'); R(x, 110 - h2, 2, 4, '#ffffff'); }
+    for (let k = 0; k < 8; k++){ const x = (rnd() * W) | 0, y = 60 + ((rnd() * 40) | 0); R(x, y, 34, 3, 'rgba(255,255,255,.7)'); }
+    R(0, 110, W, 50, '#9ac8a8'); R(96, 70, 48, 40, '#e8c050'); R(92, 66, 56, 6, '#b8382f');
+  } else if (key === 'buzhou'){
+    for (let y = 0; y < H; y++) R(0, y, W, 1, mix('#1a1e2a', '#4a3a5a', y / H));
+    R(100, 0, 40, 120, '#5a6a7a'); R(104, 0, 6, 120, '#7a8a9a'); for (let k = 0; k < 7; k++) R(96 + ((rnd() * 40) | 0), 30 + k * 12, 14, 2, '#2a3040');
+    for (let k = 0; k < 12; k++){ const x = (rnd() * W) | 0; R(x, 0, 1, 40 + ((rnd() * 40) | 0), 'rgba(160,200,255,.35)'); }
+    R(0, 120, W, 40, '#2a3040');
+  } else if (key === 'skyrift'){
+    for (let y = 0; y < H; y++) R(0, y, W, 1, mix('#000000', '#1a1028', y / H));
+    for (let k = 0; k < 40; k++) R((rnd() * W) | 0, (rnd() * H) | 0, 1, 1, rnd() < 0.5 ? '#8a6aaa' : '#ffffff');
+    for (let i = 0; i < 26; i++){ const x = 120 + Math.round(Math.sin(i * 0.9) * 14), y = i * 6; R(x - 2, y, 4, 6, '#e8d0ff'); R(x - 1, y, 2, 6, '#ffffff'); }
   } else { R(0, 0, W, H, '#101420'); }
   cutBgCache.set(key, c);
   return c;
@@ -5933,8 +6240,23 @@ const CH_OPEN = {
   32:[['cavemouth', 'hero,kkachi', 'dark', [['', '한낮인데 세상이 밤처럼 어두워졌어요.']]]],
   33:[['izumo', 'hero,kkachi', '', [['', '강 상류에서 노부부와 딸이 울고 있었어요. 여덟 머리 뱀이 온대요.']]]],
   34:[['yomi', 'hero,kkachi', 'dark', [['', '잿빛 비탈 끝에 커다란 바위 문이 있었어요. 황천으로 가는 길이에요.']]]],
+  35:[['shore', 'susanoo,amaterasu,seimei,uzume,hero', 'sparkle', [['', '부상의 신들이 바닷가에서 용사를 배웅했어요.']]],
+    ['burnfield', 'hero,kkachi', 'fire', [['', '서쪽 하늘에 해가 열 개! 땅이 갈라지고 강물이 말라 갔어요.'], ['까치', '원한 조각이 해가 되어 날아간 거예요!']]],
+    ['burnfield', 'houyi,hero', '', [['후예', '해는 하나면 충분하다.'], ['', '활 잘 쏘는 사내가 시위를 당겼어요.']]],
+    ['burnfield', 'hero,wukong', 'light', [['손오공', '또 만났군! 이번엔 내가 길잡이다.']]],
+    ['kunlunmt', 'hero,kkachi', 'sparkle', [['', '제3부 · 곤륜 — 무너진 하늘 기둥']]]],
+  36:[['yellowriver', 'hero,kkachi', 'shake', [['', '둑이 터져 마을이 잠기고 있었어요. 누런 강물이 끝없이 흘렀어요.']]]],
+  37:[['westlake', 'hero,kkachi', '', [['', '비 내리는 호수, 연꽃 사이로 오래된 탑 하나가 서 있었어요.']]]],
+  38:[['oldtemple', 'hero,kkachi', 'dark', [['', '버려진 절에 밤이 내렸어요. 벽에 아홉 꼬리 그림자가 일렁였어요.']]]],
+  39:[['moonpalace', 'hero,kkachi', 'sparkle', [['', '보름달 길을 따라 달의 궁전에 올랐어요. 옥토끼 방아 소리가 들렸어요.']]]],
+  40:[['kunlunmt', 'hero,kkachi', 'dark', [['', '곤륜 가는 황야에 네 흉수 가운데 셋이 길을 막았어요.'], ['까치', '사흉이에요… 조심해요!']]]],
+  41:[['kunlunmt', 'hero,wukong', 'light', [['', '구름 위로 솟은 신들의 산, 곤륜. 아홉 문이 닫혀 있었어요.']]]],
+  42:[['buzhou', 'hero,kkachi', 'shake', [['', '아주 옛날, 물의 신이 하늘 기둥을 들이받았던 곳이에요.']]]],
+  43:[['kunlunmt', 'nuwa,hero', 'light', [['', '곤륜 꼭대기에서 여와가 오색 돌을 녹이고 있었어요.']]]],
+  44:[['skyrift', 'hero,kkachi', 'dark', [['', '빛도 색도 없는 하늘 틈 너머에서 무언가 깨어났어요.']]]],
+  45:[['sky', 'hero,kkachi,wukong,gangrim', 'sparkle', [['', '혼돈이 다시 잠들고, 세 나라의 하늘이 하나로 이어지기 시작했어요.']]]],
 };
-const PART_OF = ch => ch >= 26 ? '제2부 · 부상' : ch >= 17 ? '제1부 · 신과의 전쟁' : ch >= 8 ? '제1부 · 저승' : '제1부 · 이승';
+const PART_OF = ch => ch >= 35 ? '제3부 · 곤륜' : ch >= 26 ? '제2부 · 부상' : ch >= 17 ? '제1부 · 신과의 전쟁' : ch >= 8 ? '제1부 · 저승' : '제1부 · 이승';
 function showChapterCard(ch){
   const name = CHAPTERS[ch];
   if (!name || (window.__game && window.__game.quiet)) return;
@@ -6072,19 +6394,20 @@ function buildJob(){
   const c = S.cls, J = JOBS[c];
   const card = (tier) => {
     const j = J[tier - 1], got = S.job >= tier, secret = tier === 2 && !hiddenTrialOpen() && !got;
-    const req = tier === 1 ? `레벨 ${JOB_LV}` : tier === 3 ? `부상 · Lv.${JOB3_LV} · ${j.ch}장` : '숨은 퀘스트를 모두 마치면';
+    const req = tier === 1 ? `레벨 ${JOB_LV}` : tier === 3 ? `부상 · Lv.${JOB3_LV} · ${j.ch}장` : tier === 4 ? `곤륜 · Lv.${JOB4_LV} · ${j.ch}장` : '숨은 퀘스트를 모두 마치면';
     return `<div class="card ${got ? '' : ''}" id="jobCard${tier}">
       <div class="ct">${tier}차 전직 · ${secret ? '???' : j.name}<span class="tag">${got ? '전직함' : req}</span></div>
       <p class="story">${secret ? (tier === 2 && hiddenOpen() ? '붉은 옷의 차사가 지켜보고 있어요. [퀘스트]의 히든 퀘스트를 따라가요.' : '어딘가에 숨은 전직이 있다는 소문이 있어요…')
-        : `공격력·체력 +${JOB_BONUS[tier].atk}%, 기술 피해 +${JOB_BONUS[tier].skill}%. 전직 기술 「${CLASSES[c].skills[tier === 3 ? 8 : 5 + tier]}」, 전직 무기 「${j.weapon}」, 망토 「${j.cape}」를 받아요.`}</p>
+        : `공격력·체력 +${JOB_BONUS[tier].atk}%, 기술 피해 +${JOB_BONUS[tier].skill}%. 전직 기술 「${CLASSES[c].skills[tier >= 3 ? 5 + tier : 5 + tier]}」, 전직 무기 「${j.weapon}」, 망토 「${j.cape}」를 받아요.`}</p>
       ${tier === 3 && !got ? `<p class="small">부상에서 레벨 ${JOB3_LV}을 넘기고 스승 ${j.teacher}이 나오는 이야기 ${j.ch}장을 마치면 겨룰 수 있어요.</p>` : ''}
-      ${got ? '' : `<button class="btn primary" data-tier="${tier}">${secret ? '???' : (tier === 1 ? '스승과' : tier === 3 ? j.teacher + '와' : '강림도령과') + ' 겨루기(전직 시험)'}</button>`}
+      ${tier === 4 && !got ? `<p class="small">곤륜에서 레벨 ${JOB4_LV}을 넘기고 이야기 ${j.ch}장 「오색 돌」을 마치면 <b>세 스승의 시험</b>(1차 스승 → 강림도령 → 3차 스승, 연달아 세 판)을 봐요. 스승은 ${j.teacher}.</p>` : ''}
+      ${got ? '' : `<button class="btn primary" data-tier="${tier}">${secret ? '???' : (tier === 1 ? '스승과' : tier === 3 ? j.teacher + '와' : tier === 4 ? '세 스승의 시험' : '강림도령과') + (tier === 4 ? '' : ' 겨루기(전직 시험)')}</button>`}
     </div>`;
   };
   panel.innerHTML = `${growSegHTML()}
     <div class="ph"><h2>전직</h2><span class="small">지금: <b>${jobName()}</b></span></div>
     <p class="hint">전직 시험은 동료 둘과 함께 ${RAID_TIME}초 안에 스승을 이기면 통과예요. 지면 몇 번이든 다시 도전할 수 있어요. 직업을 바꿔도 전직 단계는 남아요.</p>
-    ${card(1)}${card(2)}${S.world >= 3 || S.job >= 2 ? card(3) : ''}`;
+    ${card(1)}${card(2)}${S.world >= 3 || S.job >= 2 ? card(3) : ''}${S.world >= 4 || S.job >= 3 ? card(4) : ''}`;
   wireGrowSeg();
   panel.querySelectorAll('[data-tier]').forEach(bt => bt.addEventListener('click', () => { if (startJobTrial(+bt.dataset.tier)) buildTab('grow', true); }));
   return () => {
@@ -6134,7 +6457,9 @@ function buildGrow(){
 /* --- 환생 --- */
 function askCross(){
   if (!crossReady()) return;
-  showModal('바다를 건널까요?', `<p>동해 용왕의 거북을 타고 <b>부상</b>으로 건너가요. 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 몬스터는 천계 끝자락만큼 세요.</p>`,
+  showModal(S.world === 3 ? '서쪽 하늘로 건널까요?' : '바다를 건널까요?', S.world === 3
+    ? `<p>열 개의 해를 쫓아 서쪽 끝 신들의 산 <b>곤륜</b>으로 건너가요. 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 레벨 상한은 500.</p>`
+    : `<p>동해 용왕의 거북을 타고 <b>부상</b>으로 건너가요. 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 몬스터는 천계 끝자락만큼 세요.</p>`,
     [{label:'아직'}, {label:'건너기', primary:true, fn:() => { if (doCross()) { growView = 'reb'; buildTab('grow'); } }}]);
 }
 function buildReb(){
@@ -6142,6 +6467,9 @@ function buildReb(){
     ${S.world >= 2 ? `<div class="card ${crossReady() ? 'ready' : ''}" id="crossCard"><div class="ct">바다 건너기 — 부상으로<span class="tag">${S.world >= 3 ? '건넜어요' : '2부'}</span></div>
       <p class="story">천계 이야기를 마치면 동해 용왕의 거북을 타고 해 뜨는 섬 「부상」으로 건너가요. 환생과 달리 <b>레벨·장비·능력치·엽전이 그대로</b>이고, 사냥 단계만 1부터 다시 시작해요. 레벨 상한은 400이에요.</p>
       ${S.world >= 3 ? '' : `<p class="small" id="crossWhy"></p><button class="btn primary" id="crossBtn">바다 건너기</button>`}</div>` : ''}
+    ${S.world >= 3 ? `<div class="card ${crossReady() ? 'ready' : ''}" id="crossCard4"><div class="ct">서쪽 하늘로 — 곤륜으로<span class="tag">${S.world >= 4 ? '건넜어요' : '3부'}</span></div>
+      <p class="story">부상 이야기를 마치면 서쪽으로 날아간 열 개의 해를 쫓아 신들의 산 「곤륜」으로 건너가요. 이번에도 <b>레벨·장비·능력치·엽전이 그대로</b>이고 사냥 단계만 1부터. 레벨 상한은 500이에요.</p>
+      ${S.world >= 4 ? '' : `<p class="small" id="crossWhy4"></p><button class="btn primary" id="crossBtn4">서쪽 하늘로 건너기</button>`}</div>` : ''}
     <div class="card ${rebirthReady() ? 'ready' : ''}" id="rebCard">
       <div class="ct">${S.world === 2 ? '환생 — 끝' : S.world ? '환생 — 하늘로(마지막)' : '환생 — 저승으로'}<span class="tag">윤회 구슬 <b id="rebGain"></b>개 받음</span></div>
       <p class="story">${S.world === 2 ? '환생과 윤회 구슬은 두 번까지예요. 이제 하늘에서 신화를 써 내려가요.' : S.world
@@ -6169,7 +6497,9 @@ function buildReb(){
   panel.querySelectorAll('.qrow .btn').forEach(bt => bt.addEventListener('click', () => { if (claimTrial(+bt.dataset.i)) refreshPanel(); }));
   panel.querySelectorAll('#rb-atk .buy, #rb-hp .buy, #rb-spd .buy, #rb-luck .buy, #rb-eye .buy').forEach(bt => holdButton(bt, () => rebUp(bt.dataset.k)));
   if ($('#crossBtn')) $('#crossBtn').addEventListener('click', askCross);
+  if ($('#crossBtn4')) $('#crossBtn4').addEventListener('click', askCross);
   return () => {
+    if ($('#crossBtn4')){ $('#crossBtn4').disabled = !crossReady(); setText($('#crossWhy4'), crossReady() ? '준비됐어요!' : '[퀘스트]에서 부상 이야기를 끝까지 마치고 「서쪽으로 간 해」 퀘스트가 되면 건널 수 있어요.'); }
     if ($('#crossBtn')){ $('#crossBtn').disabled = !crossReady(); setText($('#crossWhy'), crossReady() ? '준비됐어요!' : '[퀘스트]에서 천계 이야기를 끝까지 마치고 「동해 용왕의 거북」 퀘스트가 되면 건널 수 있어요.'); }
     setText($('#rebGain'), String(rebirthPts()));
     setHTML($('#rebConds'), rebirthCheck().map(c => `<li class="qrow"><div class="qn">${c.ok ? '✓ ' : ''}${c.t}<span>${c.v}</span></div></li>`).join(''));
@@ -6911,18 +7241,17 @@ const JM_WORLD = [
   {name:'저승', part:'1부', sub:'시왕의 저승', gate:'환생'},
   {name:'천계', part:'1부', sub:'신과의 전쟁', gate:'마지막 환생'},
   {name:'부상', part:'2부', sub:'해 뜨는 섬의 신들', gate:'바다 건너기'},
-  {name:'곤륜', part:'3부', sub:'서쪽 하늘 · 준비 중', gate:'다음 이야기'},
+  {name:'곤륜', part:'3부', sub:'무너진 하늘 기둥', gate:'서쪽 하늘로'},
 ];
 const JM_DX = 138, JM_Y = [104, 62];   // 지그재그(아래·위). 띠 높이 180
-const jmSpan = w => [null, HELL_SPAN, HEAVEN_SPAN, BUSANG_SPAN][w];
+const jmSpan = w => [null, HELL_SPAN, HEAVEN_SPAN, BUSANG_SPAN, KUNLUN_SPAN][w];
 const jmNodeOf = (w, s) => w === 0 ? Math.min(9, Math.floor((Math.max(1, s) - 1) / 10)) : (sp => (k => k < 0 ? sp.length : k)(sp.findIndex(e => s <= e)))(jmSpan(w));
 let jmNodesCache = null, jmChCache = null;
 function jmNodes(){
   if (jmNodesCache) return jmNodesCache;
   const N = [];
   for (let k = 0; k < 10; k++){ const R = REGIONS[k % REGIONS.length]; N.push({w:0, k, ri:k % REGIONS.length, name:R.name + (k >= REGIONS.length ? ' Ⅱ' : ''), a:10 * k + 1, b:10 * k + 10, R}); }
-  for (let w = 1; w <= 3; w++){ const sp = jmSpan(w); regionsOf(w).forEach((R, k) => N.push({w, k, ri:k, name:R.name, a:k ? sp[k - 1] + 1 : 1, b:sp[k] || null, R})); }
-  N.push({w:4, k:0, name:'곤륜', a:0, b:null});
+  for (let w = 1; w <= 4; w++){ const sp = jmSpan(w); regionsOf(w).forEach((R, k) => N.push({w, k, ri:k, name:R.name, a:k ? sp[k - 1] + 1 : 1, b:sp[k] || null, R})); }
   return (jmNodesCache = N);
 }
 // 장마다: 그 장 퀘스트 조건 중 가장 뒤 세계, 그 세계에서 처음 나오는 '단계' 조건으로 지도 위 자리를 정한다
@@ -6948,13 +7277,13 @@ function jmChapters(){
 const jmChState = c => S.quest.main > c.last ? 's-done' : S.quest.main >= c.first ? 's-now' : 's-todo';
 const jmBest = w => Math.max(S.best['s' + w] || 0, S.world === w ? S.maxStage : 0);
 function jmState(n){
-  if (n.w === 4 || n.w > S.world) return 's-lock';
+  if (n.w > S.world) return 's-lock';
   if (n.w < S.world) return 's-done';
   const ci = jmNodeOf(n.w, S.stage);
   if (n.k === ci) return 's-now';
   return (n.b && jmBest(n.w) > n.b) || n.k < ci ? 's-done' : 's-todo';
 }
-const jmRange = n => n.w === 4 ? '3부' : n.b ? `${n.a}~${n.b}단계` : `${n.a}단계~`;
+const jmRange = n => n.b ? `${n.a}~${n.b}단계` : `${n.a}단계~`;
 // 지역 그림(사냥터 디오라마를 줄인 것). 처음 열 때 몇 장씩 나눠 그린다
 const jmThumbs = new Map();
 function jmThumb(w, ri){
@@ -7001,7 +7330,7 @@ function buildJourney(){
     </div>
     <div class="jm-scroll" id="jmScroll"><div class="jm-strip" style="width:${W}px">
       ${bands.map(B => { const J = JM_WORLD[B.w], cs = CH.filter(c => c.w === B.w);
-        const cn = cs.filter(c => /장$/.test(c.lab)), chs = B.w === 4 ? '3부 · 열 개의 해를 따라 서쪽으로' : cn.length ? `${cn[0].lab}~${cn[cn.length - 1].lab} · ${J.sub}` : J.sub;
+        const cn = cs.filter(c => /장$/.test(c.lab)), chs = cn.length ? `${cn[0].lab}~${cn[cn.length - 1].lab} · ${J.sub}` : J.sub;
         return `<section class="jm-band w${B.w} ${wState(B.w) === 's-lock' ? 's-lock' : ''}" style="left:${B.x0}px;width:${B.x1 - B.x0}px"><h3>${J.name} <small style="font-size:11px;opacity:.7">${J.part}${B.w < 4 ? ` · Lv.${LV_CAP[B.w]}까지` : ''}</small></h3><p>${chs}</p></section>`; }).join('')}
       <svg class="jm-path" width="${W}" height="180" viewBox="0 0 ${W} 180" aria-hidden="true">
         <path d="${pathTo(N.length)}" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-dasharray="2 9" stroke-linecap="round"/>
@@ -7009,7 +7338,7 @@ function buildJourney(){
         ${bands.slice(1).map(B => `<g transform="translate(${B.x0} 166)"><rect x="${-(10 + 5.5 * JM_WORLD[B.w].gate.length)}" y="-10" width="${20 + 11 * JM_WORLD[B.w].gate.length}" height="19" rx="9.5" fill="rgba(8,12,22,.82)" stroke="rgba(255,204,77,.45)"/><text x="0" y="3.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffd96a" font-family="SamhanSans,sans-serif">${JM_WORLD[B.w].gate}</text></g>`).join('')}
       </svg>
       ${N.map((n, i) => { const st = jmState(n);
-        const pic = n.w === 4 ? '<span class="jm-mist">?</span>' : `<canvas class="th" width="248" height="148" data-w="${n.w}" data-ri="${n.ri}"></canvas>`;
+        const pic = `<canvas class="th" width="248" height="148" data-w="${n.w}" data-ri="${n.ri}"></canvas>`;
         return `<button class="jm-node ${st}${jmSel === n ? ' s-sel' : ''}" data-n="${i}" style="left:${n.x}px;top:${n.y}px" aria-label="${JM_WORLD[n.w].name} ${n.name} ${jmRange(n)}">
           ${chTags(n)}${pic}${st === 's-lock' ? JM_LOCK : ''}${st === 's-done' ? '<i class="ok">✓</i>' : ''}<b>${n.name}</b><span>${jmRange(n)}</span></button>`; }).join('')}
       <img class="jm-hero" src="${heroImg}" alt="" style="left:${cur.x}px;top:${cur.y + 30}px">
@@ -7022,10 +7351,9 @@ function buildJourney(){
     panel.querySelectorAll('.jm-node').forEach(b => b.classList.toggle('s-sel', N[+b.dataset.n] === n));
     const st = jmState(n), J = JM_WORLD[n.w], cs = CH.filter(c => c.w === n.w && c.k === n.k);
     let body;
-    if (n.w === 4) body = `<p class="story" style="margin:0">부상 끝에서 열 개의 해가 서쪽 하늘로 날아갔어요. 다음 이야기 <b>3부 · 곤륜</b>에서 서왕모와 옛 중국 신화의 신들을 만나요. 다음 업데이트에서 이어져요.</p>`;
-    else {
+    {
       const R = n.R, best = jmBest(n.w);
-      const raids = n.w === 3 ? BUSANG_RAIDS : n.w === 2 ? GOD_RAIDS : n.w === 1 ? KINGS : n.k < REGIONS.length ? RAID_DEFS : [];
+      const raids = n.w === 4 ? KUNLUN_RAIDS : n.w === 3 ? BUSANG_RAIDS : n.w === 2 ? GOD_RAIDS : n.w === 1 ? KINGS : n.k < REGIONS.length ? RAID_DEFS : [];
       const rs = raids.filter(r => r.region === n.ri).map(r => r.boss);
       body = `<div class="dl"><span>지역 보스</span><b>${R.boss}</b></div>
         <div class="dl"><span>몬스터</span><b>${R.mobs.map(m => m[2]).join(' · ')}</b></div>
@@ -7771,7 +8099,7 @@ function offlineReward(sec){
   const s = S.stage, bonus = gainMul('gold', true);
   const kps = Math.min(0.6, dpsOf(ST) / mHp(s) * 0.5) * 0.5;
   const kills = Math.floor(kps * sec);
-  const gold = kills * mGold(s) * bonus, exp = (kills * mExp(s) + (S.world === 3 ? mExp(S.maxStage) * BUSANG.sun * sec * 0.5 : 0)) * bonus;
+  const gold = kills * mGold(s) * bonus, exp = (kills * mExp(s) + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * sec * 0.5 : 0)) * bonus;
   const gems = Math.floor(sec / 600) + Math.floor(kills * GEM_DROP * 0.5);
   const lv0 = S.level;
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
@@ -8073,7 +8401,7 @@ if (location.search.indexOf('simtest') >= 0){
     doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbCan, castAwaken, startFight,
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
-    openMap, jmNodes, FIELD, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, BUSANG_REGIONS, MOB_HD,
+    openMap, jmNodes, FIELD, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
   };
 }
