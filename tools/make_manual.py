@@ -161,6 +161,9 @@ async def capture(page):
     await page.evaluate("() => { const G = window.__game; G.startTimeBoss('normal'); G.closePage(); }")
     await shot('timefight', 4000)
     await page.evaluate("() => { const G = window.__game; for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05); delete G.REG.accounts.friend1; }")
+    await page.wait_for_timeout(300)
+    if await page.is_visible('#modal'):   # 타임 보스 결과 창은 닫고 다음 캡처로
+        await page.click('#modal-btn-0')
 
     # 2부 부상: 바다 건너기 → 구라마산, 장 제목 카드
     await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage();
@@ -423,8 +426,10 @@ th{{background:#f1f3f8;font-weight:800}}
 <tr><td>약 10~18시간</td><td>무기 +25 · 다섯 시련 → <b>첫 환생(저승)</b></td></tr>
 <tr><td>약 40~47시간</td><td>저승 레벨 200 · 저승 이야기 끝 → 히든 퀘스트 · <b>마지막 환생(천계)</b></td></tr>
 <tr><td>약 42~50시간</td><td>숨겨진 <b>2차 전직</b></td></tr>
-<tr><td>약 90~105시간</td><td>신과의 전쟁 끝 · <b>신화</b>(이야기 113개) → '끝없는 신화'. 뽑기 운이 나쁘면 160시간 넘게도 걸려요</td></tr></table>
-<p class="small">쉬지 않고 잘 키웠을 때(자동 시뮬레이션) 기준이에요. 하루 10~15시간쯤 방치하면 신화까지 <b>열흘 안팎</b>. 직업·뽑기 운·접속 간격에 따라 달라요.
+<tr><td>약 90~105시간</td><td>신과의 전쟁 끝 · <b>신화</b>(이야기 113개) → 바다 건너 <b>부상</b>(2부). 뽑기 운이 나쁘면 160시간 넘게도 걸려요</td></tr>
+<tr><td>건넌 뒤 약 37~45시간</td><td>레벨 350 · 스승의 장을 마치면 <b>3차 전직</b> (술사가 가장 빨라요)</td></tr>
+<tr><td>건넌 뒤 약 80~100시간</td><td>레벨 400 · <b>부상 이야기 끝</b>(이야기 145개) → '끝없는 신화'</td></tr></table>
+<p class="small">쉬지 않고 잘 키웠을 때(자동 시뮬레이션) 기준이에요. 하루 10~15시간쯤 방치하면 신화까지 <b>열흘 안팎</b>, 부상까지 <b>일주일쯤 더</b>. 직업·뽑기 운·접속 간격에 따라 달라요.
 <b>조합 공방</b>을 쓰지 않으면 저승은 1.5배, 천계는 2배쯤 오래 걸리고 160시간 안에 신화에 닿지 못했어요.</p>
 """, kicker='17'))
     S.append(sec('자주 묻는 질문', """
