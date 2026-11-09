@@ -1,11 +1,11 @@
 # 삼한 용사 키우기 — 작업 안내
 
 옛 한국풍 쿼터뷰(비스듬히 내려다본) 그래픽에 2~3등신 캐릭터가 나오는 방치형 RPG. 브라우저에서 돌아가는 HTML 파일 하나짜리 게임이다.
-타이틀·계정(아이디·비밀번호·캐릭터) → 꾸미기 → 프롤로그·튜토리얼 → 사냥·보스·수문장 → 장비 소환·재련·신화 보물·장신구·변신 → 펫 → 레이드·타임 보스 → 이야기 80장(연출) → 환생 → 저승, 옆으로 상점·채팅·소리.
+타이틀·계정(아이디·비밀번호·캐릭터) → 꾸미기 → 프롤로그·튜토리얼 → 사냥·보스·수문장 → 장비 소환·재련·신화 보물·장신구·변신·아바타 → 펫 → 전직(Lv50, 히든 2차) → 레이드·타임 보스 → 이야기 113개(25장, 연출) → 환생 → 저승 → 마지막 환생 → 천계(신과의 전쟁), 옆으로 상점·채팅·소리.
 
 - 공개 주소: https://benaeend.github.io/samhan-hero/ (GitHub Pages, `main` 브랜치 루트). 휴대폰 홈 화면에 설치하는 웹앱(PWA)이기도 해서 설치하면 주소창 없이 열리고 오프라인에서도 돈다
 - 같은 게임이 claude.ai 아티팩트로도 올라가 있다. 계정 클라우드 저장(`window.claude` db)은 그쪽에서만 동작하고, GitHub Pages에서는 브라우저 저장(localStorage)만 쓴다. 코드는 두 환경 모두에서 그대로 돌아가야 한다.
-- **온라인 서버(Supabase)**: `src/game.html`의 `ONLINE`(프로젝트 주소 `url`, 공개용 `key`)을 채우면 github.io에서 켜진다. 계정·캐릭터 저장은 서버 함수(`supabase/setup.sql`)로, 채팅·타임 보스는 실시간 채널로 주고받아 다른 기기에서도 같은 아이디로 이어진다. 비어 있거나 서버에 닿지 않으면 예전처럼 **그 기기(브라우저) 안에만** 저장한다. claude.ai 아티팩트에서는 그쪽 저장소(`window.claude`)를 쓴다
+- **온라인 서버(Supabase)**: 프로젝트 `gqconcepvhoyqciwwbbf`(주소·공개 키는 `src/game.html`의 `ONLINE`). github.io·localhost에서 켜진다. `setup.sql`은 이미 실행해 둠(바꾸면 SQL Editor에서 다시 실행). 테스트는 진짜 서버에 계정을 만들지 않게 `window.__samhanOnline`으로 끄거나(test_game.py의 PWA 점검) 가짜 서버로 돌린다(test_online.py). 계정·캐릭터 저장은 서버 함수(`supabase/setup.sql`)로, 채팅·타임 보스는 실시간 채널로 주고받아 다른 기기에서도 같은 아이디로 이어진다. 비어 있거나 서버에 닿지 않으면 예전처럼 **그 기기(브라우저) 안에만** 저장한다. claude.ai 아티팩트에서는 그쪽 저장소(`window.claude`)를 쓴다
 
 ## 사용자에 대해
 
@@ -47,25 +47,29 @@
 ## 코드 지도 (`src/game.html`, 위에서 아래 순서)
 
 - **CSS**: 어두운 요즘 게임풍. 색은 `:root` 토큰(`--bg`·`--panel`·`--text`·`--gold`·`--seal`·`--myth` 등, 옛 이름 `--paper`·`--ink`는 별칭), 저승에서는 `body.hell`이 붉은 톤으로 덮는다. 둥근 카드·알약 단추·빛나는 강조. 연출(`.cut`), 타이틀(`#title`), 말풍선 스타일도 여기
-- **기본 설정**: 논리 칸은 15×10(`COLS`, `ROWS`), 위 2줄(`TOPR`)은 못 걷는다(싸우는 판은 15×8). 장면은 240×160 '화면 단위'로 계산하고 `RS`(2)배 해상도 버퍼에 그린 뒤 확대한다(`render`에서 `b.setTransform(RS…)`). 저장 키(`SAVE_KEY`, `ACC_KEY`, `charKey`), 잡몹 보석 드롭 확률 `GEM_DROP`(0.1), 시간 함수 `now()`(테스트에서 `clockSkew`로 빨리 감기)
+- **기본 설정**: 논리 칸은 20×14(`COLS`, `ROWS`), 위 2줄(`TOPR`)은 못 걷는다(싸우는 판은 20×12). 지도 전체는 `MW`×`MH`(330×216)이고 화면(240×160)보다 커서 카메라(`updateCam`, `camX`·`camY`)가 용사(레이드 중엔 용사와 보스 사이)를 따라간다. 화면 전체를 덮는 효과는 `camX, camY`에서 그리고, 글자(`drawTexts`)는 카메라만큼 빼서 찍는다. 사냥터 몹 수 `maxField`는 단계가 오를수록 늘어난다 장면은 240×160 '화면 단위'로 계산하고 `RS`(2)배 해상도 버퍼에 그린 뒤 확대한다(`render`에서 `b.setTransform(RS…)`). 저장 키(`SAVE_KEY`, `ACC_KEY`, `charKey`), 잡몹 보석 드롭 확률 `GEM_DROP`(0.1), 시간 함수 `now()`(테스트에서 `clockSkew`로 빨리 감기)
 - **앱 설치 `PWA_HOST`**: github.io·localhost에서 열 때만 manifest·아이콘 링크를 넣고 `sw.js`를 등록한다(claude.ai·파일로 열 때는 안 함). `beforeinstallprompt`를 잡아 두었다가 `installApp`에서 띄우고, 없으면(아이폰 등) 설치 방법 안내 창
-- **직업 `CLASSES`**: 무사·자객·술사·도인. 체력/공격/속도 배율, 사거리(`range` 1=근접), 투사체, 기술 이름 6개(`skills`), 초각성기 이름(`awaken`), 기술 연출 종류
-- **기술 `SKILLS`**: 6칸 공통 구조(주변 광역 / 단일 강타 / 버프 / 전체 공격 / 연타 `combo` / 낙인 `mark`). 레벨 5·12·25·40·60·80에 열림. **배열 순서 = 직업별 이름 순서**라 새 기술은 끝에 붙인다
+- **직업 `CLASSES`**: 무사·자객·술사·도인. 체력/공격/속도 배율, 사거리(`range` 1=근접), 투사체, 기술 이름 8개(`skills`, 7·8번째는 전직 기술), 초각성기 이름(`awaken`), 기술 연출 종류
+- **전직 `JOBS`·`JOB_BONUS`·`startJobTrial`·`grantJob`**: 1차는 Lv`JOB_LV`(50)에 [수련] → [전직]에서 스승(`m_<직업>` 보스)과 시험 싸움(`startFight`, `info.job`), 2차는 히든 퀘스트를 마치면 강림도령(`gangrim`)과. 직업을 바꿔도 `S.job`은 남는다. 전직하면 능력 배율·전직 기술 열림(`unlockSkills`)·전직 무기 모양(`drawChibi`의 `col.job`)·전직 망토 아바타. `jobName()`이 화면 위 직업 이름
+- **히든 퀘스트 `HIDDEN_Q`·`hiddenQuest`·`claimHidden`**: 저승 이야기를 마치고(`HELL_END_Q`) 저승 Lv200이면 나타난다(그 전에는 아무것도 안 보임). 강림도령(차사본풀이)·바리공주 이야기. 진행 `S.quest.hid`, 저승 레이드 횟수는 `S.rec.hraids - S.quest.hidBase`
+- **기술 `SKILLS`**: 8칸 공통 구조(주변 광역 / 단일 강타 / 버프 / 전체 공격 / 연타 `combo` / 낙인 `mark` / 1차 전직 `jobA` / 2차 전직 `jobB`). 레벨 5·12·25·40·60·80에, 전직 기술은 `job` 단계에 열림. **배열 순서 = 직업별 이름 순서**라 새 기술은 끝에 붙인다
 - **꾸미기 `OUTFITS`·`HAIRS`·`SKINS`·`HATS`**: 옷 색('auto'면 직업색+방어구 등급색)·머리색·피부·머리 장식. `cleanLook`이 잘못된 값을 기본값으로 돌린다
 - **재련 `REFINE_*`**: 무기·방어구 칸마다 +0~+25(`REFINE_MAX`). 로스트아크식 확률 구조(실패해도 단계 유지, 실패마다 기본 확률의 10%씩 상승·최대 2배, '담금질 기운'이 확률×0.465씩 쌓여 100%면 확정 성공, +25까지 평균 약 250번). 비용 `refineGold` 500×1.2^단계 엽전 + `refineGems` 5+단계 보석, 효과 `refinePct`
 - **펫 `PETS`**: 공격·방어·지원 × 등급 5 = 15마리. 보석으로 소환(`petSummon`), 중복은 별(최대 5), 엽전+보석으로 강화(`petUpgrade`, `petUpCost`, 최대 Lv30)
 - **레이드 `RAID_DEFS`·`raidInfo(i)`(이승) / `KINGS`·`hellRaidInfo(i)`(저승 시왕) / `raidAt(i)`(지금 세계 것)**: 이승은 Lv `10*(i+1)`, 파티 `min(10, i+3)`, 세기 `ref = 1.4×req-14`. 저승은 저승 Lv `20*(i+1)`, 파티 `min(10, 5+i)`, 세기 `HELL_RAID_REF`(시뮬로 맞춘 저승 단계). 보스 체력은 `ref` 단계 기준(평범한 용사가 약 40초에 깸), 90초 제한. 토벌패(`raidTickets`, 최대 3개·15분마다 1개). 진행은 `startRaid`→`startFight`(타임 보스와 같이 씀)→`updateRaid`→`raidEnd`→`finishRaid`
 - **변신 `FORMS`**: 사신(주작·청룡·백호·현무). 이야기 보상(`form`)으로 얻고 하나를 둘러 능력·모습이 바뀜(`formOf`)
+- **아바타 `AVATARS`·`AV`·`giveAvatar`·`equipAvatar`·`openAvatarBox`**: 옷(`type:'char'`, 옷 색 + `deco` 장식)·망토(`cape`, `capeC`)·펫 꾸미기(`pet`, 머리 장식 `acc`는 `PET_HEAD` 자리에 `drawPetAcc`, 빛깔 `tint`). 가진 아바타 하나마다 공격력·체력 +`AV_PCT`%(전직 망토는 지금 직업 것만 센다). 꾸미기 상자(`src:'box'`)·이야기(`av`)·전직에서 얻는다. 입은 것 `S.av.char/cape/pet`
 - **장신구 `ACC`·`ACC_DROP`**: 반지·귀걸이·팔찌 × 5등급. 각 지역 9번째 단계(`isGateStage`, 수문장)에서만 떨어진다(`rollAcc`: 수문장 반지 8%·귀걸이/팔찌 1.5%, 그 단계 잡몹은 훨씬 낮게). 타임 보스에서도. 이야기 보상(`acc:[종류, 등급]`)으로 낮은 등급을 확정 지급해 **이야기가 운에 막히지 않게** 한다
-- **환생 `REB_STATS`·`TRIALS`·`rebirthCheck`·`doRebirth`**: 첫 환생은 이승 Lv100 + 무기 +25 + 다섯 시련(이승 101단계·이승 레이드 8곳·신화 3종·펫 하나 Lv`TRIAL_PET_LV`(20)·장신구 1개). 다음 환생은 저승 Lv200. 레벨·단계·엽전·능력치만 처음으로, 윤회 구슬 `rebirthPts` = 레벨/10 + 최고 단계/20 → 무력·강골·신속·복덕·영안(`rebUp`)
-- **세계 `S.world`**(0 이승, 1 저승): `LV_CAP` [100, 200], `HELL_REGIONS`(도산·화탕·한빙·검수·독사·흑암, 저승은 `HELL_SPAN` 표대로 이야기 순서), `effStage` = 저승 단계 + `HELL_OFF`(30), `applyWorld`가 화면 톤을 바꾼다
+- **환생 `REB_STATS`·`TRIALS`·`rebirthCheck`·`doRebirth`**: 환생(과 윤회 구슬)은 **두 번까지**. 첫 환생은 이승 Lv100 + 무기 +25 + 다섯 시련(이승 101단계·이승 레이드 8곳·신화 3종·펫 하나 Lv`TRIAL_PET_LV`(20)·장신구 1개) → 저승. 두 번째는 저승 Lv200 + 저승 이야기 끝(`HELL_END_Q`) → 천계. 환생하면 용사 주변에 오라(`drawEntityHero`, 1번 보라·2번 금빛) 레벨·단계·엽전·능력치만 처음으로, 윤회 구슬 `rebirthPts` = 레벨/10 + 최고 단계/20 → 무력·강골·신속·복덕·영안(`rebUp`)
+- **세계 `S.world`**(0 이승, 1 저승, 2 천계): `LV_CAP` [100, 200, 300], `WORLD_NAME`, `regionsOf`. 저승 `HELL_REGIONS`(`HELL_SPAN`), 천계 `HEAVEN_REGIONS`(구름 계단·반도원·살수 강가·명량 바다·화과산·영소보전, `HEAVEN_SPAN`). `effStage` = 단계 + `HELL_OFF`(30)/`HEAVEN_OFF`(60), 몬스터 체력에 `CURVE.hellG`/`heavenG`·`HEAVEN_K`를 곱한다. `best.s0~s2`·`l0~l2`. `applyWorld`가 화면 톤(`body.hell`/`body.heaven`)을 바꾼다
+- **영웅 레이드 `GOD_RAIDS`·`godRaidInfo`**(천계 레벨 30마다, 키 `g0`~): 전우치·홍길동·을지문덕·이순신 장군의 넋·염라대왕·제천대성 손오공·옥황상제·천마. 세기 `GOD_RAID_REF`. 역사 인물(이순신·을지문덕)은 악당이 아니라 '용사를 시험하는 스승'으로만 그린다
 - **타임 보스 `TB_SLOTS`·`TB_DIFF`**: 0시부터 3시간마다 30분(`tbWindow`, 기기 시계), 2명 이상(`tbOthers`: claude.ai room 'tb' 참가자 + 이 기기의 다른 계정 캐릭터), 노말/지옥(환생 필요). 120초, 엽전 + 극악 확률 귀걸이·팔찌·신화
 - **초각성 `castAwaken`**: 레이드·타임 보스마다 한 번, 12초 뒤나 보스 체력 60% 아래에서 자동(`AWAKEN_PCT`). 배우는 조건 `awakenOk`(환생·저승 Lv60·송제전)
 - **상점 `SHOP`·`BUFFS`**: 물약(`autoPotion`), 부적(`S.buff`, `tickBuffs`), 숫돌(`whetOn`), 토벌패, 꾸러미. 하루 제한은 `S.shop.got`
 - **신화 보물 `MYTHS`**: 퀘스트 보상 때 `questLuck` → 20% 기술 재사용 초기화, 6% `dropMyth`. 이야기 보상(`myth:'종류'`)으로 다섯 종 모두 확정 지급. 효과 `mythPower = (10 + 난이도) × 배율`
 - **채팅**: `addChat`, `sendChat`(나쁜 말 가림 `BAD_WORDS`), `npcChatter`, `announce`. claude.ai에서 `room` topic `chat`(타임 보스는 `tb`)으로 실시간. 받은 글은 `textContent`로만 넣는다
 - **업데이트 소식 `NOTE_VER`·`NOTES`**: 이미 하던 캐릭터로 들어올 때 기기마다 한 번(`samhan-note-seen`), [정보]에서 다시 보기
-- **이야기 `CHAPTERS`(17장)·`MAIN_Q`(80개)·`PROLOGUE`**: 고구려 건국 신화(해모수·유화·금와·주몽·대소·송양) → 환생 → 저승 시왕 → 사신의 귀환. 조건 종류는 `questCur`(kills, s0/l0 이승 최고 단계·레벨, s1/l1 저승, raids, raidK, pets3, refineW/A, myth, acc, reb, awaken, forms). `s0`의 n은 '그 단계에 닿기'라서 n=31이면 3-10 보스를 물리친 것. 다 깨면 '끝없는 윤회'(`mainQuest`). 보상 `storyReward`(form·awaken·myth·acc). 예전 15장 저장은 `migrateStory`(`quest.sv` 2)
+- **이야기 `CHAPTERS`(26장)·`MAIN_Q`(113개)·`PROLOGUE`**: 고구려 건국 신화(해모수·유화·금와·주몽·대소·송양) → 첫 전직 → 윤회의 시련 → 환생 → 저승 시왕 → 사신의 귀환 → 신과의 전쟁(17~25장) → 신화. 조건 종류는 `questCur`(kills, s0/l0 이승 최고 단계·레벨, s1/l1 저승, raids, raidK, pets3, refineW/A, myth, acc, reb, awaken, forms). `s0`의 n은 '그 단계에 닿기'라서 n=31이면 3-10 보스를 물리친 것. 새 조건 `s2`·`l2`(천계)·`job`·`trials`·`avatar`. 다 깨면 '끝없는 신화'(`mainQuest`). 보상 `storyReward`(form·awaken·myth·acc·av). 예전 저장은 `migrateStory`(`quest.sv` 3: 2판 80개에서 옮길 때 16번 뒤 +2, 34번 뒤 +7)
 - **연출 `playCut`**: 장면 한 컷 = `[배경, '등장인물,…', 효과, [[말한 사람, 대사]…]]`. 배경은 `cutBg`, 인물은 `CAST`(신화 인물)·`GUARD`(사신)·`k:번호`(시왕)·`m:몬스터:색`, 대사의 `{name}`은 캐릭터 이름. 연출 중엔 게임이 멈춘다. 이야기 퀘스트의 `c`가 깰 때 나오는 15초 안쪽 연출, `PROLOGUE`(6컷)는 첫 캐릭터를 만들 때. [정보] → 다시 보기(`openReplay`)
 - **소리 `AUD`·`TRACKS`**: 파일 없이 Web Audio로 직접 합성(가야금 뜯기·대금·장구 덩/쿵/덕·징, 5음 음계). 곡 4개(타이틀·마을·저승·전투), `sfx(종류)`. 첫 터치 뒤에 켜지고 `#tSnd`로 끈다(브라우저 자동 재생 규칙)
 - **타이틀 `#title`·`setTitle`**: 로그인 전 화면(밤하늘·달·산성·꽃잎·네 직업 용사). 로그인 창은 그 위에 뜬다
@@ -74,7 +78,8 @@
 - **상태 `defaultState` / `mergeState`**: 저장 형식(`v:1`). 필드를 추가하면 `mergeState`에서 기본값을 채워 **기존 저장이 깨지지 않게** 한다. 새로 생긴 것: `world`·`best`(세계별 최고 단계·레벨)·`reb`·`form`·`acc`·`awaken`·`seenCut`·`tb`·`quest.sv`·`quest.trials`
 - **칸 이동·전투 `update(dt)`**: 용사는 가장 가까운 몬스터에게 걸어가 사거리 안이면 공격. 10마리 처치 → 보스(30초 제한, 9번째 단계는 수문장). 레이드·타임 보스 중에는 `updateRaid`가 맡는다. 연출 중(`cut`)엔 `updateCut`만 돈다
 - **쿼터뷰 `isoX`·`isoY`·`placeOf`**: 칸(tx, ty) → 화면. 한 칸은 18×9 마름모(`IW`·`IH`), +tx는 오른쪽 아래, +ty는 왼쪽 아래. 판 가장자리 `ISO_TOP/LEFT/RIGHT/BOT`, `edgeTop`·`edgeBot`(풍경 둘 자리). 칸 방향 → 화면 각도 `DIRANG`. 그리는 순서는 발 y값으로 정렬
-- **캐릭터 그림 `drawChibi`·`personSprite`**: 2~3등신(머리 크게·큰 눈). 64×64 HD 캔버스에 둥근 도형으로 그리고 `hdFinish`가 가장자리를 도트처럼 또렷하게 + 1px 외곽선(`hd` 속성 = 2, 화면 크기는 `spW`·`spH`). 발 기준점 화면 (16, 30)(`HD_AX`·`HD_AY`). 모습은 앞(오른쪽 아래)·뒤(오른쪽 위) 두 가지, `dir`에 따라 뒤집는다(right=앞, down=앞·뒤집음, up=뒤, left=뒤·뒤집음). 프레임 0 서기·1/2 걷기·3 공격. 꾸미기·장비 등급(깃·어깨받이·망토·가슴 보석, 무기 빛)·변신(날개·뿔·범 두건·등껍질)·장신구가 다 그려진다. 연출(`castSprite`)은 앞모습만 쓴다. 미리보기(`lookPreview`)는 64×60으로 잘라 쓴다
+- **캐릭터 그림 `drawChibi`·`personSprite`** (머리 장식 `hat`: 직업 기본·musa 머리띠·jagaek 복면·sulsa 갓·doin 상투관·flower·helmet 투구·mcrown 면류관·fillet 긴고아+원숭이 귀·꼬리, `look.beard` 수염, 무기 `col.wtype`으로 spear·rod·none 바꾸기): 2~3등신(머리 크게·큰 눈). 64×64 HD 캔버스에 둥근 도형으로 그리고 `hdFinish`가 가장자리를 도트처럼 또렷하게 + 1px 외곽선(`hd` 속성 = 2, 화면 크기는 `spW`·`spH`). 발 기준점 화면 (16, 30)(`HD_AX`·`HD_AY`). 모습은 앞(오른쪽 아래)·뒤(오른쪽 위) 두 가지, `dir`에 따라 뒤집는다(right=앞, down=앞·뒤집음, up=뒤, left=뒤·뒤집음). 프레임 0 서기·1/2 걷기·3 공격. 꾸미기·장비 등급(깃·어깨받이·망토·가슴 보석, 무기 빛)·변신(날개·뿔·범 두건·등껍질)·장신구가 다 그려진다. 연출(`castSprite`)은 앞모습만 쓴다. 미리보기(`lookPreview`)는 64×60으로 잘라 쓴다
+- **사람 모양 보스 `chibiMob`**: 스승(`m_<직업>`)·강림도령·천병·전우치·홍길동·을지문덕·이순신·손오공·옥황상제는 `drawChibi`를 좌우로 뒤집어 몬스터로 쓴다. 이야기 등장인물은 `CAST`(`ex`로 전직·장식·망토·무기 지정)
 - **몬스터·펫 그림 `MOB_HD`·`PET_HD`**: 같은 화풍(통통한 몸·큰 눈·작은 다리). 모두 왼쪽을 보게 그리고 `[가로, 세로(HD 픽셀), 그리기(g, 프레임, 색, 보스?)]`. 도구는 `hdKit`(타원·다각형·둥근 사각형·그늘진 덩어리·눈 모양들). 보스는 빨간 외곽선. 새 몬스터는 여기에 추가한다
 - **지도 `buildIsoMap(지역, 세계)` / `ISO_THEME`·`PROPS`·`isoScenery`**: 지역별 판(윗면 칸·앞쪽 흙벽)과 바깥 땅·먼 산, 판 둘레 풍경 소품(나무·초가·기와집·대나무·바위·고드름·칼산·가마솥 등)을 시드 고정 난수로 놓는다. `getMap` 캐시 키는 `세계:지역`. 옛 평면 지도 `buildMap`/`THEMES`는 이야기 연출 배경(`cutBg`)에만 쓴다
 - **그리기 `render`**: 버퍼(도트) → 화면 확대. 데미지 숫자·상단 표시는 고해상도 캔버스에 따로(`drawTexts`, `drawOverlay`). 연출 중엔 `renderCut`
@@ -96,7 +101,7 @@
 - **claude.ai 아티팩트로 다시 올릴 때**: `capabilities`에 `{db:{}, user:{}, room:{topics:{chat:"interact", tb:"interact"}}}`를 선언해야 계정 저장·실시간 채팅·타임 보스 함께하기가 켜진다(없으면 혼자 하는 모드로 돌아감).
 - **디자인**: 어두운 남색 바탕 + 금색 강조의 요즘 모바일 게임풍(`:root` 토큰). 글꼴은 Pretendard(내장 이름 SamhanSans), 둥근 카드와 알약 단추. 게임 장면은 쿼터뷰 디오라마 + 2~3등신 캐릭터. 새 그래픽도 둥근 도형 → `hdFinish`(또렷한 가장자리 + 1px 외곽선)로 맞추고, 그림 파일은 쓰지 않는다.
 - **글꼴 라이선스**: Pretendard는 SIL OFL 1.1. 수정본(일부 글자만 뽑음)이라 예약된 이름 대신 SamhanSans로 바꿔 넣는다. CSS 주석의 저작권 표기와 `tools/fonts/Pretendard-LICENSE.txt`를 지우지 않는다.
-- **밸런스 기준**(2026-11, `--long 100` 네 직업, 쉬지 않고 잘 키우는 시뮬): 이승 50단계 13~24분 · 70단계 25분~2시간 · 90단계 5~6시간 · Lv100 5.5~7.5시간 · 101단계 6~12시간(이 무렵부터 한 단계에 1~2시간) · 첫 환생 24~34시간(무기 +25가 가장 늦다) · 저승 70단계는 환생 뒤 1시간 안팎 · 저승 81단계 +2~8시간 · 91단계 +6~20시간(이 뒤로 한 단계에 2~4시간) · 저승 Lv200 58~75시간 · **이야기 80장 마무리 58~75시간**(자객 58 · 도인 62 · 술사 70 · 무사 75). 몬스터 체력은 이승 101단계 약 3억, 이야기 끝(저승 97단계) 약 3,600억(보스는 ×10).
+- **밸런스 기준**(2026-11, `--long 200` 네 직업, 쉬지 않고 잘 키우는 시뮬): Lv50·1차 전직 40분~1.5시간 · 이승 101단계 3.7~4.6시간 · Lv100 8~10시간 · 첫 환생 17~19시간 · 저승 Lv200·저승 이야기 끝(=히든 퀘스트·두 번째 환생) 43~48시간 · 2차 전직 46~51시간 · **신화(이야기 113개 끝) 83~158시간**(무사 83 · 도인 91 · 자객 100 · 술사 158, 한 번씩이라 운 차이가 큼). 하루 10~15시간 방치하면 약 열흘이 목표. 경험치는 세계별 `EXP_K`[0.12, 0.4, 0.5]로 늦췄고, 천계 몬스터 체력은 2차 전직만큼 `HEAVEN_K` 1.5배.
   - 이야기·시련 조건을 운(장신구·신화 드롭)에 걸지 않는다. 필요한 것은 이야기 보상으로 확정 지급한다.
   - 레이드 세기·토벌패·재련 비용·펫 강화 비용·`CURVE`를 바꾸면 꼭 `--long 100`을 다시 돌려 위 표와 비교한다.
 - **Supabase 키**: 게임에 넣는 건 공개용 publishable 키(`sb_publishable_…`, 예전 이름 anon)뿐이다. `secret`·`service_role` 키는 절대 코드·채팅·커밋에 넣지 않는다. 표는 RLS로 잠그고 함수만 `anon`에 열어 두는 구조를 바꾸지 않는다(새 데이터도 `samhan_*` 함수로만)

@@ -76,7 +76,9 @@ SIM = r"""
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
-      if (G.rebirthReady() && (!G.S.world || G.S.raid.first.h9)) {  // 저승에서는 마지막 시왕 레이드를 깬 뒤에
+      if (!G.raid && (G.jobReady(1) || G.jobReady(2))) G.startJobTrial(G.S.job + 1);   // 전직 시험
+      if (G.S.gems >= 2500 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
+      if (G.rebirthReady()) {
         G.doRebirth();
         for (const k of ['atk', 'hp', 'luck', 'spd', 'eye']) for (let z = 0; z < 50; z++) if (!G.rebUp(k)) break;
       }
@@ -87,14 +89,14 @@ SIM = r"""
         raidPend = null;
         let r = G.firstReadyRaid();
         if (r >= 0 && t < raidHold[1]) r = Math.min(r, raidHold[0] - 1);
-        for (let j = r; j >= 0; j--) if (!G.S.raid.first[(G.S.world ? 'h' : '') + j]) { r = j; break; }
+        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g'][G.S.world] + j]) { r = j; break; }
         if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
       }
     }
     if (t >= nextRetry) { nextRetry = t + 60; G.S.autoBoss = true; }
-    mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t);
+    mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
-    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${G.S.world ? '저승' : '이승'} ${G.S.stage}단계, Lv ${G.S.level}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/80, 레이드 ${G.S.rec.raids}회, `
+    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
   }
@@ -104,16 +106,19 @@ SIM = r"""
 
 # --long: 이정표(처음 닿은 시각) 표
 LONG_S0 = [31, 51, 61, 71, 81, 86, 91, 94, 97, 101]
-LONG_S1 = [11, 21, 31, 41, 51, 61, 71, 81, 91, 101]
-LONG_L = [('L0', 50), ('L0', 80), ('L0', 100), ('L1', 50), ('L1', 100), ('L1', 150), ('L1', 200)]
-LONG_Q = [10, 20, 30, 35, 36, 45, 55, 65, 70, 75, 79, 80]
+LONG_S1 = [11, 31, 51, 71, 81, 91, 97]
+LONG_S2 = [11, 16, 31, 46, 61, 76, 86, 91]
+LONG_L = [('L0', 50), ('L0', 100), ('L1', 100), ('L1', 200), ('L2', 100), ('L2', 200), ('L2', 240)]
+LONG_Q = [17, 42, 43, 60, 86, 87, 100, 110, 112, 113]
 
 
 def long_table(cls, first):
     h = lambda m: '-' if m is None else (f'{m / 60:.1f}h' if m >= 60 else f'{m}m')
     print(f'[{cls}] 이승 ' + ' '.join(f'{x}:{h(first.get(f"0:{x}"))}' for x in LONG_S0))
     print(f'        저승 ' + ' '.join(f'{x}:{h(first.get(f"1:{x}"))}' for x in LONG_S1))
-    print('        레벨 ' + ' '.join(f'{"이승" if k == "L0" else "저승"}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
+    print(f'        천계 ' + ' '.join(f'{x}:{h(first.get(f"2:{x}"))}' for x in LONG_S2))
+    print(f'        전직 1차:{h(first.get("J1"))} 2차:{h(first.get("J2"))} · 히든 시작:{h(first.get("H1"))}')
+    print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
     print('        이야기 ' + ' '.join(f'{q}:{h(first.get(f"Q{q}"))}' for q in LONG_Q))
 
 
@@ -216,7 +221,7 @@ async def run_long():
     rest = sys.argv[k + 2:]
     classes = [a for a in rest if not a.startswith('{')] or ['musa', 'jagaek', 'sulsa', 'doin']
     curve = next((json.loads(a) for a in rest if a.startswith('{')), None)
-    marks = [m for m in (30, 60, 120, 240, 480, 720, 1440, 2160, 2880, 3600, 4320, 5040, 5760) if m <= hours * 60]
+    marks = [m for m in (60, 240, 720, 1440, 2880, 4320, 5760, 7200, 8640, 10080, 11520, 12960) if m <= hours * 60]
     async with async_playwright() as p:
         browser = await launch(p)
 
@@ -452,6 +457,37 @@ async def main():
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '18_레이드_저승.png'))
 
+        # 6-3) 전직·아바타·히든 퀘스트·천계(신과의 전쟁)
+        jb = await page.evaluate("""() => { const G = window.__game; G.quiet = true; G.S.up.atk = 200; G.S.up.hp = 200; G.refreshStats();
+          const before = G.S.job; const ok = G.startJobTrial(1); for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
+          return {before, ok, job: G.S.job, skill: G.S.skills.jobA, cape: G.S.av.cape}; }""")
+        check(jb['ok'] and jb['job'] == 1 and jb['skill'] == 1 and jb['cape'].startswith('j_'), f'1차 전직 시험을 이기면 전직하고 전직 기술·망토를 받는다 {jb}')
+        await page.click('#tab-grow'); await page.wait_for_timeout(200); await page.click('#gv-job'); await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '25_전직.png'))
+        av = await page.evaluate("""() => { const G = window.__game; G.S.gems = 5000; const n0 = G.AVATARS.filter(a => G.S.av.own[a.k]).length;
+          const r = G.openAvatarBox(); G.equipAvatar(r.a.k); return {got: !!r, n: G.AVATARS.filter(a => G.S.av.own[a.k]).length - n0, eq: G.S.av[r.a.type] === r.a.k}; }""")
+        check(av['got'] and av['n'] == 1 and av['eq'], f'꾸미기 상자로 아바타를 얻고 입는다 {av}')
+        await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-av'); await page.wait_for_timeout(400)
+        await page.screenshot(path=str(OUT / '26_아바타.png'))
+        hq = await page.evaluate("""() => { const G = window.__game, S = G.S; S.best.l1 = 200; S.level = 200; S.quest.main = G.HELL_END_Q;
+          const h0 = G.hiddenQuest(); G.claimHidden(); S.rec.raids += 10; G.claimHidden(); S.refine.armor.lv = 25; G.claimHidden();
+          const ready = G.jobReady(2); G.grantJob(2); G.claimHidden(); return {shown: !!h0 && h0.hidden, hid: S.quest.hid, ready, job: S.job, saja: !!S.av.own.c_saja}; }""")
+        check(hq['shown'] and hq['ready'] and hq['hid'] == 4 and hq['job'] == 2 and hq['saja'], f'저승을 마치면 히든 퀘스트가 나타나고, 다 하면 2차 전직을 한다 {hq}')
+        await page.click('#tab-quest'); await page.wait_for_timeout(300)
+        hv = await page.evaluate("""() => { const G = window.__game, S = G.S; const ok1 = G.rebirthReady(); const r = G.doRebirth();
+          const ok2 = G.rebirthReady(); return {ok1, world: S.world, reb: S.reb.n, again: ok2, cap: S.level}; }""")
+        check(hv['ok1'] and hv['world'] == 2 and hv['reb'] == 2 and not hv['again'], f'두 번째 환생으로 천계에 오르고, 환생은 두 번까지다 {hv}')
+        await skip_cut(page, 300)
+        for i, st in enumerate([1, 46, 76]):
+            await page.evaluate(f"() => window.__game.setStage({st})")
+            await page.wait_for_timeout(1500)
+            await (await page.query_selector('#scene')).screenshot(path=str(OUT / f'27_천계{i + 1}.png'))
+        gr = await page.evaluate("""() => { const G = window.__game; G.S.level = 40; G.S.raid.tk = 3; const ok = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
+          for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05); return {ok, name, first: !!G.S.raid.first.g0}; }""")
+        check(gr['ok'] and gr['name'] == '전우치', f'천계 영웅 레이드(전우치)를 할 수 있다 {gr}')
+        await page.click('#tab-raid'); await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '28_영웅레이드.png'))
+
         # 7) 도트 그림 모음(펫·몬스터)
         data = await page.evaluate("""() => { const sh = window.__game.sheet(); const rows = [sh.pets.map(p => p[0]).concat(sh.pets.map(p => p[1])), sh.mobs.map(m => m[0])];
           const c = document.createElement('canvas'); c.width = 30 * 22 * 3; c.height = 2 * 30 * 3 + 10; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
@@ -521,6 +557,7 @@ async def main():
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+        await ctxP.add_init_script("window.__samhanOnline = {url: ''};")   # 이 점검은 진짜 온라인 서버에 계정을 만들지 않는다
         pp = await ctxP.new_page()
         watch(pp, errors, 'PWA ')
         await pp.goto(base + 'index.html?simtest')
