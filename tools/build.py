@@ -49,7 +49,8 @@ def common_hangul() -> set:
 def main() -> None:
     html = SRC.read_text(encoding='utf-8')
     assert '/*FONT_REG*/' in html and '/*FONT_BOLD*/' in html, 'src/game.html 에 글꼴 자리표시(/*FONT_REG*/, /*FONT_BOLD*/)가 없어요'
-    chars = set(html) | {chr(c) for c in range(0x20, 0x7F)} | set('…→×·%∞★') | common_hangul()
+    jamo = {chr(c) for c in range(0x3131, 0x3164)}  # ㄱ~ㅣ (채팅의 ㅋㅋ·ㅎㅎ 등)
+    chars = set(html) | {chr(c) for c in range(0x20, 0x7F)} | set('…→×·%∞★') | common_hangul() | jamo
     text = ''.join(sorted(c for c in chars if c >= ' '))
     print('글꼴 추출 중…')
     html = html.replace('/*FONT_REG*/', subset_font('Galmuri11.woff2', text))

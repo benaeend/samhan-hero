@@ -87,7 +87,14 @@ MOCK_CLAUDE = r"""
     async delete(){ delete window.__store[path]; },
   }; }};
   const user = {async id(){ return 'u_test'; }};
-  window.claude = {use: async name => name === 'db' ? db : name === 'user' ? user : null};
+  window.__emitted = []; window.__roomH = [];
+  const room = {
+    on(topic, fn){ window.__roomH.push([topic, fn]); return () => {}; },
+    onPeers(fn){ setTimeout(() => fn({peers:[{}, {}], joined:[], left:[], updated:[]}), 0); return () => {}; },
+    async emit(topic, data){ window.__emitted.push([topic, data]); },
+    peers(){ return []; },
+  };
+  window.claude = {use: async name => name === 'db' ? db : name === 'user' ? user : name === 'room' ? room : null};
 })();
 """
 
@@ -225,6 +232,62 @@ async def main():
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '12_정보.png'), full_page=True)
 
+        await page.evaluate('() => window.__game.showNotes()')
+        await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '22_업데이트소식.png'))
+        await page.click('#modal-btn-0')
+
+        # 4-2) 상점·물약·부적
+        await page.click('#tab-shop')
+        await page.click('.shop-cats [data-c="pack"]')
+        await page.click('#shb-gift')
+        await page.click('.shop-cats [data-c="potion"]')
+        await page.click('#shb-potion')
+        await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '16_상점.png'))
+        inv = await page.evaluate('() => window.__game.S.inv')
+        check(inv['potion'] == 15, f'오늘의 선물·인삼 탕약 10개를 산다 {inv}')
+        await page.click('.shop-cats [data-c="charm"]')
+        await page.click('#shb-b_atk')
+        st = await page.evaluate('() => ({buff: window.__game.S.buff.atk})')
+        check(st['buff'] > 590, f'범 부적을 사면 10분 동안 공격력이 오른다 {st}')
+        drank = await page.evaluate('''() => { const G = window.__game; const n = G.S.inv.potion; G.hero.hp = G.ST.maxHp * 0.1; G.update(0.05);
+          return {before: n, after: G.S.inv.potion, hp: G.hero.hp / G.ST.maxHp}; }''')
+        check(drank['after'] == drank['before'] - 1 and drank['hp'] > 0.4, f'체력이 낮으면 탕약을 저절로 마신다 {drank}')
+        await page.wait_for_timeout(500)
+        await page.screenshot(path=str(OUT / '17_부적표시.png'))
+
+        # 4-3) 퀘스트 행운: 기술 초기화·신화 보물
+        res = await page.evaluate('''() => { const G = window.__game; for (const k in G.skillCd) G.skillCd[k] = 9; const atk0 = G.ST.atk;
+          G.luck = 0; G.questLuck(80); G.luck = null;
+          return {cd: Object.values(G.skillCd), sword: G.S.myth, atkUp: G.ST.atk >= atk0}; }''')
+        check(max(res['cd']) == 0, f'퀘스트 행운으로 기술 재사용이 초기화된다 {res["cd"]}')
+        check(sum(res['sword'].values()) > 0 and res['atkUp'], f'퀘스트 행운으로 신화 보물이 나온다 {res["sword"]}')
+        await page.wait_for_timeout(400)
+        await page.screenshot(path=str(OUT / '18_신화획득.png'))
+        await page.click('#modal-btn-0')
+        weak = await page.evaluate("() => { const G = window.__game; const r1 = G.dropMyth(150, 'mirror'); const r2 = G.dropMyth(20, 'mirror'); return [r1.p, r2.p, r2.up, G.S.myth.mirror]; }")
+        check(weak[0] > weak[1] and not weak[2] and weak[3] == weak[0], f'어려운 퀘스트의 신화 보물이 더 세고, 약한 것은 보석으로 바뀐다 {weak}')
+        await page.click('#modal-btn-0')
+        await page.click('#tab-gear'); await page.click('#seg-myth')
+        await page.wait_for_timeout(300)
+        await page.screenshot(path=str(OUT / '19_신화.png'))
+
+        # 4-4) 채팅
+        await page.click('#chatBtn')
+        await page.fill('#chatInput', '안녕하세요 ㅎㅎ')
+        await page.press('#chatInput', 'Enter')
+        await page.wait_for_timeout(3500)
+        msgs = await page.evaluate('() => window.__game.chatMsgs.map(m => m.kind + ":" + m.text)')
+        check(any(m.startswith('me:안녕하세요') for m in msgs) and any(m.startswith('npc:') for m in msgs), f'채팅을 보내면 주민이 대꾸한다 {msgs[-3:]}')
+        await page.fill('#chatInput', '이 병신아')
+        await page.press('#chatInput', 'Enter')
+        await page.wait_for_timeout(1300)
+        bad = await page.evaluate('() => window.__game.chatMsgs.filter(m => m.kind === "me").map(m => m.text)')
+        check(not any('병신' in m for m in bad), f'나쁜 말은 가려진다 {bad[-1:]}')
+        await page.screenshot(path=str(OUT / '20_채팅.png'))
+        await page.click('#chatClose')
+
         # 5) 다시 열면 로그인 유지 → 로그아웃 → 틀린/맞는 비밀번호
         await page.evaluate("() => window.dispatchEvent(new Event('pagehide'))")
         await page.goto(URL)
@@ -292,6 +355,15 @@ async def main():
         await pb.wait_for_function('() => window.__game.session', timeout=8000)
         got = await pb.evaluate('() => ({name: window.__game.S.name, level: window.__game.S.level, gems: window.__game.S.gems})')
         check(got['name'] == '구름' and got['level'] == 17, f'다른 기기에서 같은 계정으로 이어진다 {got}')
+        await pb.click('#chatBtn')
+        await pb.fill('#chatInput', '같이 레이드 가요')
+        await pb.press('#chatInput', 'Enter')
+        await pb.evaluate('''() => { for (const [t, fn] of window.__roomH) if (t === 'chat') fn({topic:'chat', data:{n:'바람돌이', t:'좋아요! <b>ㅋㅋ</b>'}, peer:'p2', by:null, isMe:false, sameTab:false, kind:'viewer', guest:false}); }''')
+        await pb.wait_for_timeout(300)
+        room = await pb.evaluate('() => ({sent: window.__emitted, html: document.querySelector("#chatList").innerHTML, who: document.querySelector("#chatWho").textContent})')
+        check(len(room['sent']) == 1 and room['sent'][0][1]['t'] == '같이 레이드 가요', f'claude.ai에서는 채팅이 다른 사람에게 나간다 {room["sent"]}')
+        check('바람돌이' in room['html'] and '&lt;b&gt;' in room['html'], '다른 사람의 채팅이 들어오고, 글자로만 보인다')
+        await pb.screenshot(path=str(OUT / '21_채팅_여럿.png'))
         await ctxB.close()
 
         # 9) 예전(계정 없던 때) 저장을 새 캐릭터로 이어받기
