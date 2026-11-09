@@ -9,9 +9,12 @@
 """
 import asyncio
 import base64
+import functools
 import json
 import os
 import sys
+import threading
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from playwright.async_api import async_playwright
@@ -97,6 +100,20 @@ MOCK_CLAUDE = r"""
   window.claude = {use: async name => name === 'db' ? db : name === 'user' ? user : name === 'room' ? room : null};
 })();
 """
+
+
+class QuietHandler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, '.webmanifest': 'application/manifest+json', '.js': 'text/javascript'}
+
+    def log_message(self, *args):
+        pass
+
+
+def serve():
+    """저장소 폴더를 내 컴퓨터 웹서버(127.0.0.1)로 띄운다. 앱 설치·오프라인 점검용"""
+    srv = ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(QuietHandler, directory=str(ROOT)))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv, f'http://127.0.0.1:{srv.server_address[1]}/'
 
 
 async def launch(p):
@@ -384,6 +401,45 @@ async def main():
         got = await pc.evaluate('() => ({lv: window.__game.S.level, st: window.__game.S.maxStage, tut: window.__game.S.quest.tut})')
         check(got['lv'] == 23 and got['st'] == 27 and got['tut'] == -1, f'예전 진행을 이어받는다 {got}')
         await ctxC.close()
+
+        # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
+        srv, base = serve()
+        ctxP = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+        pp = await ctxP.new_page()
+        watch(pp, errors, 'PWA ')
+        await pp.goto(base + 'index.html?simtest')
+        await pp.wait_for_selector('#lg-id')
+        info = await pp.evaluate('''async () => {
+          const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 8000))]);
+          const man = await (await fetch(document.querySelector('link[rel=manifest]').href)).json();
+          const icons = await Promise.all(man.icons.map(i => fetch(i.src).then(r => r.ok && r.headers.get('content-type'))));
+          const img = await Promise.all(man.icons.map(i => new Promise(r => { const im = new Image(); im.onload = () => r(im.width); im.onerror = () => r(0); im.src = i.src; })));
+          return {sw: !!(reg && reg.active), name: man.name, display: man.display, icons, img, pwa: window.__game.pwa};
+        }''')
+        check(info['pwa'] and info['sw'] and info['name'] == '삼한 용사 키우기' and info['display'] == 'standalone'
+              and all(t == 'image/png' for t in info['icons']) and info['img'] == [192, 512, 512], f'앱 설정·아이콘·오프라인 도우미가 준비된다 {info}')
+        check(await pp.is_visible('#lg-install'), '로그인 화면에 [앱으로 설치하기]가 보인다')
+        await pp.click('#lg-install')
+        await pp.wait_for_selector('#mTitle:has-text("앱으로 설치하기")')
+        await pp.screenshot(path=str(OUT / '23_앱설치안내.png'))
+        await pp.click('#modal-btn-0')
+        await pp.wait_for_selector('#lg-id')
+        await pp.reload()          # 오프라인 도우미가 이 페이지를 맡게 한 번 더 연다
+        await pp.wait_for_selector('#lg-id')
+        await pp.wait_for_timeout(500)
+        await ctxP.set_offline(True)
+        await pp.reload()
+        await pp.wait_for_selector('#lg-id', timeout=8000)
+        await signup(pp, 'offline1', 'abcd', '산골')
+        await pp.wait_for_timeout(1500)
+        off = await pp.evaluate('() => ({name: window.__game.S.name, kills: window.__game.S.rec.kills, online: navigator.onLine})')
+        check(off['name'] == '산골' and not off['online'], f'인터넷이 끊겨도 게임이 열리고 돌아간다 {off}')
+        await pp.screenshot(path=str(OUT / '24_오프라인.png'))
+        await ctxP.set_offline(False)
+        await pp.click('#tab-rec')
+        check(await pp.is_visible('#appBtn'), '[정보] 탭에 [앱으로 설치] 단추가 있다')
+        await ctxP.close()
+        srv.shutdown()
 
         if '--sim' in sys.argv:
             ctx = await browser.new_context(viewport={'width': 390, 'height': 800})

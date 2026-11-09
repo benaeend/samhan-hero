@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "삼한 용사 키우기",
+  "short_name": "삼한 용사",
+  "description": "옛 한국풍 도트 방치형 RPG. 네 직업 중 하나를 골라 마을 어귀부터 백두 설원까지 사냥하며 성장해요.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1d150f",
+  "theme_color": "#2b1f17",
+  "categories": ["games"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

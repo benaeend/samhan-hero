@@ -6,6 +6,10 @@
 <title>삼한 용사 키우기</title>
 <meta name="description" content="옛 한국풍 도트 방치형 RPG. 네 직업 중 하나를 골라 마을 어귀부터 백두 설원까지 사냥하며 성장해요.">
 <meta name="theme-color" content="#2b1f17">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="삼한 용사">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <style>
 /* Galmuri — Copyright 2019–2025 Lee Minseo (quiple), SIL Open Font License 1.1, https://github.com/quiple/galmuri (이 게임에 쓰인 글자만 남긴 부분 글꼴) */
 @font-face{font-family:'Galmuri';font-weight:400;src:url(data:font/woff2;base64,/*FONT_REG*/) format('woff2');font-display:block}
@@ -442,6 +446,30 @@ const MAX_CHARS = 4;
 const STEP_HERO = 0.2;
 const GEM_DROP = 0.1;                       // 잡몹 한 마리가 보석을 떨굴 확률
 let clockSkew = 0;                          // 테스트에서 시간을 빨리 돌릴 때만 쓴다
+
+/* ================= 앱으로 설치(PWA) =================
+   GitHub Pages(github.io)나 내 컴퓨터(localhost)에서 열 때만 앱 설정(manifest.webmanifest)과 오프라인 도우미(sw.js)를 켠다.
+   claude.ai 아티팩트처럼 다른 곳에 올린 경우에는 아무것도 하지 않는다. */
+const PWA_HOST = (() => {
+  try {
+    return window.top === window && /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)
+      && (location.protocol === 'https:' || location.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(location.hostname));
+  } catch (e) { return false; }
+})();
+if (PWA_HOST){
+  for (const [rel, href] of [['manifest', 'manifest.webmanifest'], ['icon', 'icons/icon-192.png'], ['apple-touch-icon', 'icons/icon-192.png']]){
+    const l = document.createElement('link'); l.rel = rel; l.href = href; document.head.appendChild(l);
+  }
+  if ('serviceWorker' in navigator){
+    const reg = () => navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (document.readyState === 'complete') reg(); else window.addEventListener('load', reg);
+  }
+}
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; });
+window.addEventListener('appinstalled', () => { installEvt = null; });
+const isStandalone = () => (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const canInstall = () => PWA_HOST && !isStandalone();
 const now = () => Date.now() + clockSkew;
 
 const SVG = {
@@ -740,8 +768,9 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-09', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-09-2', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['앱으로 설치', '휴대폰 홈 화면에 아이콘으로 설치해 앱처럼 쓸 수 있어요. 주소창 없이 전체 화면으로 열리고, 한 번 열어 두면 인터넷이 없어도 돌아가요. [정보] → [앱으로 설치]'],
   ['계정·꾸미기', '아이디·비밀번호로 로그인하고, 계정마다 캐릭터 4명까지 만들어요. 옷 색·머리색·피부·머리 장식을 꾸밀 수 있어요.'],
   ['튜토리얼·퀘스트', '길잡이 까치가 처음부터 안내해요. 이야기 퀘스트 15장과 매일 새로 고쳐지는 오늘의 할 일이 생겼어요.'],
   ['퀘스트 행운', '퀘스트 보상을 받을 때 20% 확률로 모든 기술 재사용 초기화, 6% 확률로 신화 보물이 나와요.'],
@@ -754,8 +783,31 @@ const NOTES = [
   ['보석 드롭', '잡몹도 10% 확률로 보석을 1~2개 떨궈요.'],
 ];
 function showNotes(){
-  showModal(`업데이트 소식 · ${NOTE_VER}`, `<ul class="rewards notes">${NOTES.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ul>`, [{label:'확인', primary:true}]);
+  showModal(`업데이트 소식 · ${NOTE_VER.slice(0, 10)}`, `<ul class="rewards notes">${NOTES.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ul>`, [{label:'확인', primary:true}]);
   try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
+}
+// 로그인 화면에서 열었을 때는 안내 창을 닫으면 로그인 화면으로 돌아온다
+function installAppThen(back){
+  if (installEvt){ installApp(); return; }
+  installApp();
+  const ok = $('#modal-btn-0');
+  if (ok) ok.addEventListener('click', () => setTimeout(back, 0), {once:true});
+}
+function installApp(){
+  if (installEvt){
+    const e = installEvt; installEvt = null;
+    e.prompt();
+    if (e.userChoice) e.userChoice.then(c => { if (c && c.outcome === 'accepted') addLog('앱으로 설치했어요! 홈 화면에서 바로 열 수 있어요.', 'good'); }).catch(() => {});
+    return;
+  }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const steps = ios
+    ? '<li><b>Safari</b>로 이 게임 주소를 열어요.</li><li>아래쪽 <b>[공유]</b> 단추(네모에서 화살표가 나오는 모양)를 눌러요.</li><li><b>[홈 화면에 추가]</b> → <b>[추가]</b>를 누르면 끝!</li>'
+    : '<li><b>Chrome</b>이나 <b>삼성 인터넷</b>으로 이 게임 주소를 열어요.</li><li>오른쪽 위(삼성 인터넷은 아래) <b>점 세 개 메뉴</b>를 눌러요.</li><li><b>[앱 설치]</b> 또는 <b>[홈 화면에 추가]</b>를 누르면 끝!</li>';
+  showModal('앱으로 설치하기', `<ol class="howto">${steps}</ol>
+    <p class="small">PC의 Chrome·Edge는 주소창 오른쪽의 설치 단추를 눌러도 돼요. 설치한 앱은 주소창 없이 열리고, 인터넷이 없어도 돌아가요.</p>
+    ${ios ? '<p class="small" style="color:var(--seal)">아이폰은 홈 화면 앱과 Safari의 저장 공간이 따로예요. 설치한 앱에서는 계정을 새로 만들어야 해요.</p>' : ''}`,
+    [{label:'확인', primary:true}]);
 }
 function notesSeen(){ try { return localStorage.getItem(NOTE_KEY) === NOTE_VER; } catch (e) { return true; } }
 
@@ -3309,12 +3361,13 @@ function buildRec(){
       <li>창을 닫아도 최대 12시간까지 오프라인 보상이 쌓여요.</li>
     </ul>
     <div class="recbtns"><button class="btn" id="tutBtn">튜토리얼 다시 보기</button><button class="btn" id="noteBtn">업데이트 소식</button></div>
-    <div class="recbtns" style="margin-top:8px"><button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
+    <div class="recbtns" style="margin-top:8px">${canInstall() ? '<button class="btn primary" id="appBtn">앱으로 설치</button>' : ''}<button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
   $('#lookBtn').addEventListener('click', openLookEditor);
   $('#clsBtn').addEventListener('click', () => chooseClass(true));
   $('#swBtn').addEventListener('click', switchChar);
   $('#outBtn').addEventListener('click', () => showModal('로그아웃할까요?', '<p>지금까지의 모험은 저장돼요. 다음에 아이디와 비밀번호로 다시 들어오면 이어서 할 수 있어요.</p>', [{label:'취소'}, {label:'로그아웃', primary:true, fn:logout}]));
   $('#noteBtn').addEventListener('click', showNotes);
+  if ($('#appBtn')) $('#appBtn').addEventListener('click', installApp);
   $('#tutBtn').addEventListener('click', () => { S.quest.tut = 0; S.quest.tutN = 0; addLog('길잡이 까치가 다시 안내해 줄게요.', 'good'); });
   $('#resetBtn').addEventListener('click', () => showModal('처음부터 다시 할까요?', `<p><b>${esc(S.name)}</b>의 레벨, 엽전, 보석, 장비, 펫, 퀘스트가 모두 사라지고 마을 어귀 1-1부터 다시 시작해요. 이름과 꾸미기는 그대로예요. 되돌릴 수 없어요.</p>`, [
     {label:'취소'}, {label:'다시 시작', danger:true, fn:resetGame},
@@ -3570,10 +3623,12 @@ function showLogin(mode, msg){
       <label class="check"><input type="checkbox" id="lg-keep" checked>이 기기에서 로그인 유지</label>
     </div>
     <p class="err" id="lg-err" role="alert">${esc(msg || '')}</p>
-    <p class="small">${note} 비밀번호는 암호처럼 바꾼 값(해시)으로만 저장돼요.</p>`;
+    <p class="small">${note} 비밀번호는 암호처럼 바꾼 값(해시)으로만 저장돼요.</p>
+    ${canInstall() ? '<button class="link" id="lg-install">휴대폰 홈 화면에 앱으로 설치하기</button>' : ''}`;
   showModal('삼한 용사 키우기', html, [{label:signup ? '계정 만들기' : '로그인', primary:true, keep:() => { submitLogin(signup); return true; }}], () => {
     $('#lg-tab-login').addEventListener('click', () => showLogin('login'));
     $('#lg-tab-signup').addEventListener('click', () => showLogin('signup'));
+    if ($('#lg-install')) $('#lg-install').addEventListener('click', () => { const m = signup ? 'signup' : 'login'; installAppThen(() => showLogin(m)); });
     enterSubmits();
   });
 }
@@ -3925,7 +3980,7 @@ if (location.search.indexOf('simtest') >= 0){
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX,
     claimAll, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
-    buyShop, SHOP, dropMyth, showNotes, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
+    buyShop, SHOP, dropMyth, showNotes, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_DRAW).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
