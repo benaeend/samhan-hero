@@ -35,7 +35,7 @@ SIM = r"""
   if (opts.curve) Object.assign(G.CURVE, opts.curve);
   if (opts.busang) Object.assign(G.BUSANG, opts.busang);
   if (opts.expk) G.EXP_K[3] = opts.expk;
-  if (opts.load) { Object.assign(G.S, JSON.parse(opts.load)); G.S.cls = cls; G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
+  if (opts.load) { Object.assign(G.S, JSON.parse(opts.load)); G.S.cls = cls; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
   G.S.buyMode = 1;
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
@@ -52,8 +52,9 @@ SIM = r"""
       nextShop = t + 2;
       const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
       for (let k = 0; k < 20; k++) {
-        const slot = G.S.refine.weapon.lv < G.REFINE_MAX && G.S.refine.weapon.lv <= G.S.refine.armor.lv + 3 ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
-        if (lv >= G.REFINE_MAX || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
+        const capW = G.refineCap('weapon'), capA = G.refineCap('armor'), rw = G.S.refine.weapon.lv, ra = G.S.refine.armor.lv;
+        const slot = rw < capW && (rw <= ra + 3 || ra >= capA) ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
+        if (lv >= G.refineCap(slot) || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
         G.refineTry(slot);
       }
       for (const pt of G.PET_TYPE_ORDER) {
@@ -587,17 +588,41 @@ async def main():
           return {chance: r1.ok && r1.sure && S.refine.weapon.lv === 17, box: !!(box && box.pity && box.isNew && box.a.type !== 'pet'), pet: G.PETS[pets[0].i].g}; }""")
         check(pr['chance'] and pr['box'] and pr['pet'] >= 3, f'확률 보정: 두 번 떨어진 뒤 재련은 반드시 성공, 꾸미기 상자·펫 소환 천장 {pr}')
 
+        # 6-4b) 재련 한도: 방어구는 이승 +15 → 저승 +22 → 천계 +25, 무기는 이승에서 +25
+        rc = await page.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world, out = {};
+          for (const w of [0, 1, 2]){ S.world = w; out['a' + w] = G.refineCap('armor'); out['w' + w] = G.refineCap('weapon'); }
+          S.world = 0; const lv = S.refine.armor.lv; S.refine.armor.lv = 15; S.gold = 1e300; S.dust = 1e6; const blocked = G.refineTry('armor') === null;
+          S.refine.armor.lv = lv; S.world = w0; G.refreshStats(); return Object.assign(out, {blocked}); }""")
+        check(rc['w0'] == 25 and rc['a0'] == 15 and rc['a1'] == 22 and rc['a2'] == 25 and rc['blocked'],
+              f'재련 한도: 무기는 이승에서 +25, 방어구는 이승 +15·저승 +22·천계 +25 {rc}')
+
+        # 6-4c) 오프라인 보상: 온라인 스킬 자동 처치 속도로 계산, 경험치 1.25배·엽전 0.85배, 오프라인 누적 24시간마다 신화 3%
+        of = await page.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world, st0 = S.stage; G.quiet = true;
+          S.world = 0; G.setStage(5); S.mode = 'auto'; S.off.kps = 0; G.offHunt.t = 0; G.offHunt.k = 0;
+          for (let i = 0; i < 1300; i++) G.update(0.05);
+          const kps = S.off.kps;
+          S.off.kps = 1.5; S.off.acc = 23.5 * 3600; G.offLuck = 100;
+          const r = G.offlineReward(3600); G.offLuck = null; G.closePage && 0;
+          const acc = S.off.acc; S.world = w0; G.setStage(st0); G.refreshStats(); G.quiet = false;
+          return {kps, kills: r.kills, gold: r.gold, gems: r.gems, exp: r.exp, myths: r.myths.length, acc}; }""")
+        await page.evaluate("() => { const b = document.querySelector('#modal-btn-0'); if (b) b.click(); }")
+        check(of['kps'] > 0.2 and of['kills'] == 5400 and of['gems'] > 0 and of['gold'] > 0 and of['myths'] == 1 and abs(of['acc'] - 1800) < 1,
+              f'오프라인 보상: 잰 처치 속도로 마리 수를 셈하고 보석도 나오며, 오프라인 누적 24시간에 신화 보물을 굴린다 {of}')
+
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
           if (S.world < 2){ S.world = 2; S.reb.n = 2; }
           S.level = 290; S.best.l2 = Math.max(S.best.l2, 290); Object.assign(S.up, {atk: 900, hp: 900, crit: 80, critDmg: 120, aspd: 60, regen: 40});
+          S.refine.weapon.lv = 25; S.refine.weapon.t = 0; const effW0 = G.refineEff('weapon');
           const before = G.crossReady(); S.quest.main = G.CROSS_Q; const ready = G.crossReady(); const ok = G.doCross(); G.refreshStats();
           const after = {world: S.world, lv: S.level, st: S.stage, region: G.BUSANG_REGIONS[0].name};
+          const inh = {t: S.refine.weapon.t, lv: S.refine.weapon.lv, keep: Math.abs(G.refineEff('weapon') - effW0) < 1e-6, cap: G.refineCap('armor')};
           S.best.s3 = 8; S.raid.tk = 3; const r0 = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
           for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
           S.level = 360; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 34);
           const jr = G.jobReady(3); const tr = G.startJobTrial(3); for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
-          return {before, ready, ok, after, r0, name, b0: !!S.raid.first.b0, jr, tr, job: S.job, jobC: S.skills.jobC, cape: S.av.cape}; }""")
+          return {before, ready, ok, after, inh, r0, name, b0: !!S.raid.first.b0, jr, tr, job: S.job, jobC: S.skills.jobC, cape: S.av.cape}; }""")
+        check(bs['inh']['t'] == 1 and bs['inh']['lv'] == 15 and bs['inh']['keep'] and bs['inh']['cap'] == 25, f'2부: 바다를 건너면 무기·방어구가 계승되어 +15부터(효과는 그대로) {bs["inh"]}')
         check(not bs['before'] and bs['ready'] and bs['ok'] and bs['after']['world'] == 3 and bs['after']['lv'] == 290 and bs['after']['st'] == 1,
               f'2부: 천계 이야기를 마치면 바다를 건너 부상으로 가고, 레벨은 그대로 단계만 1부터 {bs["after"]}')
         check(bs['r0'] and bs['name'] == '갓파 대왕' and bs['b0'], f'2부: 부상 레이드(갓파 대왕)를 토벌한다 {bs["name"]}')

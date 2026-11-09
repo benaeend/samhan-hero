@@ -1131,6 +1131,17 @@ const REFINE_GUARD = [10, 15, 20];
 const refineGuardTo = lv => lv >= 20 ? 20 : 15;
 const refineProtectable = lv => lv >= 16 && lv <= 19;
 const refinePct = lv => 4 * lv + 0.3 * lv * lv;
+/* 세계별 재련 한도: 1부 무기는 이승에서 +25, 방어구는 이승 +15 → 저승 +22 → 천계 +25.
+   2부(부상)로 건너가면 무기·방어구가 '계승'되어 +15부터 다시 벼린다(그동안 쌓은 효과는 그대로 base에 남고, 확률은 REFINE_T_RATE배) */
+const REFINE_CAP_A = [15, 22, 25], REFINE_INHERIT = 15, REFINE_T_RATE = 0.7;
+const refineCap = slot => S.refine[slot].t || slot === 'weapon' ? REFINE_MAX : REFINE_CAP_A[Math.min(2, S.world)];
+const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return r.t ? (r.base || 0) + refinePct(lv) - refinePct(REFINE_INHERIT) : refinePct(lv); };
+function refineInherit(){
+  let n = 0;
+  for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if (r.t) continue; r.base = refinePct(r.lv); r.lv = REFINE_INHERIT; r.drops = 0; r.t = 1; n++; }
+  if (n) refreshStats();
+  return n > 0;
+}
 const refineGold = lv => 500 * Math.pow(1.2, lv);
 const refineGems = lv => 2 + Math.floor(lv / 4);   // 보호를 켰을 때만 이 보석의 두 배
 // 쇳가루(재련 재화): 남는 장비를 갈아서 얻는다. 재련 한 번에 쇳가루가 든다
@@ -1869,7 +1880,7 @@ const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'],
 
 /* ================= 신화 보물 =================
    퀘스트 보상을 받을 때 낮은 확률로 나온다. 효과 크기는 그 퀘스트의 난이도(D)를 따른다. 이름은 우리 옛 신화에서 따옴 */
-const LUCK_RESET = 0.2, LUCK_MYTH = 0.06, MYTH_DUP_GEMS = 30, MYTH_COLOR = '#ff5a8a';
+const LUCK_RESET = 0.2, LUCK_MYTH = 0.03, MYTH_DUP_GEMS = 30, MYTH_COLOR = '#ff5a8a';
 const MYTHS = [
   {k:'sword', name:'천부인 검', stat:'공격력', icon:'sword', mul:1.2},
   {k:'mirror', name:'천부인 거울', stat:'체력', icon:'mirror', mul:1.5},
@@ -1925,8 +1936,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-11', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-12', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 탈것·재련 한도·오프라인 보상'],
+  ['탈것 10종', '[장비] → [탈것]. 부상부터 당나귀·누렁소·백마(마구간), 이야기의 과하마·응룡·해태·백록·기린, 고삐 조각으로 천리마·산군 범. 타면 걷기가 빨라지고 고유 능력이 켜져요. 가진 탈것마다 공격력·체력도 올라요.'],
+  ['재련 한도', '무기는 이승에서 +25까지, 방어구는 이승 +15 → 저승 +22 → 천계 +25. 2부로 건너가면 무기·방어구가 계승되어 효과는 그대로 두고 +15부터 다시 벼려요(확률은 1부의 70%).'],
+  ['오프라인 보상 고침', '자리를 비우면 잡은 수가 너무 적게 나오던 문제를 고쳤어요. 이제 켜 둘 때 스킬 자동 사냥 속도로 계산하고, 경험치는 1.25배·엽전·보석은 0.85배예요.'],
+  ['오프라인 신화 보물', '오프라인 시간을 모두 더해 24시간이 될 때마다 3% 확률로 신화 보물이 떨어져요. 퀘스트 보상의 신화 보물 확률은 6% → 3%로 낮췄어요.'],
   ['#', '2026-11-10 · 화면 새 단장·마을 부탁·허수아비'],
   ['퀘스트 화면', '이야기·오늘의 할 일·마을 부탁 세 칸, 장 배너·큰 진행 막대·보상 칩·[바로 가기].'],
   ['마을 부탁 30개', '채팅 「마을」에서 부탁 ▶이 붙은 말을 누르면 부탁을 들어줘요. 전래동화 15가지 + 삼국지연의 이야기 15가지.'],
@@ -2116,7 +2132,7 @@ function defaultState(){
     rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0},
     speed:1, mode:'auto', bossAuto:true, dust:40, buyMode:1, lastSave:0,
     name:'', look:defaultLook(),
-    refine:{weapon:{lv:0, drops:0}, armor:{lv:0, drops:0}},
+    refine:{weapon:{lv:0, drops:0, t:0, base:0}, armor:{lv:0, drops:0, t:0, base:0}},
     pets:{lv:Array(PET_N).fill(0), star:Array(PET_N).fill(0)}, petEq:{atk:-1, def:-1, sup:-1},
     quest:{main:0, tut:0, tutN:0, day:'', dp:{}, dgot:[], dall:false, sv:5, trials:[], hid:0, hidBase:0},
     sub:{act:{}, done:{}}, dummy:{day:'', n:0, best:0},
@@ -2130,7 +2146,7 @@ function defaultState(){
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''},
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0},
   };
 }
 function mergeState(d){
@@ -2149,7 +2165,7 @@ function mergeState(d){
   out.look = cleanLook(d.look);
   for (const k of ['weapon', 'armor']){
     const r = (d.refine && d.refine[k]) || {};
-    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0))};
+    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0)), t:r.t ? 1 : 0, base:Math.max(0, +r.base || 0)};
   }
   const pd = d.pets || {};
   out.pets = {
@@ -2219,6 +2235,7 @@ function mergeState(d){
   out.dust = Math.max(0, d.dust == null ? 40 : +d.dust || 0);
   out.dummy = Object.assign({day:'', n:0, best:0}, d.dummy || {});
   out.sub = {act:Object.assign({}, (d.sub || {}).act), done:Object.assign({}, (d.sub || {}).done)};
+  out.off = {kps:Math.min(OFF_KPS_MAX, Math.max(0, +(d.off && d.off.kps) || 0)), acc:Math.max(0, +(d.off && d.off.acc) || 0)};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
   out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
   for (const m of MOUNTS) if (mt.own && mt.own[m.k]){ out.mount.own[m.k] = true; out.mount.star[m.k] = Math.min(MOUNT_STAR_MAX, Math.max(0, Math.floor(+(mt.star && mt.star[m.k])) || 0)); }
@@ -2283,9 +2300,9 @@ function mythSets(){
 function computeStats(up = S.up){
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
   return {
-    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refinePct(S.refine.weapon.lv) / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
+    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100),
-    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refinePct(S.refine.armor.lv) / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
+    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
     crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100),
@@ -2388,7 +2405,7 @@ const whetOn = () => S.useWhet && S.inv.whet > 0;
 function refineOdds(slot){
   const r = S.refine[slot], lv = r.lv;
   if ((r.drops || 0) >= 2) return {ok:100, drop:0, brk:0, keep:0, chance:true};
-  const ok = Math.min(100, REFINE_RATE[lv] * (whetOn() ? 1.15 : 1));
+  const ok = Math.min(100, REFINE_RATE[lv] * (r.t ? REFINE_T_RATE : 1) * (whetOn() ? 1.15 : 1));
   const brk = S.useProtect && refineProtectable(lv) ? 0 : REFINE_BREAK[lv];
   const drop = REFINE_GUARD.includes(lv) ? 0 : REFINE_DROP[lv];
   const left = 100 - ok, b = Math.min(left, brk), d = Math.min(left - b, drop);
@@ -2396,7 +2413,7 @@ function refineOdds(slot){
 }
 function refineTry(slot){
   const r = S.refine[slot];
-  if (r.lv >= REFINE_MAX) return null;
+  if (r.lv >= refineCap(slot)) return null;
   const prot = S.useProtect && refineProtectable(r.lv) && (r.drops || 0) < 2;
   const g = refineGold(r.lv), gm = prot ? refineGems(r.lv) * 2 : 0, du = refineDust(r.lv);
   if (S.gold < g || S.gems < gm || S.dust < du) return null;
@@ -2515,7 +2532,7 @@ const trialsDone = () => TRIALS.every((t, i) => S.quest.trials[i]);
 function rebirthCheck(){
   if (S.world === 0) return [
     {t:'이승 레벨 100', ok:S.level >= 100, v:`Lv.${S.level}`},
-    {t:'무기 재련 +25', ok:S.refine.weapon.lv >= REFINE_MAX, v:`+${S.refine.weapon.lv}`},
+    {t:'무기 재련 +25', ok:S.refine.weapon.lv >= REFINE_MAX || !!S.refine.weapon.t, v:`+${S.refine.weapon.lv}`},
     {t:'윤회의 다섯 시련', ok:trialsDone(), v:`${S.quest.trials.filter(Boolean).length}/5`},
   ];
   if (S.world === 1) return [
@@ -2634,14 +2651,14 @@ function questLuck(D){
   }
   if (luckRoll() < LUCK_MYTH) dropMyth(D);
 }
-function dropMyth(D, kind){
+function dropMyth(D, kind, noModal){
   const pool = MYTHS.filter(x => !x.story), m = kind ? MYTHS.find(x => x.k === kind) : pool[(Math.random() * pool.length) | 0], p = mythPower(m, D), cur = S.myth[m.k] || 0;
   if (p > cur){
     S.myth[m.k] = p; refreshStats();
     addLog(`신화 보물! ${m.name} (${m.stat} +${p}%)`, 'gain');
     announce(`${S.name}님이 신화 보물 ${m.name}${josa(m.name, '을', '를')} 얻었어요! (${m.stat} +${p}%)`);
     fx.push({type:'level', t:0, dur:1}); shake = 0.3;
-    if (!(window.__game && window.__game.quiet)) showModal('신화 보물을 얻었어요!', `
+    if (!noModal && !(window.__game && window.__game.quiet)) showModal('신화 보물을 얻었어요!', `
       <div class="myth-get"><div class="ic myth">${SVG[m.icon]}</div><div><b>${m.name}</b><p>${m.stat} +${p}%${cur ? ` (전보다 +${p - cur}%)` : ''}</p><p class="small">퀘스트 난이도 ${diffName(D)}에서 나왔어요. 어려운 퀘스트일수록 센 보물이 나와요.</p></div></div>`,
       [{label:'좋아요', primary:true}]);
   } else {
@@ -2927,7 +2944,7 @@ function killMob(m){
   if (m.boss){ gainExp(m.exp * xm); bossWin(); return; }
   addLog(`${m.name} 처치 · 경험 +${fmt(m.exp * xm)}`);
   gainExp(m.exp * xm);
-  S.kills = Math.min(FIELD.kills, S.kills + 1);
+  S.kills = Math.min(FIELD.kills, S.kills + 1); offHunt.k++;
   ev('kill');
   if (isGateStage(S.stage) && Math.random() < FIELD.rew) rollAcc(false);
   if (Math.random() < MAT_DROP.mob * FIELD.rew) gainMat(1);
@@ -3670,6 +3687,7 @@ function nearestMob(){
 
 function update(dt){
   gtime += dt; S.rec.play += dt;
+  if (S.chosen && !raid && S.mode === 'auto') offTrack(dt);
   if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
@@ -4446,7 +4464,7 @@ const HIDDEN_Q = [
     c:['gate', 'gangrim,hero', 'dark', [['강림도령', '나는 강림. 이승 사람으로 염라대왕을 잡으러 갔던 차사다.'], ['강림도령', '네 넋이 쓸 만하구나. 숨은 길을 걸어 보겠느냐?']]]},
   {t:'열 대왕의 도장', s:'레이드를 10번 더 토벌해요(어느 세계의 레이드든 괜찮아요).', k:'hraids', n:10, gems:1500,
     c:['court', 'gangrim,k:0', 'seal', [['강림도령', '열 대왕께 도장을 받아 오너라. 저승 길은 도장으로 열린다.'], ['진광대왕', '…강림이 보냈느냐. 받아 가라.']]]},
-  {t:'바리공주의 생명수', s:'방어구를 +25까지 재련해요. 서천 꽃밭의 생명수처럼 단단한 몸이 필요해요.', k:'refineA', n:25, gems:2000,
+  {t:'바리공주의 생명수', s:'방어구를 +22까지 재련해요. 서천 꽃밭의 생명수처럼 단단한 몸이 필요해요.', k:'refineA', n:22, gems:2000,
     c:['sky', 'yuhwa,hero', 'sparkle', [['유화', '버려진 공주는 저승 끝까지 걸어가 생명수를 길어 왔대요.'], ['나', '저도 끝까지 걸어갈게요.']]]},
   {t:'강림의 시험', s:'[수련] → [전직]에서 강림도령과 겨뤄 2차 전직해요.', k:'job', n:2, gems:3000, av:'c_saja',
     c:['court', 'gangrim,hero', 'flash', [['강림도령', '좋다. 이제 하늘과의 싸움에 나설 자격이 있다.'], ['나', '숨은 길 끝에 이런 힘이…!']]]},
@@ -4834,6 +4852,7 @@ function doCross(){
   S.world = w; S.stage = 1; S.maxStage = 1; S.kills = 0; S.autoBoss = S.bossAuto !== false; S.deathsHere = 0;
   S.best['s' + w] = Math.max(S.best['s' + w] || 0, 1); S.best['l' + w] = Math.max(S.best['l' + w] || 0, S.level);
   raid = null; ST = null; refreshStats(); resetRuntime(); mapCache.clear(); applyWorld(); unlockSkills();
+  if (w === 3 && refineInherit()) addLog(`무기·방어구가 계승됐어요! 재련 효과는 그대로 두고 +${REFINE_INHERIT}부터 다시 벼려요(확률은 낮아져요).`, 'good');
   addLog(w === 4 ? '열 개의 해를 쫓아 서쪽 하늘 끝으로 건넜어요. 신들의 산 「곤륜」이에요!' : '동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
   announce(w === 4 ? `${S.name}님이 서쪽 끝 곤륜에 닿았어요!` : `${S.name}님이 바다 건너 부상에 닿았어요!`);
   sfx('rebirth'); saveLocal();
@@ -7405,14 +7424,15 @@ function buildRefine(){
     </div>`;
   };
   panel.innerHTML = `${gearSegHTML()}
-    <p class="hint" style="margin-top:8px">엽전과 보석으로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
+    <p class="hint" style="margin-top:8px">엽전과 쇳가루로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
+    <p class="hint">${S.refine.weapon.t ? `2부에서는 무기·방어구가 <b>계승</b>되어 +${REFINE_INHERIT}부터 다시 벼려요. 1부에서 쌓은 재련 효과는 그대로 남고, 성공 확률은 1부의 ${Math.round(REFINE_T_RATE * 100)}%예요.` : `<b>재련 한도</b>: 무기는 이승에서 +25까지. 방어구는 이승 +${REFINE_CAP_A[0]} → 저승 +${REFINE_CAP_A[1]} → 천계 +${REFINE_CAP_A[2]}. 2부로 건너가면 계승되어 +${REFINE_INHERIT}부터 다시 벼려요.`}</p>
     <div class="card grind"><div class="ct">쇳가루 <b id="dustN"></b><span class="small">재련 한 번에 쇳가루가 들어요</span></div>
       <p class="small" style="margin:0">단계 보스가 떨군 기본 장비·소환으로 모은 남는 장비를 갈면 쇳가루가 나와요. 끼고 있는 장비와 지금 등급보다 높은 장비는 남겨요.</p>
       <button class="btn primary" id="grindBtn">남는 장비 갈기</button></div>
     <label class="whet card"><input type="checkbox" id="whetChk" ${S.useWhet ? 'checked' : ''}><span id="whetTxt"></span></label>
     <label class="whet card"><input type="checkbox" id="protChk" ${S.useProtect ? 'checked' : ''}><span>보호: +16~+19에서 보석을 두 배 내고 부서짐을 막아요</span></label>
     ${card('weapon')}${card('armor')}
-    <p class="rtable">확률 공개 (성공 / 하락 / 부서짐, 나머지는 유지)<br>${REFINE_RATE.map((r, i) => `+${i + 1} ${r}%${REFINE_DROP[i] ? ` / ${REFINE_DROP[i]}%` : ''}${REFINE_BREAK[i] ? ` / ${REFINE_BREAK[i]}%` : ''}`).join(' · ')}</p>`;
+    <p class="rtable">확률 공개 (성공 / 하락 / 부서짐, 나머지는 유지)<br>${REFINE_RATE.map((r, i) => `+${i + 1} ${+(r * (S.refine.weapon.t ? REFINE_T_RATE : 1)).toFixed(1)}%${REFINE_DROP[i] ? ` / ${REFINE_DROP[i]}%` : ''}${REFINE_BREAK[i] ? ` / ${REFINE_BREAK[i]}%` : ''}`).filter((_, i) => !S.refine.weapon.t || i >= REFINE_INHERIT).join(' · ')}</p>`;
   wireGearSeg();
   const grindMax = () => Math.max(...['weapon', 'armor'].map(sl => S.equip[sl] >= 0 ? Math.floor(S.equip[sl] / 4) : 0)) - 1;
   $('#grindBtn').addEventListener('click', () => { const g = grindGear('weapon', grindMax()) + grindGear('armor', grindMax()); if (g){ sfx('refOk'); refreshPanel(); } });
@@ -7442,11 +7462,11 @@ function buildRefine(){
     setText($('#whetTxt'), `숫돌 함께 쓰기 (가진 숫돌 ${S.inv.whet}개${S.inv.whet ? '' : ' · 상점에서 살 수 있어요'})`);
     $('#whetChk').disabled = !S.inv.whet && !S.useWhet;
     for (const r of refs){
-      const R2 = S.refine[r.slot], stat = r.slot === 'weapon' ? '공격력' : '체력', max = R2.lv >= REFINE_MAX;
-      setText(r.lv, '+' + R2.lv);
-      const rp = l => +refinePct(l).toFixed(1);
-      setHTML(r.eff, max ? `${stat} +${rp(R2.lv)}% (최고 단계)` : `${stat} +${rp(R2.lv)}% → <em>+${rp(R2.lv + 1)}%</em>`);
-      if (max){ setText(r.rate, '-'); setText(r.en, '-'); setHTML(r.g, '최고'); setHTML(r.m, ''); r.btn.disabled = true; }
+      const R2 = S.refine[r.slot], stat = r.slot === 'weapon' ? '공격력' : '체력', cap = refineCap(r.slot), max = R2.lv >= cap, top = cap >= REFINE_MAX;
+      setText(r.lv, `+${R2.lv}${R2.t ? ' 계승' : ''} / 한도 +${cap}`);
+      const rp = l => fmt(+refineEff(r.slot, l).toFixed(1));
+      setHTML(r.eff, max ? `${stat} +${rp(R2.lv)}% (${top ? '최고 단계' : r.slot === 'armor' && S.world === 0 ? '저승에서 +22까지 열려요' : '천계에서 +25까지 열려요'})` : `${stat} +${rp(R2.lv)}% → <em>+${rp(R2.lv + 1)}%</em>`);
+      if (max){ setText(r.rate, '-'); setText(r.en, '-'); setHTML(r.g, top ? '최고' : '한도'); setHTML(r.m, ''); r.btn.disabled = true; }
       else {
         const o = refineOdds(r.slot), f1 = v => +v.toFixed(1);
         setText(r.rate, o.chance ? '100% (기회의 불꽃)' : `${f1(o.ok)}%${whetOn() ? ' (숫돌 ×1.15)' : ''}`);
@@ -8541,6 +8561,7 @@ async function enterChar(cid, opts = {}){
   }
   S = data ? mergeState(data) : defaultState();
   migrateStory(); mountCatchUp();
+  const inh = S.world >= 3 && refineInherit();
   if (!S.name) S.name = ch.name;
   if (!S.chosen){ S.chosen = true; S.cls = CLASSES[ch.cls] ? ch.cls : 'musa'; }
   session = {acc, cid}; A.lastChar = cid;
@@ -8553,6 +8574,7 @@ async function enterChar(cid, opts = {}){
   closePage();
   addLog(`${S.name}님, ${stageLabel(S.stage)}에 들어섰습니다.`, 'good');
   if (opts.imported) addLog('예전 모험을 이어받았습니다.', 'good');
+  if (inh) addLog(`2부에 맞춰 무기·방어구가 계승됐어요. 재련 효과는 그대로, +${REFINE_INHERIT}부터 다시 벼려요.`, 'good');
   if (opts.fresh && !opts.imported) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
   addChat('sys', '알림', `${S.name}님, 어서 오세요! 채팅창에서 주민들과 이야기할 수 있어요.${room ? (onlineWanted() ? ' 지금 접속한 다른 용사들과도 이야기가 이어져요.' : ' 지금 이 페이지를 보는 사람들과도 이야기가 이어져요.') : ''}`);
@@ -8785,28 +8807,52 @@ function resetGame(){
   closePage();
   chooseClass(false);
 }
+/* 오프라인 보상: 온라인에서 스킬 자동으로 사냥할 때 잰 처치 속도(1분씩 재서 평균)를 그대로 쓴다.
+   경험치는 온라인의 1.25배, 엽전·보석·재료는 0.85배. 오프라인으로 비운 시간을 모두 더해 24시간이 될 때마다 3% 확률로 신화 보물 */
+const OFF_EXP = 1.25, OFF_CUR = 0.85, OFF_KPS_MAX = 6, OFF_MYTH_H = 24, OFF_MYTH_P = 0.03;
+const offHunt = {t:0, k:0};
+function offTrack(dt){
+  offHunt.t += dt;
+  if (offHunt.t < 60) return;
+  const r = Math.min(OFF_KPS_MAX, offHunt.k / offHunt.t);
+  S.off.kps = S.off.kps > 0 ? S.off.kps * 0.7 + r * 0.3 : r;
+  offHunt.t = 0; offHunt.k = 0;
+}
+// 아직 잰 적이 없으면(예전 저장) 지금까지 전체 평균 처치 속도로
+const offlineKps = () => S.off.kps > 0 ? S.off.kps : Math.min(OFF_KPS_MAX, S.rec.play > 300 ? S.rec.kills / S.rec.play : 0.5);
 function offlineReward(sec){
   sec = Math.min(sec, OFFLINE_CAP);
   if (sec < 60) return;
-  const s = S.stage, bonus = gainMul('gold', true) * (1 + rideAb('off') / 100);
-  const kps = Math.min(0.6, dpsOf(ST) / mHp(s) * 0.5) * 0.5;
-  const kills = Math.floor(kps * sec);
-  const gold = kills * mGold(s) * bonus, exp = (kills * mExp(s) + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * sec * 0.5 : 0)) * bonus;
-  const gems = Math.floor(sec / 600) + Math.floor(kills * GEM_DROP * 0.5);
+  const s = S.stage, mk = 1 + rideAb('off') / 100;
+  const kills = Math.floor(offlineKps() * sec);
+  const gold = kills * mGold(s) * FIELD.rew * gainMul('gold', true) * OFF_CUR * mk;
+  const exp = (kills * mExp(s) * FIELD.rew + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * sec : 0)) * gainMul('exp', true) * OFF_EXP * mk;
+  const gx = kills * GEM_DROP * FIELD.rew * (1 + Math.min(1, s / 300)) * OFF_CUR * mk, gems = Math.floor(gx) + (Math.random() < gx % 1 ? 1 : 0);
   const lv0 = S.level;
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
-  const mats = gainMat(kills * MAT_DROP.mob * 0.5, true);
+  const mats = gainMat(kills * MAT_DROP.mob * FIELD.rew * OFF_CUR, true);
   gainExp(exp);
+  // 오프라인 누적 24시간마다 신화 보물 한 번 굴림
+  S.off.acc += sec;
+  const myths = [];
+  while (S.off.acc >= OFF_MYTH_H * 3600){
+    S.off.acc -= OFF_MYTH_H * 3600;
+    if (Math.random() < OFF_MYTH_P * (window.__game && window.__game.offLuck || 1)){ const m = dropMyth(questDiff({daily:true}), null, true); myths.push(m); }
+  }
   saveLocal();
+  const mythRow = m => { const M = MYTHS.find(x => x.k === m.k); return `<li style="color:${MYTH_COLOR}">${M.name}<span>신화 보물${m.up ? ` · ${M.stat} +${m.p}%` : ' (이미 더 센 것이 있어 보석으로)'}</span></li>`; };
   showModal('다녀오셨습니까?', `
-    <p>자리를 비운 <b>${fmtTime(sec)}</b> 동안 용사가 <b>${fmt(kills)}마리</b>를 잡았어요.</p>
+    <p>자리를 비운 <b>${fmtTime(sec)}</b> 동안 용사가 스킬 자동으로 <b>${fmt(kills)}마리</b>를 잡았어요.</p>
     <ul class="rewards">
       <li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li>
-      <li><span class="gem"></span>${fmt(gems)}<span>보석 (10분마다 1개 + 몬스터가 떨군 것)</span></li>
+      <li><span class="gem"></span>${fmt(gems)}<span>보석 (몬스터가 떨군 것)</span></li>
       ${mats ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(mats)}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}
       <li>Lv.${lv0}${S.level > lv0 ? ` → Lv.${S.level}` : ''}<span>경험치 +${fmt(exp)}</span></li>
-    </ul>${sec >= OFFLINE_CAP ? '<p class="small" style="margin-top:8px">오프라인 보상은 최대 12시간까지 쌓여요.</p>' : ''}`,
+      ${myths.map(mythRow).join('')}
+    </ul>
+    <p class="small" style="margin-top:8px">경험치 ×${OFF_EXP} · 엽전·보석 ×${OFF_CUR}${mk > 1 ? ` · 천리마 +${Math.round((mk - 1) * 100)}%` : ''} · 최대 ${OFFLINE_CAP / 3600}시간 · 신화 보물 굴림까지 ${fmtTime(S.off.acc)} / ${OFF_MYTH_H}시간(${Math.round(OFF_MYTH_P * 100)}%)</p>`,
     [{label:'받기', primary:true}]);
+  return {kills, gold, gems, exp, myths};
 }
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
@@ -9064,7 +9110,7 @@ if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
-    petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX,
+    petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
@@ -9094,6 +9140,7 @@ if (location.search.indexOf('simtest') >= 0){
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
   };
