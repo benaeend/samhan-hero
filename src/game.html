@@ -1145,8 +1145,8 @@ function refineInherit(){
 const refineGold = lv => 500 * Math.pow(1.2, lv);
 const refineGems = lv => 2 + Math.floor(lv / 4);   // 보호를 켰을 때만 이 보석의 두 배
 // 쇳가루(재련 재화): 남는 장비를 갈아서 얻는다. 재련 한 번에 쇳가루가 든다
-const DUST_G = [1, 2, 5, 12, 30];
-const refineDust = lv => 2 + Math.floor(lv / 3);
+const DUST_G = [2, 4, 8, 16, 32];
+const refineDust = lv => 1 + Math.floor(lv / 4);
 const dustOf = it => DUST_G[Math.floor(it / 4)] * (1 + it % 4);
 function grindGear(slot, maxGrade){   // 끼고 있는 것 하나는 남기고, maxGrade 등급까지 남는 장비를 모두 간다
   const G = S.gear[slot]; let got = 0, n = 0;
@@ -1161,8 +1161,18 @@ function grindGear(slot, maxGrade){   // 끼고 있는 것 하나는 남기고, 
 }
 const grindPreview = (slot, maxGrade) => { const G = S.gear[slot]; let got = 0; for (let i = 0; i < G.count.length; i++) if (Math.floor(i / 4) <= maxGrade) got += Math.max(0, G.count[i] - (S.equip[slot] === i ? 1 : 0)) * dustOf(i); return got; };
 // 단계 보스는 기본 장비를 떨군다(등급은 세계·단계에 따라)
+const dropGrade = () => Math.min(4, S.world + Math.floor(S.stage / (S.world ? 50 : 40)));
+const dropTier = () => Math.random() < 0.6 ? 0 : Math.random() < 0.7 ? 1 : 2;
+// 일반 몬스터도 가끔(MOB_GEAR × 잡몹 보상 배율) 보스보다 한 등급 낮은 기본 장비를 떨군다. 지금 낀 것보다 낮은 등급이면 바로 쇳가루로 바뀐다
+const MOB_GEAR = 0.06;
+function mobGearDrop(m){
+  const g = Math.max(0, dropGrade() - 1), it = g * 4 + dropTier(), slot = Math.random() < 0.5 ? 'weapon' : 'armor';
+  const eqG = Math.max(...['weapon', 'armor'].map(sl => S.equip[sl] >= 0 ? Math.floor(S.equip[sl] / 4) : 0));
+  if (g <= eqG){ const d = dustOf(it); S.dust += d; if (m && !fxOff()) addText('쇳가루 +' + d, m.x, m.y - mobHeight(m) - 12, '#c8c0b0', 10, true); }
+  else giveItem(slot, it);
+}
 function bossGearDrop(){
-  const g = Math.min(4, S.world + Math.floor(S.stage / (S.world ? 50 : 40))), t = Math.random() < 0.6 ? 0 : Math.random() < 0.7 ? 1 : 2;
+  const g = dropGrade(), t = dropTier();
   const slot = Math.random() < 0.5 ? 'weapon' : 'armor';
   giveItem(slot, g * 4 + t);
   if (!(window.__game && window.__game.quiet)) addLog(`보스가 ${GRADES[g].name} ${slot === 'weapon' ? cls().weapon : cls().armor}${'Ⅰ Ⅱ Ⅲ Ⅳ'.split(' ')[t] ? ' ' + 'Ⅰ Ⅱ Ⅲ Ⅳ'.split(' ')[t] : ''}${josa('장비', '을', '를')} 떨궜어요.`, 'gain');
@@ -1472,7 +1482,7 @@ const MAIN_Q = [
     c:['palace', 'geumwa,yuhwa,hero', '', [['금와왕', '나는 동부여의 금와왕이다. 물가에서 울던 여인을 데려왔노라.'], ['유화', '햇빛이 자꾸만 저를 따라와요…']]]},
   {ch:2, t:'햇빛이 낳은 알', s:'안개 늪 끝(4-10)의 보스를 물리쳐요.', k:'s0', n:41, gems:250,
     c:['palace', 'yuhwa,hero', 'egg', [['유화', '햇살을 품더니… 커다란 알을 낳았어요.'], ['나', '알 속에서 따뜻한 빛이 나요!']]]},
-  {ch:2, t:'알을 지킨 짐승들', s:'알을 지킨 짐승들처럼 요괴 4,500마리를 물리쳐요. 신화 보물 「천부인 검」을 얻어요.', k:'kills', n:4500, gems:250, myth:'sword',
+  {ch:2, t:'알을 지킨 짐승들', s:'알을 지킨 짐승들처럼 요괴 1,500마리를 물리쳐요. 신화 보물 「천부인 검」을 얻어요.', k:'kills', n:1500, gems:250, myth:'sword',
     c:['village', 'hero,kkachi', 'egg', [['까치', '말과 소는 알을 피해 가고, 새들은 날개로 덮어 주었대요.'], ['나', '짐승들도 이 아이가 특별한 걸 아는구나.']]]},
   {ch:2, t:'깨지지 않는 알', s:'레이드를 5번 클리어해요.', k:'raids', n:5, gems:250,
     c:['palace', 'geumwa,hero', 'shake', [['금와왕', '칼로 쳐도, 돌로 내리쳐도 깨지지 않는구나.'], ['나', '돌려주세요. 어머니 품에서 깨어날 거예요.']]]},
@@ -1942,6 +1952,8 @@ const NOTES = [
   ['탈것 10종', '[장비] → [탈것]. 부상부터 당나귀·누렁소·백마(마구간), 이야기의 과하마·응룡·해태·백록·기린, 고삐 조각으로 천리마·산군 범. 타면 걷기가 빨라지고 고유 능력이 켜져요. 가진 탈것마다 공격력·체력도 올라요.'],
   ['재련 한도', '무기는 이승에서 +25까지, 방어구는 이승 +15 → 저승 +22 → 천계 +25. 2부로 건너가면 무기·방어구가 계승되어 효과는 그대로 두고 +15부터 다시 벼려요(확률은 1부의 70%).'],
   ['오프라인 보상 고침', '자리를 비우면 잡은 수가 너무 적게 나오던 문제를 고쳤어요. 이제 켜 둘 때 스킬 자동 사냥 속도로 계산하고, 경험치는 1.25배·엽전·보석은 0.85배예요.'],
+  ['쇳가루 더 많이', '쇳가루가 모자라 무기 +25가 너무 오래 걸리던 문제를 고쳤어요. 일반 몬스터도 가끔 기본 장비를 떨구고, 지금 낀 것보다 높지 않은 등급이면 바로 쇳가루로 바뀌어요. 재련 한 번에 드는 쇳가루도 줄였어요.'],
+  ['처치 퀘스트 줄임', '이야기 「알을 지킨 짐승들」의 요괴 처치를 4,500 → 1,500마리로 줄였어요. 이야기 처치 퀘스트는 1,500마리를 넘지 않아요.'],
   ['오프라인 신화 보물', '오프라인 시간을 모두 더해 24시간이 될 때마다 3% 확률로 신화 보물이 떨어져요. 퀘스트 보상의 신화 보물 확률은 6% → 3%로 낮췄어요.'],
   ['#', '2026-11-10 · 화면 새 단장·마을 부탁·허수아비'],
   ['퀘스트 화면', '이야기·오늘의 할 일·마을 부탁 세 칸, 장 배너·큰 진행 막대·보상 칩·[바로 가기].'],
@@ -2948,6 +2960,7 @@ function killMob(m){
   ev('kill');
   if (isGateStage(S.stage) && Math.random() < FIELD.rew) rollAcc(false);
   if (Math.random() < MAT_DROP.mob * FIELD.rew) gainMat(1);
+  if (Math.random() < MOB_GEAR * FIELD.rew) mobGearDrop(m);
   if (Math.random() < GEM_DROP * FIELD.rew){
     const g = 1 + (Math.random() < S.stage / 300 ? 1 : 0);
     S.gems += g;
@@ -8831,6 +8844,7 @@ function offlineReward(sec){
   const lv0 = S.level;
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
   const mats = gainMat(kills * MAT_DROP.mob * FIELD.rew * OFF_CUR, true);
+  const dust = Math.round(kills * MOB_GEAR * FIELD.rew * DUST_G[Math.max(0, dropGrade() - 1)] * 1.52 * OFF_CUR); S.dust += dust;
   gainExp(exp);
   // 오프라인 누적 24시간마다 신화 보물 한 번 굴림
   S.off.acc += sec;
@@ -8847,12 +8861,13 @@ function offlineReward(sec){
       <li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li>
       <li><span class="gem"></span>${fmt(gems)}<span>보석 (몬스터가 떨군 것)</span></li>
       ${mats ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(mats)}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}
+      ${dust ? `<li style="color:#c8c0b0">${fmt(dust)}<span>쇳가루 (재련 재료)</span></li>` : ''}
       <li>Lv.${lv0}${S.level > lv0 ? ` → Lv.${S.level}` : ''}<span>경험치 +${fmt(exp)}</span></li>
       ${myths.map(mythRow).join('')}
     </ul>
     <p class="small" style="margin-top:8px">경험치 ×${OFF_EXP} · 엽전·보석 ×${OFF_CUR}${mk > 1 ? ` · 천리마 +${Math.round((mk - 1) * 100)}%` : ''} · 최대 ${OFFLINE_CAP / 3600}시간 · 신화 보물 굴림까지 ${fmtTime(S.off.acc)} / ${OFF_MYTH_H}시간(${Math.round(OFF_MYTH_P * 100)}%)</p>`,
     [{label:'받기', primary:true}]);
-  return {kills, gold, gems, exp, myths};
+  return {kills, gold, gems, exp, myths, dust};
 }
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
