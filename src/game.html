@@ -3876,10 +3876,10 @@ function npcChatter(dt){
   addChat('npc', VILLAGERS[(Math.random() * (VILLAGERS.length - 1)) | 0], pool[(Math.random() * pool.length) | 0]);
 }
 async function bootRoom(){
-  const c = window.claude;
-  if (!c || typeof c.use !== 'function') return;
+  const c = window.claude, viaOnline = onlineWanted();
+  if (!viaOnline && (!c || typeof c.use !== 'function')) return;
   try {
-    const r = await c.use('room');
+    const r = viaOnline ? await onlineRoom() : await c.use('room');
     if (!r) return;
     r.on('chat', msg => {
       if (!msg || msg.sameTab) return;
@@ -4748,7 +4748,7 @@ function buildRaid(){
       <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
       <p class="story">00시부터 3시간마다 30분 동안 나타나요. <b>2명 이상</b> 모여야 도전할 수 있고, 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
       <div class="dl"><span>참가자</span><b>${users}명 (${['나'].concat(others.map(o => o.name + (o.live ? '' : '·이 기기'))).join(', ')})</b></div>
-      ${room ? '<button class="btn sm" data-tb="join">참가한다고 알리기</button>' : `<p class="small">${users < 2 ? '지금은 같은 기기의 다른 계정 캐릭터가 함께 참가해요. 온라인 서버가 열리면 다른 플레이어와 모일 수 있어요.' : ''}</p>`}
+      ${room ? '<button class="btn sm" data-tb="join">참가한다고 알리기</button>' : `<p class="small">${users < 2 ? '지금은 같은 기기의 다른 계정 캐릭터가 함께 참가해요. 온라인 서버에 연결되면 다른 용사들과 모일 수 있어요.' : ''}</p>`}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
     </div>`);
     const live = $('#raidLive');
@@ -5086,7 +5086,8 @@ function enterSubmits(){
 function showLogin(mode, msg){
   modalLock = true;
   const signup = mode === 'signup';
-  const note = cloud ? '계정은 Claude 계정의 개인 저장소에도 함께 저장돼서, 같은 Claude 계정이면 다른 기기에서도 이어져요.'
+  const note = onlineWanted() ? '계정은 온라인 서버에 저장돼서, 다른 휴대폰이나 PC에서도 같은 아이디·비밀번호로 이어서 할 수 있어요.'
+    : cloud ? '계정은 Claude 계정의 개인 저장소에도 함께 저장돼서, 같은 Claude 계정이면 다른 기기에서도 이어져요.'
     : '계정은 이 기기(브라우저)에 저장돼요. 다른 기기나 다른 브라우저에서는 새로 만들어야 해요.';
   const html = `<div class="logo">${CLASS_ORDER.map(c => `<img src="${classPreview(c)}" alt="">`).join('')}</div>
     <div class="seg" role="group" aria-label="로그인 방식">
@@ -5118,14 +5119,35 @@ async function submitLogin(signup){
   if (signup){
     if (pw !== $('#lg-pw2').value) return err('비밀번호 확인이 서로 달라요.');
     if (REG.accounts[id]) return err('이미 있는 아이디예요. 다른 아이디를 쓰거나 로그인해 주세요.');
-  } else if (!REG.accounts[id]) return err(cloud ? '없는 아이디예요. [새 계정 만들기]를 눌러 주세요.' : '이 기기에 없는 아이디예요. [새 계정 만들기]를 눌러 주세요.');
+  } else if (!REG.accounts[id] && !onlineWanted()) return err(cloud ? '없는 아이디예요. [새 계정 만들기]를 눌러 주세요.' : '이 기기에 없는 아이디예요. [새 계정 만들기]를 눌러 주세요.');
   loginBusy = true; err('');
   const btn = $('#mBtns .primary');
   if (btn){ btn.disabled = true; btn.textContent = '확인 중…'; }
   try {
-    if (signup){
-      const salt = randHex(16), hash = await hashPw(pw, salt);
-      REG.accounts[id] = {salt, hash, created:now(), t:now(), chars:[]};
+    let srv = null;                       // 온라인 서버가 준 로그인 표(토큰)
+    onlineNote = '';
+    if (onlineWanted()){
+      try { srv = await rpc(signup ? 'samhan_signup' : 'samhan_login', {p_id:id, p_pw:pw}); }
+      catch (e) {
+        const A = REG.accounts[id];
+        if (e.code === 'id_taken') return err('이미 서버에 있는 아이디예요. 다른 아이디를 쓰거나 [로그인]해 주세요.');
+        if (e.code === 'bad_login'){
+          // 서버가 생기기 전에 이 기기에서만 만든 계정이면 서버로 옮긴다
+          if (!(A && (await hashPw(pw, A.salt, A.hash[0])) === A.hash)) return err('아이디나 비밀번호가 맞지 않아요.');
+          try { srv = await rpc('samhan_signup', {p_id:id, p_pw:pw}); onlineNote = '이 기기의 계정을 온라인 서버로 옮겼어요. 이제 다른 기기에서도 이 아이디로 들어올 수 있어요.'; }
+          catch (e2) {
+            if (e2.code === 'id_taken') return err('서버에 같은 아이디가 이미 있어요(비밀번호가 달라요). 서버 비밀번호로 로그인하거나 다른 아이디로 새로 만들어 주세요.');
+            onlineNote = '지금은 서버에 연결할 수 없어 이 기기에만 저장해요. 다시 연결되면 서버에 올려요.';
+          }
+        } else if (e.code !== 'net') return err('서버에서 받아 주지 않았어요. 아이디·비밀번호 규칙을 확인해 주세요.');
+        else if (!signup && !A) return err('서버에 연결할 수 없어요. 인터넷 연결을 확인하고 다시 시도해 주세요.');
+        else onlineNote = '지금은 서버에 연결할 수 없어 이 기기에만 저장해요. 다시 연결되면 서버에 올려요.';
+      }
+    }
+    if (signup || srv){
+      // 새 계정이거나 서버 로그인에 성공: 이 기기에도 같은 비밀번호로 계정을 둔다(인터넷이 끊겨도 들어올 수 있게)
+      const salt = randHex(16), hash = await hashPw(pw, salt), A = REG.accounts[id];
+      if (A) Object.assign(A, {salt, hash, t:now()}); else REG.accounts[id] = {salt, hash, created:now(), t:now(), chars:[]};
     } else {
       const A = REG.accounts[id], h = await hashPw(pw, A.salt, A.hash[0]);
       if (!h) return err('이 브라우저에서는 비밀번호를 확인할 수 없어요. 다른 브라우저로 열어 주세요.');
@@ -5134,7 +5156,12 @@ async function submitLogin(signup){
     curAcc = id;
     REG.keep = keep ? {acc:id} : null;
     saveReg(); writeSession({acc:id});
-    showCharSelect(signup ? '계정을 만들었어요! 이제 캐릭터를 만들어 볼까요?' : '');
+    if (srv){
+      online = {acc:id, token:srv}; saveOnline(keep);
+      try { await syncChars(id); } catch (e) { if (e.code === 'bad_token') lostOnline(); }
+    }
+    showCharSelect(onlineNote || (signup ? '계정을 만들었어요! 이제 캐릭터를 만들어 볼까요?' : ''));
+    onlineNote = '';
   } finally {
     loginBusy = false;
     if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = signup ? '계정 만들기' : '게임 시작'; }
@@ -5176,6 +5203,7 @@ function confirmDeleteChar(cid){
       A.chars = A.chars.filter(c => c.cid !== cid); A.t = now(); saveReg();
       try { localStorage.removeItem(charKey(curAcc, cid)); } catch (e) {}
       if (cloud){ try { cdoc(cdocName(curAcc, cid)).delete().catch(() => {}); } catch (e) {} }
+      if (online && online.acc === curAcc) rpc('samhan_delete', {p_token:online.token, p_cid:cid}).catch(() => {});
       showCharSelect(`${ch.name}${josa(ch.name, '을', '를')} 지웠어요.`);
       return true;
     }},
@@ -5202,11 +5230,22 @@ function showCharCreate(){
     enterSubmits();
   });
 }
-function createChar(c0, look){
+let ccBusy = false;
+async function createChar(c0, look){
+  if (ccBusy) return;
   const err = m => setText($('#cc-err'), m);
   const name = ($('#cc-name').value || '').trim();
   if (!NAME_RE.test(name)) return err('이름은 한글·영문·숫자로 2~8자예요. 띄어쓰기와 기호는 쓸 수 없어요.');
   if (allChars().some(c => c.name === name)) return err('이 기기에 같은 이름의 캐릭터가 이미 있어요.');
+  if (online){
+    ccBusy = true; err('이름을 확인하는 중…');
+    let free = true;
+    try { free = await rpc('samhan_name_free', {p_name:name}); } catch (e) {}
+    ccBusy = false;
+    if (!$('#cc-err')) return;
+    if (free === false) return err('다른 용사가 이미 쓰는 이름이에요. 다른 이름을 골라 주세요.');
+    err('');
+  }
   const A = REG.accounts[curAcc];
   if (!A){ showLogin('login'); return; }
   if (A.chars.length >= MAX_CHARS) return err(`캐릭터는 한 계정에 ${MAX_CHARS}명까지 만들 수 있어요.`);
@@ -5230,6 +5269,12 @@ async function enterChar(cid, opts = {}){
       showModal('불러오는 중…', '<p>모험 기록을 불러오고 있어요.</p>', []);
       const c = await cloudGet(cdocName(acc, cid));
       if (c && typeof c.save === 'string' && (c.t || 0) > t + 2000){ try { const d = JSON.parse(c.save); if (d && d.v === 1){ data = d; t = c.t; } } catch (e) {} }
+    } else if (online && online.acc === acc){
+      showModal('불러오는 중…', '<p>서버에서 모험 기록을 불러오고 있어요.</p>', []);
+      try {
+        const c = await rpc('samhan_load', {p_token:online.token, p_cid:cid});
+        if (c && typeof c.save === 'string' && (+c.t || 0) > t + 2000){ const d = JSON.parse(c.save); if (d && d.v === 1){ data = d; t = +c.t; } }
+      } catch (e) { if (e.code === 'bad_token') lostOnline(); }
     }
   }
   S = data ? mergeState(data) : defaultState();
@@ -5248,13 +5293,14 @@ async function enterChar(cid, opts = {}){
   if (opts.imported) addLog('예전 모험을 이어받았습니다.', 'good');
   if (opts.fresh && !opts.imported) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
-  addChat('sys', '알림', `${S.name}님, 어서 오세요! 채팅창에서 주민들과 이야기할 수 있어요.${room ? ' 지금 이 페이지를 보는 사람들과도 이야기가 이어져요.' : ''}`);
+  addChat('sys', '알림', `${S.name}님, 어서 오세요! 채팅창에서 주민들과 이야기할 수 있어요.${room ? (onlineWanted() ? ' 지금 접속한 다른 용사들과도 이야기가 이어져요.' : ' 지금 이 페이지를 보는 사람들과도 이야기가 이어져요.') : ''}`);
   chatUnread = 0;
   saveLocal();
   const away = t && !opts.fresh && !opts.hot ? (now() - t) / 1000 : 0;
   if (away >= 60) offlineReward(away);
   else if (!opts.fresh && !notesSeen() && !window.__game) showNotes();
   if (opts.fresh) try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
+  if (online) pushOnline();
 }
 function toTitle(){
   setChat(false);
@@ -5271,9 +5317,128 @@ function switchChar(){
 }
 function logout(){
   saveLocal(); pushCloud();
+  if (online){ const tok = online.token, wait = onlineP; online = null; saveOnline(false); wait.finally(() => rpc('samhan_logout', {p_token:tok}).catch(() => {})); }
   session = null; curAcc = null; REG.keep = null;
   saveReg(); writeSession(null);
   toTitle(); showLogin('login');
+}
+
+/* ================= 온라인 서버(Supabase) =================
+   ONLINE.url·key가 채워져 있고 github.io·내 컴퓨터에서 열면 켜진다(claude.ai에서는 그쪽 저장소를 쓴다).
+   계정·캐릭터 저장은 서버의 samhan_* 함수만 부른다(supabase/setup.sql). 비밀번호는 서버에서 bcrypt 해시로만 저장되고,
+   로그인하면 60일짜리 무작위 표(토큰)를 받아 이 기기에 둔다. 채팅·타임 보스는 실시간 채널 'samhan-world'.
+   서버에 닿지 않으면 지금처럼 이 기기 저장으로 놀고, 다시 닿으면 1분마다 올린다. */
+const ONLINE = Object.assign({url:'', key:''}, window.__samhanOnline || {});   // key는 '공개용(publishable) 키'라 여기 적어도 된다
+const ON_KEY = 'samhan-online-v1';
+const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big'];
+let online = null, onlineLib = null, onlineNote = '';
+const onlineWanted = () => !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); }); }
+async function onlineClient(){
+  if (onlineLib) return onlineLib;
+  if (!window.supabase) await loadScript('vendor/supabase.js');
+  onlineLib = window.supabase.createClient(ONLINE.url, ONLINE.key, {auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false}});
+  return onlineLib;
+}
+// 서버 함수 부르기. 실패하면 e.code: 위 ON_CODES 중 하나 또는 'net'(연결 안 됨·느림)
+async function rpc(fn, args){
+  let r;
+  try {
+    const sb = await onlineClient();
+    r = await Promise.race([sb.rpc(fn, args), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 9000))]);
+  } catch (e) { throw Object.assign(new Error('net'), {code:'net'}); }
+  if (r && r.error){
+    const m = String(r.error.message || '');
+    throw Object.assign(new Error(m), {code:ON_CODES.find(c => m.includes(c)) || 'net'});
+  }
+  return r ? r.data : null;
+}
+function saveOnline(keep){
+  const v = online ? JSON.stringify({acc:online.acc, token:online.token}) : null;
+  try { if (v && keep) localStorage.setItem(ON_KEY, v); else localStorage.removeItem(ON_KEY); } catch (e) {}
+  try { if (v) sessionStorage.setItem(ON_KEY, v); else sessionStorage.removeItem(ON_KEY); } catch (e) {}
+}
+function readOnline(){
+  for (const st of [sessionStorage, localStorage]){ try { const o = JSON.parse(st.getItem(ON_KEY) || 'null'); if (o && ID_RE.test(o.acc) && typeof o.token === 'string') return o; } catch (e) {} }
+  return null;
+}
+function lostOnline(msg){
+  online = null; saveOnline(false);
+  if (session) addLog(msg || '서버 로그인이 끊겼어요. 다시 로그인하면 서버에 이어서 저장돼요(지금은 이 기기에 저장 중).', 'warn');
+}
+// 캐릭터 요약(목록·레이드 동료용)
+const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally});
+// 서버의 내 캐릭터 목록을 이 기기 목록과 합친다. 이 기기에만 있는 캐릭터는 서버로 올린다
+async function syncChars(acc){
+  if (!online) return;
+  const A = REG.accounts[acc];
+  if (!A) return;
+  const list = await rpc('samhan_list', {p_token:online.token});
+  if (!Array.isArray(list)) return;
+  for (const it of list){
+    if (!it || typeof it.cid !== 'string' || typeof it.name !== 'string') continue;
+    const sm = it.summary && typeof it.summary === 'object' ? it.summary : {};
+    const loc = A.chars.find(c => c.cid === it.cid);
+    const ent = {cid:it.cid, name:String(it.name).slice(0, 8), cls:CLASSES[sm.cls] ? sm.cls : 'musa', level:Math.max(1, +sm.level || 1), maxStage:Math.max(1, +sm.maxStage || 1),
+      look:cleanLook(sm.look), armorG:Number.isFinite(+sm.armorG) ? +sm.armorG : -1, weaponG:Number.isFinite(+sm.weaponG) ? +sm.weaponG : -1,
+      ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1)} : undefined, t:+it.t || 0, srvT:+it.t || 0};
+    if (!loc) A.chars.push(ent);
+    else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
+  }
+  const onSrv = new Set(list.map(it => it && it.cid));
+  for (const ch of A.chars.slice()){
+    if (onSrv.has(ch.cid)) continue;
+    let save = null;
+    try { save = localStorage.getItem(charKey(acc, ch.cid)); } catch (e) {}
+    if (!save){ continue; }
+    try { const d = JSON.parse(save); await rpc('samhan_save', {p_token:online.token, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:save, p_t:d.lastSave || 0}); }
+    catch (e) { if (e.code === 'name_taken') ch.srvErr = 'name'; else if (e.code === 'bad_token'){ lostOnline(); return; } }
+  }
+  A.chars = A.chars.slice(0, MAX_CHARS);
+  A.t = now(); saveReg();
+}
+// 지금 캐릭터를 서버에 올린다(1분마다·창을 숨길 때·캐릭터 바꿀 때)
+let onlineBusy = false, onlineP = Promise.resolve();
+function pushOnline(){
+  if (!online || !session || onlineBusy || session.acc !== online.acc) return onlineP;
+  onlineP = pushOnlineNow();
+  return onlineP;
+}
+async function pushOnlineNow(){
+  const A = REG.accounts[session.acc], ch = A && A.chars.find(c => c.cid === session.cid);
+  if (!ch) return;
+  onlineBusy = true;
+  S.lastSave = now();
+  try {
+    await rpc('samhan_save', {p_token:online.token, p_cid:session.cid, p_name:S.name, p_summary:charSummary(ch), p_save:JSON.stringify(S), p_t:S.lastSave});
+    ch.srvT = S.lastSave; delete ch.srvErr;
+  } catch (e) {
+    if (e.code === 'bad_token') lostOnline();
+    else if (e.code === 'name_taken' && !ch.srvErr){ ch.srvErr = 'name'; addLog('다른 사람이 서버에서 같은 캐릭터 이름을 쓰고 있어 서버에 저장하지 못했어요. 이 기기에는 저장돼요.', 'warn'); }
+  }
+  onlineBusy = false;
+}
+// 실시간 채널: claude.ai room과 같은 모양(on·onPeers·emit)으로 감싼다
+async function onlineRoom(){
+  const sb = await onlineClient(), me = randHex(6), hs = {}, peerFns = [];
+  const ch = sb.channel('samhan-world', {config:{broadcast:{self:false}, presence:{key:me}}});
+  for (const topic of ['chat', 'tb']) ch.on('broadcast', {event:topic}, msg => {
+    const p = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
+    for (const fn of hs[topic] || []) fn({data:p.d, peer:String(p.p || '').slice(0, 16)});
+  });
+  ch.on('presence', {event:'sync'}, () => { const n = Object.keys(ch.presenceState() || {}).length; for (const f of peerFns) f({peers:new Array(n).fill(0)}); });
+  await new Promise((res, rej) => {
+    const to = setTimeout(() => rej(new Error('timeout')), 9000);
+    ch.subscribe(st => {
+      if (st === 'SUBSCRIBED'){ clearTimeout(to); Promise.resolve(ch.track({t:Date.now()})).catch(() => {}); res(); }
+      else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED'){ clearTimeout(to); rej(new Error(st)); }
+    });
+  });
+  return {
+    on(topic, fn){ (hs[topic] = hs[topic] || []).push(fn); return () => {}; },
+    onPeers(fn){ peerFns.push(fn); return () => {}; },
+    emit(topic, data){ return Promise.resolve(ch.send({type:'broadcast', event:topic, payload:{d:data, p:me}})).then(r => { if (r && r !== 'ok') throw Object.assign(new Error(String(r)), {code:String(r)}); }); },
+  };
 }
 
 /* ================= 저장·오프라인 보상 ================= */
@@ -5324,6 +5489,7 @@ function mergeCloudReg(c){
   } catch (e) {}
 }
 async function pushCloud(){
+  pushOnline();
   if (!cloud || !session || cloudBusy) return;
   cloudBusy = true;
   const name = cdocName(session.acc, session.cid);
@@ -5401,6 +5567,13 @@ async function boot(){
     }
   }
   bootRoom();
+  if (onlineWanted()){
+    const o = readOnline();
+    if (o && REG.accounts[o.acc]){
+      online = o;
+      try { await Promise.race([syncChars(o.acc), new Promise(r => setTimeout(r, 7000))]); } catch (e) { if (e.code === 'bad_token') lostOnline(); }
+    }
+  }
   const k = REG.keep || readSession();
   if (k && k.acc && REG.accounts[k.acc]){
     curAcc = k.acc;
@@ -5635,7 +5808,7 @@ if (location.search.indexOf('simtest') >= 0){
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
-    CURVE, fmt, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
+    CURVE, fmt, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
     setWorld(w){ S.world = w; S.stage = 1; mapCache.clear(); resetRuntime(); applyWorld(); refreshStats(); },
     doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbCan, castAwaken, startFight,
   };

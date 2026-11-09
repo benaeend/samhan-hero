@@ -5,7 +5,7 @@
 
 - 공개 주소: https://benaeend.github.io/samhan-hero/ (GitHub Pages, `main` 브랜치 루트). 휴대폰 홈 화면에 설치하는 웹앱(PWA)이기도 해서 설치하면 주소창 없이 열리고 오프라인에서도 돈다
 - 같은 게임이 claude.ai 아티팩트로도 올라가 있다. 계정 클라우드 저장(`window.claude` db)은 그쪽에서만 동작하고, GitHub Pages에서는 브라우저 저장(localStorage)만 쓴다. 코드는 두 환경 모두에서 그대로 돌아가야 한다.
-- 서버가 없으므로 게임 계정(아이디·비밀번호)은 **그 기기(브라우저) 안에** 저장된다. 다른 기기에서 같은 계정을 쓰려면 claude.ai 아티팩트로 열거나(같은 Claude 계정이면 이어짐), 따로 서버(예: Supabase·Firebase)를 붙여야 한다. 온라인 서버를 붙일 자리: 계정(`REG`·`submitLogin`), 저장(`saveLocal`·클라우드 저장), 타임 보스 참가자(`tbOthers`), 채팅(`bootRoom`)
+- **온라인 서버(Supabase)**: `src/game.html`의 `ONLINE`(프로젝트 주소 `url`, 공개용 `key`)을 채우면 github.io에서 켜진다. 계정·캐릭터 저장은 서버 함수(`supabase/setup.sql`)로, 채팅·타임 보스는 실시간 채널로 주고받아 다른 기기에서도 같은 아이디로 이어진다. 비어 있거나 서버에 닿지 않으면 예전처럼 **그 기기(브라우저) 안에만** 저장한다. claude.ai 아티팩트에서는 그쪽 저장소(`window.claude`)를 쓴다
 
 ## 사용자에 대해
 
@@ -28,17 +28,21 @@
 | `tools/make_manual.py` | 매뉴얼 PDF 생성. 본문(진행 시간표 포함)이 이 파일 안에 있으니 게임 수치를 바꾸면 같이 고친다 |
 | `tools/make_icons.py` | 빌드된 게임에서 용사 그림(2~3등신)을 꺼내 달밤 바탕의 앱 아이콘을 만든다(용사 모습을 바꿀 때만) |
 | `tools/fonts/` | Pretendard Medium·Bold·ExtraBold 원본과 라이선스(`Pretendard-LICENSE.txt`, OFL 1.1) |
+| `supabase/setup.sql` | 온라인 서버 준비 SQL(Supabase SQL Editor에 붙여 넣고 Run). 표 3개(계정·로그인 표·캐릭터)는 잠그고 `samhan_*` 함수만 공개. 여러 번 실행해도 됨 |
+| `vendor/supabase.js` | Supabase 브라우저 라이브러리 2.118.0(MIT, `vendor/supabase-LICENSE.txt`). 온라인 모드일 때만 불러온다 |
+| `tools/test_online.py` | 로컬 PostgreSQL에 `setup.sql`을 깔고 Supabase 함수 창구를 흉내 내어, 진짜 supabase-js로 가입·저장·다른 기기 로그인·채팅·타임 보스·이름 겹침·계정 옮기기를 점검 |
 
 ## 작업 순서
 
 1. `src/game.html` 수정
 2. `python3 tools/build.py` — 한글 문구를 새로 넣었으면 반드시 다시 빌드(안 하면 그 글자가 기본 글꼴로 보임). **시뮬·테스트는 빌드된 `index.html`을 쓰므로 빌드를 잊으면 옛 코드로 돈다**
 3. `python3 tools/test_game.py` — 오류가 없어야 하고, `tools/out/` 캡처를 열어 화면을 눈으로 확인
-4. 밸런스(성장 곡선·직업 수치·드롭·비용·이야기 조건)를 건드렸으면 `python3 tools/test_game.py --long 100` (네 직업을 함께 돌려 10분 안팎)
-5. 플레이어에게 보일 변화가 있으면 `UPDATE_NOTES.md`와 게임 안 `NOTE_VER`·`NOTES`를 고친다(`NOTE_VER`를 바꾸면 기존 플레이어에게 한 번 뜬다). 화면·규칙이 바뀌었으면 `python3 tools/make_manual.py`로 매뉴얼도 다시 만든다
-6. 커밋 후 `main`에 push → 1~2분 뒤 공개 주소에 반영
+4. 계정·저장·채팅·타임 보스(온라인) 코드를 건드렸으면 `python3 tools/test_online.py`(PostgreSQL·psycopg2 필요)
+5. 밸런스(성장 곡선·직업 수치·드롭·비용·이야기 조건)를 건드렸으면 `python3 tools/test_game.py --long 100` (네 직업을 함께 돌려 10분 안팎)
+6. 플레이어에게 보일 변화가 있으면 `UPDATE_NOTES.md`와 게임 안 `NOTE_VER`·`NOTES`를 고친다(`NOTE_VER`를 바꾸면 기존 플레이어에게 한 번 뜬다). 화면·규칙이 바뀌었으면 `python3 tools/make_manual.py`로 매뉴얼도 다시 만든다
+7. 커밋 후 `main`에 push → 1~2분 뒤 공개 주소에 반영
 
-준비물: `pip install fonttools brotli playwright pillow` 와 `python3 -m playwright install chromium` (크롬이 이미 있으면 그걸 씀)
+준비물: `pip install fonttools brotli playwright pillow psycopg2-binary` 와 `python3 -m playwright install chromium` (크롬이 이미 있으면 그걸 씀)
 
 ## 코드 지도 (`src/game.html`, 위에서 아래 순서)
 
@@ -75,6 +79,7 @@
 - **지도 `buildIsoMap(지역, 세계)` / `ISO_THEME`·`PROPS`·`isoScenery`**: 지역별 판(윗면 칸·앞쪽 흙벽)과 바깥 땅·먼 산, 판 둘레 풍경 소품(나무·초가·기와집·대나무·바위·고드름·칼산·가마솥 등)을 시드 고정 난수로 놓는다. `getMap` 캐시 키는 `세계:지역`. 옛 평면 지도 `buildMap`/`THEMES`는 이야기 연출 배경(`cutBg`)에만 쓴다
 - **그리기 `render`**: 버퍼(도트) → 화면 확대. 데미지 숫자·상단 표시는 고해상도 캔버스에 따로(`drawTexts`, `drawOverlay`). 연출 중엔 `renderCut`
 - **화면(HTML)**: 탭 8개 빌더 `buildGrow`(수련: 능력치·`buildReb` 환생) / `buildSkill` / `buildGear`(무기·방어구·`buildRefine`·`buildMyth`·`buildAcc`·`buildForm`) / `buildPet` / `buildQuest` / `buildRaid`(레이드·시왕·타임 보스) / `buildShop` / `buildRec`. 200ms마다 `refreshPanel`·`updateGuide`·`updateDots`. **길게 누르는 버튼이 있는 탭은 갱신할 때 패널을 다시 만들지 말고 글자만 바꾼다**. 갱신 코드에서 단추를 고를 땐 `[data-i]`처럼 정확히 고른다(레이드 탭엔 타임 보스 단추도 있다)
+- **온라인 `ONLINE`·`rpc`·`syncChars`·`pushOnline`·`onlineRoom`**: `onlineWanted()`(주소·키가 있고 github.io·localhost)일 때 켜진다. 가입·로그인은 `samhan_signup`/`samhan_login`이 60일짜리 토큰을 주고(`ON_KEY`에 보관), 성공하면 이 기기 `REG`에도 같은 비밀번호로 계정을 둔다(인터넷이 끊겨도 로그인). 서버에 없고 이 기기에만 있는 계정은 로그인 때 서버로 옮긴다. 캐릭터 목록은 `samhan_list`로 합치고(이 기기에만 있는 캐릭터는 올림), 들어갈 때 `samhan_load`가 더 새것이면 그것으로, 1분마다·창을 숨길 때·바꿀 때 `samhan_save`(더 새 기록만 덮어씀). 캐릭터 이름은 서버 전체에서 하나(`samhan_name_free`). 실시간은 채널 `samhan-world`(broadcast 'chat'·'tb', presence)를 claude.ai room과 같은 모양으로 감싼다. 서버 오류 코드는 `ON_CODES`, 연결 실패는 'net'
 - **계정 `REG`**: `showLogin` → `submitLogin`(비밀번호는 PBKDF2 해시로만 저장) → `showCharSelect` → `showCharCreate`/`createChar` → `enterChar`. 한 계정에 캐릭터 4명. 예전 저장은 `legacyCandidate`로 이어받기
 - **저장·오프라인 보상**: 5초마다 localStorage(`saveLocal`이 계정 목록의 캐릭터 요약도 갱신 → 레이드·타임 보스 동료로 쓰임), 최대 12시간 오프라인 보상(직접 플레이의 절반 효율). claude.ai에서는 `data/users/<id>/samhan-accounts`와 `data/users/<id>/samhan-c-<아이디>-<캐릭터id>`에 1분마다·창을 숨길 때 올린다
 - **테스트 훅**: 주소에 `?simtest`가 있으면 `window.__game` 노출(`addTime`, `quiet`면 결과 창·연출 생략, `setWorld`·`doRebirth`·`startTimeBoss`·`playCut`·`CURVE` 등)
@@ -94,4 +99,5 @@
 - **밸런스 기준**(2026-11, `--long 100` 네 직업, 쉬지 않고 잘 키우는 시뮬): 이승 50단계 13~24분 · 70단계 25분~2시간 · 90단계 5~6시간 · Lv100 5.5~7.5시간 · 101단계 6~12시간(이 무렵부터 한 단계에 1~2시간) · 첫 환생 24~34시간(무기 +25가 가장 늦다) · 저승 70단계는 환생 뒤 1시간 안팎 · 저승 81단계 +2~8시간 · 91단계 +6~20시간(이 뒤로 한 단계에 2~4시간) · 저승 Lv200 58~75시간 · **이야기 80장 마무리 58~75시간**(자객 58 · 도인 62 · 술사 70 · 무사 75). 몬스터 체력은 이승 101단계 약 3억, 이야기 끝(저승 97단계) 약 3,600억(보스는 ×10).
   - 이야기·시련 조건을 운(장신구·신화 드롭)에 걸지 않는다. 필요한 것은 이야기 보상으로 확정 지급한다.
   - 레이드 세기·토벌패·재련 비용·펫 강화 비용·`CURVE`를 바꾸면 꼭 `--long 100`을 다시 돌려 위 표와 비교한다.
+- **Supabase 키**: 게임에 넣는 건 공개용 publishable 키(`sb_publishable_…`, 예전 이름 anon)뿐이다. `secret`·`service_role` 키는 절대 코드·채팅·커밋에 넣지 않는다. 표는 RLS로 잠그고 함수만 `anon`에 열어 두는 구조를 바꾸지 않는다(새 데이터도 `samhan_*` 함수로만)
 - **커밋 메시지**는 한국어로, 무엇이 바뀌었는지 게임 기준으로 쓴다.
