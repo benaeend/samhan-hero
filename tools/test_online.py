@@ -214,10 +214,10 @@ async def main():
             check(any('안녕하세요 온라인' in g for g in got), f'채팅이 다른 기기로 간다 {got}')
             tb = await A.evaluate("""async () => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); return G.tbWindow().open; }""")
             await B.evaluate("""() => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); }""")
-            await A.click('#tab-raid'); await A.wait_for_timeout(300)
-            await A.click('[data-tb="join"]', timeout=5000); await A.wait_for_timeout(600)
+            await A.wait_for_timeout(900)   # 열려 있으면 접속한 용사는 저절로 참가를 알린다
             why = await B.evaluate("() => window.__game.tbCan('normal')")
-            check(tb and why == '', f'타임 보스: 다른 기기의 참가가 보이면 2명이 되어 도전할 수 있다 ({why!r})')
+            users = await B.evaluate("() => window.__game.tbUsers()")
+            check(tb and why == '' and users >= 2, f'타임 보스: 열리면 다른 기기의 용사가 저절로 함께 참가한다 ({why!r}, {users}명)')
 
             # 이름은 서버 전체에서 하나만
             ctxC, C = await device(api)

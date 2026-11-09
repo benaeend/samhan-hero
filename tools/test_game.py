@@ -95,6 +95,8 @@ SIM = r"""
         for (const k of ['atk', 'hp', 'luck', 'spd', 'eye']) for (let z = 0; z < 50; z++) if (!G.rebUp(k)) break;
       }
       G.mergeAll('weapon'); G.mergeAll('armor'); G.equipBest('weapon'); G.equipBest('armor');
+      { const keepG = Math.min(...['w', 'a'].map(k => { const n = G.craftNeed(k); return n.g != null ? n.g : 9; }));   // 조합에 쓸 등급은 남기고 갈아 쇳가루로
+        for (const sl of ['weapon', 'armor']) G.grindGear(sl, Math.min(keepG, G.S.equip[sl] >= 0 ? Math.floor(G.S.equip[sl] / 4) : 0) - 1); }
       if (!G.raid && !G.bossActive) {
         // 실패하면 30분 동안은 그보다 낮은 레이드를 돌고, 첫 클리어 보상이 남은 레이드를 먼저 한다
         if (raidPend && G.S.rec.raids === raidPend[0]) raidHold = [raidPend[1], t + 1800];
@@ -137,7 +139,7 @@ def long_table(cls, first):
     print(f'        부상 ' + ' '.join(f'{x}:{h(first.get(f"3:{x}"))}' for x in LONG_S3))
     print(f'        곤륜 ' + ' '.join(f'{x}:{h(first.get(f"4:{x}"))}' for x in LONG_S4))
     print(f'        전직 1차:{h(first.get("J1"))} 2차:{h(first.get("J2"))} 3차:{h(first.get("J3"))} 4차:{h(first.get("J4"))} · 히든 시작:{h(first.get("H1"))}')
-    print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계", "L3": "부상"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
+    print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계", "L3": "부상", "L4": "곤륜"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
     print('        이야기 ' + ' '.join(f'{q}:{h(first.get(f"Q{q}"))}' for q in LONG_Q))
 
 
@@ -317,7 +319,7 @@ async def main():
         check(await page.evaluate('() => window.__game.S.quest.tut') >= 4, '튜토리얼이 단계마다 넘어간다')
 
         # 3) 성장시켜서 펫·재련·퀘스트·레이드 화면 보기
-        await page.evaluate("""() => { const G = window.__game; G.S.gold = 1e7; G.S.gems = 5000; G.S.level = 32; G.S.up.atk = 60; G.S.up.hp = 60;
+        await page.evaluate("""() => { const G = window.__game; G.S.gold = 1e7; G.S.gems = 5000; G.S.dust = 5000; G.S.level = 32; G.S.up.atk = 60; G.S.up.hp = 60;
           G.S.maxStage = 25; G.setClass('musa'); G.petSummon(10); G.buildTab('pet'); }""")
         await page.click('.pcell:not(.unseen)')
         await page.wait_for_timeout(500)
@@ -579,7 +581,7 @@ async def main():
         await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(400)
         await page.screenshot(path=str(OUT / '30_조합공방.png'))
         pr = await page.evaluate("""() => { const G = window.__game, S = G.S; S.gold = 1e15; S.gems = 1e5;
-          S.refine.weapon.lv = 16; S.refine.weapon.drops = 2; const r1 = G.refineTry('weapon');
+          S.dust = 1e6; S.refine.weapon.lv = 16; S.refine.weapon.drops = 2; const r1 = G.refineTry('weapon');
           S.avPity = G.AV_PITY - 1; const box = G.openAvatarBox();
           S.petPity = 59; const pets = G.petSummon(1);
           return {chance: r1.ok && r1.sure && S.refine.weapon.lv === 17, box: !!(box && box.pity && box.isNew && box.a.type !== 'pet'), pet: G.PETS[pets[0].i].g}; }""")
