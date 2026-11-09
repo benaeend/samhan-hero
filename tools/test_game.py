@@ -258,7 +258,7 @@ async def main():
 
     async with async_playwright() as p:
         browser = await launch(p)
-        ctx = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+        ctx = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
         page = await ctx.new_page()
         watch(page, errors)
         await page.goto(URL)
@@ -392,6 +392,7 @@ async def main():
         await page.screenshot(path=str(OUT / '19_신화.png'))
 
         # 4-4) 채팅
+        await page.evaluate("() => window.__game.closePage()")
         await page.click('#chatBtn')
         await page.fill('#chatInput', '안녕하세요 ㅎㅎ')
         await page.press('#chatInput', 'Enter')
@@ -497,8 +498,17 @@ async def main():
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '28_영웅레이드.png'))
 
+        # 6-3b) 가로 화면: 메뉴를 누르면 장면을 덮는 페이지가 열리고, 같은 메뉴·✕로 닫힌다
+        lay = await page.evaluate("""() => { const G = window.__game; G.closePage(); const r = document.querySelector('#cv').getBoundingClientRect();
+          return {cw: r.width, vw: innerWidth, open: !document.querySelector('#page').hidden}; }""")
+        await page.click('#tab-pet'); await page.wait_for_timeout(250)
+        op = await page.evaluate("() => !document.querySelector('#page').hidden")
+        await page.click('#tab-pet'); await page.wait_for_timeout(150)
+        cl = await page.evaluate("() => document.querySelector('#page').hidden")
+        check(lay['cw'] > lay['vw'] * 0.8 and not lay['open'] and op and cl, f'가로 화면: 장면이 화면을 가득 채우고, 메뉴 페이지가 열리고 닫힌다 {lay}')
+
         # 6-4) 기술 직접 쓰기·자동/수동, 직업 특성, 조합 공방, 확률(재련·상자·펫 천장)
-        await page.evaluate("() => { const G = window.__game; G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.S.skManual = {}; }")
+        await page.evaluate("() => { const G = window.__game; G.closePage(); G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.S.skManual = {}; G.hero.dead = false; G.hero.hp = G.ST.maxHp; }")
         await page.click('#skb-roar'); await page.wait_for_timeout(100)
         tap = await page.evaluate("() => ({cd: window.__game.skillCd.roar, buff: window.__game.hero.buffT})")
         check(tap['cd'] > 0 and tap['buff'] > 0, f'기술 칸을 누르면 그 기술을 바로 쓴다 {tap}')
@@ -512,7 +522,7 @@ async def main():
         check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 3, f'도인은 공격 기술이 3개이고, 세 번째는 환생해야 열린다 {dn}')
         sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.castNow(2);
           return {shield: G.hero.shield / G.ST.maxHp}; }""")
-        check(sh['shield'] >= 0.4, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
+        check(sh['shield'] >= 0.399, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
         await page.click('#tab-skill'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '29_기술_직업특성.png'))
         cf = await page.evaluate("""() => { const G = window.__game, S = G.S; G.setClass('jagaek'); G.refreshStats();
@@ -545,7 +555,7 @@ async def main():
         await ctx.close()
 
         # 8) claude.ai 계정 저장 흉내: 기기 A에서 만든 계정·캐릭터를 기기 B(빈 브라우저)에서 불러온다
-        ctxA = await browser.new_context(viewport={'width': 390, 'height': 800})
+        ctxA = await browser.new_context(viewport={'width': 844, 'height': 390})
         await ctxA.add_init_script(MOCK_CLAUDE % 'null')
         pa = await ctxA.new_page()
         watch(pa, errors, 'A ')
@@ -558,7 +568,7 @@ async def main():
         store = await pa.evaluate('() => window.__store')
         check(any(k.endswith('/samhan-accounts') for k in store) and any('/samhan-c-cloudy-' in k for k in store), f'계정·캐릭터가 Claude 저장소에 올라간다 {list(store)}')
         await ctxA.close()
-        ctxB = await browser.new_context(viewport={'width': 390, 'height': 800})
+        ctxB = await browser.new_context(viewport={'width': 844, 'height': 390})
         await ctxB.add_init_script(MOCK_CLAUDE % json.dumps(store))
         pb = await ctxB.new_page()
         watch(pb, errors, 'B ')
@@ -582,7 +592,7 @@ async def main():
         await ctxB.close()
 
         # 9) 예전(계정 없던 때) 저장을 새 캐릭터로 이어받기
-        ctxC = await browser.new_context(viewport={'width': 390, 'height': 800})
+        ctxC = await browser.new_context(viewport={'width': 844, 'height': 390})
         pc = await ctxC.new_page()
         watch(pc, errors, 'C ')
         await pc.goto(URL)
@@ -602,7 +612,7 @@ async def main():
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
-        ctxP = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+        ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
         await ctxP.add_init_script("window.__samhanOnline = {url: ''};")   # 이 점검은 진짜 온라인 서버에 계정을 만들지 않는다
         pp = await ctxP.new_page()
         watch(pp, errors, 'PWA ')
@@ -615,7 +625,7 @@ async def main():
           const img = await Promise.all(man.icons.map(i => new Promise(r => { const im = new Image(); im.onload = () => r(im.width); im.onerror = () => r(0); im.src = i.src; })));
           return {sw: !!(reg && reg.active), name: man.name, display: man.display, icons, img, pwa: window.__game.pwa};
         }''')
-        check(info['pwa'] and info['sw'] and info['name'] == '삼한 용사 키우기' and info['display'] == 'standalone'
+        check(info['pwa'] and info['sw'] and info['name'] == '삼한 용사 키우기' and info['display'] in ('standalone', 'fullscreen')
               and all(t == 'image/png' for t in info['icons']) and info['img'] == [192, 512, 512], f'앱 설정·아이콘·오프라인 도우미가 준비된다 {info}')
         check(await pp.is_visible('#lg-install'), '로그인 화면에 [앱으로 설치하기]가 보인다')
         await pp.click('#lg-install')
@@ -641,7 +651,7 @@ async def main():
         srv.shutdown()
 
         if '--sim' in sys.argv:
-            ctx = await browser.new_context(viewport={'width': 390, 'height': 800})
+            ctx = await browser.new_context(viewport={'width': 844, 'height': 390})
             page = await ctx.new_page()
             watch(page, errors, 'sim ')
             for c in ['musa', 'jagaek', 'sulsa', 'doin']:

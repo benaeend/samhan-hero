@@ -49,7 +49,9 @@ async def capture(page):
         await page.screenshot(path=str(SHOTS / f'{name}.png'))
 
     async def tab(t, name, seg=None):
-        await page.click(f'#tab-{t}')
+        # 이미 열린 메뉴를 다시 누르면 닫히므로, 열려 있지 않을 때만 누른다
+        if not await page.evaluate(f"() => !document.querySelector('#page').hidden && document.querySelector('#tab-{t}').getAttribute('aria-selected') === 'true'"):
+            await page.click(f'#tab-{t}')
         if seg:
             await page.wait_for_timeout(150)
             await page.click(seg)
@@ -83,7 +85,7 @@ async def capture(page):
     await tab('skill', 'skill')
     await tab('gear', 'gear')
     await tab('gear', 'refine', '#seg-refine')
-    await page.click('#tab-gear'); await page.wait_for_timeout(150); await page.click('#seg-craft')
+    await page.evaluate("() => window.__game.buildTab('gear')"); await page.wait_for_timeout(150); await page.click('#seg-craft')
     await page.evaluate("() => { document.querySelector('#panel').scrollTop = 330; }")
     await shot('craft')
     await page.evaluate("() => { document.querySelector('#panel').scrollTop = 0; }")
@@ -97,6 +99,7 @@ async def capture(page):
     await tab('raid', 'raid')
     await tab('shop', 'shop')
     await tab('rec', 'rec')
+    await page.evaluate("() => window.__game.closePage()")
     await page.click('#chatBtn')
     await page.fill('#chatInput', '안녕하세요! 오늘도 사냥 ㅎㅎ')
     await page.press('#chatInput', 'Enter')
@@ -110,7 +113,7 @@ async def capture(page):
 
     # 레이드 전투
     await page.evaluate("() => { const G = window.__game; G.quiet = true; G.startRaid(G.firstReadyRaid()); }")
-    await page.click('#tab-raid')
+    await page.evaluate("() => window.__game.closePage()")
     await shot('raidfight', 3500)
     await page.evaluate("() => { const G = window.__game; for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05); }")
 
@@ -118,12 +121,12 @@ async def capture(page):
     await page.evaluate("""() => { const G = window.__game, S = G.S;
       S.level = 100; S.stage = 101; S.maxStage = 101; S.best.s0 = 101; S.best.l0 = 100; S.refine.weapon.lv = 25; S.quest.trials = [true, true, true, false, true];
       S.quest.main = 42; G.refreshStats(); }""")
-    await page.click('#tab-grow')
+    await page.evaluate("() => window.__game.buildTab('grow')")
     await page.wait_for_timeout(150)
     await page.click('#gv-reb')
     await shot('rebirth')
     await page.evaluate("() => { const G = window.__game; G.S.quest.trials = [true, true, true, true, true]; G.doRebirth(); for (let z = 0; z < 8; z++) G.rebUp('atk'); for (let z = 0; z < 5; z++) G.rebUp('hp'); }")
-    await page.click('#tab-grow')
+    await page.evaluate("() => window.__game.buildTab('grow')")
     await page.wait_for_timeout(150)
     await page.click('#gv-reb')
     await shot('rebirth2')
@@ -133,9 +136,7 @@ async def capture(page):
       S.level = 64; S.best.l1 = 64; Object.assign(S.up, {atk: 90, hp: 88, crit: 30, critDmg: 30, aspd: 20, regen: 12});
       S.form.own.cheong = true; S.form.eq = 'cheong'; S.awaken = true; S.quest.main = 49;
       G.setStage(47); G.refreshStats(); G.hero.hp = G.ST.maxHp; }""")
-    await page.click('#tab-gear')
-    await page.wait_for_timeout(150)
-    await page.click('#seg-form')
+    await page.evaluate("() => window.__game.closePage()")
     await shot('hell', 3500)
 
     # 천계(신과의 전쟁)
@@ -144,10 +145,10 @@ async def capture(page):
       S.level = 95; Object.assign(S.up, {atk: 160, hp: 150, crit: 40, critDmg: 40, aspd: 30, regen: 15}); S.quest.main = 98;
       G.setStage(52); G.refreshStats(); G.hero.hp = G.ST.maxHp; G.quiet = false; }""")
     await tg.skip_cut(page, 200)
-    await page.click('#tab-quest')
+    await page.evaluate("() => window.__game.closePage()")
     await shot('heaven', 3500)
     await page.evaluate("() => { const G = window.__game; G.quiet = true; G.S.raid.tk = 3; G.startRaid(2); }")
-    await page.click('#tab-raid')
+    await page.evaluate("() => window.__game.closePage()")
     await shot('godraid', 3000)
     await page.evaluate("() => { const G = window.__game; for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05); G.quiet = false; }")
 
@@ -155,9 +156,9 @@ async def capture(page):
     await page.evaluate("""() => { const G = window.__game;
       G.REG.accounts.friend1 = {salt: 'x', hash: 'p:x', t: 1, chars: [{cid: 'cf', name: '벗님', cls: 'doin', level: 80, maxStage: 80, look: {}, armorG: 3, weaponG: 3, ally: {dps: G.ST.atk * 3, maxHp: G.ST.maxHp}}]};
       const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); }""")
-    await page.click('#tab-raid')
+    await page.evaluate("() => window.__game.buildTab('raid')")
     await shot('timeboss', 600)
-    await page.evaluate("() => { const G = window.__game; G.startTimeBoss('normal'); }")
+    await page.evaluate("() => { const G = window.__game; G.startTimeBoss('normal'); G.closePage(); }")
     await shot('timefight', 4000)
     await page.evaluate("() => { const G = window.__game; for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05); delete G.REG.accounts.friend1; }")
 
@@ -197,13 +198,13 @@ p{{margin:4px 0}} ul{{margin:4px 0;padding-left:17px}} li{{margin:1px 0}}
 b{{font-weight:800}}
 .kicker{{font-size:8.5pt;font-weight:800;color:#b8860b;letter-spacing:.12em;margin:0 0 2px}}
 section{{break-inside:avoid;padding:10px 0 14px;border-bottom:1px solid #e4e7ee}}
-.row{{display:flex;gap:14px;align-items:flex-start}}
-.txt{{flex:1;min-width:0}}
-.figs{{display:flex;gap:8px;flex:none}}
+.row{{display:flex;flex-direction:column;gap:8px}}
+.txt{{min-width:0}}
+.figs{{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%}}
 .figs.n0{{display:none}}
-figure{{margin:0;width:47mm}}
-.figs.n2 figure{{width:40mm}}
-.row.v{{flex-direction:column}} .row.v .figs{{justify-content:center;width:100%;gap:14px}} .row.v figure{{width:50mm}}
+figure{{margin:0;width:118mm}}
+.figs.n2 figure{{width:88mm}}
+.figs.n3 figure{{width:58mm}}
 figure img{{width:100%;border-radius:9px;border:1px solid #cfd5e1;box-shadow:0 2px 8px rgba(20,30,60,.12);display:block}}
 figcaption{{font-size:8pt;color:#5a6378;text-align:center;margin-top:3px}}
 table{{border-collapse:collapse;width:100%;font-size:9pt;margin:6px 0}}
@@ -212,7 +213,7 @@ th{{background:#f1f3f8;font-weight:800}}
 .tip{{background:#fff8e1;border:1px solid #f0d58a;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:9.4pt}}
 .cover{{height:250mm;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;break-after:page;
   background:linear-gradient(180deg,#0e1424,#1f2b4a 60%,#3a2f2a);color:#fff;border-radius:14px}}
-.cover img{{width:62mm;border-radius:14px;margin:18px 0;box-shadow:0 10px 40px rgba(0,0,0,.5)}}
+.cover img{{width:150mm;border-radius:14px;margin:18px 0;box-shadow:0 10px 40px rgba(0,0,0,.5)}}
 .cover .sub{{color:#ffcc4d;font-weight:800;letter-spacing:.2em;font-size:10pt}}
 .cover p{{color:#c9d1e4;margin:2px 0}}
 .toc{{columns:2;font-size:10pt}}
@@ -247,14 +248,13 @@ th{{background:#f1f3f8;font-weight:800}}
 <p>이어서 <b>길잡이 까치</b>가 7단계 튜토리얼로 안내해요. 눌러야 할 곳이 반짝이고, 단계마다 보석을 줘요.</p>
 """, ('prologue', '프롤로그'), ('tutorial', '튜토리얼'), kicker='1'))
     S.append(sec('화면 보기', """
-<ul><li><b>맨 위</b>: 레벨 · 이름 · 직업 · 전투력, 엽전·보석, 경험치 막대.</li>
-<li><b>장면</b>: 비스듬히 내려다보는 넓은 사냥터예요. 화면이 용사를 따라가요. 용사가 가장 가까운 몬스터에게 걸어가 싸워요. 위쪽에 지역 이름과 단계(예: 도깨비 굴 5-7), 처치 수가 보여요.</li>
-<li><b>기술 칸</b>: 레벨이 오르면 기술이 열리고, 재사용 시간이 지나면 저절로 써요. <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요.</li>
-<li><b>[보스]</b> 단추: 몬스터 10마리를 잡으면 보스에 도전해요(자동 도전이 기본). 보스는 30초 안에 잡아야 해요.
-실패하면 그 단계에서 사냥하며 더 강해진 뒤 다시 도전해요.</li>
-<li><b>[속도]</b> 단추: 게임 속도를 바꿔요.</li>
-<li><b>아래 메뉴 8칸</b>: 수련 · 기술 · 장비 · 펫 · 퀘스트 · 레이드 · 상점 · 정보. 빨간 점은 받을 보상이나 할 일이 있다는 뜻이에요.</li>
-<li><b>말풍선 단추</b>: 채팅창을 열어요.</li></ul>
+<p>휴대폰을 <b>가로로</b> 들면 사냥 장면이 화면을 가득 채워요(세로로 들어도 할 수 있어요). PC에서는 창 크기에 맞춰 넓게 보여요.</p>
+<ul><li><b>왼쪽 위</b>: 레벨 · 이름 · 직업 · 전투력, 체력·경험치 막대. 그 아래 <b>지금 이야기 퀘스트</b>(누르면 퀘스트 화면, 다 하면 [보상 받기]).</li>
+<li><b>위 가운데</b>: 지역과 단계(예: 도깨비 굴 5-7), 보스까지 남은 처치 수. 보스가 나오면 보스 체력과 남은 시간.</li>
+<li><b>오른쪽 위</b>: 엽전·보석, 말풍선(채팅). 부적을 쓰면 그 아래 남은 시간이 보여요.</li>
+<li><b>오른쪽 아래</b>: 기술 8칸. 저절로 쓰고, <b>누르면 바로</b>, <b>길게 누르면 자동/수동</b>. 그 위 [보스] 단추와 [속도] 단추.</li>
+<li><b>오른쪽 끝 메뉴 8칸</b>: 수련 · 기술 · 장비 · 펫 · 퀘스트 · 레이드 · 상점 · 정보. 누르면 장면 위에 <b>별도 화면</b>이 열리고, 같은 메뉴나 ✕로 닫아요. 빨간 점은 받을 보상이나 할 일이 있다는 뜻이에요.</li>
+<li>레벨업·재련·소환·조합을 하면 화면에 빛과 글자 연출이 나와요.</li></ul>
 """, ('play', '사냥 화면'), kicker='2'))
     S.append(sec('수련 · 스테이지', """
 <p><b>[수련]</b>에서 엽전으로 능력치를 올려요: 공격력 · 체력 · 치명타 확률 · 치명타 피해 · 공격 속도 · 체력 회복.
@@ -428,7 +428,7 @@ PC: Chrome·Edge 주소창 오른쪽 설치 단추. 설치하면 주소창 없�
 async def main():
     async with async_playwright() as p:
         browser = await tg.launch(p)
-        ctx = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+        ctx = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
         page = await ctx.new_page()
         errors = []
         tg.watch(page, errors)
