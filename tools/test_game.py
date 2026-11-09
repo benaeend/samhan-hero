@@ -33,6 +33,9 @@ SIM = r"""
   G.quiet = true;
   G.setClass(cls);
   if (opts.curve) Object.assign(G.CURVE, opts.curve);
+  if (opts.busang) Object.assign(G.BUSANG, opts.busang);
+  if (opts.expk) G.EXP_K[3] = opts.expk;
+  if (opts.load) { Object.assign(G.S, JSON.parse(opts.load)); G.S.cls = cls; G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
   G.S.buyMode = 1;
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
@@ -76,8 +79,9 @@ SIM = r"""
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
-      if (jobPend && !G.raid) { if (G.S.job < jobPend[0]) jobHold = t + 1200; jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
-      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
+      if (jobPend && !G.raid) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
+      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
+      if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
       if (G.S.gems >= 6000 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
       G.buyShop('gift');
       if (G.S.inv.potion < 20) { const pp = G.SHOP.find(x => x.id === 'potion').price(); if (pp < G.S.gold * 0.05) G.buyShop('potion'); }
@@ -97,15 +101,16 @@ SIM = r"""
         raidPend = null;
         let r = G.firstReadyRaid();
         if (r >= 0 && t < raidHold[1]) r = Math.min(r, raidHold[0] - 1);
-        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g'][G.S.world] + j]) { r = j; break; }
+        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g', 'b'][G.S.world] + j]) { r = j; break; }
         if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
       }
     }
     if (t >= nextRetry) { nextRetry = t + 60; G.S.autoBoss = true; }
     mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
+    if (opts.snaps && G.S.world === 3 && !('cross' in snaps)) snaps.cross = JSON.stringify(G.S);
     if (opts.snaps) { const mm = Math.round(t / 60); if (opts.snaps.includes(mm) && !(mm in snaps) && !G.raid) snaps[mm] = JSON.stringify(G.S); }
-    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
+    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계', '부상'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
   }
@@ -117,8 +122,9 @@ SIM = r"""
 LONG_S0 = [31, 51, 61, 71, 81, 86, 91, 94, 97, 101]
 LONG_S1 = [11, 31, 51, 71, 81, 91, 97]
 LONG_S2 = [11, 16, 31, 46, 61, 76, 86, 91]
-LONG_L = [('L0', 50), ('L0', 100), ('L1', 100), ('L1', 200), ('L2', 100), ('L2', 200), ('L2', 240)]
-LONG_Q = [17, 42, 43, 60, 86, 87, 100, 110, 112, 113]
+LONG_S3 = [11, 25, 37, 49, 61, 70, 75]
+LONG_L = [('L0', 50), ('L0', 100), ('L1', 100), ('L1', 200), ('L2', 100), ('L2', 200), ('L2', 240), ('L3', 320), ('L3', 350), ('L3', 370), ('L3', 400)]
+LONG_Q = [17, 42, 43, 60, 86, 87, 100, 110, 112, 113, 115, 125, 135, 141, 145]
 
 
 def long_table(cls, first):
@@ -126,8 +132,9 @@ def long_table(cls, first):
     print(f'[{cls}] 이승 ' + ' '.join(f'{x}:{h(first.get(f"0:{x}"))}' for x in LONG_S0))
     print(f'        저승 ' + ' '.join(f'{x}:{h(first.get(f"1:{x}"))}' for x in LONG_S1))
     print(f'        천계 ' + ' '.join(f'{x}:{h(first.get(f"2:{x}"))}' for x in LONG_S2))
-    print(f'        전직 1차:{h(first.get("J1"))} 2차:{h(first.get("J2"))} · 히든 시작:{h(first.get("H1"))}')
-    print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
+    print(f'        부상 ' + ' '.join(f'{x}:{h(first.get(f"3:{x}"))}' for x in LONG_S3))
+    print(f'        전직 1차:{h(first.get("J1"))} 2차:{h(first.get("J2"))} 3차:{h(first.get("J3"))} · 히든 시작:{h(first.get("H1"))}')
+    print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계", "L3": "부상"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
     print('        이야기 ' + ' '.join(f'{q}:{h(first.get(f"Q{q}"))}' for q in LONG_Q))
 
 
@@ -230,7 +237,7 @@ async def run_long():
     rest = sys.argv[k + 2:]
     classes = [a for a in rest if not a.startswith('{')] or ['musa', 'jagaek', 'sulsa', 'doin']
     curve = next((json.loads(a) for a in rest if a.startswith('{')), None)
-    marks = [m for m in (60, 240, 720, 1440, 2880, 4320, 5760, 7200, 8640, 10080, 11520, 12960) if m <= hours * 60]
+    marks = [m for m in (60, 240, 720, 1440, 2880, 4320, 5760, 7200, 8640, 10080, 11520, 12960, 14400, 15840) if m <= hours * 60]
     async with async_playwright() as p:
         browser = await launch(p)
 
@@ -543,6 +550,30 @@ async def main():
           S.petPity = 59; const pets = G.petSummon(1);
           return {chance: r1.ok && r1.sure && S.refine.weapon.lv === 17, box: !!(box && box.pity && box.isNew && box.a.type !== 'pet'), pet: G.PETS[pets[0].i].g}; }""")
         check(pr['chance'] and pr['box'] and pr['pet'] >= 3, f'확률 보정: 두 번 떨어진 뒤 재련은 반드시 성공, 꾸미기 상자·펫 소환 천장 {pr}')
+
+        # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
+        bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
+          if (S.world < 2){ S.world = 2; S.reb.n = 2; }
+          S.level = 290; S.best.l2 = Math.max(S.best.l2, 290); Object.assign(S.up, {atk: 900, hp: 900, crit: 80, critDmg: 120, aspd: 60, regen: 40});
+          const before = G.crossReady(); S.quest.main = G.CROSS_Q; const ready = G.crossReady(); const ok = G.doCross(); G.refreshStats();
+          const after = {world: S.world, lv: S.level, st: S.stage, region: G.BUSANG_REGIONS[0].name};
+          S.best.s3 = 8; S.raid.tk = 3; const r0 = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
+          for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
+          S.level = 360; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 34);
+          const jr = G.jobReady(3); const tr = G.startJobTrial(3); for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
+          return {before, ready, ok, after, r0, name, b0: !!S.raid.first.b0, jr, tr, job: S.job, jobC: S.skills.jobC, cape: S.av.cape}; }""")
+        check(not bs['before'] and bs['ready'] and bs['ok'] and bs['after']['world'] == 3 and bs['after']['lv'] == 290 and bs['after']['st'] == 1,
+              f'2부: 천계 이야기를 마치면 바다를 건너 부상으로 가고, 레벨은 그대로 단계만 1부터 {bs["after"]}')
+        check(bs['r0'] and bs['name'] == '갓파 대왕' and bs['b0'], f'2부: 부상 레이드(갓파 대왕)를 토벌한다 {bs["name"]}')
+        check(bs['jr'] and bs['tr'] and bs['job'] == 3 and bs['jobC'] == 1 and bs['cape'] == 'j_musa_3', f'2부: Lv.350·스승의 장을 마치면 3차 전직(풍뢰장)과 3차 기술 {bs}')
+        await page.evaluate("() => { const G = window.__game; G.quiet = false; G.showChapterCard(26); }")
+        await page.wait_for_timeout(500)
+        card = await page.evaluate("() => { const el = document.querySelector('#chcard'); return el ? el.textContent : ''; }")
+        check('제26장' in card and '바다 건너 온 원한' in card, f'장이 바뀌면 장 제목 카드가 나온다 {card}')
+        await page.screenshot(path=str(OUT / '31_부상_장제목.png'))
+        await page.evaluate("() => { const G = window.__game; G.quiet = true; G.setStage(25); }")
+        await page.wait_for_timeout(1200)
+        await page.screenshot(path=str(OUT / '32_부상_구라마산.png'))
 
         # 7) 도트 그림 모음(펫·몬스터)
         data = await page.evaluate("""() => { const sh = window.__game.sheet(); const rows = [sh.pets.map(p => p[0]).concat(sh.pets.map(p => p[1])), sh.mobs.map(m => m[0])];
