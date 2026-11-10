@@ -1181,6 +1181,10 @@ const SKILLS = [
 ];
 // 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
 const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'jobD'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+// 자동으로 쓸 때의 순서(2026-11 (20), 사용자 요청): 피해를 키워 주는 기술 먼저 — 공격력 버프(3칸) → 약점(6칸) → 1차 전직(약점도 걺) → 2차 전직(공격력 버프도 줌) → 큰 기술.
+// 한 번에 하나씩, AUTO_GAP초 간격을 두고 써서 앞 기술의 효과를 받은 뒤 다음 기술이 들어간다(도인은 CLASSES.doin.order)
+const SK_AUTO_ORDER = [2, 5, 6, 7, 8, 9, 3, 1, 4, 0], AUTO_GAP = 0.1;
+let autoGap = 0;
 const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
@@ -1322,18 +1326,22 @@ const refineGems = lv => 2 + Math.floor(lv / 4);   // 보호를 켰을 때만 �
 const DUST_G = [2, 4, 8, 16, 32];
 const refineDust = lv => 1 + Math.floor(lv / 4);
 const dustOf = it => DUST_G[Math.floor(it / 4)] * (1 + it % 4);
-function grindGear(slot, maxGrade){   // 끼고 있는 것 하나는 남기고, maxGrade 등급까지 남는 장비를 모두 간다
-  const G = S.gear[slot]; let got = 0, n = 0;
+function grindGear(slot, maxGrade){   // 끼고 있는 것 하나와 조합 공방에 드는 장비는 남기고, maxGrade 등급까지 남는 장비를 모두 간다
+  const G = S.gear[slot], kf = craftKeep(slot); let got = 0, n = 0, saveLeft = kf ? kf.n : 0;
   for (let i = 0; i < G.count.length; i++){
     if (Math.floor(i / 4) > maxGrade) continue;
-    const keep = S.equip[slot] === i ? 1 : 0, c = G.count[i] - keep;
+    let keep = S.equip[slot] === i ? 1 : 0;
+    if (kf && Math.floor(i / 4) === kf.g && saveLeft > 0){ const sv = Math.min(saveLeft, G.count[i] - keep); keep += sv; saveLeft -= sv; }
+    const c = G.count[i] - keep;
     if (c > 0){ got += c * dustOf(i); n += c; G.count[i] = keep; }
   }
   if (n && !(window.__game && window.__game.quiet)) addLog(`장비 ${n}개를 갈아 쇳가루 +${fmt(got)}`, 'gain');
   S.dust += got;
   return got;
 }
-const grindPreview = (slot, maxGrade) => { const G = S.gear[slot]; let got = 0; for (let i = 0; i < G.count.length; i++) if (Math.floor(i / 4) <= maxGrade) got += Math.max(0, G.count[i] - (S.equip[slot] === i ? 1 : 0)) * dustOf(i); return got; };
+const grindPreview = (slot, maxGrade) => { const G = S.gear[slot], kf = craftKeep(slot); let got = 0, saveLeft = kf ? kf.n : 0;
+  for (let i = 0; i < G.count.length; i++) if (Math.floor(i / 4) <= maxGrade){ let keep = S.equip[slot] === i ? 1 : 0; if (kf && Math.floor(i / 4) === kf.g && saveLeft > 0){ const sv = Math.min(saveLeft, Math.max(0, G.count[i] - keep)); keep += sv; saveLeft -= sv; } got += Math.max(0, G.count[i] - keep) * dustOf(i); }
+  return got; };
 // 단계 보스는 기본 장비를 떨군다(등급은 세계·단계에 따라)
 const dropGrade = () => Math.min(4, S.world + Math.floor(S.stage / (S.world ? 50 : 40)));
 const dropTier = () => Math.random() < 0.6 ? 0 : Math.random() < 0.7 ? 1 : 2;
@@ -1342,7 +1350,8 @@ const MOB_GEAR = 0.06;
 function mobGearDrop(m){
   const g = Math.max(0, dropGrade() - 1), it = g * 4 + dropTier(), slot = Math.random() < 0.5 ? 'weapon' : 'armor';
   const eqG = Math.max(...['weapon', 'armor'].map(sl => S.equip[sl] >= 0 ? Math.floor(S.equip[sl] / 4) : 0));
-  if (g <= eqG){ const d = dustOf(it); S.dust += d; if (m && !fxOff()) addText('쇳가루 +' + d, m.x, m.y - mobHeight(m) - 12, '#c8c0b0', 10, true); }
+  const kf = craftKeep(slot);
+  if (g <= eqG && !(kf && kf.g === g && gradeHave(slot, g) < kf.n)){ const d = dustOf(it); S.dust += d; if (m && !fxOff()) addText('쇳가루 +' + d, m.x, m.y - mobHeight(m) - 12, '#c8c0b0', 10, true); }
   else giveItem(slot, it);
 }
 function bossGearDrop(){
@@ -1593,7 +1602,7 @@ const REB_STATS = [
   {k:'hp', name:'강골', desc:n => `체력 +${15 * n}%`},
   {k:'spd', name:'신속', desc:n => `공격 속도 +${3 * n}%`, max:10},
   {k:'luck', name:'복덕', desc:n => `엽전·경험치 +${10 * n}%`},
-  {k:'eye', name:'영안', desc:n => `치명타 확률 +${n}% · 치명타 피해 +${5 * n}%`, max:15},
+  {k:'eye', name:'영안', desc:n => `치명타 확률 +${n}% · 치명타 피해 +${5 * n}% (확률이 100%를 넘으면 넘친 만큼 치명타 피해로)`, max:15},
 ];
 const rebCost = lv => 1 + Math.floor(lv / 5);
 const TRIAL_PET_LV = 20;
@@ -2129,8 +2138,14 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-19', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-20', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 마을 부탁 가볍게 · 자동 기술 순서 · 조합 재료 · 치명타 100%'],
+  ['마을 부탁 가볍게', '부탁이 너무 무거웠어요. 몬스터 처치 수는 0.4배, 보스·레이드·소환 횟수는 절반, 재련은 2단계·단계는 15% 낮췄어요. 이미 받은 부탁도 같이 가벼워져요.'],
+  ['부탁이 막히지 않게', '보스 부탁은 단계 보스·레이드·타임 보스·보물 동굴·전직 시험 어느 것이든, 레이드 부탁은 [레이드] 칸의 싸움 어느 것이든 세요. 그 부탁이 열린 이야기 장을 이미 마쳤다면(이야기가 앞서 갔다면) 받으면 바로 끝나요. 아직 그 장을 하고 있다면 꼭 해내야 해요.'],
+  ['자동 기술은 돕는 기술 먼저', '자동으로 기술을 쓸 때 한꺼번에 다 쓰지 않고, 공격력 버프·약점처럼 피해를 키워 주는 기술을 먼저 쓴 뒤 0.1초씩 간격을 두고 큰 기술을 써요. 보스에게 더 큰 피해가 들어가요.'],
+  ['조합 재료는 남기고 합성', '[장비]의 「일괄 합성」과 「남는 장비 갈기」가 조합 공방 비전 무기·갑옷의 다음 단계에 드는 장비(예: 희귀 야행복 4개)는 그 개수만큼 남겨요. 그 등급이 모자라면 몬스터가 떨군 장비도 쇳가루로 바꾸지 않고 장비로 받아요.'],
+  ['치명타 확률 100%까지 (건의 반영)', '치명타 확률이 90%에서 막혀 남는 수련·영안이 버려졌어요. 이제 100%까지 오르고, 넘친 만큼은 치명타 피해로 바뀌어요(넘친 1% → 치명타 피해 +2%). [수련]에 넘친 양이 함께 보여요.'],
   ['#', '2026-11-10 · 보스 손컨트롤 · 넋 부름 · 기술 미리보기'],
   ['보스 손컨트롤', '보스가 큰 공격을 미리 보여 줘요. 땅이 붉게 물들면 땅을 누르거나 [구르기]로 피하고, 머리 위 금빛 「!」에는 [되받기]! 보스 체력 아래 「버팀」을 기술·넋·되받기로 깎으면 휘청여 더 아프게 맞아요. 레이드·수문장의 「큰 살」은 다 모으기 전에 버팀을 깨면 끊어요. 직접 안 눌러도 용사가 꽤 잘 피해요(직접 하면 늘 성공). 키보드는 스페이스.'],
   ['넋 부름 (2부부터)', '부상으로 건널 때 강림도령에게 넋 주머니를 받아요. 옛이야기 속 넋 17(우렁각시·처용·바리공주·주몽·해모수·마고할미…)을 모시면 싸우는 동안 기운이 차서 넋이 나타나 도와요. 넋 구슬은 부상·곤륜 레이드·타임 보스·보물 동굴에서, 40번 안에 하나는 꼭. [기술] → [넋 부름].'],
@@ -2350,7 +2365,7 @@ function defaultState(){
     skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0},
     gear:{weapon:{count:Array(20).fill(0), seen:Array(20).fill(false)}, armor:{count:Array(20).fill(0), seen:Array(20).fill(false)}},
     equip:{weapon:-1, armor:-1},
-    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0},
+    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0, bossAll:0, raidAll:0},
     speed:1, mode:'auto', bossAuto:true, dust:40, buyMode:1, lastSave:0,
     name:'', look:defaultLook(),
     refine:{weapon:{lv:0, drops:0, t:0, base:0}, armor:{lv:0, drops:0, t:0, base:0}},
@@ -2377,6 +2392,8 @@ function mergeState(d){
   out.up = Object.assign(base.up, d.up || {});
   out.skills = Object.assign(base.skills, d.skills || {});
   out.rec = Object.assign(base.rec, d.rec || {});
+  if (!(d.rec && d.rec.bossAll != null)) out.rec.bossAll = out.rec.bosses;   // 예전 저장: 받아 둔 부탁의 기준값과 맞춘다
+  if (!(d.rec && d.rec.raidAll != null)) out.rec.raidAll = out.rec.raids;
   out.mat = Object.assign(base.mat, d.mat || {});
   out.craft = base.craft;
   for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0)}; }
@@ -2457,6 +2474,7 @@ function mergeState(d){
   out.dust = Math.max(0, d.dust == null ? 40 : +d.dust || 0);
   out.dummy = Object.assign({day:'', n:0, best:0}, d.dummy || {});
   out.sub = {act:Object.assign({}, (d.sub || {}).act), done:Object.assign({}, (d.sub || {}).done)};
+  for (const k in out.sub.act){ const a = out.sub.act[k]; if (!a || typeof a !== 'object') delete out.sub.act[k]; }
   out.off = {kps:Math.min(OFF_KPS_MAX, Math.max(0, +(d.off && d.off.kps) || 0)), acc:Math.max(0, +(d.off && d.off.acc) || 0)};
   out.bag = []; out.bagSeq = Math.max(0, Math.floor(+d.bagSeq) || 0);
   for (const it of Array.isArray(d.bag) ? d.bag.slice(0, BAG_MAX) : []){ const c = mkClean(it); if (c && (c.t === 'acc' || c.t === 'myth')){ c.id = Number.isInteger(it.id) && it.id > 0 ? it.id : ++out.bagSeq; out.bagSeq = Math.max(out.bagSeq, c.id); out.bag.push(c); } }
@@ -2530,14 +2548,16 @@ function mythSets(){
 }
 function computeStats(up = S.up){
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
+  // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
+  const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
-    crit: Math.min(0.9, 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100),
-    critDmg: 1.5 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
+    crit: Math.min(1, crRaw), critOver: crOver,
+    critDmg: 1.5 + 2 * crOver + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
@@ -2558,7 +2578,7 @@ function statValue(k, st){
   switch (k){
     case 'atk': return st.atk < 100 ? st.atk.toFixed(1) : fmt(st.atk);
     case 'hp': return st.maxHp < 1000 ? st.maxHp.toFixed(1) : fmt(st.maxHp);
-    case 'crit': return (st.crit * 100).toFixed(1) + '%';
+    case 'crit': return (st.crit * 100).toFixed(1) + '%' + (st.critOver > 0 ? ` · 넘친 ${(st.critOver * 100).toFixed(1)}% → 치명타 피해 +${Math.round(st.critOver * 200)}%` : '');
     case 'critDmg': return Math.round(st.critDmg * 100) + '%';
     case 'aspd': return st.aspd.toFixed(2) + '회/초';
     case 'regen': return (st.regen * 100).toFixed(1) + '%/초';
@@ -3028,8 +3048,18 @@ function mergeableSets(slot, i){
   const keep = S.equip[slot] === i ? 1 : 0;
   return Math.max(0, Math.floor((S.gear[slot].count[i] - keep) / 4));
 }
-function mergeOne(slot, i){
-  const sets = mergeableSets(slot, i);
+// 조합 공방 재료 지키기(2026-11 (20), 사용자 요청): 다음 비전 무기·갑옷 조합식에 드는 등급 장비는 그 개수만큼 일괄 합성·갈기에서 남긴다
+function craftKeep(slot){
+  const c = CRAFT_SLOTS.find(x => x.gear === slot); if (!c) return null;
+  const T = CRAFT_T[S.craft[c.k].t]; if (!T) return null;
+  return {g:T.gear[0], n:T.gear[1]};
+}
+function mergeOne(slot, i, keepFor){
+  let sets = mergeableSets(slot, i);
+  if (keepFor && Math.floor(i / 4) === keepFor.g){   // 합성하면 그 등급 장비가 3개(같은 등급 안)·4개(다음 등급으로) 줄어든다
+    const dec = i % 4 === 3 ? 4 : 3;
+    sets = Math.min(sets, Math.max(0, Math.floor((gradeHave(slot, keepFor.g) - keepFor.n) / dec)));
+  }
   if (!sets) return 0;
   const G = S.gear[slot];
   G.count[i] -= sets * 4; G.count[i + 1] += sets; G.seen[i + 1] = true;
@@ -3037,7 +3067,8 @@ function mergeOne(slot, i){
 }
 function mergeAll(slot){
   let total = 0;
-  for (let i = 0; i < 19; i++) total += mergeOne(slot, i);
+  const keepFor = craftKeep(slot);
+  for (let i = 0; i < 19; i++) total += mergeOne(slot, i, keepFor);
   refreshStats();
   return total;
 }
@@ -3269,7 +3300,7 @@ function bossFail(reason){
 function bossWin(){
   const gems = 5 + Math.floor(effStage(S.stage) / 4);
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
-  S.gems += gems; S.rec.bosses++;
+  S.gems += gems; S.rec.bosses++; recWin(true, false);
   if (wasGate) rollAcc(true);
   bossGearDrop();
   gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
@@ -3465,7 +3496,7 @@ function finishTimeBoss(R){
   if (!S.tb) S.tb = {};
   S.tb[info.diff] = info.w;
   const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold');
-  S.gold += gold; S.rec.tb = (S.rec.tb || 0) + 1;
+  S.gold += gold; S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true);
   gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb);
   const luck = window.__game && window.__game.tbLuck || 1, drops = [];
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck){
@@ -3807,7 +3838,7 @@ function raidReward(info){
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
   const piece = info.busang || info.kunlun ? gainPiece((info.kunlun ? MOUNT_PIECE.kunlun : MOUNT_PIECE.busang) + (first ? MOUNT_PIECE.first : 0), true) : 0;
   const soul = soulDrop('raid');
-  S.raid.first[info.key] = true; S.rec.raids++;
+  S.raid.first[info.key] = true; S.rec.raids++; recWin(true, true);
   if (info.hell) S.rec.hraids = (S.rec.hraids || 0) + 1;
   if (raidTickets() >= TICKET_MAX) S.raid.tkT = now();
   S.raid.tk = Math.max(0, S.raid.tk - 1);
@@ -3832,6 +3863,7 @@ function startDummy(){
 }
 function finishDummy(){
   const dmg = dmgMeter, tier = dummyTier(dmg), w = Math.min(4, S.world + 1);
+  if (tier) recWin(false, true);
   const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 150 * gainMul('gold', true)) : 0, gems = [0, 0, 30, 60, 100, 150][tier], mats = [0, 0, 0, 2, 4, 6][tier];
   S.gold += gold; S.gems += gems; if (mats) gainMat(mats, true);
   const piece = tier >= 4 ? gainPiece(tier - 3, true) : 0;
@@ -3863,6 +3895,7 @@ function startVault(){
 }
 function finishVault(R){
   const win = R.win, shard = win ? vaultShards() : 1;
+  if (win) recWin(true, true);
   S.mythShard += shard;
   const m = win && Math.random() < VAULT_MYTH_P * (window.__game && window.__game.vaultLuck || 1) ? dropMyth(vaultD(), null, true) : null;
   const M = m && MYTHS.find(x => x.k === m.k), soul = win ? soulDrop('vault') : null;
@@ -4365,11 +4398,12 @@ function update(dt){
     }
   }
   if (!hero.dead){
-    for (const i of cls().order || SK_ORDER){
+    if (autoGap > 0) autoGap -= dt;
+    for (const i of cls().order || SK_AUTO_ORDER){
       const key = SKILLS[i].key, lv = skLv(i);
       if (!lv) continue;
       skillCd[key] = Math.max(0, (skillCd[key] || 0) - dt);
-      if (skillCd[key] <= 0 && skAuto(i) && tryCast(i, lv)) skillCd[key] = skCdOf(i);
+      if (autoGap <= 0 && skillCd[key] <= 0 && skAuto(i) && tryCast(i, lv)){ skillCd[key] = skCdOf(i); autoGap = AUTO_GAP; }
     }
   }
 }
@@ -4974,6 +5008,7 @@ function finishJobTrial(R){
     if (!(window.__game && window.__game.quiet)) showModal('전직 시험 실패', `<p><b>${R.info.bossName}</b>${josa(R.info.bossName, '을', '를')} 이기지 못했어요. 능력치·장비를 키워 다시 도전해요. (시험은 몇 번이든 볼 수 있어요)</p>`, [{label:'확인', primary:true}]);
     return;
   }
+  recWin(true, false);
   if (tier === 4 && (R.info.step || 0) < 2){
     const nx = (R.info.step || 0) + 1;
     addLog(`${R.info.bossName}${josa(R.info.bossName, '이', '가')} 길을 비켜 줬어요. 다음 스승이 기다려요! (${nx + 1}/3)`, 'good');
@@ -7536,11 +7571,26 @@ const SUB_Q = [
   {k:'z25', w:4, who:'술내기 하던 하인', t:'뱀에 다리를 그리다', hook:'뱀을 먼저 그리면 술을 마시기로 했는데, 다리까지 그리다 졌어요.', story:'쓸데없는 건 빼고 핵심만! 요괴 1,500마리.', c:'kills', n:1500, gems:200},
 ];
 const SUB_MAX = 3;
-const subRec = c => c === 'kills' ? S.rec.kills : c === 'bosses' ? S.rec.bosses : c === 'raids' ? S.rec.raids : c === 'refines' ? S.rec.refines : c === 'summons' ? S.rec.summons : S.maxStage;
+function recWin(boss, raidLike){ if (boss) S.rec.bossAll = (S.rec.bossAll || 0) + 1; if (raidLike) S.rec.raidAll = (S.rec.raidAll || 0) + 1; }
+// 보스 부탁은 보스라면 무엇이든(단계 보스·레이드·타임 보스·보물 동굴·전직 시험), 레이드 부탁은 [레이드] 칸이라면 무엇이든(레이드·타임 보스·허수아비·보물 동굴) 센다
+const subRec = c => c === 'kills' ? S.rec.kills : c === 'bosses' ? S.rec.bossAll : c === 'raids' ? S.rec.raidAll : c === 'refines' ? S.rec.refines : c === 'summons' ? S.rec.summons : S.maxStage;
 // 지금 상태로 보는 조건(이미 이뤘으면 받자마자 끝): 재련 단계(2부 계승 뒤는 25 + 계승 단계 − 15), 그 세계 최고 단계
 const refEffLv = slot => { const r = S.refine[slot]; return r.t ? REFINE_MAX + r.lv - REFINE_INHERIT : r.lv; };
 const SUB_STATE = {refW:() => refEffLv('weapon'), refA:() => refEffLv('armor'), stageW:q => q.w ? S.best['s' + q.w] || 0 : S.best.s0};
 const refLvText = n => n > REFINE_MAX ? `계승 +${n - (REFINE_MAX - REFINE_INHERIT)}` : `+${n}`;
+// 마을 부탁을 가볍게(2026-11 (20), 사용자 요청): 처치 0.4배·보스·레이드·소환 절반·재련 2단계·단계 15% 낮게. 이야기 글의 숫자도 함께 바꾼다(q.n0 = 예전 값)
+const SUB_LIGHT = {kills:0.4, bosses:0.5, raids:0.5, summons:0.5};
+const subStg = n => `${Math.floor((n - 1) / 10) + 1}-${(n - 1) % 10 + 1}`;
+for (const q of SUB_Q){
+  const n0 = q.n, c = q.c;
+  const n = c === 'kills' ? Math.max(50, Math.round(n0 * SUB_LIGHT.kills / 10) * 10) : c === 'refW' || c === 'refA' ? (n0 > REFINE_MAX ? Math.max(REFINE_MAX + 1, n0 - 2) : Math.max(1, n0 - 2)) : c === 'stageW' ? Math.max(5, Math.round(n0 * 0.85)) : SUB_LIGHT[c] ? Math.max(1, Math.ceil(n0 * SUB_LIGHT[c])) : n0;
+  if (n === n0) continue;
+  q.n0 = n0; q.n = n;
+  const sw = (a, b2) => { q.story = q.story.split(a).join(b2); };
+  if (c === 'refW' || c === 'refA') sw(refLvText(n0) + '까지', refLvText(n) + '까지');
+  else if (c === 'stageW') sw(subStg(n0) + '까지', subStg(n) + '까지');
+  else for (const u of ['번', '마리']){ sw(n0.toLocaleString('en-US') + u, n + u); sw(String(n0) + u, n + u); }
+}
 function subNeedText(q, v){
   if (q.c === 'refW' || q.c === 'refA') return (v == null ? '' : refLvText(Math.min(v, q.n)) + ' / ') + `${q.c === 'refW' ? '무기' : '방어구'} ${refLvText(q.n)}`;
   const stg = n => n >= 1 ? `${Math.floor((n - 1) / 10) + 1}-${(n - 1) % 10 + 1}` : '-';
@@ -7566,9 +7616,15 @@ function subRewHTML(q){
   return `<span class="rchip rc-gem">보석 ${fmt(subGems(q))}</span><span class="rchip">쇳가루 ${fmt(subDust(q))}</span>${subPiece(q) ? `<span class="rchip rc-mount">고삐 조각 ${subPiece(q)}</span>` : ''}${q.gold ? `<span class="rchip rc-gold">엽전</span>` : ''}${q.mat ? `<span class="rchip rc-mat">재료 ${q.mat}</span>` : ''}`;
 }
 const subAvail = () => SUB_Q.filter(q => subOpen(q) && !S.sub.done[q.k] && !S.sub.act[q.k]);
+// 부탁이 열린 장(이야기 장). 그 장을 이미 마쳤거나(이야기가 앞서 간 사람) 지나온 세계의 부탁이면 마친 것으로 친다.
+// 그 장을 아직 하고 있는 사람은 꼭 해야 한다(사용자 요청)
+const subCh = q => { if (!subAt) subAt = subSchedule(); return MAIN_Q[Math.min(MAIN_Q.length - 1, Math.max(0, subAt[q.k]))].ch; };
+const subPast = q => q.w < S.world || chapterDone(subCh(q));
 function subProg(q){
+  const a = S.sub.act[q.k];
+  if (subPast(q)) return q.n;
   if (SUB_STATE[q.c]) return SUB_STATE[q.c](q);
-  const a = S.sub.act[q.k]; if (!a) return 0;
+  if (!a) return 0;
   if (q.c === 'stage') return a.w !== S.world ? q.n : Math.max(0, S.maxStage - a.base);
   return Math.max(0, subRec(q.c) - a.base);
 }
@@ -7579,7 +7635,7 @@ function offerSub(k){
   if (!q || S.sub.done[q.k] || S.sub.act[q.k]) return;
   const full = Object.keys(S.sub.act).length >= SUB_MAX;
   showModal(`${q.who}의 부탁`, `<p class="story">「${q.hook}」</p><p>${q.story}</p>
-    <div class="dl"><span>할 일</span><b>${subNeedText(q)}${SUB_STATE[q.c] && subProg(q) >= q.n ? ' (이미 이뤘어요!)' : ''}</b></div>
+    <div class="dl"><span>할 일</span><b>${subNeedText(q)}${subProg(q) >= q.n ? (subPast(q) ? ' (이야기가 이미 지나간 부탁이라 받으면 바로 끝나요!)' : ' (이미 이뤘어요!)') : ''}</b></div>
     <div class="dl"><span>보상</span><b>보석 ${fmt(subGems(q))} · 쇳가루 ${fmt(subDust(q))}${subPiece(q) ? ` · 고삐 조각 ${subPiece(q)}` : ''}${q.gold ? ` · 엽전 ${fmt(subGold(q))}` : ''}${q.mat ? ` · 재료 ${q.mat}` : ''}</b></div>
     ${full ? `<p class="small" style="color:var(--seal)">부탁은 한 번에 ${SUB_MAX}개까지 들어 줄 수 있어요.</p>` : ''}`,
     [{label:'다음에'}, {label:'들어 줄게요', primary:true, fn:() => { if (!full && acceptSub(k)) closePage(); }}]);
@@ -8543,7 +8599,8 @@ function buildGear(){
     </div>
     <div class="grid">${grid}</div>
     ${detail}
-    <div class="bulk"><button class="btn" id="mergeAll">일괄 합성</button><button class="btn" id="equipBest">가장 좋은 것 장착</button></div>`;
+    <div class="bulk"><button class="btn" id="mergeAll">일괄 합성</button><button class="btn" id="equipBest">가장 좋은 것 장착</button></div>
+    ${(kf => kf ? `<p class="small" style="margin:6px 2px 0">일괄 합성·갈기는 조합 공방 ${CRAFT_SLOTS.find(c => c.gear === slot).name} 다음 단계에 드는 <b style="color:${GRADES[kf.g].color}">${GRADES[kf.g].name} ${slot === 'weapon' ? cls().weapon : cls().armor} ${kf.n}개</b>는 남겨요(지금 ${gradeHave(slot, kf.g)}개).</p>` : '')(craftKeep(slot))}`;
   wireGearSeg();
   $('#sum1').addEventListener('click', () => doSummon(slot, 1));
   $('#sum10').addEventListener('click', () => doSummon(slot, 10));
@@ -8973,7 +9030,7 @@ function buildRefine(){
     <p class="hint" style="margin-top:8px">엽전과 쇳가루로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
     <p class="hint">${S.refine.weapon.t ? `2부에서는 무기·방어구가 <b>계승</b>되어 +${REFINE_INHERIT}부터 다시 벼려요. 1부에서 쌓은 재련 효과는 그대로 남고, 성공 확률은 1부의 ${Math.round(REFINE_T_RATE * 100)}%예요.` : `<b>재련 한도</b>: 무기는 이승에서 +25까지. 방어구는 이승 +${REFINE_CAP_A[0]} → 저승 +${REFINE_CAP_A[1]} → 천계 +${REFINE_CAP_A[2]}. 2부로 건너가면 계승되어 +${REFINE_INHERIT}부터 다시 벼려요.`}</p>
     <div class="card grind"><div class="ct">쇳가루 <b id="dustN"></b><span class="small">재련 한 번에 쇳가루가 들어요</span></div>
-      <p class="small" style="margin:0">단계 보스가 떨군 기본 장비·소환으로 모은 남는 장비를 갈면 쇳가루가 나와요. 끼고 있는 장비와 지금 등급보다 높은 장비는 남겨요.</p>
+      <p class="small" style="margin:0">단계 보스가 떨군 기본 장비·소환으로 모은 남는 장비를 갈면 쇳가루가 나와요. 끼고 있는 장비, 지금 등급보다 높은 장비, <b>조합 공방 다음 단계에 드는 장비</b>는 남겨요.</p>
       <button class="btn primary" id="grindBtn">남는 장비 갈기</button></div>
     <label class="whet card"><input type="checkbox" id="whetChk" ${S.useWhet ? 'checked' : ''}><span id="whetTxt"></span></label>
     <label class="whet card"><input type="checkbox" id="protChk" ${S.useProtect ? 'checked' : ''}><span>보호: +16~+19에서 보석을 두 배 내고 부서짐을 막아요</span></label>
@@ -9177,7 +9234,8 @@ function buildQuest(){
       const act = SUB_Q.filter(q => S.sub.act[q.k]), doneN = SUB_Q.filter(q => S.sub.done[q.k]).length;
       panel.innerHTML = top + `
         <div class="ph"><h2>마을 부탁</h2><span class="small">마친 부탁 <b>${doneN}</b> / ${SUB_Q.length}</span></div>
-        <p class="hint">채팅의 <b>마을</b>에서 <b class="sqtag">부탁 ▶</b>이 붙은 말을 누르면 부탁을 들어줄 수 있어요. 한 번에 ${SUB_MAX}개까지. 이야기가 진행될수록 새 부탁이 열려요(이승 10 · 저승 10 · 천계 10 · 부상 30 · 곤륜 40). 뒤 세계일수록 보상이 커요.</p>
+        <p class="hint">채팅의 <b>마을</b>에서 <b class="sqtag">부탁 ▶</b>이 붙은 말을 누르면 부탁을 들어줄 수 있어요. 한 번에 ${SUB_MAX}개까지. 이야기가 진행될수록 새 부탁이 열려요(이승 10 · 저승 10 · 천계 10 · 부상 30 · 곤륜 40). 뒤 세계일수록 보상이 커요.
+          <b>보스</b> 부탁은 단계 보스·레이드·타임 보스·보물 동굴·전직 시험 어느 것이든, <b>레이드</b> 부탁은 [레이드] 칸의 싸움(레이드·타임 보스·허수아비·보물 동굴) 어느 것이든 세요. 그 부탁이 열린 <b>장을 이미 마쳤다면</b>(이야기가 앞서 갔다면) 받으면 바로 끝나요. 지금 그 장을 하고 있다면 꼭 해내야 해요.</p>
         <div class="matrow small">${['이승', '저승', '천계', '부상', '곤륜'].map((nm, w) => { const L = SUB_Q.filter(q => q.w === w); return `<span>${nm} <b>${L.filter(q => S.sub.done[q.k]).length}</b>/${L.length}</span>`; }).join('')}</div>
         <button class="btn" id="subFind" ${subAvail().length ? '' : 'disabled'}>${subAvail().length ? '마을 사람에게 부탁 묻기' : '지금은 새 부탁이 없어요'}</button>
         ${act.length ? act.map(q => `<div class="card qsub" id="sq-${q.k}"><div class="ct"><span><span class="qbadge sub">${q.who}</span> ${q.t}</span><span class="rchips">${subRewHTML(q)}</span></div>
@@ -10378,7 +10436,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
-  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = [];
+  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
@@ -10699,7 +10757,7 @@ if (location.search.indexOf('simtest') >= 0){
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
-    claimAll, skillGain, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
+    claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,

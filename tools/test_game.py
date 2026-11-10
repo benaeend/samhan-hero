@@ -669,8 +669,8 @@ async def main():
           const cnt = [0, 1, 2, 3, 4].map(w => G.SUB_Q.filter(q => q.w === w).length);
           const openAt = n => { S.quest.main = n; return G.SUB_Q.filter(q => G.subOpen(q)).length; };
           const o0 = openAt(0), o1 = openAt(G.PART1_END), o2 = openAt(G.PART2_END), o3 = openAt(G.MAIN_Q.length);
-          S.quest.main = m0; S.sub.act = {}; delete S.sub.done.z1; G.acceptSub('z1'); S.rec.kills += 1500;
-          const g0 = S.gems, p0 = S.mount.piece, d0 = S.dust, ok = G.claimSub('z1');
+          S.quest.main = m0; S.sub.act = {}; delete S.sub.done.z1; const g0 = S.gems, p0 = S.mount.piece, d0 = S.dust;
+          G.acceptSub('z1'); S.rec.kills += 1500; G.claimSub('z1'); const ok = !!S.sub.done.z1;
           return {cnt, o0, o1, o2, o3, ok, gem: S.gems - g0, piece: S.mount.piece - p0, dust: S.dust - d0, kmax: Math.max(...G.SUB_Q.filter(q => q.c === 'kills').map(q => q.n))}; }""")
         check(sq['cnt'] == [10, 10, 10, 30, 40] and sq['o0'] == 1 and 30 <= sq['o1'] <= 31 and 60 <= sq['o2'] <= 62 and sq['o3'] == 100 and sq['kmax'] <= 1500,
               f'마을 부탁 100개: 이승 10·저승 10·천계 10·부상 30·곤륜 40, 이야기 진행에 맞춰 열린다 {sq}')
@@ -678,6 +678,49 @@ async def main():
         ac = await page.evaluate("""() => { const G = window.__game, S = G.S, q = G.SUB_Q.find(x => x.k === 'f6'); S.sub.act = {}; delete S.sub.done.f6;
           S.refine.weapon.t = 0; S.refine.weapon.lv = 12; const g0 = S.gems; G.acceptSub('f6'); return {done: !!S.sub.done.f6, act: !!S.sub.act.f6, gems: S.gems - g0, c: q.c, n: q.n}; }""")
         check(ac['done'] and not ac['act'] and ac['gems'] > 0 and ac['c'] == 'refW', f'마을 부탁: 이미 이룬 재련 단계면 받자마자 저절로 끝난다 {ac}')
+        # 6-8b) 마을 부탁 가볍게·막히지 않게(지나온 땅은 바로 완료·보스 부탁은 무엇이든·2시간 뒤 완료)·치명타 100% 넘침
+        lt = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const f3 = G.SUB_Q.find(x => x.k === 'f3'), light = f3.n0 === 3 && f3.n === 2 && f3.story.includes('2번');
+          const kmax = Math.max(...G.SUB_Q.filter(q => q.c === 'kills').map(q => q.n));
+          S.sub.act = {}; delete S.sub.done.f3; S.world = 1; G.acceptSub('f3'); const past = !!S.sub.done.f3 && !S.sub.act.f3;
+          S.world = 0; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === G.subCh(f3)); S.sub.act = {}; delete S.sub.done.f3; G.acceptSub('f3'); const p0 = G.subProg(f3);
+          S.vault = {day:'', n:0}; const b0 = S.rec.bossAll, r0 = S.rec.raidAll; G.startVault(); G.raid.boss.hp = 1e-9; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          const viaVault = S.rec.bossAll === b0 + 1 && S.rec.raidAll === r0 + 1 && G.subProg(f3) === p0 + 1;
+          const f1 = G.SUB_Q.find(x => x.c === 'kills' && x.w === 0 && x.k !== 'f3'), ch = G.MAIN_Q.findIndex(q => q.ch === G.subCh(f1));
+          S.quest.main = ch; S.sub.act = {}; delete S.sub.done[f1.k]; G.acceptSub(f1.k); S.rec.play += 99999; const before = G.subProg(f1) < f1.n && !!S.sub.act[f1.k];
+          S.quest.main = G.MAIN_Q.findIndex(q => q.ch > G.subCh(f1)); const patient = G.subProg(f1) >= f1.n;
+          S.up.crit = 300; G.refreshStats(); const crit = G.ST.crit === 1 && G.ST.critOver > 0.5, cd = G.ST.critDmg;
+          S.up.crit = 100; G.refreshStats(); const cdLow = G.ST.critDmg;
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
+          return {light, kmax, past, viaVault, before, patient, crit, cdUp: cd > cdLow}; }""")
+        check(lt['light'] and lt['kmax'] <= 600 and lt['past'] and lt['viaVault'] and lt['before'] and lt['patient'],
+              f'마을 부탁: 가볍게(보스 3→2번·처치 600마리 이하), 지나온 땅의 부탁은 바로 완료, 보물 동굴도 보스로 셈, 그 장을 하는 중엔 꼭 해야 하고 장을 마치면 완료 {lt}')
+        check(lt['crit'] and lt['cdUp'], f'치명타 확률은 100%에서 멈추고 넘친 만큼 치명타 피해가 오른다 {lt}')
+        # 6-8c) 조합 공방 재료 지키기: 일괄 합성·갈기가 다음 비전 갑옷에 드는 희귀 장비 4개는 남긴다
+        ck = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const have = () => S.gear.armor.count.slice(8, 12).reduce((a, b) => a + b, 0);
+          S.craft.a.t = 2; S.gear.armor.count = Array(20).fill(0); S.gear.armor.count[8] = 9; S.gear.armor.seen[8] = true; S.equip.armor = -1;
+          G.mergeAll('armor'); const afterMerge = have();
+          S.gear.armor.count[8] = 9; S.gear.armor.count[9] = 0; S.equip.armor = 16; S.gear.armor.count[16] = 1; G.grindGear('armor', 3); const afterGrind = have();
+          S.craft.a.t = 9; S.gear.armor.count[8] = 9; S.equip.armor = -1; G.mergeAll('armor'); const free = have();
+          Object.assign(S, JSON.parse(keep)); G.refreshStats();
+          return {afterMerge, afterGrind, free}; }""")
+        check(ck['afterMerge'] >= 4 and ck['afterGrind'] == 4 and ck['free'] < 4, f'일괄 합성·갈기는 조합 공방에 드는 장비(희귀 4개)를 남기고, 조합을 다 하면 모두 합성한다 {ck}')
+        # 6-8d) 자동 기술 순서: 보스 앞에서 공격력 버프·약점이 먼저, 0.1초 간격으로 하나씩
+        ao = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          if (G.market) G.leaveMarket();
+          G.setClass('musa'); S.world = 0; S.level = 100; S.job = 2; S.mode = 'auto'; S.skManual = {}; S.bossAuto = true; for (const k in S.skills) S.skills[k] = 5;
+          G.setStage(20); G.refreshStats(); G.hero.hp = G.ST.maxHp;
+          S.kills = 0; S.autoBoss = false; const tough = () => { for (const m of G.mobs) if (!m.dead){ m.maxHp = m.hp = 1e300; m.atk = 0; } };
+          for (let i = 0; i < 300 && !G.hero.engaged; i++){ G.update(0.05); tough(); for (const k in G.skillCd) G.skillCd[k] = 99; }
+          for (const k in G.skillCd) G.skillCd[k] = 0;
+          const order = []; for (let i = 0; i < 12; i++){ G.update(0.05); tough(); for (const k in G.skillCd) if (G.skillCd[k] > 0.5 && !order.includes(k)) order.push(k); }
+          const h = G.hero, nm = G.mobs.filter(m => !m.dead).map(m => Math.abs(m.tx - h.tx) + Math.abs(m.ty - h.ty));
+          const diag = {mobs: nm.length, near: Math.min(...nm), eng: h.engaged, dead: h.dead, moving: h.moving, sd: h.stepDur, mt: h.mt, goal: h.goal, hold: h.holdT, dodge: h.dodgeT, roll: h.rollT, tg: !!h.target, pos: [h.tx, h.ty], cut: !!G.cut, mk: !!G.market, mode: S.mode, ride: S.mount.ride};
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
+          return {order, diag}; }""")
+        check(ao['order'][:2] == ['roar', 'mark'] and 3 <= len(ao['order']) <= 7,
+              f'자동 기술: 보스 앞에서 공격력 버프·약점을 먼저 쓰고 0.1초 간격으로 하나씩 쓴다 {ao}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
