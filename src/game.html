@@ -5149,7 +5149,7 @@ function endBox(){
   if (ascLv('weapon') < 2 || ascLv('armor') < 2) opts.push('asc');
   const t = opts[(Math.random() * opts.length) | 0];
   if (t === 'acc'){ const ks = ACC_ORDER.filter(k => accOpen(k)), k = ks[(Math.random() * ks.length) | 0], a = giveAcc(k, 4); return `전설 ${ACC[k].names[a.g]} (+${a.p}%)`; }
-  if (t === 'skin'){ const r = skinDrop(45, true, 4); if (r) return `전설 치장 ${skName(r.it)}`; }
+  if (t === 'skin'){ const r = skinDrop(45, true, 4, 1, 0.95); if (r) return `전설 치장 ${skName(r.it)}`; }
   const sl = ascLv('weapon') <= ascLv('armor') ? 'weapon' : 'armor';
   if (S.equip[sl] >= 16){ S.asc[sl] = Math.min(2, (S.asc[sl] || 0) + 1); refreshStats(); return `${GEAR[sl].label} 각성 → ${GRADES[ASC[S.asc[sl]].g].name}`; }
   const it = 19, nw = giveItem(sl, it); return `전설 ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`;
@@ -6648,10 +6648,10 @@ const skinOpen = () => skCh() >= SK_CH0;
 const skGradeP = ch => { let r = SK_GP[0][1]; for (const [c, gp] of SK_GP) if (ch >= c) r = gp; return r; };
 const skSE = it => it.l.reduce((a, l) => a + l[1], 0);
 const skName = it => `${GRADES[it.g].name} ${SKC[it.c].name}`;
-function skMake(sk, g){
+function skMake(sk, g, q = 0.8){   // q: 한 줄 값이 최대의 몇 배부터(보통 0.8, 엔드 상자 0.95)
   const P = SK_PART[sk.p], G = SK_GRADES[g], rest = Object.keys(SK_STATS).filter(t => t !== P.stat);
   for (let i = rest.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
-  return {id:++S.skin.seq, c:sk.c, g, l:[P.stat, ...rest].slice(0, G.n).map(t => [t, Math.round(G.se * (0.8 + 0.2 * Math.random()) * 100) / 100])};
+  return {id:++S.skin.seq, c:sk.c, g, l:[P.stat, ...rest].slice(0, G.n).map(t => [t, Math.round(G.se * (q + (1 - q) * Math.random()) * 100) / 100])};
 }
 let skCache = null;
 function skinSum(){
@@ -6685,7 +6685,7 @@ function skinGet(it, quiet){
   }
   return {it, better, fresh};
 }
-function skinDrop(ch, quiet, minG = 0, rolls = 1){   // minG: 이 등급 아래로는 안 나옴, rolls: 등급을 몇 번 굴려 좋은 것으로
+function skinDrop(ch, quiet, minG = 0, rolls = 1, q){   // minG: 이 등급 아래로는 안 나옴, rolls: 등급을 몇 번 굴려 좋은 것으로
   ch = Math.min(ch == null ? skCh() : ch, 45);
   const pool = SK_LIST.filter(x => x.c <= ch); if (!pool.length) return null;
   const sk = SKC[ch] && Math.random() < SK_CUR ? SKC[ch] : pool[Math.floor(Math.random() * pool.length)];
@@ -6694,7 +6694,7 @@ function skinDrop(ch, quiet, minG = 0, rolls = 1){   // minG: 이 등급 아래�
   for (let k = 0; k < rolls; k++){ let r = Math.random() * 100, x = 0; for (; x < 4; x++){ if (r < gp[x]) break; r -= gp[x]; } g = Math.max(g, x); }
   g = Math.max(g, minG);
   if (luck != null) g = luck;
-  return skinGet(skMake(sk, g), quiet);
+  return skinGet(skMake(sk, g, q), quiet);
 }
 function skinRoll(){ if (skinOpen() && Math.random() < SK_P * (window.__game && window.__game.skLuck || 1)) return skinDrop(); return null; }
 function skEquip(id){
