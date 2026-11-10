@@ -719,24 +719,24 @@ body.portrait .chat{width:100%}
 body.portrait .rotate-tip{display:flex;top:auto;bottom:auto;align-items:center;gap:8px;font-size:12px;font-weight:700;padding:6px 8px 6px 12px;border-radius:999px;background:rgba(8,12,22,.8);border:1px solid var(--line-2);color:var(--gold);white-space:nowrap}
 body.portrait .rotate-tip[hidden]{display:none}
 .rotate-tip button{border:0;background:rgba(255,255,255,.1);color:var(--text);border-radius:50%;width:22px;height:22px;cursor:pointer}
-@media (max-height:420px){
-  .sk{width:42px;height:42px}
-  .ctrl .skills{grid-template-columns:repeat(5,42px)}
-  .page-head{padding-top:6px;padding-bottom:6px}
-  .tab{font-size:10px}
-  .tab svg{width:19px;height:19px}
-}
-@media (min-aspect-ratio:5/4){
-  .modal.on-title{justify-items:end;padding-right:max(14px,6vw)}
-  .modal.on-title .sheet{width:min(400px,50%);max-height:96%}
-  .t-logo,.t-heroes{right:50%}
-  .t-heroes{top:calc(8% + 120px)}
-  .t-moon{right:auto;left:6%}
-}
-@media (min-aspect-ratio:5/4) and (max-height:480px){
-  .t-logo h1{font-size:44px}
-  .t-heroes img{width:56px;height:53px}
-}
+/* @media (max-height:420px){ 대신 body.short(resize가 돌린 화면까지 생각해 붙임) */
+  :where(body.short) .sk{width:42px;height:42px}
+  :where(body.short) .ctrl .skills{grid-template-columns:repeat(5,42px)}
+  :where(body.short) .page-head{padding-top:6px;padding-bottom:6px}
+  :where(body.short) .tab{font-size:10px}
+  :where(body.short) .tab svg{width:19px;height:19px}
+
+/* @media (min-aspect-ratio:5/4){ 대신 body.wide(resize가 돌린 화면까지 생각해 붙임) */
+  :where(body.wide) .modal.on-title{justify-items:end;padding-right:max(14px,6vw)}
+  :where(body.wide) .modal.on-title .sheet{width:min(400px,50%);max-height:96%}
+  :where(body.wide) .t-logo,:where(body.wide) .t-heroes{right:50%}
+  :where(body.wide) .t-heroes{top:calc(8% + 120px)}
+  :where(body.wide) .t-moon{right:auto;left:6%}
+
+/* @media (min-aspect-ratio:5/4) and (max-height:480px){ 대신 body.cmp(resize가 돌린 화면까지 생각해 붙임) */
+  :where(body.cmp) .t-logo h1{font-size:44px}
+  :where(body.cmp) .t-heroes img{width:56px;height:53px}
+
 .hud{width:min(280px,35%)}
 .qtrack{width:min(250px,33%)}
 body.portrait .hud{width:auto}
@@ -746,31 +746,32 @@ body.portrait .log{bottom:64px}
 body.portrait .guide{bottom:64px}
 body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;transform:translateX(-50%)}
 
-@media (max-height:480px) and (min-aspect-ratio:5/4){   /* 휴대폰 가로: 글자·상자를 작게 해 장면을 더 넓게 */
-  .hud{width:min(226px,30%);padding:5px 8px 6px;gap:3px;border-radius:12px}
-  .who{gap:4px}
-  .who #lv{font-size:9.5px;padding:1px 6px}
-  .who .nick{font-size:12px;max-width:6em}
-  .who .cls{font-size:9.5px;padding:0 4px}
-  .who .cp{font-size:9.5px}
-  .bar{font-size:9.5px;gap:4px}
-  .bar .tr{height:6px}
-  .hud .bar .num{min-width:40px;font-size:9.5px}
-  .qtrack{top:80px;width:min(196px,26%);padding:5px 8px;gap:2px 6px;font-size:10.5px;border-radius:11px}
-  .qtrack b{font-size:9px}
-  .qtrack .qn{font-size:9.5px}
-  .qtrack .qbar{height:4px}
-  .qtrack .btn{padding:3px 8px;font-size:10.5px;border-radius:999px;min-height:0}
-  .log{width:min(260px,34%);bottom:8px;gap:2px}
-  .log div{font-size:9.5px;padding:1px 6px;border-radius:6px}
-  .topr{gap:4px}
-  .topr .cur{font-size:11.5px;padding:2px 8px 2px 4px}
-  .btn-chat{width:32px;height:32px;border-radius:10px}
-  .btn-mode{height:28px;font-size:10.5px;padding:0 8px}
-  .ctrl .btn-speed{height:28px;font-size:11px}
-  .scene > .btn-boss{font-size:13px;padding:8px 18px;bottom:12px}
-  .guide{font-size:11px;padding:6px 9px}
-}
+/* @media (max-height:480px) and (min-aspect-ratio:5/4){ 대신 body.cmp(resize가 돌린 화면까지 생각해 붙임) */
+  /* 휴대폰 가로: 글자·상자를 작게 해 장면을 더 넓게 */
+:where(body.cmp) .hud{width:min(226px,30%);padding:5px 8px 6px;gap:3px;border-radius:12px}
+  :where(body.cmp) .who{gap:4px}
+  :where(body.cmp) .who #lv{font-size:9.5px;padding:1px 6px}
+  :where(body.cmp) .who .nick{font-size:12px;max-width:6em}
+  :where(body.cmp) .who .cls{font-size:9.5px;padding:0 4px}
+  :where(body.cmp) .who .cp{font-size:9.5px}
+  :where(body.cmp) .bar{font-size:9.5px;gap:4px}
+  :where(body.cmp) .bar .tr{height:6px}
+  :where(body.cmp) .hud .bar .num{min-width:40px;font-size:9.5px}
+  :where(body.cmp) .qtrack{top:80px;width:min(196px,26%);padding:5px 8px;gap:2px 6px;font-size:10.5px;border-radius:11px}
+  :where(body.cmp) .qtrack b{font-size:9px}
+  :where(body.cmp) .qtrack .qn{font-size:9.5px}
+  :where(body.cmp) .qtrack .qbar{height:4px}
+  :where(body.cmp) .qtrack .btn{padding:3px 8px;font-size:10.5px;border-radius:999px;min-height:0}
+  :where(body.cmp) .log{width:min(260px,34%);bottom:8px;gap:2px}
+  :where(body.cmp) .log div{font-size:9.5px;padding:1px 6px;border-radius:6px}
+  :where(body.cmp) .topr{gap:4px}
+  :where(body.cmp) .topr .cur{font-size:11.5px;padding:2px 8px 2px 4px}
+  :where(body.cmp) .btn-chat{width:32px;height:32px;border-radius:10px}
+  :where(body.cmp) .btn-mode{height:28px;font-size:10.5px;padding:0 8px}
+  :where(body.cmp) .ctrl .btn-speed{height:28px;font-size:11px}
+  :where(body.cmp) .scene > .btn-boss{font-size:13px;padding:8px 18px;bottom:12px}
+  :where(body.cmp) .guide{font-size:11px;padding:6px 9px}
+
 /* 장 제목 카드(붓글씨 느낌) */
 .chcard{position:absolute;left:50%;top:44%;z-index:12;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:18px 40px 20px;pointer-events:none;opacity:0;
   background:radial-gradient(closest-side,rgba(10,8,6,.86),rgba(10,8,6,.6) 70%,transparent);text-align:center;white-space:nowrap}
@@ -1340,6 +1341,8 @@ const HAIRS = ['#241c26', '#5a3a2a', '#8a5a3a', '#a8a8b0', '#d8c8a0', '#8a2a2a']
 const SKINS = ['#f4c79c', '#e6b088', '#c98e64'];
 const HATS = [['class', '직업 기본'], ['none', '없음'], ['musa', '머리띠'], ['sulsa', '갓'], ['jagaek', '복면'], ['doin', '상투관'], ['flower', '꽃핀']];
 const defaultLook = () => ({outfit:'auto', hair:HAIRS[0], hat:'class', skin:0});
+const hasK = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);   // 서버·남이 보낸 키 검사(constructor·__proto__ 같은 이름 막기)
+const gradeIdx = v => { v = Math.floor(+v); return Number.isInteger(v) && v >= -1 && v <= 4 ? v : -1; };   // 남이 보낸 장비 등급(-1~4)
 function cleanLook(l){
   const d = defaultLook();
   if (!l || typeof l !== 'object') return d;
@@ -2240,9 +2243,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-6', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-7', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 장터 상인의 귀한 물건 · 여러 가지 고침'],
+  ['장터 상인', '보부상 덕보의 물건이 12시간마다(0시·12시) 바뀌어요. 바뀔 때마다 2% 확률로 귀한 물건(전설 치장·전설 장신구) 하나를 보석 2,000에 가져와요(나오면 기록에 알려 줘요).'],
+  ['타임 보스·1일 보스', '기술을 아껴 두었다가 끝에 몰아 쳐도 쉬워지지 않게 보스 체력을 끝까지 맞춰요. 되받기로 넣은 큰 피해는 내 \'실제 피해\' 기억에 넣지 않아, 자리를 비운 동안의 보스 도전이 너무 쉬워지던 것도 고쳤어요.'],
+  ['고침', '주간 큰 상자의 치장은 하나만, 늘 고급 이상으로(예전엔 두 개를 주면서 하나만 보였어요). 자정 직전에 시작한 1일 보스가 다음 날 도전을 써 버리던 것, 화면을 돌렸을 때 효과 위치·작은 글자 배치, 다른 용사가 이상한 값을 보내면 게임이 멈출 수 있던 것을 고쳤어요.'],
   ['#', '2026-11-10 · 화면 방향 바꾸기 · 타임 보스/1일 보스 손맛'],
   ['가로·세로를 게임 안에서', '오른쪽 위 [화면 돌리기] 아이콘을 누르면 휴대폰을 돌리지 않아도 가로 ↔ 세로 배치가 바뀌어요. [정보] → 화면 방향에서 자동(기기 방향)·가로·세로를 고를 수 있고, 고른 것은 기억해요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요.'],
   ['타임 보스·1일 보스는 손으로', '이제 그냥 두면 꼭 이기는 싸움이 아니에요. 보스 체력이 싸우는 동안 내 기본 피해에 맞춰져 제한 시간 언저리에 쓰러질 만큼이라, 그냥 두면 반반쯤이에요. 금빛 「!」에 [되받기](보스를 묶고 기본 피해 4초 몫을 한 번에, 두 번이면 휘청)·붉은 칸 피하기·휘청일 때(피해 1.8배) 기술을 넣으면 거의 이겨요. 보스 공격은 방어와 상관없이 최대 체력의 몇 %로 들어오고, 붉은 칸·강타가 아파졌어요(쓰러지면 그만큼 뒤처져요).'],
@@ -2891,8 +2898,7 @@ function claimWeekAll(){
   S.gems += g; out.push(`보석 ${fmt(g)}`);
   S.mythShard = (S.mythShard || 0) + WEEK_SHARD; out.push(`신화 조각 ${WEEK_SHARD}`);
   S.gems += AV_BOX; const box = openAvatarBox(); if (box && box.a) out.push(`꾸미기 상자: ${box.a.name}${box.isNew ? '(새것!)' : '(겹침)'}`); else if (box) out.push('꾸미기 상자: 위로품');
-  if (skinOpen()){ const r1 = skinDrop(null, true).it; const keep = window.__game && window.__game.skGrade; if (window.__game) window.__game.skGrade = Math.max(1, r1.g);
-    const r2 = skinDrop(null, true); if (window.__game) window.__game.skGrade = keep == null ? null : keep; out.push(`치장: ${skName(r2.it)}`); }
+  if (skinOpen()){ const r = skinDrop(null, true, 1, 2); if (r) out.push(`치장: ${skName(r.it)}`); }   // 치장 하나: 등급을 두 번 굴려 좋은 쪽, 고급 이상
   if (S.world >= 3){ gainPiece(WEEK_PIECE, true); out.push(`고삐 조각 ${WEEK_PIECE}`); }
   addLog(`주간 퀘스트를 모두 마쳤습니다! ${out.join(' · ')}`, 'gain'); announce(`${S.name}님이 이번 주 주간 퀘스트를 모두 마쳤어요!`);
   questLuck(questDiff({all:true}));
@@ -3361,7 +3367,7 @@ function addText(text, x, y, color, size, bold){
 }
 const HIT_STYLE = {basic:['#ffffff', 12], skill:['#9fe7ff', 12], soul:['#ffc8f0', 13], pet:['#ffd0a0', 11], ally:['#d8d0c0', 10]};
 let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정)
-function hit(m, base, kind, sure){
+function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
   const sc = hero.soulCritT > 0 ? hero.soulCrit / 100 : 0;
@@ -3369,8 +3375,8 @@ function hit(m, base, kind, sure){
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : PAT.grogMul : 1;
-  const dmg = base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
-  if (mine){ dmgMeter += dmg; if (m.boss || m.raid) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
+  const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
   let hpLoss = dmg;
@@ -3692,12 +3698,12 @@ let TB_SELF_K = 1;   // 처음 체력에 넣는 내 몫(첫 몇 초 뒤부터는
 const TB_LEAD = 0.35;   // 시간표(1 − 지난 시간/tgt)보다 TB_LEAD 넘게 앞서 깎이지 않음(한꺼번에 터진 기술로 몇 초 만에 끝나지 않게)
 /* 타임 보스·1일 보스 맞추기(2026-11 (38), 사용자 요청: 무조건 이기지는 않게, 손을 잘 쓰면 이기게)
    · 체력: '기본 피해'(휘청으로 더 들어간 몫·되받기 피해는 빼고, 용사가 서 있던 동안만)의 빠르기를 1초마다 재어
-     그 빠르기로 tgt초(제한 시간 언저리)에 쓰러지게 맞춘다(제한 시간의 FIT.until까지). 처음 몇 초는 기억(S.rec.fitK × 어림)을 FIT.pw초만큼 섞어
+     그 빠르기로 tgt초(제한 시간 언저리)에 쓰러지게 맞춘다(끝까지 — 기술을 아꼈다가 끝에 몰아 쳐도 그만큼 단단해짐). 처음 몇 초는 기억(S.rec.fitK × 어림)을 FIT.pw초만큼 섞어
      흔들리지 않게. 이미 넣은 피해는 그대로라, 되받기·휘청으로 더 넣은 몫과 덜 쓰러져 더 때린 시간만큼 일찍 쓰러진다.
      손을 놓고 두면 제한 시간 언저리라 이기고 지는 게 반반쯤. 체력 막대는 거꾸로 차오르지 않는다(모자란 몫은 debt로 다음 피해에서 먼저 깎음)
    · 공격: 방어(받는 피해 줄임)를 빼고 맞는 용사 최대 체력의 몇 %(누구에게나 같은 위협). 피할 수 있는 붉은 칸(×FIT.tile)·강타(×FIT.blow)가 아프다
    · 되받기: 패턴 둘에 하나, 기본 피해 FIT.ctr초 몫을 한 번에 + 버팀 FIT.ctrStg. 휘청 동안 받는 피해 ×FIT.grog */
-const FIT = {until:0.75, pw:12, ctr:4, ctrStg:50, grog:1.8, regen:0.015, tile:5, blow:6};
+const FIT = {until:1, pw:12, ctr:4, ctrStg:50, grog:1.8, regen:0.015, tile:5, blow:6};
 const fitOn = m => !!(m && m.raid && raid && raid.info.fit && raid.boss === m);
 const fitRateOf = F => (F.base + F.rate * FIT.pw) / (F.alive + FIT.pw);
 const fitRate = () => { const F = raid && raid.info.fit; return F ? fitRateOf(F) : 0; };
@@ -3726,7 +3732,7 @@ const tbKey = () => tbWindow().id + ':' + (session ? session.acc + '/' + session
 const tbNum = v => Math.min(1e300, Math.max(0, +v || 0));
 function tbFromSummary(name, sm, mine){
   if (typeof name !== 'string' || !sm || typeof sm !== 'object' || !sm.ally || typeof sm.ally !== 'object') return null;
-  return {name:name.slice(0, 8), cls:CLASSES[sm.cls] ? sm.cls : 'musa', look:cleanLook(sm.look), armorG:Number.isInteger(sm.armorG) ? sm.armorG : -1, weaponG:Number.isInteger(sm.weaponG) ? sm.weaponG : -1,
+  return {name:name.slice(0, 8), cls:hasK(CLASSES, sm.cls) ? sm.cls : 'musa', look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
     level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine};
 }
 // 같은 직업은 나까지 TB_CLS_CAP명, 모두 TB_PICK명
@@ -3790,7 +3796,7 @@ function startTimeBoss(diff){
   if (tbCan(diff)) return false;
   const w = tbWindow(), D = TB_DIFF[diff], others = tbOthers();
   // 함께 싸우는 캐릭터는 실제 보스 피해(기술·넋 포함)로 싸운다(휘두를 때 피해 = 실제 피해 ÷ TB_ALLY_SK, 나머지는 동료 기술로)
-  const party = others.map(o => ({name:o.name, cls:CLASSES[o.cls] ? o.cls : 'musa', look:cleanLook(o.look), armorG:o.armorG == null ? -1 : o.armorG, weaponG:o.weaponG == null ? -1 : o.weaponG,
+  const party = others.map(o => ({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG),
     dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true}));
   const partyDps = realDps() * TB_SELF_K + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);   // 동료가 10명이 안 돼도(0명이어도) 그만큼으로 맞춘다
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
@@ -3950,7 +3956,7 @@ function counterOk(B, manual){
   const P = B.pat; P.tel = null;
   B.stunT = Math.max(B.stunT || 0, 1.8); S.rec.counters = (S.rec.counters || 0) + 1;
   addText(manual ? '되받기!' : '되받기', hero.x, hero.y - 40, '#ffe08a', manual ? 15 : 12, true);
-  if (fitOn(B)){ hitNoBase = true; hit(B, fitRate() * FIT.ctr / Math.max(1, ST.critDmg), 'skill', true); hitNoBase = false; patStg(B, FIT.ctrStg); }   // 타임 보스·1일 보스: 기본 피해 몇 초 몫
+  if (fitOn(B)){ hitNoBase = true; hit(B, fitRate() * FIT.ctr, 'skill', true, true); hitNoBase = false; patStg(B, FIT.ctrStg); }   // 타임 보스·1일 보스: 기본 피해(파티) FIT.ctr초 몫 그대로
   else { hit(B, ST.atk * atkBuff() * skillMulX() * cls().skillMul * 5, 'skill', true); patStg(B, 35); }
   shake = Math.max(shake, 0.3); sfx('crit');
   if (!fxOff()){ vadd({type:'shock', x:hero.x, y:hero.y, r0:4, r1:26, w:3, col:'#ffe08a', dur:0.45, ground:true}); vadd({type:'slashx', x:B.x, y:B.y - mobHeight(B) * 0.5, L:16, a:-0.6, col:'#ffe08a', dur:0.35}); }
@@ -4290,7 +4296,8 @@ function startDBoss(){
   if (raid || dbLeft() <= 0 || (!session && !window.__game)) return false;
   S.dboss.n++;
   const B = dbBoss(), sun = dbDay() === 0, s = Math.max(1, S.maxStage - (sun ? 0 : 3));
-  const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0};
+  const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0,
+    day:dummyDay(), dow:dbDay(), sun, part:sun ? 'all' : dbPart(), paid0:S.dboss.paid};   // 자정을 넘겨 끝나도 시작한 날 것으로 셈
   const est = realDps() * DB_FIT.self, tgt = sun ? DB_FIT.sunTgt : DB_FIT.tgt;
   info.fit = fitNew(tgt, est, 'fitKd');
   startFight(info, [], {hp:info.fit.rate * tgt, atk:ST.maxHp * (sun ? DB_FIT.sunHit : DB_FIT.hit), aoe:ST.maxHp * DB_FIT.aoe, time:DB_TIME});
@@ -4299,14 +4306,16 @@ function startDBoss(){
   return true;
 }
 function finishDBoss(R){
-  dbCheck();
-  const B = dbBoss(), sun = dbDay() === 0, out = [];
-  if (!S.dboss.paid){ S.dboss.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); }
+  const I = R.info || {}, cross = !!I.day && I.day !== dummyDay();   // 자정을 넘겨 끝난 싸움: 시작한 날의 보스·부위·보상으로, 새 날의 도전 횟수·보상은 건드리지 않음
+  if (!cross) dbCheck();
+  const st = cross ? {paid:!!I.paid0, won:false} : S.dboss;
+  const B = cross ? DBOSS[I.dow] : dbBoss(), sun = cross ? !!I.sun : dbDay() === 0, part = cross ? I.part : sun ? 'all' : dbPart(), out = [];
+  if (!st.paid){ st.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); }
   let skin = null;
-  if (R.win && !S.dboss.won){
-    S.dboss.won = true; recWin(true, true);
+  if (R.win && !st.won){
+    st.won = true; recWin(true, true);
     if (sun){ if (Math.random() < DB_SUN_P * (window.__game && window.__game.dbLuck || 1)) skin = skinDropPart('all', 4); }
-    else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; skin = skinDropPart(dbPart(), g); }
+    else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; skin = skinDropPart(part, g); }
     if (skin) out.push(`치장: ${skName(skin.it)}${skin.better ? '(바로 낌)' : ''}`);
     else if (sun) out.push('전설 치장은 이번엔 나오지 않았어요');
   }
@@ -5710,12 +5719,14 @@ function skinGet(it, quiet){
   }
   return {it, better, fresh};
 }
-function skinDrop(ch, quiet){
+function skinDrop(ch, quiet, minG = 0, rolls = 1){   // minG: 이 등급 아래로는 안 나옴, rolls: 등급을 몇 번 굴려 좋은 것으로
   ch = Math.min(ch == null ? skCh() : ch, 45);
   const pool = SK_LIST.filter(x => x.c <= ch); if (!pool.length) return null;
   const sk = SKC[ch] && Math.random() < SK_CUR ? SKC[ch] : pool[Math.floor(Math.random() * pool.length)];
   const gp = skGradeP(ch), luck = window.__game && window.__game.skGrade;
-  let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < gp[g]) break; r -= gp[g]; }
+  let g = 0;
+  for (let k = 0; k < rolls; k++){ let r = Math.random() * 100, x = 0; for (; x < 4; x++){ if (r < gp[x]) break; r -= gp[x]; } g = Math.max(g, x); }
+  g = Math.max(g, minG);
   if (luck != null) g = luck;
   return skinGet(skMake(sk, g), quiet);
 }
@@ -5735,13 +5746,13 @@ function skSellWorse(){   // 끼고 있는 것보다 단계 값이 낮은 보관
 }
 const skinLook = () => { const o = {}; for (const P of SK_PARTS){ const it = S.skin && S.skin.eq[P.k]; if (it) o[P.k] = SKC[it.c].col; } return o; };
 function skClean(d){   // 저장에서 온 치장 다듬기
-  const ok = it => it && SKC[it.c] && Number.isInteger(it.g) && it.g >= 0 && it.g < SK_GRADES.length && Array.isArray(it.l) && it.l.length >= 1 && it.l.length <= SK_GRADES[it.g].n
-    && it.l.every(l => Array.isArray(l) && SK_STATS[l[0]] && isFinite(+l[1])) && new Set(it.l.map(l => l[0])).size === it.l.length;
-  const fix = it => ({id:Math.max(1, Math.floor(+it.id) || 1), c:it.c, g:it.g, l:it.l.map(l => [l[0], Math.max(0, Math.min(SK_GRADES[it.g].se, +l[1]))])});
+  const ok = it => it && hasK(SKC, String(it.c)) && Number.isInteger(it.g) && it.g >= 0 && it.g < SK_GRADES.length && Array.isArray(it.l) && it.l.length >= 1 && it.l.length <= SK_GRADES[it.g].n
+    && it.l.every(l => Array.isArray(l) && hasK(SK_STATS, l[0]) && isFinite(+l[1])) && new Set(it.l.map(l => l[0])).size === it.l.length;
+  const fix = it => ({id:Math.max(1, Math.floor(+it.id) || 1), c:+it.c, g:it.g, l:it.l.map(l => [l[0], Math.max(0, Math.min(SK_GRADES[it.g].se, +l[1]))])});
   const o = {eq:{}, inv:[], seq:Math.max(0, Math.floor(+(d && d.seq)) || 0), found:{}};
   if (d && d.eq) for (const P of SK_PARTS){ const it = d.eq[P.k]; if (ok(it) && SKC[it.c].p === P.k) o.eq[P.k] = fix(it); }
   if (d && Array.isArray(d.inv)) o.inv = d.inv.filter(ok).slice(0, SK_INV).map(fix);
-  if (d && d.found) for (const c in d.found) if (SKC[c]) o.found[c] = 1;
+  if (d && d.found) for (const c in d.found) if (hasK(SKC, c)) o.found[c] = 1;
   for (const it of [...Object.values(o.eq), ...o.inv]){ o.found[it.c] = 1; o.seq = Math.max(o.seq, it.id); }
   return o;
 }
@@ -6371,13 +6382,13 @@ function itemInfo(it){
 function mkClean(o){
   if (!o || typeof o !== 'object') return null;
   const int = (v, lo, hi) => { v = Math.floor(+v); return Number.isFinite(v) && v >= lo && v <= hi ? v : null; };
-  if (o.t === 'acc' && ACC[o.k]){ const g = int(o.g, 0, 4), p = g == null ? null : int(o.p, 1, ACC[o.k].base[g] * 40); return p == null ? null : {t:'acc', k:o.k, g, p}; }
+  if (o.t === 'acc' && hasK(ACC, o.k)){ const g = int(o.g, 0, 4), p = g == null ? null : int(o.p, 1, ACC[o.k].base[g] * 40); return p == null ? null : {t:'acc', k:o.k, g, p}; }
   if (o.t === 'myth'){ const M = MYTHS.find(m => m.k === o.k && !m.story), p = int(o.p, 1, 20000); return M && p != null ? {t:'myth', k:o.k, p} : null; }
   if (o.t === 'gear' && (o.s === 'weapon' || o.s === 'armor')){ const i = int(o.it, 0, 19), n = int(o.n, 1, 9999); return i != null && n != null ? {t:'gear', s:o.s, it:i, n} : null; }
   if (o.t === 'mat' && MATS.some(m => m.k === o.k)){ const n = int(o.n, 1, 1e9); return n != null ? {t:'mat', k:o.k, n} : null; }
   if (o.t === 'dust' || o.t === 'piece'){ const n = int(o.n, 1, 1e9); return n != null ? {t:o.t, n} : null; }
   if (o.t === 'skin'){ const c = skClean({inv:[{id:1, c:o.c, g:o.g, l:o.l}]}).inv[0]; return c ? {t:'skin', c:c.c, g:c.g, l:c.l} : null; }
-  if (o.t === 'stack' && MK_STACK[o.k]){ const n = int(o.n, 1, 1e9); return n != null ? {t:'stack', k:o.k, n} : null; }
+  if (o.t === 'stack' && hasK(MK_STACK, o.k)){ const n = int(o.n, 1, 1e9); return n != null ? {t:'stack', k:o.k, n} : null; }
   return null;
 }
 function bagAdd(it, quiet){
@@ -7466,7 +7477,7 @@ function mkRecv(m){
   const x = Math.max(0, Math.min(COLS - 1, Math.floor(+d.x) || 0)), y = Math.max(TOPR, Math.min(ROWS - 1, Math.floor(+d.y) || TOPR));
   let p = market.peers.get(id);
   if (!p){ p = {tx:x, ty:y, fx:x, fy:y, mt:1, moving:false, x:0, y:0, dir:'down', stepDur:0.22}; placeOf(p); market.peers.set(id, p); }
-  Object.assign(p, {n:String(d.n || '용사').slice(0, 8), c:CLASSES[d.c] ? d.c : 'musa', l:cleanLook(d.l), ag:Math.max(-1, Math.min(4, Math.floor(+d.ag))), wg:Math.max(-1, Math.min(4, Math.floor(+d.wg))), j:Math.max(0, Math.min(4, Math.floor(+d.j) || 0)), r:MT[d.r] ? d.r : '', gx:x, gy:y, seen:12});
+  Object.assign(p, {n:String(d.n || '용사').slice(0, 8), c:hasK(CLASSES, d.c) ? d.c : 'musa', l:cleanLook(d.l), ag:Math.max(-1, Math.min(4, Math.floor(+d.ag))), wg:Math.max(-1, Math.min(4, Math.floor(+d.wg))), j:Math.max(0, Math.min(4, Math.floor(+d.j) || 0)), r:hasK(MT, d.r) ? d.r : '', gx:x, gy:y, seen:12});
 }
 // 장터 안에서: 걷기·도착하면 상인 화면·다른 용사 움직임
 function updateMarket(dt){
@@ -7585,11 +7596,15 @@ function fxAdd(cls, vars, dur, html){
   setTimeout(() => { e.remove(); fxCount--; }, dur);
   return e;
 }
+const toBody = (x, y) => { if (!rotDeg) return [x, y]; const p = localPt({clientX:x, clientY:y}, document.body); return [p.x, p.y]; };   // 화면을 돌렸으면 효과 층(#fxl, body 안) 좌표로
 function fxPos(el){
-  if (el && el.getBoundingClientRect){ const r = el.getBoundingClientRect(); if (r.width) return [r.left + r.width / 2, r.top + r.height / 2]; }
+  if (el && el.getBoundingClientRect){ const r = el.getBoundingClientRect(); if (r.width) return toBody(r.left + r.width / 2, r.top + r.height / 2); }
   return [viewW() / 2, viewH() * 0.45];
 }
-function heroScreen(){ const r = cv.getBoundingClientRect(); return [r.left + (hero.x - camX) * scale, r.top + (hero.y - 16 - camY) * scale]; }
+function heroScreen(){   // 장면 위 용사 머리 위 자리(효과 층 좌표). 돌린 화면이면 장면의 왼쪽 위 모서리를 body 안 좌표로 바꿔서
+  const r = cv.getBoundingClientRect(), o = rotDeg === 90 ? toBody(r.right, r.top) : rotDeg === -90 ? toBody(r.left, r.bottom) : [r.left, r.top];
+  return [o[0] + (hero.x - camX) * scale, o[1] + (hero.y - 16 - camY) * scale];
+}
 function fxSparks(x, y, c, n, sp, w){
   for (let i = 0; i < n; i++){
     const a = Math.random() * Math.PI * 2, d = sp * (0.4 + Math.random() * 0.8), dur = 0.6 + Math.random() * 0.6;
@@ -7716,6 +7731,7 @@ function resize(){
   const sc = cv.parentElement, sw = sc.clientWidth || 480, sh = sc.clientHeight || 320;
   const land = sw / sh >= 1.25;
   document.body.classList.toggle('portrait', !land);
+  { const w0 = viewW(), h0 = viewH(), B = document.body.classList; B.toggle('wide', w0 >= h0 * 1.25); B.toggle('cmp', w0 >= h0 * 1.25 && h0 <= 480); B.toggle('short', h0 <= 420); }   // 예전 @media 조건을 돌린 화면 기준으로
   VW = land ? Math.max(W, Math.min(VW_MAX, Math.round(H * sw / sh))) : W;   // 넓힌 판(MW)과 따로, 보이는 너비는 예전 최대 360 그대로
   scale = land ? Math.max(sw / VW, sh / H) : sw / VW;
   dpr = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -8739,7 +8755,7 @@ async function bootRoom(){
       addChat('player', name + (msg.guest ? '(손님)' : msg.isMe ? '(내 다른 창)' : ''), text);
     }, () => { room = null; });
     r.onPeers(ch => { const ps = Array.isArray(ch && ch.peers) ? ch.peers : []; roomPeers = ps.length;
-      roomList = ps.map(p => p && typeof p === 'object' ? {n:cleanChat(String(p.n || p.name || '')).slice(0, 8), c:CLASSES[p.c] ? p.c : '', l:Math.max(0, Math.floor(+p.l) || 0), w:Math.max(0, Math.min(4, Math.floor(+p.w) || 0)), me:!!p.me} : null).filter(p => p && p.n);
+      roomList = ps.map(p => p && typeof p === 'object' ? {n:cleanChat(String(p.n || p.name || '')).slice(0, 8), c:hasK(CLASSES, p.c) ? p.c : '', l:Math.max(0, Math.floor(+p.l) || 0), w:Math.max(0, Math.min(4, Math.floor(+p.w) || 0)), me:!!p.me} : null).filter(p => p && p.n);
       updateChatHead(); }, () => {});
     r.on('tb', msg => {
       if (!msg || msg.sameTab || msg.isMe) return;
@@ -10521,7 +10537,7 @@ function buildRaid(){
     setHTML($('#tbBox'), `<div class="card dcard ${w.open && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(tbB.type, tbB.color)}" alt=""></div><div>
       <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
       <p class="story">00시부터 3시간마다 30분 동안 나타나요. ${online ? '<b>서버에 만들어진 모든 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 30분 동안은 같은 파티). 보스 체력은 <b>모인 용사들의 피해에 맞춰</b> 제한 시간 언저리에 쓰러질 만큼이라 <b>그냥 두면 이기고 지는 게 반반</b>이에요. 금빛 「!」에 <b>[되받기]</b>(보스를 묶고 크게 침, 두 번이면 휘청), 붉은 칸·강타는 <b>피하기</b>, 휘청일 때(피해 ${FIT.grog}배) 기술을 넣으면 이겨요. 보스 한 방은 방어와 상관없이 맞는 용사 최대 체력의 ${(TB_DIFF.normal.hit * 100).toFixed(1).replace('.0', '')}%(지옥 ${(TB_DIFF.hell.hit * 100).toFixed(1).replace('.0', '')}%), 붉은 칸·강타는 그 ${FIT.tile}~${FIT.blow}배. 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
-      <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => `${o.name}(${CLASSES[o.cls].name}${o.mine ? '·내 캐릭터' : ''})`)))}</b></div>
+      <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => `${esc(o.name)}(${(hasK(CLASSES, o.cls) ? CLASSES[o.cls] : CLASSES.musa).name}${o.mine ? '·내 캐릭터' : ''})`)))}</b></div>
       ${users < 2 ? `<p class="small">${online ? '아직 함께 싸울 캐릭터가 없어요(한 번이라도 싸워 본 캐릭터만 뽑혀요).' : '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 서버의 모든 캐릭터 가운데에서 뽑혀요.'}</p>` : ''}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
     </div></div>`);
@@ -11534,8 +11550,8 @@ async function syncChars(acc){
     if (!it || typeof it.cid !== 'string' || typeof it.name !== 'string') continue;
     const sm = it.summary && typeof it.summary === 'object' ? it.summary : {};
     const loc = A.chars.find(c => c.cid === it.cid);
-    const ent = {cid:it.cid, name:String(it.name).slice(0, 8), cls:CLASSES[sm.cls] ? sm.cls : 'musa', level:Math.max(1, +sm.level || 1), maxStage:Math.max(1, +sm.maxStage || 1),
-      look:cleanLook(sm.look), armorG:Number.isFinite(+sm.armorG) ? +sm.armorG : -1, weaponG:Number.isFinite(+sm.weaponG) ? +sm.weaponG : -1,
+    const ent = {cid:it.cid, name:String(it.name).slice(0, 8), cls:hasK(CLASSES, sm.cls) ? sm.cls : 'musa', level:Math.max(1, +sm.level || 1), maxStage:Math.max(1, +sm.maxStage || 1),
+      look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
       ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1), rd:Math.max(0, +sm.ally.rd || 0)} : undefined, t:+it.t || 0, srvT:+it.t || 0,
       world:Math.max(0, Math.min(4, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, +sm.level || 1)))};
     if (!loc) A.chars.push(ent);
@@ -11582,7 +11598,7 @@ async function onlineRoom(){
     const p = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
     for (const fn of hs[topic] || []) fn({data:p.d, peer:String(p.p || '').slice(0, 16)});
   });
-  ch.on('presence', {event:'sync'}, () => { const st = ch.presenceState() || {}, peers = Object.keys(st).map(k => Object.assign({me:k === me}, (st[k] || [])[0] || {})); for (const f of peerFns) f({peers}); });
+  ch.on('presence', {event:'sync'}, () => { const st = ch.presenceState() || {}, peers = Object.keys(st).map(k => Object.assign({}, (st[k] || [])[0] || {}, {me:k === me})); for (const f of peerFns) f({peers}); });
   await new Promise((res, rej) => {
     const to = setTimeout(() => rej(new Error('timeout')), 9000);
     ch.subscribe(st => {
@@ -12079,7 +12095,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };

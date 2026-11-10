@@ -700,12 +700,14 @@ async def main():
           const g0 = S.gems, sh0 = S.mythShard || 0; for (const W of G.WEEKLY) S.week.wp[W.key] = W.goal;
           const early = G.claimWeekAll(); let n = 0; for (const W of G.WEEKLY) if (G.claimWeek(W.key)) n++;
           const gemsW = S.gems - g0, again = G.claimWeek('kill');
+          S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 30); S.skin = {eq:{}, inv:[], seq:0, found:{}}; G.skGrade = null;
           S.gems = 0; const box = G.claimWeekAll(), gemsAll = S.gems, shard = (S.mythShard || 0) - sh0;
+          const sks = Object.values(S.skin.eq).concat(S.skin.inv), skN = sks.length, skG = Math.min(...sks.map(x => x.g));
           G.addTime(8 * 86400 * 1000); G.weekCheck(); const reset = S.week.key !== key && !S.week.wall && !S.week.wgot.length;
           Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
-          return {mon, counted, early, n, gemsW, again, box: box && box.length, gemsAll, shard, reset}; }""")
+          return {mon, counted, early, n, gemsW, again, box: box && box.length, gemsAll, shard, reset, skN, skG}; }""")
         check(wk['mon'] == 1 and wk['counted'] == [10, 5] and wk['early'] is None and wk['n'] == 8 and wk['gemsW'] == 3500 * 2 and not wk['again']
-              and wk['box'] >= 3 and wk['gemsAll'] == 6000 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'],
+              and wk['box'] >= 3 and wk['gemsAll'] == 6000 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'] and wk['skN'] == 1 and wk['skG'] >= 1,
               f'주간 퀘스트: 월요일 시작·일을 세고·보석(천계 2배)·덤·큰 상자(보석·신화 조각·꾸미기 상자·치장)·다음 주에 새로 {wk}')
 
         # 6-4g) 1일 보스: 요일마다 보스·치장 부위, 이기면 그 부위 치장(모든 등급), 일요일은 전설만(낮은 확률), 참가만 해도 하루 한 번 보석·엽전
@@ -741,6 +743,20 @@ async def main():
           return {ok, rise, norm, pct, dk, ctr, want: G.FIT.ctr, baseD}; }""")
         check(fh['ok'] and fh['rise'] == 0 and abs(fh['norm'] - fh['pct']) < 0.002 and fh['dk'] < 1 and fh['ctr'] >= fh['want'] * 0.9 and fh['baseD'] == 0,
               f'1일·타임 보스: 방어가 높아도 맞으면 최대 체력의 같은 %, 되받기는 기본 피해 몇 초 몫을 한 번에(기본 피해로는 안 셈), 막대는 거꾸로 안 참 {fh}')
+
+        # 6-4g3) 남이 보낸 값 막기(constructor 같은 이름·큰 등급·HTML 이름) + 자정을 넘긴 1일 보스는 시작한 날 것으로
+        gd = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const bad = [G.mkClean({t:'skin', c:'constructor', g:0, l:[['atk', 0.3]]}), G.mkClean({t:'stack', k:'constructor', n:1}), G.mkClean({t:'acc', k:'__proto__', g:0, p:1}), G.mkClean({t:'skin', c:17, g:0, l:[['toString', 0.3]]})];
+          const a = G.tbFromSummary('<!--x', {cls:'constructor', armorG:99, weaponG:-7, ally:{dps:5, maxHp:9, rd:'x'}}, false);
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          S.skin = {eq:{}, inv:[], seq:0, found:{}}; S.dboss = {day:'', n:0, paid:false, won:false}; G.dbCheck(); G.dbLuck = 100;
+          const ok = G.startDBoss(), R = G.raid; R.info.day = '1999-1-1'; R.info.paid0 = false; const g0 = S.gems;
+          R.info.fit = null; R.boss.hp = 1; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          const today = {n:S.dboss.n, paid:S.dboss.paid, won:S.dboss.won}, gems = S.gems > g0, skins = Object.values(S.skin.eq).concat(S.skin.inv).length;
+          G.dbLuck = null; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
+          return {bad: bad.every(x => x === null), cls: a.cls, ag: a.armorG, wg: a.weaponG, rd: a.rd, ok, today, gems, skins}; }""")
+        check(gd['bad'] and gd['cls'] == 'musa' and gd['ag'] == -1 and gd['wg'] == -1 and gd['rd'] == 0 and gd['ok'] and gd['today'] == {'n': 1, 'paid': False, 'won': False} and gd['gems'] and gd['skins'] == 1,
+              f'남이 보낸 이상한 값(constructor 이름·큰 등급)은 버리고, 자정을 넘긴 1일 보스는 시작한 날 것으로(새 날 도전·보상은 그대로) {gd}')
 
         # 6-4h) 화면 방향 고르기: 휴대폰을 돌리지 않고 가로·세로를 바꾸고(잠글 수 없으면 화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞는다
         await page.evaluate("() => { const G = window.__game; G.closePage && G.closePage(); const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } G.hero.dead = false; }")
