@@ -498,7 +498,7 @@ async def main():
           G.REG.accounts.friend2 = {salt:'x', hash:'p:x', t:1, chars:[{cid:'f2', name:'벗님2', cls:'doin', level:50, look:{}, armorG:3, weaponG:3, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp}}]};
           const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); S.tb = {};
           const names = G.tbOthers().map(o => o.name), ok = G.startTimeBoss('normal'), R = G.raid, B = R.boss;
-          const partyRd = G.realDps() * (1 + 6 + 0.8);   // 나 + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8)
+          const partyRd = G.realDps() * (G.TB_SELF_K + 6 + 0.8) * 2;   // 나(내 몫 TB_SELF_K) + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8), 처음 체력은 어림의 2배(싸우며 맞춤)
           const hpK = +(B.maxHp / partyRd).toFixed(1);
           const a2 = R.allies.find(a => a.name === '내캐2');
           const pctMe = B.tbPct.hit, dmgMe = G.ST.maxHp * pctMe, dmgA2 = a2.maxHp * pctMe;
@@ -506,7 +506,7 @@ async def main():
           A.chars = c0; delete G.REG.accounts.friend2; Object.assign(S, JSON.parse(keep)); G.refreshStats();
           return {ok, n: names.length, mine: names.filter(n => n.startsWith('내캐')).length, friend: names.includes('벗님2'), hpK, ratio: +(dmgA2 / dmgMe).toFixed(2)}; }""")
         check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - 120) < 1 and tb2['ratio'] == 3,
-              f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합에 맞추고(노말 120초분), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
+              f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합에서 시작하고(노말 120초분×2, 싸우며 맞춤), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
 
         # 타임 보스 동료는 무작위 10명, 같은 직업은 나까지 3명(이 기기만 쓸 때도 같은 규칙, 30분 동안은 같은 파티)
         tb3 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S);
@@ -704,6 +704,24 @@ async def main():
         check(wk['mon'] == 1 and wk['counted'] == [10, 5] and wk['early'] is None and wk['n'] == 8 and wk['gemsW'] == 3500 * 2 and not wk['again']
               and wk['box'] >= 3 and wk['gemsAll'] == 6000 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'],
               f'주간 퀘스트: 월요일 시작·일을 세고·보석(천계 2배)·덤·큰 상자(보석·신화 조각·꾸미기 상자·치장)·다음 주에 새로 {wk}')
+
+        # 6-4g) 1일 보스: 요일마다 보스·치장 부위, 이기면 그 부위 치장(모든 등급), 일요일은 전설만(낮은 확률), 참가만 해도 하루 한 번 보석·엽전
+        db = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.skin = {eq:{}, inv:[], seq:0, found:{}}; S.dboss = {day:'', n:0, paid:false, won:false}; S.up.atk = Math.max(S.up.atk, 150); G.refreshStats();
+          const day = G.dbDay(), part = G.dbPart(), g0 = S.gems;
+          // 지면: 참가 보상만
+          G.dbCheck(); S.dboss.n = 1; const lose = G.finishDBoss({win:false}); const gemsLose = S.gems - g0; const lose2 = G.finishDBoss({win:false});
+          // 이기면: 그날 부위 치장(일요일이 아니면 늘 하나)
+          const ok = G.startDBoss(); const B = G.raid && G.raid.boss; if (B) B.hp = 1; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          const got = S.skin.inv.concat(Object.values(S.skin.eq)), parts = got.map(it => G.SKC[it.c].p);
+          // 여러 날 흉내: 월~토는 그 부위, 일요일은 전설만
+          const grades = [0, 0, 0, 0, 0], partOk = [];
+          for (let k = 0; k < 300; k++){ const r = G.skinDropPart('belt', [0, 1, 2, 3, 4][k % 5]); grades[r.it.g]++; partOk.push(G.SKC[r.it.c].p === 'belt'); }
+          const sunAll = G.skinDropPart('all', 4).it.g;
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
+          return {day, part, loseOut: lose.out.length, gemsLose: gemsLose > 0, lose2: lose2.out.length, ok, won: S.dboss ? true : false, got: got.length, parts, sun: day === 0, allGrades: grades.every(n => n > 0), partOk: partOk.every(Boolean), sunAll}; }""")
+        check(db['loseOut'] == 2 and db['gemsLose'] and db['lose2'] == 0 and db['ok'] and (db['sun'] or (db['got'] == 1 and db['parts'][0] == db['part'])) and db['allGrades'] and db['partOk'] and db['sunAll'] == 4,
+              f'1일 보스: 참가 보상(하루 한 번)·이기면 오늘 부위 치장·모든 등급·일요일은 전설 {db}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');

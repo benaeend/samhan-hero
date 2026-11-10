@@ -116,16 +116,20 @@ FAKE_CHANNEL = r"""
   const real = window.supabase.createClient;
   window.supabase.createClient = (...a) => {
     const c = real(...a);
-    c.channel = () => {
-      const hs = [];
+    c.channel = (name, cfg) => {
+      const hs = [], me = (cfg && cfg.config && cfg.config.presence && cfg.config.presence.key) || 'k' + Math.random(), pres = {};
+      const sync = () => { for (const [type, f, fn] of hs) if (type === 'presence' && f.event === 'sync') fn(); };
       const ch = {
         on(type, filter, fn){ hs.push([type, filter, fn]); return ch; },
         subscribe(cb){ setTimeout(() => cb('SUBSCRIBED'), 30); return ch; },
-        track(){ return Promise.resolve('ok'); },
-        presenceState(){ return {a: [], b: []}; },
+        track(meta){ pres[me] = [meta]; window.__relaySend(JSON.stringify({presence: true, key: me, meta})); setTimeout(sync, 0); return Promise.resolve('ok'); },
+        presenceState(){ return pres; },
         send(m){ window.__relaySend(JSON.stringify(m)); return Promise.resolve('ok'); },
       };
-      window.__relayRecv = s => { const m = JSON.parse(s); for (const [type, f, fn] of hs) if (type === 'broadcast' && f.event === m.event) fn({type: 'broadcast', event: m.event, payload: m.payload}); };
+      // 가짜 presence: track을 받으면 그 키를 목록에 넣고, 처음 본 키에는 내 것도 한 번 돌려준다
+      window.__relayRecv = s => { const m = JSON.parse(s);
+        if (m.presence){ const fresh = !pres[m.key]; pres[m.key] = [m.meta]; if (fresh && pres[me]) window.__relaySend(JSON.stringify({presence: true, key: me, meta: pres[me][0]})); sync(); return; }
+        for (const [type, f, fn] of hs) if (type === 'broadcast' && f.event === m.event) fn({type: 'broadcast', event: m.event, payload: m.payload}); };
       return ch;
     };
     return c;
@@ -276,6 +280,13 @@ async def main():
             check('장터손님' in seen, f'장터 마을: 접속한 다른 용사가 이름표를 달고 함께 보인다 {seen}')
             await A.screenshot(path=str(OUT / '33_온라인_장터.png'))
             await A.evaluate("() => window.__game.leaveMarket()")
+            # 채팅창 「지금 접속 중」: 다른 기기의 용사 이름·직업·레벨이 보인다
+            await A.evaluate("() => { window.__game.roomTrack(true); window.__game.setChat(true); }"); await C.evaluate("() => window.__game.roomTrack(true)")
+            await A.wait_for_timeout(1500)
+            on = await A.evaluate("() => ({names: window.__game.roomList.map(p => p.n), me: window.__game.roomList.filter(p => p.me).map(p => p.n), shown: !document.querySelector('#chatOn').hidden, text: document.querySelector('#chatOnList').textContent})")
+            check('장터손님' in on['names'] and '온라인용사' in on['me'] and on['shown'] and '장터손님' in on['text'], f'채팅창: 지금 접속 중인 용사(이름·직업·레벨)가 보인다 {on}')
+            await A.screenshot(path=str(OUT / '34_온라인_접속중.png'))
+            await A.evaluate("() => window.__game.setChat(false)")
 
             # 서버가 생기기 전(또는 연결이 안 될 때) 만든 계정은 다음 로그인 때 서버로 옮겨진다
             ctxD, D = await device('http://127.0.0.1:9')

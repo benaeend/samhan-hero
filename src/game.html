@@ -144,6 +144,7 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .fzb{display:block;margin:-6px 0 8px auto;padding:2px 6px;border:0;background:none;color:var(--gold);font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
 .fzb:hover{text-decoration:underline}
 .qch{display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.dbweek{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 8px}.dbweek span{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--text-soft)}.dbweek span.on{border-color:var(--gold);color:var(--gold);font-weight:800}
 .mode{display:flex;gap:4px}
 .chip{border:1px solid var(--line-2);background:rgba(255,255,255,.04);color:var(--text-soft);padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer}
 .chip[aria-pressed="true"]{background:linear-gradient(180deg,#ffe08a,var(--gold-2));color:#1c1303;border-color:transparent;box-shadow:0 0 10px var(--glow)}
@@ -341,6 +342,11 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .chat[hidden]{display:none}
 .chat-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
 .chat-head .small{flex:1;margin:0}
+.chat-on{padding:6px 12px 8px;border-bottom:1px solid var(--line)}
+.chat-onb{border:0;background:none;color:var(--gold);font:inherit;font-size:12px;font-weight:800;cursor:pointer;padding:0 0 4px}
+.chat-onl{display:flex;flex-wrap:wrap;gap:4px;max-height:84px;overflow:auto}
+.chat-u{display:inline-flex;align-items:baseline;gap:4px;padding:2px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);font-size:11.5px;font-weight:700;color:var(--text)}
+.chat-u small{font-size:10px;color:var(--text-soft);font-weight:600}.chat-u.me{background:rgba(255,204,77,.12)}
 .chat-list{flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;overscroll-behavior:contain}
 .chat-list.only-sys .cm:not(.sys),.chat-list.only-npc .cm:not(.npc),.chat-list.only-user .cm:not(.me):not(.player){display:none}
 .cm.hook{cursor:pointer;border-color:rgba(255,204,77,.55)!important;background:rgba(255,204,77,.1)!important}
@@ -1007,6 +1013,7 @@ body.in-market .act{display:none}
       <p class="small" id="chatWho"></p>
       <button class="btn sm" id="chatClose">닫기</button>
     </div>
+    <div class="chat-on" id="chatOn" hidden><button type="button" class="chat-onb" id="chatOnBtn" aria-expanded="true"></button><div class="chat-onl" id="chatOnList"></div></div>
     <ul class="chat-list" id="chatList" role="log" aria-live="polite"></ul>
     <form class="chat-in" id="chatForm" autocomplete="off"><input type="text" id="chatInput" maxlength="60" placeholder="할 말을 적어요 (60자까지)" aria-label="채팅 입력"><button class="btn primary sm" type="submit">보내기</button></form>
   </section>
@@ -2230,9 +2237,14 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-4', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-5', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 1일 보스 · 채팅창 접속자 · 타임 보스 맞추기'],
+  ['1일 보스', '[레이드] → [타임 보스] 아래에 1일 보스가 생겼어요. 요일마다 보스와 치장 부위가 바뀌어요(월 토시·화 신발·수 허리띠·목 무기 술·금 발밑 빛·토 무작위). 이기면 그날 부위의 치장 하나(일반~전설 모든 등급), 일요일엔 전설 치장만 10% 확률로. 이기든 지든 하루 한 번 보석·엽전을 줘요(하루 3번 도전, 이기면 끝).'],
+  ['보스 그림', '타임 보스·1일 보스 칸에 보스 그림이 보여요.'],
+  ['채팅창 「지금 접속 중」', '채팅창 위에 지금 접속한 용사들의 이름·직업·레벨·세계가 보여요. 「지금 접속 중 n명」을 누르면 접고 펼 수 있어요.'],
+  ['타임 보스는 혼자서도', '뽑힐 캐릭터가 10명이 안 되면 있는 만큼, 한 명도 없으면 혼자 싸워요. 싸우는 동안 실제로 넣는 피해를 재서 보스 체력을 맞춰, 몇 명이든 노말은 1분 남짓·지옥은 1분 30초쯤에 쓰러지게 했어요(한꺼번에 터진 기술로 몇 초 만에 끝나지도 않게).'],
   ['#', '2026-11-10 · 주간 퀘스트 · 타임 보스 동료 · 설명 접기'],
   ['주간 퀘스트', '[퀘스트] → [주간]: 월요일 0시에 새로 시작하는 큰 할 일 8가지(몬스터 5,000마리·보스 40번·레이드 10번·타임 보스 3번·백귀야행 3번·소환 50번·재련 20번·오늘의 할 일 모두 끝내기 5일). 할 일마다 보석 300~600(뒤 세계일수록 최대 4배)과 덤, 모두 끝내면 큰 상자(보석 3,000×세계 배율·신화 조각 30·꾸미기 상자 한 번·치장·고삐 조각).'],
   ['타임 보스 동료', '이제 접속한 사람만이 아니라 서버에 만들어진 모든 캐릭터 가운데 무작위 10명이 함께 싸워요(같은 직업은 나까지 3명까지, 30분 동안 같은 파티). 보스 체력은 모인 캐릭터들의 전투력을 모두 더한 만큼으로 맞춰져요.'],
@@ -2412,7 +2424,7 @@ function defaultState(){
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, mythShard:0,
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, asc:{weapon:0, armor:0},
   };
 }
@@ -2520,7 +2532,8 @@ function mergeState(d){
   out.bag = []; out.bagSeq = Math.max(0, Math.floor(+d.bagSeq) || 0);
   for (const it of Array.isArray(d.bag) ? d.bag.slice(0, BAG_MAX) : []){ const c = mkClean(it); if (c && (c.t === 'acc' || c.t === 'myth')){ c.id = Number.isInteger(it.id) && it.id > 0 ? it.id : ++out.bagSeq; out.bagSeq = Math.max(out.bagSeq, c.id); out.bag.push(c); } }
   out.petMythPity = Math.max(0, Math.floor(+d.petMythPity) || 0);
-  out.vault = {day:d.vault && typeof d.vault.day === 'string' ? d.vault.day : '', n:Math.max(0, Math.floor(+(d.vault && d.vault.n)) || 0)}; out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
+  out.vault = {day:d.vault && typeof d.vault.day === 'string' ? d.vault.day : '', n:Math.max(0, Math.floor(+(d.vault && d.vault.n)) || 0)};
+  { const db = d.dboss && typeof d.dboss === 'object' ? d.dboss : {}; out.dboss = {day:typeof db.day === 'string' ? db.day : '', n:Math.max(0, Math.floor(+db.n) || 0), paid:!!db.paid, won:!!db.won}; } out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
   out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
   out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
@@ -2638,7 +2651,8 @@ const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 const RDPS_K0 = 8;
 let bmeter = {d:0, t:0};
 function bmeterEnd(){
-  if (bmeter.t >= 3 && bmeter.d > 0){ const k = Math.max(1, Math.min(1000, bmeter.d / bmeter.t / Math.max(1e-9, dpsOf(ST)))); S.rec.rdpsK = S.rec.rdpsK ? S.rec.rdpsK * 0.7 + k * 0.3 : k; }
+  if (bmeter.t >= 3 && bmeter.d > 0){ const k = Math.max(1, Math.min(1e7, bmeter.d / bmeter.t / Math.max(1e-9, dpsOf(ST)))), o = S.rec.rdpsK;
+    S.rec.rdpsK = !o || k > o * 2 || k < o / 2 ? k : o * 0.7 + k * 0.3; }   // 크게 틀렸으면(2배 넘게) 이번 값으로 바로 맞춘다
   bmeter = {d:0, t:0};
 }
 const realDps = () => dpsOf(ST) * (S.rec.rdpsK || RDPS_K0);
@@ -3352,7 +3366,13 @@ function hit(m, base, kind, sure){
   if (mine){ dmgMeter += dmg; if (m.boss || m.raid) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
-  m.hp -= dmg; m.flash = 0.1; m.aggro = true;
+  let hpLoss = dmg;
+  if (m.raid && raid && raid.info.tb && raid.boss === m){   // 타임 보스: 실제로 넣은 피해는 그대로 세고, 시간표보다 너무 앞서 깎이지는 않게(한꺼번에 터진 기술·초각성기로 몇 초 만에 끝나지 않게)
+    raid.tbDone = (raid.tbDone || 0) + dmg;
+    const el = TB_TIME - raid.time, floor = Math.max(0, 1 - el / TB_DIFF[raid.info.diff].tgt - TB_LEAD) * m.maxHp;
+    hpLoss = Math.max(0, Math.min(dmg, m.hp - floor));
+  }
+  m.hp -= hpLoss; m.flash = 0.1; m.aggro = true;
   if (m.pat && !(m.pat.grogT > 0) && m.hp > 0) patStg(m, dmg / m.maxHp * PAT.stgK * (kind === 'skill' || kind === 'soul' ? 1 : 0.5) * (m.pat.tel && m.pat.tel.kind === 'wipe' ? 2.5 : 1));   // 버팀 깎기
   const st = HIT_STYLE[kind] || HIT_STYLE.basic;
   addText(fmt(dmg), m.x + (Math.random() * (m.raid ? 30 : 10) - (m.raid ? 15 : 5)), m.y - mobHeight(m) - 2 + (kind === 'ally' ? 8 : 0),
@@ -3639,8 +3659,8 @@ const TB_SLOTS = [
 ];
 const TB_OPEN = 30 * 60 * 1000, TB_TIME = 120;
 const TB_DIFF = {
-  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, hit:0.08, aoe:0.05},
-  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, hit:0.14, aoe:0.08},
+  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, tgt:65, hit:0.08, aoe:0.05},
+  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, tgt:85, hit:0.14, aoe:0.08},
 };
 /* 타임 보스 세기(2026-11 (26), 사용자 요청): 모인 용사들의 전투력에 맞춘다.
    체력 = 모두의 초당 피해 합 × hpSec초(다 같이 hpSec초쯤 때려야 쓰러짐), 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe).
@@ -3656,8 +3676,10 @@ const tbPeers = new Map();     // 실시간으로 참가를 알린 사람들(예
 /* 타임 보스 동료(2026-11 (32), 사용자 요청): 접속한 사람이 아니라 서버에 만들어진 모든 캐릭터 가운데 무작위 TB_PICK(10)명.
    같은 직업은 나까지 합쳐 TB_CLS_CAP(3)명까지. 온라인이면 서버 함수 samhan_tb_pick이 고르고(창마다 한 번),
    서버가 없거나 아직이면 이 기기에 저장된 캐릭터에서 같은 규칙으로 고른다(창·캐릭터마다 같은 씨앗이라 그 30분 동안은 같은 파티) */
-const TB_PARTY_MAX = 24, TB_ALLY_SK = 1.3, TB_PICK = 10, TB_CLS_CAP = 3;   // 동료는 휘두르기 + 기술(allySkill)로 기본의 1.3배쯤 넣는다
-let tbPick = {key:'', list:null, busy:false};
+const TB_PARTY_MAX = 24, TB_ALLY_SK = 1.3, TB_PICK = 10, TB_CLS_CAP = 3;
+let TB_SELF_K = 0.5;
+const TB_FIT_T = [8, 20, 35, 50, 80, 100], TB_HP0 = 2, TB_LEAD = 0.35;   // 시간표(1 − 지난 시간/tgt)보다 TB_LEAD 넘게 앞서 깎이지 않는다: 노말은 아무리 세도 42초쯤부터 쓰러짐   // 이때마다 보스 체력을 실제 피해에 다시 맞춘다(처음 체력은 어림의 TB_HP0배로 넉넉히)   // 혼자 싸울 때 50~75초(직업마다)에 깨지게(시뮬로 잼)   // 보스 체력에 넣는 내 몫: 동료가 적거나 없어도(혼자서도) 제한 시간 안에 깰 수 있게   // 동료는 휘두르기 + 기술(allySkill)로 기본의 1.3배쯤 넣는다
+let tbPick = {key:'', list:null};
 const tbKey = () => tbWindow().id + ':' + (session ? session.acc + '/' + session.cid : '');
 const tbNum = v => Math.min(1e300, Math.max(0, +v || 0));
 function tbFromSummary(name, sm, mine){
@@ -3680,22 +3702,25 @@ function tbPickLocal(){
     seen.add(c.name); const o = tbFromSummary(c.name, c, c.acc === session.acc); if (o) pool.push(o); }
   return tbCapPick(pool, rng(strHash(tbKey())));
 }
+let tbPickP = null;   // 서버에 묻는 중이면 그 결과를 같이 기다린다
 async function tbFetchPick(force){
-  if (!session || !online || tbPick.busy) return tbPick.list;
+  if (!session || !online) return tbPick.list;
   const key = tbKey();
   if (!force && tbPick.key === key && tbPick.list) return tbPick.list;
-  tbPick.busy = true;
-  try {
-    const rows = await rpc('samhan_tb_pick', {p_token:online.token, p_cid:session.cid, p_cls:S.cls});
-    if (Array.isArray(rows)){
-      const seen = new Set([S.name]), pool = [];
-      for (const r of rows){ const o = r && tbFromSummary(r.name, r.summary, r.mine); if (o && !seen.has(o.name)){ seen.add(o.name); pool.push(o); } }
-      tbPick = {key, list:tbCapPick(pool, Math.random), busy:false, srv:true};   // 서버가 이미 섞고 걸렀지만 한 번 더 규칙을 지킨다
-      return tbPick.list;
-    }
-  } catch (e){ if (e.code === 'bad_token') lostOnline(); }
-  tbPick.busy = false;
-  return null;
+  if (tbPickP) return tbPickP;
+  tbPickP = (async () => {
+    try {
+      const rows = await rpc('samhan_tb_pick', {p_token:online.token, p_cid:session.cid, p_cls:S.cls});
+      if (Array.isArray(rows)){
+        const seen = new Set([S.name]), pool = [];
+        for (const r of rows){ const o = r && tbFromSummary(r.name, r.summary, r.mine); if (o && !seen.has(o.name)){ seen.add(o.name); pool.push(o); } }
+        tbPick = {key, list:tbCapPick(pool, Math.random), srv:true};   // 서버가 이미 섞고 걸렀지만 한 번 더 규칙을 지킨다
+        return tbPick.list;
+      }
+    } catch (e){ if (e.code === 'bad_token') lostOnline(); }   // 서버 함수가 아직 없으면(setup.sql 다시 실행 전) 이 기기 캐릭터에서
+    return null;
+  })();
+  try { return await tbPickP; } finally { tbPickP = null; }
 }
 function tbOthers(){
   const key = tbKey();
@@ -3725,10 +3750,10 @@ function startTimeBoss(diff){
   // 함께 싸우는 캐릭터는 실제 보스 피해(기술·넋 포함)로 싸운다(휘두를 때 피해 = 실제 피해 ÷ TB_ALLY_SK, 나머지는 동료 기술로)
   const party = others.map(o => ({name:o.name, cls:CLASSES[o.cls] ? o.cls : 'musa', look:cleanLook(o.look), armorG:o.armorG == null ? -1 : o.armorG, weaponG:o.weaponG == null ? -1 : o.weaponG,
     dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true}));
-  const partyDps = realDps() + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);
+  const partyDps = realDps() * TB_SELF_K + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);   // 동료가 10명이 안 돼도(0명이어도) 그만큼으로 맞춘다
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
-  startFight(info, party, {hp:partyDps * D.hpSec, atk:ST.maxHp * D.hit, aoe:ST.maxHp * D.aoe, time:TB_TIME});
+  startFight(info, party, {hp:partyDps * D.hpSec * TB_HP0, atk:ST.maxHp * D.hit, aoe:ST.maxHp * D.aoe, time:TB_TIME});
   raid.boss.tbPct = {hit:D.hit, aoe:D.aoe};
   raid.deaths = 0;
   addLog(`타임 보스 ${info.bossName}! ${party.length + 1}명이 함께 ${TB_TIME}초 안에 쓰러뜨려요.`, 'warn');
@@ -4029,6 +4054,15 @@ function updateRaid(dt){
   if (R.ending){ R.endT -= dt; if (R.endT <= 0) finishRaid(); return; }
   R.time -= dt;
   if (R.time <= 0){ raidEnd(false); return; }
+  /* 타임 보스 맞추기(2026-11 (32)): 처음 체력은 어림(기억해 둔 실제 피해)이라 틀릴 수 있다. 8·20·35·50·80·100초마다 파티가 실제로 넣은 피해의 평균으로
+     남은 체력을 다시 맞춰, 동료가 몇 명이든(혼자여도) 노말 tgt 65초·지옥 85초쯤에 쓰러지게 한다. 체력 막대 %는 그대로 */
+  if (R.info.tb && !R.boss.dead && (R.tbFit || 0) < TB_FIT_T.length && TB_TIME - R.time >= TB_FIT_T[R.tbFit || 0]){
+    R.tbFit = (R.tbFit || 0) + 1;
+    // 지금까지 파티가 실제로 넣은 피해의 평균 세기로 남은 체력을 다시 맞춘다(뒤로 갈수록 처음 몰아친 기술의 몫이 줄어 고르게 됨)
+    const B = R.boss, el = TB_TIME - R.time, rate = (R.tbDone || 0) / el, tgt = TB_DIFF[R.info.diff].tgt, frac = B.hp / B.maxHp;
+    if (rate > 0 && frac > 0){ const mx = rate * Math.max(10, tgt - el) / frac; B.maxHp = mx; B.hp = mx * frac; R.tbRate = rate; }
+  }
+
   if (R.info.tb && (R.deaths || 0) >= TB_LIVES && hero.dead && R.allies.every(a => a.down)){ raidEnd(false); return; }
   if (R.awk){
     if (R.awk.show > 0) R.awk.show -= dt;
@@ -4187,6 +4221,65 @@ function finishParade(){
   return {kills:k, gold, gems, dust, mat, piece, grudge};
 }
 const VAULT_TRIES = 2, VAULT_TIME = 60, VAULT_MYTH_P = 0.07, SHARD_COST = 30;   // 신화 보물 7%(사용자 요청)
+/* 1일 보스(2026-11 (36), 사용자 요청): [레이드] → [타임 보스] 아래. 요일마다 다른 보스와 그날의 치장 부위.
+   이기면 그날 부위의 치장 하나(모든 등급이 나올 수 있음, DB_GP), 토요일은 부위 무작위, 일요일은 전설 치장만 낮은 확률(DB_SUN_P, 부위 무작위).
+   참가만 해도(이기든 지든, 하루 한 번) 보석·엽전. 하루 DB_TRIES번까지 도전, 이기면 그날은 끝 */
+const DBOSS = [
+  {name:'황금 해태 왕', type:'haetae', color:'#ffd24a', part:'all', d:'옳고 그름을 가리는 해태의 왕. 일요일엔 전설 치장만, 아주 드물게'},
+  {name:'달빛 범', type:'tiger', color:'#c8d0ff', part:'guard', d:'달밤에 산을 내려오는 흰 범'},
+  {name:'해를 문 불개', type:'wolf', color:'#e8642a', part:'shoe', d:'해와 달을 물려다 데어 버린 불개'},
+  {name:'물귀신 두꺼비', type:'frog', color:'#3a8a7a', part:'belt', d:'깊은 못에 사는 늙은 두꺼비'},
+  {name:'흰 매 해동청', type:'hawk', color:'#eef4ff', part:'tassel', d:'바다 건너까지 이름난 흰 매'},
+  {name:'곰 장군', type:'bear', color:'#7a5a3a', part:'foot', d:'쑥과 마늘을 지키는 곰 장군'},
+  {name:'삼족오', type:'crow', color:'#ffd24a', part:'any', d:'해 속에 사는 세 발 까마귀(부위는 그날 무작위)'},
+];
+const DB_TRIES = 3, DB_TIME = 60, DB_GP = [40, 30, 18, 9, 3], DB_SUN_P = 0.1;
+const dbDay = () => new Date(now()).getDay();
+const dbBoss = () => DBOSS[dbDay()];
+function dbCheck(){ if (S.dboss.day !== dummyDay()) S.dboss = {day:dummyDay(), n:0, paid:false, won:false}; }
+const dbLeft = () => { dbCheck(); return S.dboss.won ? 0 : DB_TRIES - S.dboss.n; };
+function dbPart(){ const B = dbBoss(); if (B.part === 'any'){ const r = rng(strHash(dummyDay() + ':part')); return SK_PARTS[Math.floor(r() * SK_PARTS.length)].k; } return B.part; }
+const dbGems = () => Math.round(150 * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul());
+const dbGold = () => mGold(Math.max(1, S.maxStage)) * 400 * gainMul('gold');
+// 그 부위의 치장 가운데 지금 장까지 열린 것(아직 하나도 안 열렸으면 그 부위의 첫 치장)
+function skinDropPart(part, g){
+  const all = SK_LIST.filter(x => part === 'all' || x.p === part), ch = skCh();
+  const pool = all.filter(x => x.c <= ch);
+  const list = pool.length ? pool : part === 'all' ? SK_PARTS.map(P => SK_LIST.find(x => x.p === P.k)) : [all[0]];
+  const sk = list[Math.floor(Math.random() * list.length)];
+  return skinGet(skMake(sk, g), true);
+}
+function startDBoss(){
+  dbCheck();
+  if (raid || dbLeft() <= 0 || (!session && !window.__game)) return false;
+  S.dboss.n++;
+  const B = dbBoss(), sun = dbDay() === 0, s = Math.max(1, S.maxStage - (sun ? 0 : 3));
+  const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0};
+  startFight(info, [], {hp:mHp(s) * (sun ? 30 : 22) * BOSS_K.hp[S.world], atk:mAtk(s) * 2 * BOSS_K.atk[S.world], aoe:mAtk(s) * 1.2, time:DB_TIME});
+  addLog(`1일 보스 ${B.name}! ${DB_TIME}초 안에 쓰러뜨려요.`, 'warn');
+  return true;
+}
+function finishDBoss(R){
+  dbCheck();
+  const B = dbBoss(), sun = dbDay() === 0, out = [];
+  if (!S.dboss.paid){ S.dboss.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); }
+  let skin = null;
+  if (R.win && !S.dboss.won){
+    S.dboss.won = true; recWin(true, true);
+    if (sun){ if (Math.random() < DB_SUN_P * (window.__game && window.__game.dbLuck || 1)) skin = skinDropPart('all', 4); }
+    else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; skin = skinDropPart(dbPart(), g); }
+    if (skin) out.push(`치장: ${skName(skin.it)}${skin.better ? '(바로 낌)' : ''}`);
+    else if (sun) out.push('전설 치장은 이번엔 나오지 않았어요');
+  }
+  ev('raid');
+  saveLocal();
+  addLog(`1일 보스 ${B.name} ${R.win ? '토벌!' : '도전 끝'}${out.length ? ' · ' + out.join(' · ') : ''}`, R.win ? 'gain' : 'warn');
+  if (skin && skin.it.g >= 3) announce(`${S.name}님이 1일 보스에서 ${GRADES[skin.it.g].name} 치장 ${SKC[skin.it.c].name}${josa(SKC[skin.it.c].name, '을', '를')} 얻었어요!`);
+  if (window.__game && window.__game.quiet) return {win:R.win, out, skin};
+  showModal(R.win ? '1일 보스 토벌' : '1일 보스 실패', `<p><b>${B.name}</b>${R.win ? `${josa(B.name, '을', '를')} 쓰러뜨렸어요!` : `${josa(B.name, '을', '를')} ${DB_TIME}초 안에 쓰러뜨리지 못했어요. 오늘 ${dbLeft()}번 더 도전할 수 있어요.`}</p>
+    ${out.length ? `<ul class="rewards">${out.map(x => `<li>${x}</li>`).join('')}</ul>` : '<p class="small">참가 보상은 오늘 이미 받았어요.</p>'}`, [{label:'확인', primary:true}]);
+  return {win:R.win, out, skin};
+}
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
 const vaultShards = () => 3 + Math.min(4, S.world);
@@ -4232,6 +4325,7 @@ function finishRaid(){
   if (info.tb){ finishTimeBoss(R); return; }
   if (info.dummy){ finishDummy(R); return; }
   if (info.vault){ finishVault(R); return; }
+  if (info.dboss){ finishDBoss(R); return; }
   if (info.job){ finishJobTrial(R); return; }
   if (R.win){
     const rw = raidReward(info);
@@ -8461,7 +8555,12 @@ function subHook(){
   return true;
 }
 let chatMsgs = [], chatOpen = false, chatUnread = 0, chatSendT = -1e9, chatFilter = 'all', npcT = 20, heroSay = null;
-let room = null, roomPeers = 0;
+let room = null, roomPeers = 0, roomList = [];
+// 채팅창 「지금 접속 중」(2026-11 (35), 사용자 요청): 들어온 캐릭터의 이름·직업·레벨·세계를 실시간 채널에 알린다(캐릭터를 바꾸거나 레벨이 오르면 다시)
+const roomMeta = () => session && S && S.name ? {n:S.name, c:S.cls, l:S.level, w:S.world} : {};
+let roomMetaSig = '';
+let roomTrackT = 0;
+function roomTrack(force){ if (!room || typeof room.track !== 'function') return; const m = roomMeta(), sig = JSON.stringify(m); if (!force && (sig === roomMetaSig || Date.now() - roomTrackT < 10000)) return; roomMetaSig = sig; roomTrackT = Date.now(); room.track(m); }
 function cleanChat(t){
   t = String(t).replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u206f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
   for (const w of BAD_WORDS) if (t.includes(w)) t = t.split(w).join('*'.repeat(w.length));
@@ -8527,7 +8626,9 @@ async function bootRoom(){
       const name = cleanChat(typeof d.n === 'string' ? d.n : '').slice(0, 8) || '나그네';
       addChat('player', name + (msg.guest ? '(손님)' : msg.isMe ? '(내 다른 창)' : ''), text);
     }, () => { room = null; });
-    r.onPeers(ch => { roomPeers = ch.peers.length; }, () => {});
+    r.onPeers(ch => { const ps = Array.isArray(ch && ch.peers) ? ch.peers : []; roomPeers = ps.length;
+      roomList = ps.map(p => p && typeof p === 'object' ? {n:cleanChat(String(p.n || p.name || '')).slice(0, 8), c:CLASSES[p.c] ? p.c : '', l:Math.max(0, Math.floor(+p.l) || 0), w:Math.max(0, Math.min(4, Math.floor(+p.w) || 0)), me:!!p.me} : null).filter(p => p && p.n);
+      updateChatHead(); }, () => {});
     r.on('tb', msg => {
       if (!msg || msg.sameTab || msg.isMe) return;
       const d = msg.data && typeof msg.data === 'object' ? msg.data : {};
@@ -9054,7 +9155,7 @@ function updatePetFaces(){
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
-  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.vault ? '보물 동굴' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
   else if (parade){ cls = 'fight'; txt = '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / PARADE_TIME); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
@@ -10289,7 +10390,8 @@ function buildRaid(){
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
   const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
   if (raidView === 'tb'){
-    panel.innerHTML = top + `<div id="tbBox"></div><div id="raidLive"></div>`;
+    panel.innerHTML = top + `<div id="tbBox"></div><div id="dbBox"></div><div id="raidLive"></div>`;
+    $('#dbBox').addEventListener('click', e => { if (e.target.closest('[data-db]') && startDBoss()) closePage(); });
     wireSeg();
     $('#tbBox').addEventListener('click', e => {
       const bt = e.target.closest('[data-tb]');
@@ -10300,13 +10402,23 @@ function buildRaid(){
     return () => {
     const w = tbWindow(), users = tbUsers(), others = tbOthers();
     const tbLeft = w.open ? w.end - now() : w.next - now();
-    setHTML($('#tbBox'), `<div class="card ${w.open && !raid ? 'ready' : ''}">
+    const tbB = w.open ? w.boss : TB_SLOTS[(w.slot + 1) % 8];
+    setHTML($('#tbBox'), `<div class="card dcard ${w.open && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(tbB.type, tbB.color)}" alt=""></div><div>
       <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
       <p class="story">00시부터 3시간마다 30분 동안 나타나요. ${online ? '<b>서버에 만들어진 모든 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 30분 동안은 같은 파티). 보스 체력과 공격은 <b>모인 용사들의 전투력에 맞춰져요</b>(체력 = 모두의 피해를 ${TB_DIFF.normal.hpSec}초(지옥 ${TB_DIFF.hell.hpSec}초) 동안 모은 만큼, 한 번 칠 때 맞는 용사 체력의 ${Math.round(TB_DIFF.normal.hit * 100)}%(지옥 ${Math.round(TB_DIFF.hell.hit * 100)}%)). 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
       <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => `${o.name}(${CLASSES[o.cls].name}${o.mine ? '·내 캐릭터' : ''})`)))}</b></div>
       ${users < 2 ? `<p class="small">${online ? '아직 함께 싸울 캐릭터가 없어요(한 번이라도 싸워 본 캐릭터만 뽑혀요).' : '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 서버의 모든 캐릭터 가운데에서 뽑혀요.'}</p>` : ''}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
-    </div>`);
+    </div></div>`);
+    { dbCheck(); const B = dbBoss(), sun = dbDay() === 0, part = sun ? null : dbPart(), left = dbLeft(), days = '일월화수목금토';
+      const gp = DB_GP.map((v, g) => `${GRADES[g].name} ${v}%`).join(' · ');
+      const week = DBOSS.map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
+      setHTML($('#dbBox'), `<div class="card dcard ${left > 0 && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
+        <div class="ct">1일 보스 · ${B.name}<span class="tag">${S.dboss.won ? '오늘 토벌함' : `오늘 ${left} / ${DB_TRIES}번`}</span></div>
+        <p class="story">${B.d}. 날마다 보스와 <b>치장 부위</b>가 바뀌어요. ${sun ? `<b>일요일</b>엔 이기면 <b>전설 치장</b>(부위 무작위)이 <b>${Math.round(DB_SUN_P * 100)}%</b> 확률로 하나 나와요.` : `이기면 오늘 부위 <b>${SK_PART[part].name}</b> 치장 하나(모든 등급: ${gp}).`} 이기든 지든 하루 한 번 <b>보석 ${fmt(dbGems())}·엽전 ${fmt(dbGold())}</b>을 줘요. ${DB_TIME}초 혼자 싸움.</p>
+        <div class="dbweek">${week}</div>
+        <button class="btn ${left > 0 && !raid ? 'primary' : ''}" data-db="go" ${left > 0 && !raid ? '' : 'disabled'}>${raid ? (raid.info.dboss ? '싸우는 중…' : '다른 싸움 중') : S.dboss.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '1일 보스 도전' : '오늘은 다 했어요(내일 다시)'}</button>
+      </div></div>`); }
     const live = $('#raidLive');
     if (raid){
       const rows = [`<div><span>${esc(S.name || '나')} (나·${cls().name})</span><div class="meter"><i style="width:${(hero.hp / ST.maxHp * 100).toFixed(1)}%"></i></div></div>`]
@@ -10767,8 +10879,17 @@ function setChat(open){
   if (open){ chatUnread = 0; const ul = $('#chatList'); ul.scrollTop = ul.scrollHeight; }
   updateChatHead();
 }
+let chatOnOpen = true;
 function updateChatHead(){
-  setText($('#chatWho'), room ? `지금 ${Math.max(1, roomPeers)}명이 보고 있어요` : '주민들과 이야기해요');
+  setText($('#chatWho'), room ? `지금 ${Math.max(1, roomPeers)}명 접속 중` : '주민들과 이야기해요');
+  const seenN = new Set(), list = roomList.slice().sort((a, b) => (b.me - a.me) || (b.w - a.w) || (b.l - a.l)).filter(p => !seenN.has(p.n) && seenN.add(p.n)), box = $('#chatOn');   // 같은 캐릭터를 여러 기기에서 켜도 한 번만
+  box.hidden = !room || !list.length;
+  if (!box.hidden){
+    setText($('#chatOnBtn'), `지금 접속 중 ${list.length}명 ${chatOnOpen ? '▴' : '▾'}`);
+    $('#chatOnBtn').setAttribute('aria-expanded', String(chatOnOpen));
+    const html = chatOnOpen ? list.slice(0, 40).map(p => `<span class="chat-u${p.me ? ' me' : ''}" style="--c:${(CLASSES[p.c] || {}).fx || '#c8d0e0'}">${esc(p.n)}${p.me ? '(나)' : ''}<small>${p.c ? CLASSES[p.c].name : ''}${p.l ? ` Lv.${p.l}` : ''}${p.w ? ` · ${WORLD_NAME[p.w]}` : ''}</small></span>`).join('') + (list.length > 40 ? `<span class="chat-u">외 ${list.length - 40}명</span>` : '') : '';
+    setHTML($('#chatOnList'), html);
+  }
   const b = $('#chatBtn');
   b.classList.toggle('has-dot', chatUnread > 0);
   setText($('#chatDot'), chatUnread > 9 ? '9+' : String(chatUnread));
@@ -10777,6 +10898,7 @@ function openMap(){ jmSel = null; buildTab('map'); }   // 열 때마다 지금 �
 $('#mapBtn').addEventListener('click', () => { if (!session && !window.__game) return; setChat(false); if (currentTab === 'map' && !$('#page').hidden) closePage(); else openMap(); });
 $('#chatBtn').addEventListener('click', () => { if (!session) return; setChat(!chatOpen); if (chatOpen && window.matchMedia && window.matchMedia('(pointer: fine)').matches) $('#chatInput').focus({preventScroll:true}); });
 $('#chatClose').addEventListener('click', () => setChat(false));
+$('#chatOnBtn').addEventListener('click', () => { chatOnOpen = !chatOnOpen; updateChatHead(); });
 $('#chatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#chatInput'); if (sendChat(inp.value)) inp.value = ''; });
 // 채팅 보기: 전체 / 용사들(나·다른 사람) / 마을(NPC·부탁) / 알림
 const CHAT_F = [['#ch-all', 'all'], ['#ch-user', 'user'], ['#ch-npc', 'npc'], ['#ch-sys', 'sys']];
@@ -10831,11 +10953,12 @@ function updateDots(){
   $('#tab-quest').classList.toggle('has-dot', on && questAnyReady());
   $('#tab-raid').classList.toggle('has-dot', on && !raid && (firstReadyRaid() >= 0 || !tbCan('normal') || !tbCan('hell')));
   const tw = tbWindow();
-  if (on && tw.open && tbAnnounced !== tw.id){ tbAnnounced = tw.id; announce(`타임 보스 '${tw.boss.name}'${josa(tw.boss.name, '이', '가')} 나타났어요! 30분 동안 접속한 용사 모두 함께 도전해요. [레이드] → [타임 보스]`); }
+  if (on && tw.open && tbAnnounced !== tw.id){ tbAnnounced = tw.id; announce(`타임 보스 '${tw.boss.name}'${josa(tw.boss.name, '이', '가')} 나타났어요! 30분 동안 서버의 캐릭터 가운데 무작위 ${TB_PICK}명과 함께 도전해요. [레이드] → [타임 보스]`); }
   shopCheck();
   $('#tab-shop').classList.toggle('has-dot', on && !(S.shop.got.gift >= 1));
   $('#tab-gear').classList.toggle('has-dot', on && craftReady());
   updateChatHead();
+  roomTrack();   // 캐릭터·레벨이 바뀌면 접속자 목록에 다시 알림(10초에 한 번까지)
 }
 
 /* --- 직업 고르기 --- */
@@ -11210,6 +11333,7 @@ async function enterChar(cid, opts = {}){
   else if (!opts.fresh && !notesSeen() && !window.__game) showNotes();
   if (opts.fresh) try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
   if (online) pushOnline();
+  roomTrack(true);   // 채팅창 「지금 접속 중」에 이 캐릭터로 알림
 }
 function toTitle(){
   setChat(false);
@@ -11337,17 +11461,18 @@ async function onlineRoom(){
     const p = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
     for (const fn of hs[topic] || []) fn({data:p.d, peer:String(p.p || '').slice(0, 16)});
   });
-  ch.on('presence', {event:'sync'}, () => { const n = Object.keys(ch.presenceState() || {}).length; for (const f of peerFns) f({peers:new Array(n).fill(0)}); });
+  ch.on('presence', {event:'sync'}, () => { const st = ch.presenceState() || {}, peers = Object.keys(st).map(k => Object.assign({me:k === me}, (st[k] || [])[0] || {})); for (const f of peerFns) f({peers}); });
   await new Promise((res, rej) => {
     const to = setTimeout(() => rej(new Error('timeout')), 9000);
     ch.subscribe(st => {
-      if (st === 'SUBSCRIBED'){ clearTimeout(to); Promise.resolve(ch.track({t:Date.now()})).catch(() => {}); res(); }
+      if (st === 'SUBSCRIBED'){ clearTimeout(to); Promise.resolve(ch.track(Object.assign({t:Date.now()}, roomMeta()))).catch(() => {}); res(); }
       else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED'){ clearTimeout(to); rej(new Error(st)); }
     });
   });
   return {
     on(topic, fn){ (hs[topic] = hs[topic] || []).push(fn); return () => {}; },
     onPeers(fn){ peerFns.push(fn); return () => {}; },
+    track(meta){ return Promise.resolve(ch.track(Object.assign({t:Date.now()}, meta))).catch(() => {}); },
     emit(topic, data){ return Promise.resolve(ch.send({type:'broadcast', event:topic, payload:{d:data, p:me}})).then(r => { if (r && r !== 'ok') throw Object.assign(new Error(String(r)), {code:String(r)}); }); },
   };
 }
@@ -11831,7 +11956,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, DBOSS, startDBoss, finishDBoss, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
