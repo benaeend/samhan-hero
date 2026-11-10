@@ -872,6 +872,8 @@ body:not(.portrait) .tab{flex-basis:70px}
 .bigboss.mk{background:radial-gradient(circle at 50% 32%,#4a8a5a,#123a20 72%)}
 .bigboss.mk .rf{stroke:#8ff0a0}
 body.in-market .ctrl{display:none}
+.pgrid.pmyth{grid-template-columns:repeat(6,1fr)}
+.pgrid.pmyth .pcell{box-shadow:0 0 0 1px rgba(255,90,138,.35),0 0 12px -4px rgba(255,90,138,.7)}
 </style>
 </head>
 <body>
@@ -1076,6 +1078,7 @@ const GRADES = [
   {name:'희귀', color:'#4aa8ff'},
   {name:'영웅', color:'#c27bff'},
   {name:'전설', color:'#ffb347'},
+  {name:'신화', color:'#ff5a8a'},   // 신화 펫·환수만(장비·장신구는 0~4)
 ];
 const GRADE_P = [0.64, 0.26, 0.085, 0.013, 0.002];
 const TIER_P = [0.55, 0.28, 0.13, 0.04];
@@ -1145,7 +1148,9 @@ const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
 const skLv = i => skOpen(i) ? S.skills[SKILLS[i].key] || 0 : 0;
-const skAuto = i => S.mode !== 'semi' && !(S.skManual && S.skManual[SKILLS[i].key]);   // 반자동이면 기술은 모두 직접
+// 반자동이면 기술은 모두 직접. 다만 다른 용사·동료와 함께하는 싸움(레이드·타임 보스 등)에서는 늘 모든 기술을 자동으로(사용자 요청)
+const coopFight = () => !!raid && !!raid.allies && raid.allies.length > 0;
+const skAuto = i => coopFight() || S.mode !== 'semi' && !(S.skManual && S.skManual[SKILLS[i].key]);
 const skLockText = i => { const d = skDef(i); return d.reb ? '환생' : d.job ? d.job + '차' : 'Lv.' + d.unlock; };
 const skLockLong = i => { const d = skDef(i); return d.reb ? '환생하면 익힘' : d.job ? `${d.job}차 전직 때 익힘` : `Lv.${d.unlock}에 익힘`; };
 // 도인 기술 수치
@@ -1300,15 +1305,24 @@ const PETS = [
   {type:'sup', g:2, name:'삽살개', draw:'dog', c:'#c8b088'},
   {type:'sup', g:3, name:'두루미', draw:'crane', c:'#f4f4f0'},
   {type:'sup', g:4, name:'봉황', draw:'phoenix', c:'#e0503a'},
+  // 신화 펫·환수(2026-11 (17)): 그 부에 들어가야 소환에 나오고, story는 이야기 보상으로만(한 부에 한 마리씩)
+  {type:'atk', g:5, name:'뇌수', draw:'raiju', c:'#4a5ac8', part:3},
+  {type:'def', g:5, name:'바쿠', draw:'baku', c:'#6a5a8a', part:3, story:true},
+  {type:'sup', g:5, name:'아마비에', draw:'amabie', c:'#5ab8b0', part:3},
+  {type:'atk', g:5, name:'필방', draw:'bifang', c:'#d8402a', part:4},
+  {type:'def', g:5, name:'백택', draw:'baize', c:'#f2eee4', part:4, story:true},
+  {type:'sup', g:5, name:'비휴', draw:'pixiu', c:'#e0b03c', part:4},
 ];
 const PET_N = PETS.length, PET_MAX = 30, PET_STAR_MAX = 5, PET_DUP_GEMS = 20;
 const PET_P = [0.55, 0.28, 0.13, 0.035, 0.005];
 const PET_PITY = 60;   // 60번 안에 영웅 이상이 안 나오면 60번째는 영웅 이상 확정
-const PET_ATK = [30, 45, 65, 90, 130];      // 한 번 공격할 때 용사 공격력의 %
-const PET_DR = [5, 7, 10, 13, 17];          // 받는 피해 감소 %
-const PET_HP = [10, 16, 25, 38, 55];        // 체력 +%
-const PET_GOLD = [5, 8, 12, 16, 22];        // 엽전·경험치 +%
-const PET_HEAL = [2, 2.5, 3, 4, 5];         // 5초마다 최대 체력의 %
+const PET_ATK = [30, 45, 65, 90, 130, 190];      // 한 번 공격할 때 용사 공격력의 %
+const PET_DR = [5, 7, 10, 13, 17, 22];          // 받는 피해 감소 %
+const PET_HP = [10, 16, 25, 38, 55, 80];        // 체력 +%
+const PET_GOLD = [5, 8, 12, 16, 22, 30];        // 엽전·경험치 +%
+const PET_HEAL = [2, 2.5, 3, 4, 5, 6.5];
+const MYTH_PET_P = 0.003, MYTH_PET_PITY = 200;   // 신화 펫: 한 번에 0.3%, 200번 안에 안 나오면 확정(그 부에 들어간 뒤)
+const mythPetPool = () => PETS.map((p, i) => i).filter(i => PETS[i].g === 5 && !PETS[i].story && PETS[i].part <= S.world);         // 5초마다 최대 체력의 %
 const petSummonCost = n => n === 10 ? 900 : 100 * n;
 const petUpCost = lv => ({gold:500 * Math.pow(1.25, lv - 1), gems:5 + 2 * (lv - 1)});
 
@@ -1837,7 +1851,7 @@ const MAIN_Q = [
     c:['cedar', 'hero,m:haetae:#6a4a3a', 'dark', [['', '원숭이 얼굴에 범의 다리, 뱀 꼬리를 단 누에가 밤하늘에서 울었어요.'], ['까치', '저 울음에도 원한이 섞여 있어요!']]]},
   {ch:29, t:'텐구 장수', s:'부상 4-1에 닿아요(텐구 장수를 물리쳐요). 「텐구 깃 망토」를 얻어요.', k:'s3', n:37, gems:9000, av:'p_tengu',
     c:['cedar', 'hero,m:tengu:#c83a2a', 'sparkle', [['소조보', '자객이라면 다시 오너라. 깃바람 타는 법을 가르쳐 주마.']]]},
-  {ch:30, t:'눈보라 산장', s:'부상 4-5에 닿아요.', k:'s3', n:41, gems:9000,
+  {ch:30, t:'눈보라 산장', s:'부상 4-5에 닿아요. 나쁜 꿈을 먹는 신화 환수 「바쿠」가 함께해요.', k:'s3', n:41, gems:9000, pet:'baku',
     c:['snowpass', 'hero,kkachi', 'ice', [['', '눈보라 속 작은 산장의 화로가 꽁꽁 얼어 있었어요.']]]},
   {ch:30, t:'눈보라의 약속', s:'부상 레이드 「눈보라의 약속」에서 유키온나의 사연을 들어요.', k:'raidK', key:'b4', n:1, gems:9500,
     c:['snowpass', 'hero,m:yukionna:#eef4ff', 'ice', [['유키온나', '오늘 본 것을 아무에게도 말하지 마. 그 약속, 지킬 수 있겠어?'], ['나', '지킬게요. 기다리는 사람이 꼭 돌아오길 바라요.'], ['', '눈보라가 조용히 그쳤어요.']]]},
@@ -1906,7 +1920,7 @@ const MAIN_Q = [
     c:['oldtemple', 'zhongkui,hero', 'sparkle', [['종규', '술 내기는 내가 졌다. 자, 한 잔 받게.']]]},
   {ch:39, t:'계수나무 아래', s:'레벨 440을 달성해요.', k:'l4', n:440, gems:20500,
     c:['moonpalace', 'change,hero', 'sparkle', [['', '계수나무 아래에서 옥토끼가 방아를 찧고, 항아가 홀로 땅을 내려다보았어요.'], ['항아', '그림자는 빛이 있어야 생기지. 너는 어떤 빛의 그림자니?']]]},
-  {ch:39, t:'옥토끼의 약', s:'곤륜 5-4에 닿아요.', k:'s4', n:52, gems:21000,
+  {ch:39, t:'옥토끼의 약', s:'곤륜 5-4에 닿아요. 모든 요괴를 안다는 신화 환수 「백택」이 함께해요.', k:'s4', n:52, gems:21000, pet:'baize',
     c:['moonpalace', 'change,houyi,hero', 'light', [['', '옥토끼가 빻은 약 한 줌이 땅의 후예에게 닿았어요.'], ['후예', '…달이 오늘따라 밝구나.']]]},
   {ch:40, t:'도철', s:'곤륜 레이드 「도철」에서 무엇이든 삼키는 흉수를 물리쳐요.', k:'raidK', key:'k4', n:1, gems:21500,
     c:['kunlunmt', 'hero,m:bear:#6a4a3a', 'shake', [['', '황야에 나타난 도철이 바위까지 삼켰어요.'], ['나', '배고픔도 원한이었구나. 이제 쉬어.']]]},
@@ -2045,8 +2059,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-16', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-17', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 신화 펫 · 보물 동굴 · 퀘스트 바로 가기'],
+  ['신화 펫 · 환수', '전설보다 높은 신화 등급 펫 6마리: 부상의 뇌수·바쿠·아마비에, 곤륜의 필방·백택·비휴. 바쿠·백택은 이야기 보상으로 확정, 나머지는 그 땅에 들어간 뒤 펫 소환에서 0.3%(200번 안에 확정).'],
+  ['보물 동굴', '[레이드] → [보물 동굴] 하루 2번. 보물 이무기를 쓰러뜨리면 신화 조각과 7% 확률로 신화 보물. 신화 조각 30개로 원하는 신화 보물을 만들어요.'],
+  ['함께하는 싸움은 자동 기술', '레이드·타임 보스처럼 다른 용사·동료와 싸울 때는 반자동이어도 모든 기술을 자동으로 쓰고, 함께하는 다른 용사도 기술과 초각성기를 써요(기술을 안 쓰던 문제 고침).'],
+  ['퀘스트 바로 가기', '왼쪽 위 퀘스트를 누르면 그 퀘스트를 하는 곳으로 바로 가요. 퀘스트를 받거나 보상을 받으면 사냥 화면으로 돌아가고, 연출이 시작되면 메뉴가 저절로 닫혀 놓치지 않아요.'],
   ['#', '2026-11-10 · 가방 · 장터 마을'],
   ['가방', '아래 메뉴에 [가방]이 생겼어요. 지금 것보다 약한 장신구·신화 보물과 바꿔 낀 옛것이 모여요(예전에는 보석으로 바뀌던 것). 끼기·상인에게 팔기·장터에 올리기.'],
   ['장터 마을', '오른쪽 위 장터 단추로 들어가는 돌바닥 광장. 땅을 눌러 걷고, 다른 용사들이 이름표를 달고 함께 서 있어요. 상인·알림판·거간꾼·아전 앞에서 거래해요.'],
@@ -2269,8 +2288,8 @@ function defaultState(){
     form:{own:{jujak:false, cheong:false, baekho:false, hyeonmu:false}, eq:''},
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
-    craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]},
+    craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, mythShard:0,
   };
 }
 function mergeState(d){
@@ -2362,6 +2381,8 @@ function mergeState(d){
   out.off = {kps:Math.min(OFF_KPS_MAX, Math.max(0, +(d.off && d.off.kps) || 0)), acc:Math.max(0, +(d.off && d.off.acc) || 0)};
   out.bag = []; out.bagSeq = Math.max(0, Math.floor(+d.bagSeq) || 0);
   for (const it of Array.isArray(d.bag) ? d.bag.slice(0, BAG_MAX) : []){ const c = mkClean(it); if (c && (c.t === 'acc' || c.t === 'myth')){ c.id = Number.isInteger(it.id) && it.id > 0 ? it.id : ++out.bagSeq; out.bagSeq = Math.max(out.bagSeq, c.id); out.bag.push(c); } }
+  out.petMythPity = Math.max(0, Math.floor(+d.petMythPity) || 0);
+  out.vault = {day:d.vault && typeof d.vault.day === 'string' ? d.vault.day : '', n:Math.max(0, Math.floor(+(d.vault && d.vault.n)) || 0)}; out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
   out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
   out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
@@ -2564,11 +2585,24 @@ function refineTry(slot){
 /* --- 펫 --- */
 function rollPet(){
   S.petPity = (S.petPity || 0) + 1;
+  const myth = mythPetPool();
+  if (myth.length){ S.petMythPity = (S.petMythPity || 0) + 1; if (S.petMythPity >= MYTH_PET_PITY || Math.random() < MYTH_PET_P * (window.__game && window.__game.petLuck || 1)){ S.petMythPity = 0; return myth[(Math.random() * myth.length) | 0]; } }
   let g = 0;
   if (S.petPity >= PET_PITY) g = Math.random() < PET_P[4] / (PET_P[3] + PET_P[4]) ? 4 : 3;
   else { let r = Math.random(); for (; g < 4; g++){ if (r < PET_P[g]) break; r -= PET_P[g]; } }
   if (g >= 3) S.petPity = 0;
-  return ((Math.random() * 3) | 0) * 5 + g;
+  const t = PET_TYPE_ORDER[(Math.random() * 3) | 0];
+  return PETS.findIndex(p => p.type === t && p.g === g);
+}
+// 이야기 보상 펫(신화 환수)
+function givePet(draw){
+  const i = PETS.findIndex(p => p.draw === draw); if (i < 0 || S.pets.lv[i]) return false;
+  S.pets.lv[i] = 1; const p = PETS[i];
+  addLog(`${GRADES[p.g].name} 환수 「${p.name}」${josa(p.name, '이', '가')} 함께하기로 했어요! [펫]에서 데려가요.`, 'good');
+  announce(`${S.name}님이 ${GRADES[p.g].name} 환수 ${p.name}${josa(p.name, '을', '를')} 얻었어요!`);
+  if (eqPet(p.type) < 0 || petScore(i) > petScore(eqPet(p.type))) petEquip(i);
+  refreshStats();
+  return true;
 }
 function petScore(i){ const e = petInfo(i); return PETS[i].type === 'atk' ? e.pct : PETS[i].type === 'def' ? e.hp + e.dr * 4 : e.bonus + e.heal * 5; }
 function petEquipBest(t){
@@ -2824,6 +2858,7 @@ function storyReward(q){
   if (q.av && !S.av.own[q.av]) giveAvatar(q.av);
   if (q.acc && S.acc[q.acc[0]].g < q.acc[1]) giveAcc(q.acc[0], q.acc[1]);
   if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount);
+  if (q.pet) givePet(q.pet);
 }
 // 예전 이야기(15장)로 하던 저장: 이미 이룬 퀘스트는 보상 없이 넘기고(변신 등은 줌) 새 이야기에 이어 붙인다
 function migrateStory(){
@@ -3328,7 +3363,7 @@ function startTimeBoss(diff){
   const base = 10 * mobHp(D.ref) / 15 * 3 * 40;
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
-  startFight(info, party, {hp:Math.max(base * 2, partyDps * 70), atk:heroRef(0, D.ref) / (2 * MOB_TTK) * 4.8, aoe:heroRef(0, D.ref) / (2 * MOB_TTK) * 3.2, time:TB_TIME});
+  startFight(info, party, {hp:Math.max(base * 2, partyDps * 85), atk:heroRef(0, D.ref) / (2 * MOB_TTK) * 4.8, aoe:heroRef(0, D.ref) / (2 * MOB_TTK) * 3.2, time:TB_TIME});
   raid.deaths = 0;
   addLog(`타임 보스 ${info.bossName}! ${party.length + 1}명이 함께 ${TB_TIME}초 안에 쓰러뜨려요.`, 'warn');
   tbJoin();
@@ -3378,6 +3413,22 @@ function damageAlly(a, d){
   if (a.hp <= 0){ a.hp = 0; a.down = true; a.downT = 6; a.swing = 0;
     if (raid && raid.info.tb){ raid.deaths = (raid.deaths || 0) + 1; if (raid.deaths >= TB_LIVES){ a.downT = Infinity; for (const b2 of raid.allies) if (b2.down) b2.downT = Infinity; if (hero.dead) hero.deadT = Infinity; } } }
 }
+// 함께하는 동료의 기술·초각성기(2026-11 (17)): 다른 용사의 캐릭터가 기본 공격만 하던 문제를 고침. NPC 동료는 작은 기술만
+function allySkill(a, B){
+  const C = CLASSES[a.cls], nm = (C.skills || [])[(Math.random() * 6) | 0] || '기술', hy = B.y - mobHeight(B) * 0.5;
+  const dmg = a.hit * (a.npc ? 2.5 : 4.5) * (0.85 + Math.random() * 0.3);
+  a.swing = 0.3;
+  if (!fxOff()){ vadd({type:'glow', x:B.x, y:hy, r:14, col:C.fx || '#ffffff', dur:0.4}); vSparks(B.x, hy, 6, C.fx || '#ffffff', 60, 18); }
+  addText(nm, a.x, a.y - 34, C.fx || '#ffe08a', 10, true);
+  for (let k = 0; k < 3; k++) after(k * 0.12, () => { if (raid && !B.dead) hit(B, dmg / 3, 'ally'); });
+}
+function allyAwaken(a, B){
+  a.awk = true;
+  const C = CLASSES[a.cls], dmg = a.hit * 60;
+  fx.push({type:'awaken', t:0, dur:1.1, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5}); shake = Math.max(shake, 0.35);
+  addText(`${a.name} · ${C.awaken}!`, a.x, a.y - 40, '#ffd24a', 12, true);
+  for (let k = 0; k < 4; k++) after(k * 0.15, () => { if (raid && !B.dead) hit(B, dmg / 4, 'ally'); });
+}
 function allyAttack(a, B){
   a.swing = 0.2;
   const C = CLASSES[a.cls];
@@ -3419,6 +3470,9 @@ function updateRaid(dt){
     a.dir = dirOf(B.tx - a.tx, B.ty - a.ty);
     a.atkT -= dt * a.aspd;
     if (a.atkT <= 0){ a.atkT = 1; allyAttack(a, B); }
+    a.skT = (a.skT == null ? 2 + Math.random() * 4 : a.skT) - dt;   // 동료도 기술을 쓴다
+    if (a.skT <= 0){ a.skT = 6 + Math.random() * 3; allySkill(a, B); }
+    if (!a.npc && !a.awk && (R.limit - R.time >= 14 || B.hp <= B.maxHp * 0.6)) allyAwaken(a, B);   // 다른 용사(실제 캐릭터)는 초각성기도
     if (a.cls === 'doin'){ a.healT -= dt; if (a.healT <= 0){ a.healT = 4; healParty(a); } }
   }
   if (B.dead || B.spawnT > 0) return;
@@ -3499,6 +3553,41 @@ function finishDummy(){
   ev('raid');
   return {dmg, tier, gold, gems};
 }
+/* 보물 동굴(2026-11 (17)): 하루 2번, 보물 이무기를 60초 안에 쓰러뜨리면 신화 조각(3 + 세계)과 7% 확률로 신화 보물(약하면 가방으로).
+   지면 조각 1개. 조각 30개로 원하는 신화 보물을 하나 만든다(운에만 기대지 않게). 이무기 세기는 최고 단계 − 5 */
+const VAULT_TRIES = 2, VAULT_TIME = 60, VAULT_MYTH_P = 0.07, SHARD_COST = 30;   // 신화 보물 7%(사용자 요청)
+function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
+const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
+const vaultShards = () => 3 + Math.min(4, S.world);
+function startVault(){
+  if (raid || vaultLeft() <= 0 || (!session && !window.__game)) return false;
+  S.vault.n++;
+  const s = Math.max(1, S.maxStage - 5);
+  const info = {vault:true, label:'보물 동굴', bossName:'보물 이무기', type:'serpent', color:'#e0b03c', region:regionIndex(S.stage), party:1, ref:s, g:0};
+  startFight(info, [], {hp:mHp(s) * 20 * BOSS_K.hp[S.world], atk:mAtk(s) * 2 * BOSS_K.atk[S.world], aoe:mAtk(s) * 1.2, time:VAULT_TIME});
+  addLog(`보물 동굴! ${VAULT_TIME}초 안에 보물 이무기를 쓰러뜨려요.`, 'warn');
+  return true;
+}
+function finishVault(R){
+  const win = R.win, shard = win ? vaultShards() : 1;
+  S.mythShard += shard;
+  const m = win && Math.random() < VAULT_MYTH_P * (window.__game && window.__game.vaultLuck || 1) ? dropMyth(vaultD(), null, true) : null;
+  const M = m && MYTHS.find(x => x.k === m.k);
+  addLog(win ? `보물 동굴 성공! 신화 조각 +${shard}${M ? ` · 신화 보물 ${M.name}` : ''}` : `보물 이무기가 달아났어요… 신화 조각 +${shard}`, win ? 'gain' : 'warn'); sfx(win ? 'win' : 'fail');
+  if (M) announce(`${S.name}님이 보물 동굴에서 신화 보물 ${M.name}${josa(M.name, '을', '를')} 찾았어요!`);
+  saveLocal();
+  if (!(window.__game && window.__game.quiet)) showModal(win ? '보물 동굴 · 성공' : '보물 동굴 · 실패', `<p>${win ? '보물 이무기를 쓰러뜨렸어요!' : `${VAULT_TIME}초 안에 쓰러뜨리지 못했어요.`}</p>
+    <div class="rchips" style="justify-content:center"><span class="rchip rc-myth">신화 조각 ${shard}</span>${M ? `<span class="rchip rc-myth">${M.name} +${m.p}%${m.up ? '' : ' (가방으로)'}</span>` : ''}</div>
+    <p class="small" style="margin-top:8px">신화 조각 ${S.mythShard}개 · ${SHARD_COST}개면 [레이드] → [보물 동굴]에서 원하는 신화 보물을 만들어요.</p>`, [{label:'확인', primary:true}]);
+  return {win, shard, myth:m};
+}
+function craftMyth(k){
+  const M = MYTHS.find(x => x.k === k && !x.story);
+  if (!M || S.mythShard < SHARD_COST) return null;
+  S.mythShard -= SHARD_COST;
+  const r = dropMyth(vaultD(), k, true); saveLocal();
+  return r;
+}
 function finishRaid(){
   const R = raid;
   raid = null;
@@ -3510,6 +3599,7 @@ function finishRaid(){
   const info = R.info;
   if (info.tb){ finishTimeBoss(R); return; }
   if (info.dummy){ finishDummy(R); return; }
+  if (info.vault){ finishVault(R); return; }
   if (info.job){ finishJobTrial(R); return; }
   if (R.win){
     const rw = raidReward(info);
@@ -4461,6 +4551,25 @@ const PET_HD = {
     blob(15, 17, 9, 6.4, c); Pl([[19, 14], [26, 16], [24, 22], [17, 21]], K); E(13, 18, 5, 2.4, mix(c, '#b8b8b0', 0.4));
     RR(6, 4, 3.4, 12, 1.6, K); blob(7, 4, 4, 3.6, c); E(7, 1.6, 2, 1.4, '#d8433a'); Pl([[3.4, 3.4], [-1, 5], [3.6, 5.4]], '#c8b878'); E(6, 3.8, 1, 1.2, EYE); }],
 };
+// 신화 펫·환수(2026-11 (17)): 있는 그림 위에 번개·코·지느러미·불꽃·뿔·날개를 더한다
+Object.assign(PET_HD, {
+  raiju:[30, 26, (g, f, c) => { petFeline(g, f, c, false); const {Pl, E} = hdKit(g), Y = '#ffe24a';
+    Pl([[21, 3], [25, -1], [23.6, 4], [28, 1.4], [24, 9], [25, 5]], Y); Pl([[13, 12], [16.6, 10], [15.4, 13], [19, 12], [14.6, 16.6], [15.6, 13.4]], Y);
+    E(5, 14 + (f ? -1 : 0), 1.6, 1.6, mix(Y, '#ffffff', 0.4)); }],
+  baku:[30, 26, (g, f, c) => { PET_HD.bear[2](g, f, c); const {E, RR, Pl} = hdKit(g), d = darken(c, 0.25);
+    E(17, 15, 6.4, 4.4, '#efe8f4'); RR(-1, 11.4, 6, 3, 1.5, d); E(-1.4, 13.4, 1.6, 1.4, darken(c, 0.4)); Pl([[4, 15], [3, 18], [5, 15.6]], '#fff6e0');
+    for (const [x, y] of [[21, 8], [25, 11]]) E(x, y, 1.2, 1.2, '#c8b0ff'); }],
+  amabie:[32, 26, (g, f, c) => { petBird(g, f, c, {belly:'#d8f6ff', wing:darken(c, 0.25), beak:'#ffb347', crest:'#9a6ad8', tailLen:12, tail:'#3a9a9a', tail2:'#9fe7ff', legs3:true});
+    const {E} = hdKit(g); for (let k = 0; k < 6; k++) E(13 + (k % 3) * 3, 13 + Math.floor(k / 3) * 3, 1.1, 0.8, mix(c, '#ffffff', 0.45)); }],
+  bifang:[28, 32, (g, f, c) => { PET_HD.crane[2](g, f, c); const {E, Pl} = hdKit(g), fl = f ? 1 : 0;
+    for (const [x, y] of [[12, 15], [16, 18], [11, 19]]) E(x, y, 1.3, 1, '#3a6ac8');
+    Pl([[22, 21], [28, 14 - fl], [26, 21], [29, 19 - fl], [25, 24]], '#ff8a2a'); Pl([[23, 21], [26.6, 16.6 - fl], [25, 22]], '#ffe24a'); }],
+  baize:[32, 26, (g, f, c) => { PET_HD.haetae[2](g, f, c); const {Pl, E} = hdKit(g), Y = '#e0b03c';
+    Pl([[4, 5], [1, -2], [6, 4]], Y); Pl([[13, 4], [17, -2], [14, 5]], Y); E(9, 5.4, 1.4, 1.1, '#3a8ac8'); E(9, 5.2, 0.6, 0.5, '#ffffff'); }],
+  pixiu:[34, 26, (g, f, c) => { const {Pl} = hdKit(g), w = f ? -2 : 0;
+    Pl([[17, 11], [22, 1 + w], [30, 2 + w], [25, 6 + w], [31, 7 + w], [22, 12]], '#fff2b0'); Pl([[19, 11], [23, 4 + w], [27, 5 + w], [22, 10]], '#ffd84a');
+    PET_HD.haetae[2](g, f, c); }],
+});
 // 펫 그림을 몹으로도 쓴다(곤륜의 금오 새끼·큰 자라·육오·도철·독침 새): 1.5배로 키운다
 for (const t of ['crow', 'turtle', 'tiger', 'bear', 'hawk']) if (!MOB_HD[t] && PET_HD[t]){ const [w, h, dr] = PET_HD[t]; MOB_HD[t] = [Math.round(w * 1.5), Math.round(h * 1.5), (g, f, c) => { g.save(); g.scale(1.5, 1.5); dr(g, f, c); g.restore(); }]; }
 function petFeline(g, f, c, stripes){
@@ -4732,7 +4841,7 @@ function rideMount(k){
 }
 // 이야기에서 받았어야 할 탈것(탈것이 생기기 전에 그 이야기를 지난 저장)
 function mountCatchUp(){
-  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); }
+  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); }
 }
 
 /* 탈것 그림: 64×48 HD, 왼쪽을 본다. 안장 가운데 (33.5, 16)에 용사가 앉는다 */
@@ -5002,6 +5111,7 @@ function equipAvatar(k){
 }
 // 펫 꾸미기: 머리(또는 목) 자리. 펫 그림 칸 기준(HD 픽셀, 왼쪽을 봄)
 const PET_HEAD = {cat:[8, 2], tiger:[8, 2], hawk:[7, 1.6], crow:[7, 1], magpie:[7, 1.6], phoenix:[7, 0.6], turtle:[5, 6.6], bear:[9, 2], haetae:[9, 3.6], toad:[13, 2.6], dog:[9, 3], crane:[7, 0.4]};
+Object.assign(PET_HEAD, {raiju:[8, 2], baku:[9, 2], amabie:[7, 1.6], bifang:[7, 0.4], baize:[9, 3.6], pixiu:[9, 3.6]});
 function drawPetAcc(g, draw, acc){
   const [hx, hy] = PET_HEAD[draw] || [8, 2], {E, Pl, RR} = hdKit(g);
   if (acc === 'gat'){ E(hx, hy - 0.6, 5.6, 1.3, '#16131c'); RR(hx - 2.2, hy - 4.6, 4.4, 4.2, 1.4, '#16131c'); RR(hx - 1.4, hy - 4, 1, 3, 0.5, '#3a3444'); }
@@ -6910,7 +7020,7 @@ function offerSub(k){
     <div class="dl"><span>할 일</span><b>${subNeedText(q)}${SUB_STATE[q.c] && subProg(q) >= q.n ? ' (이미 이뤘어요!)' : ''}</b></div>
     <div class="dl"><span>보상</span><b>보석 ${fmt(subGems(q))} · 쇳가루 ${fmt(subDust(q))}${subPiece(q) ? ` · 고삐 조각 ${subPiece(q)}` : ''}${q.gold ? ` · 엽전 ${fmt(subGold(q))}` : ''}${q.mat ? ` · 재료 ${q.mat}` : ''}</b></div>
     ${full ? `<p class="small" style="color:var(--seal)">부탁은 한 번에 ${SUB_MAX}개까지 들어 줄 수 있어요.</p>` : ''}`,
-    [{label:'다음에'}, {label:'들어 줄게요', primary:true, fn:() => { if (!full) acceptSub(k); }}]);
+    [{label:'다음에'}, {label:'들어 줄게요', primary:true, fn:() => { if (!full && acceptSub(k)) closePage(); }}]);
 }
 function acceptSub(k){
   const q = SUB_Q.find(x => x.k === k);
@@ -7089,6 +7199,7 @@ const CUT_X = {1:[120], 2:[72, 170], 3:[52, 122, 192], 4:[40, 96, 152, 206], 5:[
 function playCut(shots, opts = {}){
   if (!shots || !shots.length || !session && !window.__game) return false;
   cut = {shots, si:-1, opts, t:0};
+  closePage(); setChat(false);   // 메뉴 화면·채팅을 닫아 연출을 놓치지 않게
   $('#cut').hidden = false; $('#scene').classList.add('cutting');
   const tt = $('#cutTitle'); setText(tt, opts.title || ''); tt.classList.toggle('on', !!opts.title);
   setTimeout(() => tt.classList.remove('on'), 3200);
@@ -7502,7 +7613,7 @@ function updatePetFaces(){
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
-  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.vault ? '보물 동굴' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
   if (!session && !window.__game) cls = 'off';
@@ -8144,7 +8255,7 @@ function buildAvatar(){
 /* --- 신화 보물 --- */
 function buildMyth(){
   panel.innerHTML = `${gearSegHTML()}
-    <p class="hint" style="margin-top:8px">퀘스트 보상을 받을 때 낮은 확률(${Math.round(LUCK_MYTH * 100)}%)로 신화 보물이 나와요. 어려운 퀘스트일수록 효과가 커요. 종류마다 가장 센 것만 남고, 약한 것은 보석 ${MYTH_DUP_GEMS}개로 바뀌어요.</p>
+    <p class="hint" style="margin-top:8px">퀘스트 보상을 받을 때 낮은 확률(${Math.round(LUCK_MYTH * 100)}%)로 신화 보물이 나와요. 어려운 퀘스트일수록 효과가 커요. <b>[레이드] → [보물 동굴]</b>(하루 2번)에서도 나오고, 신화 조각 ${SHARD_COST}개로 원하는 것을 만들 수 있어요(지금 조각 ${S.mythShard}개). 종류마다 가장 센 것을 끼고, 약한 것은 가방으로 들어가요.</p>
     <ul class="list">${MYTHS.map(m => `<li class="row" id="my-${m.k}"><div class="ic myth" style="--myth:${MYTH_COLOR}">${SVG[m.icon]}</div>
       <div><div class="nm">${m.name}<span class="l">${m.stat}</span></div><div class="val" data-r="v"></div></div><span></span></li>`).join('')}</ul>
     <p class="small" style="margin-top:6px">퀘스트를 깰 때 ${Math.round(LUCK_RESET * 100)}% 확률로 모든 기술의 재사용 시간도 초기화돼요.</p>`;
@@ -8317,8 +8428,12 @@ function buildPet(){
       <button class="gbtn" id="psum1"><span>펫 1회 소환</span><span class="price"><i class="gem"></i>${petSummonCost(1)}</span></button>
       <button class="gbtn" id="psum10"><span>펫 10회 소환</span><span class="price"><i class="gem"></i>${petSummonCost(10)}</span></button>
     </div>
-    <p class="odds">확률 공개 — 전설 0.5% · 영웅 3.5% · 희귀 13% · 고급 28% · 일반 55% (등급 안에서 공격·방어·지원 펫이 똑같이 3분의 1씩, 예: 전설 펫 한 마리는 0.17%). <b id="petPity"></b></p>
+    <p class="odds">확률 공개 — 전설 0.5% · 영웅 3.5% · 희귀 13% · 고급 28% · 일반 55% (등급 안에서 공격·방어·지원 펫이 똑같이 3분의 1씩, 예: 전설 펫 한 마리는 0.17%). <b style="color:#ff5a8a">신화 ${MYTH_PET_P * 100}%</b>: 2부 부상·3부 곤륜에 들어가면 그 땅의 환수가 소환에 나와요(${MYTH_PET_PITY}번 안에 확정). <b id="petPity"></b></p>
     <div class="pgrid">${grid}</div>
+    <h3 class="sub" style="color:#ff5a8a">신화 펫 · 환수</h3>
+    <p class="small" style="margin:0 0 6px">부마다 한 마리(바쿠·백택)는 이야기 보상으로, 나머지는 펫 소환으로 얻어요.</p>
+    <div class="pgrid pmyth">${PETS.map((p, i) => [p, i]).filter(([p]) => p.g === 5).map(([p, i]) => { const own = S.pets.lv[i] > 0, eq = eqPet(p.type) === i, lock = !own && S.world < p.part;
+      return `<button class="pcell${own ? '' : ' unseen'}${petSel === i ? ' sel' : ''}" data-i="${i}" style="--g:${GRADES[5].color}" aria-label="${p.name}${own ? ` Lv.${S.pets.lv[i]}` : lock ? `, ${p.part - 1}부에서` : ', 아직 없음'}"><img src="${petImg(i)}" alt="">${own ? `<span class="lvl">Lv.${S.pets.lv[i]}</span><span class="st">${starStr(S.pets.star[i])}</span>` : `<span class="lvl">${lock ? (p.part - 1) + '부' : p.story ? '이야기' : '소환'}</span>`}${eq ? '<span class="eq">함께</span>' : ''}</button>`; }).join('')}</div>
     ${detail}`;
   $('#psum1').addEventListener('click', () => doPetSummon(1));
   $('#psum10').addEventListener('click', () => doPetSummon(10));
@@ -8329,7 +8444,7 @@ function buildPet(){
   if (up) holdButton(up, () => { const ok = petUpgrade(sel); if (ok) upFx(up, `Lv.${S.pets.lv[sel]}`, '#8ff0a0'); return ok; });
   return () => {
     $('#psum1').disabled = S.gems < petSummonCost(1); $('#psum10').disabled = S.gems < petSummonCost(10);
-    setText($('#petPity'), `영웅 이상 확정까지 ${Math.max(1, PET_PITY - (S.petPity || 0))}번`);
+    setText($('#petPity'), `영웅 이상 확정까지 ${Math.max(1, PET_PITY - (S.petPity || 0))}번${mythPetPool().length ? ` · 신화 확정까지 ${Math.max(1, MYTH_PET_PITY - (S.petMythPity || 0))}번` : ''}`);
     setHTML($('#pslots'), petSlotsHTML());
     if (up){
       const lv = S.pets.lv[sel];
@@ -8364,10 +8479,12 @@ function doPetSummon(n){
 /* --- 퀘스트 --- */
 // 퀘스트 화면: 이야기 · 오늘의 할 일 · 마을 부탁(서브 퀘스트) 세 칸
 let questView = 'main';
-function questGo(q){   // 「바로 가기」: 이 퀘스트를 하는 곳으로
-  const k = q.k;
-  if (k === 'raids' || k === 'raidK' || k === 'hraids') return buildTab('raid');
-  if (k === 'refineW' || k === 'refineA' || k === 'myth' || k === 'acc' || k === 'forms' || k === 'avatar') return buildTab('gear');
+function questGo(q){   // 「바로 가기」·퀘스트 누르기: 이 퀘스트를 하는 곳으로(사냥·단계·레벨이면 사냥 화면)
+  const k = q.k || q.c;
+  setChat(false);
+  if (k === 'raids' || k === 'raidK' || k === 'hraids'){ raidView = 'raid'; return buildTab('raid'); }
+  const seg = {refineW:'refine', refineA:'refine', refW:'refine', refA:'refine', myth:'myth', acc:'acc', forms:'form', avatar:'av', summons:'weapon'}[k];
+  if (seg){ gearSlot = seg; gearSel = -1; return buildTab('gear'); }
   if (k === 'pets3') return buildTab('pet');
   if (k === 'job' || k === 'world' || k === 'reb' || k === 'trials'){ growView = k === 'job' ? 'job' : 'reb'; return buildTab('grow'); }
   closePage();
@@ -8377,6 +8494,7 @@ function questRewHTML(q){
   if (q.myth){ const m = MYTHS.find(x => x.k === q.myth); if (m) ch.push(`<span class="rchip rc-myth">${m.name}</span>`); }
   if (q.av){ const a = AVATARS.find(x => x.k === q.av); if (a) ch.push(`<span class="rchip rc-av">${a.name}</span>`); }
   if (q.mount) ch.push(`<span class="rchip rc-mount">탈것</span>`);
+  if (q.pet) ch.push(`<span class="rchip rc-myth">신화 환수</span>`);
   if (q.form) ch.push(`<span class="rchip rc-myth">변신</span>`);
   if (q.acc) ch.push(`<span class="rchip rc-acc">장신구</span>`);
   return ch.join('');
@@ -8397,8 +8515,8 @@ function buildQuest(){
       <ul class="list qdaily">${DAILY.map(d => `<li class="qrow" id="dq-${d.key}"><div><div class="qn">${d.name}<span class="rchip rc-gem">보석 ${d.gems}</span></div><div class="meter gold"><i></i></div></div><button class="btn sm" data-k="${d.key}"></button></li>`).join('')}</ul>
       <div class="card qall"><div class="ct">모두 마치면<span class="rchip rc-gem">보석 ${DAILY_ALL}</span></div><button class="btn primary" id="dAll">모두 완료 보상 받기</button></div>`;
     wireSeg();
-    $('#dAll').addEventListener('click', () => { if (claimDailyAll()) refreshPanel(); });
-    panel.querySelectorAll('.qrow .btn').forEach(bt => bt.addEventListener('click', () => { if (claimDaily(bt.dataset.k)) refreshPanel(); }));
+    $('#dAll').addEventListener('click', () => { if (claimDailyAll()) closePage(); });
+    panel.querySelectorAll('.qrow .btn').forEach(bt => bt.addEventListener('click', () => { if (claimDaily(bt.dataset.k)) closePage(); }));
     return () => {
       dailyCheck(); dots();
       for (const d of DAILY){
@@ -8428,7 +8546,7 @@ function buildQuest(){
         ${doneN ? `<details class="ngrp"><summary><b>마친 부탁</b><span>${doneN}개</span></summary><ul class="rewards notes">${SUB_Q.filter(q => S.sub.done[q.k]).map(q => `<li><b>${q.t}</b><span>${q.who}</span></li>`).join('')}</ul></details>` : ''}`;
       wireSeg();
       $('#subFind').addEventListener('click', () => { const av = subAvail(); if (!av.length) return; const q = av[(Math.random() * av.length) | 0]; addChat('npc', q.who, q.hook, {sq:q.k}); offerSub(q.k); });
-      panel.querySelectorAll('[data-sq]').forEach(b => b.addEventListener('click', () => { if (claimSub(b.dataset.sq)) draw(); }));
+      panel.querySelectorAll('[data-sq]').forEach(b => b.addEventListener('click', () => { if (claimSub(b.dataset.sq)) closePage(); else { const q = SUB_Q.find(x => x.k === b.dataset.sq); if (q) questGo(q); } }));
       return act.map(q => q.k).join(',');
     };
     let sig = draw();
@@ -8441,7 +8559,7 @@ function buildQuest(){
         const v = Math.min(q.n, subProg(q)), done = v >= q.n;
         c.querySelector('.meter i').style.width = (v / q.n * 100).toFixed(1) + '%';
         setText(c.querySelector('.pr'), subNeedText(q, subProg(q)));
-        const b = c.querySelector('[data-sq]'); b.disabled = !done; setText(b, done ? '보상 받기' : '진행 중'); c.classList.toggle('ready', done);
+        const b = c.querySelector('[data-sq]'); b.disabled = false; setText(b, done ? '보상 받기' : '바로 가기 ›'); c.classList.toggle('ready', done);
       }
     };
   }
@@ -8464,8 +8582,8 @@ function buildQuest(){
       <button class="btn primary" id="hidClaim">보상 받기</button>
     </div>`;
   wireSeg();
-  $('#mainClaim').addEventListener('click', () => { if (claimMain()) refreshPanel(); });
-  $('#hidClaim').addEventListener('click', () => { if (claimHidden()) refreshPanel(); });
+  $('#mainClaim').addEventListener('click', () => { closePage(); claimMain(); });   // 사냥 화면으로 돌아가 연출을 본다
+  $('#hidClaim').addEventListener('click', () => { if (claimHidden()) closePage(); });
   $('#replayBtn').addEventListener('click', openReplay);
   $('#qMapBtn').addEventListener('click', openMap);
   $('#mqGo').addEventListener('click', () => questGo(mainQuest()));
@@ -8538,7 +8656,7 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['tb', '타임 보스'], ['dummy', '허수아비']];
+  const segs = [['raid', '레이드'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴']];
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
   const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
   if (raidView === 'tb'){
@@ -8569,6 +8687,31 @@ function buildRaid(){
         <div class="meter fire"><i style="width:${Math.max(0, raid.boss.hp / raid.boss.maxHp * 100).toFixed(1)}%"></i></div>
         <div class="party">${rows.join('')}</div></div>`);
     } else setHTML(live, '');
+    };
+  }
+  if (raidView === 'vault'){
+    const list = MYTHS.filter(m => !m.story);
+    panel.innerHTML = top + `
+      <div class="card dcard"><div class="dport"><img src="${bossPortrait('serpent', '#e0b03c')}" alt=""></div>
+        <div><div class="ct">보물 동굴<span class="tag" id="vLeft"></span></div>
+        <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>와 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 1개.</p></div></div>
+      <div class="card"><div class="ct">신화 조각 <b id="vShard"></b><span class="small">${SHARD_COST}개로 원하는 신화 보물 하나</span></div>
+        <p class="small" style="margin:0 0 6px">만들면 지금 힘에 맞는 값(이 정도: +<b id="vPow"></b> × 종류 배율)이 나와요. 지금 것보다 약하면 가방으로 들어가요.</p>
+        <ul class="list">${list.map(m => `<li class="qrow"><div><div class="qn"><span><b style="color:${MYTH_COLOR}">${m.name}</b> <span class="small">${m.stat}</span></span><span class="small" data-vmc="${m.k}"></span></div></div><button class="btn sm" data-vm="${m.k}">만들기</button></li>`).join('')}</ul></div>
+      <div id="raidLive"></div>
+      <button class="btn primary big" id="vGo">보물 동굴 들어가기</button>`;
+    wireSeg();
+    $('#vGo').addEventListener('click', () => { if (startVault()) closePage(); });
+    panel.querySelectorAll('[data-vm]').forEach(b => b.addEventListener('click', () => {
+      const M = MYTHS.find(x => x.k === b.dataset.vm), r = craftMyth(b.dataset.vm);
+      if (r){ addLog(`신화 조각으로 ${M.name} +${r.p}%를 만들었어요${r.up ? '!' : ' (지금 것이 더 세서 가방으로)'}`, 'gain'); sfx('rare'); playFx('craft', {el:b, ok:true}); }
+      refreshPanel();
+    }));
+    return () => {
+      const left = vaultLeft();
+      setText($('#vLeft'), `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
+      for (const m of list){ setText(panel.querySelector(`[data-vmc="${m.k}"]`), `지금 +${S.myth[m.k] || 0}% · 만들면 +${mythPower(m, vaultD())}%`); const bt = panel.querySelector(`[data-vm="${m.k}"]`); bt.disabled = S.mythShard < SHARD_COST; }
+      const b = $('#vGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.vault ? '싸우는 중…' : '다른 싸움 중') : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)');
     };
   }
   if (raidView === 'dummy'){
@@ -8930,7 +9073,7 @@ function updateQTrack(){
   $('#qtClaim').hidden = !done;
   el.classList.toggle('ready', done);
 }
-$('#qtrack').addEventListener('click', e => { if (e.target.closest('#qtClaim')){ e.stopPropagation(); claimMain(); updateQTrack(); return; } buildTab('quest'); });
+$('#qtrack').addEventListener('click', e => { if (e.target.closest('#qtClaim')){ e.stopPropagation(); closePage(); claimMain(); updateQTrack(); return; } if (session || window.__game) questGo(mainQuest()); });   // 누르면 그 퀘스트를 하는 곳으로
 $('#rotClose').addEventListener('click', () => { $('#rotTip').hidden = true; try { localStorage.setItem('samhan-rot-tip', '1'); } catch (e) {} });
 
 /* --- 채팅 창 --- */
@@ -9940,6 +10083,8 @@ if (location.search.indexOf('simtest') >= 0){
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
     subOpen, subGems, get PART1_END(){ return PART1_END; }, get PART2_END(){ return PART2_END; },
+    skAuto, coopFight, raidParty,
+    givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,

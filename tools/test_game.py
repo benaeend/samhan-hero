@@ -691,6 +691,20 @@ async def main():
         check(bg['inBag'] and bg['swapped'] and bg['sold'] == 2 and bg['leftBag'] == 0, f'가방: 약한 장신구는 가방으로, 끼면 옛것이 가방으로, 안 쓰는 것은 팔린다 {bg}')
         check(bg['offers'] == 5 and bg['nb'] == {'ok': True} and bg['nb2'] == 'gone' and bg['myth'] and bg['inMk'] and bg['noMobs'] and bg['back'],
               f'장터: NPC 상인은 날마다 하나씩, 장터 마을에서는 사냥이 멈추고 나오면 다시 사냥 {bg}')
+        # 6-10) 신화 펫·환수: 1부엔 소환에 안 나오고, 부상에 가면 그 땅의 환수(이야기 환수는 빼고)가 소환에 나온다. 보물 동굴·신화 조각. 함께하는 싸움은 늘 자동 기술
+        mp = await page.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world; G.quiet = true;
+          S.world = 0; const pool0 = G.mythPetPool().length; S.world = 3; const pool3 = G.mythPetPool().map(i => G.PETS[i].name);
+          S.gems = 1e7; G.petLuck = 400; const r = G.petSummon(1); G.petLuck = null; const got = G.PETS[r[0].i];
+          const bk = G.PETS.findIndex(p => p.draw === 'baku'); S.pets.lv[bk] = 0; const gp = G.givePet('baku');
+          S.vault = {day:'', n:0}; S.mythShard = 0; const v = G.startVault(); G.raid.boss.hp = 1e-9; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          const shard = S.mythShard; S.mythShard = 30; const cm = G.craftMyth('flute');
+          S.mode = 'semi'; G.startFight({label:'시험', bossName:'시험 보스', type:'oni', color:'#c83a2a', region:0, party:3, ref:1, g:0}, G.raidParty({party:3, g:0, ref:1}), {hp:1e9, atk:0, aoe:0, time:5});
+          const auto = G.coopFight() && G.skAuto(0) && G.skAuto(5); for (let i = 0; i < 200; i++) G.update(0.05); S.mode = 'auto';
+          S.world = w0; return {pool0, pool3, got: got.g, gotName: got.name, gp, baku: S.pets.lv[bk], v, shard, cm: !!cm, shardLeft: S.mythShard, auto}; }""")
+        check(mp['pool0'] == 0 and mp['pool3'] == ['뇌수', '아마비에'] and mp['got'] == 5 and mp['gp'] and mp['baku'] == 1,
+              f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 {mp}')
+        check(mp['v'] and mp['shard'] >= 4 and mp['cm'] and mp['shardLeft'] == 0 and mp['auto'],
+              f'보물 동굴: 이기면 신화 조각, 조각 30개로 신화 보물을 만들고, 함께하는 싸움은 반자동이어도 기술이 자동 {mp}')
         await page.evaluate("() => { const G = window.__game; G.quiet = false; G.enterMarket(); }")
         await page.wait_for_timeout(1200)
         await page.screenshot(path=str(OUT / '34_장터마을.png'))
