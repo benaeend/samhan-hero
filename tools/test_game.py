@@ -630,13 +630,28 @@ async def main():
           S.world = 0; G.setStage(5); S.mode = 'auto'; S.off.kps = 0; G.offHunt.t = 0; G.offHunt.k = 0;
           for (let i = 0; i < 1300; i++) G.update(0.05);
           const kps = S.off.kps;
-          S.off.kps = 1.5; S.off.acc = 23.5 * 3600; G.offLuck = 100;
-          const r = G.offlineReward(3600); G.offLuck = null; G.closePage && 0;
+          S.off.kps = 1.5; S.off.acc = 23.5 * 3600; G.offLuck = 100; const ba = S.bossAuto; S.bossAuto = false;
+          const r = G.offlineReward(3600); S.bossAuto = ba; G.offLuck = null; G.closePage && 0;
           const acc = S.off.acc; S.world = w0; G.setStage(st0); G.refreshStats(); G.quiet = false;
           return {kps, kills: r.kills, gold: r.gold, gems: r.gems, exp: r.exp, myths: r.myths.length, acc}; }""")
         await page.evaluate("() => { const b = document.querySelector('#modal-btn-0'); if (b) b.click(); }")
         check(of['kps'] > 0.2 and of['kills'] == 5400 and of['gems'] > 0 and of['gold'] > 0 and of['myths'] == 1 and abs(of['acc'] - 1800) < 1,
               f'오프라인 보상: 잰 처치 속도로 마리 수를 셈하고 보석도 나오며, 오프라인 누적 24시간에 신화 보물을 굴린다 {of}')
+
+        # 6-4d) 오프라인 보스 자동 도전: 이기면 다음 단계, 한 단계에서 5번 지면 그 사냥터에서 사냥
+        ob = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.world = 0; G.setStage(5); S.maxStage = Math.max(S.maxStage, 5); S.kills = 0; S.bossAuto = true; S.off.kps = 2; S.rec.rdpsK = 1e6; G.refreshStats();
+          const x5 = G.offBossOdds(5);
+          G.offBossLuck = 0; const a = G.offlineReward(3600); const stA = S.stage, autoA = S.autoBoss;
+          document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click();
+          G.setStage(5); S.kills = 0; G.offBossLuck = 1e9; const b = G.offlineReward(1800);
+          document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click();
+          G.offBossLuck = null;
+          const out = {x5:+x5.x.toFixed(2), p5:x5.p, failA:a.boss.fail, stuckA:a.boss.stuck, stA, autoA, killsA:a.kills, winB:b.boss.win, stB:b.stage, endB:b.boss.end};
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.quiet = false; return out; }""")
+        check(ob['failA'] == 5 and ob['stuckA'] == 5 and ob['stA'] == 5 and not ob['autoA'] and 6000 < ob['killsA'] <= 7200
+              and ob['p5'] > 0 and ob['winB'] >= 3 and ob['stB'] == 5 + ob['winB'],
+              f'오프라인 보스: 5번 지면 그 사냥터에서 사냥(단계 그대로), 이기면 다음 단계로 올라간다 {ob}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');

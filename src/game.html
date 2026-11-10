@@ -2201,9 +2201,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-beta', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-1', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 자리를 비운 동안 보스 도전'],
+  ['오프라인 보스 자동 도전', '보스 자동이면 자리를 비운 동안에도 처치 25마리마다 단계 보스에 도전해요. 이기면 다음 단계로 올라가고, 한 단계에서 5번 지면 그 사냥터에서 계속 사냥한 것으로 셈해요. 돌아오면 「다녀오셨습니까?」 창에 몇 단계 올라갔는지 보여 줘요. 보스 수동이거나 다음 보스가 이야기·레벨로 잠겨 있으면 예전처럼 사냥만 해요.'],
   ['#', '베타 서비스 업데이트 총정리'],
   ['세계와 이야기', '1부(이승·저승·천계) → 2부 부상(일본 옛 신화) → 3부 곤륜(중국 옛 기록·민담), 이야기 182개와 끝없는 신화. 갈림길 두 곳, 마을 부탁 100개, 장 제목 카드·연출, 여정 지도.'],
   ['직업과 전직', '무사(균형)·자객(보스)·술사(늦게 피는 꽃)·도인(한 방). 전직 4번(Lv.50 · 숨은 2차 · 부상 Lv.350 · 곤륜 Lv.480), 초각성기, 환생 두 번. 3·4차 전직 뒤 직업 차이를 고르게 맞췄어요.'],
@@ -3339,16 +3341,19 @@ function startBoss(){
   mobs.push(b); bossRef = b; bossActive = true; bossTime = BOSS_TIME; hero.elixirUsed = false;
   fx.push({type:'poof', t:0, dur:0.5, x:b.x, y:b.y - 10, big:true});
   addLog(`${b.name}${josa(b.name, '이', '가')} 나타났습니다! 30초 안에 쓰러뜨리세요.`, 'warn'); sfx('boss');
+  if (window.__game && window.__game.onBoss) window.__game.onBoss('start');
 }
 function bossFail(reason){
   bossActive = false; bmeterEnd();
   if (bossRef && !bossRef.dead){ bossRef.dead = true; bossRef.deathT = 0.4; bossRef.fled = true; }
   bossRef = null; S.autoBoss = false;
   bossRetry = 0;
+  if (window.__game && window.__game.onBoss) window.__game.onBoss('fail');
   addLog(S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`, 'warn');
 }
 function bossWin(){
   bmeterEnd();
+  if (window.__game && window.__game.onBoss) window.__game.onBoss('win');
   const gems = Math.round((5 + Math.floor(effStage(S.stage) / 4)) * gemMul());
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
   S.gems += gems; S.rec.bosses++; recWin(true, false);
@@ -11053,18 +11058,63 @@ function offTrack(dt){
 }
 // 아직 잰 적이 없으면(예전 저장) 지금까지 전체 평균 처치 속도로
 const offlineKps = () => S.off.kps > 0 ? S.off.kps : Math.min(OFF_KPS_MAX, S.rec.play > 300 ? S.rec.kills / S.rec.play : 0.5);
+/* 오프라인 보스 자동 도전(2026-11 (29), 사용자 요청): 보스 자동이면 자리를 비운 동안에도 처치 25마리마다 단계 보스에 도전한다.
+   이기면 다음 단계, 한 단계에서 OFF_BOSS_TRIES(5)번 지면 그 사냥터에서 계속 사냥한 것으로 셈한다.
+   이길지는 실제 보스 피해(realDps)로 30초 안에 쓰러뜨리는지와 보스 공격을 버티는지(takenK·회복)로 어림해 굴린다 */
+const OFF_BOSS_TRIES = 5, OFF_BOSS_X = [0.8, 1.3], OFF_BOSS_PMAX = 0.95, OFF_BOSS_MAXN = 400;   // x = (30초·버티는 시간 중 짧은 쪽) ÷ 보스를 쓰러뜨리는 데 드는 시간. 온라인 시뮬 150판과 맞춤
+const takenK = () => (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * (1 - (cls().evade || 0));
+function offBossOdds(s = S.stage){
+  const w = S.world, hp = mHp(s) * 10 * BOSS_K.hp[w], tk = hp / Math.max(1e-9, realDps());
+  const take = 2 * BOSS_K.atk[w] * mAtk(s) * takenK() - ST.regen * ST.maxHp;
+  const live = take > 0 ? ST.maxHp * (S.myth.elixir > 0 ? 1.5 : 1) / take : 1e9;
+  const x = Math.min(BOSS_TIME, live) / tk;
+  return {x, p:OFF_BOSS_PMAX * Math.max(0, Math.min(1, (x - OFF_BOSS_X[0]) / (OFF_BOSS_X[1] - OFF_BOSS_X[0]))), t:Math.max(3, Math.min(BOSS_TIME, tk, live))};
+}
 function offlineReward(sec){
   sec = Math.min(sec, OFFLINE_CAP);
   if (sec < 60) return;
-  const s = S.stage, mk = 1 + rideAb('off') / 100;
-  const kills = Math.floor(offlineKps() * sec);
-  const gold = kills * mGold(s) * FIELD.rew * gainMul('gold', true) * OFF_CUR * mk;
-  const exp = (kills * mExp(s) * FIELD.rew + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * sec : 0)) * gainMul('exp', true) * OFF_EXP * mk;
-  const gx = kills * GEM_DROP * FIELD.rew * (1 + Math.min(1, s / 300)) * OFF_CUR * mk, gems = Math.floor(gx) + (Math.random() < gx % 1 ? 1 : 0);
-  const lv0 = S.level;
+  const mk = 1 + rideAb('off') / 100, kps = offlineKps(), st0 = S.stage, lv0 = S.level;
+  let kills = 0, gold = 0, exp = 0, gx = 0, dustX = 0, matX = 0;
+  const run = (t, hunt) => {   // t초: 사냥(hunt)이면 그 단계 몹을 잡고, 아니면 보스 싸움. 부상·곤륜 기운은 늘 쌓임
+    const s = S.stage, k = hunt ? kps * t : 0;
+    kills += k; S.kills = Math.min(FIELD.kills, S.kills + Math.floor(k));
+    gold += k * mGold(s) * FIELD.rew;
+    exp += k * mExp(s) * FIELD.rew + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * t : 0);
+    gx += k * GEM_DROP * FIELD.rew * (1 + Math.min(1, s / 300));
+    matX += k * MAT_DROP.mob * FIELD.rew; dustX += k * MOB_GEAR * FIELD.rew * DUST_G[Math.max(0, dropGrade() - 1)] * 1.52;
+  };
+  // 보스 도전
+  const bt = {win:0, fail:0, end:'', from:st0};
+  let left = sec, fails = 0, n = 0;
+  const sfx0 = sfx; sfx = () => {};
+  try {
+    while (left > 0.5){
+      if (bossActive || raid || parade || market){ bt.end = 'busy'; break; }   // 싸우던 중이면 돌아와서 이어서
+      if (!S.bossAuto){ bt.end = 'manual'; break; }
+      const bg = bossGate();
+      if (!bg.ok){ bt.end = 'gate'; bt.why = bg.why; break; }
+      if (fails >= OFF_BOSS_TRIES || n >= OFF_BOSS_MAXN){ bt.end = 'stuck'; break; }
+      const need = Math.max(0, FIELD.kills - S.kills), tn = fails ? BOSS_RETRY : need / Math.max(1e-6, kps);
+      if (tn >= left) break;
+      run(tn, true); left -= tn;
+      const o = offBossOdds(S.stage), tf = Math.min(left, o.t);
+      run(tf, false); left -= tf; n++;
+      if (Math.random() < o.p * (window.__game && window.__game.offBossLuck != null ? window.__game.offBossLuck : 1)){ bossWin(); bt.win++; fails = 0; }
+      else { fails++; bt.fail++; }
+    }
+  } finally { sfx = sfx0; }
+  if (left > 0) run(left, true);
+  if (bt.win) resetRuntime();   // 새 단계 사냥터로
+  if (bt.end === 'stuck' || fails > 0){ S.autoBoss = false; bossRetry = 0; }
+  bt.stuck = fails >= OFF_BOSS_TRIES ? S.stage : 0;
+  kills = Math.floor(kills);
+  gold *= gainMul('gold', true) * OFF_CUR * mk;
+  exp *= gainMul('exp', true) * OFF_EXP * mk;
+  gx *= OFF_CUR * mk;
+  const gems = Math.floor(gx) + (Math.random() < gx % 1 ? 1 : 0);
   S.gold += gold; S.gems += gems; S.rec.kills += kills;
-  const mats = gainMat(kills * MAT_DROP.mob * FIELD.rew * OFF_CUR, true);
-  const dust = Math.round(kills * MOB_GEAR * FIELD.rew * DUST_G[Math.max(0, dropGrade() - 1)] * 1.52 * OFF_CUR); S.dust += dust;
+  const mats = gainMat(matX * OFF_CUR, true);
+  const dust = Math.round(dustX * OFF_CUR); S.dust += dust;
   gainExp(exp);
   // 오프라인 누적 24시간마다 신화 보물 한 번 굴림
   S.off.acc += sec;
@@ -11077,6 +11127,7 @@ function offlineReward(sec){
   const mythRow = m => { const M = MYTHS.find(x => x.k === m.k); return `<li style="color:${MYTH_COLOR}">${M.name}<span>신화 보물${m.up ? ` · ${M.stat} +${m.p}%` : ' (이미 더 센 것이 있어 가방으로)'}</span></li>`; };
   showModal('다녀오셨습니까?', `
     <p>자리를 비운 <b>${fmtTime(sec)}</b> 동안 용사가 스킬 자동으로 <b>${fmt(kills)}마리</b>를 잡았어요.</p>
+    ${offBossLine(bt)}
     <ul class="rewards">
       <li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li>
       <li><span class="gem"></span>${fmt(gems)}<span>보석 (몬스터가 떨군 것)</span></li>
@@ -11087,7 +11138,14 @@ function offlineReward(sec){
     </ul>
     <p class="small" style="margin-top:8px">경험치 ×${OFF_EXP} · 엽전·보석 ×${OFF_CUR}${mk > 1 ? ` · 천리마 +${Math.round((mk - 1) * 100)}%` : ''} · 최대 ${OFFLINE_CAP / 3600}시간 · 신화 보물 굴림까지 ${fmtTime(S.off.acc)} / ${OFF_MYTH_H}시간(${Math.round(OFF_MYTH_P * 100)}%)</p>`,
     [{label:'받기', primary:true}]);
-  return {kills, gold, gems, exp, myths, dust};
+  return {kills, gold, gems, exp, myths, dust, boss:bt, stage:S.stage};
+}
+function offBossLine(bt){
+  const a = bt.win ? `보스 <b>${bt.win}마리</b>를 물리쳐 <b>${stageLabel(bt.from)} → ${stageLabel(S.stage)}</b>까지 올라갔어요. ` : '';
+  if (bt.stuck) return `<p>${a}<b>${stageLabel(bt.stuck)}</b> 보스에게 ${OFF_BOSS_TRIES}번 져서 그 사냥터에서 계속 사냥했어요.</p>`;
+  if (bt.end === 'gate') return `<p>${a}다음 보스는 잠겨 있어 사냥만 했어요(${bt.why}).</p>`;
+  if (bt.end === 'manual') return '<p class="small">보스 수동이라 보스에는 도전하지 않고 사냥만 했어요.</p>';
+  return a ? `<p>${a}</p>` : '';
 }
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
@@ -11380,7 +11438,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
