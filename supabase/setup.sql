@@ -135,3 +135,101 @@ revoke all on function public.samhan_signup(text, text), public.samhan_login(tex
 grant execute on function public.samhan_signup(text, text), public.samhan_login(text, text), public.samhan_logout(uuid),
   public.samhan_list(uuid), public.samhan_load(uuid, text), public.samhan_save(uuid, text, text, jsonb, text, bigint),
   public.samhan_delete(uuid, text), public.samhan_name_free(text) to anon, authenticated;
+
+-- ── 장터(2026-11): 보스 드롭 물건을 보석 값에 올리고 다른 용사가 산다 ──
+-- 물건(item)은 게임이 다시 확인해서 받는다. 사흘 안 팔리면 목록에서 빠지고 판 사람이 돌려받는다. 판 값은 수수료 5%를 떼고 받는다.
+create table if not exists public.samhan_market (
+  id bigserial primary key,
+  seller text not null references public.samhan_accounts(id) on delete cascade,
+  seller_name text not null check (char_length(seller_name) between 1 and 8),
+  kind text not null check (kind in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece')),
+  item jsonb not null,
+  price bigint not null check (price between 1 and 10000000),
+  created_at timestamptz not null default now(),
+  buyer text,
+  buyer_name text,
+  sold_at timestamptz,
+  claimed boolean not null default false
+);
+create index if not exists samhan_market_open on public.samhan_market (created_at desc) where buyer is null;
+create index if not exists samhan_market_seller on public.samhan_market (seller);
+alter table public.samhan_market enable row level security;
+revoke all on table public.samhan_market from public, anon, authenticated;
+revoke all on sequence public.samhan_market_id_seq from public, anon, authenticated;
+
+-- 올리기(계정마다 팔고 있거나 판 값을 아직 안 받은 물건 10개까지)
+create or replace function public.samhan_market_post(p_token uuid, p_name text, p_kind text, p_item jsonb, p_price bigint) returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); n int; nid bigint;
+begin
+  if p_kind is null or p_kind not in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece') or p_item is null or jsonb_typeof(p_item) <> 'object'
+     or char_length(p_item::text) > 300 or (p_item->>'t') is distinct from p_kind then raise exception 'bad_item'; end if;
+  if p_price is null or p_price < 1 or p_price > 10000000 then raise exception 'bad_price'; end if;
+  select count(*) into n from samhan_market where seller = a and (buyer is null or not claimed);
+  if n >= 10 then raise exception 'mk_full'; end if;
+  insert into samhan_market (seller, seller_name, kind, item, price)
+    values (a, left(coalesce(nullif(p_name, ''), a), 8), p_kind, p_item, p_price) returning id into nid;
+  return nid;
+end $$;
+
+-- 팔고 있는 물건 목록(최근 60개, 종류 거르기: '' 전체, 'mat'은 재료·쇳가루·고삐 조각까지)
+create or replace function public.samhan_market_list(p_token uuid, p_kind text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token);
+begin
+  return coalesce((select jsonb_agg(jsonb_build_object('id', t.id, 'seller_name', t.seller_name, 'kind', t.kind, 'item', t.item, 'price', t.price, 'mine', t.seller = a) order by t.created_at desc)
+    from (select * from samhan_market where buyer is null and created_at > now() - interval '3 days'
+          and (coalesce(p_kind, '') = '' or kind = p_kind or (p_kind = 'mat' and kind in ('mat', 'dust', 'piece')))
+          order by created_at desc limit 60) t), '[]'::jsonb);
+end $$;
+
+-- 사기(먼저 산 한 사람만, 내 물건은 못 삼)
+create or replace function public.samhan_market_buy(p_token uuid, p_name text, p_id bigint) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); r record;
+begin
+  update samhan_market set buyer = a, buyer_name = left(coalesce(nullif(p_name, ''), a), 8), sold_at = now()
+    where id = p_id and buyer is null and seller <> a and created_at > now() - interval '3 days'
+    returning kind, item, price into r;
+  if not found then
+    if exists (select 1 from samhan_market where id = p_id and seller = a) then raise exception 'own'; end if;
+    raise exception 'gone';
+  end if;
+  return jsonb_build_object('kind', r.kind, 'item', r.item, 'price', r.price);
+end $$;
+
+-- 내리기·돌려받기(안 팔린 내 물건)
+create or replace function public.samhan_market_cancel(p_token uuid, p_id bigint) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); r record;
+begin
+  delete from samhan_market where id = p_id and seller = a and buyer is null returning kind, item into r;
+  if not found then raise exception 'gone'; end if;
+  return jsonb_build_object('kind', r.kind, 'item', r.item);
+end $$;
+
+-- 내 물건(파는 중·기한 지남·팔렸는데 값을 아직 안 받은 것)
+create or replace function public.samhan_market_mine(p_token uuid) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token);
+begin
+  return coalesce((select jsonb_agg(jsonb_build_object('id', id, 'kind', kind, 'item', item, 'price', price, 'buyer_name', buyer_name,
+      'sold', buyer is not null, 'expired', buyer is null and created_at <= now() - interval '3 days') order by created_at desc)
+    from samhan_market where seller = a and not (buyer is not null and claimed)), '[]'::jsonb);
+end $$;
+
+-- 판 값 받기(수수료 5%를 뗀 보석 합계)
+create or replace function public.samhan_market_claim(p_token uuid) returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); g bigint;
+begin
+  with u as (update samhan_market set claimed = true where seller = a and buyer is not null and not claimed returning price)
+  select coalesce(sum(floor(price * 0.95)), 0)::bigint into g from u;
+  delete from samhan_market where claimed and sold_at < now() - interval '30 days';
+  return g;
+end $$;
+
+revoke all on function public.samhan_market_post(uuid, text, text, jsonb, bigint), public.samhan_market_list(uuid, text), public.samhan_market_buy(uuid, text, bigint),
+  public.samhan_market_cancel(uuid, bigint), public.samhan_market_mine(uuid), public.samhan_market_claim(uuid) from public;
+grant execute on function public.samhan_market_post(uuid, text, text, jsonb, bigint), public.samhan_market_list(uuid, text), public.samhan_market_buy(uuid, text, bigint),
+  public.samhan_market_cancel(uuid, bigint), public.samhan_market_mine(uuid), public.samhan_market_claim(uuid) to anon, authenticated;

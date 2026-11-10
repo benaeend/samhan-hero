@@ -229,6 +229,30 @@ async def main():
             await C.fill('#cc-name', '온라인용사'); await C.click('#modal-btn-1'); await C.wait_for_timeout(1200)
             check('이미 쓰는 이름' in await C.inner_text('#cc-err'), '다른 사람이 쓰는 캐릭터 이름은 막는다')
 
+            # 장터: 다른 계정끼리 물건을 올리고 사고, 판 값을 받는다. 장터 마을에서는 서로 보인다
+            await C.fill('#cc-name', '장터손님'); await C.click('#modal-btn-1')
+            await C.wait_for_function('() => window.__game.session', timeout=15000)
+            await tg.skip_cut(C, 300)
+            post = await A.evaluate("""async () => { const G = window.__game, S = G.S; S.bag = []; G.bagAdd({t:'acc', k:'ring', g:2, p:50}, true); const id = S.bag[0].id;
+              const r = await G.mkPost({t:'bag', id}, 1, 120); return {r, left: S.bag.length}; }""")
+            lst = await C.evaluate("""async () => { const G = window.__game; G.S.gems = 1000; G.S.bag = []; const L = await G.mkList(''); const row = (L.rows || []).find(r => r.it.t === 'acc');
+              const b = row ? await G.mkBuy(row) : null; const again = row ? await G.mkBuy(Object.assign({}, row)) : null;
+              return {n: (L.rows || []).length, seller: row && row.name, b, again, gems: G.S.gems, bag: G.S.bag.map(x => x.k + x.g + ':' + x.p)}; }""")
+            check(post['r'].get('id') and post['left'] == 0 and lst['seller'] == '온라인용사' and lst['b'] == {'ok': True} and (lst['again'] or {}).get('err') == 'gone'
+                  and lst['gems'] == 880 and lst['bag'] == ['ring2:50'], f'장터: 올린 물건을 다른 계정이 보석으로 사고, 두 번은 못 산다 {post} {lst}')
+            mine = await A.evaluate("""async () => { const G = window.__game, S = G.S; const m = await G.mkMine(); const g0 = S.gems; const c = await G.mkClaim();
+              S.dust = Math.max(S.dust, 100); const d0 = S.dust; const p = await G.mkPost({t:'dust'}, 50, 10); const d1 = S.dust;
+              const m2 = await G.mkMine(); const row = (m2.rows || []).find(r => r.it.t === 'dust'); const x = row ? await G.mkCancel(row.id) : null;
+              return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: S.gems - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
+            check(mine['sold'] == 1 and mine['claim'] == 114 and mine['gemsUp'] == 114 and mine['dustOut'] == 50 and mine['dustBack'] == 50 and mine['cancel'] == {'ok': True},
+                  f'장터: 판 값(수수료 5%)을 받고, 안 팔린 물건은 내려서 돌려받는다 {mine}')
+            await A.evaluate("() => window.__game.enterMarket()"); await C.evaluate("() => window.__game.enterMarket()")
+            await A.wait_for_timeout(3800)
+            seen = await A.evaluate("() => [...window.__game.market.peers.values()].map(p => p.n)")
+            check('장터손님' in seen, f'장터 마을: 접속한 다른 용사가 이름표를 달고 함께 보인다 {seen}')
+            await A.screenshot(path=str(OUT / '33_온라인_장터.png'))
+            await A.evaluate("() => window.__game.leaveMarket()")
+
             # 서버가 생기기 전(또는 연결이 안 될 때) 만든 계정은 다음 로그인 때 서버로 옮겨진다
             ctxD, D = await device('http://127.0.0.1:9')
             await tg.signup(D, 'local1', 'pass0000', '옮길용사', 'doin')

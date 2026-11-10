@@ -675,6 +675,26 @@ async def main():
         check(sq['cnt'] == [10, 10, 10, 30, 40] and sq['o0'] == 1 and 30 <= sq['o1'] <= 31 and 60 <= sq['o2'] <= 62 and sq['o3'] == 100 and sq['kmax'] <= 1500,
               f'마을 부탁 100개: 이승 10·저승 10·천계 10·부상 30·곤륜 40, 이야기 진행에 맞춰 열린다 {sq}')
         check(sq['ok'] and sq['gem'] >= 6000 and sq['piece'] >= 2 and sq['dust'] > 0, f'마을 부탁: 곤륜 부탁은 보석·쇳가루·고삐 조각을 크게 준다 {sq}')
+        ac = await page.evaluate("""() => { const G = window.__game, S = G.S, q = G.SUB_Q.find(x => x.k === 'f6'); S.sub.act = {}; delete S.sub.done.f6;
+          S.refine.weapon.t = 0; S.refine.weapon.lv = 12; const g0 = S.gems; G.acceptSub('f6'); return {done: !!S.sub.done.f6, act: !!S.sub.act.f6, gems: S.gems - g0, c: q.c, n: q.n}; }""")
+        check(ac['done'] and not ac['act'] and ac['gems'] > 0 and ac['c'] == 'refW', f'마을 부탁: 이미 이룬 재련 단계면 받자마자 저절로 끝난다 {ac}')
+        # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
+        bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
+          G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
+          G.bagAdd({t:'acc', k:'ring', g:4, p:900}, true); const up = S.bag.find(x => x.p === 900); G.bagEquip(up.id);
+          const swapped = S.acc.ring.p === 900 && S.bag.some(x => x.p === 500);
+          const g0 = S.gems; const sold = G.bagSellWorse(); const leftBag = S.bag.length;
+          S.gems = 1e6; S.mkNpc = {day:'', got:[]}; const o = G.npcOffers(); const nb = G.npcBuy(2); const nb2 = G.npcBuy(2);
+          G.enterMarket(); const inMk = !!G.market && G.mobs.length === 0; for (let i = 0; i < 40; i++) G.update(0.05); const noMobs = G.mobs.length === 0;
+          G.leaveMarket(); for (let i = 0; i < 60; i++) G.update(0.05);
+          return {inBag, swapped, sold: sold.n, gemsUp: S.gems > 0, leftBag, offers: o.length, nb, nb2: nb2.err, myth: S.bag.some(x => x.t === 'myth'), inMk, noMobs, back: !G.market && G.mobs.length > 0}; }""")
+        check(bg['inBag'] and bg['swapped'] and bg['sold'] == 2 and bg['leftBag'] == 0, f'가방: 약한 장신구는 가방으로, 끼면 옛것이 가방으로, 안 쓰는 것은 팔린다 {bg}')
+        check(bg['offers'] == 5 and bg['nb'] == {'ok': True} and bg['nb2'] == 'gone' and bg['myth'] and bg['inMk'] and bg['noMobs'] and bg['back'],
+              f'장터: NPC 상인은 날마다 하나씩, 장터 마을에서는 사냥이 멈추고 나오면 다시 사냥 {bg}')
+        await page.evaluate("() => { const G = window.__game; G.quiet = false; G.enterMarket(); }")
+        await page.wait_for_timeout(1200)
+        await page.screenshot(path=str(OUT / '34_장터마을.png'))
+        await page.evaluate("() => window.__game.leaveMarket()")
         await page.evaluate("() => { const G = window.__game; G.quiet = false; G.buildTab('gear'); }")
         await page.click('#seg-mount')
         await page.wait_for_timeout(400)
@@ -723,7 +743,8 @@ async def main():
         await pb.evaluate('''() => { for (const [t, fn] of window.__roomH) if (t === 'chat') fn({topic:'chat', data:{n:'바람돌이', t:'좋아요! <b>ㅋㅋ</b>'}, peer:'p2', by:null, isMe:false, sameTab:false, kind:'viewer', guest:false}); }''')
         await pb.wait_for_timeout(300)
         room = await pb.evaluate('() => ({sent: window.__emitted, html: document.querySelector("#chatList").innerHTML, who: document.querySelector("#chatWho").textContent})')
-        check(len(room['sent']) == 1 and room['sent'][0][1]['t'] == '같이 레이드 가요', f'claude.ai에서는 채팅이 다른 사람에게 나간다 {room["sent"]}')
+        chats = [m for m in room['sent'] if m[0] == 'chat']   # 타임 보스 시간이면 'tb' 참가 알림도 함께 나간다
+        check(len(chats) == 1 and chats[0][1]['t'] == '같이 레이드 가요', f'claude.ai에서는 채팅이 다른 사람에게 나간다 {room["sent"]}')
         check('바람돌이' in room['html'] and '&lt;b&gt;' in room['html'], '다른 사람의 채팅이 들어오고, 글자로만 보인다')
         await pb.screenshot(path=str(OUT / '21_채팅_여럿.png'))
         await ctxB.close()

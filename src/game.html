@@ -847,6 +847,31 @@ body:not(.portrait) .log{left:calc(58px + env(safe-area-inset-left));bottom:12px
 body:not(.portrait) .guide{bottom:56px}
 body.portrait .topr .sbtn{display:none}
 body.portrait .log{bottom:126px}
+
+/* 가방·장터 */
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.bitem{position:relative;display:grid;justify-items:center;gap:2px;padding:10px 6px 8px;border-radius:14px;border:1px solid color-mix(in srgb,var(--g) 45%,transparent);background:linear-gradient(180deg,var(--panel-2),var(--panel));color:var(--text);cursor:pointer;font-family:inherit;text-align:center}
+.bitem .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--g);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--g) 30%,#1b2338),#10151f);border:1px solid color-mix(in srgb,var(--g) 60%,transparent)}
+.bitem .ic svg{width:20px;height:20px}
+.bitem b{font-size:12.5px;color:var(--g)}
+.bitem small{font-size:10.5px;color:var(--text-soft);line-height:1.3}
+.bitem i{position:absolute;top:5px;right:7px;font-style:normal;font-weight:900;color:#7dff9a;font-size:13px}
+.bitem.up{box-shadow:0 0 0 1px rgba(125,255,154,.35),0 0 12px -4px rgba(125,255,154,.6)}
+h3.sub{font-size:13px;margin:14px 0 6px;color:var(--gold)}
+.mklist{display:grid;gap:6px;margin-top:8px}
+.mkrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--line-2);background:linear-gradient(180deg,var(--panel-2),var(--panel))}
+.mkrow .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--g);background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb,var(--g) 55%,transparent)}
+.mkrow .ic svg{width:18px;height:18px}
+.mkrow .mt{display:grid;min-width:0}
+.mkrow .mt b{color:var(--g);font-size:13px}
+.mkrow .mt small{color:var(--text-soft);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mkrow .btn .gem{margin-right:4px}
+.mk-inp{width:130px;padding:7px 10px;border-radius:10px;border:1px solid var(--line-2);background:rgba(0,0,0,.3);color:var(--text);font:inherit;font-weight:800;text-align:right}
+.mkmsg{margin:8px 0 0;color:var(--gold);font-weight:800}
+body:not(.portrait) .tab{flex-basis:70px}
+.bigboss.mk{background:radial-gradient(circle at 50% 32%,#4a8a5a,#123a20 72%)}
+.bigboss.mk .rf{stroke:#8ff0a0}
+body.in-market .ctrl{display:none}
 </style>
 </head>
 <body>
@@ -869,6 +894,7 @@ body.portrait .log{bottom:126px}
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
       <div class="cur" aria-label="쇳가루" id="curDust"><span class="dusti"></span><span id="dustTop">0</span></div>
       <div class="cur" aria-label="고삐 조각" id="curPiece" hidden><span class="piecei"></span><span id="pieceTop">0</span></div>
+      <button class="btn-chat sbtn" id="mkBtn" aria-label="장터"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18l1 5a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5-2zm2 8.6V21h14v-8.4a5 5 0 0 1-2 .4v4H7v-4a5 5 0 0 1-2-.4z"/></svg></button>
       <button class="btn-chat sbtn" id="newsBtn" aria-label="업데이트 소식"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h13v14H6a2 2 0 0 1-2-2zm13 3h3v9a2 2 0 0 1-2 2h-1zM7 8v3h7V8zm0 5v2h7v-2z"/></svg></button>
       <button class="btn-chat sbtn" id="helpBtn" aria-label="하는 법"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14v2h2v-2zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1.2.7-2 1.5-2 3.3h2c0-1 .4-1.4 1.2-1.9A4 4 0 0 0 12 6z"/></svg></button>
     </div>
@@ -934,6 +960,8 @@ body.portrait .log{bottom:126px}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6v2h-1v2h3v2h2v2h1v9h-1v2H5v-2H4v-9h1V8h2V6h3V4H9zm2 10v2h-1v2h4v-2h-1v-2z"/></svg>상점<i class="dot"></i></button>
     <button class="tab" role="tab" id="tab-rec" data-tab="rec" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h12l2 2v16H5zm3 4v2h8V7zm0 4v2h8v-2zm0 4v2h5v-2z"/></svg>정보</button>
+    <button class="tab" role="tab" id="tab-bag" data-tab="bag" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6v3h-1v2h3l2 3v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-9l2-3h3V5H9zm-1 10v2h8v-2z"/></svg>가방<i class="dot"></i></button>
   </nav>
   <button class="bigboss" id="bigBoss" aria-label="보스 도전"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" class="rb"/><circle cx="20" cy="20" r="17" class="rf" id="bbRing"/></svg><b id="bbTxt">보스</b><i id="bbSub"></i></button>
 </div>
@@ -2017,8 +2045,14 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-15', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-16', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 가방 · 장터 마을'],
+  ['가방', '아래 메뉴에 [가방]이 생겼어요. 지금 것보다 약한 장신구·신화 보물과 바꿔 낀 옛것이 모여요(예전에는 보석으로 바뀌던 것). 끼기·상인에게 팔기·장터에 올리기.'],
+  ['장터 마을', '오른쪽 위 장터 단추로 들어가는 돌바닥 광장. 땅을 눌러 걷고, 다른 용사들이 이름표를 달고 함께 서 있어요. 상인·알림판·거간꾼·아전 앞에서 거래해요.'],
+  ['장터 거래', '보스 드롭 물건(장신구·신화 보물·장비 조각·재료)을 보석 값에 올리고 사요. 10개까지·사흘·수수료 5%. 온라인 로그인이 필요하고, 보부상 덕보(NPC)는 언제나 날마다 다섯 가지를 팔아요.'],
+  ['저절로 완료', '마을 부탁의 재련·단계 조건은 「+n까지」「n단계까지」로 바뀌어 이미 이뤘으면 받자마자 끝나요. 다 한 부탁과 윤회의 시련은 누르지 않아도 저절로 마쳐요.'],
+  ['타임 보스 고침', '먼저 참가한 용사가 나중에 들어온 용사에게 보이지 않던 문제를 고쳤어요.'],
   ['#', '2026-11-10 · 새 화면 배치'],
   ['넓은 사냥터', '사냥터가 20×12칸에서 28×19칸으로 넓어졌어요. 카메라가 용사를 따라 더 멀리 움직이고, 몬스터는 용사 근처에 나와서 사냥 속도는 그대로예요.'],
   ['아래 아이콘 메뉴', '가로 화면에서 메뉴가 아래 줄로 내려가고 금테 동그란 아이콘이 됐어요. 오른쪽 끝 큰 보스 단추는 보스까지 남은 처치를 고리로 보여 주고, 다 차면 눌러서 바로 도전해요.'],
@@ -2236,7 +2270,7 @@ function defaultState(){
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0},
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]},
   };
 }
 function mergeState(d){
@@ -2326,6 +2360,9 @@ function mergeState(d){
   out.dummy = Object.assign({day:'', n:0, best:0}, d.dummy || {});
   out.sub = {act:Object.assign({}, (d.sub || {}).act), done:Object.assign({}, (d.sub || {}).done)};
   out.off = {kps:Math.min(OFF_KPS_MAX, Math.max(0, +(d.off && d.off.kps) || 0)), acc:Math.max(0, +(d.off && d.off.acc) || 0)};
+  out.bag = []; out.bagSeq = Math.max(0, Math.floor(+d.bagSeq) || 0);
+  for (const it of Array.isArray(d.bag) ? d.bag.slice(0, BAG_MAX) : []){ const c = mkClean(it); if (c && (c.t === 'acc' || c.t === 'myth')){ c.id = Number.isInteger(it.id) && it.id > 0 ? it.id : ++out.bagSeq; out.bagSeq = Math.max(out.bagSeq, c.id); out.bag.push(c); } }
+  out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
   out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
   for (const m of MOUNTS) if (mt.own && mt.own[m.k]){ out.mount.own[m.k] = true; out.mount.star[m.k] = Math.min(MOUNT_STAR_MAX, Math.max(0, Math.floor(+(mt.star && mt.star[m.k])) || 0)); }
@@ -2744,6 +2781,7 @@ function questLuck(D){
 function dropMyth(D, kind, noModal){
   const pool = MYTHS.filter(x => !x.story), m = kind ? MYTHS.find(x => x.k === kind) : pool[(Math.random() * pool.length) | 0], p = mythPower(m, D), cur = S.myth[m.k] || 0;
   if (p > cur){
+    if (cur > 0 && !m.story) bagAdd({t:'myth', k:m.k, p:cur}, true);   // 바꾼 옛것은 가방으로
     S.myth[m.k] = p; refreshStats();
     addLog(`신화 보물! ${m.name} (${m.stat} +${p}%)`, 'gain');
     announce(`${S.name}님이 신화 보물 ${m.name}${josa(m.name, '을', '를')} 얻었어요! (${m.stat} +${p}%)`);
@@ -2752,8 +2790,8 @@ function dropMyth(D, kind, noModal){
       <div class="myth-get"><div class="ic myth">${SVG[m.icon]}</div><div><b>${m.name}</b><p>${m.stat} +${p}%${cur ? ` (전보다 +${p - cur}%)` : ''}</p><p class="small">퀘스트 난이도 ${diffName(D)}에서 나왔어요. 어려운 퀘스트일수록 센 보물이 나와요.</p></div></div>`,
       [{label:'좋아요', primary:true}]);
   } else {
-    S.gems += MYTH_DUP_GEMS;
-    addLog(`${m.name}${josa(m.name, '이', '가')} 나왔지만 이미 더 센 것이 있어 보석 ${MYTH_DUP_GEMS}개로 바꿨어요.`, 'gain');
+    if (!m.story && bagAdd({t:'myth', k:m.k, p})) addLog(`${m.name}${josa(m.name, '이', '가')} 나왔어요. 이미 더 센 것이 있어 가방에 넣었어요.`, 'gain');
+    else if (m.story){ S.gems += MYTH_DUP_GEMS; addLog(`${m.name}${josa(m.name, '이', '가')} 나왔지만 이미 있어 보석 ${MYTH_DUP_GEMS}개로 바꿨어요.`, 'gain'); }
   }
   return {k:m.k, p, up:p > cur};
 }
@@ -3142,14 +3180,15 @@ function giveAcc(k, g){
   const better = cur.g < 0 || p > cur.p;
   const name = A.names[g];
   if (better){
+    if (cur.g >= 0) bagAdd({t:'acc', k, g:cur.g, p:cur.p}, true);   // 바꿔 낀 옛것은 가방으로
     S.acc[k] = {g, p}; refreshStats();
     addLog(`장신구! ${GRADES[g].name} ${name} (${A.stat} +${p}%)`, 'gain');
     announce(`${S.name}님이 ${GRADES[g].name} 장신구 ${name}${josa(name, '을', '를')} 얻었어요!`);
     addText(name + '!', hero.x, hero.y - 44, GRADES[g].color, 13, true);
     fx.push({type:'level', t:0, dur:0.8}); sfx('rare');
   } else {
-    S.gems += ACC_DUP_GEMS;
-    addLog(`${name}${josa(name, '이', '가')} 나왔지만 지금 것이 더 좋아 보석 ${ACC_DUP_GEMS}개로 바꿨어요.`, 'gain');
+    bagAdd({t:'acc', k, g, p});
+    addLog(`${name}${josa(name, '이', '가')} 나왔어요. 지금 것이 더 좋아 가방에 넣었어요.`, 'gain');
   }
   return {k, g, p, better};
 }
@@ -3189,6 +3228,7 @@ function startRaid(i){
   return true;
 }
 function startFight(info, party, o){
+  if (market) leaveMarket();
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
@@ -3274,7 +3314,7 @@ function tbCan(diff){
 const TB_LIVES = 5;   // 타임 보스: 파티 전체가 다섯 번까지만 일어날 수 있다
 let tbJoinedId = '';
 // 타임 보스가 열려 있으면 접속한 용사는 저절로 참가를 알린다(모두 함께 싸움)
-function tbAutoJoin(){ const w = tbWindow(); if (!w.open || !session || tbJoinedId === w.id) return; tbJoinedId = w.id; tbJoin(); }
+function tbAutoJoin(){ const w = tbWindow(); if (!w.open || !session || market || tbJoinedId === w.id) return; tbJoinedId = w.id; tbJoin(); }
 function tbJoin(){
   if (!room || !session) return;
   room.emit('tb', {w:tbWindow().id, n:S.name, c:S.cls, d:Math.round(dpsOf(ST)), h:Math.round(ST.maxHp), l:S.look}).catch(() => {});
@@ -3309,9 +3349,9 @@ function finishTimeBoss(R){
   const luck = window.__game && window.__game.tbLuck || 1, drops = [];
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck){
     let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
-    const a = giveAcc(k, g); drops.push(`${GRADES[a.g].name} ${ACC[k].names[a.g]}${a.better ? '' : ' (보석으로 바꿈)'}`);
+    const a = giveAcc(k, g); drops.push(`${GRADES[a.g].name} ${ACC[k].names[a.g]}${a.better ? '' : ' (가방으로)'}`);
   }
-  if (Math.random() < D.drop.myth * luck){ const m = dropMyth(D.ref); drops.push(`신화 보물 ${MYTHS.find(x => x.k === m.k).name}${m.up ? '' : ' (보석으로 바꿈)'}`); }
+  if (Math.random() < D.drop.myth * luck){ const m = dropMyth(D.ref); drops.push(`신화 보물 ${MYTHS.find(x => x.k === m.k).name}${m.up ? '' : ' (가방으로)'}`); }
   addLog(`타임 보스 토벌! 엽전 +${fmt(gold)}`, 'gain');
   announce(`${S.name}님의 파티가 타임 보스 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨렸어요!`);
   saveLocal();
@@ -3779,7 +3819,7 @@ function nearestMob(){
 
 function update(dt){
   gtime += dt; S.rec.play += dt;
-  if (S.chosen && !raid && S.mode === 'auto') offTrack(dt);
+  if (S.chosen && !raid && !market && S.mode === 'auto') offTrack(dt);
   if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
@@ -3803,6 +3843,7 @@ function update(dt){
   // 부상의 해돋이 기운: 사냥 속도와 상관없이 지금까지 나아간 단계만큼 경험치가 조금씩 쌓인다
   if (S.world >= 3 && !hero.dead) gainExp(mExp(S.maxStage) * CONT[S.world].sun * gainMul('exp') * dt);
 
+  if (market){ updateMarket(dt); return; }   // 장터 마을: 사냥 멈춤
   // 레이드 / 보스·소환
   if (raid) updateRaid(dt);
   else if (bossActive){
@@ -4787,6 +4828,145 @@ function mountSprite(k, f, flip){
 }
 const mountImgCache = new Map();
 function mountImg(k){ let u = mountImgCache.get(k); if (!u){ u = mountSprite(k, 0, false).toDataURL(); mountImgCache.set(k, u); } return u; }
+/* ================= 가방·장터(2026-11 (16)) =================
+   가방 S.bag: 끼지 않은 장신구·신화 보물(수문장·타임 보스·오프라인·바꿔 낀 옛것). 쌓이는 재료(쇳가루·고삐 조각·세계 재료)와
+   남는 장비 조각은 원래 자리(S.dust·S.mount.piece·S.mat·S.gear) 그대로 두고 가방 화면에 함께 보인다.
+   장터: 보스 드롭 물건을 보석 값에 올리고 다른 용사가 산다(서버 samhan_market_*, 수수료 5%, 사흘). 서버가 없으면 NPC 상인만 */
+const BAG_MAX = 60, MK_FEE = 0.05, MK_MAX = 10, MK_DAYS = 3, MK_PRICE_MAX = 10000000;
+const ACC_NPC = [10, 30, 80, 200, 500];   // 상인이 사 주는 값(보석, × (1 + 세계))
+const itemNpcGems = it => it.t === 'acc' ? ACC_NPC[it.g] * (1 + S.world) : it.t === 'myth' ? Math.max(10, Math.round(it.p / 2)) : 0;
+const MK_KIND = {acc:'장신구', myth:'신화 보물', gear:'장비', mat:'재료', dust:'쇳가루', piece:'고삐 조각'};
+function itemInfo(it){
+  if (it.t === 'acc'){ const A = ACC[it.k]; return {name:A.names[it.g], desc:`${A.stat} +${fmt(it.p)}%`, color:GRADES[it.g].color, icon:A.icon, grade:GRADES[it.g].name}; }
+  if (it.t === 'myth'){ const M = MYTHS.find(m => m.k === it.k); return {name:M.name, desc:`${M.stat} +${fmt(it.p)}%`, color:MYTH_COLOR, icon:M.icon, grade:'신화'}; }
+  if (it.t === 'gear'){ const g = Math.floor(it.it / 4); return {name:gearName(it.s, it.it), desc:`${GEAR[it.s].label} ${it.n}개`, color:GRADES[g].color, icon:GEAR[it.s].icon, grade:GRADES[g].name}; }
+  if (it.t === 'mat'){ const M = MATS.find(m => m.k === it.k) || MATS[0]; return {name:M.name, desc:`조합 재료 ${fmt(it.n)}개`, color:M.color, icon:'pearl', grade:'재료'}; }
+  if (it.t === 'dust') return {name:'쇳가루', desc:`재련 재료 ${fmt(it.n)}`, color:'#c8c0b0', icon:'pearl', grade:'재료'};
+  if (it.t === 'piece') return {name:'고삐 조각', desc:`탈것 별 ${fmt(it.n)}개`, color:'#c8b0ff', icon:'ring', grade:'재료'};
+  return {name:'?', desc:'', color:'#ffffff', icon:'pearl', grade:''};
+}
+// 서버·저장에서 들어온 물건 다듬기(이상한 값은 버림)
+function mkClean(o){
+  if (!o || typeof o !== 'object') return null;
+  const int = (v, lo, hi) => { v = Math.floor(+v); return Number.isFinite(v) && v >= lo && v <= hi ? v : null; };
+  if (o.t === 'acc' && ACC[o.k]){ const g = int(o.g, 0, 4), p = g == null ? null : int(o.p, 1, ACC[o.k].base[g] * 40); return p == null ? null : {t:'acc', k:o.k, g, p}; }
+  if (o.t === 'myth'){ const M = MYTHS.find(m => m.k === o.k && !m.story), p = int(o.p, 1, 20000); return M && p != null ? {t:'myth', k:o.k, p} : null; }
+  if (o.t === 'gear' && (o.s === 'weapon' || o.s === 'armor')){ const i = int(o.it, 0, 19), n = int(o.n, 1, 9999); return i != null && n != null ? {t:'gear', s:o.s, it:i, n} : null; }
+  if (o.t === 'mat' && MATS.some(m => m.k === o.k)){ const n = int(o.n, 1, 1e9); return n != null ? {t:'mat', k:o.k, n} : null; }
+  if (o.t === 'dust' || o.t === 'piece'){ const n = int(o.n, 1, 1e9); return n != null ? {t:o.t, n} : null; }
+  return null;
+}
+function bagAdd(it, quiet){
+  it = mkClean(it); if (!it || (it.t !== 'acc' && it.t !== 'myth')) return false;
+  if (S.bag.length >= BAG_MAX){ const v = itemNpcGems(it); S.gems += v; if (!quiet) addLog(`가방이 가득 차서 ${itemInfo(it).name}${josa(itemInfo(it).name, '을', '를')} 상인에게 팔았어요 (보석 +${v})`, 'gain'); return false; }
+  it.id = ++S.bagSeq; S.bag.push(it);
+  return true;
+}
+const bagFind = id => S.bag.findIndex(x => x.id === id);
+const bagWorse = it => it.t === 'acc' ? it.p <= S.acc[it.k].p : it.p <= (S.myth[it.k] || 0);
+function bagEquip(id){
+  const i = bagFind(id); if (i < 0) return false;
+  const it = S.bag.splice(i, 1)[0];
+  if (it.t === 'acc'){ const cur = S.acc[it.k]; if (cur.g >= 0) bagAdd({t:'acc', k:it.k, g:cur.g, p:cur.p}, true); S.acc[it.k] = {g:it.g, p:it.p}; }
+  else { const cur = S.myth[it.k] || 0; if (cur > 0) bagAdd({t:'myth', k:it.k, p:cur}, true); S.myth[it.k] = it.p; }
+  refreshStats(); saveLocal();
+  return true;
+}
+function bagSell(id){ const i = bagFind(id); if (i < 0) return 0; const v = itemNpcGems(S.bag[i]); S.bag.splice(i, 1); S.gems += v; return v; }
+function bagSellWorse(){ let n = 0, g = 0; for (const it of S.bag.slice()) if (bagWorse(it)){ g += bagSell(it.id); n++; } if (n) saveLocal(); return {n, g}; }
+// 장터에 올릴 수 있는 것: 가방 물건 · 남는 장비 조각 · 재료·쇳가루·고삐 조각
+function mkSources(){
+  const out = S.bag.map(it => ({src:{t:'bag', id:it.id}, it, stack:false}));
+  for (const s of ['weapon', 'armor']) for (let i = 0; i < 20; i++){ const spare = S.gear[s].count[i] - (S.equip[s] === i ? 1 : 0); if (spare > 0) out.push({src:{t:'gear', s, it:i}, it:{t:'gear', s, it:i, n:spare}, stack:true, max:spare}); }
+  for (const M of MATS) if ((S.mat[M.k] || 0) >= 1) out.push({src:{t:'mat', k:M.k}, it:{t:'mat', k:M.k, n:Math.floor(S.mat[M.k])}, stack:true, max:Math.floor(S.mat[M.k])});
+  if (S.dust >= 1) out.push({src:{t:'dust'}, it:{t:'dust', n:Math.floor(S.dust)}, stack:true, max:Math.floor(S.dust)});
+  if (S.mount.piece >= 1) out.push({src:{t:'piece'}, it:{t:'piece', n:S.mount.piece}, stack:true, max:S.mount.piece});
+  return out;
+}
+function mkTake(src, n){
+  if (src.t === 'bag'){ const i = bagFind(src.id); if (i < 0) return null; const it = S.bag.splice(i, 1)[0]; return {t:it.t, k:it.k, g:it.g, p:it.p}; }
+  n = Math.floor(+n); if (!(n >= 1)) return null;
+  if (src.t === 'gear'){ const G = S.gear[src.s], spare = G.count[src.it] - (S.equip[src.s] === src.it ? 1 : 0); if (spare < n) return null; G.count[src.it] -= n; return {t:'gear', s:src.s, it:src.it, n}; }
+  if (src.t === 'mat'){ if ((S.mat[src.k] || 0) < n) return null; S.mat[src.k] -= n; return {t:'mat', k:src.k, n}; }
+  if (src.t === 'dust'){ if (S.dust < n) return null; S.dust -= n; return {t:'dust', n}; }
+  if (src.t === 'piece'){ if (S.mount.piece < n) return null; S.mount.piece -= n; return {t:'piece', n}; }
+  return null;
+}
+// 산 물건·돌려받은 물건을 넣는다
+function mkGive(o){
+  const it = mkClean(o); if (!it) return false;
+  if (it.t === 'acc' || it.t === 'myth') return bagAdd(it);
+  if (it.t === 'gear'){ const G = S.gear[it.s]; G.count[it.it] += it.n; G.seen[it.it] = true; if (S.equip[it.s] < 0) equipBest(it.s); refreshStats(); return true; }
+  if (it.t === 'mat') S.mat[it.k] = (S.mat[it.k] || 0) + it.n;
+  else if (it.t === 'dust') S.dust += it.n;
+  else S.mount.piece += it.n;
+  return true;
+}
+const mkOn = () => !!online && !!session && session.acc === online.acc;
+const MK_ERR = {gone:'이미 팔렸거나 내려간 물건이에요.', mk_full:`한 번에 ${MK_MAX}개까지만 올릴 수 있어요.`, bad_item:'올릴 수 없는 물건이에요.', bad_price:`값은 보석 1 ~ ${fmt(MK_PRICE_MAX)}이에요.`, own:'내 물건은 살 수 없어요.',
+  gems:'보석이 모자라요.', bag:'가방이 가득 찼어요. 가방을 정리해 주세요.', no_fn:'장터 서버를 준비하는 중이에요. 그동안 [상인]에서 NPC 상인과 거래할 수 있어요.', net:'서버에 닿지 않아요. 잠시 뒤에 다시 해 봐요.', bad_token:'서버 로그인이 끊겼어요. 다시 로그인해 주세요.', off:'온라인 서버에 로그인하면 다른 용사와 거래할 수 있어요.'};
+const mkErrText = c => MK_ERR[c] || MK_ERR.net;
+function mkSaveNow(){ saveLocal(); pushOnline(); }
+async function mkPost(src, n, price){
+  price = Math.floor(+price);
+  if (!mkOn()) return {err:'off'};
+  if (!(price >= 1 && price <= MK_PRICE_MAX)) return {err:'bad_price'};
+  const it = mkTake(src, n); if (!it) return {err:'bad_item'};
+  try { const id = await rpc('samhan_market_post', {p_token:online.token, p_name:S.name, p_kind:it.t, p_item:it, p_price:price}); mkSaveNow(); return {id}; }
+  catch (e){ mkGive(it); if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+async function mkList(kind){
+  if (!mkOn()) return {err:'off'};
+  try { const rows = await rpc('samhan_market_list', {p_token:online.token, p_kind:kind || ''}); return {rows:(Array.isArray(rows) ? rows : []).map(r => ({id:+r.id, name:String(r.seller_name || '').slice(0, 8), kind:r.kind, it:mkClean(r.item), price:Math.floor(+r.price), mine:!!r.mine})).filter(r => r.it)}; }
+  catch (e){ if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+async function mkBuy(row){
+  if (!mkOn()) return {err:'off'};
+  if (row.mine) return {err:'own'};
+  if (S.gems < row.price) return {err:'gems'};
+  if ((row.it.t === 'acc' || row.it.t === 'myth') && S.bag.length >= BAG_MAX) return {err:'bag'};
+  S.gems -= row.price;
+  try { const r = await rpc('samhan_market_buy', {p_token:online.token, p_name:S.name, p_id:row.id}); mkGive(r && r.item); mkSaveNow(); return {ok:true}; }
+  catch (e){ S.gems += row.price; if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+async function mkMine(){
+  if (!mkOn()) return {err:'off'};
+  try { const rows = await rpc('samhan_market_mine', {p_token:online.token}); return {rows:(Array.isArray(rows) ? rows : []).map(r => ({id:+r.id, it:mkClean(r.item), price:Math.floor(+r.price), buyer:r.buyer_name ? String(r.buyer_name).slice(0, 8) : '', sold:!!r.sold, expired:!!r.expired})).filter(r => r.it)}; }
+  catch (e){ if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+async function mkCancel(id){
+  if (!mkOn()) return {err:'off'};
+  try { const r = await rpc('samhan_market_cancel', {p_token:online.token, p_id:id}); mkGive(r && r.item); mkSaveNow(); return {ok:true}; }
+  catch (e){ if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+async function mkClaim(){
+  if (!mkOn()) return {err:'off'};
+  try { const g = Math.max(0, Math.floor(+(await rpc('samhan_market_claim', {p_token:online.token})) || 0)); S.gems += g; if (g) mkSaveNow(); return {gems:g}; }
+  catch (e){ if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
+}
+// NPC 상인(서버 없이도): 날마다 바뀌는 물건 다섯 가지, 하나씩만
+const strHash = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
+function npcOffers(){
+  const rnd = rng(strHash(today() + ':' + S.world + ':' + (session ? session.cid : ''))), out = [], wg = Math.min(4, S.world);
+  for (let k = 0; k < 2; k++){
+    const ak = ACC_ORDER[(rnd() * 3) | 0], g = Math.min(4, wg + (rnd() < 0.25 ? 1 : 0)), p = Math.max(1, Math.round(ACC[ak].base[g] * (1 + effStage(Math.max(1, S.maxStage)) / 60) * (0.85 + rnd() * 0.25)));
+    out.push({it:{t:'acc', k:ak, g, p}, price:[120, 360, 900, 2400, 6000][g] * (1 + S.world)});
+  }
+  const pool = MYTHS.filter(m => !m.story), m = pool[(rnd() * pool.length) | 0], p = mythPower(m, Math.max(5, Math.round(S.maxStage * 0.5)));
+  out.push({it:{t:'myth', k:m.k, p}, price:p * 12});
+  out.push({it:{t:'mat', k:MATS[Math.min(2, S.world)].k, n:5}, price:60});
+  out.push({it:{t:'dust', n:150 * (1 + S.world)}, price:80});
+  return out;
+}
+function npcBuy(i){
+  if (S.mkNpc.day !== today()) S.mkNpc = {day:today(), got:[]};
+  const o = npcOffers()[i];
+  if (!o || S.mkNpc.got.includes(i)) return {err:'gone'};
+  if (S.gems < o.price) return {err:'gems'};
+  if ((o.it.t === 'acc' || o.it.t === 'myth') && S.bag.length >= BAG_MAX) return {err:'bag'};
+  S.gems -= o.price; S.mkNpc.got.push(i); mkGive(o.it); saveLocal();
+  return {ok:true};
+}
 const avCount = () => AVATARS.filter(a => S.av.own[a.k] && (!a.job || a.cls === S.cls)).length;   // 전직 망토는 지금 직업 것만 센다
 function giveAvatar(k, quiet){
   const a = AV[k];
@@ -5592,6 +5772,202 @@ function buildIsoMap(ri, w = S.world){
   return c;
 }
 
+/* ================= 장터 마을(2026-11 (16)) =================
+   오른쪽 위 [장터] 단추·가방에서 들어간다. 사냥은 멈추고, 넓은 돌바닥 광장을 걸어 다닌다(땅을 누르면 그리로).
+   상인·알림판·거간꾼·아전 앞으로 가면 장터 거래 화면이 열린다. 온라인이면 접속한 다른 용사가 이름표를 달고 함께 서 있다
+   (실시간 'mk': 이름·직업·꾸미기·장비 등급·자리를 3초마다·움직일 때 보냄, 12초 동안 소식이 없으면 사라짐) */
+let market = null, mkMapCv = null;
+const MK_IN = [14, 17];
+const MK_NPC = [
+  {k:'npc', name:'보부상 덕보', tx:6, ty:4, cls:'musa', look:{outfit:'#8a5a3a', hair:HAIRS[1], hat:'sulsa', skin:1}, beard:true, view:'npc', say:'오늘 들어온 물건 보고 가시게!'},
+  {k:'board', name:'장터 알림판', tx:14, ty:3, board:true, view:'buy', say:'다른 용사들이 올린 물건이 붙어 있어요.'},
+  {k:'broker', name:'거간꾼 막동', tx:21, ty:4, cls:'jagaek', look:{outfit:'#3f5f9a', hair:HAIRS[0], hat:'musa', skin:0}, view:'sell', say:'팔 물건 있으면 내가 올려 주지!'},
+  {k:'clerk', name:'전표 아전', tx:25, ty:9, cls:'sulsa', look:{outfit:'#3a3450', hair:HAIRS[0], hat:'sulsa', skin:0}, view:'mine', say:'판 값과 돌려받을 물건은 여기서!'},
+];
+const mkNpcAt = (tx, ty) => MK_NPC.find(n => Math.abs(n.tx - tx) + Math.abs(n.ty - ty) <= 1);
+const MK_STALL = [[3, '#c83a2a'], [9, '#3a7ac8'], [17, '#d8a83a'], [23, '#3f8f6a']];   // 위쪽 가장자리 노점(칸 tx, 차양 색)
+function buildMarketMap(){
+  const rnd = rng(777), c = document.createElement('canvas'); c.width = MW * RS; c.height = MH * RS;
+  const g = c.getContext('2d'); g.scale(RS, RS);
+  // 저녁 하늘 · 먼 산 · 마을 지붕들
+  const sky = g.createLinearGradient(0, 0, 0, 30); sky.addColorStop(0, '#f2b880'); sky.addColorStop(1, '#ffe6c0');
+  g.fillStyle = '#8a7a5a'; g.fillRect(0, 0, MW, MH); g.fillStyle = sky; g.fillRect(0, 0, MW, 28);
+  g.fillStyle = '#9a8aa8'; g.beginPath(); g.moveTo(0, 26); for (let x = 0; x <= MW; x += 6) g.lineTo(x, 14 + Math.sin(x * 0.04) * 5 + Math.sin(x * 0.11) * 2); g.lineTo(MW, 26); g.closePath(); g.fill();
+  for (let x = -10; x < MW; x += 22 + rnd() * 10){ const y = 26; gPoly(g, [[x, y], [x + 18, y], [x + 16, y - 5], [x + 2, y - 5]], '#4a4a5a'); gPoly(g, [[x - 2, y - 4], [x + 20, y - 4], [x + 17, y - 8], [x + 1, y - 8]], '#2e3040'); }
+  // 바깥 흙바닥
+  for (let i = -20; i < 50; i++) for (let j = -24; j < 44; j++){ const cx = isoX(i, j), cy = isoY(i, j); if (cx < -IW || cx > MW + IW || cy < 26 || cy > MH + IH) continue; isoTile(g, cx, cy, rnd() < 0.5 ? '#9a8660' : '#8f7c58', 0); }
+  // 판 둘레 뒤쪽 풍경: 기와집·노점·나무·등롱
+  const back = [];
+  for (let x = 6; x < MW - 6; x += 34 + rnd() * 10){ const y = edgeTop(x) - 4; if (y > 30) back.push([y, gg => PROPS.house(gg, x, y, '#3a4048')]); }
+  for (let x = 20; x < MW; x += 50 + rnd() * 20){ const y = edgeTop(x) - 14; if (y > 32) back.push([y, gg => PROPS.tree(gg, x, y, 1.1, '#5a9a4a')]); }
+  back.sort((a, b2) => a[0] - b2[0]).forEach(([, fn]) => fn(g));
+  // 판: 앞 두 벽(다듬은 돌) → 돌바닥
+  const [lx, ly] = ISO_LEFT, [bx, by] = ISO_BOT, [rx, ry] = ISO_RIGHT;
+  gPoly(g, [[lx, ly], [bx, by], [bx, by + IDEP], [lx, ly + IDEP]], '#9a9488'); gPoly(g, [[bx, by], [rx, ry], [rx, ry + IDEP], [bx, by + IDEP]], '#7e786e');
+  for (let k = 0; k < 40; k++){ const u = k / 40, x = lx + (bx - lx) * u, y = ly + (by - ly) * u; g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x, y + 2 + (k % 2) * 3, 0.6, 3); const x2 = bx + (rx - bx) * u, y2 = by + (ry - by) * u; g.fillRect(x2, y2 + 2 + (k % 2) * 3, 0.6, 3); }
+  const bed = (tx, ty) => (tx >= 2 && tx <= 6 || tx >= 21 && tx <= 25) && (ty >= 11 && ty <= 15);   // 잔디밭 두 곳
+  const cx0 = 14, cy0 = 11;
+  for (let ty = TOPR; ty < ROWS; ty++) for (let tx = 0; tx < COLS; tx++){
+    const cx = isoX(tx, ty), cy = isoY(tx, ty), d = Math.hypot(tx - cx0, ty - cy0);
+    let col = (tx + ty) % 2 ? '#d6c6a4' : '#cbb995';
+    if (rnd() < 0.3) col = mix(col, '#b8a684', 0.5);
+    if (bed(tx, ty)) col = (tx + ty) % 2 ? '#7cbc5c' : '#74b456';
+    else if (d < 3.2) col = d < 1.2 ? '#e8dcc0' : (Math.floor(d * 2) % 2 ? '#d8caa8' : '#c8b896');   // 가운데 둥근 돌무늬
+    isoTile(g, cx, cy, col);
+    if (!bed(tx, ty)){ g.fillStyle = 'rgba(90,70,50,.35)'; g.fillRect(cx - 0.3, cy - IH / 2, 0.6, IH); }
+    else if (rnd() < 0.4){ g.fillStyle = ['#ffd84a', '#ff8ab0', '#ffffff'][(rnd() * 3) | 0]; g.fillRect(cx + (rnd() - 0.5) * 8, cy + (rnd() - 0.5) * 3, 1, 1); }
+  }
+  // 잔디밭 돌 테두리
+  g.strokeStyle = '#9a8e78'; g.lineWidth = 1.2;
+  for (const [a, b2] of [[2, 6], [21, 25]]){ const p = [[a - 0.5, 10.5], [b2 + 0.5, 10.5], [b2 + 0.5, 15.5], [a - 0.5, 15.5]].map(([x, y]) => [isoX(x, y), isoY(x, y)]); g.beginPath(); g.moveTo(p[0][0], p[0][1]); for (const q of p.slice(1)) g.lineTo(q[0], q[1]); g.closePath(); g.stroke(); }
+  // 가운데 연꽃 돌무늬
+  const mx = isoX(cx0, cy0), my = isoY(cx0, cy0);
+  for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4; gEll(g, mx + Math.cos(a) * 9, my + Math.sin(a) * 4.5, 4.5, 2.2, 'rgba(150,120,80,.35)'); }
+  gEll(g, mx, my, 5, 2.5, 'rgba(150,120,80,.45)'); gEll(g, mx, my, 2.5, 1.2, '#b89a6a');
+  // 판 가장자리 빛
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(lx, ly); g.lineTo(ISO_TOP[0], ISO_TOP[1]); g.lineTo(rx, ry); g.stroke();
+  // 위쪽 가장자리 노점(판 바로 뒤)
+  for (const [tx, col] of MK_STALL){ const x = isoX(tx, TOPR - 1), y = isoY(tx, TOPR - 1); mkStall(g, x, y, col, rnd); }
+  // 오른쪽 위 북 무대
+  mkDrumStage(g, isoX(COLS - 1, 6) + 14, isoY(COLS - 1, 6) - 2);
+  // 앞쪽: 낮은 돌담·등롱·나무
+  for (let x = 10; x < MW - 6; x += 46 + rnd() * 16){ const y = edgeBot(x) + IDEP + 6; if (y < MH - 4){ PROPS.lantern(g, x, y, 1); } }
+  for (let x = 30; x < MW; x += 70 + rnd() * 20){ const y = edgeBot(x) + IDEP + 12; if (y < MH) PROPS.tree(g, x, y, 1, '#5a9a4a'); }
+  return c;
+}
+function mkStall(g, x, y, col, rnd){   // 노점: 나무 좌판 + 천 차양 + 물건
+  gShadow(g, x, y + 2, 16);
+  for (const dx of [-12, 12]) gPoly(g, [[x + dx - 0.8, y + 2], [x + dx + 0.8, y + 2], [x + dx + 0.8, y - 16], [x + dx - 0.8, y - 16]], '#6b4a2b');
+  gPoly(g, [[x - 14, y - 2], [x + 14, y - 2], [x + 14, y - 6], [x - 14, y - 6]], '#a07a4a'); gPoly(g, [[x - 14, y - 6], [x + 14, y - 6], [x + 12, y - 8], [x - 12, y - 8]], '#c89a5a');
+  const goods = ['#ffd84a', '#ff8a5a', '#8fd06a', '#9fe7ff', '#e88ad8', '#ffffff'];
+  for (let k = 0; k < 6; k++) gBlob(g, x - 10 + k * 4, y - 9.5, 1.8, 1.4, goods[(rnd() * goods.length) | 0]);
+  gPoly(g, [[x - 16, y - 16], [x + 16, y - 16], [x + 14, y - 22], [x - 14, y - 22]], col);
+  for (let k = 0; k < 4; k++) gPoly(g, [[x - 16 + k * 8, y - 16], [x - 12 + k * 8, y - 16], [x - 11 + k * 8, y - 22], [x - 14 + k * 8, y - 22]], mix(col, '#ffffff', 0.35));
+  for (let k = 0; k < 8; k++) gEll(g, x - 14 + k * 4, y - 16, 2, 1.2, darken(col, 0.15));
+}
+function mkDrumStage(g, x, y){   // 북 무대: 붉은 기둥 단 + 큰 북
+  gShadow(g, x, y + 2, 26);
+  gPoly(g, [[x - 24, y], [x, y + 10], [x + 24, y], [x, y - 10]], '#a8402a'); gPoly(g, [[x - 24, y], [x, y + 10], [x, y + 14], [x - 24, y + 4]], '#7a2a1a'); gPoly(g, [[x, y + 10], [x + 24, y], [x + 24, y + 4], [x, y + 14]], '#5a1e12');
+  for (const [dx, dy] of [[-18, -2], [18, -2], [0, -9], [0, 7]]) gPoly(g, [[x + dx - 1, y + dy], [x + dx + 1, y + dy], [x + dx + 1, y + dy - 22], [x + dx - 1, y + dy - 22]], '#c83a2a');
+  gPoly(g, [[x - 26, y - 22], [x, y - 32], [x + 26, y - 22], [x, y - 12]], '#3a4048'); gPoly(g, [[x - 26, y - 22], [x, y - 12], [x, y - 10], [x - 26, y - 20]], '#2a2e36');
+  gEll(g, x, y - 10, 7, 7, '#7a4a2a'); gEll(g, x, y - 10, 5.5, 5.5, '#e8d8b0');
+  for (let k = 0; k < 3; k++){ const a = k * 2.1; gEll(g, x + Math.cos(a) * 2, y - 10 + Math.sin(a) * 2, 2, 2, ['#c83a2a', '#3a6ac8', '#e8b030'][k]); }
+}
+function getMarketMap(){ if (!mkMapCv) mkMapCv = buildMarketMap(); return mkMapCv; }
+// 장터 알림판 그림(사람 대신 세워 둔 판)
+let mkBoardSp = null;
+function mkBoardSprite(){
+  if (mkBoardSp) return mkBoardSp;
+  const cnv = document.createElement('canvas'); cnv.width = 44; cnv.height = 52; const g = cnv.getContext('2d'); g.translate(2, 2);
+  const {RR, Pl, E} = hdKit(g);
+  RR(8, 18, 4, 30, 2, '#6b4a2b'); RR(28, 18, 4, 30, 2, '#6b4a2b');
+  RR(2, 4, 36, 24, 3, '#8a6a3a'); RR(4, 6, 32, 20, 2, '#c8a46a');
+  for (const [x, y, c] of [[6, 8, '#fff6e0'], [16, 9, '#ffe8c0'], [26, 8, '#fff6e0'], [10, 17, '#ffe8c0'], [22, 17, '#fff6e0']]){ RR(x, y, 8, 7, 1, c); RR(x + 1.5, y + 2, 5, 0.8, 0.4, '#6a5a4a'); RR(x + 1.5, y + 4, 4, 0.8, 0.4, '#6a5a4a'); E(x + 4, y + 0.6, 0.8, 0.8, '#c83a2a'); }
+  Pl([[0, 5], [20, -1], [40, 5], [40, 7], [20, 1], [0, 7]], '#3a4048');
+  mkBoardSp = hdFinish(cnv);
+  return mkBoardSp;
+}
+function enterMarket(){
+  if (!session && !window.__game) return;
+  if (raid){ addLog('싸우는 중에는 장터에 갈 수 없어요.', 'warn'); return; }
+  if (cut) return;
+  closePage(); setChat(false);
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
+  mobs = []; projs = []; bossActive = false; bossRef = null;
+  market = {peers:new Map(), target:null, goal:null, sendT:0, say:null, sayT:0};
+  document.body.classList.add('in-market');
+  Object.assign(hero, {tx:MK_IN[0], ty:MK_IN[1], fx:MK_IN[0], fy:MK_IN[1], moving:false, dir:'up', dead:false, target:null});
+  placeOf(hero); camSnap = true;
+  addLog('장터 마을에 들어왔어요. 땅을 누르면 걸어가고, 상인·알림판 앞으로 가면 거래할 수 있어요.', 'good'); sfx('quest');
+  mkSend(true);
+}
+function leaveMarket(){
+  if (!market) return;
+  mkSend(false, true);
+  market = null; resetRuntime(); document.body.classList.remove('in-market');
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', target:null});
+  placeOf(hero); camSnap = true; spawnT = 0.6;
+  addLog('사냥터로 돌아왔어요.', 'good');
+}
+// 다른 용사에게 내 모습·자리 알리기
+function mkSend(force, bye){
+  if (!room || !session) return;
+  if (bye){ room.emit('mk', {bye:1}).catch(() => {}); return; }
+  if (!market) return;
+  market.sendT = 3;
+  room.emit('mk', {n:S.name, c:S.cls, l:S.look, ag:gradeOf(S.equip.armor), wg:gradeOf(S.equip.weapon), j:S.job, x:hero.tx, y:hero.ty, r:S.mount.ride || ''}).catch(() => {});
+}
+function mkRecv(m){
+  if (!market || !m || !m.data) return;
+  const d = m.data, id = m.peer || 'p';
+  if (d.bye){ market.peers.delete(id); return; }
+  const x = Math.max(0, Math.min(COLS - 1, Math.floor(+d.x) || 0)), y = Math.max(TOPR, Math.min(ROWS - 1, Math.floor(+d.y) || TOPR));
+  let p = market.peers.get(id);
+  if (!p){ p = {tx:x, ty:y, fx:x, fy:y, mt:1, moving:false, x:0, y:0, dir:'down', stepDur:0.22}; placeOf(p); market.peers.set(id, p); }
+  Object.assign(p, {n:String(d.n || '용사').slice(0, 8), c:CLASSES[d.c] ? d.c : 'musa', l:cleanLook(d.l), ag:Math.max(-1, Math.min(4, Math.floor(+d.ag))), wg:Math.max(-1, Math.min(4, Math.floor(+d.wg))), j:Math.max(0, Math.min(4, Math.floor(+d.j) || 0)), r:MT[d.r] ? d.r : '', gx:x, gy:y, seen:12});
+}
+// 장터 안에서: 걷기·도착하면 상인 화면·다른 용사 움직임
+function updateMarket(dt){
+  const M = market;
+  updateMove(hero, dt);
+  if (!hero.moving && M.goal){
+    const [gx, gy] = M.goal;
+    if (hero.tx === gx && hero.ty === gy || !stepToward(hero, gx, gy, heroStep())){
+      const n = M.goalNpc; M.goal = null; M.goalNpc = null;
+      if (n){ hero.dir = 'up'; if (n.say) heroSayNpc(n); mkView = n.view; if (n.view === 'buy') mkRows = null; if (n.view === 'mine') mkMineRows = null; buildTab('market'); }
+      mkSend(true);
+    } else mkSend(true);
+  }
+  M.sendT -= dt; if (M.sendT <= 0) mkSend(true);
+  for (const [id, p] of M.peers){
+    p.seen -= dt; if (p.seen <= 0){ M.peers.delete(id); continue; }
+    updateMove(p, dt);
+    if (!p.moving && (p.tx !== p.gx || p.ty !== p.gy)){ const dx = Math.sign(p.gx - p.tx), dy = dx ? 0 : Math.sign(p.gy - p.ty); startMove(p, p.tx + dx, p.ty + dy, 0.22); }
+  }
+  if (M.sayT > 0) M.sayT -= dt;
+  updatePets(dt);
+}
+function heroSayNpc(n){ market.say = {name:n.name, text:n.say, x:isoX(n.tx, n.ty), y:isoY(n.tx, n.ty)}; market.sayT = 3; }
+// 장면을 누르면: 장터에서는 그 칸으로 걸어간다(상인을 누르면 그 앞까지)
+function mkCanvasClick(e){
+  if (!market || cut) return;
+  const r = cv.getBoundingClientRect(), x = camX + (e.clientX - r.left) / scale, y = camY + (e.clientY - r.top) / scale;
+  const u = (x - IOX) / (IW / 2), v = (y - IOY) / (IH / 2);
+  let tx = Math.round((u + v) / 2), ty = Math.round((v - u) / 2);
+  const n = MK_NPC.find(q => Math.abs(isoX(q.tx, q.ty) - x) < 12 && y > isoY(q.tx, q.ty) - 34 && y < isoY(q.tx, q.ty) + 6) || mkNpcAt(tx, ty);
+  if (n){ tx = n.tx; ty = n.ty + 1; market.goalNpc = n; } else market.goalNpc = null;
+  tx = Math.max(0, Math.min(COLS - 1, tx)); ty = Math.max(TOPR, Math.min(ROWS - 1, ty));
+  market.goal = [tx, ty];
+  fx.push({type:'poof', t:0, dur:0.3, x:isoX(tx, ty), y:isoY(tx, ty)});
+}
+// 장터 그리기: NPC·알림판·다른 용사(이름표는 drawMarketTags)
+function drawMarketEnt(e){
+  if (e.npc){
+    const n = e.npc, x = isoX(n.tx, n.ty), y = isoY(n.tx, n.ty) + 1;
+    if (n.board){ const sp = mkBoardSprite(); drawShadow(x, y, 12); b.drawImage(sp, x - spW(sp) / 2, y - spH(sp) + 2, spW(sp), spH(sp)); return; }
+    const look = Object.assign(cleanLook(n.look), {beard:!!n.beard}), sp = personSprite(n.cls, look, 1, -1, 'down', Math.floor(gtime * 1.4 + n.tx) % 2 ? 0 : 0, false);
+    drawShadow(x, y, 10); b.drawImage(sp, x - HD_AX, y - HD_AY, spW(sp), spH(sp));
+    return;
+  }
+  const p = e.peer, f = p.moving ? (p.mt < 0.5 ? 1 : 2) : 0, sp = personSprite(p.c, p.l, p.ag, p.wg, p.dir, f, false, {job:p.j});
+  const x = Math.round(p.x), y = Math.round(p.y);
+  drawShadow(x, y, 10);
+  let hy = y;
+  if (p.r){ const M = MT[p.r], flip = p.dir === 'right' || p.dir === 'up', fly = M.fly ? 6 : 0, ms = mountSprite(M.k, 0, flip); b.drawImage(ms, x - (flip ? 21 : 23), y - 31 - fly, spW(ms) * 1.3, spH(ms) * 1.3); hy = y - 16 - fly; }
+  b.drawImage(sp, x - HD_AX, hy - HD_AY, spW(sp), spH(sp));
+  p.tagY = hy - 34;
+}
+function drawMarketTags(){
+  for (const n of MK_NPC){ const x = (isoX(n.tx, n.ty) - camX) * scale, y = (isoY(n.tx, n.ty) - (n.board ? 26 : 33) - camY) * scale; nameTag(n.name, x, y, {bg:'rgba(120,70,20,.88)', line:'rgba(255,214,140,.85)', color:'#fff2c8'}); }
+  for (const p of market.peers.values()) if (p.tagY != null) nameTag(p.n, (p.x - camX) * scale, (p.tagY - camY) * scale - 2);
+  if (market.say && market.sayT > 0){
+    ctx.font = '700 11px SamhanSans, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const t = market.say.text, w = Math.ceil(ctx.measureText(t).width) + 12, x = Math.round((market.say.x - camX) * scale - w / 2), y = Math.round((market.say.y - 52 - camY) * scale);
+    ctx.globalAlpha = Math.min(1, market.sayT); ctx.fillStyle = '#fbf4e2'; ctx.fillRect(x, y, w, 18); ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, 16);
+    ctx.fillStyle = '#2a2118'; ctx.fillText(t, x + 6, y + 9.5); ctx.globalAlpha = 1;
+  }
+  ctx.textAlign = 'left';
+}
 
 
 /* ================= 연출 효과 =================
@@ -5686,6 +6062,7 @@ function upFx(el, text, c){ const t = performance.now(); if (t - upFxT < 90) ret
 
 /* ================= 그리기 ================= */
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+cv.addEventListener('click', e => mkCanvasClick(e));   // 장터 마을: 누른 칸으로 걷기
 const buf = document.createElement('canvas'); buf.width = VW * RS; buf.height = H * RS;
 const b = buf.getContext('2d');
 let dpr = 1, scale = 1;
@@ -6243,22 +6620,23 @@ function render(){
   b.imageSmoothingEnabled = false;
   updateCam();
   b.setTransform(RS, 0, 0, RS, -camX * RS, -camY * RS);
-  b.drawImage(getMap(ri), 0, 0, MW, MH);
-  if (Rg.theme === 'cave') for (const [tx, ty] of CAVE_TORCH){ const fl = Math.floor(gtime * 10 + tx) % 3; P(tx - 2, ty - 15 - fl, 5, 4 + fl, '#ff7a2a'); P(tx - 1, ty - 16 - fl, 3, 3, '#ffd27a'); P(tx, ty - 17 - fl, 1, 2, '#fff2c0'); }
+  b.drawImage(market ? getMarketMap() : getMap(ri), 0, 0, MW, MH);
+  if (Rg.theme === 'cave' && !market) for (const [tx, ty] of CAVE_TORCH){ const fl = Math.floor(gtime * 10 + tx) % 3; P(tx - 2, ty - 15 - fl, 5, 4 + fl, '#ff7a2a'); P(tx - 1, ty - 16 - fl, 3, 3, '#ffd27a'); P(tx, ty - 17 - fl, 1, 2, '#fff2c0'); }
   for (const p of parts) if (p.type === 'coin' && p.t < p.dur){ const a = p.t > p.dur * 0.7 ? 0.5 : 1; b.globalAlpha = a; P(p.x - 1, p.y - 1, 2, 2, '#e0b03c'); P(p.x - 1, p.y - 1, 1, 1, '#fff2a0'); b.globalAlpha = 1; }
   const ents = mobs.map(m => ({y:m.y, m}));
   if (raid) for (const a of raid.allies) ents.push({y:a.y, a});
   for (const t of PET_TYPE_ORDER) if (eqPet(t) >= 0 && petRt[t].init) ents.push({y:petRt[t].y, pet:t});
   ents.push({y:hero.y + 0.1, hero:true});
+  if (market){ for (const n of MK_NPC) ents.push({y:isoY(n.tx, n.ty) + 1, npc:n}); for (const p2 of market.peers.values()) ents.push({y:p2.y, peer:p2}); }
   ents.sort((a, b2) => a.y - b2.y);
   drawVfx(true);
-  for (const e of ents){ if (e.hero) drawEntityHero(); else if (e.a) drawAlly(e.a); else if (e.pet) drawPet(e.pet); else drawMob(e.m); }
+  for (const e of ents){ if (e.hero) drawEntityHero(); else if (e.npc || e.peer) drawMarketEnt(e); else if (e.a) drawAlly(e.a); else if (e.pet) drawPet(e.pet); else drawMob(e.m); }
   for (const p of parts) if (p.type === 'gem'){ b.globalAlpha = Math.max(0, 1 - p.t / p.dur); P(p.x - 1, p.y - 2, 3, 1, '#7fdcff'); P(p.x - 2, p.y - 1, 5, 1, '#5ac8f0'); P(p.x - 1, p.y, 3, 1, '#2a88b0'); P(p.x, p.y + 1, 1, 1, '#2a88b0'); P(p.x, p.y - 3, 1, 1, '#ffffff'); b.globalAlpha = 1; }
   for (const p of projs) drawProj(p);
   for (const e of fx) drawFx(e);
   drawVfx(false);
   b.setTransform(RS, 0, 0, RS, 0, 0);
-  drawWeather(Rg);
+  if (!market) drawWeather(Rg);
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
@@ -6278,6 +6656,7 @@ function nameTag(text, x, y, opt = {}){
 }
 function drawTexts(){
   if (session && !hero.dead && hero.tagY != null && !cut){ nameTag(S.name, (hero.x - camX) * scale, (hero.tagY - camY) * scale - 2, {color:'#fff6d8'}); ctx.textAlign = 'left'; }
+  if (market && !cut) drawMarketTags();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of texts){
     ctx.globalAlpha = 1 - Math.max(0, (t.t - 0.55) / 0.35);
@@ -6322,10 +6701,11 @@ function drawOverlay(){
   drawBuffsAndSay(cw);
   ctx.textBaseline = 'middle';
   ctx.font = '800 13px SamhanSans, sans-serif';
-  const label = raid ? '레이드 · ' + raid.info.label : stageLabel(S.stage);
+  const label = market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? '레이드 · ' + raid.info.label : stageLabel(S.stage);
   const tw = Math.ceil(ctx.measureText(label).width);
   box(cx - tw / 2 - 10, y0, tw + 20, 22);
   ctx.fillStyle = raid ? '#ffb39a' : '#f3e6c8'; ctx.textAlign = 'center'; ctx.fillText(label, cx, y0 + 11.5); ctx.textAlign = 'left';
+  if (market) return;   // 장터 마을에는 보스 막대가 없다
   const bRef = raid ? raid.boss : bossActive ? bossRef : null;
   const y1 = y0 + 27;
   if (bRef){
@@ -6381,7 +6761,7 @@ const SUB_Q = [
   {k:'f2', w:0, who:'흥부', t:'제비가 물어 온 박씨', hook:'제비가 박씨를 물어 왔어요! 그런데…', story:'박을 타는 동안 박 냄새를 맡은 요괴들이 몰려와요. 200마리만 막아 주세요.', c:'kills', n:200, gems:90, gold:300},
   {k:'f3', w:0, who:'혹부리 영감', t:'도깨비의 노래 값', hook:'도깨비들이 제 노래를 또 듣고 싶대요. 허허.', story:'노래 값으로 혹을 떼 갔는데, 이번엔 보스 도깨비가 시비를 걸어요. 단계 보스를 3번 혼내 주세요.', c:'bosses', n:3, gems:100},
   {k:'f5', w:0, who:'자라', t:'토끼의 간', hook:'용왕님 병에 토끼 간이 좋다는데요…', story:'토끼는 간을 두고 왔대요. 대신 약초밭 가는 길의 요괴 250마리를 물리쳐 주세요.', c:'kills', n:250, gems:100, gold:200},
-  {k:'f6', w:0, who:'나무꾼 막쇠', t:'금도끼 은도끼', hook:'연못에 쇠도끼를 빠뜨렸어요!', story:'산신령님이 정직하게 쇠를 다루는 사람을 좋아하신대요. 재련을 5번 해 보세요.', c:'refines', n:5, gems:120},
+  {k:'f6', w:0, who:'나무꾼 막쇠', t:'금도끼 은도끼', hook:'연못에 쇠도끼를 빠뜨렸어요!', story:'산신령님이 정직하게 쇠를 다루는 사람을 좋아하신대요. 무기를 +5까지 재련해 보세요.', c:'refW', n:5, gems:120},
   {k:'f7', w:0, who:'콩쥐', t:'깨진 독', hook:'깨진 독에 물을 채워야 잔치에 갈 수 있어요.', story:'두꺼비가 독을 막는 동안 몰려드는 요괴 300마리를 막아 주세요.', c:'kills', n:300, gems:110, gold:300},
   {k:'f9', w:0, who:'선비', t:'은혜 갚은 까치', hook:'종을 울려 저를 살린 까치 가족이 있어요.', story:'까치 둥지 근처에 뱀 요괴가 또 나타났대요. 200마리를 쫓아 주세요.', c:'kills', n:200, gems:90, mat:2},
   {k:'f10', w:0, who:'착한 아우', t:'도깨비 방망이', hook:'개암을 깨물었더니 도깨비들이 방망이를 두고 갔어요!', story:'형님이 따라 하기 전에 방망이로 좋은 걸 불러내 봐요. 소환 10번!', c:'summons', n:10, gems:120},
@@ -6392,10 +6772,10 @@ const SUB_Q = [
   {k:'f13', w:1, who:'비단 장수', t:'망주석 재판', hook:'고갯마루에서 비단을 몽땅 도둑맞았어요.', story:'사또님이 망주석을 데려오라네요. 도둑 소굴(레이드)을 2번 털어 주세요.', c:'raids', n:2, gems:120, mat:2},
   {k:'h1', w:1, who:'철산 고을 사또', t:'장화와 홍련', hook:'밤마다 동헌에 자매 원귀가 나타나 억울함을 호소한대요…', story:'두 자매의 억울함을 풀려면 늪에 숨은 요괴부터 쫓아야 해요. 요괴 400마리!', c:'kills', n:400, gems:110},
   {k:'h2', w:1, who:'밀양 관아 아전', t:'아랑의 부탁', hook:'새 사또마다 첫날 밤을 못 넘긴대요.', story:'아랑 아가씨는 억울함을 들어 줄 사람을 기다렸던 거래요. 범인을 찾게 단계 보스를 4번 물리쳐 주세요.', c:'bosses', n:4, gems:120},
-  {k:'h3', w:1, who:'주막 주인 덕진', t:'덕진 다리', hook:'저승 곳간이 텅 빈 원님이 제 곳간에서 쌀을 빌려 갔대요.', story:'원님이 살아 돌아와 갚은 쌀로 다리를 놓으려 해요. 다리에 쓸 쇠를 벼려 주세요. 재련 10번!', c:'refines', n:10, gems:130},
+  {k:'h3', w:1, who:'주막 주인 덕진', t:'덕진 다리', hook:'저승 곳간이 텅 빈 원님이 제 곳간에서 쌀을 빌려 갔대요.', story:'원님이 살아 돌아와 갚은 쌀로 다리를 놓으려 해요. 다리를 받칠 만큼 단단하게, 방어구를 +18까지 벼려 주세요.', c:'refA', n:18, gems:130},
   {k:'h4', w:1, who:'한량', t:'땅속 나라 도적', hook:'땅속 나라 도적이 공주님들을 잡아갔어요!', story:'도적의 소굴로 내려가려면 동료가 필요해요. 레이드 2번.', c:'raids', n:2, gems:140, mat:2},
   {k:'h5', w:1, who:'막내아들', t:'여우 누이', hook:'누이가 밤마다 외양간에 나가요…', story:'흰·빨강·파랑 병을 던지며 달아나는 동안 뒤쫓는 요괴 500마리를 막아 주세요.', c:'kills', n:500, gems:120},
-  {k:'h6', w:1, who:'가난한 선비', t:'도깨비 감투', hook:'쓰면 안 보이는 감투를 주웠어요!', story:'감투를 찾으러 도깨비들이 몰려와요. 도깨비 마을까지 단계를 5개 더 올라가 주세요.', c:'stage', n:5, gems:130},
+  {k:'h6', w:1, who:'가난한 선비', t:'도깨비 감투', hook:'쓰면 안 보이는 감투를 주웠어요!', story:'감투를 찾으러 도깨비들이 몰려와요. 도깨비 마을이 있는 저승 4-10까지 올라가 주세요.', c:'stageW', n:40, gems:130},
   {k:'h7', w:1, who:'효자', t:'사자밥 한 상', hook:'저승사자가 어머니를 데리러 온대요.', story:'사자밥을 차려 대접하면 사정을 봐준대요. 그 사이 몰려드는 잡귀 600마리를 막아 주세요.', c:'kills', n:600, gems:130},
   {k:'h8', w:1, who:'셋째 딸', t:'구렁덩덩 신선비', hook:'구렁이 허물을 벗은 신랑이 떠나 버렸어요.', story:'신랑을 찾아 저승 끝까지 가야 해요. 보스를 6번 물리치면 길이 열린대요.', c:'bosses', n:6, gems:150},
   {k:'f15', w:1, who:'할아버지', t:'개와 고양이의 구슬', hook:'용왕이 준 구슬을 잃어버렸어요.', story:'개와 고양이가 강을 건너 찾는 동안 강가 요괴 500마리를 막아 주세요.', c:'kills', n:500, gems:120, mat:3},
@@ -6406,37 +6786,37 @@ const SUB_Q = [
   {k:'c1', w:2, who:'바닷가 어부', t:'연오랑 세오녀', hook:'연오랑과 세오녀가 바다 건너 떠나자 해와 달이 빛을 잃었대요.', story:'세오녀가 짠 비단으로 하늘에 제를 올리면 빛이 돌아온대요. 비단을 지키게 레이드 3번.', c:'raids', n:3, gems:150},
   {k:'c2', w:2, who:'심 봉사', t:'연꽃 타고 온 딸', hook:'딸 청이가 공양미 삼백 석에 인당수로 갔어요…', story:'연꽃을 타고 돌아올 길을 지켜 주세요. 바다 요괴 700마리!', c:'kills', n:700, gems:140},
   {k:'c3', w:2, who:'어머니 별', t:'북두칠성 일곱 형제', hook:'일곱 아들이 하늘에 올라 별이 되었대요.', story:'형제 별을 가리는 구름 요괴를 걷어 주세요. 보스 7번.', c:'bosses', n:7, gems:150},
-  {k:'c4', w:2, who:'절 동자승', t:'쌀바위', hook:'바위 구멍에서 하루 먹을 쌀만 똑똑 나왔대요.', story:'욕심부려 구멍을 넓히자 물만 나왔대요. 욕심 없이 연장을 손질해요. 재련 15번.', c:'refines', n:15, gems:140},
-  {k:'c5', w:2, who:'제주 할망', t:'두 개의 해', hook:'하늘에 해와 달이 둘씩 떠서 낮엔 뜨겁고 밤엔 얼어붙었대요.', story:'대별왕·소별왕 형제가 활로 하나씩 떨어뜨렸대요. 활 솜씨를 보여 주게 단계 6개 더.', c:'stage', n:6, gems:150},
+  {k:'c4', w:2, who:'절 동자승', t:'쌀바위', hook:'바위 구멍에서 하루 먹을 쌀만 똑똑 나왔대요.', story:'욕심부려 구멍을 넓히자 물만 나왔대요. 욕심 없이 갈고닦아 방어구를 +23까지 벼려요.', c:'refA', n:23, gems:140},
+  {k:'c5', w:2, who:'제주 할망', t:'두 개의 해', hook:'하늘에 해와 달이 둘씩 떠서 낮엔 뜨겁고 밤엔 얼어붙었대요.', story:'대별왕·소별왕 형제가 활로 하나씩 떨어뜨렸대요. 활 솜씨를 보여 주게, 천계 5-10까지 올라가 보게.', c:'stageW', n:50, gems:150},
   {k:'c6', w:2, who:'한라산 신선', t:'흰 사슴의 못', hook:'흰 사슴이 물 마시던 못이 말라 간다네.', story:'못을 더럽히는 요괴 800마리를 물리쳐 주게.', c:'kills', n:800, gems:150},
   {k:'c7', w:2, who:'제주 어부', t:'설문대 할망의 다리', hook:'치마폭으로 흙을 날라 섬을 만든 할망이 육지까지 다리를 놓아 준대요.', story:'대신 명주 속옷 한 벌을 지어 달랬는데 한 필이 모자랐대요. 명주를 모으게 소환 25번.', c:'summons', n:25, gems:140},
   // ── 부상(w 3): 일본 옛이야기 ──
   {k:'j1', w:3, who:'복숭아 할머니', t:'복숭아에서 태어난 아이', hook:'강에서 떠내려온 큰 복숭아에서 사내아이가 나왔어요!', story:'오니 섬으로 떠난 아이를 도와요. 개·원숭이·꿩 대신 동료와 레이드 3번.', c:'raids', n:3, gems:160},
   {k:'j2', w:3, who:'바닷가 어부', t:'거북이 데려간 용궁', hook:'괴롭힘당하던 거북을 살려 줬더니 용궁에 초대받았어요.', story:'돌아와 보니 삼백 년이 흘렀대요. 상자를 열기 전에 바닷가 요괴 800마리를 막아 주세요.', c:'kills', n:800, gems:140},
   {k:'j3', w:3, who:'눈 오는 날 노인', t:'학이 짠 비단', hook:'덫에 걸린 학을 풀어 줬더니 낯선 아가씨가 찾아왔어요.', story:'베 짜는 방을 들여다보지 말래요. 그동안 문 앞을 노리는 보스를 6번 막아 주세요.', c:'bosses', n:6, gems:150},
-  {k:'j4', w:3, who:'한 치 동자', t:'바늘 칼 한 자루', hook:'키가 한 치뿐이지만 바늘 칼로 오니를 물리쳤어요!', story:'오니가 떨군 요술 방망이로 키를 키우려면 쇠를 벼려야 해요. 재련 15번.', c:'refines', n:15, gems:150},
+  {k:'j4', w:3, who:'한 치 동자', t:'바늘 칼 한 자루', hook:'키가 한 치뿐이지만 바늘 칼로 오니를 물리쳤어요!', story:'오니가 떨군 요술 방망이로 키를 키우려면 칼이 단단해야 해요. 무기를 계승 +17까지 벼려요.', c:'refW', n:27, gems:150},
   {k:'j5', w:3, who:'대나무 베는 노인', t:'빛나는 대나무', hook:'빛나는 대나무 속에서 나온 아기를 달에서 데리러 온대요.', story:'구혼자에게 낸 다섯 보물처럼 진귀한 것을 모아 와요. 소환 30번.', c:'summons', n:30, gems:150},
-  {k:'j6', w:3, who:'착한 할아버지', t:'마른 나무에 꽃을', hook:'재를 뿌렸더니 마른 나무에 벚꽃이 활짝 폈어요!', story:'욕심쟁이 이웃이 따라 하다 재를 날렸대요. 꽃길을 지키게 단계 8개 더.', c:'stage', n:8, gems:160},
+  {k:'j6', w:3, who:'착한 할아버지', t:'마른 나무에 꽃을', hook:'재를 뿌렸더니 마른 나무에 벚꽃이 활짝 폈어요!', story:'욕심쟁이 이웃이 따라 하다 재를 날렸대요. 꽃길이 이어진 부상 3-5까지 가 주세요.', c:'stageW', n:25, gems:160},
   {k:'j7', w:3, who:'아기 게', t:'감씨와 주먹밥', hook:'원숭이가 덜 익은 감을 던져 엄마 게를 다치게 했어요!', story:'밤·벌·절구가 도와주기로 했어요. 심술궂은 원숭이 무리 900마리를 쫓아 주세요.', c:'kills', n:900, gems:140},
   {k:'j8', w:3, who:'마음씨 고운 할아버지', t:'참새 집의 고리짝', hook:'혼나고 달아난 참새를 찾아가 사과하고 싶어요.', story:'참새 집 가는 길의 요괴를 물리쳐 주세요. 보스 5번. 작은 고리짝이 좋은 거래요.', c:'bosses', n:5, gems:140},
   {k:'j9', w:3, who:'고물 장수', t:'춤추는 찻솥', hook:'사 온 찻솥이 너구리로 변해 줄타기를 해요!', story:'구경꾼을 따라 요괴도 몰려왔어요. 1,000마리를 막아 주면 너구리가 쉴 수 있어요.', c:'kills', n:1000, gems:150},
   {k:'j10', w:3, who:'토끼', t:'딱딱 산의 불씨', hook:'할머니를 속인 너구리를 혼내 줘야 해요.', story:'진흙 배를 띄우기 전에 너구리 패거리 보스를 7번 잡아 주세요.', c:'bosses', n:7, gems:150},
-  {k:'j11', w:3, who:'삿갓 장수 할아버지', t:'눈 맞은 돌부처', hook:'팔지 못한 삿갓을 눈 맞은 돌부처님들께 씌워 드렸어요.', story:'그날 밤 집 앞에 쌀가마가 놓였대요. 은혜를 나누게 마을 연장을 고쳐 드려요. 재련 12번.', c:'refines', n:12, gems:140},
+  {k:'j11', w:3, who:'삿갓 장수 할아버지', t:'눈 맞은 돌부처', hook:'팔지 못한 삿갓을 눈 맞은 돌부처님들께 씌워 드렸어요.', story:'그날 밤 집 앞에 쌀가마가 놓였대요. 은혜를 나누게 갑옷을 계승 +17까지 손질해요.', c:'refA', n:27, gems:140},
   {k:'j12', w:3, who:'나무꾼 할아버지', t:'굴러간 주먹밥', hook:'주먹밥이 쥐 구멍에 굴러 들어갔더니 노랫소리가 들려요.', story:'쥐들의 떡방아 잔치를 지키게 요괴 700마리를 막아 주세요.', c:'kills', n:700, gems:130},
   {k:'j13', w:3, who:'산골 소년', t:'곰과 씨름한 아이', hook:'도끼를 멘 아이가 곰과 씨름해 이겼대요!', story:'힘을 보여 줄 차례예요. 보스를 8번 쓰러뜨려 주세요.', c:'bosses', n:8, gems:160},
   {k:'j14', w:3, who:'나룻배 사공', t:'눈보라 밤의 약속', hook:'눈보라 치던 밤 하얀 여인을 봤다는 말, 아무에게도 하지 말래요.', story:'약속을 지키는 동안 눈 요괴 1,000마리가 몰려와요.', c:'kills', n:1000, gems:150},
   {k:'j15', w:3, who:'비파 타는 호이치', t:'경문을 쓴 몸', hook:'밤마다 무사 영혼들이 제 비파를 들으러 와요.', story:'온몸에 경문을 썼는데 귀에만 못 썼대요. 영혼들을 달래게 레이드 3번.', c:'raids', n:3, gems:160},
   {k:'j16', w:3, who:'꾀 많은 소년', t:'숨는 도롱이', hook:'대나무 통을 멀리 보는 통이라 속여 덴구의 도롱이를 얻었어요!', story:'도롱이를 되찾으려는 덴구들을 돌려보내 주세요. 보스 6번.', c:'bosses', n:6, gems:150},
   {k:'j17', w:3, who:'강가 의원', t:'팔을 돌려준 값', hook:'말을 끌고 가려던 갓파의 팔을 붙잡았더니 고약 비법을 알려 준대요.', story:'약초를 캐는 동안 강가 요괴 800마리를 막아 주세요.', c:'kills', n:800, gems:140},
-  {k:'j18', w:3, who:'논두렁 아이', t:'해 뜬 날의 비', hook:'해가 쨍한데 비가 와요! 여우 시집가는 날이래요.', story:'여우불 행렬을 놀래키지 않게 길을 열어요. 단계 6개 더.', c:'stage', n:6, gems:140},
+  {k:'j18', w:3, who:'논두렁 아이', t:'해 뜬 날의 비', hook:'해가 쨍한데 비가 와요! 여우 시집가는 날이래요.', story:'여우불 행렬을 놀래키지 않게 길을 열어요. 부상 4-9까지 앞서 가 주세요.', c:'stageW', n:45, gems:140},
   {k:'j19', w:3, who:'밤길 상인', t:'얼굴 없는 손님', hook:'울던 아가씨가 돌아보니 얼굴이 없었어요!', story:'포장마차 주인도 얼굴이 없었대요… 밤길 요괴 보스를 5번 잡아 주세요.', c:'bosses', n:5, gems:140},
   {k:'j20', w:3, who:'호수의 용궁 아가씨', t:'산을 감은 지네', hook:'산을 일곱 바퀴 감은 큰 지네가 호수를 괴롭혀요.', story:'활 잘 쏘는 무사가 화살 한 대로 끝냈대요. 함께 레이드 4번!', c:'raids', n:4, gems:170},
   {k:'j21', w:3, who:'우물가 하녀들', t:'아홉 장의 접시', hook:'밤마다 우물에서 접시 세는 소리가 들려요. 하나, 둘… 아홉.', story:'열 번째 접시를 찾아 주면 쉴 수 있대요. 소환 25번으로 찾아봐요.', c:'summons', n:25, gems:140},
-  {k:'j22', w:3, who:'그릇 쓴 아가씨', t:'머리에 쓴 그릇', hook:'어머니가 씌워 준 그릇이 벗겨지지 않아요.', story:'그릇이 벗겨지는 날 보물이 쏟아진대요. 재련 18번으로 마음을 닦아요.', c:'refines', n:18, gems:160},
+  {k:'j22', w:3, who:'그릇 쓴 아가씨', t:'머리에 쓴 그릇', hook:'어머니가 씌워 준 그릇이 벗겨지지 않아요.', story:'그릇이 벗겨지는 날 보물이 쏟아진대요. 마음을 닦듯 무기를 계승 +19까지 벼려요.', c:'refW', n:29, gems:160},
   {k:'j23', w:3, who:'다리 아래 뱃사공', t:'고조 다리의 천 자루 칼', hook:'칼 천 자루를 모으겠다는 큰 승려가 다리를 막고 있어요.', story:'피리 부는 소년이 날렵하게 이겼대요. 보스 9번으로 날렵함을 보여 줘요.', c:'bosses', n:9, gems:170},
   {k:'j24', w:3, who:'가난한 할아버지', t:'쥐의 씨름', hook:'산에서 쥐들이 씨름을 하는데 우리 집 쥐가 늘 져요.', story:'떡을 먹이면 힘이 난대요. 떡방앗간을 지키게 요괴 1,200마리를 막아 주세요.', c:'kills', n:1200, gems:160},
   {k:'j25', w:3, who:'절 동자승', t:'세 장의 부적', hook:'밤 따러 간 산에서 산할멈에게 쫓기고 있어요!', story:'부적 세 장으로 강·산·불을 만들며 달아나요. 뒤쫓는 보스를 7번 막아 주세요.', c:'bosses', n:7, gems:160},
-  {k:'j26', w:3, who:'마을 촌장', t:'삼 년 잠꾸러기', hook:'삼 년 내내 자던 다로가 일어나 바위를 굴려 물길을 냈어요!', story:'새 물길을 지키게 단계 10개 더 올라가 주세요.', c:'stage', n:10, gems:170},
+  {k:'j26', w:3, who:'마을 촌장', t:'삼 년 잠꾸러기', hook:'삼 년 내내 자던 다로가 일어나 바위를 굴려 물길을 냈어요!', story:'새 물길이 바다까지 이어지게 부상 6-5까지 올라가 주세요.', c:'stageW', n:65, gems:170},
   {k:'j27', w:3, who:'가난한 젊은이', t:'짚 한 가닥', hook:'짚 한 가닥이 귤이 되고, 귤이 비단이 되고…', story:'마지막엔 큰 집이 됐대요. 소환 30번으로 바꿔 봐요.', c:'summons', n:30, gems:150},
   {k:'j28', w:3, who:'밭 가는 할아버지', t:'원숭이들의 가마', hook:'밭에서 자던 저를 원숭이들이 돌부처로 여겨 강 건너로 모셨어요.', story:'흉내 낸 욕심쟁이는 강에 빠졌대요. 원숭이 떼 1,000마리 사이를 지나가게 도와주세요.', c:'kills', n:1000, gems:150},
   {k:'j29', w:3, who:'산골 아들', t:'버리지 않은 어머니', hook:'늙은 부모를 산에 버리라는 명령이 내렸어요.', story:'몰래 모신 어머니의 지혜로 이웃 나라의 수수께끼를 풀었대요. 레이드 5번으로 지혜를 보여 줘요.', c:'raids', n:5, gems:180},
@@ -6444,7 +6824,7 @@ const SUB_Q = [
   // ── 곤륜(w 4): 중국 옛이야기(고사·민담) + 이야기꾼의 삼국지연의 ──
   {k:'z1', w:4, who:'흰 수염 노인', t:'산을 옮긴 노인', hook:'집 앞 산 두 개를 대대로 퍼 옮기겠다고 했더니 다들 웃어요.', story:'하늘이 감동해 산을 옮겨 줬대요. 우리도 꾸준히 — 요괴 1,500마리!', c:'kills', n:1500, gems:170},
   {k:'s1', w:4, who:'이야기꾼 노인', t:'복숭아밭의 맹세', hook:'복숭아꽃 아래 세 사람이 형제를 맺은 이야기, 들어 볼 텐가?', story:'함께 싸우는 법을 아는 이가 큰일을 하지. 동료와 함께 레이드를 5번 해 보게.', c:'raids', n:5, gems:180},
-  {k:'z2', w:4, who:'바닷가 소녀', t:'바다를 메우는 새', hook:'바다에 빠진 공주가 작은 새가 되어 돌을 물어 나른대요.', story:'정위새를 돕게 단계 12개 더 올라가 주세요.', c:'stage', n:12, gems:180},
+  {k:'z2', w:4, who:'바닷가 소녀', t:'바다를 메우는 새', hook:'바다에 빠진 공주가 작은 새가 되어 돌을 물어 나른대요.', story:'정위새를 돕게 곤륜 2-5까지 올라가 주세요.', c:'stageW', n:15, gems:180},
   {k:'s2', w:4, who:'초가집 서생', t:'세 번 찾아가기', hook:'세 번 찾아와야 마음을 연다는 이야기가 있지요.', story:'정성을 보이시오. 보스를 8번 쓰러뜨리고 다시 오시오.', c:'bosses', n:8, gems:150},
   {k:'z3', w:4, who:'성벽 아래 아낙', t:'성벽을 무너뜨린 울음', hook:'성 쌓으러 간 남편이 돌아오지 않아요.', story:'겨울옷을 전해 주러 가는 길이에요. 성벽의 요괴 보스 10번을 물리쳐 주세요.', c:'bosses', n:10, gems:170},
   {k:'s3', w:4, who:'바람 읽는 사공', t:'동남풍', hook:'강 위에 동남풍을 불러 불배를 띄운 이야기 아나?', story:'바람이 바뀌는 순간을 놓치지 말게. 요괴 1,200마리를 쓸어 보게.', c:'kills', n:1200, gems:160, gold:400},
@@ -6454,37 +6834,48 @@ const SUB_Q = [
   {k:'s5', w:4, who:'남쪽 장수', t:'일곱 번 잡고 일곱 번 놓아주기', hook:'일곱 번 잡고 일곱 번 놓아줘서 마음을 얻었다더군.', story:'힘으로만 이기는 게 다가 아니라네. 보스를 7번 잡고 놓아 보게… 아니, 잡아 보게.', c:'bosses', n:7, gems:200},
   {k:'z6', w:4, who:'베틀 앞 아버지', t:'아버지 대신 간 딸', hook:'군첩에 늙은 제 이름이 있어요…', story:'딸 목란이 말을 사서 대신 떠났대요. 열두 해 싸움처럼 보스 12번!', c:'bosses', n:12, gems:190},
   {k:'s6', w:4, who:'다리 지키는 장수', t:'다리 위의 호통', hook:'다리 하나를 홀로 막아 세운 호통 이야기!', story:'물러서지 말게. 요괴 1,000마리를 막아 내게.', c:'kills', n:1000, gems:150, gold:300},
-  {k:'z7', w:4, who:'늙은 병사', t:'섶에 눕고 쓸개를 핥다', hook:'패한 왕이 섶에 눕고 쓸개를 핥으며 때를 기다렸소.', story:'참는 힘을 기르게. 재련 25번.', c:'refines', n:25, gems:180},
-  {k:'s7', w:4, who:'말 탄 나그네', t:'다섯 관문 천 리 길', hook:'다섯 관문을 지나 천 리를 간 이야기가 있소.', story:'길은 걸어야 줄어드는 법. 지금 세계에서 단계를 10개 더 올라가 보시오.', c:'stage', n:10, gems:180},
+  {k:'z7', w:4, who:'늙은 병사', t:'섶에 눕고 쓸개를 핥다', hook:'패한 왕이 섶에 눕고 쓸개를 핥으며 때를 기다렸소.', story:'참는 힘을 기르게. 무기를 계승 +21까지 벼려 보시오.', c:'refW', n:31, gems:180},
+  {k:'s7', w:4, who:'말 탄 나그네', t:'다섯 관문 천 리 길', hook:'다섯 관문을 지나 천 리를 간 이야기가 있소.', story:'길은 걸어야 줄어드는 법. 곤륜 3-10까지 가 보시오.', c:'stageW', n:30, gems:180},
   {k:'z8', w:4, who:'피리꾼', t:'사방에서 들리는 고향 노래', hook:'밤마다 사방에서 우리 고향 노래가 들려요…', story:'포위를 뚫게 동료와 레이드 6번.', c:'raids', n:6, gems:190},
-  {k:'s8', w:4, who:'거문고 타는 선비', t:'빈 성의 거문고', hook:'성문을 활짝 열고 거문고를 탔다는 이야기 아시오?', story:'떨지 않는 마음이 가장 센 갑옷이오. 재련을 20번 해 보시오.', c:'refines', n:20, gems:160},
-  {k:'z9', w:4, who:'밭 가는 농부', t:'그루터기만 지키는 사람', hook:'토끼가 그루터기에 부딪힌 뒤로 이웃이 밭을 버리고 기다려요.', story:'기다리기만 하면 안 되죠. 단계 10개 더!', c:'stage', n:10, gems:170},
+  {k:'s8', w:4, who:'거문고 타는 선비', t:'빈 성의 거문고', hook:'성문을 활짝 열고 거문고를 탔다는 이야기 아시오?', story:'떨지 않는 마음이 가장 센 갑옷이오. 갑옷을 계승 +20까지 벼려 보시오.', c:'refA', n:30, gems:160},
+  {k:'z9', w:4, who:'밭 가는 농부', t:'그루터기만 지키는 사람', hook:'토끼가 그루터기에 부딪힌 뒤로 이웃이 밭을 버리고 기다려요.', story:'기다리기만 하면 안 되죠. 곤륜 4-10까지 나아가요!', c:'stageW', n:40, gems:170},
   {k:'s9', w:4, who:'은혜 갚는 장수', t:'좁은 길에서 비켜 주기', hook:'옛 은혜를 잊지 않고 길을 비켜 준 이야기라네.', story:'받은 건 갚아야지. 레이드를 4번 깨고 오게.', c:'raids', n:4, gems:150, mat:3},
   {k:'z10', w:4, who:'변방 노인', t:'말을 잃은 노인', hook:'말을 잃었는데 그 말이 좋은 말을 데리고 돌아왔다네.', story:'좋은 일 나쁜 일은 돌고 도는 법. 소환 40번으로 운을 시험해 보게.', c:'summons', n:40, gems:170},
   {k:'s10', w:4, who:'먹 가는 동자', t:'떠나는 글', hook:'충심을 글로 적고 먼 길을 떠났대요.', story:'마음을 글로 남기려면 힘이 있어야 해요. 보스를 9번 물리쳐 주세요.', c:'bosses', n:9, gems:150},
-  {k:'z11', w:4, who:'나루터 사공', t:'뱃전에 새긴 표시', hook:'칼을 떨어뜨린 자리를 뱃전에 새긴 손님이 있었지.', story:'배는 움직이는데 말이야! 칼은 제대로 벼려 두게. 재련 20번.', c:'refines', n:20, gems:160},
+  {k:'z11', w:4, who:'나루터 사공', t:'뱃전에 새긴 표시', hook:'칼을 떨어뜨린 자리를 뱃전에 새긴 손님이 있었지.', story:'배는 움직이는데 말이야! 칼은 제대로 벼려 두게. 무기 계승 +22까지.', c:'refW', n:32, gems:160},
   {k:'s11', w:4, who:'아이 업은 장수', t:'아이를 품고 적진을 뚫다', hook:'아이를 품에 안고 적진을 뚫은 장수 이야기!', story:'지킬 게 있으면 더 강해지는 법. 요괴 1,500마리.', c:'kills', n:1500, gems:200, gold:500},
   {k:'z12', w:4, who:'절 화공', t:'눈동자를 그리면', hook:'벽에 그린 용에 눈동자를 찍었더니 하늘로 날아갔대요.', story:'날아간 용이 남긴 비늘을 찾아 레이드 5번.', c:'raids', n:5, gems:180},
   {k:'s12', w:4, who:'의원', t:'뼈를 긁는 치료', hook:'뼈를 긁는 치료에도 바둑을 두었다는 장수가 있었지요.', story:'아파도 버티는 힘을 보여 주시오. 보스 10번.', c:'bosses', n:10, gems:160},
   {k:'z13', w:4, who:'가난한 선비', t:'반딧불과 눈빛', hook:'기름 살 돈이 없어 반딧불과 눈빛으로 글을 읽어요.', story:'밤길 요괴 1,000마리를 막아 주시면 마저 읽을게요.', c:'kills', n:1000, gems:150},
   {k:'s13', w:4, who:'닭 파는 상인', t:'닭갈비', hook:'버리기 아깝고 먹자니 살이 없는 닭갈비 이야기 아쇼?', story:'쓸 만한 걸 고르는 눈이 중요하지. 소환 30번 해서 골라 보쇼.', c:'summons', n:30, gems:150},
   {k:'z14', w:4, who:'이사 다니는 어머니', t:'세 번 옮긴 집', hook:'아이 공부를 위해 세 번이나 이사했어요.', story:'서당 옆 길의 요괴 보스를 8번 물리쳐 주세요.', c:'bosses', n:8, gems:160},
-  {k:'s14', w:4, who:'백발 활잡이', t:'늙어도 녹슬지 않는 활', hook:'늙었다고 활이 녹스나!', story:'한 걸음씩이면 된다네. 지금 세계에서 단계를 8개 더.', c:'stage', n:8, gems:160},
+  {k:'s14', w:4, who:'백발 활잡이', t:'늙어도 녹슬지 않는 활', hook:'늙었다고 활이 녹스나!', story:'한 걸음씩이면 된다네. 곤륜 6-5까지.', c:'stageW', n:55, gems:160},
   {k:'z15', w:4, who:'동무를 구한 아이', t:'독을 깬 아이', hook:'큰 물독에 동무가 빠졌는데 어른들은 사다리만 찾아요!', story:'돌로 독을 깨 동무를 살렸대요. 망설이지 말고 보스 9번!', c:'bosses', n:9, gems:170},
-  {k:'s15', w:4, who:'고리 엮는 대장장이', t:'배를 고리로 엮다', hook:'배를 고리로 엮으면 흔들리지 않는다던데…', story:'단단하게 엮을수록 좋지. 재련 18번.', c:'refines', n:18, gems:150},
-  {k:'z16', w:4, who:'저울 장수', t:'배로 잰 코끼리', hook:'코끼리를 배에 태워 물 높이를 새기고 돌로 무게를 쟀대요.', story:'머리를 쓰면 무거운 것도 거뜬해요. 재련 20번.', c:'refines', n:20, gems:170},
+  {k:'s15', w:4, who:'고리 엮는 대장장이', t:'배를 고리로 엮다', hook:'배를 고리로 엮으면 흔들리지 않는다던데…', story:'단단하게 엮을수록 좋지. 갑옷을 계승 +22까지.', c:'refA', n:32, gems:150},
+  {k:'z16', w:4, who:'저울 장수', t:'배로 잰 코끼리', hook:'코끼리를 배에 태워 물 높이를 새기고 돌로 무게를 쟀대요.', story:'머리를 쓰면 무거운 것도 거뜬해요. 갑옷을 계승 +23까지 벼려요.', c:'refA', n:33, gems:170},
   {k:'z17', w:4, who:'장사꾼 포숙', t:'나를 알아준 벗', hook:'벗이 이익을 더 가져가도 사정을 알았기에 탓하지 않았소.', story:'벗과 함께 레이드 6번을 해 보시오.', c:'raids', n:6, gems:190},
   {k:'z18', w:4, who:'조나라 사신', t:'구슬을 온전히 돌려보내다', hook:'성 열다섯 개와 바꾸자던 구슬을 끝내 온전히 지켜 왔소.', story:'지키는 힘을 보여 주시오. 보스 10번.', c:'bosses', n:10, gems:180},
   {k:'z19', w:4, who:'거문고 타는 백아', t:'줄을 끊은 거문고', hook:'내 소리를 알아주던 벗이 떠나 거문고 줄을 끊었소.', story:'벗의 무덤 가는 산길 요괴 1,200마리를 막아 주오.', c:'kills', n:1200, gems:170},
-  {k:'z20', w:4, who:'주막의 도사', t:'좁쌀 밥이 익는 동안의 꿈', hook:'좁쌀 밥이 익는 동안 평생의 꿈을 꾼 젊은이가 있었지.', story:'꿈이 아닌 진짜 길을 걸어 보게. 단계 12개 더.', c:'stage', n:12, gems:190},
+  {k:'z20', w:4, who:'주막의 도사', t:'좁쌀 밥이 익는 동안의 꿈', hook:'좁쌀 밥이 익는 동안 평생의 꿈을 꾼 젊은이가 있었지.', story:'꿈이 아닌 진짜 길을 걸어 보게. 곤륜 7-10까지.', c:'stageW', n:70, gems:190},
   {k:'z21', w:4, who:'홰나무 아래 선비', t:'개미 나라의 꿈', hook:'홰나무 아래 잠들어 개미 나라 사위가 됐다네.', story:'개미 나라를 지켜 준 것처럼 보스 11번!', c:'bosses', n:11, gems:180},
-  {k:'z22', w:4, who:'도관의 젊은이', t:'벽을 뚫는 술법', hook:'벽 뚫는 술법을 배웠는데 집에서 해 보니 머리만 부딪혀요.', story:'꾸준히 닦지 않으면 술법도 소용없대요. 재련 30번.', c:'refines', n:30, gems:190},
+  {k:'z22', w:4, who:'도관의 젊은이', t:'벽을 뚫는 술법', hook:'벽 뚫는 술법을 배웠는데 집에서 해 보니 머리만 부딪혀요.', story:'꾸준히 닦지 않으면 술법도 소용없대요. 무기를 계승 +24까지.', c:'refW', n:34, gems:190},
   {k:'z23', w:4, who:'고갯마루 주막 주인', t:'고개의 호랑이', hook:'세 잔 마시면 고개를 못 넘는다는 술을 열여덟 잔 마신 장사가 있었어요.', story:'맨손으로 호랑이를 잡았대요. 고개 요괴 보스 12번!', c:'bosses', n:12, gems:200},
   {k:'z24', w:4, who:'숲속 사슴', t:'호랑이 위세를 빌린 여우', hook:'여우가 호랑이 앞을 걸으니 짐승들이 다 도망쳐요.', story:'빌린 힘 말고 진짜 힘을 보여 주세요. 레이드 7번.', c:'raids', n:7, gems:200},
   {k:'z25', w:4, who:'술내기 하던 하인', t:'뱀에 다리를 그리다', hook:'뱀을 먼저 그리면 술을 마시기로 했는데, 다리까지 그리다 졌어요.', story:'쓸데없는 건 빼고 핵심만! 요괴 1,500마리.', c:'kills', n:1500, gems:200},
 ];
 const SUB_MAX = 3;
 const subRec = c => c === 'kills' ? S.rec.kills : c === 'bosses' ? S.rec.bosses : c === 'raids' ? S.rec.raids : c === 'refines' ? S.rec.refines : c === 'summons' ? S.rec.summons : S.maxStage;
+// 지금 상태로 보는 조건(이미 이뤘으면 받자마자 끝): 재련 단계(2부 계승 뒤는 25 + 계승 단계 − 15), 그 세계 최고 단계
+const refEffLv = slot => { const r = S.refine[slot]; return r.t ? REFINE_MAX + r.lv - REFINE_INHERIT : r.lv; };
+const SUB_STATE = {refW:() => refEffLv('weapon'), refA:() => refEffLv('armor'), stageW:q => q.w ? S.best['s' + q.w] || 0 : S.best.s0};
+const refLvText = n => n > REFINE_MAX ? `계승 +${n - (REFINE_MAX - REFINE_INHERIT)}` : `+${n}`;
+function subNeedText(q, v){
+  if (q.c === 'refW' || q.c === 'refA') return (v == null ? '' : refLvText(Math.min(v, q.n)) + ' / ') + `${q.c === 'refW' ? '무기' : '방어구'} ${refLvText(q.n)}`;
+  const stg = n => n >= 1 ? `${Math.floor((n - 1) / 10) + 1}-${(n - 1) % 10 + 1}` : '-';
+  if (q.c === 'stageW') return (v == null ? '' : stg(Math.min(v, q.n)) + ' / ') + `${WORLD_NAME[q.w]} ${stg(q.n)}`;
+  if (q.c === 'stage') return v == null ? `단계 ${q.n}개 더` : `${fmt(v)} / ${fmt(q.n)}단계`;
+  return (v == null ? '' : `${fmt(v)} / `) + `${fmt(q.n)}${SUB_UNIT[q.c]}`;
+}
 /* 세계마다 부탁이 그 세계 이야기 구간에 고르게 열린다(이승 10·저승 10·천계 10·부상 30·곤륜 40)
    구간: 이승 = 첫 환생 퀘스트까지, 저승 = 두 번째 환생까지, 천계 = 1부 끝까지, 부상 = 2부 끝까지, 곤륜 = 끝까지 */
 const SUB_K = [1, 2.5, 5, 20, 40], SUB_DUST = [20, 60, 120, 250, 400];
@@ -6504,6 +6895,7 @@ function subRewHTML(q){
 }
 const subAvail = () => SUB_Q.filter(q => subOpen(q) && !S.sub.done[q.k] && !S.sub.act[q.k]);
 function subProg(q){
+  if (SUB_STATE[q.c]) return SUB_STATE[q.c](q);
   const a = S.sub.act[q.k]; if (!a) return 0;
   if (q.c === 'stage') return a.w !== S.world ? q.n : Math.max(0, S.maxStage - a.base);
   return Math.max(0, subRec(q.c) - a.base);
@@ -6515,7 +6907,7 @@ function offerSub(k){
   if (!q || S.sub.done[q.k] || S.sub.act[q.k]) return;
   const full = Object.keys(S.sub.act).length >= SUB_MAX;
   showModal(`${q.who}의 부탁`, `<p class="story">「${q.hook}」</p><p>${q.story}</p>
-    <div class="dl"><span>할 일</span><b>${q.c === 'stage' ? `단계 ${q.n}개 더` : `${q.n}${SUB_UNIT[q.c]}`}</b></div>
+    <div class="dl"><span>할 일</span><b>${subNeedText(q)}${SUB_STATE[q.c] && subProg(q) >= q.n ? ' (이미 이뤘어요!)' : ''}</b></div>
     <div class="dl"><span>보상</span><b>보석 ${fmt(subGems(q))} · 쇳가루 ${fmt(subDust(q))}${subPiece(q) ? ` · 고삐 조각 ${subPiece(q)}` : ''}${q.gold ? ` · 엽전 ${fmt(subGold(q))}` : ''}${q.mat ? ` · 재료 ${q.mat}` : ''}</b></div>
     ${full ? `<p class="small" style="color:var(--seal)">부탁은 한 번에 ${SUB_MAX}개까지 들어 줄 수 있어요.</p>` : ''}`,
     [{label:'다음에'}, {label:'들어 줄게요', primary:true, fn:() => { if (!full) acceptSub(k); }}]);
@@ -6525,7 +6917,14 @@ function acceptSub(k){
   if (!q || S.sub.done[k] || S.sub.act[k] || Object.keys(S.sub.act).length >= SUB_MAX) return false;
   S.sub.act[k] = {base:subRec(q.c), w:S.world};
   addLog(`부탁을 들어 주기로 했어요: ${q.t}`, 'good'); sfx('quest');
+  if (subProg(q) >= q.n) claimSub(k);   // 이미 이룬 조건이면 바로 끝
   return true;
+}
+// 이미 이룬 마을 부탁·윤회의 시련은 저절로 마친다(누르지 않아도)
+function autoClear(){
+  if (!session || cut) return;
+  for (const q of SUB_Q) if (S.sub.act[q.k] && subProg(q) >= q.n) claimSub(q.k);
+  if (S.world === 0) TRIALS.forEach((t, i) => { if (trialReady(i)) claimTrial(i); });
 }
 function claimSub(k){
   const q = SUB_Q.find(x => x.k === k);
@@ -6619,8 +7018,11 @@ async function bootRoom(){
       const d = msg.data && typeof msg.data === 'object' ? msg.data : {};
       if (typeof d.w !== 'number') return;
       const name = cleanChat(typeof d.n === 'string' ? d.n : '').slice(0, 8) || '나그네';
+      const fresh = !tbPeers.has(msg.peer) || tbPeers.get(msg.peer).w !== d.w;
       tbPeers.set(msg.peer, {w:d.w, name, cls:CLASSES[d.c] ? d.c : 'musa', look:cleanLook(d.l), dps:Math.min(1e300, Math.max(1, +d.d || 1)), maxHp:Math.min(1e300, Math.max(1, +d.h || 1))});
+      if (fresh && session && tbJoinedId === d.w) tbJoin();   // 나중에 들어온 용사도 먼저 참가한 나를 알 수 있게 한 번 답한다
     }, () => {});
+    r.on('mk', msg => { if (msg && !msg.sameTab && !msg.isMe) mkRecv(msg); }, () => {});
     room = r;
   } catch (e) { room = null; }
 }
@@ -7099,7 +7501,8 @@ function updatePetFaces(){
 // 큰 보스 단추: 고리가 보스까지 남은 처치만큼 차오르고, 다 차면 눌러서 바로 도전(보스 수동이어도). 싸우는 중엔 남은 체력
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
-  if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
+  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
   if (!session && !window.__game) cls = 'off';
@@ -7107,14 +7510,16 @@ function updateBigBoss(){
   if (elBig.className !== 'bigboss ' + cls) elBig.className = 'bigboss ' + cls;
   setText($('#bbTxt'), txt); setText($('#bbSub'), sub);
   const off = (106.8 * (1 - p)).toFixed(1); const rf = $('#bbRing'); if (rf.style.strokeDashoffset !== off + 'px') rf.style.strokeDashoffset = off + 'px';
-  const lab = cls === 'ready' ? '보스 도전' : `보스까지 ${Math.max(0, FIELD.kills - S.kills)}마리`; if (elBig.getAttribute('aria-label') !== lab) elBig.setAttribute('aria-label', lab);
+  const lab = cls === 'mk' ? '장터에서 나가 사냥터로' : cls === 'ready' ? '보스 도전' : `보스까지 ${Math.max(0, FIELD.kills - S.kills)}마리`; if (elBig.getAttribute('aria-label') !== lab) elBig.setAttribute('aria-label', lab);
 }
 elBig.addEventListener('click', () => {
+  if (market){ leaveMarket(); sfx('click'); return; }
   if ((!session && !window.__game) || raid || bossActive) return;
   if (S.kills >= FIELD.kills){ S.autoBoss = true; bossRetry = 0; sfx('click'); }
   else { addLog(`몬스터 ${FIELD.kills - S.kills}마리를 더 잡으면 보스가 나와요.`); sfx('blip'); }
 });
 $('#newsBtn').addEventListener('click', () => { if (session) showNotes(); });
+$('#mkBtn').addEventListener('click', () => { if (!session && !window.__game) return; if (market) leaveMarket(); else enterMarket(); });
 $('#helpBtn').addEventListener('click', () => { if (!session) return; if (currentTab !== 'rec') $('#tab-rec').click(); setTimeout(() => { const g = document.querySelector('.hgrid'); if (g) g.scrollIntoView({block:'center', behavior:'smooth'}); }, 80); });
 // 미니맵: 사냥판(마름모)과 용사·몬스터·동료 점, 지금 보이는 화면 테두리
 const miniCv = $('#mini'), miniG = miniCv.getContext('2d');
@@ -7124,7 +7529,7 @@ function drawMini(){
   if (!miniBox){ const pts = [[0, TOPR], [COLS, TOPR], [0, ROWS], [COLS, ROWS]].map(([tx, ty]) => [isoX(tx, ty), isoY(tx, ty)]); miniBox = {pts, x0:Math.min(...pts.map(p => p[0])), x1:Math.max(...pts.map(p => p[0])), y0:Math.min(...pts.map(p => p[1])), y1:Math.max(...pts.map(p => p[1]))}; }
   const g = miniG, w = miniCv.width, h = miniCv.height, B = miniBox, sc = Math.min((w - 30) / (B.x1 - B.x0), (h - 46) / (B.y1 - B.y0));
   const ox = (w - (B.x1 - B.x0) * sc) / 2 - B.x0 * sc, oy = 8 - B.y0 * sc, X = x => ox + x * sc, Y = y => oy + y * sc;
-  const Rg = curRegion(S.stage), th = ISO_THEME[Rg.theme] || ISO_THEME.village;
+  const Rg = curRegion(S.stage), th = market ? {top:['#d6c6a4']} : ISO_THEME[Rg.theme] || ISO_THEME.village;
   g.clearRect(0, 0, w, h);
   const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, 'rgba(20,28,46,.9)'); bg.addColorStop(1, 'rgba(6,9,16,.95)'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
   const c = B.pts; g.beginPath(); g.moveTo(X(c[0][0]), Y(c[0][1])); g.lineTo(X(c[1][0]), Y(c[1][1])); g.lineTo(X(c[3][0]), Y(c[3][1])); g.lineTo(X(c[2][0]), Y(c[2][1])); g.closePath();
@@ -7135,10 +7540,11 @@ function drawMini(){
   g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.5; g.strokeRect(X(camX), Y(camY), VW * sc, H * sc);
   const dot = (x, y, r, col, ring) => { g.beginPath(); g.arc(X(x), Y(y), r, 0, 7); g.fillStyle = col; g.fill(); if (ring){ g.lineWidth = 2; g.strokeStyle = ring; g.stroke(); } };
   if (raid) for (const a of raid.allies || []) if (!a.down) dot(a.x, a.y, 4, '#7fc8ff');
+  if (market){ for (const n of MK_NPC) dot(isoX(n.tx, n.ty), isoY(n.tx, n.ty), 4.5, '#ffb347', '#fff2c8'); for (const p of market.peers.values()) dot(p.x, p.y, 4.5, '#7fc8ff', '#ffffff'); }
   for (const m of mobs) if (!m.dead && m.spawnT <= 0) dot(m.x, m.y, m.boss || m.raid ? 8 : 3.5, m.boss || m.raid ? '#ff3b5a' : '#ff8a7a', m.boss || m.raid ? '#ffffff' : null);
   const pu = 1 + 0.25 * Math.sin(gtime * 5);
   dot(hero.x, hero.y, 5.5 * pu, '#ffd24a', '#ffffff');
-  setText($('#miniLbl'), raid ? raid.info.label : `${WORLD_NAME[S.world]} · ${stageLabel(S.stage)}`);
+  setText($('#miniLbl'), market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? raid.info.label : `${WORLD_NAME[S.world]} · ${stageLabel(S.stage)}`);
 }
 
 /* --- 수련 --- */
@@ -7568,6 +7974,140 @@ function buildMount(){
   };
 }
 
+/* --- 가방 화면 --- */
+function bagItemHTML(it){
+  const I = itemInfo(it), up = !bagWorse(it);
+  return `<button type="button" class="bitem${up ? ' up' : ''}" data-bid="${it.id}" style="--g:${I.color}"><span class="ic">${SVG[I.icon] || ''}</span><b>${I.name}</b><small>${I.desc}</small>${up ? '<i>↑</i>' : ''}</button>`;
+}
+function bagItemModal(id){
+  const it = S.bag[bagFind(id)]; if (!it) return;
+  const I = itemInfo(it), cur = it.t === 'acc' ? (S.acc[it.k].g >= 0 ? `${ACC[it.k].names[S.acc[it.k].g]} +${fmt(S.acc[it.k].p)}%` : '없음') : `+${fmt(S.myth[it.k] || 0)}%`;
+  showModal(I.name, `<p><span class="tag" style="color:${I.color};border-color:${I.color}">${I.grade}</span> ${I.desc}</p>
+    <div class="dl"><span>지금 낀 것</span><b>${cur}</b></div>
+    <p class="small">끼면 지금 것은 가방으로 들어와요. 상인에게 팔면 보석 ${fmt(itemNpcGems(it))}개.${mkOn() ? ' 장터에 올리면 다른 용사가 보석으로 사 갈 수 있어요.' : ''}</p>`,
+    [{label:'닫기'}, {label:`팔기 (보석 ${fmt(itemNpcGems(it))})`, fn:() => { const v = bagSell(id); if (v){ addLog(`${I.name}${josa(I.name, '을', '를')} 상인에게 팔았어요 (보석 +${fmt(v)})`, 'gain'); sfx('gem'); saveLocal(); refreshPanel(); } }},
+     ...(mkOn() ? [{label:'장터에 올리기', fn:() => mkSellModal({src:{t:'bag', id}, it, stack:false})}] : []),
+     {label:'끼기', primary:true, fn:() => { if (bagEquip(id)){ addLog(`${I.name}${josa(I.name, '을', '를')} 꼈어요!`, 'good'); sfx('rare'); refreshPanel(); } }}]);
+}
+let bagSig = '';
+function buildBag(){
+  bagSig = '';
+  panel.innerHTML = `
+    <div class="ph"><h2>가방</h2><span class="small">장신구·신화 보물 <b id="bagN"></b> / ${BAG_MAX}</span></div>
+    <div class="dbtns" style="margin-bottom:10px"><button class="btn primary" id="toMarket">장터 마을로 가기</button><button class="btn" id="mkPageBtn">장터 거래</button><button class="btn" id="sellWorse">안 쓰는 것 모두 팔기</button></div>
+    <p class="hint">수문장·타임 보스·오프라인에서 나온 장신구·신화 보물 가운데 지금 낀 것보다 약한 것과, 바꿔 낀 옛것이 여기 모여요. 눌러서 끼거나 상인에게 팔거나 장터에 올려요. <b>↑</b>는 지금 것보다 좋은 물건이에요.</p>
+    <div class="bgrid" id="bagGrid"></div>
+    <h3 class="sub">재료 · 소모품</h3><div class="matrow" id="bagStack"></div>
+    <p class="small" id="bagGear"></p>`;
+  $('#toMarket').addEventListener('click', () => { closePage(); enterMarket(); });
+  $('#mkPageBtn').addEventListener('click', () => { mkView = 'buy'; buildTab('market'); });
+  $('#sellWorse').addEventListener('click', () => { const r = bagSellWorse(); addLog(r.n ? `안 쓰는 물건 ${r.n}개를 팔았어요 (보석 +${fmt(r.g)})` : '팔 물건이 없어요(지금 것보다 좋은 물건은 남겨요).', r.n ? 'gain' : ''); if (r.n) sfx('gem'); refreshPanel(); });
+  return () => {
+    const sig = S.bag.map(it => it.id).join(',') + '|' + ACC_ORDER.map(k => S.acc[k].p).join(',') + '|' + MYTHS.map(m => S.myth[m.k] || 0).join(',');
+    setText($('#bagN'), String(S.bag.length));
+    if (sig !== bagSig){
+      bagSig = sig;
+      const items = S.bag.slice().sort((a, b) => (a.t === b.t ? 0 : a.t === 'acc' ? -1 : 1) || (b.g || 0) - (a.g || 0) || b.p - a.p);
+      setHTML($('#bagGrid'), items.length ? items.map(bagItemHTML).join('') : '<p class="small" style="grid-column:1/-1">아직 빈 가방이에요. 수문장(지역 9번째 단계)·타임 보스에서 장신구가, 오프라인·퀘스트 행운에서 신화 보물이 나와요.</p>');
+      $('#bagGrid').querySelectorAll('[data-bid]').forEach(b => b.addEventListener('click', () => bagItemModal(+b.dataset.bid)));
+    }
+    const st = [['쇳가루', S.dust, '#c8c0b0'], ['고삐 조각', S.mount.piece, '#c8b0ff'], ...MATS.map(M => [M.name, S.mat[M.k] || 0, M.color]), ['인삼 탕약', S.inv.potion, '#8ff0a0'], ['산삼 탕약', S.inv.elixir, '#ffd977'], ['숫돌', S.inv.whet, '#9fe7ff'], ['토벌패', raidTickets(), '#ffcc4d']];
+    setHTML($('#bagStack'), st.map(([n, v, c]) => `<span style="color:${c}">${n} <b>${fmt(Math.floor(v))}</b></span>`).join(''));
+    const spare = ['weapon', 'armor'].reduce((a, s) => a + S.gear[s].count.reduce((x, c, i) => x + Math.max(0, c - (S.equip[s] === i ? 1 : 0)), 0), 0);
+    setText($('#bagGear'), `남는 장비 조각 ${fmt(spare)}개 — [장비]에서 합성하거나 [재련]에서 갈아 쇳가루로, 장터에 올릴 수도 있어요.`);
+  };
+}
+
+/* --- 장터 거래 화면(사기·팔기·내 물건·상인) --- */
+let mkView = 'buy', mkKind = '', mkRows = null, mkMineRows = null, mkMsg = '', mkLoading = false;
+function mkRowHTML(it, right, sub){
+  const I = itemInfo(it);
+  return `<div class="mkrow" style="--g:${I.color}"><span class="ic">${SVG[I.icon] || ''}</span><div class="mt"><b>${I.name}</b><small>${I.desc}${sub ? ' · ' + sub : ''}</small></div>${right}</div>`;
+}
+function mkSellModal(s){
+  const I = itemInfo(s.it), sug = Math.max(10, s.it.t === 'acc' || s.it.t === 'myth' ? itemNpcGems(s.it) * 3 : s.it.t === 'gear' ? (1 + Math.floor(s.it.it / 4)) * 20 : 30);
+  showModal('장터에 올리기', `<p><b style="color:${I.color}">${I.name}</b> · ${I.desc}</p>
+    ${s.stack ? `<label class="dl"><span>몇 개 (최대 ${fmt(s.max)})</span><input class="mk-inp" id="mkN" type="number" min="1" max="${s.max}" value="${Math.min(s.max, s.it.t === 'dust' ? 100 : s.it.t === 'gear' ? 1 : 5)}"></label>` : ''}
+    <label class="dl"><span>값 (보석, 전부)</span><input class="mk-inp" id="mkP" type="number" min="1" max="${MK_PRICE_MAX}" value="${sug}"></label>
+    <p class="small">팔리면 수수료 ${Math.round(MK_FEE * 100)}%를 뗀 보석을 [내 물건]에서 받아요. ${MK_DAYS}일 동안 안 팔리면 [내 물건]에서 돌려받아요. 한 번에 ${MK_MAX}개까지 올릴 수 있어요.</p>`,
+    [{label:'그만두기'}, {label:'올리기', primary:true, fn:async () => {
+      const n = s.stack ? +$('#mkN').value : 1, p = +$('#mkP').value;
+      mkMsg = '올리는 중…'; refreshPanel();
+      const r = await mkPost(s.src, n, p);
+      mkMsg = r.err ? mkErrText(r.err) : `${I.name}${josa(I.name, '을', '를')} 보석 ${fmt(p)}에 올렸어요!`;
+      if (!r.err){ addLog(mkMsg, 'good'); sfx('quest'); mkMineRows = null; }
+      if (currentTab === 'market') buildTab('market', true); else refreshPanel();
+    }}]);
+}
+async function mkLoad(){
+  if (mkLoading) return; mkLoading = true;
+  if (mkView === 'buy'){ const r = await mkList(mkKind); mkRows = r.rows || []; if (r.err) mkMsg = mkErrText(r.err); }
+  else if (mkView === 'mine'){ const r = await mkMine(); mkMineRows = r.rows || []; if (r.err) mkMsg = mkErrText(r.err); }
+  mkLoading = false;
+  if (currentTab === 'market') buildTab('market', true);
+}
+function buildMarket(){
+  if (S.mkNpc.day !== today()) S.mkNpc = {day:today(), got:[]};
+  const on = mkOn(), seg = `<div class="seg four" role="group" aria-label="장터 보기">${[['buy', '사기'], ['sell', '팔기'], ['mine', '내 물건'], ['npc', '상인']].map(([k, n]) => `<button id="mk-${k}" aria-pressed="${mkView === k}">${n}</button>`).join('')}</div>`;
+  const offNote = `<div class="card"><p class="small" style="margin:0">${MK_ERR.off} 지금은 <b>[상인]</b>에서 NPC 상인과 거래할 수 있어요.</p></div>`;
+  let body = '';
+  if (mkView === 'buy'){
+    if (!on) body = offNote;
+    else {
+      if (mkRows === null && !mkLoading) setTimeout(mkLoad, 0);
+      const chips = [['', '전체'], ['acc', '장신구'], ['myth', '신화'], ['gear', '장비'], ['mat', '재료']].map(([k, n]) => `<button class="chip" data-kind="${k}" aria-pressed="${mkKind === k}">${n}</button>`).join('');
+      body = `<div class="mode" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">${chips}<button class="chip" id="mkRe">새로고침</button></div>
+        <div class="mklist">${mkRows === null || mkLoading ? '<p class="small">불러오는 중…</p>' : mkRows.length ? mkRows.map(r => mkRowHTML(r.it, `<button class="btn sm ${r.mine ? '' : 'primary'}" data-buy="${r.id}" ${r.mine ? 'disabled' : ''}>${r.mine ? '내 물건' : `<span class="gem"></span>${fmt(r.price)}`}</button>`, `판 사람 ${esc(r.name)}`)).join('') : '<p class="small">지금 올라온 물건이 없어요. 내 물건을 먼저 올려 보세요!</p>'}</div>`;
+    }
+  } else if (mkView === 'sell'){
+    if (!on) body = offNote;
+    else { const src = mkSources(); body = `<p class="hint" style="margin-top:10px">올릴 물건을 골라 값(보석)을 정해요. 가방의 장신구·신화 보물, 남는 장비 조각, 재료·쇳가루·고삐 조각을 올릴 수 있어요.</p>
+      <div class="mklist">${src.length ? src.map((s, i) => mkRowHTML(s.it, `<button class="btn sm primary" data-sell="${i}">올리기</button>`)).join('') : '<p class="small">올릴 물건이 없어요.</p>'}</div>`; }
+  } else if (mkView === 'mine'){
+    if (!on) body = offNote;
+    else {
+      if (mkMineRows === null && !mkLoading) setTimeout(mkLoad, 0);
+      const sold = (mkMineRows || []).filter(r => r.sold), sum = sold.reduce((a, r) => a + Math.floor(r.price * (1 - MK_FEE)), 0);
+      body = `<div class="card" style="margin-top:10px"><div class="ct">판 값<span class="tag">수수료 ${Math.round(MK_FEE * 100)}%</span></div><p class="small" style="margin:0 0 8px">팔린 물건 ${sold.length}개 · 받을 보석 <b>${fmt(sum)}</b></p><button class="btn primary" id="mkClaim" ${sum ? '' : 'disabled'}>판 값 받기</button></div>
+        <div class="mklist">${mkMineRows === null || mkLoading ? '<p class="small">불러오는 중…</p>' : mkMineRows.length ? mkMineRows.map(r => mkRowHTML(r.it, r.sold ? '<span class="tag">팔림</span>' : `<button class="btn sm" data-cancel="${r.id}">${r.expired ? '돌려받기' : '내리기'}</button>`, r.sold ? `${esc(r.buyer)}님이 삼 · 보석 ${fmt(r.price)}` : `보석 ${fmt(r.price)}${r.expired ? ' · 기한 지남' : ' · 파는 중'}`)).join('') : '<p class="small">올린 물건이 없어요.</p>'}</div>`;
+    }
+  } else {
+    const offers = npcOffers();
+    body = `<p class="hint" style="margin-top:10px">떠돌이 상인 <b>보부상 덕보</b>가 날마다 다른 물건을 하나씩만 팔아요(자정에 바뀜). 서버 없이도 거래할 수 있어요. 가방의 물건은 [가방]에서 상인에게 팔 수 있어요.</p>
+      <div class="mklist">${offers.map((o, i) => mkRowHTML(o.it, S.mkNpc.got.includes(i) ? '<span class="tag">오늘 팔림</span>' : `<button class="btn sm primary" data-npc="${i}"><span class="gem"></span>${fmt(o.price)}</button>`)).join('')}</div>`;
+  }
+  panel.innerHTML = `<div class="ph"><h2>장터</h2><span class="small">${on ? '온라인 · 다른 용사와 거래' : '혼자 · NPC 상인만'}</span></div>${seg}${mkMsg ? `<p class="small mkmsg">${esc(mkMsg)}</p>` : ''}${body}`;
+  mkMsg = '';
+  for (const k of ['buy', 'sell', 'mine', 'npc']) $('#mk-' + k).addEventListener('click', () => { mkView = k; if (k === 'buy') mkRows = null; if (k === 'mine') mkMineRows = null; buildTab('market', true); });
+  panel.querySelectorAll('[data-kind]').forEach(b => b.addEventListener('click', () => { mkKind = b.dataset.kind; mkRows = null; buildTab('market', true); }));
+  const re = $('#mkRe'); if (re) re.addEventListener('click', () => { mkRows = null; buildTab('market', true); });
+  panel.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', async () => {
+    const row = (mkRows || []).find(r => r.id === +b.dataset.buy); if (!row) return;
+    b.disabled = true;
+    const r = await mkBuy(row);
+    mkMsg = r.err ? mkErrText(r.err) : `${itemInfo(row.it).name}${josa(itemInfo(row.it).name, '을', '를')} 샀어요!`;
+    if (!r.err){ addLog(mkMsg, 'gain'); sfx('rare'); }
+    mkRows = null; buildTab('market', true);
+  }));
+  panel.querySelectorAll('[data-sell]').forEach(b => b.addEventListener('click', () => { const s = mkSources()[+b.dataset.sell]; if (s) mkSellModal(s); }));
+  panel.querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', async () => {
+    b.disabled = true; const r = await mkCancel(+b.dataset.cancel);
+    mkMsg = r.err ? mkErrText(r.err) : '물건을 돌려받았어요.'; mkMineRows = null; buildTab('market', true);
+  }));
+  const cl = $('#mkClaim'); if (cl) cl.addEventListener('click', async () => {
+    cl.disabled = true; const r = await mkClaim();
+    mkMsg = r.err ? mkErrText(r.err) : `판 값 보석 ${fmt(r.gems)}개를 받았어요!`; if (!r.err && r.gems){ addLog(mkMsg, 'gain'); sfx('gem'); }
+    mkMineRows = null; buildTab('market', true);
+  });
+  panel.querySelectorAll('[data-npc]').forEach(b => b.addEventListener('click', () => {
+    const o = npcOffers()[+b.dataset.npc], r = npcBuy(+b.dataset.npc);
+    mkMsg = r.err ? mkErrText(r.err) : `상인에게서 ${itemInfo(o.it).name}${josa(itemInfo(o.it).name, '을', '를')} 샀어요!`;
+    if (!r.err){ addLog(mkMsg, 'gain'); sfx('rare'); }
+    buildTab('market', true);
+  }));
+  return null;
+}
+
 /* --- 아바타 --- */
 function avPetIdx(){ for (const t of PET_TYPE_ORDER){ const i = eqPet(t); if (i >= 0) return i; } const j = S.pets.lv.findIndex(l => l > 0); return j >= 0 ? j : 0; }
 function avPreview(a){
@@ -7900,7 +8440,7 @@ function buildQuest(){
         const c = $('#sq-' + q.k); if (!c) continue;
         const v = Math.min(q.n, subProg(q)), done = v >= q.n;
         c.querySelector('.meter i').style.width = (v / q.n * 100).toFixed(1) + '%';
-        setText(c.querySelector('.pr'), `${fmt(v)} / ${fmt(q.n)}${SUB_UNIT[q.c]}`);
+        setText(c.querySelector('.pr'), subNeedText(q, subProg(q)));
         const b = c.querySelector('[data-sq]'); b.disabled = !done; setText(b, done ? '보상 받기' : '진행 중'); c.classList.toggle('ready', done);
       }
     };
@@ -8348,8 +8888,8 @@ function buildJourney(){
   let last = sig();
   return () => { const now = sig(); if (now !== last && currentTab === 'map'){ last = now; const sl = sc.scrollLeft; buildTab('map'); const s2 = $('#jmScroll'); if (s2) s2.scrollLeft = sl; } };
 }
-const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec, map:buildJourney};
-const PAGE_META = {map:['여정 지도', 'mapBtn']};   // 메뉴 칸이 없는 페이지: 제목과 아이콘을 가져올 단추
+const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec, bag:buildBag, map:buildJourney, market:buildMarket};
+const PAGE_META = {map:['여정 지도', 'mapBtn'], market:['장터', 'mkBtn']};   // 메뉴 칸이 없는 페이지: 제목과 아이콘을 가져올 단추
 // 메뉴 페이지: 오른쪽(세로 화면은 아래) 메뉴를 누르면 장면을 덮는 별도 화면으로 열린다. 같은 메뉴를 다시 누르거나 ✕·Esc로 닫는다
 let currentTab = null, refresher = null;
 function buildTab(key, keepScroll){
@@ -8870,7 +9410,7 @@ function logout(){
    서버에 닿지 않으면 지금처럼 이 기기 저장으로 놀고, 다시 닿으면 1분마다 올린다. */
 const ONLINE = Object.assign({url:'https://gqconcepvhoyqciwwbbf.supabase.co', key:'sb_publishable_iYTPNM7jQlmlA7ibfhHKaw_UyjTU_0B'}, window.__samhanOnline || {});   // key는 '공개용(publishable) 키'라 여기 적어도 된다(비밀 키는 절대 넣지 않는다)
 const ON_KEY = 'samhan-online-v1';
-const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big'];
+const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
 let online = null, onlineLib = null, onlineNote = '';
 const onlineWanted = () => !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
 function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); }); }
@@ -8889,7 +9429,8 @@ async function rpc(fn, args){
   } catch (e) { throw Object.assign(new Error('net'), {code:'net'}); }
   if (r && r.error){
     const m = String(r.error.message || '');
-    throw Object.assign(new Error(m), {code:ON_CODES.find(c => m.includes(c)) || 'net'});
+    const nofn = r.error.code === 'PGRST202' || /Could not find the function|does not exist/.test(m);   // 서버에 아직 새 함수가 없음(setup.sql을 다시 실행하기 전)
+    throw Object.assign(new Error(m), {code:nofn ? 'no_fn' : ON_CODES.find(c => m.includes(c)) || 'net'});
   }
   return r ? r.data : null;
 }
@@ -8962,7 +9503,7 @@ async function pushOnlineNow(){
 async function onlineRoom(){
   const sb = await onlineClient(), me = randHex(6), hs = {}, peerFns = [];
   const ch = sb.channel('samhan-world', {config:{broadcast:{self:false}, presence:{key:me}}});
-  for (const topic of ['chat', 'tb']) ch.on('broadcast', {event:topic}, msg => {
+  for (const topic of ['chat', 'tb', 'mk']) ch.on('broadcast', {event:topic}, msg => {
     const p = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
     for (const fn of hs[topic] || []) fn({data:p.d, peer:String(p.p || '').slice(0, 16)});
   });
@@ -9097,7 +9638,7 @@ function offlineReward(sec){
     if (Math.random() < OFF_MYTH_P * (window.__game && window.__game.offLuck || 1)){ const m = dropMyth(questDiff({daily:true}), null, true); myths.push(m); }
   }
   saveLocal();
-  const mythRow = m => { const M = MYTHS.find(x => x.k === m.k); return `<li style="color:${MYTH_COLOR}">${M.name}<span>신화 보물${m.up ? ` · ${M.stat} +${m.p}%` : ' (이미 더 센 것이 있어 보석으로)'}</span></li>`; };
+  const mythRow = m => { const M = MYTHS.find(x => x.k === m.k); return `<li style="color:${MYTH_COLOR}">${M.name}<span>신화 보물${m.up ? ` · ${M.stat} +${m.p}%` : ' (이미 더 센 것이 있어 가방으로)'}</span></li>`; };
   showModal('다녀오셨습니까?', `
     <p>자리를 비운 <b>${fmtTime(sec)}</b> 동안 용사가 스킬 자동으로 <b>${fmt(kills)}마리</b>를 잡았어요.</p>
     <ul class="rewards">
@@ -9345,7 +9886,7 @@ function start(hotData){
   else window.addEventListener('resize', resize);
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -9399,6 +9940,7 @@ if (location.search.indexOf('simtest') >= 0){
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
     subOpen, subGems, get PART1_END(){ return PART1_END; }, get PART2_END(){ return PART2_END; },
+    bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
