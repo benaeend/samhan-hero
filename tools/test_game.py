@@ -858,6 +858,13 @@ async def main():
         qs = await page.evaluate("() => ({open: !document.querySelector('#page').hidden, got: window.__game.S.quest.dgot.length, gems: window.__game.S.gems})")
         check(qs['open'] and qs['got'] == 1 and qs['gems'] > g0, f'퀘스트 창: 오늘의 할 일 보상을 받아도 퀘스트 창에 그대로 있다 {qs}')
         await page.evaluate("() => { const G = window.__game; G.closePage(); G.quiet = true; }")
+        # 6-8n) 곤륜 저장을 다시 불러와도 곤륜 그대로(예전엔 이승 Lv100으로 바뀜), 이미 바뀐 저장은 곤륜 기록으로 되돌림
+        kf = await page.evaluate("""() => { const G = window.__game, S = G.S;
+          const a = G.mergeState(Object.assign(JSON.parse(JSON.stringify(S)), {world:4, level:455, stage:40, maxStage:42, best:Object.assign({}, S.best, {s4:42, l4:455})}));
+          const b = G.mergeState(Object.assign(JSON.parse(JSON.stringify(S)), {world:0, level:100, stage:63, maxStage:70, best:Object.assign({}, S.best, {s4:63, l4:475, l0:475})}));
+          return {a:[a.world, a.level, a.maxStage], b:[b.world, b.level, b.maxStage, b.stage, b.best.l0, !!b.kunlunFix]}; }""")
+        check(kf['a'] == [4, 455, 42] and kf['b'][:4] == [4, 475, 63, 63] and kf['b'][4] <= 100 and kf['b'][5],
+              f'곤륜 저장: 다시 불러와도 곤륜 그대로이고, 예전에 이승으로 바뀐 저장은 곤륜 기록으로 되돌린다 {kf}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';

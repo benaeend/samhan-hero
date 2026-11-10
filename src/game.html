@@ -866,7 +866,7 @@ body:not(.portrait) .mini .mini-ic{display:none}
 body:not(.portrait) .scene > #chatBtn{left:calc(8px + env(safe-area-inset-left));bottom:8px;width:42px;height:42px;border-radius:50%}
 body:not(.portrait) .log{left:calc(58px + env(safe-area-inset-left));bottom:12px}
 body:not(.portrait) .guide{bottom:56px}
-body.portrait .topr .sbtn{display:none}
+body.portrait .topr .sbtn{display:none}body.portrait .topr .sbtn.always{display:grid;place-items:center}
 body.portrait .log{bottom:126px}
 
 /* 가방·장터 */
@@ -950,6 +950,7 @@ body.in-market .act{display:none}
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
       <div class="cur" aria-label="쇳가루" id="curDust"><span class="dusti"></span><span id="dustTop">0</span></div>
       <div class="cur" aria-label="고삐 조각" id="curPiece" hidden><span class="piecei"></span><span id="pieceTop">0</span></div>
+      <button class="btn-chat sbtn always" id="charBtn" aria-label="캐릭터 바꾸기" title="캐릭터 바꾸기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM3 19c0-3.3 2.7-6 6-6s6 2.7 6 6v1H3zM15 5h4V3l3 3-3 3V7h-4zm7 10h-4v2l-3-3 3-3v2h4z"/></svg></button>
       <button class="btn-chat sbtn" id="mkBtn" aria-label="장터"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18l1 5a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5-2zm2 8.6V21h14v-8.4a5 5 0 0 1-2 .4v4H7v-4a5 5 0 0 1-2-.4z"/></svg></button>
       <button class="btn-chat sbtn" id="newsBtn" aria-label="업데이트 소식"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h13v14H6a2 2 0 0 1-2-2zm13 3h3v9a2 2 0 0 1-2 2h-1zM7 8v3h7V8zm0 5v2h7v-2z"/></svg></button>
       <button class="btn-chat sbtn" id="helpBtn" aria-label="하는 법"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 14v2h2v-2zm1-10a4 4 0 0 0-4 4h2a2 2 0 1 1 3 1.7c-1.2.7-2 1.5-2 3.3h2c0-1 .4-1.4 1.2-1.9A4 4 0 0 0 12 6z"/></svg></button>
@@ -1225,7 +1226,7 @@ const dChargeMul = l => 2.5 + 0.05 * (l - 1);
 const dBaguaAdd = l => 60 + 4 * (l - 1);
 const dGutAtk = l => 50 + (l - 1);          // 만신 대굿 공격력 +%(예전엔 레벨 효과가 없었음)
 // 후반(3·4차 전직) 직업 맞춤(2026-11 (27)): 같은 장비·능력치에서 무사=1 기준 보스 피해 목표 자객 1.4~1.7·술사 1.2~1.4·도인 1.0~1.3(bench)
-const LATE_K = {clone:0.3, jagaekD:0.14, sulsaC:1.2, sulsaD:0.38, doinD:0.9, shinA:120, shinB:4, shinT:20};   // 예전: 분신 0.6·자객 4차 0.08·식신 0.67·우레 0.17·굿춤 20+0.5/레벨 12초
+const LATE_K = {clone:0.3, cloneMob:0.6, jagaekD:0.14, sulsaC:1.0, sulsaD:0.38, doinD:0.9, shinA:120, shinB:4, shinT:20};   // 예전: 분신 0.6·자객 4차 0.08·식신 0.67·우레 0.17·굿춤 20+0.5/레벨 12초
 const dShinAtk = l => LATE_K.shinA + LATE_K.shinB * (l - 1);   // 신명 굿춤 공격력 +%
 // 술사 마력 보호막(최대 체력의 %)
 const shieldPct = l => 40 + (l - 1);
@@ -1255,7 +1256,7 @@ function skillDesc(i, l){
     return `하늘과 땅을 가르는 일격: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
   }
   if (d.kind === 'jobC'){
-    if (S.cls === 'jagaek') return `깃털 분신 셋이 12초 동안 함께 싸워요(분신 하나가 칠 때마다 공격력의 ${Math.round(LATE_K.clone * 100 * (1 + 0.03 * (l - 1)))}%, 치명타 그대로)`;
+    if (S.cls === 'jagaek') return `깃털 분신 셋이 12초 동안 함께 싸워요(분신 하나가 칠 때마다 공격력의 ${Math.round(LATE_K.cloneMob * 100 * (1 + 0.03 * (l - 1)))}%, 보스에게는 ${Math.round(LATE_K.clone * 100 * (1 + 0.03 * (l - 1)))}%, 치명타 그대로)`;
     if (S.cls === 'sulsa') return `종이 식신 12장이 날아가 하나에 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.sulsaC * sm))}%`;
     return `바람 칼날이 8번 휘몰아쳐 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobCPct(l) * sm))}%씩`;
   }
@@ -1341,7 +1342,11 @@ const refinePct = lv => 4 * lv + 0.3 * lv * lv;
    2부(부상)로 건너가면 무기·방어구가 '계승'되어 +15부터 다시 벼린다(그동안 쌓은 효과는 그대로 base에 남고, 확률은 REFINE_T_RATE배) */
 const REFINE_CAP_A = [15, 22, 25], REFINE_INHERIT = 15, REFINE_T_RATE = 0.7;
 const refineCap = slot => S.refine[slot].t || slot === 'weapon' ? REFINE_MAX : REFINE_CAP_A[Math.min(2, S.world)];
-const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return r.t ? (r.base || 0) + refinePct(lv) - refinePct(REFINE_INHERIT) : refinePct(lv); };
+/* 밸런스 2차(2026-11 (28)): 부상·곤륜(2부부터)은 성장의 무게를 재련에서 모음(아바타·탈것·넋·별호)으로 옮긴다.
+   재련 효과 ×REFINE_LATE, 모음 효과 ×LATE_COL(lateCol()). 전체 세기는 거의 그대로(곤륜 100시간 무사 기준 +9%쯤) */
+const REFINE_LATE = 0.75, LATE_COL = 1.5;
+const lateCol = () => S.world >= 3 ? LATE_COL : 1;
+const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return (r.t ? (r.base || 0) + refinePct(lv) - refinePct(REFINE_INHERIT) : refinePct(lv)) * (S.world >= 3 ? REFINE_LATE : 1); };
 function refineInherit(){
   let n = 0;
   for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if (r.t) continue; r.base = refinePct(r.lv); r.lv = REFINE_INHERIT; r.drops = 0; r.t = 1; n++; }
@@ -2524,13 +2529,21 @@ function mergeState(d){
   out.myth = {};
   for (const m of MYTHS) out.myth[m.k] = Math.min(m.pow || Infinity, Math.max(0, Math.round(+(d.myth && d.myth[m.k]) || 0)));
   // 환생·저승·변신·장신구 (2026-11 추가)
-  out.world = [0, 1, 2, 3].includes(d.world) ? d.world : 0;
+  out.world = [0, 1, 2, 3, 4].includes(d.world) ? d.world : 0;
   const bd = d.best || {};
+  // 고침(2026-11 (28)): 예전엔 곤륜(4)이 빠져 있어 곤륜 저장을 불러오면 이승 Lv100으로 바뀌었다.
+  // 그렇게 바뀐 저장(이승인데 곤륜 기록이 있음)은 곤륜 최고 단계·레벨 기록으로 되돌린다(세계는 이승으로 되돌아갈 수 없으니 안전)
+  if (out.world === 0 && Math.floor(+bd.s4) > 0 && Math.floor(+bd.l4) > 0){
+    out.world = 4; out.level = Math.max(Math.floor(+out.level) || 1, Math.floor(+bd.l4)); out.exp = 0;
+    out.maxStage = Math.floor(+bd.s4); out.stage = Math.max(1, Math.min(Math.floor(+out.stage) || 1, out.maxStage)); out.kills = 0;
+    out.kunlunFix = true;
+  }
   out.best = {s0:Math.max(1, Math.floor(+bd.s0) || 0, out.world ? 0 : out.maxStage), l0:Math.max(1, Math.floor(+bd.l0) || 0, out.world ? 0 : out.level),
     s1:Math.max(0, Math.floor(+bd.s1) || 0, out.world === 1 ? out.maxStage : 0), l1:Math.max(0, Math.floor(+bd.l1) || 0, out.world === 1 ? out.level : 0),
     s2:Math.max(0, Math.floor(+bd.s2) || 0, out.world === 2 ? out.maxStage : 0), l2:Math.max(0, Math.floor(+bd.l2) || 0, out.world === 2 ? out.level : 0),
     s3:Math.max(0, Math.floor(+bd.s3) || 0, out.world === 3 ? out.maxStage : 0), l3:Math.max(0, Math.floor(+bd.l3) || 0, out.world === 3 ? out.level : 0),
     s4:Math.max(0, Math.floor(+bd.s4) || 0, out.world === 4 ? out.maxStage : 0), l4:Math.max(0, Math.floor(+bd.l4) || 0, out.world === 4 ? out.level : 0)};
+  out.best.l0 = Math.min(LV_CAP[0], out.best.l0); out.best.l1 = Math.min(LV_CAP[1], out.best.l1);
   out.job = Math.min(3, Math.max(0, Math.floor(+d.job) || 0));
   const av = d.av && typeof d.av === 'object' ? d.av : {};
   out.av = {own:{}, char:'', cape:'', pet:''};
@@ -2668,9 +2681,9 @@ function computeStats(up = S.up){
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
-      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100),
+      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
-      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100),
+      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
     crit: Math.min(1, crRaw), critOver: crOver,
     critDmg: 1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
@@ -4660,7 +4673,7 @@ function update(dt){
       // 분신 셋은 용사의 적과 그 가까이 있는 다른 적을 나눠 친다(보스 하나뿐이면 모두 보스를)
       const near = mobs.filter(m => !m.dead && m !== tg && m.spawnT <= 0).sort((a, b) => (Math.abs(a.tx - tg.tx) + Math.abs(a.ty - tg.ty)) - (Math.abs(b.tx - tg.tx) + Math.abs(b.ty - tg.ty)));
       const tgs = [tg, near[0] || tg, near[1] || tg];
-      while (hero.cloneAcc >= 1){ hero.cloneAcc -= 1; for (let k = 0; k < 3; k++) if (!tgs[k].dead) hit(tgs[k], ST.atk * atkBuff() * skillMulX() * LATE_K.clone * (1 + 0.03 * ((hero.cloneLv || 1) - 1)), 'skill'); }
+      while (hero.cloneAcc >= 1){ hero.cloneAcc -= 1; for (let k = 0; k < 3; k++) if (!tgs[k].dead) hit(tgs[k], ST.atk * atkBuff() * skillMulX() * (tgs[k].boss || tgs[k].raid ? LATE_K.clone : LATE_K.cloneMob) * (1 + 0.03 * ((hero.cloneLv || 1) - 1)), 'skill'); }   // 분신: 보스엔 약하게, 몹 떼엔 예전대로(사냥 속도)
     }
   }
   if (!hero.dead){
@@ -5451,7 +5464,7 @@ const mountStableGold = () => Math.round(mGold(Math.max(1, S.maxStage)) * 1500);
 const mountOpen = () => S.world >= 3;
 const mountK = k => 1 + 0.2 * (S.mount.star[k] || 0);
 const mountN = () => MOUNTS.filter(m => S.mount.own[m.k]).length;
-function mountCol(){ let p = 0; for (const m of MOUNTS) if (S.mount.own[m.k]) p += MOUNT_G[m.g].pct * mountK(m.k); return p; }   // 모음 효과 %
+function mountCol(){ let p = 0; for (const m of MOUNTS) if (S.mount.own[m.k]) p += MOUNT_G[m.g].pct * mountK(m.k); return p * lateCol(); }   // 모음 효과 %
 const rideM = () => S.mount.ride && S.mount.own[S.mount.ride] ? MT[S.mount.ride] : null;
 const rideAb = k => { const m = rideM(); return m && m.ab[k] ? m.ab[k] * mountK(m.k) : 0; };
 const heroStep = () => { const m = rideM(); return STEP_HERO / (m ? 1 + m.spd / 100 : 1); };
@@ -5635,7 +5648,7 @@ const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경�
 const titleEffText = t => Object.entries(t.eff).map(([k, v]) => `${TITLE_EFF[k]} +${v}%`).join(' · ');
 const titleN = () => TITLES.filter(t => S.title.own[t.k]).length;
 const titleEff = k => { const t = TT[S.title.eq]; return t && S.title.own[t.k] ? t.eff[k] || 0 : 0; };
-const titleCol = () => TITLE_COL * titleN();
+const titleCol = () => TITLE_COL * titleN() * lateCol();
 function titleCheck(){
   let got = 0;
   for (const t of TITLES){
@@ -5873,7 +5886,7 @@ const soulOpen = () => S.world >= 3;
 const soulSlots = () => S.job >= 4 ? 2 : 1;
 const soulK = k => (1 + 0.2 * (S.soul.star[k] || 0)) * (1 + BOND_K * soulBond(k));
 const soulN = () => SOULS.filter(s => S.soul.own[s.k]).length;
-function soulCol(){ let p = 0; for (const s of SOULS) if (S.soul.own[s.k]) p += SOUL_COL[s.g] * (1 + BOND_COL * soulBond(s.k)); return p; }
+function soulCol(){ let p = 0; for (const s of SOULS) if (S.soul.own[s.k]) p += SOUL_COL[s.g] * (1 + BOND_COL * soulBond(s.k)); return p * lateCol(); }
 const soulEq = () => S.soul.eq.slice(0, soulSlots()).filter(k => k && S.soul.own[k]);
 let soulG = 0, soulApp = [];   // 넋의 기운(싸우는 동안 참)·지금 나타난 넋(그림)
 function soulValText(s, k = soulK(s.k)){
@@ -6163,6 +6176,7 @@ function npcBuy(i){
   return {ok:true};
 }
 const avCount = () => AVATARS.filter(a => S.av.own[a.k] && (!a.job || a.cls === S.cls)).length;   // 전직 망토는 지금 직업 것만 센다
+const avColPct = () => AV_PCT * avCount() * lateCol();   // 아바타 도감 효과 %(부상부터 ×LATE_COL)
 function giveAvatar(k, quiet){
   const a = AV[k];
   if (!a) return false;
@@ -8867,6 +8881,12 @@ elBig.addEventListener('click', () => {
   else { addLog(`몬스터 ${FIELD.kills - S.kills}마리를 더 잡으면 보스가 나와요.`); sfx('blip'); }
 });
 $('#newsBtn').addEventListener('click', () => { if (session) showNotes(); });
+// 캐릭터 바꾸기(2026-11 (28), 사용자 요청): 화면 위 아이콘 → 한 번 묻고 저장한 뒤 캐릭터 고르기
+$('#charBtn').addEventListener('click', () => {
+  if (!session || cut) return;
+  showModal('캐릭터 바꾸기', `<p>지금 캐릭터(<b>${esc(S.name)}</b>)를 저장하고 캐릭터 고르기 화면으로 갈까요?${raid ? '<br><span class="small" style="color:#ff8a7a">지금 하는 싸움은 그만두게 돼요.</span>' : ''}</p>`,
+    [{label:'취소'}, {label:'바꾸기', primary:true, fn:() => { if (raid) raid = null; switchChar(); }}]);
+});
 $('#mkBtn').addEventListener('click', () => { if (!session && !window.__game) return; if (market) leaveMarket(); else enterMarket(); });
 $('#helpBtn').addEventListener('click', () => { if (!session) return; if (currentTab !== 'rec') $('#tab-rec').click(); setTimeout(() => { const g = document.querySelector('.hgrid'); if (g) g.scrollIntoView({block:'center', behavior:'smooth'}); }, 80); });
 // 미니맵: 사냥판(마름모)과 용사·몬스터·동료 점, 지금 보이는 화면 테두리
@@ -9559,7 +9579,7 @@ function buildAvatar(){
   const list = t => AVATARS.filter(a => a.type === t && (!a.job || a.cls === S.cls));
   panel.innerHTML = `${gearSegHTML()}
     <div class="ph" style="margin-top:10px"><h2>아바타</h2><span class="small">도감 효과 공격력·체력 <b id="avBonus"></b></span></div>
-    <p class="hint">옷·망토·펫 꾸미기는 모습만 바꿔요. 대신 가진 아바타 하나마다 공격력·체력이 ${AV_PCT}%씩 올라요(도감 효과). 다시 누르면 벗어요.</p>
+    <p class="hint">옷·망토·펫 꾸미기는 모습만 바꿔요. 대신 가진 아바타 하나마다 공격력·체력이 ${AV_PCT}%씩 올라요(도감 효과, 부상부터 ${AV_PCT * LATE_COL}%). 다시 누르면 벗어요.</p>
     <button class="btn primary" id="avBox" style="width:100%;margin-bottom:6px">꾸미기 상자 열기 (보석 ${AV_BOX})</button>
     <p class="odds" id="avOdds"></p>
     ${AV_TYPES.map(([t, nm]) => `<div class="ph"><h2>${nm}</h2></div><div class="avgrid">${list(t).map(a => `<button class="avcell" data-k="${a.k}" aria-pressed="false">
@@ -9568,7 +9588,7 @@ function buildAvatar(){
   $('#avBox').addEventListener('click', () => { if (buyShop('avbox')) refreshPanel(); });
   panel.querySelectorAll('.avcell').forEach(bt => bt.addEventListener('click', () => { if (S.av.own[bt.dataset.k]){ equipAvatar(bt.dataset.k); sfx('click'); refreshPanel(); } }));
   return () => {
-    setText($('#avBonus'), `+${AV_PCT * avCount()}% (${avCount()}개)`);
+    setText($('#avBonus'), `+${fmt(avColPct())}% (${avCount()}개${lateCol() > 1 ? `, ${WORLD_NAME[S.world]} ×${LATE_COL}` : ''})`);
     $('#avBox').disabled = S.gems < AV_BOX;
     setHTML($('#avOdds'), `확률 공개 — 옷 ${AV_ODDS[0][1]}% · 망토 ${AV_ODDS[1][1]}% · 펫 꾸미기 ${AV_ODDS[2][1]}% · 위로품(인삼 탕약) ${AV_ODDS[3][1]}%. 종류 안에서는 똑같은 확률. <b>새 옷·망토 확정까지 ${Math.max(1, AV_PITY - (S.avPity || 0))}번</b>`);
     panel.querySelectorAll('.avcell').forEach(bt => {
@@ -10878,6 +10898,7 @@ async function enterChar(cid, opts = {}){
     }
   }
   S = data ? mergeState(data) : defaultState();
+  const kfix = !!S.kunlunFix; delete S.kunlunFix;
   migrateStory(); mountCatchUp();
   const inh = S.world >= 3 && refineInherit();
   if (!S.name) S.name = ch.name;
@@ -10892,6 +10913,7 @@ async function enterChar(cid, opts = {}){
   closePage();
   addLog(`${S.name}님, ${stageLabel(S.stage)}에 들어섰습니다.`, 'good');
   if (opts.imported) addLog('예전 모험을 이어받았습니다.', 'good');
+  if (kfix){ addLog(`곤륜 기록을 되찾았어요: 곤륜 ${S.maxStage}단계 · Lv.${S.level}(예전에 다시 들어오면 이승으로 바뀌던 문제를 고쳤어요)`, 'good'); saveLocal(); }
   if (inh) addLog(`2부에 맞춰 무기·방어구가 계승됐어요. 재련 효과는 그대로, +${REFINE_INHERIT}부터 다시 벼려요.`, 'good');
   if (opts.fresh && !opts.imported) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
@@ -11469,7 +11491,7 @@ if (location.search.indexOf('simtest') >= 0){
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
-    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
+    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
 }
 
