@@ -493,7 +493,8 @@ async def main():
         check(tb['ok'] and tb['gold'] and tb['done'], f'타임 보스: 2명 이상이면 도전하고 엽전을 받는다 {tb}')
         tb2 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           const A = G.REG.accounts[G.session.acc], c0 = A.chars.slice(); S.rec.rdpsK = 10;
-          for (let i = 0; i < 3; i++) A.chars.push({cid:'tb' + i, name:'내캐' + i, cls:'sulsa', level:50, look:{}, armorG:2, weaponG:2, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp * (i + 1), rd:G.realDps() * (i + 1)}});
+          const oc = ['sulsa', 'jagaek'].find(c => c !== S.cls);
+          for (let i = 0; i < 3; i++) A.chars.push({cid:'tb' + i, name:'내캐' + i, cls:oc, level:50, look:{}, armorG:2, weaponG:2, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp * (i + 1), rd:G.realDps() * (i + 1)}});
           G.REG.accounts.friend2 = {salt:'x', hash:'p:x', t:1, chars:[{cid:'f2', name:'벗님2', cls:'doin', level:50, look:{}, armorG:3, weaponG:3, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp}}]};
           const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); S.tb = {};
           const names = G.tbOthers().map(o => o.name), ok = G.startTimeBoss('normal'), R = G.raid, B = R.boss;
@@ -505,7 +506,19 @@ async def main():
           A.chars = c0; delete G.REG.accounts.friend2; Object.assign(S, JSON.parse(keep)); G.refreshStats();
           return {ok, n: names.length, mine: names.filter(n => n.startsWith('내캐')).length, friend: names.includes('벗님2'), hpK, ratio: +(dmgA2 / dmgMe).toFixed(2)}; }""")
         check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - 120) < 1 and tb2['ratio'] == 3,
-              f'타임 보스: 같은 계정의 다른 캐릭터까지 모두 참가하고, 보스 체력은 모두의 실제 피해 합에 맞추고(노말 120초분), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
+              f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합에 맞추고(노말 120초분), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
+
+        # 타임 보스 동료는 무작위 10명, 같은 직업은 나까지 3명(이 기기만 쓸 때도 같은 규칙, 30분 동안은 같은 파티)
+        tb3 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S);
+          const cls = ['musa', 'jagaek', 'sulsa', 'doin'], chars = [];
+          for (let i = 0; i < 20; i++) chars.push({cid:'p' + i, name:'뽑' + i, cls:cls[i % 4], level:40, look:{}, armorG:1, weaponG:1, ally:{dps:10, maxHp:100, rd:80}});
+          chars.push({cid:'px', name:'안싸움', cls:'musa', level:1, look:{}});
+          G.REG.accounts.pickt = {salt:'x', hash:'p:x', t:1, chars};
+          const a = G.tbOthers(), b = G.tbOthers(), n = {}; for (const o of a) n[o.cls] = (n[o.cls] || 0) + 1;
+          delete G.REG.accounts.pickt; Object.assign(S, JSON.parse(keep));
+          return {n:a.length, same:a.map(o => o.name).join() === b.map(o => o.name).join(), byCls:n, me:S.cls, none:a.some(o => o.name === '안싸움')}; }""")
+        capOk = all(v <= (2 if k == tb3['me'] else 3) for k, v in tb3['byCls'].items())
+        check(tb3['n'] == 10 and tb3['same'] and capOk and not tb3['none'], f'타임 보스: 무작위 10명·같은 직업은 나까지 3명·30분 동안 같은 파티 {tb3}')
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '18_레이드_저승.png'))
 
@@ -675,6 +688,22 @@ async def main():
         check(sk['closed'] and sk['bad'] == 0 and sk['maxCh'] == 20 and sk['eq'] >= 4 and sk['hpUp'] and sk['better'] and sk['low'] <= 3.5 and 9.5 <= sk['top'] <= 10
               and sk['g4line'][0] == 0 and sk['g4line'][1] > 0 and sk['g4line'][2] == 0 and sk['g4line'][3] > 0 and sk['clean'] == ['dropped', 0] and sk['offSk'] >= 3,
               f'장별 치장: 17장부터·지나온 장 것만·줄 수=등급, 1~2줄로 다 채워도 3.5단계 이하·전설은 10단계, 4줄은 2부 후반·전설은 3부 중반부터, 오프라인에도 나온다 {sk}')
+
+        # 6-4f) 주간 퀘스트: 월요일에 새로 시작, 일을 하면 세고, 받으면 보석(세계 배율)·덤, 모두 끝내면 큰 상자
+        wk = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.world = 2; S.week = {key:'', wp:{}, wgot:[], wall:false}; G.weekCheck(); const key = S.week.key, d = new Date(G.now());
+          const mon = new Date(key.split('-')[0], key.split('-')[1] - 1, key.split('-')[2]).getDay();
+          G.ev('kill', 10); G.ev('gsummon', 3); G.ev('psummon', 2); const counted = [S.week.wp.kill, S.week.wp.summon];
+          const g0 = S.gems, sh0 = S.mythShard || 0; for (const W of G.WEEKLY) S.week.wp[W.key] = W.goal;
+          const early = G.claimWeekAll(); let n = 0; for (const W of G.WEEKLY) if (G.claimWeek(W.key)) n++;
+          const gemsW = S.gems - g0, again = G.claimWeek('kill');
+          S.gems = 0; const box = G.claimWeekAll(), gemsAll = S.gems, shard = (S.mythShard || 0) - sh0;
+          G.addTime(8 * 86400 * 1000); G.weekCheck(); const reset = S.week.key !== key && !S.week.wall && !S.week.wgot.length;
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
+          return {mon, counted, early, n, gemsW, again, box: box && box.length, gemsAll, shard, reset}; }""")
+        check(wk['mon'] == 1 and wk['counted'] == [10, 5] and wk['early'] is None and wk['n'] == 8 and wk['gemsW'] == 3500 * 2 and not wk['again']
+              and wk['box'] >= 3 and wk['gemsAll'] == 6000 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'],
+              f'주간 퀘스트: 월요일 시작·일을 세고·보석(천계 2배)·덤·큰 상자(보석·신화 조각·꾸미기 상자·치장)·다음 주에 새로 {wk}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');

@@ -236,3 +236,23 @@ revoke all on function public.samhan_market_post(uuid, text, text, jsonb, bigint
   public.samhan_market_cancel(uuid, bigint), public.samhan_market_mine(uuid), public.samhan_market_claim(uuid) from public;
 grant execute on function public.samhan_market_post(uuid, text, text, jsonb, bigint), public.samhan_market_list(uuid, text), public.samhan_market_buy(uuid, text, bigint),
   public.samhan_market_cancel(uuid, bigint), public.samhan_market_mine(uuid), public.samhan_market_claim(uuid) to anon, authenticated;
+
+-- ── 타임 보스 동료(2026-11 (32)): 서버에 만들어진 모든 캐릭터 가운데 무작위 10명 ──
+-- 같은 직업은 파티 전체에서 3명까지(부른 사람의 직업은 2명까지 더). 한 번이라도 싸워 본(요약에 ally가 있는) 캐릭터만, 부른 캐릭터 자신은 빼고.
+-- 돌려주는 것은 이름과 요약(직업·레벨·모습·전투력)뿐, 계정 아이디는 주지 않는다
+create or replace function public.samhan_tb_pick(p_token uuid, p_cid text, p_cls text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token);
+begin
+  return coalesce((select jsonb_agg(jsonb_build_object('name', t.name, 'summary', t.summary, 'mine', t.mine))
+    from (select x.name, x.summary, x.mine from (
+            select c.name, c.summary, c.acc = a as mine,
+                   row_number() over (partition by coalesce(c.summary->>'cls', '') order by random()) as k
+              from samhan_chars c
+             where not (c.acc = a and c.cid = coalesce(p_cid, '')) and jsonb_typeof(c.summary->'ally') = 'object') x
+          where x.k <= case when coalesce(x.summary->>'cls', '') = coalesce(p_cls, '') then 2 else 3 end
+          order by random() limit 10) t), '[]'::jsonb);
+end $$;
+revoke all on function public.samhan_tb_pick(uuid, text, text) from public;
+grant execute on function public.samhan_tb_pick(uuid, text, text) to anon, authenticated;
+

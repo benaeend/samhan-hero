@@ -214,10 +214,21 @@ async def main():
             check(any('안녕하세요 온라인' in g for g in got), f'채팅이 다른 기기로 간다 {got}')
             tb = await A.evaluate("""async () => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); return G.tbWindow().open; }""")
             await B.evaluate("""() => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); }""")
-            await A.wait_for_timeout(900)   # 열려 있으면 접속한 용사는 저절로 참가를 알린다
+            # 타임 보스 동료: 서버에 만들어진 모든 캐릭터 가운데 무작위 10명(같은 직업은 나까지 3명), 계정 아이디는 안 줌
+            with pg.conn() as c, c.cursor() as cur:
+                cur.execute("insert into samhan_accounts (id, pw_hash) values ('tbfill', 'x') on conflict do nothing")
+                for i in range(4):
+                    cur.execute("insert into samhan_accounts (id, pw_hash) values (%s, 'x') on conflict do nothing", (f'tbacc{i}',))
+                    for j, cl in enumerate(['musa', 'musa', 'sulsa', 'sulsa'] if i < 2 else ['jagaek', 'doin', 'doin', 'jagaek']):
+                        cur.execute("insert into samhan_chars (acc, cid, name, summary) values (%s, %s, %s, %s::jsonb) on conflict do nothing",
+                                    (f'tbacc{i}', f'tbc{i}x{j}', f'동료{i}{j}', json.dumps({'cls': cl, 'level': 50, 'look': {}, 'ally': {'dps': 100, 'maxHp': 1000, 'rd': 800}})))
+                cur.execute("insert into samhan_chars (acc, cid, name, summary) values ('tbfill', 'tbnone', '안싸운캐', '{}'::jsonb) on conflict do nothing")
             why = await B.evaluate("() => window.__game.tbCan('normal')")
-            users = await B.evaluate("() => window.__game.tbUsers()")
-            check(tb and why == '' and users >= 2, f'타임 보스: 열리면 다른 기기의 용사가 저절로 함께 참가한다 ({why!r}, {users}명)')
+            pick = await B.evaluate("""async () => { const G = window.__game; const L = await G.tbFetchPick(true) || []; const n = {}; for (const o of L) n[o.cls] = (n[o.cls] || 0) + 1;
+              return {n: L.length, users: G.tbUsers(), byCls: n, me: G.S.cls, self: L.some(o => o.name === G.S.name), none: L.some(o => o.name === '안싸운캐'), acc: L.some(o => 'acc' in o), srv: !!G.tbPick.srv}; }""")
+            capOk = all(v <= (2 if k == pick['me'] else 3) for k, v in pick['byCls'].items())
+            check(tb and why == '' and pick['n'] == 10 and pick['users'] == 11 and capOk and not pick['self'] and not pick['none'] and not pick['acc'] and pick['srv'],
+                  f'타임 보스: 서버의 모든 캐릭터 가운데 무작위 10명이 함께(같은 직업은 3명까지, 나·안 싸워 본 캐릭터는 빼고) {why!r} {pick}')
 
             # 이름은 서버 전체에서 하나만
             ctxC, C = await device(api)
