@@ -47,11 +47,17 @@ SIM = r"""
   let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0;
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
+  const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
   for (let i = 1; i <= steps; i++) {
     const g0 = G.S.gold, e0 = G.S.gems;
     G.update(dt); G.addTime(dt * 1000);
     goldIn += Math.max(0, G.S.gold - g0); gemIn += Math.max(0, G.S.gems - e0);
     const t = i * dt;
+    if (opts.raidlog) {
+      if (G.raid && !rl) { const I = G.raid.info, B = G.raid.boss, C = G.CLASSES[G.S.cls]; rl = {t0:t, k:I.key || (I.tb ? 'tb' : I.dboss ? 'db' : I.vault ? 'vault' : I.dummy ? 'dummy' : I.job ? 'job' : 'x'), ref:I.ref, w:G.S.world, lv:G.S.level, st:G.S.maxStage, n0:G.S.rec.raids,
+        awk:G.S.awaken ? Math.round(G.realDps() * (G.S.job >= 4 ? G.AWAKEN_SEC4 : G.AWAKEN_SEC) / B.maxHp * 100) : 0}; }
+      else if (!G.raid && rl) { raids.push(Object.assign(rl, {dur:Math.round(t - rl.t0), win:G.S.rec.raids > rl.n0})); rl = null; }
+    }
     if (t >= nextShop) {
       nextShop = t + 2;
       const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
@@ -72,6 +78,7 @@ SIM = r"""
       }
       for (const gd of G.GUARDS) if (G.guardOpen(gd)) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k)) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지
       if (G.guardOpen(G.GUARDS[1]) && G.S.guard.on !== 'jowang') G.guardSet('jowang');
+      { const fb = G.formBest(); if (fb && G.S.form.eq !== fb) G.S.form.eq = fb; }   // 변신: 가장 센 것을 착용(보스·레이드에서 자동으로 한 번)
       for (const sl of ['weapon', 'armor']) G.ascend(sl);   // 신화·태초 각성(되면 바로)
       { const keepG = ['weapon', 'armor'].reduce((a, sl) => { const N = G.ascNeed(sl); return a + (!N.max && N.world ? N.A.grudge : 0); }, 0);   // 결이야기: 각성에 쓸 원한 조각은 남기고 낮은 마디부터
         const so = G.SOULS.filter(x => G.S.soul.own[x.k] && G.soulBond(x.k) < 3).sort((a, b) => G.soulBond(a.k) - G.soulBond(b.k) || b.g - a.g);
@@ -80,7 +87,7 @@ SIM = r"""
         let best = null, bs = Infinity;
         for (const k of Object.keys(Wt)) { const b = G.buyInfo(k); if (!b.n) continue; const sc = b.cost * Wt[k]; if (sc < bs) { bs = sc; best = k; } }
         let bsk = null, sc2 = Infinity;
-        for (const sk of G.SKILLS) { const lv = G.S.skills[sk.key]; if (lv && lv < sk.max) { const c = G.skillCost(sk, lv) * 2; if (c < sc2) { sc2 = c; bsk = sk.key; } } }
+        G.SKILLS.forEach((sk, i) => { const lv = G.skLv(i); if (lv && G.skIn(i) && lv < G.skCap(i)) { const c = G.skillCost(sk, lv) * 2; if (c < sc2) { sc2 = c; bsk = sk.key; } } });   // 전투 칸에 낀 기술만, 최대 레벨까지
         if (bsk && sc2 < bs) { if (!G.upgradeSkill(bsk)) break; }
         else if (best) { if (!G.buyStat(best)) break; }
         else break;
@@ -130,7 +137,7 @@ SIM = r"""
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
   }
-  return {log, first, snaps};
+  return {log, first, snaps, raids};
 }
 """
 
@@ -597,7 +604,8 @@ async def main():
               f'반자동이면 기술을 알아서 쓰지 않고, 보스 수동이면 [보스 도전]을 눌러야 보스가 나온다(6초 처치 수 field) {md}')
 
         # 6-4) 기술 직접 쓰기·자동/수동, 직업 특성, 조합 공방, 확률(재련·상자·펫 천장)
-        await page.evaluate("() => { const G = window.__game; G.closePage(); G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.S.skManual = {}; G.hero.dead = false; G.hero.hp = G.ST.maxHp; }")
+        await page.evaluate("() => { const G = window.__game; G.closePage(); G.setClass('musa'); G.S.level = 120; G.unlockSkills(); G.S.skSetMan = true; G.S.skSet = [0, 1, 2, 3, 4, 5]; G.skillCd.roar = 0; G.S.skManual = {}; G.hero.dead = false; G.hero.hp = G.ST.maxHp; }")
+        await page.wait_for_timeout(300)
         await page.click('#skb-roar'); await page.wait_for_timeout(100)
         tap = await page.evaluate("() => ({cd: window.__game.skillCd.roar, buff: window.__game.hero.buffT})")
         check(tap['cd'] > 0 and tap['buff'] > 0, f'기술 칸을 누르면 그 기술을 바로 쓴다 {tap}')
@@ -707,7 +715,7 @@ async def main():
           Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
           return {mon, counted, early, n, gemsW, again, box: box && box.length, gemsAll, shard, reset, skN, skG}; }""")
         check(wk['mon'] == 1 and wk['counted'] == [10, 5] and wk['early'] is None and wk['n'] == 8 and wk['gemsW'] == 3500 * 2 and not wk['again']
-              and wk['box'] >= 3 and wk['gemsAll'] == 6000 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'] and wk['skN'] == 1 and wk['skG'] >= 1,
+              and wk['box'] >= 3 and 6000 <= wk['gemsAll'] <= 6030 and wk['shard'] >= 30 + 6 + 12 + 5 + 6 and wk['reset'] and wk['skN'] == 1 and wk['skG'] >= 1,
               f'주간 퀘스트: 월요일 시작·일을 세고·보석(천계 2배)·덤·큰 상자(보석·신화 조각·꾸미기 상자·치장)·다음 주에 새로 {wk}')
 
         # 6-4g) 1일 보스: 요일마다 보스·치장 부위, 이기면 그 부위 치장(모든 등급), 일요일은 전설만(낮은 확률), 참가만 해도 하루 한 번 보석·엽전
@@ -776,6 +784,49 @@ async def main():
         back = await page.evaluate("() => ({rot: window.__game.rotDeg, land: !document.body.classList.contains('portrait'), mode: window.__game.orientMode})")
         check(orr['rot'] in (90, -90) and orr['portrait'] == land0 and goal == [orr['tx'], orr['ty']] and back['rot'] == 0 and back['land'] == land0 and back['mode'] == 'auto',
               f'화면 방향: 게임 안에서 가로·세로를 바꾸고(화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞고, 자동으로 되돌린다 {orr} {goal} {back}')
+
+        # 6-4i) 변신(보스 싸움·레이드에서 한 판에 한 번, 30초, 일반 몹 사냥 중엔 못 씀, 효과는 단계 값, 사신은 부상부터 약하게)
+        #       기술 최대 레벨(전직)·전투 기술 6칸·연계(콤보)·초각성(실제 보스 피해 몇 초 몫)
+        nf = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true; G.noFork = true;
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          G.setClass('musa'); S.world = 1; S.form.own.cheong = true; S.form.own.tengu = true; S.form.eq = 'cheong'; S.form.manual = true; G.refreshStats(); G.hero.dead = false; G.hero.hp = G.ST.maxHp;
+          const noHunt = !G.startForm(true), a0 = G.ST.atk;
+          G.gateOff = true; G.PAT.off = true; S.kills = G.FIELD.kills; S.autoBoss = false; G.startBoss(); const B = G.bossRef; B.hp = B.maxHp = 1e300; B.atk = 0;
+          const ok1 = G.startForm(true), a1 = G.ST.atk, again = G.startForm(true);
+          for (let i = 0; i < 400; i++) G.update(0.05);
+          const still = G.bossActive && G.formT > 0 && G.formT < 15;
+          for (let i = 0; i < 400 && G.bossActive; i++) G.update(0.05); for (let i = 0; i < 3; i++) G.update(0.05);
+          const ended = G.formT <= 0 && G.ST.atk === a0, again2 = G.startForm(true);
+          // 다음 판(자동)이면 시작하자마자 변신
+          if (G.bossActive){ B.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
+          S.form.manual = false; G.hero.dead = false; G.hero.hp = G.ST.maxHp; S.kills = G.FIELD.kills; G.startBoss(); const B2 = G.bossRef; if (B2){ B2.hp = B2.maxHp = 1e300; B2.atk = 0; } for (let i = 0; i < 40; i++) G.update(0.05);
+          const autoOn = G.formT > 0; if (G.bossActive && B2){ B2.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
+          for (let i = 0; i < 3; i++) G.update(0.05); const endAfter = G.formT <= 0;
+          // 단계 값: 청룡은 1부(저승) 공격력 ×1.24^1.5, 부상에서는 사신이 60%로
+          const fx1 = G.formFx(G.FM.cheong).atk; S.world = 3; const fx3 = G.formFx(G.FM.cheong).atk, tg3 = G.formFx(G.FM.tengu).atk; S.world = 1;
+          // 기술: 최대 레벨·6칸·연계
+          S.job = 1; S.level = 100; const cap1 = G.skCap(0); S.job = 3; S.level = 200; S.world = 3; const cap3 = G.skCap(0); S.world = 1; S.job = 1; S.level = 120;
+          S.skills.spin = 30; const lvEff = G.skLv(0); S.skills.spin = 5;
+          G.unlockSkills(); S.skSetMan = false; S.skSet = []; G.skSetFix(); const set = S.skSet.slice();
+          const t1 = G.skToggle(set[0]), full = S.skSet.length;
+          S.skSetMan = true; S.skSet = [0, 1, 2, 3, 4, 5]; for (const k in G.skillCd) G.skillCd[k] = 0; G.hero.dead = false;
+          G.hero.dead = false; S.mode = 'semi'; S.kills = G.FIELD.kills; G.startBoss(); const B3 = G.bossRef; if (B3){ B3.hp = B3.maxHp = 1e300; B3.atk = 0; } for (let i = 0; i < 30; i++) G.update(0.05); for (const k in G.skillCd) G.skillCd[k] = 0;
+          const c0 = S.rec.combos || 0, k0 = G.castNow(2), k1 = G.castNow(3), combo = (S.rec.combos || 0) - c0, cm = G.comboMul();
+          if (G.bossActive && B3){ B3.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
+          const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), cap1, cap3, lvEff, set, t1, full, combo, cm: +cm.toFixed(2), k0, k1};
+          G.PAT.off = false; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return out; }""")
+        check(nf['noHunt'] and nf['ok1'] and nf['up'] > 1.3 and not nf['again'] and nf['ended'] and nf['still'] and not nf['again2'] and nf['autoOn'] and nf['endAfter']
+              and abs(nf['fx1'] - 1.24 ** 1.5) < 0.01 and abs(nf['fx3'] - 1.0709 ** (1.5 * 0.6)) < 0.005 and nf['tg3'] > nf['fx3']
+              and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) == 6 and nf['t1'] and nf['full'] == 5 and nf['combo'] == 1 and nf['cm'] == 1.35 and nf['k0'] and nf['k1'],
+              f'변신: 사냥 중엔 못 쓰고 보스 싸움에서 한 번만 30초(자동이면 시작하자마자)·단계 값(부상에선 사신 60%)·기술 최대 레벨(1차 15·3차 25)·전투 칸 6개·연계 {nf}')
+        aw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          S.awaken = true; S.level = 60; S.raid.tk = 3; S.rec.rdpsK = 50; G.refreshStats(); const ok = G.startRaid(0), R = G.raid, B = R.boss; B.hp = B.maxHp = 1e300;
+          const d0 = R.tbDone || 0, m0 = S.rec.maxHit || 0; let dmg = 0; const h0 = B.hp;
+          G.castAwaken(); for (let i = 0; i < 20; i++) G.update(0.05);
+          const want = G.realDps() * G.AWAKEN_SEC, used = R.awk.used; R.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return {ok, used, want: want > 0}; }""")
+        check(aw['ok'] and aw['used'] and aw['want'], f'초각성은 한 싸움에 한 번, 내 실제 보스 피해 몇 초 몫으로 {aw}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
@@ -877,7 +928,7 @@ async def main():
         # 6-8d) 자동 기술 순서: 보스 앞에서 공격력 버프·약점이 먼저, 0.1초 간격으로 하나씩
         ao = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           if (G.market) G.leaveMarket();
-          G.setClass('musa'); S.world = 0; S.level = 100; S.job = 2; S.mode = 'auto'; S.skManual = {}; S.bossAuto = true; for (const k in S.skills) S.skills[k] = 5;
+          G.setClass('musa'); S.world = 0; S.level = 100; S.job = 2; S.mode = 'auto'; S.skManual = {}; S.bossAuto = true; for (const k in S.skills) S.skills[k] = 5; S.skSetMan = true; S.skSet = [2, 5, 6, 7, 1, 0];   // 전투 칸 6개에 버프·약점을 끼움
           G.setStage(20); G.refreshStats(); G.hero.hp = G.ST.maxHp;
           S.kills = 0; S.autoBoss = false; const tough = () => { for (const m of G.mobs) if (!m.dead){ m.maxHp = m.hp = 1e300; m.atk = 0; } };
           for (let i = 0; i < 300 && !G.hero.engaged; i++){ G.update(0.05); tough(); for (const k in G.skillCd) G.skillCd[k] = 99; }

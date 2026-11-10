@@ -522,7 +522,25 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 .qtrack.ready{border-color:rgba(255,204,77,.6);box-shadow:0 0 16px rgba(255,204,77,.25)}
 .log{left:calc(8px + env(safe-area-inset-left));right:auto;bottom:10px;width:min(360px,44%);z-index:3}
 .ctrl{position:absolute;right:8px;bottom:8px;z-index:3;display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto;gap:6px;padding:0;background:none;border:0;align-items:end}
-.ctrl .skills{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(5,46px);gap:6px}
+.ctrl .skills{grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:repeat(6,40px);gap:6px;justify-content:end}
+.ctrl .skills .sk{width:40px;height:40px}.ctrl .skills .sk svg{width:21px;height:21px}
+:where(body.short) .ctrl .skills .sk{width:38px;height:38px}
+.sk.empty{opacity:.45;font-size:18px;font-weight:900;color:var(--gold);border-style:dashed}
+/* 변신 단추(2026-11 (40)): 기술 줄 바로 위. 누르면 변신, 길게 누르면 자동·수동 */
+.formb{grid-column:1/-1;grid-row:2;position:relative;display:flex;align-items:center;gap:7px;height:38px;padding:0 10px 0 4px;border-radius:12px;cursor:pointer;overflow:hidden;font-family:inherit;color:var(--text);
+  border:1px solid color-mix(in srgb,var(--fc,#ffd24a) 60%,transparent);background:linear-gradient(180deg,rgba(28,34,52,.92),rgba(12,16,28,.92));box-shadow:0 3px 10px rgba(0,0,0,.45);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.formb[hidden]{display:none}
+.formb img{width:34px;height:32px;object-fit:cover;object-position:50% 20%;image-rendering:pixelated;border-radius:10px;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--fc,#ffd24a) 45%,#141b2e),#101626 75%)}
+.formb b{font-size:12.5px;font-weight:900;white-space:nowrap;color:color-mix(in srgb,var(--fc,#ffd24a) 55%,#fff)}
+.formb .fs{margin-left:auto;font-size:11.5px;font-weight:800;white-space:nowrap}
+.formb .fm{font-size:10px;font-weight:900;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.1);color:#cfd6e6}
+.formb.man .fm{background:rgba(90,160,255,.3);color:#cfe6ff}
+.formb .fbar{position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,1) * 100%);background:var(--fc,#ffd24a);opacity:.85}
+.formb.cd{filter:saturate(.45)}.formb.cd .fbar{opacity:.4}
+.formb.on{box-shadow:0 0 0 2px color-mix(in srgb,var(--fc,#ffd24a) 70%,transparent),0 0 18px color-mix(in srgb,var(--fc,#ffd24a) 55%,transparent)}
+.formb.ready{animation:formpulse 1.1s ease-in-out infinite alternate}
+@keyframes formpulse{to{box-shadow:0 0 0 2px color-mix(in srgb,var(--fc,#ffd24a) 55%,transparent),0 0 14px color-mix(in srgb,var(--fc,#ffd24a) 40%,transparent)}}
+@media (prefers-reduced-motion: reduce){.formb.ready{animation:none}}
 .ctrl .sp{display:none}
 .ctrl .btn-mode{grid-row:1;height:34px}
 #modeBtn{grid-column:1/3}#bossModeBtn{grid-column:3/5}
@@ -711,6 +729,7 @@ body.portrait .qtrack{top:auto;left:8px;width:calc(100% - 16px)}
 body.portrait .log{width:auto;right:8px}
 body.portrait .ctrl{left:8px;right:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
 body.portrait .ctrl .skills{display:flex;gap:4px}
+body.portrait .formb{flex-basis:100%;height:34px}
 body.portrait .btn-mode{height:30px;font-size:11px;padding:0 8px}
 body.portrait .sk{width:34px;height:34px;border-radius:10px}
 body.portrait .sk svg{width:19px;height:19px}
@@ -721,7 +740,7 @@ body.portrait .rotate-tip[hidden]{display:none}
 .rotate-tip button{border:0;background:rgba(255,255,255,.1);color:var(--text);border-radius:50%;width:22px;height:22px;cursor:pointer}
 /* @media (max-height:420px){ 대신 body.short(resize가 돌린 화면까지 생각해 붙임) */
   :where(body.short) .sk{width:42px;height:42px}
-  :where(body.short) .ctrl .skills{grid-template-columns:repeat(5,42px)}
+  :where(body.short) .ctrl .skills{grid-template-columns:repeat(6,38px)}
   :where(body.short) .page-head{padding-top:6px;padding-bottom:6px}
   :where(body.short) .tab{font-size:10px}
   :where(body.short) .tab svg{width:19px;height:19px}
@@ -987,6 +1006,7 @@ body.in-market .act{display:none}
     <div class="log" id="log" role="log" aria-live="polite"></div>
   <button class="btn-boss" id="bossBtn" hidden>보스 도전</button>
   <div class="ctrl">
+    <button type="button" class="formb" id="formBtn" hidden aria-label="변신"><img id="formImg" alt=""><b id="formName">변신</b><span class="fs" id="formState"></span><span class="fm" id="formMode">자동</span><i class="fbar" aria-hidden="true"></i></button>
     <div class="skills" id="skillbar"></div>
     <div class="sp"></div>
     <button class="btn-mode" id="modeBtn" aria-label="전투: 자동 (누르면 반자동)">자동</button>
@@ -1239,7 +1259,44 @@ let autoGap = 0;
 const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job || S.job >= d.job) && (!d.reb || S.reb.n >= d.reb); };
-const skLv = i => skOpen(i) ? S.skills[SKILLS[i].key] || 0 : 0;
+/* 기술 최대 레벨(2026-11 (40), 사용자 요청: 전직마다 기술이 쌓여 너무 많이 들고 다님): 전직 단계·누적 레벨로 막는다.
+   최대 = min(30, 10 + 5 × 전직, 4 + 누적 레벨/6). 이미 넘게 올린 저장은 깎지 않고 효과만 그 레벨로(다음 전직·레벨에 다시 쓰임) */
+const skCap = i => Math.min(SKILLS[i].max, 10 + 5 * (S.job || 0), 4 + Math.floor(cumLv() / 6));
+const skLv = i => skOpen(i) ? Math.min(S.skills[SKILLS[i].key] || 0, skCap(i)) : 0;
+/* 전투 기술 칸(2026-11 (40), 사용자 요청: 실제 전투에서는 5~6개만): 익힌 기술 가운데 SK_SLOTS(6)개만 끼워 쓴다(S.skSet = 칸 번호).
+   S.skSetMan이 거짓이면(기본) 새 기술을 익힐 때마다 직업별 순서 SK_PICK으로 저절로 골라 끼우고, [기술]에서 직접 바꾸면 그 뒤로는 내가 고른 대로 */
+const SK_SLOTS = 6;
+const SK_PICK = {musa:[0, 1, 2, 6, 7, 8, 9, 3, 5, 4], jagaek:[0, 1, 2, 6, 7, 8, 9, 4, 5, 3], sulsa:[0, 2, 6, 7, 8, 9, 3, 1, 5, 4], doin:[5, 7, 3, 1, 2, 8, 0, 9, 6, 4]};   // 천계·부상 끝 저장에서 6칸 조합마다 보스(0.65)·몹 떼(0.35) 피해를 재서 가장 좋은 순서(bal skpick.py)
+function skSetFix(){
+  if (!Array.isArray(S.skSet)) S.skSet = [];
+  S.skSet = S.skSet.filter((i, k, a) => Number.isInteger(i) && i >= 0 && i < SKILLS.length && a.indexOf(i) === k).slice(0, SK_SLOTS);
+  const pick = SK_PICK[S.cls] || SK_PICK.musa;
+  if (!S.skSetMan){ const want = pick.filter(i => skOpen(i)).slice(0, SK_SLOTS); if (want.join() !== S.skSet.slice().sort((a, b) => pick.indexOf(a) - pick.indexOf(b)).join()) S.skSet = want; }
+  else for (const i of pick) if (S.skSet.length < SK_SLOTS && skOpen(i) && !S.skSet.includes(i)) S.skSet.push(i);   // 직접 고른 뒤에도 빈 칸은 채움
+}
+const skIn = i => (S.skSet || []).includes(i);
+function skToggle(i){   // [기술]에서 끼우기·빼기
+  if (!skOpen(i)) return false;
+  skSetFix(); S.skSetMan = true;
+  if (skIn(i)) S.skSet = S.skSet.filter(x => x !== i);
+  else { if (S.skSet.length >= SK_SLOTS) return false; S.skSet.push(i); }
+  skBarKey = ''; return true;
+}
+function skSetAuto(){ S.skSetMan = false; skSetFix(); skBarKey = ''; }
+/* 연계(콤보, 2026-11 (40), 사용자 요청): 바로 앞에 쓴 기술(COMBO_WIN초 안)과 이번 기술이 짝이 맞으면 '연계!' — COMBO_T초 동안 기술 피해 +p%.
+   두 기술을 모두 전투 칸에 끼워야 하고, 자동 순서로 저절로 이어지는 짝(auto)과 직접 순서를 맞춰야 하는 짝이 있다 */
+const COMBO_WIN = 3, COMBO_T = 5;
+const COMBOS = [
+  {k:'c1', a:0, b:1, name:'이어 치기', p:25},
+  {k:'c2', a:2, b:3, name:'기세 싣기', p:35},
+  {k:'c3', a:5, b:4, name:'약점 몰아치기', p:35},
+  {k:'c4', a:6, b:7, name:'스승의 가르침', p:30, auto:true},
+  {k:'c5', a:8, b:9, name:'하늘땅 연계', p:40, auto:true},
+  {k:'c6', a:9, b:3, name:'끝없는 연환', p:30, auto:true},
+];
+let lastCast = null, skFixKey = '';   // {i, t} 바로 앞에 쓴 기술
+const comboFor = i => lastCast && gtime - lastCast.t <= COMBO_WIN ? COMBOS.find(c => c.a === lastCast.i && c.b === i && skIn(c.a) && skIn(c.b)) || null : null;
+const comboMul = () => hero.comboT > 0 ? 1 + (hero.comboP || 0) / 100 : 1;
 // 반자동이면 기술은 모두 직접. 다만 다른 용사·동료와 함께하는 싸움(레이드·타임 보스 등)에서는 늘 모든 기술을 자동으로(사용자 요청)
 const coopFight = () => !!raid && !!raid.allies && raid.allies.length > 0;
 const skAuto = i => coopFight() || S.mode !== 'semi' && !(S.skManual && S.skManual[SKILLS[i].key]);
@@ -1518,17 +1575,68 @@ function hellRaidInfo(i){
     gems:60 + 15 * (i + 1), firstGems:120 * (i + 1)});
 }
 // 시왕 레이드 보스 세기(저승 단계 기준): 그 레벨에 보통 닿아 있는 단계보다 조금 아래
-const HELL_RAID_REF = [5, 15, 30, 42, 55, 66, 72, 76, 80, 84];
+const HELL_RAID_REF = [38, 52, 60, 69, 74, 77, 81, 87, 92, 96];   // (2026-11 (40), 사용자 요청: 너무 약함) 예전 [5, 15, 30, 42, 55, 66, 72, 76, 80, 84]는 실제로 도전할 때의 단계보다 30~60단계 아래라 2~9초에 끝났음. 시뮬에서 처음 도전할 때 30~45초쯤 걸리게(직업 차이로 자객은 더 빠르고 술사는 더 느림)
 const raidAt = i => S.world === 4 ? kunlunRaidInfo(i) : S.world === 3 ? busangRaidInfo(i) : S.world === 2 ? godRaidInfo(i) : S.world ? hellRaidInfo(i) : raidInfo(i);
 
 /* 변신: 고구려 고분벽화의 사신(四神) */
+/* 변신(2026-11 (40), 사용자 요청): 착용한 변신 하나를 보스 싸움·레이드에서 한 판에 딱 한 번, 전투 화면 [변신] 단추(기술 줄 위)로 FORM_TIME(30)초 켠다.
+   일반 몹을 잡을 때는 못 쓰고, 싸움이 끝나면 풀린다. 자동(기본)이면 싸움이 시작되면 바로, 수동이면 직접 누른다(단추를 길게 누르면 바뀜).
+   효과는 치장처럼 '단계 값'(se): 지금 땅 한 단계 몬스터 배율 SK_GW의 se제곱 — 공격력·기술·속도·보스 피해는 체력 배율, 체력은 공격 배율, 받는 피해는 공격 배율의 −se제곱.
+   그래서 어느 땅에서나 '몇 단계만큼'이 같다(예전엔 고정 %라 한 단계가 작은 부상·곤륜에서 청룡이 9단계쯤으로 너무 셌음).
+   1부의 사신(part 1)은 부상·곤륜에서 FORM_OLD_LATE(0.6)배. 부상(part 3)·곤륜(part 4) 새 변신은 부마다 하나가 이야기 보상(story), 나머지는 1일 보스·꾸미기 상자 */
 const FORMS = [
-  {k:'jujak', name:'주작', desc:'공격력 +25% · 엽전·경험치 +30%', color:'#ff5a3a', atk:25, gain:30},
-  {k:'cheong', name:'청룡', desc:'공격력 +40% · 기술 피해 +30%', color:'#3a8aff', atk:40, skill:30},
-  {k:'baekho', name:'백호', desc:'공격 속도 +25% · 치명타 확률 +10%', color:'#f0f0f4', spd:25, crit:10},
-  {k:'hyeonmu', name:'현무', desc:'받는 피해 -30% · 체력 +60%', color:'#2f6a52', dr:30, hp:60},
+  {k:'jujak', name:'주작', part:1, color:'#ff5a3a', se:{atk:1.0}, gain:30, story:true},
+  {k:'cheong', name:'청룡', part:1, color:'#3a8aff', se:{atk:1.5, skill:1.0}, story:true},
+  {k:'baekho', name:'백호', part:1, color:'#f0f0f4', se:{spd:1.0}, crit:10, story:true},
+  {k:'hyeonmu', name:'현무', part:1, color:'#2f6a52', se:{hp:3, def:3}, story:true},
+  {k:'tengu', name:'까마귀 텐구', part:3, color:'#4a4a6a', se:{atk:1.5, spd:1.5}, story:true},
+  {k:'kitsune', name:'여우불 구미', part:3, color:'#ff9a3a', se:{skill:3.0}, gain:20},
+  {k:'oni', name:'붉은 오니', part:3, color:'#d8433a', se:{atk:2.5, boss:1.5, hp:1.0}},
+  {k:'hwang', name:'황룡', part:4, color:'#ffcc33', se:{atk:2.0, boss:1.5, hp:1.0}, story:true},
+  {k:'chok', name:'촉룡', part:4, color:'#ff5a2a', se:{atk:2.0, skill:2.5}},
+  {k:'jeongwi', name:'정위', part:4, color:'#7ad0ff', se:{spd:2.0, def:1.5}, gain:30},
 ];
-const formOf = () => FORMS.find(f => f.k === S.form.eq && S.form.own[f.k]) || null;
+const FM = Object.fromEntries(FORMS.map(f => [f.k, f]));
+// 변신 모습 조각(drawChibi): 날개(색 4겹, small이면 작게)·볏(머리 위 불꽃)·뿔(cone이면 오니 뿔)·어깨 비늘·범 꼬리와 두건·등껍질·여우 귀와 꼬리·작은 두건(텐구)
+const FORM_LOOK = {
+  jujak:{wings:['#e8402a', '#ff6a3a', '#ffa040', '#ffd24a'], crest:['#ffd24a', '#ff6a3a']},
+  cheong:{horns:['#9fe7ff', '#6ac4ff'], scale:['#3a8aff', '#9fe7ff']},
+  baekho:{tiger:true},
+  hyeonmu:{shell:true},
+  tengu:{wings:['#1e1e2a', '#2e2e44', '#44445e', '#6a6a8a'], tokin:true},
+  kitsune:{fox:['#ff9a3a', '#fff4e0'], tails:3},
+  oni:{horns:['#f4ead0', '#c8b88a'], cone:true},
+  hwang:{horns:['#ffe08a', '#ffb020'], scale:['#ffcc33', '#fff2b0'], crest:['#fff2b0', '#ffcc33']},
+  chok:{horns:['#ff8a5a', '#d8433a'], crest:['#ffd24a', '#ff5a2a'], scale:['#d8433a', '#ffb070']},
+  jeongwi:{wings:['#3a8ad8', '#5aa8f0', '#9ad8ff', '#e8f6ff'], small:true, crest:['#e8f6ff', '#7ad0ff']},
+};
+const FORM_TIME = 30, FORM_OLD_LATE = 0.6, FORM_DB_P = 0.04, FORM_BOX_P = 0.015, FORM_PITY = 60;
+const FORM_PART = {1:'사신(1부)', 3:'부상의 변신', 4:'곤륜의 변신'};
+const FORM_STAT = {atk:'공격력', skill:'기술 피해', spd:'공격 속도', boss:'보스 피해', hp:'체력', def:'받는 피해'};
+const formOf = () => FORMS.find(f => f.k === S.form.eq && S.form.own[f.k]) || null;   // 착용한 변신
+let formT = 0, formFor = null;   // 변신 남은 시간·변신을 쓴 싸움(저장 안 함)
+const curFight = () => market ? null : raid ? (raid.ending ? null : raid) : bossActive && bossRef && !bossRef.dead ? bossRef : null;   // 지금 보스 싸움·레이드(같은 판이면 같은 것)
+const formOn = () => formT > 0 ? formOf() : null;   // 지금 변신 중인 것
+// 변신의 효과(지금 땅 기준): 배율들과 엽전·경험치 %·치명타 확률
+function formFx(F){
+  const o = {atk:1, skill:1, spd:1, boss:1, hp:1, def:1, gain:0, crit:0};
+  if (!F) return o;
+  const [G, A] = SK_GW[Math.max(0, Math.min(4, S.world))], k = F.part === 1 && S.world >= 3 ? FORM_OLD_LATE : 1, se = F.se || {};
+  for (const t of ['atk', 'skill', 'spd', 'boss']) if (se[t]) o[t] = Math.pow(G, se[t] * k);
+  if (se.hp) o.hp = Math.pow(A, se.hp * k);
+  if (se.def) o.def = Math.pow(A, -se.def * k);
+  o.gain = (F.gain || 0) * k; o.crit = (F.crit || 0) * k / 100;
+  return o;
+}
+let fxNow = formFx(null);   // 지금 켜진 변신의 효과(refreshStats·변신 켜고 끌 때 다시 셈)
+function formDesc(F){
+  const x = formFx(F), out = [];
+  for (const t of ['atk', 'skill', 'spd', 'boss', 'hp']) if (x[t] !== 1) out.push(`${FORM_STAT[t]} +${((x[t] - 1) * 100).toFixed(0)}%`);
+  if (x.def !== 1) out.push(`받는 피해 −${((1 - x.def) * 100).toFixed(0)}%`);
+  if (x.crit) out.push(`치명타 확률 +${(x.crit * 100).toFixed(0)}%`);
+  if (x.gain) out.push(`엽전·경험치 +${x.gain.toFixed(0)}%`);
+  return out.join(' · ');
+}
 
 /* 장신구: 각 지역 9번째 단계(수문장 단계)에서만, 아주 드물게 떨어진다 */
 const ACC = {
@@ -2017,7 +2125,7 @@ const MAIN_Q = [
     c:['cedar', 'hero,m:tengu:#c83a2a', 'flash', [['소조보', '그림자보다 빠르다는 아이가 너냐. 따라와 보거라.'], ['나', '날개가 없어도 산은 넘을 수 있어요!']]]},
   {ch:29, t:'밤하늘의 울음', s:'부상 레이드 「밤하늘의 울음」에서 누에를 잠재워요.', k:'raidK', key:'b3', n:1, gems:9000,
     c:['cedar', 'hero,m:haetae:#6a4a3a', 'dark', [['', '원숭이 얼굴에 범의 다리, 뱀 꼬리를 단 누에가 밤하늘에서 울었어요.'], ['까치', '저 울음에도 원한이 섞여 있어요!']]]},
-  {ch:29, t:'텐구 장수', s:'부상 4-1에 닿아요(텐구 장수를 물리쳐요). 「텐구 깃 망토」를 얻어요.', k:'s3', n:37, gems:9000, av:'p_tengu',
+  {ch:29, t:'텐구 장수', s:'부상 4-1에 닿아요(텐구 장수를 물리쳐요). 「텐구 깃 망토」와 까마귀 텐구 변신을 얻어요.', k:'s3', n:37, gems:9000, av:'p_tengu', form:'tengu',
     c:['cedar', 'hero,m:tengu:#c83a2a', 'sparkle', [['소조보', '자객이라면 다시 오너라. 깃바람 타는 법을 가르쳐 주마.']]]},
   {ch:30, t:'눈보라 산장', s:'부상 4-5에 닿아요. 나쁜 꿈을 먹는 신화 환수 「바쿠」가 함께해요.', k:'s3', n:41, gems:9000, pet:'baku',
     c:['snowpass', 'hero,kkachi', 'ice', [['', '눈보라 속 작은 산장의 화로가 꽁꽁 얼어 있었어요.']]]},
@@ -2096,7 +2204,7 @@ const MAIN_Q = [
     c:['kunlunmt', 'hero,m:tiger:#8a3a3a', 'dark', [['궁기', '착한 놈부터 잡아먹는 게 내 법이다.'], ['', '그때 뿔이 빛나는 해태가 궁기와 용사 사이를 가로막았어요.']]]},
   {ch:40, t:'도올', s:'곤륜 레이드 「도올」을 물리쳐요. 탈것 「해태」를 얻어요.', k:'raidK', key:'k6', n:1, gems:22500, mount:'haetae',
     c:['kunlunmt', 'hero,kkachi,m:haetae:#d8c070', 'sparkle', [['까치', '해태가 {name}님을 골랐어요!'], ['', '옳고 그름을 가리는 짐승이 사흉을 심판하고 용사 곁에 섰어요.']]]},
-  {ch:40, t:'곤륜 가는 길', s:'곤륜 5-10에 닿아요. 「곤륜 운무 망토」를 얻어요.', k:'s4', n:58, gems:23000, av:'p_kunlun',
+  {ch:40, t:'곤륜 가는 길', s:'곤륜 5-10에 닿아요. 「곤륜 운무 망토」와 황룡 변신을 얻어요.', k:'s4', n:58, gems:23000, av:'p_kunlun', form:'hwang',
     c:['kunlunmt', 'hero,wukong', '', [['손오공', '저 위가 곤륜이다. 아홉 문이 있지. 셈 잘하냐?']]]},
   {ch:41, t:'아홉 문의 문지기', s:'곤륜 6-1에 닿아요(육오를 물리쳐요).', k:'s4', n:61, gems:23500,
     c:['kunlunmt', 'hero,m:tiger:#e8c070', '', [['육오', '곤륜의 아홉 문은 셈할 줄 아는 자에게만 열린다.'], ['나', '싸워서 열 문이 아니라면, 셈부터 하죠.']]]},
@@ -2243,9 +2351,15 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-7', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-8', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 변신 개편 · 기술 6칸과 연계 · 초각성 · 저승/천계 레이드'],
+  ['변신은 보스 싸움에서 한 번', '착용한 변신을 보스 싸움·레이드에서 한 판에 딱 한 번, 기술 줄 위 [변신] 단추로 30초 동안 써요(일반 몹 사냥 중엔 못 써요). 자동이면 보스가 나오자마자, 단추를 길게 누르면 수동. 효과는 \'몇 단계만큼\'이라 어느 땅에서나 비슷하게 세고, 사신(1부)의 힘은 부상·곤륜에서 60%로 줄어요(부상에서 청룡이 너무 셌어요).'],
+  ['새 변신 여섯', '부상: 까마귀 텐구(이야기 「텐구 장수」)·여우불 구미·붉은 오니 / 곤륜: 황룡(이야기 「곤륜 가는 길」)·촉룡·정위. 이야기 것이 아닌 변신은 1일 보스(이기면 4%)·꾸미기 상자(1.5%)에서, 60번 안에 하나는 꼭.'],
+  ['전투 기술 6칸 · 최대 레벨 · 연계', '전투에서는 익힌 기술 가운데 6개만 써요([기술]에서 끼우기·빼기, 자동으로 고르기도 있어요). 기술 최대 레벨은 처음 10·1차 15·2차 20·3차 25·4차 30. 짝이 맞는 두 기술을 3초 안에 이어 쓰면 「연계!」로 5초 동안 기술 피해 +25~40%.'],
+  ['초각성', '레이드·타임 보스에서 한 싸움에 한 번. 피해는 내 보스 피해 8초 몫(4차 뒤 12초)으로 줄였어요(예전엔 레이드 보스를 혼자 몇 번이나 지울 만큼 셌어요).'],
+  ['저승·천계 레이드가 단단해졌어요', '시왕 레이드·영웅 레이드가 처음 도전할 때 2~15초 만에 끝나서, 30~60초쯤 걸리게 올렸어요. 처음엔 질 수도 있으니 준비해서 도전해요.'],
   ['#', '2026-11-10 · 장터 상인의 귀한 물건 · 여러 가지 고침'],
   ['장터 상인', '보부상 덕보의 물건이 12시간마다(0시·12시) 바뀌어요. 바뀔 때마다 2% 확률로 귀한 물건(전설 치장·전설 장신구) 하나를 보석 2,000에 가져와요(나오면 기록에 알려 줘요).'],
   ['타임 보스·1일 보스', '기술을 아껴 두었다가 끝에 몰아 쳐도 쉬워지지 않게 보스 체력을 끝까지 맞춰요. 되받기로 넣은 큰 피해는 내 \'실제 피해\' 기억에 넣지 않아, 자리를 비운 동안의 보스 도전이 너무 쉬워지던 것도 고쳤어요.'],
@@ -2432,11 +2546,11 @@ function defaultState(){
     world:0, best:{s0:1, l0:1, s1:0, l1:0, s2:0, l2:0, s3:0, l3:0},
     job:0, av:{own:{}, char:'', cape:'', pet:''},
     reb:{n:0, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}},
-    form:{own:{jujak:false, cheong:false, baekho:false, hyeonmu:false}, eq:''},
+    form:{own:Object.fromEntries(FORMS.map(f => [f.k, false])), eq:'', manual:false, pity:0},
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}, neck:{g:-1, p:0}, pae:{g:-1, p:0}},
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
-    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
+    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, asc:{weapon:0, armor:0},
   };
@@ -2453,6 +2567,7 @@ function mergeState(d){
   out.craft = base.craft;
   for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0), el:Math.max(0, Math.min(ENGR_LV_MAX, c.el | 0))}; }
   out.skManual = d.skManual && typeof d.skManual === 'object' ? d.skManual : {};
+  out.skSet = Array.isArray(d.skSet) ? d.skSet.filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : []; out.skSetMan = !!d.skSetMan;
   out.equip = Object.assign(base.equip, d.equip || {});
   // 새로 생긴 칸: 예전 저장에는 없으므로 기본값을 채운다
   out.name = typeof d.name === 'string' ? d.name.slice(0, 8) : '';
@@ -2518,6 +2633,7 @@ function mergeState(d){
   out.form = {own:{}, eq:''};
   for (const f of FORMS) out.form.own[f.k] = !!(d.form && d.form.own && d.form.own[f.k]);
   if (d.form && out.form.own[d.form.eq]) out.form.eq = d.form.eq;
+  out.form.manual = !!(d.form && d.form.manual); out.form.pity = Math.max(0, Math.min(FORM_PITY, Math.floor(+(d.form && d.form.pity)) || 0));
   out.acc = {};
   for (const k of ACC_ORDER){ const a = (d.acc && d.acc[k]) || {}; const g = Math.floor(+a.g); out.acc[k] = g >= 0 && g <= 4 ? {g, p:Math.max(0, Math.round(+a.p) || 0)} : {g:-1, p:0}; }
   out.awaken = !!d.awaken;
@@ -2641,22 +2757,22 @@ function mythSets(){
   return {sword:m.sword > 0 && m.kusa > 0 && m.pangu > 0 ? k : 0, mirror:m.mirror > 0 && m.yata > 0 && m.elixir > 0 ? k : 0, bell:m.bell > 0 && m.maga > 0 && m.sail > 0 ? k : 0};
 }
 function computeStats(up = S.up){
-  const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = formOf() || {}, RB = S.reb.up;
+  const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = fxNow, RB = S.reb.up;
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
-  const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100, crOver = Math.max(0, crRaw - 1);
+  const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
-      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk'),
+      * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk'),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
-      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp'),
+      * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp'),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
     crit: Math.min(1, crRaw), critOver: crOver,
     critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg'),
-    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
+    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
+const skillMulX = () => comboMul() * (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * fxNow.skill * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 /* 실제 보스 피해(2026-11 (26)): 기본 초당 피해(dpsOf)에는 기술·넋·펫·보스 피해 배율이 빠져 있어 후반엔 실제보다 수십 배 작다.
    보스·레이드 싸움에서 용사 쪽(용사·펫·넋)이 보스에게 넣은 피해 ÷ 싸운 시간을 재어, dpsOf의 몇 배인지(S.rec.rdpsK, 평균)를 기억한다.
@@ -2675,7 +2791,7 @@ function power(st){
   return (dpsOf(st) + petDps) * 10 + st.maxHp / (1 - petDR() / 100);
 }
 function refreshStats(){
-  const old = ST; brCache = null; skCache = null;
+  const old = ST; brCache = null; skCache = null; fxNow = formFx(formOn());
   ST = computeStats();
   if (old && old.maxHp > 0) hero.hp = Math.min(ST.maxHp, hero.hp / old.maxHp * ST.maxHp);
   if (spriteCache.size > 400) spriteCache.clear();
@@ -2693,7 +2809,7 @@ function statValue(k, st){
 const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1);
 const spdBuff = () => (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0) + rideAb(k) + barrack().gain + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + barrack().gain + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -2720,7 +2836,7 @@ function buyStat(k){
 const skillCost = (sk, lv) => sk.base * Math.pow(sk.growth, lv - 1);
 function upgradeSkill(key){
   const i = SKILLS.findIndex(s => s.key === key), sk = SKILLS[i], lv = skLv(i);
-  if (!lv || lv >= sk.max) return false;
+  if (!lv || lv >= skCap(i)) return false;
   const c = skillCost(sk, lv);
   if (S.gold < c) return false;
   S.gold -= c; S.skills[key]++;
@@ -3109,12 +3225,7 @@ function claimMain(){
 }
 // 보석 말고 따로 주는 이야기 보상(변신·초각성)
 function storyReward(q){
-  if (q.form && !S.form.own[q.form]){
-    S.form.own[q.form] = true; refreshStats();
-    const F = FORMS.find(f => f.k === q.form);
-    addLog(`${F.name} 변신을 얻었습니다! [장비] → [변신]`, 'good');
-    announce(`${S.name}님이 사신 ${F.name}의 힘을 얻었어요!`);
-  }
+  if (q.form && !S.form.own[q.form]) giveForm(q.form);
   if (q.awaken && !S.awaken){ S.awaken = true; addLog(`초각성기 「${cls().awaken}」를 익혔습니다!`, 'good'); }
   if (q.myth && !S.myth[q.myth]) dropMyth(questDiff(q), q.myth);
   if (q.av && !S.av.own[q.av]) giveAvatar(q.av);
@@ -3375,7 +3486,7 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : PAT.grogMul : 1;
-  const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') * fxNow.boss : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
@@ -3425,7 +3536,7 @@ function damageHero(d){
   if (hero.invisT > 0) return;   // 무영 월광살: 모습을 감춘 동안
   if (cls().evade && Math.random() < cls().evade){ addText('회피', hero.x + Math.random() * 8 - 4, hero.y - 30, '#d8d0ff', 10, true); return; }
   const dr = petDR();
-  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (1 - rideAb('dr') / 100) * skMul('def') * (0.9 + Math.random() * 0.2);
+  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (1 - rideAb('dr') / 100) * skMul('def') * (0.9 + Math.random() * 0.2);
   if (dr > 0) petRt.def.glow = 0.25;
   if (hero.shield > 0){
     const a = Math.min(hero.shield, dmg);
@@ -3648,15 +3759,17 @@ function startFight(info, party, o){
   if (currentTab === 'raid') buildTab('raid', true);
 }
 /* 초각성기: 레이드(타임 보스 포함)마다 한 번. 12초가 지나거나 보스 체력이 60% 아래로 내려가면 저절로 쓴다 */
-const AWAKEN_PCT = 15000;
+const AWAKEN_PCT = 15000, AWAKEN_SEC = 8, AWAKEN_SEC4 = 12;   // AWAKEN_PCT는 예전 값(설명용), 지금은 실제 보스 피해 몇 초 몫
 function castAwaken(){
   const R = raid, B = R.boss, C = cls();
   R.awk.used = true; R.awk.show = 1.8;
-  const dmg = ST.atk * atkBuff() * skillMulX() * C.skillMul * AWAKEN_PCT * (S.job >= 4 ? 25000 / 15000 : 1) / 100;
+  // (2026-11 (40), 사용자 요청: 너무 셈) 예전엔 공격력 15000%라 레이드 보스 체력의 몇 배~몇백 배를 한 번에 지웠다.
+  // 이제는 내 실제 보스 피해(realDps)의 AWAKEN_SEC초 몫(4차 전직 뒤 AWAKEN_SEC4초)을 한 싸움에 한 번. 내 실제 피해 기억·변신/기본 피해 셈에는 넣지 않는다
+  const dmg = realDps() * (S.job >= 4 ? AWAKEN_SEC4 : AWAKEN_SEC);
   fx.push({type:'awaken', t:0, dur:1.3, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5});
   fx.push({type:C.nukeFx, t:0, dur:1, pts:[[B.x - 22, B.y - 8], [B.x, B.y - 24], [B.x + 22, B.y - 8], [B.x - 12, B.y - 36], [B.x + 12, B.y - 36], [B.x, B.y - 2]], seed:Math.random() * 1000});
   shake = 0.7;
-  for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead) hit(B, dmg / 5, 'skill'); });
+  for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead){ hitNoBase = true; hit(B, dmg / 5, 'skill', true, true); hitNoBase = false; } });
   addLog(`초각성기 · ${S.job >= 4 ? C.awaken4 : C.awaken}!`, 'gain'); sfx('awaken');
 }
 /* ================= 타임 보스 =================
@@ -3865,7 +3978,7 @@ function allySkill(a, B){
 }
 function allyAwaken(a, B){
   a.awk = true;
-  const C = CLASSES[a.cls], dmg = a.hit * 60;
+  const C = CLASSES[a.cls], dmg = a.hit * a.aspd * AWAKEN_SEC;   // 동료 초각성도 그 동료 피해 AWAKEN_SEC초 몫(예전 60번 휘두른 만큼)
   fx.push({type:'awaken', t:0, dur:1.1, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5}); shake = Math.max(shake, 0.35);
   addText(`${a.name} · ${C.awaken}!`, a.x, a.y - 40, '#ffd24a', 12, true);
   for (let k = 0; k < 4; k++) after(k * 0.15, () => { if (raid && !B.dead) hit(B, dmg / 4, 'ally'); });
@@ -4318,6 +4431,7 @@ function finishDBoss(R){
     else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; skin = skinDropPart(part, g); }
     if (skin) out.push(`치장: ${skName(skin.it)}${skin.better ? '(바로 낌)' : ''}`);
     else if (sun) out.push('전설 치장은 이번엔 나오지 않았어요');
+    const nf = formDrop(FORM_DB_P); if (nf) out.push(`변신: ${nf.name}`);   // 1일 보스: 아주 드물게 변신(부상부터)
   }
   ev('raid');
   saveLocal();
@@ -4471,9 +4585,14 @@ const AOE_KINDS = ['spin', 'meteor', 'jobA', 'jobB'], ONE_KINDS = ['bolt', 'comb
 const kindMul = k => { const C = cls(); return AOE_KINDS.includes(k) ? C.aoeMul || 1 : ONE_KINDS.includes(k) ? C.oneMul || 1 : 1; };
 const SELF_KINDS = ['roar', 'd_heal', 'd_charge', 'd_bagua', 'd_gut'];
 function tryCast(i, lv, manual){
+  const cb = comboFor(i), prev = [hero.comboT, hero.comboP];
+  if (cb){ hero.comboT = COMBO_T; hero.comboP = cb.p; }   // 연계는 이번 기술부터 받는다
   const ok = castSkill(i, lv, manual);
-  if (ok && !fxOff()) skillVfx(i, manual);
-  return ok;
+  if (!ok){ if (cb){ hero.comboT = prev[0]; hero.comboP = prev[1]; } return false; }
+  lastCast = {i, t:gtime};
+  if (cb){ S.rec.combos = (S.rec.combos || 0) + 1; addText(`연계 · ${cb.name}!`, hero.x, hero.y - 48, '#ffe08a', manual ? 14 : 12, true); if (manual) addLog(`연계 「${cb.name}」! ${COMBO_T}초 동안 기술 피해 +${cb.p}%`, 'good'); }
+  if (!fxOff()) skillVfx(i, manual);
+  return true;
 }
 function castSkill(i, lv, manual){
   const C = cls(), d = skDef(i), kind = d.kind;
@@ -4660,7 +4779,7 @@ const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
-  if (!lv || hero.dead || cut || !session && !window.__game) return false;
+  if (!lv || !skIn(i) || hero.dead || cut || !session && !window.__game) return false;
   if (skillCd[key] > 0) return false;
   if (!tryCast(i, lv, true)) return false;
   skillCd[key] = skCdOf(i);
@@ -4745,7 +4864,8 @@ function update(dt){
     }
   }
 
-  updatePat(dt); updateSoul(dt); updateEvt(dt);
+  updatePat(dt); updateSoul(dt); updateEvt(dt); updateForm(dt);
+  { const k = [S.cls, S.level, S.job, S.reb.n, S.world, S.skSetMan ? 1 : 0, (S.skSet || []).length].join(':'); if (k !== skFixKey){ skFixKey = k; skSetFix(); } }   // 새 기술을 익히면 전투 칸을 다시 고름
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
@@ -4852,9 +4972,10 @@ function update(dt){
   }
   if (!hero.dead){
     if (autoGap > 0) autoGap -= dt;
+    if (hero.comboT > 0) hero.comboT -= dt;
     for (const i of cls().order || SK_AUTO_ORDER){
       const key = SKILLS[i].key, lv = skLv(i);
-      if (!lv) continue;
+      if (!lv || !skIn(i)) continue;   // 전투 칸(6칸)에 낀 기술만
       skillCd[key] = Math.max(0, (skillCd[key] || 0) - dt);
       if (autoGap <= 0 && skillCd[key] <= 0 && skAuto(i) && tryCast(i, lv)){ skillCd[key] = skCdOf(i); autoGap = AUTO_GAP; }
     }
@@ -4945,15 +5066,21 @@ function drawChibi(g, c, view, f, col, look){
   // ── 몸 뒤: 망토·날개·등껍질·꼬리, 뒤로 든 무기
   const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
   if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
-  if (fm === 'jujak'){
-    const u = f % 2 ? -1 : 0;
+  const FLK = FORM_LOOK[fm] || {};
+  if (FLK.wings){
+    const u = f % 2 ? -1 : 0, sc = FLK.small ? 0.68 : 1;
     for (const s of [-1, 1]){
-      const bx = 32 + s * 7, W2 = [['#e8402a', 0], ['#ff6a3a', 3], ['#ffa040', 6], ['#ffd24a', 9]];
-      for (const [cl, k] of W2) Pl([[bx, 40 + by], [bx + s * (20 - k), 22 + u + k * 0.6], [bx + s * (22 - k), 33 + u + k * 0.5], [bx + s * (14 - k * 0.6), 46 + by]], cl);
+      const bx = 32 + s * 7, W2 = FLK.wings.map((cl, i) => [cl, i * 3]);
+      for (const [cl, k] of W2) Pl([[bx, 40 + by], [bx + s * (20 - k) * sc, 40 - (18 - k * 0.6) * sc + u], [bx + s * (22 - k) * sc, 40 - (7 - k * 0.5) * sc + u], [bx + s * (14 - k * 0.6) * sc, 46 + by]], cl);
     }
   }
-  if (fm === 'hyeonmu' && !back){ E(32, 45 + by, 15, 11, '#2f6a52'); E(32, 45 + by, 13, 9, '#3f8a68'); }
-  if (fm === 'baekho'){ const tx = back ? 40 : 21; Pl([[tx, 50], [tx - 9 * (back ? -1 : 1), 44 + sway], [tx - 11 * (back ? -1 : 1), 40 + sway], [tx - 8 * (back ? -1 : 1), 41 + sway], [tx - 6 * (back ? -1 : 1), 47], [tx + 1, 52]], '#f0f0f4');
+  if (FLK.tails){   // 여우 꼬리(몸 뒤로 부채처럼)
+    const tx = back ? 40 : 24, d = back ? 1 : -1;
+    for (let i = 0; i < FLK.tails; i++){ const a = -0.75 + i * 0.5 + sway * 0.06, cx = tx + d * Math.cos(a) * 9, cy = 45 + Math.sin(a) * 8 + by;
+      E(cx, cy, 7, 3.4, FLK.fox[0], d * a); E(cx + d * Math.cos(a) * 5, cy + Math.sin(a) * 3.6, 2.8, 2.1, FLK.fox[1], d * a); }
+  }
+  if (FLK.shell && !back){ E(32, 45 + by, 15, 11, '#2f6a52'); E(32, 45 + by, 13, 9, '#3f8a68'); }
+  if (FLK.tiger){ const tx = back ? 40 : 21; Pl([[tx, 50], [tx - 9 * (back ? -1 : 1), 44 + sway], [tx - 11 * (back ? -1 : 1), 40 + sway], [tx - 8 * (back ? -1 : 1), 41 + sway], [tx - 6 * (back ? -1 : 1), 47], [tx + 1, 52]], '#f0f0f4');
     E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
   if (back) drawWeapon(true);
 
@@ -4988,14 +5115,14 @@ function drawChibi(g, c, view, f, col, look){
     if (!back){ RR(30.4, 44.3 + by * 0.5, 3.2, 3.6, 0.8, mix(bc, '#ffd24a', 0.45)); E(32, 46.1 + by * 0.5, 0.8, 0.8, '#ffffff'); RR(25.6, 47.4 + by * 0.5, 1.2, 4.4, 0.6, darken(bc, 0.2)); E(26.2, 52.2 + by * 0.5, 1.5, 1.3, mix(bc, '#ffd24a', 0.3)); } }
   if (back && cc){ Pl([[22, 37 + by], [42, 37 + by], [46, 56], [18, 56]], cc); Pl([[18, 56], [46, 56], [45.6, 54], [18.4, 54]], ctr); Pl([[23, 37 + by], [41, 37 + by], [41.4, 39 + by], [22.6, 39 + by]], ctr);
     if (col.capeStar) for (const [x, y] of [[26, 44], [37, 47], [31, 51], [40, 41]]) E(x, y + by * 0.5, 0.9, 0.9, '#ffe28a'); }
-  if (back && fm === 'hyeonmu'){ E(32, 45 + by, 13, 10, '#2f6a52'); for (const [x, y] of [[27, 42], [37, 42], [32, 47], [26, 49], [38, 49]]) E(x, y + by, 3, 2.4, '#1e4a38'); E(32, 41 + by, 9, 2, '#5a9a7a'); }
+  if (back && FLK.shell){ E(32, 45 + by, 13, 10, '#2f6a52'); for (const [x, y] of [[27, 42], [37, 42], [32, 47], [26, 49], [38, 49]]) E(x, y + by, 3, 2.4, '#1e4a38'); E(32, 41 + by, 9, 2, '#5a9a7a'); }
 
   // ── 뒤쪽 팔(왼쪽)
   if (!back){ RR(19.5, 38 + by, 5, 9, 2.4, OD); E(22, 48 + by, 2.4, 2.2, SKD); }
   else { RR(39.5, 38 + by, 5, 9, 2.4, OD); E(42, 48 + by, 2.4, 2.2, SKD); }
   if (SKL.guard){ const gc = darken(SKL.guard, 0.15); RR(back ? 39.3 : 19.3, 41.2 + by, 5.4, 2.8, 1.2, gc); RR(back ? 39.3 : 19.3, 41.2 + by, 5.4, 0.8, 0.4, mix(gc, '#ffffff', 0.4)); }
   if (aG >= 2){ E(23, 38.4 + by, 4.6, 3, trim); E(41, 38.4 + by, 4.6, 3, trim); E(22, 37.6 + by, 2.2, 1.2, mix(trim, '#ffffff', 0.45)); E(40, 37.6 + by, 2.2, 1.2, mix(trim, '#ffffff', 0.45)); }
-  if (fm === 'cheong'){ for (const x of [23, 41]){ E(x, 38.6 + by, 3.6, 2.2, '#3a8aff'); E(x - 1, 38 + by, 1.6, 0.9, '#9fe7ff'); } }
+  if (FLK.scale){ for (const x of [23, 41]){ E(x, 38.6 + by, 3.6, 2.2, FLK.scale[0]); E(x - 1, 38 + by, 1.6, 0.9, FLK.scale[1]); } }
 
   // ── 머리
   if (!back){
@@ -5060,9 +5187,12 @@ function drawChibi(g, c, view, f, col, look){
     E(fx2, fy2, 1.4, 1.4, '#ffd84a');
   }
   // ── 변신: 머리 장식
-  if (fm === 'jujak'){ Pl([[hx - 2, hy - 13], [hx - 4, hy - 24], [hx + 1, hy - 17], [hx + 5, hy - 23], [hx + 3, hy - 13]], '#ffd24a'); E(hx, hy - 14, 3, 1.8, '#ff6a3a'); }
-  if (fm === 'cheong'){ for (const s of [-1, 1]){ const x0 = hx + s * 6; Pl([[x0 - 1.4, hy - 9], [x0 + 1.4, hy - 9], [x0 + s * 5, hy - 21], [x0 + s * 3, hy - 15]], '#9fe7ff'); Pl([[x0 + s * 3, hy - 15], [x0 + s * 7, hy - 17], [x0 + s * 4, hy - 13]], '#6ac4ff'); } }
-  if (fm === 'baekho'){
+  if (FLK.crest){ Pl([[hx - 2, hy - 13], [hx - 4, hy - 24], [hx + 1, hy - 17], [hx + 5, hy - 23], [hx + 3, hy - 13]], FLK.crest[0]); E(hx, hy - 14, 3, 1.8, FLK.crest[1]); }
+  if (FLK.horns && !FLK.cone){ for (const s of [-1, 1]){ const x0 = hx + s * 6; Pl([[x0 - 1.4, hy - 9], [x0 + 1.4, hy - 9], [x0 + s * 5, hy - 21], [x0 + s * 3, hy - 15]], FLK.horns[0]); Pl([[x0 + s * 3, hy - 15], [x0 + s * 7, hy - 17], [x0 + s * 4, hy - 13]], FLK.horns[1]); } }
+  if (FLK.cone){ for (const s of [-1, 1]){ const x0 = hx + s * 5; Pl([[x0 - 2, hy - 9], [x0 + 2, hy - 9], [x0 + s * 2.5, hy - 18]], FLK.horns[0]); Pl([[x0 - 2, hy - 9], [x0 + 2, hy - 9], [x0 + s * 0.6, hy - 11.5]], FLK.horns[1]); } }
+  if (FLK.fox){ for (const s of [-1, 1]){ const x0 = hx + s * 9; Pl([[x0 - 3.4, hy - 8], [x0 + 3.4, hy - 8], [x0 + s * 1.6, hy - 19]], FLK.fox[0]); Pl([[x0 - 1.6, hy - 9], [x0 + 1.6, hy - 9], [x0 + s * 1, hy - 15.5]], '#f6c8b8'); } }
+  if (FLK.tokin){ RR(hx - 3.6, hy - 17.5, 7.2, 5, 2, '#1e1e2a'); E(hx, hy - 18.4, 2.2, 1.6, '#d8433a'); }
+  if (FLK.tiger){
     E(hx, hy - 4, 14.8, 9.4, '#f0f0f4'); for (const s of [-1, 1]){ E(hx + s * 10, hy - 12, 3.6, 3.6, '#f0f0f4'); E(hx + s * 10, hy - 11.6, 1.8, 1.8, '#f3a0b0'); }
     for (const x of [-6, 0, 6]) Pl([[hx + x - 1, hy - 12.6], [hx + x + 1, hy - 12.6], [hx + x + 0.4, hy - 6]], '#22202c');
     if (!back){ E(hx + 6.2, hy + 4.2, 1.9, 2.7, EYE); E(hx - 1.2, hy + 4.2, 1.6, 2.5, EYE); E(hx + 6.8, hy + 3.2, 0.8, 0.8, '#ffffff'); }
@@ -5151,7 +5281,7 @@ function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   return white ? sp.white : sp.base;
 }
 const gradeOf = i => i >= 0 ? Math.floor(i / 4) : -1;
-const heroEx = () => ({form:formOf() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, sk:skinLook()});
+const heroEx = () => ({form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, sk:skinLook()});
 const heroSprite = (c, dir, f, white) => personSprite(c, S.look, gearG('armor'), gearG('weapon'), dir, f, white, heroEx());
 
 const petCache = new Map();
@@ -5832,7 +5962,7 @@ function rideMount(k){
 }
 // 이야기에서 받았어야 할 탈것(탈것이 생기기 전에 그 이야기를 지난 저장)
 function mountCatchUp(){
-  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); if (q.acc && ACC[q.acc[0]].w && S.acc[q.acc[0]].g < 0) giveAcc(q.acc[0], q.acc[1]); }
+  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); if (q.acc && ACC[q.acc[0]].w && S.acc[q.acc[0]].g < 0) giveAcc(q.acc[0], q.acc[1]); if (q.form && !S.form.own[q.form] && giveForm(q.form, true)) addLog(`지난 이야기 보상: ${FM[q.form].name} 변신`, 'gain'); }
 }
 
 /* 탈것 그림: 64×48 HD, 왼쪽을 본다. 안장 가운데 (33.5, 16)에 용사가 앉는다 */
@@ -6322,6 +6452,48 @@ function soulAct(k, manual){
   }
 }
 // 넋의 기운: 싸우는 동안 초마다 SOUL_RATE, 가득하면 자동·함께하는 싸움에서는 저절로
+/* 변신 켜기·끄기·자동(2026-11 (40)) */
+const formAuto = () => coopFight() || !S.form.manual;
+const formReady = () => { const f = curFight(); return !!f && formFor !== f && formT <= 0; };   // 이번 싸움에 아직 안 썼으면
+function startForm(manual){
+  const F = formOf(), fight = curFight();
+  if (!F || !fight || formFor === fight || formT > 0 || hero.dead || cut) return false;
+  formFor = fight; formT = FORM_TIME; refreshStats(); S.rec.forms = (S.rec.forms || 0) + 1;
+  addText(`${F.name} 변신!`, hero.x, hero.y - 44, F.color === '#4a4a6a' ? '#c8c8ff' : F.color, manual ? 15 : 13, true);
+  sfx('form'); shake = Math.max(shake, 0.25);
+  if (!fxOff()){ vadd({type:'shock', x:hero.x, y:hero.y, r0:4, r1:34, w:3, col:F.color, dur:0.55, ground:true}); vadd({type:'glow', x:hero.x, y:hero.y - 12, r:20, col:F.color, dur:0.6}); vSparks(hero.x, hero.y - 14, 12, F.color, 70, 26); }
+  if (manual) addLog(`${F.name} 변신! ${FORM_TIME}초 동안 ${formDesc(F)}`, 'good');
+  return true;
+}
+function endForm(){
+  formT = 0; refreshStats();
+  const F = formOf(); if (F && !fxOff()) vadd({type:'glow', x:hero.x, y:hero.y - 12, r:14, col:F.color, dur:0.4});
+}
+function updateForm(dt){
+  const fight = curFight();
+  if (formT > 0){ formT -= dt; if (formT <= 0 || fight !== formFor) endForm(); return; }   // 30초가 지나거나 싸움이 끝나면 풀림
+  const B = fight && (fight.boss || fight);
+  if (formOf() && fight && formFor !== fight && formAuto() && !hero.dead && !(B.spawnT > 0)) startForm(false);   // 자동: 싸움이 시작되면(보스가 나타나면) 바로
+}
+// 변신 얻기: 이야기 보상·1일 보스·꾸미기 상자(이야기 것이 아닌 변신, 들어간 땅의 것만). 아무것도 안 끼었으면 바로 착용
+function giveForm(k, quiet){
+  const F = FM[k]; if (!F || S.form.own[k]) return false;
+  S.form.own[k] = true; if (!formOf()) S.form.eq = k; refreshStats();
+  if (!quiet){ addLog(`${F.name} 변신을 얻었어요! [장비] → [변신]에서 착용하고, 전투 화면 [변신] 단추로 써요.`, 'gain'); announce(`${S.name}님이 ${F.name} 변신을 얻었어요!`); }
+  return true;
+}
+// 가진 변신 가운데 피해가 가장 큰 것(시뮬이 씀)
+function formBest(){ let best = '', bv = 0; for (const F of FORMS) if (S.form.own[F.k]){ const x = formFx(F), v = x.atk * (1 + 0.6 * (x.skill - 1)) * Math.sqrt(x.spd) * x.boss * (1 + x.crit); if (v > bv){ bv = v; best = F.k; } } return best; }
+const formDropPool = () => FORMS.filter(F => !F.story && F.part <= Math.max(1, S.world) && !S.form.own[F.k]);
+function formDrop(p){   // p 확률(천장 FORM_PITY번)로 아직 없는 변신 하나. 나오면 그 변신을 돌려준다
+  const pool = formDropPool(); if (!pool.length) return null;
+  S.form.pity = (S.form.pity || 0) + 1;
+  const luck = window.__game && window.__game.formLuck != null ? window.__game.formLuck : 1;
+  if (!(Math.random() < p * luck) && S.form.pity < FORM_PITY) return null;
+  S.form.pity = 0;
+  const F = pool[Math.floor(Math.random() * pool.length)]; giveForm(F.k);
+  return F;
+}
 function updateSoul(dt){
   for (const a of soulApp) a.t += dt;
   if (soulApp.length) soulApp = soulApp.filter(a => a.t < a.dur);
@@ -6557,12 +6729,13 @@ function openAvatarBox(){
   let type;
   if (S.avPity >= AV_PITY && rare.length) type = 'pity';
   else { let r = Math.random() * 100 / (window.__game && window.__game.avLuck || 1); type = 'miss'; for (const [t, p] of AV_ODDS){ if (r < p){ type = t; break; } r -= p; } }
-  if (type === 'miss'){ S.inv.potion = Math.min(999, S.inv.potion + 10); return {miss:true, pity:S.avPity}; }
+  const form = formDrop(FORM_BOX_P);   // 꾸미기 상자에서도 아주 드물게 변신(부상부터, 천장 FORM_PITY)
+  if (type === 'miss'){ S.inv.potion = Math.min(999, S.inv.potion + 10); return {miss:true, pity:S.avPity, form}; }
   const pool = type === 'pity' ? rare : box.filter(a => a.type === type), a = pool[(Math.random() * pool.length) | 0];
   const isNew = !S.av.own[a.k];
   if (isNew && a.type !== 'pet') S.avPity = 0;
   giveAvatar(a.k);
-  return {a, isNew, pity:type === 'pity'};
+  return {a, isNew, pity:type === 'pity', form};
 }
 function equipAvatar(k){
   const a = AV[k];
@@ -6605,7 +6778,7 @@ const GOD_RAIDS = [
   {name:'영소보전의 결전', boss:'옥황상제', type:'emperor', color:'#e8c84a', region:5},
   {name:'하늘 문의 끝', boss:'천마', type:'cheonma', color:'#2a1a3a', region:5},
 ];
-const GOD_RAID_REF = [8, 18, 28, 38, 48, 58, 68, 78];
+const GOD_RAID_REF = [40, 48, 54, 55, 60, 67, 73, 81];   // (2026-11 (40)) 예전 [8, 18, 28, 38, 48, 58, 68, 78]는 처음 도전 때 2~15초에 끝나 저승 레이드처럼 올림
 function godRaidInfo(i){
   const d = GOD_RAIDS[i % GOD_RAIDS.length], round = Math.floor(i / GOD_RAIDS.length), req = 30 * (i + 1);
   const suffix = round ? ` ${round + 1}단` : '';
@@ -7791,7 +7964,7 @@ function drawEntityHero(){
     b.strokeStyle = hexA(fc, 0.5 + 0.06 * skf.g); b.lineWidth = 0.8; b.beginPath(); b.ellipse(x, y, 12.5 + pu * 1.5, 5.4 + pu * 0.6, 0, 0, Math.PI * 2); b.stroke();
     if (!reduceMotion) for (let k = 0, nk = 2 + skf.g; k < nk; k++){ const ph = (gtime * 0.6 + k / nk) % 1; b.fillStyle = hexA(fc, 0.7 * (1 - ph)); b.fillRect(x + Math.sin(k * 2.1 + gtime) * 10 - 0.6, y - ph * 9 - 0.6, 1.2, 1.2); }
     b.restore(); }
-  const F = formOf(), wg = gradeOf(S.equip.weapon);
+  const F = formOn(), wg = gradeOf(S.equip.weapon);
   if (S.job >= 1 && !hero.dead && !reduceMotion){
     const jc = [cls().fx || '#ffd24a', cls().fx || '#ffd24a', '#9fe7ff', '#ffd24a', '#ff8ad0'][S.job], pu = 0.5 + 0.5 * Math.sin(gtime * 2.4);
     b.save(); b.globalCompositeOperation = 'lighter';
@@ -9163,13 +9336,17 @@ const elLv = $('#lv'), elCls = $('#clsName'), elCp = $('#cp'), elGold = $('#gold
 const elHp = $('#hpfill'), elHpN = $('#hpnum'), elXp = $('#xpfill'), elXpN = $('#xpnum');
 const elBoss = $('#bossBtn'), elSpeed = $('#speedBtn');
 // 기술 줄: 누르면 바로 쓰기, 길게 누르면 자동/수동 바꾸기
-const skillEls = {};
-let skBarCls = '';
+let skillEls = {};
+let skBarKey = '';
+const skBarList = () => (S.skSet || []).slice(0, SK_SLOTS);
 function buildSkillbar(){
-  skBarCls = S.cls;
-  $('#skillbar').innerHTML = SKILLS.map((sk, i) => `<button type="button" class="sk" id="skb-${sk.key}">${SVG[skDef(i).icon]}<span class="cd"></span><span class="mn">수동</span><span class="lk">${skLockText(i)}</span></button>`).join('');
-  SKILLS.forEach((sk, i) => {
-    const el = $('#skb-' + sk.key);
+  const list = skBarList();
+  skBarKey = S.cls + ':' + list.join(','); skillEls = {};
+  $('#skillbar').innerHTML = list.map(i => { const sk = SKILLS[i]; return `<button type="button" class="sk" id="skb-${sk.key}">${SVG[skDef(i).icon]}<span class="cd"></span><span class="mn">수동</span><span class="lk">${skLockText(i)}</span></button>`; }).join('')
+    + Array.from({length:SK_SLOTS - list.length}, () => '<button type="button" class="sk empty" data-skopen aria-label="빈 기술 칸 — [기술]에서 끼우기">+</button>').join('');
+  $('#skillbar').querySelectorAll('[data-skopen]').forEach(b => b.addEventListener('click', () => { skillView = 'skill'; buildTab('skill'); }));
+  list.forEach(i => {
+    const sk = SKILLS[i], el = $('#skb-' + sk.key);
     skillEls[sk.key] = {el, cd:el.querySelector('.cd'), lk:el.querySelector('.lk')};
     let t = null, long = false;
     el.addEventListener('pointerdown', e => { if (e.button > 0) return; long = false; clearTimeout(t); t = setTimeout(() => { long = true; if (skLv(i)) toggleSkAuto(i); }, 520); });
@@ -9214,10 +9391,11 @@ function updateHud(){
   const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid && bossGate().ok;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
   if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '보스 도전!');
-  if (skBarCls !== S.cls) buildSkillbar();
+  if (skBarKey !== S.cls + ':' + skBarList().join(',')) buildSkillbar();
   updateActBtns();
-  SKILLS.forEach((sk, i) => {
-    const r = skillEls[sk.key], lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), rdy = man && !(skillCd[sk.key] > 0);
+  skBarList().forEach(i => {
+    const sk = SKILLS[i], r = skillEls[sk.key]; if (!r) return;
+    const lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), rdy = man && !(skillCd[sk.key] > 0);
     if (r.el.classList.contains('locked') !== locked) r.el.classList.toggle('locked', locked);
     if (r.el.classList.contains('manual') !== man) r.el.classList.toggle('manual', man);
     if (r.el.classList.contains('rdy') !== rdy) r.el.classList.toggle('rdy', rdy);
@@ -9231,7 +9409,39 @@ function updateHud(){
 /* --- 넋 구슬·구르기/되받기 단추(2026-11 (19)) --- */
 const elSoul = $('#soulBtn'), elHand = $('#handBtn');
 let soulImgKey = '';
+const elForm = $('#formBtn'); let formImgKey = '';
+function updateFormBtn(){
+  const F = session ? formOf() : null, show = !!F && !market;
+  if (elForm.hidden === show) elForm.hidden = !show;
+  if (!show) return;
+  const key = [F.k, S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin].join('|');
+  if (formImgKey !== key){ formImgKey = key; $('#formImg').src = lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), 'down', {form:F.k}); elForm.style.setProperty('--fc', F.color === '#4a4a6a' ? '#9a9ad8' : F.color); setText($('#formName'), F.name); }
+  const fight = curFight(), on = formT > 0, ready = formReady(), used = !!fight && formFor === fight && !on, auto = formAuto(), cd = !on && !ready;
+  setText($('#formState'), on ? `변신 중 ${Math.ceil(formT)}초` : ready ? (auto ? '곧 변신' : '누르기!') : used ? '이번 싸움엔 씀' : '보스·레이드에서');
+  setText($('#formMode'), auto ? '자동' : '수동');
+  const p = (on ? formT / FORM_TIME : ready ? 1 : 0).toFixed(3); if (elForm.style.getPropertyValue('--p') !== p) elForm.style.setProperty('--p', p);
+  for (const [c, v] of [['on', on], ['cd', cd], ['ready', ready], ['man', !auto]]) if (elForm.classList.contains(c) !== v) elForm.classList.toggle(c, v);
+  const lab = `변신 ${F.name} · ${on ? '변신 중' : ready ? '쓸 수 있음' : used ? '이번 싸움엔 씀' : '보스 싸움·레이드에서만'} · ${auto ? '자동' : '수동'} (길게 누르면 바뀜)`; if (elForm.getAttribute('aria-label') !== lab) elForm.setAttribute('aria-label', lab);
+}
+function toggleFormAuto(){
+  S.form.manual = !S.form.manual; sfx('click');
+  addLog(S.form.manual ? '변신 수동: 보스 싸움·레이드에서 [변신] 단추를 직접 눌러요(한 판에 한 번).' : '변신 자동: 보스 싸움·레이드가 시작되면 바로 변신해요(한 판에 한 번).', 'good');
+  updateFormBtn();
+}
+{ let t = null, long = false;
+  elForm.addEventListener('pointerdown', e => { if (e.button > 0) return; long = false; clearTimeout(t); t = setTimeout(() => { long = true; toggleFormAuto(); }, 520); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) elForm.addEventListener(ev, () => clearTimeout(t));
+  elForm.addEventListener('contextmenu', e => e.preventDefault());
+  elForm.addEventListener('click', () => {
+    if (long){ long = false; return; }
+    if (formT > 0) addLog(`${formOf().name} 변신 중이에요(${Math.ceil(formT)}초 남음).`);
+    else if (!curFight()) addLog('변신은 보스 싸움·레이드에서만, 한 판에 한 번 쓸 수 있어요.');
+    else if (formFor === curFight()) addLog('이번 싸움에서는 이미 변신했어요.');
+    else if (!startForm(true)) addLog('지금은 변신할 수 없어요.');
+  });
+}
 function updateActBtns(){
+  updateFormBtn();
   const eq = session && soulOpen() ? soulEq() : [], showS = eq.length > 0 && !market;
   if (elSoul.hidden === showS) elSoul.hidden = !showS;
   if (showS){
@@ -9261,13 +9471,14 @@ document.addEventListener('keydown', e => {
   if (!session || cut || modalOpen || e.repeat || /INPUT|TEXTAREA/.test((document.activeElement || {}).tagName || '')) return;
   if (e.code === 'Space' && patBoss()){ e.preventDefault(); handPress(); }
   else if (e.code === 'KeyQ' && soulG >= SOUL_FULL) castSoul(true);
+  else if (e.code === 'KeyE' && formOf()) startForm(true);
 });
 
 /* --- 가로 화면 새 배치(2026-11 (13)): 얼굴 카드·펫 얼굴·재화 줄·미니맵·큰 보스 단추 --- */
 const elFace = $('#hudFace'), elPets = $('#hudPets'), elBig = $('#bigBoss'), elDustTop = $('#dustTop'), elPieceTop = $('#pieceTop'), elCurPiece = $('#curPiece');
 let faceKey = '', petFaceKey = '';
 function updateFace(){
-  const aG = gearG('armor'), wG = gearG('weapon'), ex = {form:formOf() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape};
+  const aG = gearG('armor'), wG = gearG('weapon'), ex = {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape};
   const k = [S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin, aG, wG, ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape].join('|');
   if (k === faceKey) return;
   faceKey = k; elFace.src = lookPreview(S.cls, S.look, aG, wG, 'down', ex);
@@ -9552,17 +9763,25 @@ function buildSkill(){
     <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}</ul></div>
     <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).
       칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).</p>
+    <div class="card" style="margin-top:10px"><div class="ct">전투 기술 칸<span class="tag" id="skSetN"></span></div>
+      <p class="small" style="margin:0 0 8px">전투에서는 익힌 기술 가운데 <b>${SK_SLOTS}개</b>만 써요. 아래 기술마다 <b>[끼우기·빼기]</b>로 고르고, [자동으로 고르기]면 새 기술을 익힐 때마다 알아서 바꿔 끼워요. 기술 최대 레벨은 <b>전직할 때마다 +5</b>(처음 10 · 1차 15 · 2차 20 · 3차 25 · 4차 30)이고, 레벨이 낮을 때는 레벨에 따라서도 막혀요.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" id="skAutoPick"></button></div></div>
     <ul class="list">${SKILLS.map((sk, i) => `
       <li class="row" id="sk-${sk.key}"><div class="ic">${SVG[skDef(i).icon]}</div>
         <div><div class="nm">${skillName(i)}<span class="l" data-r="lv"></span></div><div class="val" data-r="desc"></div><div class="nx" data-r="nx"></div></div>
-        <button class="buy" id="skbuy-${sk.key}"><span class="coin"></span><span data-r="cost"></span></button></li>`).join('')}
+        <div style="display:grid;gap:4px;justify-items:end"><button class="btn sm" data-eq="${i}"></button><button class="buy" id="skbuy-${sk.key}"><span class="coin"></span><span data-r="cost"></span></button></div></li>`).join('')}
     </ul>
+    <div class="card" style="margin-top:14px"><div class="ct">연계(콤보)<span class="tag">${COMBO_T}초 동안 기술 피해↑</span></div>
+      <p class="small" style="margin:0 0 6px">두 기술을 모두 전투 칸에 끼우고, 앞 기술을 쓴 뒤 <b>${COMBO_WIN}초 안에</b> 다음 기술을 쓰면 「연계!」가 터져요. <b>자동</b> 표시는 자동 순서로도 저절로 이어지는 짝이고, 나머지는 기술 칸을 직접 눌러 순서를 맞춰야 해요.</p>
+      <ul class="traits" id="skCombos"></ul></div>
     <div class="card ${S.awaken ? 'ready' : ''}" style="margin-top:14px">
       <div class="ct"><span style="color:var(--gold)">초각성기</span> · ${cls().awaken}<span class="tag">${S.awaken ? '익힘' : '잠김'}</span></div>
-      <p class="story">레이드와 타임 보스에서 한 번, 공격력의 ${fmt(AWAKEN_PCT * cls().skillMul)}%를 다섯 번에 나눠 퍼부어요. 싸움이 시작되고 12초가 지나거나 보스 체력이 60% 아래로 떨어지면 저절로 써요.</p>
+      <p class="story">레이드·타임 보스에서 <b>한 싸움에 딱 한 번</b>, 내 보스 피해 <b>${AWAKEN_SEC}초 몫</b>(4차 전직 뒤 ${AWAKEN_SEC4}초)을 다섯 번에 나눠 퍼부어요. 싸움이 시작되고 12초가 지나거나 보스 체력이 60% 아래로 떨어지면 저절로 써요.</p>
       ${S.awaken ? '' : `<p class="small">배우는 법: 환생한 뒤 저승 레벨 60을 넘기고, 시왕 레이드 「송제전」을 토벌한 다음, 저승 이야기의 「각성의 시련」 퀘스트를 완료해요.</p>`}
     </div>`;
   wireSkillSeg();
+  $('#skAutoPick').addEventListener('click', () => { if (S.skSetMan) skSetAuto(); else { skSetFix(); S.skSetMan = true; } sfx('click'); refreshPanel(); });
+  panel.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.eq; if (!skToggle(i)) addLog(skOpen(i) ? `전투 칸은 ${SK_SLOTS}개까지예요. 먼저 다른 기술을 빼요.` : '아직 익히지 않은 기술이에요.'); else sfx('click'); refreshPanel(); }));
   const refs = SKILLS.map((sk, i) => {
     const row = $('#sk-' + sk.key);
     const r = {sk, i, lv:row.querySelector('[data-r=lv]'), desc:row.querySelector('[data-r=desc]'), nx:row.querySelector('[data-r=nx]'), btn:$('#skbuy-' + sk.key)};
@@ -9571,14 +9790,20 @@ function buildSkill(){
     return r;
   });
   return () => {
+    skSetFix();
+    setText($('#skSetN'), `${(S.skSet || []).length}/${SK_SLOTS} · ${S.skSetMan ? '직접 고름' : '자동으로 고름'}`);
+    setText($('#skAutoPick'), S.skSetMan ? '자동으로 고르기' : '지금: 자동으로 고름 (누르면 직접 고르기)');
+    setHTML($('#skCombos'), COMBOS.map(c => { const on = skIn(c.a) && skIn(c.b); return `<li style="${on ? '' : 'opacity:.55'}"><b>${c.name}</b> · ${esc(skillName(c.a))} → ${esc(skillName(c.b))} · 기술 피해 +${c.p}%${c.auto ? ' · 자동' : ''}${on ? '' : ' (두 기술을 끼워야 해요)'}</li>`; }).join(''));
+    for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = skIn(i), open = skOpen(i); setText(b, on ? '빼기' : '끼우기'); b.disabled = !open || (!on && (S.skSet || []).length >= SK_SLOTS); b.classList.toggle('primary', on); }
     for (const r of refs){
       const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
-      setHTML(r.nx, lv && lv < r.sk.max ? skillGainHTML(r.i, lv) : lv ? '최대 레벨이에요' : '');
+      const cap = skCap(r.i);
+      setHTML(r.nx, lv && lv < cap ? skillGainHTML(r.i, lv) : lv ? (cap < r.sk.max ? `지금 최대 Lv.${cap} — ${S.job < 4 && 10 + 5 * S.job <= 4 + Math.floor(cumLv() / 6) ? '다음 전직' : '레벨을 올리면'} 더 올릴 수 있어요` : '최대 레벨이에요') : '');
       if (!lv){
         setText(r.lv, skLockLong(r.i));
         setHTML(r.desc, `${skillDesc(r.i, Math.max(1, S.skills[r.sk.key] || 1))} · ${cdt}`);
         setHTML(r.cost, '잠김'); r.btn.disabled = true; r.btn.classList.add('nocoin');
-      } else if (lv >= r.sk.max){
+      } else if (lv >= skCap(r.i)){
         setText(r.lv, 'Lv.' + lv + ' 최대');
         setHTML(r.desc, `${skillDesc(r.i, lv)} · ${cdt}`);
         setHTML(r.cost, '최대'); r.btn.disabled = true; r.btn.classList.add('nocoin');
@@ -9791,30 +10016,41 @@ function buildCraft(){
 }
 
 /* --- 변신 --- */
-const FORM_FROM = {jujak:'이승 이야기 7장 「다물의 맹세」', cheong:'저승 이야기 「한빙지옥」', baekho:'저승 이야기 「검수지옥」', hyeonmu:'저승 이야기 「흑암지옥」'};
+const FORM_FROM = {jujak:'이승 이야기 7장 「다물의 맹세」', cheong:'저승 이야기 「한빙지옥」', baekho:'저승 이야기 「검수지옥」', hyeonmu:'저승 이야기 「흑암지옥」',
+  tengu:'부상 이야기 「텐구 장수」', hwang:'곤륜 이야기 「곤륜 가는 길」'};
+const formFrom = F => FORM_FROM[F.k] || `${F.part === 4 ? '곤륜' : '부상'}에 간 뒤 1일 보스(이기면 ${Math.round(FORM_DB_P * 100)}%) · 꾸미기 상자(${(FORM_BOX_P * 100).toFixed(1)}%), ${FORM_PITY}번 안에 하나는 꼭`;
 function buildForm(){
+  const parts = [1, 3, 4];
   panel.innerHTML = `${gearSegHTML()}
-    <p class="hint" style="margin-top:10px">고구려 고분벽화의 수호신, 사신(四神)의 힘을 빌려 변신해요. 한 번에 하나만 쓸 수 있고, 변신하면 모습이 바뀌어요.</p>
-    <div class="classes">${FORMS.map(F => `<div class="ccard" id="fm-${F.k}" style="cursor:default">
-      <img alt="" data-r="img"><b style="color:${F.color === '#2f6a52' ? '#5ad8a0' : F.color}">${F.name} 변신</b><span>${F.desc}</span>
-      <em data-r="from"></em><button class="btn sm" data-k="${F.k}"></button></div>`).join('')}</div>`;
+    <p class="hint" style="margin-top:10px">변신 하나를 <b>착용</b>하면 <b>보스 싸움·레이드</b>에서 <b>한 판에 한 번</b>, 전투 화면 기술 줄 위 <b>[변신]</b> 단추로 <b>${FORM_TIME}초</b> 동안 힘을 빌려요(일반 몹을 잡을 때는 못 쓰고, 싸움이 끝나면 풀려요). <b>자동</b>이면 싸움이 시작되면 바로 변신하고, <b>수동</b>이면 직접 눌러요(단추를 길게 누르거나 아래에서 바꿔요). 효과는 '몇 단계만큼'이라 어느 땅에서나 비슷하게 세고, 사신(1부)의 힘은 부상·곤륜에서 ${Math.round(FORM_OLD_LATE * 100)}%로 줄어요. 변신하면 모습도 바뀌어요.</p>
+    <div class="mode" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"><button class="chip" id="fmAuto"></button><span class="small" id="fmNow" style="align-self:center"></span></div>
+    ${parts.map(pt => `<h3 class="sub">${FORM_PART[pt]}</h3><div class="classes">${FORMS.filter(F => F.part === pt).map(F => `<div class="ccard" id="fm-${F.k}" style="cursor:default">
+      <img alt="" data-r="img"><b style="color:${F.color === '#2f6a52' ? '#5ad8a0' : F.color === '#4a4a6a' ? '#a8a8e8' : F.color}">${F.name}</b><span data-r="desc"></span>
+      <em data-r="from"></em><button class="btn sm" data-k="${F.k}"></button></div>`).join('')}</div>`).join('')}`;
   wireGearSeg();
+  $('#fmAuto').addEventListener('click', () => { toggleFormAuto(); refreshPanel(); });
   panel.querySelectorAll('.ccard .btn').forEach(bt => bt.addEventListener('click', () => {
     const k = bt.dataset.k;
     if (!S.form.own[k]) return;
+    if (formT > 0) endForm();   // 바꾸면 지금 변신은 풀린다(이번 싸움엔 이미 쓴 것으로)
     S.form.eq = S.form.eq === k ? '' : k;
-    refreshStats(); sfx(S.form.eq ? 'form' : 'click');
-    if (S.form.eq){ fx.push({type:'level', t:0, dur:0.8}); addLog(`${FORMS.find(f => f.k === k).name} 변신!`, 'good'); } else addLog('변신을 풀었습니다.');
+    refreshStats(); sfx('click');
+    addLog(S.form.eq ? `${FM[k].name} 변신을 착용했어요. 전투 화면 [변신] 단추로 써요.` : '변신을 해제했어요.', 'good');
     refreshPanel();
   }));
   return () => {
+    setText($('#fmAuto'), S.form.manual ? '지금: 수동 (눌러서 자동으로)' : '지금: 자동 (눌러서 수동으로)');
+    $('#fmAuto').setAttribute('aria-pressed', String(!S.form.manual));
+    const F0 = formOf();
+    setText($('#fmNow'), F0 ? (formT > 0 ? `${F0.name} 변신 중 · ${Math.ceil(formT)}초` : `착용: ${F0.name}`) : '착용한 변신이 없어요');
     for (const F of FORMS){
-      const card = $('#fm-' + F.k), own = S.form.own[F.k], on = S.form.eq === F.k, img = card.querySelector('[data-r=img]');
+      const card = $('#fm-' + F.k), own = S.form.own[F.k], on = S.form.eq === F.k, img = card.querySelector('[data-r=img]'), lock = !own && F.part > Math.max(1, S.world);
       const src = lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), 'down', {form:F.k, ear:S.acc.ear.g, brace:S.acc.brace.g});
       if (img._s !== src){ img._s = src; img.src = src; }
       img.style.filter = own ? '' : 'brightness(0) opacity(.4)';
-      setText(card.querySelector('[data-r=from]'), own ? (on ? '변신 중' : '') : `얻는 곳: ${FORM_FROM[F.k]}`);
-      const bt = card.querySelector('.btn'); setText(bt, on ? '풀기' : own ? '변신하기' : '잠김'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
+      setText(card.querySelector('[data-r=desc]'), `${FORM_TIME}초 동안 ${formDesc(F)}`);
+      setText(card.querySelector('[data-r=from]'), own ? (on ? '착용 중' : '') : lock ? `${F.part === 4 ? '곤륜' : '부상'}에 가면 얻을 수 있어요` : `얻는 곳: ${formFrom(F)}`);
+      const bt = card.querySelector('.btn'); setText(bt, on ? '해제' : own ? '착용' : '잠김'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
       card.setAttribute('aria-pressed', String(on));
     }
   };
@@ -10043,7 +10279,7 @@ function buildMarket(){
 function avPetIdx(){ for (const t of PET_TYPE_ORDER){ const i = eqPet(t); if (i >= 0) return i; } const j = S.pets.lv.findIndex(l => l > 0); return j >= 0 ? j : 0; }
 function avPreview(a){
   if (a.type === 'pet'){ const old = S.av.pet; S.av.pet = a.k; const u = petSprite(avPetIdx(), 0).toDataURL(); S.av.pet = old; return u; }
-  const ex = {form:formOf() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:a.type === 'char' ? a.k : S.av.char, cape:a.type === 'cape' ? a.k : S.av.cape};
+  const ex = {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:a.type === 'char' ? a.k : S.av.char, cape:a.type === 'cape' ? a.k : S.av.cape};
   return lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), a.type === 'cape' ? 'up' : 'down', ex);
 }
 function buildAvatar(){
@@ -11131,6 +11367,7 @@ function chooseClass(canCancel){
 function setClass(c){
   const changed = S.cls !== c || !S.chosen;
   S.cls = c; S.chosen = true;
+  if (changed){ S.skSet = []; S.skSetMan = false; skSetFix(); skBarKey = ''; }
   refreshStats(); hero.hp = ST.maxHp; hero.target = null;
   buildTab(currentTab, true);
   if (changed) addLog(`${CLASSES[c].name}의 길을 걷습니다.`, 'good');
@@ -11713,7 +11950,7 @@ const offlineKps = () => S.off.kps > 0 ? S.off.kps : Math.min(OFF_KPS_MAX, S.rec
    이기면 다음 단계, 한 단계에서 OFF_BOSS_TRIES(5)번 지면 그 사냥터에서 계속 사냥한 것으로 셈한다.
    이길지는 실제 보스 피해(realDps)로 30초 안에 쓰러뜨리는지와 보스 공격을 버티는지(takenK·회복)로 어림해 굴린다 */
 const OFF_BOSS_TRIES = 5, OFF_BOSS_X = [0.8, 1.3], OFF_BOSS_PMAX = 0.95, OFF_BOSS_MAXN = 400;   // x = (30초·버티는 시간 중 짧은 쪽) ÷ 보스를 쓰러뜨리는 데 드는 시간. 온라인 시뮬 150판과 맞춤
-const takenK = () => (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * (1 - ((formOf() || {}).dr || 0) / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * skMul('def') * (1 - (cls().evade || 0));
+const takenK = () => (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * skMul('def') * (1 - (cls().evade || 0));
 function offBossOdds(s = S.stage){
   const w = S.world, hp = mHp(s) * 10 * BOSS_K.hp[w], tk = hp / Math.max(1e-9, realDps());
   const take = 2 * BOSS_K.atk[w] * mAtk(s) * takenK() - ST.regen * ST.maxHp;
@@ -12037,7 +12274,7 @@ function start(hotData){
   if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); npcRareNote(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); npcRareNote(); if (session) skSetFix(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -12058,8 +12295,8 @@ function start(hotData){
 }
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
-    get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get raid(){ return raid; }, get session(){ return session; },
-    update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
+    get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
+    update, buyStat, upgradeSkill, CLASSES, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
@@ -12095,7 +12332,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
