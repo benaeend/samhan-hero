@@ -66,6 +66,8 @@ SIM = r"""
           if (!G.petUpgrade(pi)) break;
         }
       }
+      for (const gd of G.GUARDS) if (G.guardOpen(gd)) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k)) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지
+      if (G.guardOpen(G.GUARDS[1]) && G.S.guard.on !== 'jowang') G.guardSet('jowang');
       for (let g = 0; g < 400; g++) {
         let best = null, bs = Infinity;
         for (const k of Object.keys(Wt)) { const b = G.buyInfo(k); if (!b.n) continue; const sc = b.cost * Wt[k]; if (sc < bs) { bs = sc; best = k; } }
@@ -90,6 +92,8 @@ SIM = r"""
         if (!G.S.craft[k].e && !G.S.craft[k].e2) G.pickEngr(k, G.ENGR_BEST[cls][k]);
         const n = G.craftNeed(k);
         if (n.ok && (!n.gems || n.gems <= G.S.gems * 0.6)) G.craft(k);
+        for (let z = 0; z < 2; z++) { const ec = G.engrLvCost(k), n2 = G.craftNeed(k);   // 각인 강화: 다음 조합에 쓸 재료는 남기고
+          if (ec.gems > G.S.gems * 0.2 || (G.S.mat[ec.mk] || 0) < ec.mat + (n2.max ? 0 : n2.mat || 0) || !G.engrUp(k)) break; }
       }
       if (G.rebirthReady()) {
         G.doRebirth();
@@ -781,6 +785,48 @@ async def main():
               f'갈림길: 지나온 갈림길을 고르면 그 길의 별호와 원한 조각 20, 다시 고를 수 없다 {fk}')
         check(fk['bond']['b'] == [True, True, False, False] and fk['bond']['lv'] == 2 and fk['bond']['left'] == 59 and fk['bond']['k'] == 1.3 and fk['bond']['col'] == 2.0 and fk['bond']['lines'],
               f'결이야기: 원한 조각 10·30·60으로 마디마다 넋의 힘 +15%·모음 효과 +50% {fk}')
+        # 6-8i) 수호신: 전직·환생으로 열리고, 엽전으로 올리고, 모신 것은 전부·나머지는 30%
+        gd = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.job = 0; S.reb.n = 0; S.world = 0; S.guard = {lv:{}, on:''}; S.gold = 0; const lock = !G.guardUp('seongju');
+          S.job = 1; S.reb.n = 1; S.gold = 1e300; G.refreshStats(); const a0 = G.ST.atk, h0 = G.ST.maxHp;
+          for (let i = 0; i < 25; i++){ G.guardUp('jowang'); G.guardUp('seongju'); } const noTeo = !G.guardUp('teoju');
+          G.guardSet('jowang'); G.refreshStats(); const a1 = G.ST.atk / a0, h1 = G.ST.maxHp / h0;
+          const out = {lock, noTeo, lv: [G.guardLv('jowang'), G.guardLv('seongju')], on: S.guard.on, atk: +a1.toFixed(3), hp: +h1.toFixed(3)};
+          Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.setStage(S.stage); G.refreshStats(); return out; }""")
+        check(gd['lock'] and gd['noTeo'] and gd['lv'] == [20, 20] and gd['on'] == 'jowang' and gd['atk'] == 1.3 and gd['hp'] == 1.12,
+              f'수호신: 1차 전직 뒤 성주신, 첫 환생 뒤 조왕신. Lv20 조왕신을 모시면 공격력 +30%, 안 모신 성주신은 체력 +40%의 30% {gd}')
+        # 6-8j) 목걸이(부상부터 보스 피해)·패옥(곤륜부터 경험치·엽전), 각인 강화(조합 단계 + 1까지, 재료·보석)
+        ac = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.world = 0; const lock = !G.accOpen('neck') && !G.accOpen('pae'); G.accLuck = 1e6; S.acc.neck = {g:-1, p:0}; S.acc.pae = {g:-1, p:0}; G.rollAcc(true); const noDrop = S.acc.neck.g < 0;
+          G.setWorld(3); S.stage = 30; G.rollAcc(true); const drop3 = S.acc.neck.g >= 0 && S.acc.pae.g < 0; G.accLuck = 1;
+          S.acc.neck = {g:-1, p:0}; S.acc.pae = {g:-1, p:0}; G.refreshStats(); const gm0 = G.gainMul('gold');
+          G.giveAcc('pae', 2); const gm1 = G.gainMul('gold');
+          S.craft.w = {t:2, e:'power', e2:'', f:0, el:0}; S.mat.m2 = 1000; S.mat.m0 = 1000; S.gems = 1e6; G.refreshStats(); const e0 = G.craftEff('power');
+          const ups = [0, 1, 2, 3].map(() => G.engrUp('w')); const e1 = G.craftEff('power');
+          const out = {lock, noDrop, drop3, pae: S.acc.pae.p, gain: +(gm1 / gm0).toFixed(3), ups, el: G.engrLv('w'), eff: +(e1 / e0).toFixed(2)};
+          G.accLuck = 1; Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.setStage(S.stage); G.refreshStats(); return out; }""")
+        check(ac['lock'] and ac['noDrop'] and ac['drop3'] and ac['pae'] > 0 and ac['gain'] > 1.05,
+              f'목걸이·패옥: 1부엔 안 나오고 부상부터 목걸이(곤륜부터 패옥), 패옥은 경험치·엽전을 올린다 {ac}')
+        check(ac['ups'] == [True, True, True, False] and ac['el'] == 3 and ac['eff'] == 1.3, f'각인 강화: 조합 단계 + 1까지, 단계마다 각인 효과 +10% {ac}')
+        # 6-8k) 신화·태초 각성: 부상부터 전설 장비를 깨우면 장착 효과 ×1.5, 곤륜부터 ×2.2. 전설이 아니면 꺼짐
+        asc = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.asc = {weapon:0, armor:0}; S.world = 2; S.equip.weapon = 19; S.mythShard = 1000; S.grudge = 1000; S.mat.m2 = 1000; const no2 = !G.ascend('weapon');
+          G.setWorld(3); const p0 = G.gearPct('weapon'); const ok1 = G.ascend('weapon'), p1 = G.gearPct('weapon'), no3 = !G.ascend('weapon');
+          G.setWorld(4); const ok2 = G.ascend('weapon'), p2 = G.gearPct('weapon'), g2 = G.gearG('weapon');
+          S.equip.weapon = 15; const off = G.ascMul('weapon') === 1 && G.gearG('weapon') === 3;
+          const out = {no2, ok1, no3, ok2, r1: +((p1 - G.ownedPct('weapon')) / (p0 - G.ownedPct('weapon'))).toFixed(2), g2, off, left: [S.mythShard, S.grudge]};
+          Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.setStage(S.stage); G.refreshStats(); return out; }""")
+        check(asc['no2'] and asc['ok1'] and asc['no3'] and asc['ok2'] and asc['r1'] == 1.5 and asc['g2'] == 6 and asc['off'] and asc['left'] == [940, 600],
+              f'신화·태초 각성: 부상에서 신화(×1.5), 곤륜에서 태초, 전설 장비를 낄 때만 켜진다 {asc}')
+        # 6-8l) 부상·곤륜 펫 8마리: 1부엔 소환에 안 나오고, 그 땅에 가면 같은 등급 후보에 더해진다
+        np_ = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const idx = d => G.PETS.findIndex(p => p.draw === d), cnt = (w, n) => { S.world = w; const c = {}; for (let i = 0; i < n; i++){ const k = G.rollPet(); c[k] = (c[k] || 0) + 1; } return c; };
+          const c0 = cnt(0, 4000), c4 = cnt(4, 6000);
+          const newIdx = ['kitsu', 'kama', 'tanuki', 'kappa', 'luan', 'aojiao', 'okto', 'qingniao'].map(idx);
+          const imgs = newIdx.every(i => typeof G.petImg(i) === 'string' && G.petImg(i).length > 100);
+          const out = {n: G.PETS.length, none0: newIdx.every(i => !c0[i]), some4: newIdx.filter(i => c4[i]).length, imgs};
+          Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.refreshStats(); return out; }""")
+        check(np_['n'] == 29 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
