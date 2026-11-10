@@ -11453,6 +11453,8 @@ const ON_KEY = 'samhan-online-v1';
 const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
 let online = null, onlineLib = null, onlineNote = '';
 const onlineWanted = () => !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
+// 타이틀 아래 한 줄: 계정이 어디에 저장되는지(온라인 서버 · Claude 저장소 · 이 기기)
+{ const tv = document.querySelector('.t-ver'); if (tv) tv.textContent = '2026.11 업데이트 · ' + (onlineWanted() ? '계정은 서버에 저장돼 다른 기기에서도 이어져요' : window.claude && typeof window.claude.use === 'function' ? '계정은 내 Claude 계정에 저장돼요' : '계정은 이 기기에 저장돼요'); }
 function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); }); }
 async function onlineClient(){
   if (onlineLib) return onlineLib;
