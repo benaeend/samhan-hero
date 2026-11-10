@@ -342,10 +342,11 @@ async def main():
         await page.click('#cutSkip')
 
         # 4) 레이드: 화면 캡처 후 끝까지 자동 진행
+        await page.evaluate("() => { window.__game.gateOff = true; }")   # 이 뒤 점검은 이야기를 건너뛰고 세계를 옮겨 다닌다(이야기·레벨 문은 6-8e에서 따로 본다)
         await page.click('#tab-raid')
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '8_레이드목록.png'))
-        await page.click('#raid-2 .btn')
+        await page.click('#raid-0 .btn')   # 이야기 1장이라 이승 첫 레이드만 열려 있다(이야기 문)
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '9_레이드파티.png'))
         await page.click('#modal-btn-1')
@@ -424,6 +425,7 @@ async def main():
         await page.evaluate("() => window.dispatchEvent(new Event('pagehide'))")
         await page.goto(URL)
         await page.wait_for_function('() => window.__game.session', timeout=8000)
+        await page.evaluate("() => { window.__game.gateOff = true; }")
         check(await page.evaluate('() => window.__game.S.name') == '홍길동', '다시 열면 같은 캐릭터로 이어진다')
         check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 결과가 저장된다')
         await page.click('#tab-rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
@@ -721,6 +723,25 @@ async def main():
           return {order, diag}; }""")
         check(ao['order'][:2] == ['roar', 'mark'] and 3 <= len(ao['order']) <= 7,
               f'자동 기술: 보스 앞에서 공격력 버프·약점을 먼저 쓰고 0.1초 간격으로 하나씩 쓴다 {ao}')
+        # 6-8e) 숫돌 10+1·배럭 효과·만렙 경험치 모으기·단계 보스/레이드 이야기·레벨 문
+        nw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true; G.gateOff = false;
+          S.gems = 1000; const w0 = S.inv.whet; G.buyShop('whet10'); const whet = S.inv.whet - w0, paid = 1000 - S.gems;
+          const A = G.REG.accounts[G.session.acc], n0 = A.chars.length; G.refreshStats(); const atk0 = G.ST.atk, g0 = G.barrack().gain;
+          A.chars.push({cid:'zz_test', name:'배럭', cls:'doin', level:400, cum:700, world:3}); G.refreshStats();
+          const br = G.barrack(), atkUp = G.ST.atk / atk0; A.chars = A.chars.filter(c => c.cid !== 'zz_test'); G.refreshStats();
+          S.world = 0; S.level = 100; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(100) * 10);
+          const bank = S.expBank; S.world = 1; S.level = 1; const up = G.useExpBank(); const bankAfter = S.expBank, lvAfter = S.level;
+          S.world = 0; S.level = 1; S.quest.main = 0; const g1 = G.stageGate(), b1 = G.bossGate(25).ok, b2 = G.bossGate(3).ok;
+          S.level = 5; const lvGate = !G.bossGate(15).ok && G.bossGate(15).why.includes('Lv');
+          S.world = 1; S.level = 200; S.raid.first = {}; S.quest.main = G.MAIN_Q.findIndex(q => q.key === 'h0'); const rOpen = [G.raidUnlockedBase(), G.raidUnlocked()];
+          S.quest.main = G.MAIN_Q.length + 3; const free = G.stageGate();
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.gateOff = true;
+          return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
+        check(nw['whet'] == 11 and nw['paid'] == 250, f'상점: 숫돌 10+1 묶음은 250보석에 11개 {nw}')
+        check(nw['stat'] == 35 and abs(nw['atkUp'] - 1.35) < 0.02 and nw['gain'] >= 9, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +35%, 경험치·엽전도 오른다 {nw}')
+        check(9.5 <= nw['bank'] <= 10.5 and nw['up'] >= 2 and nw['bankAfter'] == 0, f'만렙 경험치: 만렙에서 버려지던 경험치를 모아 두고 환생 뒤 30%를 레벨로 돌려준다 {nw}')
+        check(nw['g1'] == 21 and not nw['b1'] and nw['b2'] and nw['lvGate'] and nw['rOpen'] == [10, 1] and nw['free'],
+              f'이야기·레벨 문: 단계 보스는 이야기 진행과 레벨에 맞춰, 저승 레이드는 그 레이드 퀘스트에 닿아야 열린다 {nw}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
