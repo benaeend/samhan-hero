@@ -832,7 +832,7 @@ async def main():
           const autoOn = G.formT > 0; if (G.bossActive && B2){ B2.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
           for (let i = 0; i < 3; i++) G.update(0.05); const endAfter = G.formT <= 0;
           // 단계 값: 청룡은 1부(저승) 공격력 ×1.24^1.5, 부상에서는 사신이 60%로
-          const fx1 = G.formFx(G.FM.cheong).atk; S.world = 3; const fx3 = G.formFx(G.FM.cheong).atk, tg3 = G.formFx(G.FM.tengu).atk; S.world = 1;
+          const res = G.gearRes(), fx1 = G.formFx(G.FM.cheong).atk; S.world = 3; const fx3 = G.formFx(G.FM.cheong).atk, tg3 = G.formFx(G.FM.tengu).atk; S.world = 1;
           // 기술: 최대 레벨·6칸·연계
           S.job = 1; S.level = 100; const cap1 = G.skCap(0); S.job = 3; S.level = 200; S.world = 3; const cap3 = G.skCap(0); S.world = 1; S.job = 1; S.level = 120;
           S.skills.spin = 30; const lvEff = G.skLv(0); S.skills.spin = 5;
@@ -842,10 +842,10 @@ async def main():
           G.hero.dead = false; S.mode = 'semi'; S.kills = G.FIELD.kills; G.startBoss(); const B3 = G.bossRef; if (B3){ B3.hp = B3.maxHp = 1e300; B3.atk = 0; } for (let i = 0; i < 30; i++) G.update(0.05); for (const k in G.skillCd) G.skillCd[k] = 0;
           G.comboLuck = 10; const c0 = S.rec.combos || 0, k0 = G.castNow(2), k1 = G.castNow(3), combo = (S.rec.combos || 0) - c0, cm = G.comboMul(); G.comboLuck = null;
           if (G.bossActive && B3){ B3.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
-          const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), cap1, cap3, lvEff, set, t1, full, combo, cm: +cm.toFixed(2), k0, k1};
+          const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), res, cap1, cap3, lvEff, set, t1, full, combo, cm: +cm.toFixed(2), k0, k1};
           G.PAT.off = false; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return out; }""")
         check(nf['noHunt'] and nf['ok1'] and nf['up'] > 1.3 and not nf['again'] and nf['ended'] and nf['still'] and not nf['again2'] and nf['autoOn'] and nf['endAfter']
-              and abs(nf['fx1'] - 1.24 ** 1.5) < 0.01 and abs(nf['fx3'] - 1.0709 ** (1.5 * 0.6)) < 0.005 and nf['tg3'] > nf['fx3']
+              and abs(nf['fx1'] - 1.24 ** (1.5 * nf['res'])) < 0.01 and abs(nf['fx3'] - 1.0709 ** (1.5 * 0.6 * nf['res'])) < 0.005 and nf['tg3'] > nf['fx3']
               and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) == 6 and nf['t1'] and nf['full'] == 5 and nf['combo'] == 1 and nf['cm'] == 1.12 and nf['k0'] and nf['k1'],
               f'변신: 사냥 중엔 못 쓰고 보스 싸움에서 한 번만 30초(자동이면 시작하자마자)·단계 값(부상에선 사신 60%)·기술 최대 레벨(1차 15·3차 25)·전투 칸 6개·연계 {nf}')
         aw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
@@ -902,6 +902,39 @@ async def main():
         check(nw['wipeSt'][:3] == [1, 2, 3] and nw['low'] <= 1.5 and nw['diedNoPot'] and nw['livePot'] and nw['potUsed'] >= 1, f'전멸기: 1까지 깎이고 회복약이 없으면 쓰러짐, 있으면 마셔 버팀 {nw}')
         check(nw['dbLock'] and nw['grLock'] and nw['grOk'] and nw['grParty'] == 4 and nw['grCap'] <= 2 and nw['grWon'] and nw['grAv'] >= 1 and nw['grEx'] >= 1,
               f'1일 보스·강림 레이드는 초반엔 잠김, 강림 레이드는 4명(같은 직업 2명까지)·이기면 아바타 {nw}')
+        # 6-4k) 2026-11 (42): 장비 공명·세트, 타임 보스 시간대 보상, 천공의 탑, 태초의 신, 결투, 본캐
+        nk = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), was = [G.PAT.off, G.gateOff]; G.quiet = true; G.PAT.off = true; G.gateOff = true;
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          const out = {}; G.setClass('musa'); S.world = 1; S.reb.n = 1; S.level = 150; G.applyWorld();
+          // 공명·세트: 전설 무기·갑옷 + 용비늘 망토 + 전설 팔찌 + 청룡 변신 = 해모수의 조합 5세트
+          S.gear.weapon.count[16] = Math.max(1, S.gear.weapon.count[16]); S.gear.armor.count[16] = Math.max(1, S.gear.armor.count[16]); S.equip.weapon = 16; S.equip.armor = 16; S.asc = {weapon:0, armor:0};
+          S.av.own.p_dragon = true; S.av.cape = ''; S.acc.brace = {g:4, p:80}; S.form.own.cheong = true; S.form.eq = 'cheong'; G.refreshStats();
+          const c0 = G.ST.crit + G.ST.critOver; out.res = G.gearRes(); out.set0 = G.setSum().on; S.av.cape = 'p_dragon'; G.refreshStats(); out.set1 = G.setSum().on; out.setUp = +((G.ST.crit + G.ST.critOver) - c0).toFixed(3);
+          S.equip.weapon = 4; G.refreshStats(); out.setOff = G.setSum().on.length; out.resLow = G.gearRes(); S.equip.weapon = 16; G.refreshStats();
+          // 타임 보스 시간대 보상: 6시 = 무기, 9시 = 치장/보석
+          const R = {win:true, info:{diff:'normal', w:new Date(2026, 10, 10, 6).getTime(), bossName:'해태', party:1}}; out.tb6 = G.finishTimeBoss(R).spec;
+          // 천공의 탑
+          out.ws = [G.towerWS(1), G.towerWS(100), G.towerWS(300)];
+          S.tower = {best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}; const g0 = S.gems;
+          out.t1 = G.startTower(); out.tPre = G.skPreset; const T1 = G.raid; T1.boss.hp = 0.0001; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); out.tBest = S.tower.best; out.tGems = S.gems > g0;
+          G.startTower(); G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.raid.time = 0; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); out.tLeft = G.towerLeft();
+          S.tower.best = 49; S.tower.n = 0; G.startTower(); G.raid.boss.hp = 0.0001; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); out.wing = !!S.av.own.w_cloud;
+          // 태초의 신: 전멸기 세 번 문턱, 이기면 엔드 아이템
+          G.taechoForce = true; S.inv.potion = 50; out.tc = G.startTaecho(); const TC = G.raid; out.tcWipes = TC && TC.info.wipes.length; TC.boss.hp = TC.boss.maxHp * 0.7; let st1 = false; for (let i = 0; i < 40; i++){ G.update(0.05); if (TC.wipe && TC.wipe.st === 1) st1 = true; }
+          out.tcWipe = st1; TC.boss.hp = 0.0001; TC.wipe = {st:4, i:9}; for (let i = 0; i < 200 && G.raid; i++) G.update(0.05); out.godWin = S.tower.godWin; out.seed = S.tower.seed; out.tWing = !!S.av.own.w_taecho; G.taechoForce = false;
+          // 결투
+          const c = G.pvpCands(); out.pvpN = c.length; const pt0 = S.pvp.pt; out.pv = G.startPvp(c[0]); out.pvPct = !!(G.raid && G.raid.boss.tbPct); G.raid.boss.hp = 0.0001; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); out.pvUp = S.pvp.pt > pt0 && S.pvp.win >= 1;
+          // 본캐: 배럭 효과 없음
+          const b0 = G.barrack(); G.setMainChar(true); out.main = G.isMainChar() && G.barrack().main && G.barrack().stat === 0; G.setMainChar(false); out.mainOff = !G.isMainChar(); out.brExp = b0.exp <= b0.gain;
+          G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
+        check(nk['res'] == 1 and nk['set1'] and nk['set1'][0][0] == 'haemosu' and nk['set1'][0][1] == 5 and nk['setUp'] >= 0.059 and nk['setOff'] == 0 and nk['resLow'] < 1,
+              f'장비 공명(전설 1배)·세트(해모수의 조합 5세트, 무기·갑옷이 안 맞으면 꺼짐) {nk}')
+        check(any('검' in x or '무기' in x or '신령' in x for x in nk['tb6']), f'타임 보스: 6시는 무기를 준다 {nk["tb6"]}')
+        check(nk['ws'][0][0] == 0 and nk['ws'][1][0] == 1 and nk['ws'][2][0] == 4 and nk['t1'] and nk['tPre'] is None and nk['tBest'] == 1 and nk['tGems'] and nk['tLeft'] == 4 and nk['wing'],
+              f'천공의 탑: 층마다 정해진 세기, 저절로 조합 안 바꿈, 지면 하루 횟수 하나, 50층 날개 {nk}')
+        check(nk['tc'] and nk['tcWipes'] == 3 and nk['tcWipe'] and nk['godWin'] == 1 and nk['seed'] and nk['tWing'], f'태초의 신: 전멸기 세 번, 이기면 태초의 씨앗·태초의 날개 {nk}')
+        check(nk['pvpN'] >= 1 and nk['pv'] and nk['pvPct'] and nk['pvUp'], f'결투: 상대 목록에서 골라 싸우고 이기면 점수 {nk}')
+        check(nk['main'] and nk['mainOff'] and nk['brExp'], f'본캐는 배럭 효과를 받지 않음, 배럭 경험치는 엽전보다 적게 {nk}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
@@ -1030,7 +1063,7 @@ async def main():
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.gateOff = true;
           return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
         check(nw['whet'] == 11 and nw['paid'] == 250, f'상점: 숫돌 10+1 묶음은 250보석에 11개 {nw}')
-        check(nw['stat'] == 35 and abs(nw['atkUp'] - 1.35) < 0.02 and nw['gain'] >= 9, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +35%, 경험치·엽전도 오른다 {nw}')
+        check(nw['stat'] == 14 and abs(nw['atkUp'] - 1.14) < 0.02 and nw['gain'] >= 9, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +14%(50레벨마다 1%), 엽전·경험치도 오른다 {nw}')
         check(9.5 <= nw['bank'] <= 10.5 and nw['up'] >= 2 and nw['bankAfter'] == 0, f'만렙 경험치: 만렙에서 버려지던 경험치를 모아 두고 환생 뒤 30%를 레벨로 돌려준다 {nw}')
         check(nw['g1'] == 21 and not nw['b1'] and nw['b2'] and nw['lvGate'] and nw['rOpen'] == [10, 1] and nw['free'],
               f'이야기·레벨 문: 단계 보스는 이야기 진행과 레벨에 맞춰, 저승 레이드는 그 레이드 퀘스트에 닿아야 열린다 {nw}')
@@ -1169,7 +1202,7 @@ async def main():
           const gx = h.tx + 3, gy = h.ty - 2; G.fieldClick(at(gx, gy)); const fg = !!h.goal;
           for (let i = 0; i < 60; i++) G.update(0.05); const arrived = h.tx === gx && h.ty === gy && h.holdT > 2;
           for (let i = 0; i < 40; i++) G.update(0.2); const m = G.mobs.find(q => !q.dead && q.spawnT <= 0);
-          let picked = false; if (m){ const mm = Object.assign({}, at(m.tx, m.ty)); mm.clientY -= 6 * G.scale; G.fieldClick(mm); picked = h.target === m; }
+          let picked = false; if (m){ const mm = Object.assign({}, at(m.tx, m.ty)); mm.clientY -= 6 * G.scale; G.fieldClick(mm); picked = h.target === m || !!(h.target && !h.target.dead && Math.abs(h.target.tx - m.tx) + Math.abs(h.target.ty - m.ty) <= 1); }   // 겹친 몬스터를 골라도 됨
           S.mode = 'auto'; return {goal, mkMoved, fg, arrived, picked}; }""")
         check(tp['mkMoved'] and tp['fg'] and tp['arrived'] and tp['picked'], f'눌러서 움직이기: 장터에서 걸어가고, 사냥터 땅을 누르면 그 칸으로·몬스터를 누르면 그 몬스터를 {tp}')
         # 6-10) 신화 펫·환수: 1부엔 소환에 안 나오고, 부상에 가면 그 땅의 환수(이야기 환수는 빼고)가 소환에 나온다. 보물 동굴·신화 조각. 함께하는 싸움은 늘 자동 기술

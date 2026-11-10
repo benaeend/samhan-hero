@@ -298,6 +298,7 @@ async def main():
             _, D2 = await device(api, ctxD2)
             if await D2.evaluate('() => !!window.__game.session'):   # 로그인 유지로 바로 들어왔으면 로그아웃
                 await tg.skip_cut(D2, 300)
+                if await D2.is_hidden('#moreMenu'): await D2.click('#tab-more')   # 정보는 [더보기] 안(2026-11 (41))
                 await D2.click('#tab-rec'); await D2.wait_for_timeout(200)
                 await D2.click('#outBtn'); await D2.wait_for_timeout(200)
                 await D2.click('#mBtns .primary, #mBtns .danger'); await D2.wait_for_timeout(500)
