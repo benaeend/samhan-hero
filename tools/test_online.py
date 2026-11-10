@@ -246,6 +246,19 @@ async def main():
               return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: S.gems - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
             check(mine['sold'] == 1 and mine['claim'] == 114 and mine['gemsUp'] == 114 and mine['dustOut'] == 50 and mine['dustBack'] == 50 and mine['cancel'] == {'ok': True},
                   f'장터: 판 값(수수료 5%)을 받고, 안 팔린 물건은 내려서 돌려받는다 {mine}')
+            # 장터: 치장·신화 조각도 다른 용사와 보석으로 거래, 기본 장비는 못 올린다
+            sk = await A.evaluate("""async () => { const G = window.__game, S = G.S; S.skin.inv = []; const it = G.skMake(G.SKC[30], 3); S.skin.inv.push(it);
+              const p1 = await G.mkPost({t:'skin', id:it.id}, 1, 500); S.mythShard = 40; const p2 = await G.mkPost({t:'stack', k:'shard'}, 25, 90);
+              S.gear.weapon.count[2] = 3; const gearSrc = G.mkSources().some(x => x.src.t === 'gear'); const p3 = await G.mkPost({t:'gear', s:'weapon', it:2}, 1, 10);
+              return {p1, p2, p3, gearSrc, inv: S.skin.inv.length, shard: S.mythShard, lines: it.l.length}; }""")
+            sb = await C.evaluate("""async () => { const G = window.__game, S = G.S; S.gems = 2000; S.skin = {eq:{}, inv:[], seq:0, found:{}}; S.mythShard = 0;
+              const L = await G.mkList('skin'); const row = (L.rows || []).find(r => r.it.t === 'skin'); const b1 = row ? await G.mkBuy(row) : null;
+              const L2 = await G.mkList('mat'); const r2 = (L2.rows || []).find(r => r.it.t === 'stack'); const b2 = r2 ? await G.mkBuy(r2) : null;
+              const eq = S.skin.eq.shoe; return {b1, b2, gems: S.gems, shoe: eq ? [eq.c, eq.g, eq.l.length] : null, shard: S.mythShard, gearRows: (await G.mkList('')).rows.filter(r => r.it.t === 'gear').length}; }""")
+            check(sk['p1'].get('id') and sk['p2'].get('id') and sk['p3'].get('err') == 'bad_item' and not sk['gearSrc'] and sk['inv'] == 0 and sk['shard'] == 15
+                  and sb['b1'] == {'ok': True} and sb['b2'] == {'ok': True} and sb['gems'] == 1410 and sb['shoe'] == [30, 3, 4] and sb['shard'] == 25 and sb['gearRows'] == 0,
+                  f'장터: 치장·신화 조각도 다른 용사가 보석으로 사 가고(산 치장은 바로 낌), 기본 장비는 올릴 수 없다 {sk} {sb}')
+            await A.evaluate("async () => { await window.__game.mkClaim(); }")
             await A.evaluate("() => window.__game.enterMarket()"); await C.evaluate("() => window.__game.enterMarket()")
             await A.wait_for_timeout(3800)
             seen = await A.evaluate("() => [...window.__game.market.peers.values()].map(p => p.n)")

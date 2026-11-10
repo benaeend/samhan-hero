@@ -218,6 +218,7 @@ async def capture(page):
       for (let i = 0; i < 24; i++) G.skinDrop(null, true); G.skGrade = 3; for (let i = 0; i < 4; i++) G.skinDrop(null, true); G.skGrade = null;
       G.refreshStats(); G.quiet = false; G.buildTab('gear'); }""")
     await page.wait_for_timeout(200); await page.click('#seg-skin')
+    await page.evaluate("() => { const g = document.querySelector('.skgrid'); if (g) g.previousElementSibling.scrollIntoView({block:'start'}); }")
     await shot('skin')
     await page.evaluate("() => window.__game.closePage()")
 
@@ -528,8 +529,9 @@ th{{background:#f1f3f8;font-weight:800}}
 <h3>장터 마을</h3>
 <p>오른쪽 위 <b>장터 단추</b>(또는 가방의 [장터 마을로 가기])로 들어가요. 돌바닥 광장과 노점·기와집·북 무대가 있는 마을이에요. <b>땅을 누르면 그리로 걸어가고</b>, 온라인이면 지금 장터에 있는 <b>다른 용사들이 이름표를 달고 함께</b> 서 있어요. <b>보부상 덕보</b>(NPC 상인) · <b>장터 알림판</b>(사기) · <b>거간꾼 막동</b>(팔기) · <b>전표 아전</b>(내 물건) 앞으로 가면 거래 화면이 열려요. 장터에 있는 동안은 사냥이 멈추고, 오른쪽 아래 큰 단추 <b>[나가기]</b>로 사냥터에 돌아가요.</p>
 <h3>장터 거래 — 사기 · 팔기 · 내 물건 · 상인</h3>
-<ul><li><b>사기</b>: 다른 용사가 올린 물건(장신구·신화 보물·장비 조각·재료·쇳가루·고삐 조각)을 <b>보석</b>으로 사요. 먼저 산 한 사람만 가져가요.</li>
-<li><b>팔기</b>: 가방 물건·남는 장비 조각·재료를 골라 값을 정해 올려요. 한 번에 <b>10개</b>까지, <b>사흘</b> 동안 진열돼요.</li>
+<ul><li><b>사기</b>: 다른 용사가 올린 물건을 <b>보석</b>으로 사요(거래 돈은 보석뿐). 먼저 산 한 사람만 가져가요. 산 치장이 더 좋으면 바로 껴요.</li>
+<li><b>팔기</b>: 값을 정해 올리면 <b>다른 용사가 사 가요</b>(NPC가 사 가지 않아요). 한 번에 <b>10개</b>까지, <b>사흘</b> 동안 진열돼요.
+올릴 수 있는 것: 장신구·신화 보물·<b>치장</b>·재료·쇳가루·고삐 조각·신화 조각·원한 조각·인삼/산삼 탕약·숫돌. <b>기본 장비(무기·방어구 조각)는 거래할 수 없어요.</b></li>
 <li><b>내 물건</b>: 팔린 물건의 값을 <b>수수료 5%</b>를 떼고 받고, 안 팔린 물건은 내려서 돌려받아요.</li>
 <li><b>상인</b>: 보부상 덕보가 날마다 다섯 가지 물건을 하나씩 팔아요(자정에 바뀜). 온라인이 아니어도 거래할 수 있어요.</li>
 <li>다른 용사와의 거래는 <b>온라인 서버에 로그인</b>했을 때만 돼요.</li></ul>

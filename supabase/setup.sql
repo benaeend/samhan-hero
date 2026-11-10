@@ -136,13 +136,13 @@ grant execute on function public.samhan_signup(text, text), public.samhan_login(
   public.samhan_list(uuid), public.samhan_load(uuid, text), public.samhan_save(uuid, text, text, jsonb, text, bigint),
   public.samhan_delete(uuid, text), public.samhan_name_free(text) to anon, authenticated;
 
--- ── 장터(2026-11): 보스 드롭 물건을 보석 값에 올리고 다른 용사가 산다 ──
+-- ── 장터(2026-11): 기본 장비를 뺀 물건(장신구·신화 보물·치장·재료·조각·소모품)을 보석 값에 올리고 다른 용사가 산다. 거래 돈은 보석뿐 ──
 -- 물건(item)은 게임이 다시 확인해서 받는다. 사흘 안 팔리면 목록에서 빠지고 판 사람이 돌려받는다. 판 값은 수수료 5%를 떼고 받는다.
 create table if not exists public.samhan_market (
   id bigserial primary key,
   seller text not null references public.samhan_accounts(id) on delete cascade,
   seller_name text not null check (char_length(seller_name) between 1 and 8),
-  kind text not null check (kind in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece')),
+  kind text not null check (kind in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece', 'skin', 'stack')),
   item jsonb not null,
   price bigint not null check (price between 1 and 10000000),
   created_at timestamptz not null default now(),
@@ -151,6 +151,9 @@ create table if not exists public.samhan_market (
   sold_at timestamptz,
   claimed boolean not null default false
 );
+-- 2026-11 (31): 치장(skin)·조각/소모품(stack)도 거래. 기본 장비(gear)는 새로 올릴 수 없다(이미 올린 것은 내리기·돌려받기만)
+alter table public.samhan_market drop constraint if exists samhan_market_kind_check;
+alter table public.samhan_market add constraint samhan_market_kind_check check (kind in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece', 'skin', 'stack'));
 create index if not exists samhan_market_open on public.samhan_market (created_at desc) where buyer is null;
 create index if not exists samhan_market_seller on public.samhan_market (seller);
 alter table public.samhan_market enable row level security;
@@ -162,7 +165,7 @@ create or replace function public.samhan_market_post(p_token uuid, p_name text, 
 language plpgsql security definer set search_path = public, extensions as $$
 declare a text := samhan_acc(p_token); n int; nid bigint;
 begin
-  if p_kind is null or p_kind not in ('acc', 'myth', 'gear', 'mat', 'dust', 'piece') or p_item is null or jsonb_typeof(p_item) <> 'object'
+  if p_kind is null or p_kind not in ('acc', 'myth', 'mat', 'dust', 'piece', 'skin', 'stack') or p_item is null or jsonb_typeof(p_item) <> 'object'
      or char_length(p_item::text) > 300 or (p_item->>'t') is distinct from p_kind then raise exception 'bad_item'; end if;
   if p_price is null or p_price < 1 or p_price > 10000000 then raise exception 'bad_price'; end if;
   select count(*) into n from samhan_market where seller = a and (buyer is null or not claimed);
@@ -172,14 +175,14 @@ begin
   return nid;
 end $$;
 
--- 팔고 있는 물건 목록(최근 60개, 종류 거르기: '' 전체, 'mat'은 재료·쇳가루·고삐 조각까지)
+-- 팔고 있는 물건 목록(최근 60개, 기본 장비는 빼고, 종류 거르기: '' 전체, 'mat'은 재료·쇳가루·고삐 조각·조각/소모품까지)
 create or replace function public.samhan_market_list(p_token uuid, p_kind text) returns jsonb
 language plpgsql security definer set search_path = public, extensions as $$
 declare a text := samhan_acc(p_token);
 begin
   return coalesce((select jsonb_agg(jsonb_build_object('id', t.id, 'seller_name', t.seller_name, 'kind', t.kind, 'item', t.item, 'price', t.price, 'mine', t.seller = a) order by t.created_at desc)
-    from (select * from samhan_market where buyer is null and created_at > now() - interval '3 days'
-          and (coalesce(p_kind, '') = '' or kind = p_kind or (p_kind = 'mat' and kind in ('mat', 'dust', 'piece')))
+    from (select * from samhan_market where buyer is null and created_at > now() - interval '3 days' and kind <> 'gear'
+          and (coalesce(p_kind, '') = '' or kind = p_kind or (p_kind = 'mat' and kind in ('mat', 'dust', 'piece', 'stack')))
           order by created_at desc limit 60) t), '[]'::jsonb);
 end $$;
 

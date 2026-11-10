@@ -658,10 +658,10 @@ async def main():
           const qi = ch => G.MAIN_Q.findIndex(q => q.ch === ch), out = {};
           S.skin = {eq:{}, inv:[], seq:0, found:{}}; G.refreshStats();
           S.quest.main = qi(12); out.closed = !G.skinOpen();
-          S.world = 2; S.quest.main = qi(20); const a0 = G.ST.atk; let bad = 0; const chs = new Set();
+          S.world = 2; S.quest.main = qi(20); G.refreshStats(); const a0 = G.ST.maxHp; let bad = 0; const chs = new Set();
           for (let i = 0; i < 300; i++){ const it = G.skinDrop(null, true).it; chs.add(it.c);
             if (it.c > 20 || it.g > 1 || it.l.length !== G.SK_GRADES[it.g].n || new Set(it.l.map(l => l[0])).size !== it.l.length || it.l[0][0] !== G.SK_PARTS.find(P => P.k === G.SKC[it.c].p).stat) bad++; }
-          out.bad = bad; out.maxCh = Math.max(...chs); out.eq = Object.keys(S.skin.eq).length; out.atkUp = G.ST.atk > a0;
+          out.bad = bad; out.maxCh = Math.max(...chs); out.eq = Object.keys(S.skin.eq).length; out.hpUp = G.ST.maxHp > a0;
           out.better = Object.values(S.skin.eq).every(e => S.skin.inv.filter(x => G.SKC[x.c].p === G.SKC[e.c].p).every(x => G.skSE(x) <= G.skSE(e) + 1e-9));
           const fill = g => { for (const P of G.SK_PARTS){ const sk = G.SK_LIST.find(x => x.p === P.k); S.skin.eq[P.k] = {id:900, c:sk.c, g, l:G.skMake(sk, g).l.map(([t]) => [t, G.SK_GRADES[g].se])}; } G.refreshStats(); return +G.skinSum().se.toFixed(2); };
           out.low = fill(1); out.top = fill(4);
@@ -672,7 +672,7 @@ async def main():
           S.quest.main = qi(20); S.off.kps = 3; S.bossAuto = false; G.skLuck = null; const o = G.offlineReward(3600); out.offSk = o.skins;
           document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click();
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.quiet = false; return out; }""")
-        check(sk['closed'] and sk['bad'] == 0 and sk['maxCh'] == 20 and sk['eq'] >= 4 and sk['atkUp'] and sk['better'] and sk['low'] <= 3.5 and 9.5 <= sk['top'] <= 10
+        check(sk['closed'] and sk['bad'] == 0 and sk['maxCh'] == 20 and sk['eq'] >= 4 and sk['hpUp'] and sk['better'] and sk['low'] <= 3.5 and 9.5 <= sk['top'] <= 10
               and sk['g4line'][0] == 0 and sk['g4line'][1] > 0 and sk['g4line'][2] == 0 and sk['g4line'][3] > 0 and sk['clean'] == ['dropped', 0] and sk['offSk'] >= 3,
               f'장별 치장: 17장부터·지나온 장 것만·줄 수=등급, 1~2줄로 다 채워도 3.5단계 이하·전설은 10단계, 4줄은 2부 후반·전설은 3부 중반부터, 오프라인에도 나온다 {sk}')
 
