@@ -742,6 +742,18 @@ async def main():
         check(9.5 <= nw['bank'] <= 10.5 and nw['up'] >= 2 and nw['bankAfter'] == 0, f'만렙 경험치: 만렙에서 버려지던 경험치를 모아 두고 환생 뒤 30%를 레벨로 돌려준다 {nw}')
         check(nw['g1'] == 21 and not nw['b1'] and nw['b2'] and nw['lvGate'] and nw['rOpen'] == [10, 1] and nw['free'],
               f'이야기·레벨 문: 단계 보스는 이야기 진행과 레벨에 맞춰, 저승 레이드는 그 레이드 퀘스트에 닿아야 열린다 {nw}')
+        # 6-8f) 별호·급보
+        te = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.title = {own:{}, eq:''}; S.rec.kills = 12000; G.titleCheck(); const own = !!S.title.own.hunt1, eq = S.title.eq ? 'hunt1' : '';
+          S.title.eq = 'hunt1'; G.refreshStats(); const a1 = G.ST.atk; S.title.eq = ''; G.refreshStats(); const a0 = G.ST.atk;
+          G.setStage(Math.max(1, S.stage)); G.evtT = 0; const e0 = S.rec.events || 0;
+          for (let i = 0; i < 6; i++) G.update(0.05); const spawned = G.mobs.some(m => m.evt);
+          for (let i = 0; i < 900 && G.mobs.some(m => m.evt && !m.dead); i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; }
+          const caught = (S.rec.events || 0) > e0 || !G.mobs.some(m => m.evt && !m.dead);
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
+          return {own, eq, atkUp: +(a1 / a0).toFixed(3), spawned, caught}; }""")
+        check(te['own'] and te['eq'] == 'hunt1' and te['atkUp'] > 1.02 and te['spawned'] and te['caught'],
+              f'별호: 몬스터 1만 마리면 「도깨비 사냥꾼」을 얻어 달고 공격력이 오르고, 급보 손님이 나타나 잡히거나 사라진다 {te}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';

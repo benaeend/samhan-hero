@@ -151,6 +151,11 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .nm .l{font-weight:700;font-size:11.5px;color:var(--text-soft)}
 .val{font-size:12px;color:var(--text-soft);font-variant-numeric:tabular-nums}
 .val em{font-style:normal;color:var(--jade);font-weight:800}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.tchip{display:grid;gap:1px;text-align:left;padding:7px 9px;border-radius:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.03);color:var(--text-soft);font-family:inherit;cursor:default}
+.tchip b{font-size:12.5px;color:var(--text-soft)}.tchip small{font-size:10.5px}.tchip i{font-style:normal;font-size:10px;opacity:.8}
+.tchip.own{cursor:pointer;border-color:rgba(255,204,77,.45)}.tchip.own b{color:var(--gold)}
+.tchip.on{background:linear-gradient(180deg,rgba(255,214,102,.22),rgba(255,170,40,.1));box-shadow:0 0 12px -3px rgba(255,204,77,.6)}
 .shtag{font-size:10.5px;font-weight:900;color:#2a1a00;background:linear-gradient(180deg,#ffe08a,#f5a524);border-radius:999px;padding:1px 7px;box-shadow:0 0 10px rgba(255,204,77,.45)}
 .nx{font-size:11.5px;color:var(--text-soft);margin-top:3px;font-variant-numeric:tabular-nums}
 .nx b{color:var(--text);font-weight:800}
@@ -2141,8 +2146,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-21', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-22', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 별호 · 급보'],
+  ['별호 18가지', '몬스터 1만 마리·레이드 100번·첫 환생·바다 건너기·되받기 100번처럼 이룬 일에 따라 별호를 얻어요. 하나를 달면 이름표 위에 금빛으로 보이고 그 효과(공격력·체력·보스 피해·경험치·엽전·보석·치명타 피해)가 붙어요. 가진 별호마다 공격력·체력 +0.5%. [정보] → 별호.'],
+  ['급보', '사냥하는 동안 10분 안팎마다 깜짝 손님이 나타나요: 황금 도깨비(엽전)·보물 너구리(보석·쇳가루)·떠도는 넋(경험치). 20초 안에 잡아야 해요. 용사가 먼저 쫓아가고, 눌러서 직접 노려도 돼요.'],
   ['#', '2026-11-10 · 배럭 효과 · 만렙 경험치 · 이야기 문 · 숫돌 10+1'],
   ['배럭 효과', '같은 계정의 캐릭터끼리 서로 도와요. 다른 캐릭터 가운데 가장 높은 누적 레벨(이승 100 + 저승 200 + 그 뒤 레벨) 20마다 공격력·체력 +1%(최대 40%), 다른 캐릭터 한 명마다 경험치·엽전 +2~10%, 보석은 그 절반. [정보]에서 지금 받는 효과를 볼 수 있어요.'],
   ['만렙 경험치 모으기', '만렙에서 버려지던 경험치를 모아 두었다가(경험치 막대에 「모음」), 환생하거나 다음 세계로 건너면 30%를 레벨로 돌려줘요(최대 30레벨분).'],
@@ -2391,7 +2399,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0}, expBank:0,
+    soul:{own:{}, star:{}, eq:['', ''], pity:0}, expBank:0, title:{own:{}, eq:''},
   };
 }
 function mergeState(d){
@@ -2498,6 +2506,8 @@ function mergeState(d){
   for (const sl of SOULS) if (so.own && so.own[sl.k]){ out.soul.own[sl.k] = true; out.soul.star[sl.k] = Math.min(SOUL_STAR_MAX, Math.max(0, Math.floor(+(so.star && so.star[sl.k])) || 0)); }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
+  const ti = d.title && typeof d.title === 'object' ? d.title : {};
+  out.title = {own:{}, eq:''}; for (const t of TITLES) if (ti.own && ti.own[t.k]) out.title.own[t.k] = true; if (out.title.own[ti.eq]) out.title.eq = ti.eq;
   if (out.mode !== 'semi') out.mode = 'auto';
   out.bossAuto = out.bossAuto !== false;
   if (![1, 10, 'max'].includes(out.buyMode)) out.buyMode = 1;
@@ -2564,7 +2574,7 @@ function barrack(){
   const gain = others.reduce((t, c) => t + Math.min(BR.gainMax, BR.gainBase + Math.floor(cum(c) / 100)), 0);
   return (brCache = {n:others.length, top, stat:Math.min(BR.statMax, Math.floor(top / BR.statPer)), gain, gem:Math.floor(gain / 2)});
 }
-const gemMul = () => 1 + barrack().gem / 100;
+const gemMul = () => 1 + (barrack().gem + titleEff('gem')) / 100;
 const classAtk = () => { const C = cls(); return C.grow ? C.grow[0] + (C.grow[1] - C.grow[0]) * Math.min(1, cumLv() / 600) : C.atkMul; };
 // 세 나라 세트: 같은 줄 보물 셋(이승·부상·곤륜)을 모두 가지면 추가 효과. 오색 돌이 있으면 1.5배
 function mythSets(){
@@ -2577,12 +2587,12 @@ function computeStats(up = S.up){
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + (F.crit || 0) / 100 + 0.05 * MS.bell + rideAb('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
-      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100),
+      * (1 + 0.15 * RB.atk) * (1 + (F.atk || 0) / 100) * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
-      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100),
+      * (1 + 0.15 * RB.hp) * (1 + (F.hp || 0) / 100) * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + AV_PCT * avCount() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100),
     regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
     crit: Math.min(1, crRaw), critOver: crOver,
-    critDmg: 1.5 + 2 * crOver + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
+    critDmg: 1.5 + 2 * crOver + titleEff('critDmg') / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100,
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * (1 + (F.spd || 0) / 100) * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
   };
 }
@@ -2612,7 +2622,7 @@ function statValue(k, st){
 const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1);
 const spdBuff = () => (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0) + rideAb(k) + barrack().gain) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + ((formOf() || {}).gain || 0) + rideAb(k) + barrack().gain + titleEff(k)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -3240,7 +3250,7 @@ function hit(m, base, kind, sure){
   const sc = hero.soulCritT > 0 ? hero.soulCrit / 100 : 0;
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit + sc;
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
-  const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (m.pat && m.pat.grogT > 0 ? PAT.grogMul : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) : 1) * (0.92 + Math.random() * 0.16);
+  const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (m.pat && m.pat.grogT > 0 ? PAT.grogMul : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) : 1) * (0.92 + Math.random() * 0.16);
   if (mine){ dmgMeter += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
@@ -3258,6 +3268,7 @@ function killMob(m){
   for (let i = 0; i < n; i++) parts.push({type:'coin', x:m.x, y:m.y - 6, vx:(Math.random() - 0.5) * 70, vy:-(50 + Math.random() * 60), gy:m.y, t:0, dur:0.9 + Math.random() * 0.3});
   if (hero.target === m) hero.target = null;
   if (m.raid){ m.deathT = 1; raidEnd(true); return; }
+  if (m.evt){ evtReward(m); return; }
   const gm = gainMul('gold'), xm = gainMul('exp');
   S.gold += m.gold * gm; S.rec.kills++;
   if (m.boss){ gainExp(m.exp * xm); bossWin(); return; }
@@ -4310,7 +4321,7 @@ function nearestMob(){
   let best = null, bd = 1e9;
   for (const m of mobs){
     if (m.dead || m.spawnT > 0) continue;
-    const d = Math.abs(m.tx - hero.tx) + Math.abs(m.ty - hero.ty) + (m.boss ? -0.5 : 0);
+    const d = Math.abs(m.tx - hero.tx) + Math.abs(m.ty - hero.ty) + (m.boss ? -0.5 : 0) + (m.evt ? -4 : 0);   // 급보 손님 먼저
     if (d < bd){ bd = d; best = m; }
   }
   return best;
@@ -4375,7 +4386,7 @@ function update(dt){
     }
   }
 
-  updatePat(dt); updateSoul(dt);
+  updatePat(dt); updateSoul(dt); updateEvt(dt);
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
@@ -4430,6 +4441,7 @@ function update(dt){
     if (m.stunT > 0) m.stunT -= dt;
     if (m.raid){ placeOf(m); continue; }   // 레이드 보스는 updateRaid가 움직인다
     updateMove(m, dt);
+    if (m.evt){ evtMove(m, dt); placeOf(m); continue; }   // 급보 손님: 때리지 않고 도망치거나 떠돈다
     if (patBusy(m)){ placeOf(m); continue; }   // 묶임·휘청·큰 공격 준비 중
     if (!m.moving){
       const dx = hero.tx - m.tx, dy = hero.ty - m.ty, man = Math.abs(dx) + Math.abs(dy);
@@ -5373,6 +5385,96 @@ function mountSprite(k, f, flip){
 }
 const mountImgCache = new Map();
 function mountImg(k){ let u = mountImgCache.get(k); if (!u){ u = mountSprite(k, 0, false).toDataURL(); mountImgCache.set(k, u); } return u; }
+/* ================= 별호(2026-11 (22)) =================
+   이룬 일에 따라 얻는 칭호. 하나를 달면 이름표 위에 금빛으로 보이고 그 별호 효과가 붙는다. 가진 별호마다 공격력·체력 +TITLE_COL% */
+const TITLE_COL = 0.5;
+const subDoneN = () => Object.keys(S.sub.done || {}).length;
+const mythN = () => MYTHS.filter(m => (S.myth[m.k] || 0) > 0).length;
+const petN = () => S.pets.lv.filter(l => l > 0).length;
+const TITLES = [
+  {k:'step', name:'첫걸음', need:'이야기 1장을 마쳐요', prog:() => [S.quest.main, 5], eff:{exp:3}},
+  {k:'hunt1', name:'도깨비 사냥꾼', need:'몬스터 1만 마리', prog:() => [S.rec.kills, 10000], eff:{atk:3}},
+  {k:'hunt2', name:'백전노장', need:'몬스터 10만 마리', prog:() => [S.rec.kills, 100000], eff:{atk:6}},
+  {k:'boss1', name:'보스 사냥꾼', need:'단계 보스 300번', prog:() => [S.rec.bosses, 300], eff:{boss:5}},
+  {k:'raid1', name:'토벌대장', need:'레이드 100번', prog:() => [S.rec.raids, 100], eff:{boss:8}},
+  {k:'event', name:'급보 단골', need:'급보 손님 30번 잡기', prog:() => [S.rec.events || 0, 30], eff:{gold:6}},
+  {k:'smith', name:'대장장이', need:'재련 300번', prog:() => [S.rec.refines, 300], eff:{gold:5}},
+  {k:'helper', name:'마을의 해결사', need:'마을 부탁 30개', prog:() => [subDoneN(), 30], eff:{gem:5}},
+  {k:'pet', name:'펫 친구', need:'펫 15마리', prog:() => [petN(), 15], eff:{exp:5}},
+  {k:'myth', name:'신화 수집가', need:'신화 보물 5종', prog:() => [mythN(), 5], eff:{critDmg:10}},
+  {k:'reb1', name:'저승을 건넌 자', need:'첫 환생', prog:() => [S.reb.n, 1], eff:{hp:5}},
+  {k:'reb2', name:'하늘에 오른 자', need:'두 번째 환생', prog:() => [S.reb.n, 2], eff:{hp:8}},
+  {k:'counter', name:'되받기 달인', need:'보스 공격 되받기 100번', prog:() => [S.rec.counters || 0, 100], eff:{boss:6}},
+  {k:'legend', name:'신화의 주인', need:'1부 이야기 끝', prog:() => [S.quest.main, PART1_END], eff:{atk:5, hp:5}},
+  {k:'sea', name:'바다를 건넌 자', need:'부상에 닿기', prog:() => [S.world >= 3 ? 1 : 0, 1], eff:{gold:8}},
+  {k:'soul', name:'넋을 부르는 자', need:'넋 8종 모시기', prog:() => [soulN(), 8], eff:{atk:5}},
+  {k:'west', name:'서쪽 끝의 용사', need:'곤륜에 닿기', prog:() => [S.world >= 4 ? 1 : 0, 1], eff:{exp:8}},
+  {k:'three', name:'세 하늘의 용사', need:'이야기를 모두 마쳐요', prog:() => [S.quest.main, MAIN_Q.length], eff:{atk:10, hp:10}},
+];
+const TT = Object.fromEntries(TITLES.map(t => [t.k, t]));
+const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해'};
+const titleEffText = t => Object.entries(t.eff).map(([k, v]) => `${TITLE_EFF[k]} +${v}%`).join(' · ');
+const titleN = () => TITLES.filter(t => S.title.own[t.k]).length;
+const titleEff = k => { const t = TT[S.title.eq]; return t && S.title.own[t.k] ? t.eff[k] || 0 : 0; };
+const titleCol = () => TITLE_COL * titleN();
+function titleCheck(){
+  let got = 0;
+  for (const t of TITLES){
+    if (S.title.own[t.k]) continue;
+    const [v, n] = t.prog();
+    if (v >= n){ S.title.own[t.k] = true; got++; if (!S.title.eq) S.title.eq = t.k;
+      addLog(`별호 「${t.name}」${josa(t.name, '을', '를')} 얻었어요! (${titleEffText(t)}) [정보]에서 달 수 있어요`, 'good'); announce(`${S.name}님이 별호 「${t.name}」${josa(t.name, '을', '를')} 얻었어요!`); }
+  }
+  if (got) refreshStats();
+  return got;
+}
+
+/* ================= 급보(2026-11 (22)) =================
+   사냥하는 동안 EVT_GAP초 안팎마다 깜짝 손님이 나타난다. EVT_LIFE초 안에 잡으면 큰 보상, 못 잡으면 사라진다. 손님은 때리지 않는다 */
+const EVT_GAP = [540, 240], EVT_LIFE = 20;
+const EVTS = [
+  {k:'gold', name:'황금 도깨비', type:'dokkaebi', color:'#ffcf3a', hpK:25, flee:true, say:'황금 도깨비가 나타났어요! 놓치기 전에 잡아요!'},
+  {k:'gem', name:'보물 너구리', type:'raccoon', color:'#c8924a', hpK:20, flee:true, say:'보물 보따리를 진 너구리가 지나가요!'},
+  {k:'exp', name:'떠도는 넋', type:'wisp', color:'#8ff0ff', hpK:15, flee:false, say:'길 잃은 넋이 떠돌아요. 달래 주면 깨달음을 줘요.'},
+];
+let evtT = 300;
+function updateEvt(dt){
+  if (!session || raid || bossActive || market || hero.dead || cut) return;
+  evtT -= dt;
+  if (evtT > 0) return;
+  evtT = EVT_GAP[0] + Math.random() * EVT_GAP[1];
+  const E = EVTS[(Math.random() * EVTS.length) | 0], spot = spawnTile(5) || spawnTile(3);
+  if (!spot) return;
+  const m = makeMob(false, spot[0], spot[1]);
+  Object.assign(m, {type:E.type, color:E.color, name:E.name, evt:E.k, evtLife:EVT_LIFE, flee:E.flee, atk:0, gold:0, exp:0, stepDur:0.3});
+  m.hp = m.maxHp = m.hp * E.hpK;
+  mobs.push(m);
+  fx.push({type:'poof', t:0, dur:0.5, x:m.x, y:m.y - 8, big:true});
+  addLog(`급보! ${E.say}`, 'warn'); sfx('boss');
+  if (!fxOff()) fxBanner('급보!', E.name, '#ffd24a', '30%', 1.4);
+}
+function evtReward(m){
+  const E = EVTS.find(e => e.k === m.evt); S.rec.events = (S.rec.events || 0) + 1;
+  let txt = '';
+  if (m.evt === 'gold'){ const g = mGold(S.stage) * 200 * gainMul('gold'); S.gold += g; txt = `엽전 +${fmt(g)}`; }
+  else if (m.evt === 'gem'){ const g = Math.round((10 + 5 * S.world) * gemMul()), d = 10 * (1 + S.world); S.gems += g; S.dust += d; txt = `보석 +${g} · 쇳가루 +${d}`; }
+  else { const x = mExp(S.stage) * 150 * gainMul('exp'); gainExp(x); txt = `경험치 +${fmt(x)}`; if (soulOpen()) S.soul.pity = Math.min(SOUL_PITY - 1, S.soul.pity + 1); }
+  addLog(`${E.name}${josa(E.name, '을', '를')} 잡았어요! ${txt}`, 'gain'); sfx('rare');
+  addText(txt, m.x, m.y - mobHeight(m) - 14, '#ffe08a', 13, true);
+  if (!fxOff()){ vSparks(m.x, m.y - 10, 14, '#ffd24a', 90, 40); vadd({type:'glow', x:m.x, y:m.y - 10, r:20, col:'#ffd24a', dur:0.6}); }
+}
+// 급보 손님 움직임: 시간이 다 되면 사라지고, 도망치는 손님은 용사에게서 멀어지는 쪽으로
+function evtMove(m, dt){
+  m.evtLife -= dt;
+  if (m.evtLife <= 0){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 8}); addLog(`${m.name}${josa(m.name, '이', '가')} 사라졌어요…`, 'warn'); return; }
+  if (m.moving || !m.flee) return;
+  m.thinkT -= dt; if (m.thinkT > 0) return; m.thinkT = 0.35;
+  const opts = DIRS.filter(([ox, oy]) => tileFree(m.tx + ox, m.ty + oy, m)).map(([ox, oy]) => [ox, oy, Math.abs(m.tx + ox - hero.tx) + Math.abs(m.ty + oy - hero.ty)]);
+  if (!opts.length) return;
+  opts.sort((a, b) => b[2] - a[2]);
+  const pick = Math.random() < 0.7 ? opts[0] : opts[(Math.random() * opts.length) | 0];
+  startMove(m, m.tx + pick[0], m.ty + pick[1], m.stepDur);
+}
 /* ================= 넋 부름(2026-11 (18), 2부 부상부터) =================
    부상으로 건널 때 강림도령이 건넨 넋 주머니에 옛이야기 속 넋(17)을 모신다. 싸우는 동안 넋의 기운(soulG)이 SOUL_FULL까지 차면
    주머니의 넋이 용사 곁에 나타나 한 번 돕는다(자동·함께하는 싸움은 저절로, 반자동은 넋 구슬 단추를 눌러서).
@@ -6966,6 +7068,12 @@ function drawMob(m){
       b.fillStyle = hexA(k % 2 ? '#ffffff' : ac, 0.85 * (1 - ph)); b.fillRect(px - 0.8, py - 0.8, 1.6, 1.6); }
     b.restore();
   }
+  if (m.evt && !m.dead){   // 급보 손님: 금빛 빛무리와 반짝이
+    const pu = 0.5 + 0.5 * Math.sin(gtime * 6);
+    b.save(); b.globalCompositeOperation = 'lighter'; vGlow(x, y - h * 0.45, w * 0.7, '#ffd24a', 0.3 + 0.2 * pu);
+    for (let k = 0; k < 6; k++){ const a = gtime * 2 + k * 1.05; b.fillStyle = `rgba(255,236,150,${0.5 + 0.4 * pu})`; b.fillRect(x + Math.cos(a) * w * 0.45 - 0.8, y - h * 0.5 + Math.sin(a) * h * 0.35 - 0.8, 1.6, 1.6); }
+    b.restore();
+  }
   const flip = m.dir === 'right' || m.dir === 'up';   // 몬스터 그림은 왼쪽을 본다
   const dy = y - h - fl + bobF + 1;
   if (flip){ b.translate(x, 0); b.scale(-1, 1); b.drawImage(sp, -Math.round(w / 2), dy, w, h); }
@@ -7427,7 +7535,12 @@ function nameTag(text, x, y, opt = {}){
   ctx.fillStyle = opt.color || '#ffffff'; ctx.fillText(text, x, Y + h / 2 + 0.5);
 }
 function drawTexts(){
-  if (session && !hero.dead && hero.tagY != null && !cut){ nameTag(S.name, (hero.x - camX) * scale, (hero.tagY - camY) * scale - 2, {color:'#fff6d8'}); ctx.textAlign = 'left'; }
+  if (session && !hero.dead && hero.tagY != null && !cut){
+    const hx = (hero.x - camX) * scale, hy = (hero.tagY - camY) * scale - 2;
+    nameTag(S.name, hx, hy, {color:'#fff6d8'});
+    const tt = TT[S.title.eq]; if (tt && S.title.own[tt.k]){ ctx.font = '900 10px SamhanSans, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#1a1006'; const ty = hy - 25; ctx.strokeText(`「${tt.name}」`, hx, ty); ctx.fillStyle = '#ffd24a'; ctx.fillText(`「${tt.name}」`, hx, ty); }
+    ctx.textAlign = 'left'; }
+  if (!cut && !market) for (const m of mobs) if (m.evt && !m.dead && m.spawnT <= 0) nameTag(`${m.name} ${Math.ceil(m.evtLife)}초`, (m.x - camX) * scale, (m.y - mobHeight(m) - 4 - camY) * scale, {bg:'rgba(120,80,10,.9)', line:'rgba(255,220,120,.9)', color:'#fff2c8', size:9.5});
   if (market && !cut) drawMarketTags();
   if (!cut && !market) drawPatMarks();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
@@ -7735,6 +7848,7 @@ function acceptSub(k){
 function autoClear(){
   if (!session || cut) return;
   for (const q of SUB_Q) if (S.sub.act[q.k] && subProg(q) >= q.n) claimSub(q.k);
+  titleCheck();
   if (S.world === 0) TRIALS.forEach((t, i) => { if (trialReady(i)) claimTrial(i); });
 }
 function claimSub(k){
@@ -9627,6 +9741,7 @@ function buildRec(){
     <dl class="rec">${items.map(([id, l]) => `<div><dt>${l}</dt><dd id="${id}"></dd></div>`).join('')}</dl>
     <p class="save-note" id="r-save"></p>
     <div class="card brk"><div class="ct">배럭 효과 <span class="tag" id="br-n"></span></div><p class="small" id="br-txt" style="margin:4px 0 0"></p></div>
+    <div class="card"><div class="ct">별호 <span class="tag" id="ti-n"></span></div><p class="small" style="margin:2px 0 6px">이룬 일에 따라 얻어요. 하나를 달면 이름표 위에 보이고 그 효과가 붙어요. 가진 별호마다 공격력·체력 +${TITLE_COL}%.</p><div class="tgrid" id="ti-grid"></div></div>
     <div class="recbtns"><button class="btn" id="lookBtn">꾸미기</button><button class="btn" id="clsBtn">직업 바꾸기</button></div>
     <div class="recbtns" style="margin-top:8px"><button class="btn" id="swBtn">캐릭터 바꾸기</button><button class="btn" id="outBtn">로그아웃</button></div>
     <div class="ph" style="margin-top:16px"><h2>소리</h2></div>
@@ -9659,6 +9774,12 @@ function buildRec(){
     if (img._s !== src){ img._s = src; img.src = src; }
     setText($('#r-name'), `${S.name} · ${cls().name} Lv.${S.level}`);
     setText($('#r-acc'), session ? `아이디 ${session.acc}` : '');
+    { setText($('#ti-n'), `${titleN()}/${TITLES.length} · 모음 공격력·체력 +${fmt(titleCol())}%`);
+      const sig = TITLES.map(t => (S.title.own[t.k] ? 1 : 0) + (S.title.eq === t.k ? 2 : 0)).join('');
+      const tg = $('#ti-grid'); if (tg && tg._sig !== sig){ tg._sig = sig;
+        tg.innerHTML = TITLES.map(t => { const own = !!S.title.own[t.k], on = S.title.eq === t.k, [v, n] = t.prog();
+          return `<button class="tchip${own ? ' own' : ''}${on ? ' on' : ''}" data-tk="${t.k}" ${own ? '' : 'disabled'}><b>${t.name}</b><small>${titleEffText(t)}</small><i>${own ? (on ? '다는 중' : '달기') : `${t.need} · ${fmt(Math.min(v, n))}/${fmt(n)}`}</i></button>`; }).join('');
+        tg.querySelectorAll('[data-tk]').forEach(bt => bt.addEventListener('click', () => { const k = bt.dataset.tk; if (!S.title.own[k]) return; S.title.eq = S.title.eq === k ? '' : k; refreshStats(); saveLocal(); sfx('click'); refreshPanel(); })); } }
     { const b = barrack(); setText($('#br-n'), `다른 캐릭터 ${b.n}명`);
       setHTML($('#br-txt'), b.n ? `가장 높은 캐릭터 누적 Lv.${b.top} → 공격력·체력 <b>+${b.stat}%</b> · 경험치·엽전 <b>+${b.gain}%</b> · 보석 <b>+${b.gem}%</b>`
         : `같은 계정에 캐릭터를 더 만들면 서로 도와요. 다른 캐릭터 가운데 가장 높은 누적 레벨 ${BR.statPer}마다 공격력·체력 +1%(최대 ${BR.statMax}%), 캐릭터 한 명마다 경험치·엽전 +${BR.gainBase}~${BR.gainMax}%·보석은 그 절반.`); }
@@ -10850,7 +10971,7 @@ if (location.search.indexOf('simtest') >= 0){
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
-    patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
+    TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
