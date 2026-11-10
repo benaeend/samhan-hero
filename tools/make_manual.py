@@ -187,6 +187,22 @@ async def capture(page):
     await page.evaluate("() => window.__game.showChapterCard(29)")
     await shot('chcard', 700)
 
+    # 보스 손컨·넋 부름(2부): 붉은 칸 예고, 넋이 나타나는 장면, [기술] → [넋 부름]
+    await page.wait_for_timeout(3500)
+    await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.giveSoul('bari', true); G.giveSoul('haemosu', true); G.soulEquipBest();
+      S.kills = 25; S.autoBoss = true; for (let i = 0; i < 12; i++) G.update(0.05);
+      const B = G.patBoss(); if (!B) return; B.maxHp *= 50; B.hp = B.maxHp; G.HAND.dodge = 0; B.pat.cd = 0.01; B.pat.n = 0;
+      for (let i = 0; i < 300; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; const T = B.pat.tel; if (T && T.kind === 'tiles' && T.t > T.T * 0.55) break; }
+      G.quiet = false; }""")
+    await shot('bosspat', 60)
+    await page.evaluate("""() => { const G = window.__game, B = G.patBoss(); G.quiet = true; if (B && B.pat){ B.pat.tel = null; B.pat.cd = 99; } G.HAND.dodge = 0.8;
+      G.soulG = 100; G.castSoul(true); for (let i = 0; i < 10; i++) G.update(0.05); G.quiet = false; }""")
+    await shot('soulcast', 120)
+    await page.evaluate("() => { const G = window.__game; G.buildTab('skill'); }")
+    await page.wait_for_timeout(150); await page.click('#kv-soul')
+    await shot('soulpage')
+    await page.evaluate("() => { const G = window.__game; G.closePage(); G.quiet = true; const B = G.patBoss(); if (B) B.hp = 1; for (let i = 0; i < 200 && G.bossActive; i++) G.update(0.05); G.quiet = false; }")
+
 
 def jpg(name):
     '''PDF가 너무 커지지 않게 캡처를 JPG로 바꿔 쓴다'''
@@ -298,7 +314,7 @@ th{{background:#f1f3f8;font-weight:800}}
 <b>한 단계에 1~2시간</b>, 저승 90단계를 넘으면 <b>2~4시간</b>씩 방치해야 넘을 수 있어요. 막히면 장비·재련·펫·레이드로 힘을 키워요.</div>
 """, ('grow', '수련 탭'), kicker='3'))
     S.append(sec('기술 · 초각성기', """
-<p>직업마다 기술 8개가 있어요. <b>Lv.5 · 12 · 25 · 40 · 60 · 80</b>에 하나씩, 그리고 <b>1차·2차 전직</b> 때 하나씩 열려요(도인의 6번째 칸은 <b>환생</b>하면). [기술]에서 엽전으로 강화하고, 맨 위에 <b>직업 특성</b>이 나와요.</p>
+<p>직업마다 기술 8개가 있어요. <b>Lv.5 · 12 · 25 · 40 · 60 · 80</b>에 하나씩, 그리고 <b>1차·2차 전직</b> 때 하나씩 열려요(도인의 6번째 칸은 <b>환생</b>하면). [기술]에서 엽전으로 강화하고, 맨 위에 <b>직업 특성</b>이 나와요. 칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술이 <b>몇 % 세지는지</b> 함께 보여 줘요.</p>
 <table><tr><th>칸</th><th>무사</th><th>자객</th><th>술사</th><th>도인</th></tr>
 <tr><td>1</td><td>회오리 베기</td><td>그림자 베기</td><td>불꽃 고리</td><td><b>천벌 부적</b>(공격)</td></tr>
 <tr><td>2</td><td>일섬</td><td>급소 찌르기</td><td>벼락</td><td>봉인 부적(준비)</td></tr>
@@ -437,6 +453,20 @@ th{{background:#f1f3f8;font-weight:800}}
 <li>장이 바뀔 때마다 <b>붓글씨 장 제목</b>이 나오고, 2부 장은 여는 연출도 있어요.</li></ul>
 <div class="tip">일본 옛 신화·민담(고사기 등)의 줄거리를 바탕으로 대사는 새로 썼어요. 신들은 악당이 아니라 원한에 흔들린 존재로 그렸어요.</div>
 """, ('busang', '부상 · 구라마산'), ('chcard', '장 제목 카드'), kicker='15'))
+    S.append(sec('보스 손컨트롤 · 넋 부름', """
+<h3>보스 손컨트롤 — 미리 보고 피하기</h3>
+<ul><li><b>붉은 칸</b>: 땅이 붉게 물들고 안쪽이 차오르면 곧 터져요. <b>땅을 눌러</b> 걸어가거나 기술 칸 왼쪽 <b>[구르기]</b>(키보드 스페이스)로 빠져요.</li>
+<li><b>되받기</b>: 보스 머리 위에 <b>금빛 「!」</b>가 뜨면 단추가 <b>[되받기!]</b>로 바뀌어요. 누르면 막고 보스가 잠깐 묶여요. 못 막으면 강타를 맞아요.</li>
+<li><b>버팀</b>: 보스 체력 아래 파란 막대. 기술·넋·되받기로 깎아 0이 되면 <b>휘청</b> — 4초 동안 공격을 못 하고 받는 피해 +40%.</li>
+<li><b>큰 살</b>: 레이드·수문장 보스가 크게 기를 모아요(검붉은 막대). 다 모으기 전에 버팀을 깨면 <b>끊고</b>, 못 깨면 모두 최대 체력의 절반 넘게 다쳐요.</li>
+<li>직접 안 눌러도 용사가 붉은 칸은 80%쯤 피하고 35%쯤 되받아요. <b>직접 하면 늘 성공</b>이라 더 빨리 잡아요. 이승 앞 10단계는 없고, 30단계까지는 붉은 칸만 나와요.</li></ul>
+<h3>넋 부름 (2부 부상부터)</h3>
+<p>부상으로 건널 때 강림도령에게 <b>넋 주머니</b>를 받아요. 옛이야기 속 넋 <b>17</b>(고급 4 · 희귀 4 · 영웅 4 · 전설 3 · 신화 2)을 모시면, 싸우는 동안 <b>넋의 기운</b>이 25초쯤에 차서 넋이 용사 곁에 나타나 도와요(큰 피해 · 모든 적 피해 · 묶기 · 받는 피해 증가 · 회복 · 보호막 · 치명타 · 기술 재사용 줄이기).
+[자동]이면 저절로, [반자동]이면 기술 칸 왼쪽 <b>넋 구슬</b>을 눌러요(키보드 Q).</p>
+<ul><li><b>넋 구슬</b>: 부상·곤륜 레이드 4% · 타임 보스 8% · 보물 동굴 5%, <b>40번 안에 하나는 꼭</b>. 이야기에서 강림도령(부상)·주몽(곤륜)을 확정으로 받아요.</li>
+<li>같은 넋이 또 오면 별 +1(최대 5, 별마다 +20%), 별이 가득하면 보석 600. 모신 넋마다 공격력·체력 +0.5~3%.</li>
+<li>주머니는 1칸, <b>4차 전직 뒤 2칸</b>(차례로 나타나요). [기술] → <b>[넋 부름]</b>에서 모시고 내려요.</li></ul>
+""", ('bosspat', '붉은 칸 예고 · 버팀'), ('soulcast', '넋이 나타남'), ('soulpage', '넋 부름 화면'), kicker='15'))
     S.append(sec('가방 · 장터', """
 <h3>가방 ([가방] 메뉴)</h3>
 <p>수문장·타임 보스·오프라인·퀘스트 행운에서 나온 장신구·신화 보물 가운데 <b>지금 낀 것보다 약한 것</b>과, 더 좋은 것을 끼면서 빠진 <b>옛것</b>이 가방(60칸)에 모여요. 눌러서 <b>끼기</b> · <b>상인에게 팔기</b>(보석) · <b>장터에 올리기</b>. [안 쓰는 것 모두 팔기]는 지금 것보다 약한 물건만 한 번에 팔아요(↑ 표시는 지금 것보다 좋은 물건). 쇳가루·고삐 조각·조합 재료·탕약·숫돌·토벌패 개수도 여기서 한눈에 봐요.</p>
@@ -480,7 +510,7 @@ th{{background:#f1f3f8;font-weight:800}}
 PC: Chrome·Edge 주소창 오른쪽 설치 단추. 설치하면 주소창 없이 전체 화면으로 열리고 인터넷이 없어도 돌아가요.
 (아이폰은 설치한 앱과 Safari의 저장 공간이 따로라 앱에서 계정을 새로 만들어야 해요.)</p>
 <p><b>Q. 보스에게 자꾸 쓰러져요.</b><br>새 단계의 보스는 세게 때려요. 체력·방어구 재련·방어 펫·<b>비전 갑옷</b>(조합 공방)으로 버티고, 인삼 탕약을 챙겨요.
-술사는 <b>마력 보호막</b>을 보스가 나올 때 직접 눌러 쓰면 좋아요. 같은 단계에서 조금 더 키우면 덜 아파요.</p>
+술사는 <b>마력 보호막</b>을 보스가 나올 때 직접 눌러 쓰면 좋아요. 붉은 칸을 <b>직접 피하고</b> 금빛 「!」에 <b>되받기</b>를 누르면 훨씬 덜 맞아요. 같은 단계에서 조금 더 키우면 덜 아파요.</p>
 <p><b>Q. 사이트 데이터를 지우면?</b><br>온라인 서버에 저장된 기록은 남아요. 같은 아이디로 다시 로그인하면 돼요.</p>
 <p class="tip">글꼴: Pretendard(SIL OFL 1.1, 이 게임에서는 SamhanSans라는 이름으로 일부 글자만 담음). 음악·효과음은 게임 안에서 직접 만들어 내는 소리예요.
 그림·이야기·이름은 이 게임을 위해 새로 만들었어요.</p>

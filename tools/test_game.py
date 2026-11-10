@@ -721,6 +721,41 @@ async def main():
               f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 {mp}')
         check(mp['v'] and mp['shard'] >= 4 and mp['cm'] and mp['shardLeft'] == 0 and mp['auto'],
               f'보물 동굴: 이기면 신화 조각, 조각 30개로 신화 보물을 만들고, 함께하는 싸움은 반자동이어도 기술이 자동 {mp}')
+        # 6-11) 기술 레벨업 미리보기·넋 부름·보스 손컨(붉은 칸·되받기·버팀·큰 살)
+        so = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), H = Object.assign({}, G.HAND); G.quiet = true;
+          const g1 = G.skillGain(0, 1).g, gMax = G.SKILLS.every((sk, i) => G.skillGain(i, 5).g > 0);
+          S.world = 0; S.soul = {own:{}, star:{}, eq:['', ''], pity:0}; const d0 = G.soulDrop('raid');
+          G.setWorld(3); S.stage = 15; S.maxStage = 20; S.level = 320; S.job = 3; S.up.atk = 200; S.up.hp = 400; G.refreshStats();
+          S.soul.pity = 39; const d1 = G.soulDrop('raid'); const k1 = d1 && d1.k; const d2 = G.giveSoul(k1, true);
+          const col = G.soulCol() > 0, eq = G.soulEq().length === 1;
+          S.kills = 25; S.autoBoss = true; for (let i = 0; i < 12; i++) G.update(0.05);
+          const B = G.patBoss(); B.maxHp = B.hp = 1e40; const lv = G.patLv(B);
+          // 붉은 칸: 자동 손이 피하면 안 맞고, 못 피하면 맞는다
+          const tiles = dodge => { G.HAND.dodge = dodge ? 1 : 0; G.hero.hp = G.ST.maxHp; B.atk = G.ST.maxHp * 0.3; B.stunT = 0; B.pat.grogT = 0; B.pat.tel = null; B.pat.cd = 0.01; B.pat.n = 0;
+            const h0 = S.rec.patHits || 0; let seen = false; for (let i = 0; i < 80; i++){ G.update(0.05); const T = B.pat.tel; if (T && T.kind === 'tiles') seen = true; if (seen && !T) break; }
+            return {seen, hit: (S.rec.patHits || 0) > h0}; };
+          const tA = tiles(true), tB = tiles(false);
+          // 되받기: 단추를 누르면 막고 보스가 묶인다
+          B.pat.tel = null; B.pat.cd = 0.01; B.pat.n = 2; G.HAND.counter = 0; let ctr = null;
+          for (let i = 0; i < 40 && !ctr; i++){ G.update(0.05); if (B.pat.tel && B.pat.tel.kind === 'counter') ctr = G.handPress(); }
+          const stun = B.stunT > 0, counters = S.rec.counters || 0;
+          // 버팀: 깎이면 휘청
+          B.stunT = 0; B.pat.tel = null; B.pat.stg = 5; G.hero.hp = G.ST.maxHp; B.pat.cd = 99; G.patStg(B, 10);
+          const grog = B.pat.grogT > 0; for (let i = 0; i < 100; i++) G.update(0.05); const back = B.pat.grogT <= 0 && B.pat.stg === 100;
+          // 큰 살: 못 끊으면 최대 체력의 절반 넘게 깎인다
+          B.pat.grogT = 0; B.pat.stg = 100; B.stunT = 0; B.gate = true; B.pat.wipes = [1.01]; B.pat.cd = 99; G.hero.hp = G.ST.maxHp; G.hero.shield = 0;
+          for (let i = 0; i < 3; i++) G.update(0.05); const wiping = !!(B.pat.tel && B.pat.tel.kind === 'wipe'); B.pat.stg = 1e9;
+          let low = 1; for (let i = 0; i < 140 && B.pat.tel; i++){ G.update(0.05); low = Math.min(low, G.hero.hp / G.ST.maxHp); G.hero.hp = Math.max(G.hero.hp, 1); }
+          // 넋 부름: 기운이 차면 넋이 나타나 보스를 친다(자동)
+          B.pat.cd = 99; S.mode = 'auto'; G.soulG = 100; const hp0 = B.hp; let app = false; for (let i = 0; i < 30; i++){ G.update(0.05); if (G.soulApp.length) app = true; }
+          const casted = app && G.soulG < 100 && (S.rec.souls || 0) > 0;
+          Object.assign(G.HAND, H); Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
+          return {g1: +g1.toFixed(1), gMax, d0, k1: !!k1, star: d2 && d2.star, col, eq, lv, tA, tB, ctr, stun, counters, grog, back, wiping, low: +low.toFixed(2), casted}; }""")
+        check(so['g1'] == 10 and so['gMax'], f'기술 미리보기: 레벨을 올리면 몇 % 세지는지 모든 칸에서 보인다(회오리 Lv1→2 +10%) {so}')
+        check(so['d0'] is None and so['k1'] and so['star'] == 1 and so['col'] and so['eq'], f'넋 부름: 1부엔 넋 구슬이 안 나오고, 2부에선 40번 천장·같은 넋은 별·주머니에 저절로 모심 {so}')
+        check(so['lv'] == 2 and so['tA']['seen'] and not so['tA']['hit'] and so['tB']['hit'] and so['ctr'] == 'counter' and so['stun'] and so['grog'] and so['back'],
+              f'보스 손컨: 붉은 칸(피하면 안 맞고 못 피하면 맞음)·되받기 단추·버팀을 깨면 휘청 {so}')
+        check(so['wiping'] and so['low'] <= 0.5 and so['casted'], f'큰 살을 못 끊으면 체력이 크게 깎이고, 넋의 기운이 차면 넋이 나타나 돕는다 {so}')
         await page.evaluate("() => { const G = window.__game; G.quiet = false; G.enterMarket(); }")
         await page.wait_for_timeout(1200)
         await page.screenshot(path=str(OUT / '34_장터마을.png'))
