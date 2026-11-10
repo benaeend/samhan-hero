@@ -488,6 +488,21 @@ async def main():
           const res = {why, ok, gold: G.S.gold > g0, done: G.S.tb.normal === G.tbWindow().id};
           delete G.REG.accounts.friend1; return res; }""")
         check(tb['ok'] and tb['gold'] and tb['done'], f'타임 보스: 2명 이상이면 도전하고 엽전을 받는다 {tb}')
+        tb2 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const A = G.REG.accounts[G.session.acc], c0 = A.chars.slice(); S.rec.rdpsK = 10;
+          for (let i = 0; i < 3; i++) A.chars.push({cid:'tb' + i, name:'내캐' + i, cls:'sulsa', level:50, look:{}, armorG:2, weaponG:2, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp * (i + 1), rd:G.realDps() * (i + 1)}});
+          G.REG.accounts.friend2 = {salt:'x', hash:'p:x', t:1, chars:[{cid:'f2', name:'벗님2', cls:'doin', level:50, look:{}, armorG:3, weaponG:3, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp}}]};
+          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); S.tb = {};
+          const names = G.tbOthers().map(o => o.name), ok = G.startTimeBoss('normal'), R = G.raid, B = R.boss;
+          const partyRd = G.realDps() * (1 + 6 + 0.8);   // 나 + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8)
+          const hpK = +(B.maxHp / partyRd).toFixed(1);
+          const a2 = R.allies.find(a => a.name === '내캐2');
+          const pctMe = B.tbPct.hit, dmgMe = G.ST.maxHp * pctMe, dmgA2 = a2.maxHp * pctMe;
+          for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
+          A.chars = c0; delete G.REG.accounts.friend2; Object.assign(S, JSON.parse(keep)); G.refreshStats();
+          return {ok, n: names.length, mine: names.filter(n => n.startsWith('내캐')).length, friend: names.includes('벗님2'), hpK, ratio: +(dmgA2 / dmgMe).toFixed(2)}; }""")
+        check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - 120) < 1 and tb2['ratio'] == 3,
+              f'타임 보스: 같은 계정의 다른 캐릭터까지 모두 참가하고, 보스 체력은 모두의 실제 피해 합에 맞추고(노말 120초분), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '18_레이드_저승.png'))
 

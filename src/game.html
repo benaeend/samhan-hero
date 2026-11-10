@@ -2189,8 +2189,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-25', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-26', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 타임 보스 개편'],
+  ['만들어 둔 캐릭터 모두 함께', '타임 보스에 이 기기에 만들어 둔 캐릭터가 모두(같은 계정의 다른 캐릭터 포함) 함께 싸워요. 지금 접속한 다른 용사도 함께해요(24명까지).'],
+  ['보스가 모인 용사들의 전투력에 맞춰져요', '보스 체력은 모두가 실제로 넣는 피해(기술·넋·펫 포함)를 노말 120초·지옥 150초 동안 모은 만큼, 공격은 맞는 용사 체력의 8%(지옥 14%)예요. 약한 캐릭터와 강한 캐릭터가 섞여도 누구나 1~2분쯤 걸리는 싸움이 돼요. 캐릭터마다 보스전에서 넣은 피해를 기억해 두었다가 그 세기로 함께 싸워요.'],
   ['#', '2026-11-10 · 수호신 · 목걸이·패옥 · 각인 강화 · 신화·태초 각성 · 새 펫'],
   ['수호신', '[수련] → [수호신]. 성주신(체력)·조왕신(공격력)·터주신(엽전)·삼신할미(경험치)·칠성신(치명타 피해)이 전직·환생·새 땅에 닿을 때 하나씩 와요. 엽전을 바쳐 Lv.20까지 올리고, 모신 하나는 효과 전부·나머지는 30%.'],
   ['목걸이 · 패옥', '장신구 두 가지가 더해졌어요. 목걸이(보스 피해)는 부상부터, 패옥(경험치·엽전)은 곤륜부터 그 땅의 수문장(4%)·레이드(3%)에서 나와요. 이야기 「갓파 대왕」·「가뭄 귀신」에서도 하나씩 받아요(지나왔다면 들어올 때).'],
@@ -2298,7 +2301,7 @@ const NOTES = [
   ['새 기술·초각성기', 'Lv.60·80에 기술이 하나씩 더 열려요. 초각성기는 레이드·타임 보스마다 한 번 쓰는 필살기예요.'],
   ['변신·장신구', '이야기에서 사신(주작·청룡·백호·현무) 변신을 얻어요. 반지·귀걸이·팔찌는 각 지역 9번째 단계 수문장에게서 드물게 나와요. [장비]'],
   ['재련 +25', '재련이 +25까지 늘고 비용은 내려갔어요. 장비가 좋아지면 용사 모습도 바뀌어요.'],
-  ['타임 보스', '0시부터 3시간마다 30분 동안! 2명 이상 모여 도전해요. 노말·지옥(환생 필요). [레이드]'],
+  ['타임 보스', '0시부터 3시간마다 30분 동안! 만들어 둔 캐릭터 모두와 접속한 용사가 함께 도전해요. 노말·지옥(환생 필요). [레이드]'],
   ['난이도', '초반은 빠르게, 중반부터는 한 단계에 1~2시간(저승 깊은 곳은 2~4시간) 방치해야 넘을 수 있어요.'],
   ['매뉴얼', '플레이 매뉴얼(PDF)은 benaeend.github.io/samhan-hero/docs/manual.pdf 에서 볼 수 있어요.'],
 ];
@@ -2663,6 +2666,17 @@ function computeStats(up = S.up){
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
 const skillMulX = () => (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * (1 + ((formOf() || {}).skill || 0) / 100) * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
+/* 실제 보스 피해(2026-11 (26)): 기본 초당 피해(dpsOf)에는 기술·넋·펫·보스 피해 배율이 빠져 있어 후반엔 실제보다 수십 배 작다.
+   보스·레이드 싸움에서 용사 쪽(용사·펫·넋)이 보스에게 넣은 피해 ÷ 싸운 시간을 재어, dpsOf의 몇 배인지(S.rec.rdpsK, 평균)를 기억한다.
+   타임 보스 체력과 함께 싸우는 캐릭터의 세기에 쓴다. 아직 재지 못했으면 RDPS_K0배로 어림 */
+const RDPS_K0 = 8;
+let bmeter = {d:0, t:0};
+function bmeterEnd(){
+  if (bmeter.t >= 3 && bmeter.d > 0){ const k = Math.max(1, Math.min(1000, bmeter.d / bmeter.t / Math.max(1e-9, dpsOf(ST)))); S.rec.rdpsK = S.rec.rdpsK ? S.rec.rdpsK * 0.7 + k * 0.3 : k; }
+  bmeter = {d:0, t:0};
+}
+const realDps = () => dpsOf(ST) * (S.rec.rdpsK || RDPS_K0);
+const allyRd = a => a && (+a.rd > 0 ? +a.rd : Math.max(1, +a.dps || 1) * RDPS_K0);   // 예전 요약(실제 피해 없음)은 어림
 function power(st){
   const pi = eqPet('atk'), petDps = pi >= 0 ? st.atk * petInfo(pi).pct / 100 / 1.5 : 0;
   return (dpsOf(st) + petDps) * 10 + st.maxHp / (1 - petDR() / 100);
@@ -3316,7 +3330,7 @@ function hit(m, base, kind, sure){
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit + sc;
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
   const dmg = base * (crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (m.pat && m.pat.grogT > 0 ? PAT.grogMul : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) : 1) * (0.92 + Math.random() * 0.16);
-  if (mine){ dmgMeter += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
+  if (mine){ dmgMeter += dmg; if (m.boss || m.raid) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
   m.hp -= dmg; m.flash = 0.1; m.aggro = true;
@@ -3408,13 +3422,14 @@ function startBoss(){
   addLog(`${b.name}${josa(b.name, '이', '가')} 나타났습니다! 30초 안에 쓰러뜨리세요.`, 'warn'); sfx('boss');
 }
 function bossFail(reason){
-  bossActive = false;
+  bossActive = false; bmeterEnd();
   if (bossRef && !bossRef.dead){ bossRef.dead = true; bossRef.deathT = 0.4; bossRef.fled = true; }
   bossRef = null; S.autoBoss = false;
   bossRetry = 0;
   addLog(S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`, 'warn');
 }
 function bossWin(){
+  bmeterEnd();
   const gems = Math.round((5 + Math.floor(effStage(S.stage) / 4)) * gemMul());
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
   S.gems += gems; S.rec.bosses++; recWin(true, false);
@@ -3539,7 +3554,10 @@ function startRaid(i){
   addLog(`${info.label} 토벌 시작! ${RAID_TIME}초 안에 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨려요.`, 'warn');
   return true;
 }
+// 레이드 자리(근접 6·원거리 8)가 모자라면 보스 왼쪽 판에 줄지어 선다(타임 보스는 여럿이 모인다)
+function extraSpot(k){ const i = Math.max(0, k - 14), x = 3 + (i % 6) + FOX, y = 4 + Math.floor(i / 6) * 2 + (i % 2) + FOY; return [Math.min(COLS - 2, x), Math.max(TOPR, Math.min(ROWS - 2, y))]; }
 function startFight(info, party, o){
+  bmeter = {d:0, t:0};
   if (market) leaveMarket();
   if (parade) finishParade();
   if (bossActive){ bossActive = false; bossRef = null; }
@@ -3550,7 +3568,7 @@ function startFight(info, party, o){
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
     const near = a.cls === 'musa' || a.cls === 'jagaek';
-    const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || [2 + FOX, 3 + k + FOY];
+    const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || extraSpot(k);
     const C = CLASSES[a.cls], aspd = C.spdMul;
     const e = Object.assign(a, {tx:spot[0], ty:spot[1], fx:spot[0], fy:spot[1], mt:0, moving:false, x:0, y:0, dir:'right',
       hp:a.maxHp, aspd, hit:a.dps / aspd, atkT:Math.random(), swing:0, hurt:0, down:false, downT:0, healT:2 + k, seed:k});
@@ -3598,20 +3616,29 @@ const TB_SLOTS = [
 ];
 const TB_OPEN = 30 * 60 * 1000, TB_TIME = 120;
 const TB_DIFF = {
-  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02]},
-  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07]},
+  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, hit:0.08, aoe:0.05},
+  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, hit:0.14, aoe:0.08},
 };
+/* 타임 보스 세기(2026-11 (26), 사용자 요청): 모인 용사들의 전투력에 맞춘다.
+   체력 = 모두의 초당 피해 합 × hpSec초(다 같이 hpSec초쯤 때려야 쓰러짐), 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe).
+   그래서 약한 캐릭터·강한 캐릭터가 섞여도 누구나 똑같이 위협받고, 사람이 많을수록 보스도 단단해진다 */
+const bossHit = (B, tg, mul = 1) => B.tbPct ? (tg === hero ? ST.maxHp : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul;
+const bossAoe = (B, tg) => B.tbPct ? (tg === hero ? ST.maxHp : tg.maxHp) * B.tbPct.aoe : B.aoe;
 function tbWindow(){
   const d = new Date(now()), slot = Math.floor(d.getHours() / 3);
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), slot * 3).getTime();
   return {slot, id:start, open:now() - start < TB_OPEN, end:start + TB_OPEN, next:start + 3 * 3600 * 1000, boss:TB_SLOTS[slot]};
 }
 const tbPeers = new Map();     // 실시간으로 참가한 사람들(peer → 정보)
+// 2026-11 (26), 사용자 요청: 만들어 둔 캐릭터를 모두 데려간다(같은 계정의 다른 캐릭터 포함, 지금 캐릭터만 빼고) + 실시간 참가자. TB_PARTY_MAX명까지
+const TB_PARTY_MAX = 24, TB_ALLY_SK = 1.3;   // 동료는 휘두르기 + 기술(allySkill)로 기본의 1.3배쯤 넣는다
 function tbOthers(){
-  const w = tbWindow(), out = [];
-  for (const p of tbPeers.values()) if (p.w === w.id && out.length < 9) out.push(Object.assign({live:true}, p));
-  if (session) for (const c of allChars()) if (c.acc !== session.acc && c.ally && out.length < 9)
-    out.push({name:c.name, cls:c.cls, look:cleanLook(c.look), armorG:c.armorG, weaponG:c.weaponG, dps:c.ally.dps, maxHp:c.ally.maxHp, own:true});
+  const w = tbWindow(), out = [], seen = new Set();   // 실시간 참가자와 이 기기에 저장된 캐릭터가 같으면 한 번만
+  for (const p of tbPeers.values()) if (p.w === w.id && out.length < TB_PARTY_MAX - 1){ seen.add(p.name); out.push(Object.assign({live:true}, p)); }
+  if (session) for (const c of allChars()) if (!(c.acc === session.acc && c.cid === session.cid) && c.ally && out.length < TB_PARTY_MAX - 1 && !seen.has(c.name)){
+    seen.add(c.name);
+    out.push({name:c.name, cls:c.cls, look:cleanLook(c.look), armorG:c.armorG, weaponG:c.weaponG, dps:c.ally.dps, maxHp:c.ally.maxHp, rd:c.ally.rd, own:true, mine:c.acc === session.acc});
+  }
   return out;
 }
 const tbUsers = () => 1 + tbOthers().length;
@@ -3630,18 +3657,19 @@ let tbJoinedId = '';
 function tbAutoJoin(){ const w = tbWindow(); if (!w.open || !session || market || parade || tbJoinedId === w.id) return; tbJoinedId = w.id; tbJoin(); }
 function tbJoin(){
   if (!room || !session) return;
-  room.emit('tb', {w:tbWindow().id, n:S.name, c:S.cls, d:Math.round(dpsOf(ST)), h:Math.round(ST.maxHp), l:S.look}).catch(() => {});
+  room.emit('tb', {w:tbWindow().id, n:S.name, c:S.cls, d:Math.round(dpsOf(ST)), h:Math.round(ST.maxHp), r:Math.round(realDps()), l:S.look}).catch(() => {});
 }
 function startTimeBoss(diff){
   if (tbCan(diff)) return false;
   const w = tbWindow(), D = TB_DIFF[diff], others = tbOthers();
+  // 함께 싸우는 캐릭터는 실제 보스 피해(기술·넋 포함)로 싸운다(휘두를 때 피해 = 실제 피해 ÷ TB_ALLY_SK, 나머지는 동료 기술로)
   const party = others.map(o => ({name:o.name, cls:CLASSES[o.cls] ? o.cls : 'musa', look:cleanLook(o.look), armorG:o.armorG == null ? -1 : o.armorG, weaponG:o.weaponG == null ? -1 : o.weaponG,
-    dps:Math.max(1, +o.dps || 1), maxHp:Math.max(1, +o.maxHp || 1), own:true}));
-  const partyDps = dpsOf(ST) + party.reduce((t, a) => t + a.dps, 0);
-  const base = 10 * mobHp(D.ref) / 15 * 3 * 40;
+    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true}));
+  const partyDps = realDps() + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
-  startFight(info, party, {hp:Math.max(base * 2, partyDps * 85), atk:heroRef(0, D.ref) / (2 * MOB_TTK) * 4.8, aoe:heroRef(0, D.ref) / (2 * MOB_TTK) * 3.2, time:TB_TIME});
+  startFight(info, party, {hp:partyDps * D.hpSec, atk:ST.maxHp * D.hit, aoe:ST.maxHp * D.aoe, time:TB_TIME});
+  raid.boss.tbPct = {hit:D.hit, aoe:D.aoe};
   raid.deaths = 0;
   addLog(`타임 보스 ${info.bossName}! ${party.length + 1}명이 함께 ${TB_TIME}초 안에 쓰러뜨려요.`, 'warn');
   tbJoin();
@@ -3859,9 +3887,9 @@ function updatePat(dt){
       if (T.t >= T.T){
         P.tel = null;
         const [x, y] = heroTile();
-        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(B.atk * PAT.tileMul); S.rec.patHits = (S.rec.patHits || 0) + 1; }
+        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(bossHit(B, hero, PAT.tileMul)); S.rec.patHits = (S.rec.patHits || 0) + 1; }
         else if (!hero.dead && T.set.size) S.rec.dodges = (S.rec.dodges || 0) + 1;
-        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, B.atk * PAT.tileMul); }
+        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, bossHit(B, a, PAT.tileMul)); }
         shake = Math.max(shake, 0.3); sfx('hit');
         if (!fxOff()) for (const [tx, ty] of T.tiles.filter((_, k) => k % 2 === 0).slice(0, 26)){ const px = isoX(tx, ty), py = isoY(tx, ty); vadd({type:'glow', x:px, y:py - 3, r:8, col:'#ff5a3a', dur:0.35}); vSparks(px, py - 2, 2, '#ff8a5a', 40, 18); }
       }
@@ -3870,8 +3898,8 @@ function updatePat(dt){
       if (T.t >= T.T){
         P.tel = null; B.lunge = 0.25;
         const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
-        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(B.atk * PAT.blowMul); }
-        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, B.atk * PAT.blowMul); }
+        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(bossHit(B, hero, PAT.blowMul)); }
+        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, bossHit(B, tg, PAT.blowMul)); }
         shake = Math.max(shake, 0.25);
       }
     } else if (T.kind === 'wipe' && T.t >= T.T){
@@ -3971,7 +3999,7 @@ function updateRaid(dt){
     if (tg){
       B.dir = tg.x > B.x ? 'right' : 'left'; B.lunge = 0.2;
       fx.push({type:'hit', t:0, dur:0.2, x:tg.x, y:tg.y - 12});
-      if (tg === hero) damageHero(B.atk); else damageAlly(tg, B.atk);
+      if (tg === hero) damageHero(bossHit(B, hero)); else damageAlly(tg, bossHit(B, tg));
     }
   }
   B.aoeT -= dt;
@@ -3980,12 +4008,13 @@ function updateRaid(dt){
     fx.push({type:'ring', t:0, dur:0.6, x:B.x, y:B.y - 4, color:'#ff7a4a', r:90});
     shake = 0.3;
     addText('땅울림!', B.x, B.y - mobHeight(B) - 14, '#ff9a6a', 13, true);
-    if (!hero.dead) damageHero(B.aoe);
-    for (const a of R.allies) if (!a.down) damageAlly(a, B.aoe);
+    if (!hero.dead) damageHero(bossAoe(B, hero));
+    for (const a of R.allies) if (!a.down) damageAlly(a, bossAoe(B, a));
   }
 }
 function raidEnd(win){
   if (!raid || raid.ending) return;
+  bmeterEnd();
   raid.ending = true; raid.win = win; raid.endT = win ? 1.3 : 0.8;
   const B = raid.boss;
   if (!win && !B.dead){ B.dead = true; B.deathT = 0.6; B.fled = true; fx.push({type:'poof', t:0, dur:0.6, x:B.x, y:B.y - 20, big:true}); }
@@ -4493,6 +4522,7 @@ function update(dt){
 
   if (market){ updateMarket(dt); return; }   // 장터 마을: 사냥 멈춤
   // 레이드 / 보스·소환
+  if (((raid && !raid.ending) || bossActive) && !hero.dead) bmeter.t += dt;
   if (raid) updateRaid(dt);
   else if (parade) updateParade(dt);
   else if (bossActive){
@@ -8266,7 +8296,7 @@ async function bootRoom(){
       if (typeof d.w !== 'number') return;
       const name = cleanChat(typeof d.n === 'string' ? d.n : '').slice(0, 8) || '나그네';
       const fresh = !tbPeers.has(msg.peer) || tbPeers.get(msg.peer).w !== d.w;
-      tbPeers.set(msg.peer, {w:d.w, name, cls:CLASSES[d.c] ? d.c : 'musa', look:cleanLook(d.l), dps:Math.min(1e300, Math.max(1, +d.d || 1)), maxHp:Math.min(1e300, Math.max(1, +d.h || 1))});
+      tbPeers.set(msg.peer, {w:d.w, name, cls:CLASSES[d.c] ? d.c : 'musa', look:cleanLook(d.l), dps:Math.min(1e300, Math.max(1, +d.d || 1)), maxHp:Math.min(1e300, Math.max(1, +d.h || 1)), rd:Math.min(1e300, Math.max(0, +d.r || 0))});
       if (fresh && session && tbJoinedId === d.w) tbJoin();   // 나중에 들어온 용사도 먼저 참가한 나를 알 수 있게 한 번 답한다
     }, () => {});
     r.on('mk', msg => { if (msg && !msg.sameTab && !msg.isMe) mkRecv(msg); }, () => {});
@@ -9956,9 +9986,9 @@ function buildRaid(){
     const tbLeft = w.open ? w.end - now() : w.next - now();
     setHTML($('#tbBox'), `<div class="card ${w.open && !raid ? 'ready' : ''}">
       <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
-      <p class="story">00시부터 3시간마다 30분 동안 나타나요. <b>지금 접속한 용사가 모두</b> 함께 싸워요. 보스가 매우 세고, 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
-      <div class="dl"><span>참가자</span><b>${users}명 (${['나'].concat(others.map(o => o.name + (o.live ? '' : '·이 기기'))).join(', ')})</b></div>
-      ${room ? '<button class="btn sm" data-tb="join">참가한다고 알리기</button>' : `<p class="small">${users < 2 ? '지금은 같은 기기의 다른 계정 캐릭터가 함께 참가해요. 온라인 서버에 연결되면 다른 용사들과 모일 수 있어요.' : ''}</p>`}
+      <p class="story">00시부터 3시간마다 30분 동안 나타나요. <b>이 기기에 만들어 둔 캐릭터 모두</b>(같은 계정의 다른 캐릭터 포함)와 <b>지금 접속한 용사</b>가 함께 싸워요. 보스 체력과 공격은 <b>모인 용사들의 전투력에 맞춰져요</b>(체력 = 모두의 피해를 ${TB_DIFF.normal.hpSec}초(지옥 ${TB_DIFF.hell.hpSec}초) 동안 모은 만큼, 한 번 칠 때 맞는 용사 체력의 ${Math.round(TB_DIFF.normal.hit * 100)}%(지옥 ${Math.round(TB_DIFF.hell.hit * 100)}%)). 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
+      <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => o.name + (o.live ? '' : o.mine ? '(내 캐릭터)' : '(이 기기)'))))}</b></div>
+      ${room ? '<button class="btn sm" data-tb="join">참가한다고 알리기</button>' : `<p class="small">${users < 2 ? '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 다른 용사들과도 모일 수 있어요.' : ''}</p>`}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
     </div>`);
     const live = $('#raidLive');
@@ -10922,7 +10952,7 @@ async function syncChars(acc){
     const loc = A.chars.find(c => c.cid === it.cid);
     const ent = {cid:it.cid, name:String(it.name).slice(0, 8), cls:CLASSES[sm.cls] ? sm.cls : 'musa', level:Math.max(1, +sm.level || 1), maxStage:Math.max(1, +sm.maxStage || 1),
       look:cleanLook(sm.look), armorG:Number.isFinite(+sm.armorG) ? +sm.armorG : -1, weaponG:Number.isFinite(+sm.weaponG) ? +sm.weaponG : -1,
-      ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1)} : undefined, t:+it.t || 0, srvT:+it.t || 0,
+      ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1), rd:Math.max(0, +sm.ally.rd || 0)} : undefined, t:+it.t || 0, srvT:+it.t || 0,
       world:Math.max(0, Math.min(4, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, +sm.level || 1)))};
     if (!loc) A.chars.push(ent);
     else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
@@ -10995,7 +11025,7 @@ function saveLocal(){
   const A = REG.accounts[session.acc], ch = A && A.chars.find(c => c.cid === session.cid);
   if (!ch) return;
   const sum = {name:S.name, cls:S.cls, level:S.level, maxStage:S.maxStage, look:S.look, armorG:gradeOf(S.equip.armor), weaponG:gradeOf(S.equip.weapon),
-    ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp)}, world:S.world, cum:cumLv()};
+    ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp), rd:Math.round(realDps())}, world:S.world, cum:cumLv()};
   const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum]);
   if (pick(ch) !== pick(sum)){ Object.assign(ch, sum, {t:now()}); A.t = now(); saveReg(); }
 }
@@ -11407,7 +11437,7 @@ if (location.search.indexOf('simtest') >= 0){
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
-    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
+    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
 }
 
