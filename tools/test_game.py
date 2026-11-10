@@ -487,26 +487,29 @@ async def main():
           G.REG.accounts.friend1 = {salt: 'x', hash: 'p:x', t: 1, chars: [{cid: 'cf', name: '벗님', cls: 'doin', level: 50, maxStage: 50, look: {}, armorG: 3, weaponG: 3, ally: {dps: G.ST.atk * 3, maxHp: G.ST.maxHp}}]};
           const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000);
           const g0 = G.S.gold, why = G.tbCan('normal'), ok = G.startTimeBoss('normal');
+          for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
+          if (G.raid){ G.raid.info.fit = null; G.raid.boss.hp = 1; }   // 이제 보스는 손을 잘 써야 쓰러지므로(체력을 늘 다시 맞춤), 보상 확인은 맞추기를 끄고 끝낸다
           for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
           const res = {why, ok, gold: G.S.gold > g0, done: G.S.tb.normal === G.tbWindow().id};
           delete G.REG.accounts.friend1; return res; }""")
         check(tb['ok'] and tb['gold'] and tb['done'], f'타임 보스: 2명 이상이면 도전하고 엽전을 받는다 {tb}')
         tb2 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
-          const A = G.REG.accounts[G.session.acc], c0 = A.chars.slice(); S.rec.rdpsK = 10;
+          const A = G.REG.accounts[G.session.acc], c0 = A.chars.slice(); S.rec.rdpsK = 10; delete S.rec.fitK;
           const oc = ['sulsa', 'jagaek'].find(c => c !== S.cls);
           for (let i = 0; i < 3; i++) A.chars.push({cid:'tb' + i, name:'내캐' + i, cls:oc, level:50, look:{}, armorG:2, weaponG:2, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp * (i + 1), rd:G.realDps() * (i + 1)}});
           G.REG.accounts.friend2 = {salt:'x', hash:'p:x', t:1, chars:[{cid:'f2', name:'벗님2', cls:'doin', level:50, look:{}, armorG:3, weaponG:3, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp}}]};
           const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); S.tb = {};
           const names = G.tbOthers().map(o => o.name), ok = G.startTimeBoss('normal'), R = G.raid, B = R.boss;
-          const partyRd = G.realDps() * (G.TB_SELF_K + 6 + 0.8) * 2;   // 나(내 몫 TB_SELF_K) + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8), 처음 체력은 어림의 2배(싸우며 맞춤)
+          const partyRd = G.realDps() * (G.TB_SELF_K + 6 + 0.8);   // 나(내 몫 TB_SELF_K) + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8). 처음 체력은 어림 × 목표 시간(싸우며 맞춤)
           const hpK = +(B.maxHp / partyRd).toFixed(1);
           const a2 = R.allies.find(a => a.name === '내캐2');
           const pctMe = B.tbPct.hit, dmgMe = G.ST.maxHp * pctMe, dmgA2 = a2.maxHp * pctMe;
-          for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
+          let rise = 0, last = 1; for (let i = 0; i < 3000 && G.raid; i++){ G.update(0.05); const f = B.hp / B.maxHp; if (f > last + 1e-6) rise++; last = f; }   // 체력 막대는 거꾸로 차오르지 않는다
+          const fitK = S.rec.fitK;
           A.chars = c0; delete G.REG.accounts.friend2; Object.assign(S, JSON.parse(keep)); G.refreshStats();
-          return {ok, n: names.length, mine: names.filter(n => n.startsWith('내캐')).length, friend: names.includes('벗님2'), hpK, ratio: +(dmgA2 / dmgMe).toFixed(2)}; }""")
-        check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - 120) < 1 and tb2['ratio'] == 3,
-              f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합에서 시작하고(노말 120초분×2, 싸우며 맞춤), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
+          return {ok, n: names.length, mine: names.filter(n => n.startsWith('내캐')).length, friend: names.includes('벗님2'), hpK, tgt: G.TB_DIFF.normal.tgt, ratio: +(dmgA2 / dmgMe).toFixed(2), rise, fitK}; }""")
+        check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - tb2['tgt']) < 1 and tb2['ratio'] == 3 and tb2['rise'] == 0 and (tb2['fitK'] or 0) > 0,
+              f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합 × 목표 시간에서 시작해 싸우며 맞추고(막대는 거꾸로 안 참, 끝나면 기억), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
 
         # 타임 보스 동료는 무작위 10명, 같은 직업은 나까지 3명(이 기기만 쓸 때도 같은 규칙, 30분 동안은 같은 파티)
         tb3 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S);
@@ -712,7 +715,7 @@ async def main():
           // 지면: 참가 보상만
           G.dbCheck(); S.dboss.n = 1; const lose = G.finishDBoss({win:false}); const gemsLose = S.gems - g0; const lose2 = G.finishDBoss({win:false});
           // 이기면: 그날 부위 치장(일요일이 아니면 늘 하나)
-          const ok = G.startDBoss(); const B = G.raid && G.raid.boss; if (B) B.hp = 1; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          const ok = G.startDBoss(); const B = G.raid && G.raid.boss; if (B){ G.raid.info.fit = null; B.hp = 1; } for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
           const got = S.skin.inv.concat(Object.values(S.skin.eq)), parts = got.map(it => G.SKC[it.c].p);
           // 여러 날 흉내: 월~토는 그 부위, 일요일은 전설만
           const grades = [0, 0, 0, 0, 0], partOk = [];
@@ -722,6 +725,41 @@ async def main():
           return {day, part, loseOut: lose.out.length, gemsLose: gemsLose > 0, lose2: lose2.out.length, ok, won: S.dboss ? true : false, got: got.length, parts, sun: day === 0, allGrades: grades.every(n => n > 0), partOk: partOk.every(Boolean), sunAll}; }""")
         check(db['loseOut'] == 2 and db['gemsLose'] and db['lose2'] == 0 and db['ok'] and (db['sun'] or (db['got'] == 1 and db['parts'][0] == db['part'])) and db['allGrades'] and db['partOk'] and db['sunAll'] == 4,
               f'1일 보스: 참가 보상(하루 한 번)·이기면 오늘 부위 치장·모든 등급·일요일은 전설 {db}')
+
+        # 6-4g2) 타임 보스·1일 보스 손맛: 공격은 방어 빼고 최대 체력의 %, 되받기는 기본 피해 FIT.ctr초 몫(기본 피해로는 안 셈), 막대는 거꾸로 안 참
+        fh = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          S.dboss = {day:'', n:0, paid:false, won:false}; S.buff.def = 600; G.refreshStats(); G.dbCheck();
+          const ok = G.startDBoss(), R = G.raid, B = R.boss; let rise = 0, last = 1;
+          for (let i = 0; i < 200 && G.raid; i++){ G.update(0.05); const f = B.hp / B.maxHp; if (f > last + 1e-6) rise++; last = f; }
+          const norm = +(G.bossHit(B, G.hero) * G.takenK() / G.ST.maxHp).toFixed(3), pct = B.tbPct.hit, dk = +G.takenK().toFixed(2);
+          const base0 = R.info.fit.base, done0 = R.tbDone, rate = G.fitRate();
+          B.pat = B.pat || {stg:100, cd:9, tel:null, grogT:0, n:0, wipes:[]}; B.pat.grogT = 0; B.pat.tel = {kind:'counter', t:0, T:1.1, auto:{ok:false}}; G.counterOk(B, true);
+          const ctr = +((R.tbDone - done0) / rate).toFixed(2), baseD = R.info.fit.base - base0;
+          R.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
+          return {ok, rise, norm, pct, dk, ctr, want: G.FIT.ctr, baseD}; }""")
+        check(fh['ok'] and fh['rise'] == 0 and abs(fh['norm'] - fh['pct']) < 0.002 and fh['dk'] < 1 and fh['ctr'] >= fh['want'] * 0.9 and fh['baseD'] == 0,
+              f'1일·타임 보스: 방어가 높아도 맞으면 최대 체력의 같은 %, 되받기는 기본 피해 몇 초 몫을 한 번에(기본 피해로는 안 셈), 막대는 거꾸로 안 참 {fh}')
+
+        # 6-4h) 화면 방향 고르기: 휴대폰을 돌리지 않고 가로·세로를 바꾸고(잠글 수 없으면 화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞는다
+        await page.evaluate("() => { const G = window.__game; G.closePage && G.closePage(); const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } G.hero.dead = false; }")
+        await page.wait_for_timeout(200)
+        land0 = await page.evaluate("() => !document.body.classList.contains('portrait')")
+        await page.evaluate("(m) => window.__game.setOrient(m, true)", 'port' if land0 else 'land')
+        await page.wait_for_timeout(400)
+        orr = await page.evaluate("""() => { const G = window.__game, h = G.hero; for (const m of G.mobs) if (!m.raid) m.dead = true; h.target = null; const tx = Math.max(1, Math.min(26, h.tx + 2)), ty = h.ty, cv = document.querySelector('#cv'), rc = cv.getBoundingClientRect();
+          const xr = (G.isoX(tx, ty) - G.camX) * G.scale + 2, yr = (G.isoY(tx, ty) - G.camY) * G.scale + 2;
+          const pt = G.rotDeg === 90 ? [rc.right - yr, rc.top + xr] : G.rotDeg === -90 ? [rc.left + yr, rc.bottom - xr] : [rc.left + xr, rc.top + yr];
+          const el = document.elementFromPoint(pt[0], pt[1]);
+          return {rot: G.rotDeg, portrait: document.body.classList.contains('portrait'), tx, ty, pt, el: el ? el.id || el.className : '', cut: !!G.cut, raid: !!G.raid, mk: !!G.market, dead: h.dead}; }""")
+        await page.mouse.click(orr['pt'][0], orr['pt'][1]); await page.wait_for_timeout(100)
+        goal = await page.evaluate("() => { const h = window.__game.hero, g = h.goal; return g ? [g[0], g[1]] : h.target ? 'target:' + h.target.name : null; }")
+        await page.screenshot(path=str(OUT / '35_화면돌리기.png'))
+        await page.evaluate("() => window.__game.setOrient('auto', true)"); await page.wait_for_timeout(300)
+        back = await page.evaluate("() => ({rot: window.__game.rotDeg, land: !document.body.classList.contains('portrait'), mode: window.__game.orientMode})")
+        check(orr['rot'] in (90, -90) and orr['portrait'] == land0 and goal == [orr['tx'], orr['ty']] and back['rot'] == 0 and back['land'] == land0 and back['mode'] == 'auto',
+              f'화면 방향: 게임 안에서 가로·세로를 바꾸고(화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞고, 자동으로 되돌린다 {orr} {goal} {back}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');

@@ -454,7 +454,7 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .t-snd.off{color:#7a8296;text-decoration:line-through}
 .t-ver{position:absolute;left:0;right:0;bottom:calc(6px + env(safe-area-inset-bottom));margin:0;text-align:center;font-size:10.5px;color:rgba(255,255,255,.5)}
 .modal.on-title{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;align-items:end;padding-bottom:calc(26px + env(safe-area-inset-bottom))}
-.modal.on-title .sheet{max-height:min(560px,60vh);background:linear-gradient(180deg,rgba(26,35,54,.9),rgba(14,20,34,.94));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.modal.on-title .sheet{max-height:min(560px,calc(var(--vh1, 1vh) * 60));background:linear-gradient(180deg,rgba(26,35,54,.9),rgba(14,20,34,.94));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .modal.on-title .logo{display:none}
 
 /* 모달 */
@@ -971,6 +971,7 @@ body.in-market .act{display:none}
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
       <div class="cur" aria-label="쇳가루" id="curDust"><span class="dusti"></span><span id="dustTop">0</span></div>
       <div class="cur" aria-label="고삐 조각" id="curPiece" hidden><span class="piecei"></span><span id="pieceTop">0</span></div>
+      <button class="btn-chat sbtn always" id="orientBtn" aria-label="화면 돌리기(가로·세로)" title="화면 돌리기(가로·세로)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h7a2 2 0 0 1 2 2v5h-2V4H7v16h7v-3h2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm11 9h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3v-2h2v-5h-2zm-1-8a6 6 0 0 1 5 5l1.5-1.2.9 1.4L21 10l-2.2-3.1 1.4-.9.9 1.2A4 4 0 0 0 17 5z"/></svg></button>
       <button class="btn-chat sbtn always" id="charBtn" aria-label="캐릭터 바꾸기" title="캐릭터 바꾸기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM3 19c0-3.3 2.7-6 6-6s6 2.7 6 6v1H3zM15 5h4V3l3 3-3 3V7h-4zm7 10h-4v2l-3-3 3-3v2h4z"/></svg></button>
       <button class="btn-chat sbtn" id="mkBtn" aria-label="장터"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18l1 5a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5-2zm2 8.6V21h14v-8.4a5 5 0 0 1-2 .4v4H7v-4a5 5 0 0 1-2-.4z"/></svg></button>
       <button class="btn-chat sbtn" id="newsBtn" aria-label="업데이트 소식"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h13v14H6a2 2 0 0 1-2-2zm13 3h3v9a2 2 0 0 1-2 2h-1zM7 8v3h7V8zm0 5v2h7v-2z"/></svg></button>
@@ -2237,9 +2238,12 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-5', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-6', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 화면 방향 바꾸기 · 타임 보스/1일 보스 손맛'],
+  ['가로·세로를 게임 안에서', '오른쪽 위 [화면 돌리기] 아이콘을 누르면 휴대폰을 돌리지 않아도 가로 ↔ 세로 배치가 바뀌어요. [정보] → 화면 방향에서 자동(기기 방향)·가로·세로를 고를 수 있고, 고른 것은 기억해요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요.'],
+  ['타임 보스·1일 보스는 손으로', '이제 그냥 두면 꼭 이기는 싸움이 아니에요. 보스 체력이 싸우는 동안 내 기본 피해에 맞춰져 제한 시간 언저리에 쓰러질 만큼이라, 그냥 두면 반반쯤이에요. 금빛 「!」에 [되받기](보스를 묶고 기본 피해 4초 몫을 한 번에, 두 번이면 휘청)·붉은 칸 피하기·휘청일 때(피해 1.8배) 기술을 넣으면 거의 이겨요. 보스 공격은 방어와 상관없이 최대 체력의 몇 %로 들어오고, 붉은 칸·강타가 아파졌어요(쓰러지면 그만큼 뒤처져요).'],
   ['#', '2026-11-10 · 1일 보스 · 채팅창 접속자 · 타임 보스 맞추기'],
   ['1일 보스', '[레이드] → [타임 보스] 아래에 1일 보스가 생겼어요. 요일마다 보스와 치장 부위가 바뀌어요(월 토시·화 신발·수 허리띠·목 무기 술·금 발밑 빛·토 무작위). 이기면 그날 부위의 치장 하나(일반~전설 모든 등급), 일요일엔 전설 치장만 10% 확률로. 이기든 지든 하루 한 번 보석·엽전을 줘요(하루 3번 도전, 이기면 끝).'],
   ['보스 그림', '타임 보스·1일 보스 칸에 보스 그림이 보여요.'],
@@ -3362,15 +3366,19 @@ function hit(m, base, kind, sure){
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit + sc;
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
-  const dmg = base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * (m.pat && m.pat.grogT > 0 ? PAT.grogMul : 1) * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : PAT.grogMul : 1;
+  const dmg = base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine){ dmgMeter += dmg; if (m.boss || m.raid) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
   let hpLoss = dmg;
-  if (m.raid && raid && raid.info.tb && raid.boss === m){   // 타임 보스: 실제로 넣은 피해는 그대로 세고, 시간표보다 너무 앞서 깎이지는 않게(한꺼번에 터진 기술·초각성기로 몇 초 만에 끝나지 않게)
+  if (fit){   // 타임 보스·1일 보스: 실제로 넣은 피해는 그대로 세고, 시간표보다 너무 앞서 깎이지는 않게(한꺼번에 터진 기술·초각성기로 몇 초 만에 끝나지 않게)
     raid.tbDone = (raid.tbDone || 0) + dmg;
-    const el = TB_TIME - raid.time, floor = Math.max(0, 1 - el / TB_DIFF[raid.info.diff].tgt - TB_LEAD) * m.maxHp;
-    hpLoss = Math.max(0, Math.min(dmg, m.hp - floor));
+    const F = raid.info.fit;
+    if (!hero.dead && !hitNoBase) F.base += dmg / grog;   // 기본 피해(휘청 몫·되받기 빼고)로 체력을 맞춘다
+    if (F.debt > 0){ const a = Math.min(F.debt, hpLoss); F.debt -= a; hpLoss -= a; }
+    const el = raid.limit - raid.time, floor = Math.max(0, 1 - el / raid.info.fit.tgt - TB_LEAD) * m.maxHp;
+    hpLoss = Math.max(0, Math.min(hpLoss, m.hp - floor));
   }
   m.hp -= hpLoss; m.flash = 0.1; m.aggro = true;
   if (m.pat && !(m.pat.grogT > 0) && m.hp > 0) patStg(m, dmg / m.maxHp * PAT.stgK * (kind === 'skill' || kind === 'soul' ? 1 : 0.5) * (m.pat.tel && m.pat.tel.kind === 'wipe' ? 2.5 : 1));   // 버팀 깎기
@@ -3659,14 +3667,15 @@ const TB_SLOTS = [
 ];
 const TB_OPEN = 30 * 60 * 1000, TB_TIME = 120;
 const TB_DIFF = {
-  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, tgt:65, hit:0.08, aoe:0.05},
-  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, tgt:85, hit:0.14, aoe:0.08},
+  normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, tgt:122, hit:0.035, aoe:0.03},
+  hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, tgt:128, hit:0.05, aoe:0.04},
 };
 /* 타임 보스 세기(2026-11 (26), 사용자 요청): 모인 용사들의 전투력에 맞춘다.
-   체력 = 모두의 초당 피해 합 × hpSec초(다 같이 hpSec초쯤 때려야 쓰러짐), 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe).
+   (2026-11 (38)부터 체력은 FIT로 맞춤 — 아래 TB_LEAD 근처 설명. hpSec는 예전 값으로 남겨 둠) 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe, 방어는 tbHeroHp로 빼고).
    그래서 약한 캐릭터·강한 캐릭터가 섞여도 누구나 똑같이 위협받고, 사람이 많을수록 보스도 단단해진다 */
-const bossHit = (B, tg, mul = 1) => B.tbPct ? (tg === hero ? ST.maxHp : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul;
-const bossAoe = (B, tg) => B.tbPct ? (tg === hero ? ST.maxHp : tg.maxHp) * B.tbPct.aoe : B.aoe;
+const tbHeroHp = () => ST.maxHp / Math.max(0.05, takenK());   // 방어로 줄어드는 몫을 미리 되돌려, 맞으면 최대 체력의 그 %가 깎인다
+const bossHit = (B, tg, mul = 1) => B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul;
+const bossAoe = (B, tg) => B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.aoe : B.aoe;
 function tbWindow(){
   const d = new Date(now()), slot = Math.floor(d.getHours() / 3);
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), slot * 3).getTime();
@@ -3677,8 +3686,39 @@ const tbPeers = new Map();     // 실시간으로 참가를 알린 사람들(예
    같은 직업은 나까지 합쳐 TB_CLS_CAP(3)명까지. 온라인이면 서버 함수 samhan_tb_pick이 고르고(창마다 한 번),
    서버가 없거나 아직이면 이 기기에 저장된 캐릭터에서 같은 규칙으로 고른다(창·캐릭터마다 같은 씨앗이라 그 30분 동안은 같은 파티) */
 const TB_PARTY_MAX = 24, TB_ALLY_SK = 1.3, TB_PICK = 10, TB_CLS_CAP = 3;
-let TB_SELF_K = 0.5;
-const TB_FIT_T = [8, 20, 35, 50, 80, 100], TB_HP0 = 2, TB_LEAD = 0.35;   // 시간표(1 − 지난 시간/tgt)보다 TB_LEAD 넘게 앞서 깎이지 않는다: 노말은 아무리 세도 42초쯤부터 쓰러짐   // 이때마다 보스 체력을 실제 피해에 다시 맞춘다(처음 체력은 어림의 TB_HP0배로 넉넉히)   // 혼자 싸울 때 50~75초(직업마다)에 깨지게(시뮬로 잼)   // 보스 체력에 넣는 내 몫: 동료가 적거나 없어도(혼자서도) 제한 시간 안에 깰 수 있게   // 동료는 휘두르기 + 기술(allySkill)로 기본의 1.3배쯤 넣는다
+let TB_SELF_K = 1;   // 처음 체력에 넣는 내 몫(첫 몇 초 뒤부터는 실제로 재어 맞춘다)
+const TB_LEAD = 0.35;   // 시간표(1 − 지난 시간/tgt)보다 TB_LEAD 넘게 앞서 깎이지 않음(한꺼번에 터진 기술로 몇 초 만에 끝나지 않게)
+/* 타임 보스·1일 보스 맞추기(2026-11 (38), 사용자 요청: 무조건 이기지는 않게, 손을 잘 쓰면 이기게)
+   · 체력: '기본 피해'(휘청으로 더 들어간 몫·되받기 피해는 빼고, 용사가 서 있던 동안만)의 빠르기를 1초마다 재어
+     그 빠르기로 tgt초(제한 시간 언저리)에 쓰러지게 맞춘다(제한 시간의 FIT.until까지). 처음 몇 초는 기억(S.rec.fitK × 어림)을 FIT.pw초만큼 섞어
+     흔들리지 않게. 이미 넣은 피해는 그대로라, 되받기·휘청으로 더 넣은 몫과 덜 쓰러져 더 때린 시간만큼 일찍 쓰러진다.
+     손을 놓고 두면 제한 시간 언저리라 이기고 지는 게 반반쯤. 체력 막대는 거꾸로 차오르지 않는다(모자란 몫은 debt로 다음 피해에서 먼저 깎음)
+   · 공격: 방어(받는 피해 줄임)를 빼고 맞는 용사 최대 체력의 몇 %(누구에게나 같은 위협). 피할 수 있는 붉은 칸(×FIT.tile)·강타(×FIT.blow)가 아프다
+   · 되받기: 패턴 둘에 하나, 기본 피해 FIT.ctr초 몫을 한 번에 + 버팀 FIT.ctrStg. 휘청 동안 받는 피해 ×FIT.grog */
+const FIT = {until:0.75, pw:12, ctr:4, ctrStg:50, grog:1.8, regen:0.015, tile:5, blow:6};
+const fitOn = m => !!(m && m.raid && raid && raid.info.fit && raid.boss === m);
+const fitRateOf = F => (F.base + F.rate * FIT.pw) / (F.alive + FIT.pw);
+const fitRate = () => { const F = raid && raid.info.fit; return F ? fitRateOf(F) : 0; };
+let hitNoBase = false;   // 되받기 피해는 기본 피해로 세지 않는다
+function fitNew(tgt, est, mk){ const k = Math.max(0.3, Math.min(3, +S.rec[mk] || 1)); return {tgt, rate:est * k, est, mk, base:0, alive:0, next:2, debt:0}; }   // mk = 기억 이름(타임 보스 fitK·1일 보스 fitKd)
+function fitTick(R, dt){
+  const F = R.info.fit, B = R.boss;
+  if (B.dead || B.spawnT > 0) return;
+  if (!hero.dead) F.alive += dt;
+  const el = R.limit - R.time;
+  if (el < F.next || el > R.limit * FIT.until) return;
+  F.next = Math.floor(el) + 1;
+  const H = fitRateOf(F) * F.tgt, left = Math.max(H * 0.02, H - (R.tbDone || 0)), cur = B.hp / B.maxHp;
+  B.maxHp = H;
+  if (left / H > cur){ B.hp = cur * H; F.debt = left - B.hp; } else { B.hp = left; F.debt = 0; }
+}
+// 끝나면 이번 기본 피해 빠르기 ÷ 어림을 기억해 다음 처음 체력을 맞춘다
+function fitEnd(R){
+  const F = R.info.fit;
+  if (!F || F.alive < 10 || !(F.base > 0) || !(F.est > 0)) return;
+  const m = Math.max(0.3, Math.min(3, F.base / F.alive / F.est)), o = +S.rec[F.mk];
+  S.rec[F.mk] = o > 0 ? o * 0.6 + m * 0.4 : m;
+}
 let tbPick = {key:'', list:null};
 const tbKey = () => tbWindow().id + ':' + (session ? session.acc + '/' + session.cid : '');
 const tbNum = v => Math.min(1e300, Math.max(0, +v || 0));
@@ -3753,7 +3793,8 @@ function startTimeBoss(diff){
   const partyDps = realDps() * TB_SELF_K + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);   // 동료가 10명이 안 돼도(0명이어도) 그만큼으로 맞춘다
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
-  startFight(info, party, {hp:partyDps * D.hpSec * TB_HP0, atk:ST.maxHp * D.hit, aoe:ST.maxHp * D.aoe, time:TB_TIME});
+  info.fit = fitNew(D.tgt, partyDps, 'fitK');   // 처음 체력 = 모인 전투력으로 어림한 초당 피해 × 목표 시간. 그 뒤 실제로 재어 맞춤(fitTick)
+  startFight(info, party, {hp:info.fit.rate * D.tgt, atk:ST.maxHp * D.hit, aoe:ST.maxHp * D.aoe, time:TB_TIME});
   raid.boss.tbPct = {hit:D.hit, aoe:D.aoe};
   raid.deaths = 0;
   addLog(`타임 보스 ${info.bossName}! ${party.length + 1}명이 함께 ${TB_TIME}초 안에 쓰러뜨려요.`, 'warn');
@@ -3907,8 +3948,8 @@ function counterOk(B, manual){
   const P = B.pat; P.tel = null;
   B.stunT = Math.max(B.stunT || 0, 1.8); S.rec.counters = (S.rec.counters || 0) + 1;
   addText(manual ? '되받기!' : '되받기', hero.x, hero.y - 40, '#ffe08a', manual ? 15 : 12, true);
-  hit(B, ST.atk * atkBuff() * skillMulX() * cls().skillMul * 5, 'skill', true);
-  patStg(B, 35);
+  if (fitOn(B)){ hitNoBase = true; hit(B, fitRate() * FIT.ctr / Math.max(1, ST.critDmg), 'skill', true); hitNoBase = false; patStg(B, FIT.ctrStg); }   // 타임 보스·1일 보스: 기본 피해 몇 초 몫
+  else { hit(B, ST.atk * atkBuff() * skillMulX() * cls().skillMul * 5, 'skill', true); patStg(B, 35); }
   shake = Math.max(shake, 0.3); sfx('crit');
   if (!fxOff()){ vadd({type:'shock', x:hero.x, y:hero.y, r0:4, r1:26, w:3, col:'#ffe08a', dur:0.45, ground:true}); vadd({type:'slashx', x:B.x, y:B.y - mobHeight(B) * 0.5, L:16, a:-0.6, col:'#ffe08a', dur:0.35}); }
 }
@@ -3972,9 +4013,9 @@ function updatePat(dt){
       if (T.t >= T.T){
         P.tel = null;
         const [x, y] = heroTile();
-        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(bossHit(B, hero, PAT.tileMul)); S.rec.patHits = (S.rec.patHits || 0) + 1; }
+        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(bossHit(B, hero, fitOn(B) ? FIT.tile : PAT.tileMul)); S.rec.patHits = (S.rec.patHits || 0) + 1; }
         else if (!hero.dead && T.set.size) S.rec.dodges = (S.rec.dodges || 0) + 1;
-        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, bossHit(B, a, PAT.tileMul)); }
+        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, bossHit(B, a, fitOn(B) ? FIT.tile : PAT.tileMul)); }
         shake = Math.max(shake, 0.3); sfx('hit');
         if (!fxOff()) for (const [tx, ty] of T.tiles.filter((_, k) => k % 2 === 0).slice(0, 26)){ const px = isoX(tx, ty), py = isoY(tx, ty); vadd({type:'glow', x:px, y:py - 3, r:8, col:'#ff5a3a', dur:0.35}); vSparks(px, py - 2, 2, '#ff8a5a', 40, 18); }
       }
@@ -3983,8 +4024,8 @@ function updatePat(dt){
       if (T.t >= T.T){
         P.tel = null; B.lunge = 0.25;
         const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
-        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(bossHit(B, hero, PAT.blowMul)); }
-        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, bossHit(B, tg, PAT.blowMul)); }
+        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(bossHit(B, hero, fitOn(B) ? FIT.blow : PAT.blowMul)); }
+        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, bossHit(B, tg, fitOn(B) ? FIT.blow : PAT.blowMul)); }
         shake = Math.max(shake, 0.25);
       }
     } else if (T.kind === 'wipe' && T.t >= T.T){
@@ -4001,7 +4042,7 @@ function updatePat(dt){
   P.cd -= dt;
   if (P.cd <= 0){
     P.cd = PAT.cd[0] + Math.random() * (PAT.cd[1] - PAT.cd[0]); P.n++;
-    if (lv >= 2 && P.n % 3 === 0 && !hero.dead) patCounter(B, P); else patTiles(B, P);
+    if (lv >= 2 && P.n % (fitOn(B) ? 2 : 3) === 0 && !hero.dead) patCounter(B, P); else patTiles(B, P);   // 타임 보스·1일 보스는 되받기가 더 잦다
   }
 }
 const patBusy = m => !!(m.stunT > 0 || m.pat && (m.pat.grogT > 0 || m.pat.tel));   // 묶였거나 휘청이거나 큰 공격을 준비하는 동안 보통 공격을 안 한다
@@ -4054,15 +4095,7 @@ function updateRaid(dt){
   if (R.ending){ R.endT -= dt; if (R.endT <= 0) finishRaid(); return; }
   R.time -= dt;
   if (R.time <= 0){ raidEnd(false); return; }
-  /* 타임 보스 맞추기(2026-11 (32)): 처음 체력은 어림(기억해 둔 실제 피해)이라 틀릴 수 있다. 8·20·35·50·80·100초마다 파티가 실제로 넣은 피해의 평균으로
-     남은 체력을 다시 맞춰, 동료가 몇 명이든(혼자여도) 노말 tgt 65초·지옥 85초쯤에 쓰러지게 한다. 체력 막대 %는 그대로 */
-  if (R.info.tb && !R.boss.dead && (R.tbFit || 0) < TB_FIT_T.length && TB_TIME - R.time >= TB_FIT_T[R.tbFit || 0]){
-    R.tbFit = (R.tbFit || 0) + 1;
-    // 지금까지 파티가 실제로 넣은 피해의 평균 세기로 남은 체력을 다시 맞춘다(뒤로 갈수록 처음 몰아친 기술의 몫이 줄어 고르게 됨)
-    const B = R.boss, el = TB_TIME - R.time, rate = (R.tbDone || 0) / el, tgt = TB_DIFF[R.info.diff].tgt, frac = B.hp / B.maxHp;
-    if (rate > 0 && frac > 0){ const mx = rate * Math.max(10, tgt - el) / frac; B.maxHp = mx; B.hp = mx * frac; R.tbRate = rate; }
-  }
-
+  if (R.info.fit) fitTick(R, dt);   // 타임 보스·1일 보스 체력 맞추기(FIT)
   if (R.info.tb && (R.deaths || 0) >= TB_LIVES && hero.dead && R.allies.every(a => a.down)){ raidEnd(false); return; }
   if (R.awk){
     if (R.awk.show > 0) R.awk.show -= dt;
@@ -4108,7 +4141,7 @@ function updateRaid(dt){
 }
 function raidEnd(win){
   if (!raid || raid.ending) return;
-  bmeterEnd();
+  bmeterEnd(); fitEnd(raid);
   raid.ending = true; raid.win = win; raid.endT = win ? 1.3 : 0.8;
   const B = raid.boss;
   if (!win && !B.dead){ B.dead = true; B.deathT = 0.6; B.fled = true; fx.push({type:'poof', t:0, dur:0.6, x:B.x, y:B.y - 20, big:true}); }
@@ -4234,6 +4267,7 @@ const DBOSS = [
   {name:'삼족오', type:'crow', color:'#ffd24a', part:'any', d:'해 속에 사는 세 발 까마귀(부위는 그날 무작위)'},
 ];
 const DB_TRIES = 3, DB_TIME = 60, DB_GP = [40, 30, 18, 9, 3], DB_SUN_P = 0.1;
+const DB_FIT = {tgt:61, sunTgt:63, hit:0.04, sunHit:0.05, aoe:0.03, self:1};   // 기본 피해로만 치면 60초(일요일 62초)에 쓰러지게(FIT), 보스 한 방 = 최대 체력의 5%(일 6.5%, 방어 빼고)
 const dbDay = () => new Date(now()).getDay();
 const dbBoss = () => DBOSS[dbDay()];
 function dbCheck(){ if (S.dboss.day !== dummyDay()) S.dboss = {day:dummyDay(), n:0, paid:false, won:false}; }
@@ -4255,7 +4289,10 @@ function startDBoss(){
   S.dboss.n++;
   const B = dbBoss(), sun = dbDay() === 0, s = Math.max(1, S.maxStage - (sun ? 0 : 3));
   const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0};
-  startFight(info, [], {hp:mHp(s) * (sun ? 30 : 22) * BOSS_K.hp[S.world], atk:mAtk(s) * 2 * BOSS_K.atk[S.world], aoe:mAtk(s) * 1.2, time:DB_TIME});
+  const est = realDps() * DB_FIT.self, tgt = sun ? DB_FIT.sunTgt : DB_FIT.tgt;
+  info.fit = fitNew(tgt, est, 'fitKd');
+  startFight(info, [], {hp:info.fit.rate * tgt, atk:ST.maxHp * (sun ? DB_FIT.sunHit : DB_FIT.hit), aoe:ST.maxHp * DB_FIT.aoe, time:DB_TIME});
+  raid.boss.tbPct = {hit:sun ? DB_FIT.sunHit : DB_FIT.hit, aoe:DB_FIT.aoe};
   addLog(`1일 보스 ${B.name}! ${DB_TIME}초 안에 쓰러뜨려요.`, 'warn');
   return true;
 }
@@ -4701,7 +4738,7 @@ function update(dt){
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
-    hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * ST.regen * dt);
+    hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * (raid && raid.info.fit ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt);   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
     autoPotion(dt);
     updateMove(hero, dt);
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
@@ -7428,7 +7465,7 @@ function updateMarket(dt){
 function heroSayNpc(n){ market.say = {name:n.name, text:n.say, x:isoX(n.tx, n.ty), y:isoY(n.tx, n.ty)}; market.sayT = 3; }
 // 장면을 누르면: 장터에서는 그 칸으로 걸어간다(상인을 누르면 그 앞까지). 사냥터·레이드는 sceneClick
 function sceneTile(e){
-  const r = cv.getBoundingClientRect(), x = camX + (e.clientX - r.left) / scale, y = camY + (e.clientY - r.top) / scale;
+  const lp = localPt(e, cv), x = camX + lp.x / scale, y = camY + lp.y / scale;
   const u = (x - IOX) / (IW / 2), v = (y - IOY) / (IH / 2);
   return {x, y, tx:Math.round((u + v) / 2), ty:Math.round((v - u) / 2)};
 }
@@ -7520,7 +7557,7 @@ function fxAdd(cls, vars, dur, html){
 }
 function fxPos(el){
   if (el && el.getBoundingClientRect){ const r = el.getBoundingClientRect(); if (r.width) return [r.left + r.width / 2, r.top + r.height / 2]; }
-  return [innerWidth / 2, innerHeight * 0.45];
+  return [viewW() / 2, viewH() * 0.45];
 }
 function heroScreen(){ const r = cv.getBoundingClientRect(); return [r.left + (hero.x - camX) * scale, r.top + (hero.y - 16 - camY) * scale]; }
 function fxSparks(x, y, c, n, sp, w){
@@ -7547,7 +7584,7 @@ function playFx(kind, o = {}){
       fxAdd('fx-glow', Object.assign({c:o.chance ? 'rgba(255,120,60,.9)' : 'rgba(255,220,120,.9)'}, P2), 1000);
       fxAdd('fx-ring', Object.assign({c:o.chance ? '#ff8a3a' : '#ffd76a', s:big ? '18' : '10'}, P2), 800);
       fxSparks(x, y, o.chance ? ['#ffd24a', '#ff7a2a', '#fff'] : ['#fff3b0', '#ffcc4d', '#fff'], big ? 30 : 16, big ? 170 : 110, 6);
-      if (big) fxAdd('fx-rays', {x:innerWidth / 2 + 'px', y:innerHeight * 0.42 + 'px', c:'rgba(255,214,110,.45)'}, 1600);
+      if (big) fxAdd('fx-rays', {x:viewW() / 2 + 'px', y:viewH() * 0.42 + 'px', c:'rgba(255,214,110,.45)'}, 1600);
       fxBanner(o.chance ? '기회의 불꽃!' : '재련 성공!', `+${o.lv}`, o.chance ? '#ff9a4a' : '#ffd76a', '40%', big ? 1.6 : 1.2);
     } else if (o.res === 'break'){
       fxAdd('fx-flash', {c:'rgba(255,40,40,.55)'}, 550);
@@ -7566,9 +7603,9 @@ function playFx(kind, o = {}){
     const g = o.best | 0, c = GR_C[g] || '#fff';
     if (g >= 3){
       fxAdd('fx-flash', {c:g >= 4 ? 'rgba(255,214,90,.6)' : 'rgba(200,140,255,.5)'}, 550);
-      fxAdd('fx-rays', {x:innerWidth / 2 + 'px', y:innerHeight * 0.45 + 'px', c:g >= 4 ? 'rgba(255,214,110,.6)' : 'rgba(210,150,255,.5)', d:'2s'}, 2000);
+      fxAdd('fx-rays', {x:viewW() / 2 + 'px', y:viewH() * 0.45 + 'px', c:g >= 4 ? 'rgba(255,214,110,.6)' : 'rgba(210,150,255,.5)', d:'2s'}, 2000);
       fxBanner(g >= 4 ? '전설 등장!' : '영웅 등장!', o.sub, c, '22%', 1.8);
-    } else if (g >= 2) fxSparks(innerWidth / 2, innerHeight * 0.45, [c, '#fff'], 18, 160, 6);
+    } else if (g >= 2) fxSparks(viewW() / 2, viewH() * 0.45, [c, '#fff'], 18, 160, 6);
   } else if (kind === 'box'){
     if (o.miss){ fxSparks(x, y, ['#9aa4b8', '#cfd6de'], 10, 70, 5); return; }
     fxAdd('fx-glow', Object.assign({c:o.rare ? 'rgba(255,140,200,.9)' : 'rgba(255,220,140,.8)'}, P2), 1000);
@@ -7579,7 +7616,7 @@ function playFx(kind, o = {}){
     fxAdd('fx-glow', Object.assign({c:'rgba(255,170,80,.9)'}, P2), 1000);
     fxAdd('fx-ring', Object.assign({c:'#ffb347', s:'16'}, P2), 800);
     fxSparks(x, y, ['#ffd24a', '#ff8a3a', '#fff'], 30, 170, 6);
-    fxAdd('fx-rays', {x:innerWidth / 2 + 'px', y:innerHeight * 0.42 + 'px', c:'rgba(255,180,90,.45)'}, 1600);
+    fxAdd('fx-rays', {x:viewW() / 2 + 'px', y:viewH() * 0.42 + 'px', c:'rgba(255,180,90,.45)'}, 1600);
     fxBanner('조합 성공!', o.sub, '#ffb347', '38%');
   } else if (kind === 'up'){
     fxAdd('fx-ring', Object.assign({c:o.c || '#ffd76a', s:'4', d:'.5s'}, P2), 500);
@@ -7587,7 +7624,7 @@ function playFx(kind, o = {}){
     if (o.text) fxAdd('fx-float', Object.assign({c:o.c || '#ffd76a'}, P2), 900, esc(o.text));
   } else if (kind === 'job'){
     fxAdd('fx-flash', {c:'rgba(255,240,200,.6)'}, 550);
-    fxAdd('fx-rays', {x:innerWidth / 2 + 'px', y:innerHeight * 0.42 + 'px', c:'rgba(255,214,110,.6)', d:'2.2s'}, 2200);
+    fxAdd('fx-rays', {x:viewW() / 2 + 'px', y:viewH() * 0.42 + 'px', c:'rgba(255,214,110,.6)', d:'2.2s'}, 2200);
     fxBanner('전직!', o.sub, '#ffd76a', '36%', 2.2);
   }
 }
@@ -7600,6 +7637,51 @@ cv.addEventListener('click', e => { if (market) mkCanvasClick(e); else fieldClic
 const buf = document.createElement('canvas'); buf.width = VW * RS; buf.height = H * RS;
 const b = buf.getContext('2d');
 let dpr = 1, scale = 1;
+/* 화면 방향 고르기(2026-11 (37), 사용자 요청: 휴대폰을 돌리지 않고 게임 안에서 가로·세로 바꾸기).
+   orientMode 'auto'(기기 방향 따라)·'land'(가로)·'port'(세로), 이 기기에 기억(ORIENT_KEY).
+   먼저 화면 방향 잠금(screen.orientation.lock, 안드로이드 설치 앱·전체 화면)을 해 보고, 안 되면(아이폰 등) 게임 화면 전체(body)를 90도 돌려 보여 준다.
+   돌린 동안 장면 누르기는 localPt가 되돌려 계산하고, 화면 크기는 viewW·viewH(돌린 뒤의 가로·세로)로 본다 */
+const ORIENT_KEY = 'samhan-orient';
+let orientMode = (() => { try { const v = localStorage.getItem(ORIENT_KEY); return v === 'land' || v === 'port' ? v : 'auto'; } catch (e){ return 'auto'; } })();
+let rotDeg = 0;
+const viewW = () => rotDeg ? innerHeight : innerWidth, viewH = () => rotDeg ? innerWidth : innerHeight;
+function localPt(e, el){
+  const r = el.getBoundingClientRect();
+  if (rotDeg === 90) return {x:e.clientY - r.top, y:r.right - e.clientX};
+  if (rotDeg === -90) return {x:r.bottom - e.clientY, y:e.clientX - r.left};
+  return {x:e.clientX - r.left, y:e.clientY - r.top};
+}
+function applyRot(){
+  const W0 = innerWidth, H0 = innerHeight, physLand = W0 > H0;
+  const want = orientMode === 'land' && !physLand ? 90 : orientMode === 'port' && physLand ? -90 : 0;
+  const bs = document.body.style;
+  if (want !== rotDeg || want){
+    rotDeg = want;
+    document.body.classList.toggle('rotated', !!want);
+    if (!want){ for (const k of ['position', 'left', 'top', 'width', 'height', 'transform', 'transformOrigin', 'overflow']) bs[k] = ''; }
+    else Object.assign(bs, {position:'fixed', left:'0', top:'0', width:H0 + 'px', height:W0 + 'px', transformOrigin:'0 0', overflow:'hidden',
+      transform:want === 90 ? `translateX(${W0}px) rotate(90deg)` : `translateY(${H0}px) rotate(-90deg)`});
+  }
+  document.documentElement.style.setProperty('--vh1', (viewH() / 100) + 'px');
+}
+async function setOrient(mode, gesture){
+  orientMode = mode === 'land' || mode === 'port' ? mode : 'auto';
+  try { localStorage.setItem(ORIENT_KEY, orientMode); } catch (e) {}
+  const so = screen.orientation;
+  if (so && so.lock){
+    try {
+      if (orientMode === 'auto'){ if (so.unlock) so.unlock(); }
+      else {
+        const physLand = innerWidth > innerHeight, need = orientMode === 'land' ? !physLand : physLand;
+        if (need && gesture && !document.fullscreenElement && document.documentElement.requestFullscreen && matchMedia('(pointer: coarse)').matches) await document.documentElement.requestFullscreen({navigationUI:'hide'}).catch(() => {});
+        await so.lock(orientMode === 'land' ? 'landscape' : 'portrait');
+      }
+    } catch (e) {}   // 잠글 수 없는 곳(아이폰·보통 브라우저 창)은 아래에서 화면을 돌려 보여 준다
+  }
+  setTimeout(() => { applyRot(); resize(); }, 60);
+  applyRot(); resize();
+}
+const orientName = () => ({auto:'자동(기기 방향)', land:'가로', port:'세로'})[orientMode];
 function resize(){
   const sc = cv.parentElement, sw = sc.clientWidth || 480, sh = sc.clientHeight || 320;
   const land = sw / sh >= 1.25;
@@ -7615,7 +7697,7 @@ function resize(){
   if (buf.width !== VW * RS){ buf.width = VW * RS; buf.height = H * RS; }
   sc.style.setProperty('--cvt', top + 'px'); sc.style.setProperty('--cvh', ch + 'px');
   // 가로 화면: 화면 높이 500px 이상이면 그대로, 낮을수록 작게(최소 UI_S_MIN)
-  const vh = window.innerHeight || sh;
+  const vh = viewH() || sh;
   uiS = land ? Math.max(UI_S_MIN, Math.min(1, vh / 500)) : 1;
   document.documentElement.style.setProperty('--uiS', uiS.toFixed(3));
   placeQt();
@@ -9177,6 +9259,7 @@ elBig.addEventListener('click', () => {
 });
 $('#newsBtn').addEventListener('click', () => { if (session) showNotes(); });
 // 캐릭터 바꾸기(2026-11 (28), 사용자 요청): 화면 위 아이콘 → 한 번 묻고 저장한 뒤 캐릭터 고르기
+$('#orientBtn').addEventListener('click', () => { const land = !document.body.classList.contains('portrait'); setOrient(land ? 'port' : 'land', true); sfx('click'); addLog(`화면을 ${land ? '세로' : '가로'}로 바꿨어요. [정보]에서 자동(기기 방향 따라)으로 되돌릴 수 있어요.`); });
 $('#charBtn').addEventListener('click', () => {
   if (!session || cut) return;
   showModal('캐릭터 바꾸기', `<p>지금 캐릭터(<b>${esc(S.name)}</b>)를 저장하고 캐릭터 고르기 화면으로 갈까요?${raid ? '<br><span class="small" style="color:#ff8a7a">지금 하는 싸움은 그만두게 돼요.</span>' : ''}</p>`,
@@ -10405,7 +10488,7 @@ function buildRaid(){
     const tbB = w.open ? w.boss : TB_SLOTS[(w.slot + 1) % 8];
     setHTML($('#tbBox'), `<div class="card dcard ${w.open && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(tbB.type, tbB.color)}" alt=""></div><div>
       <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
-      <p class="story">00시부터 3시간마다 30분 동안 나타나요. ${online ? '<b>서버에 만들어진 모든 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 30분 동안은 같은 파티). 보스 체력과 공격은 <b>모인 용사들의 전투력에 맞춰져요</b>(체력 = 모두의 피해를 ${TB_DIFF.normal.hpSec}초(지옥 ${TB_DIFF.hell.hpSec}초) 동안 모은 만큼, 한 번 칠 때 맞는 용사 체력의 ${Math.round(TB_DIFF.normal.hit * 100)}%(지옥 ${Math.round(TB_DIFF.hell.hit * 100)}%)). 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
+      <p class="story">00시부터 3시간마다 30분 동안 나타나요. ${online ? '<b>서버에 만들어진 모든 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 30분 동안은 같은 파티). 보스 체력은 <b>모인 용사들의 피해에 맞춰</b> 제한 시간 언저리에 쓰러질 만큼이라 <b>그냥 두면 이기고 지는 게 반반</b>이에요. 금빛 「!」에 <b>[되받기]</b>(보스를 묶고 크게 침, 두 번이면 휘청), 붉은 칸·강타는 <b>피하기</b>, 휘청일 때(피해 ${FIT.grog}배) 기술을 넣으면 이겨요. 보스 한 방은 방어와 상관없이 맞는 용사 최대 체력의 ${(TB_DIFF.normal.hit * 100).toFixed(1).replace('.0', '')}%(지옥 ${(TB_DIFF.hell.hit * 100).toFixed(1).replace('.0', '')}%), 붉은 칸·강타는 그 ${FIT.tile}~${FIT.blow}배. 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
       <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => `${o.name}(${CLASSES[o.cls].name}${o.mine ? '·내 캐릭터' : ''})`)))}</b></div>
       ${users < 2 ? `<p class="small">${online ? '아직 함께 싸울 캐릭터가 없어요(한 번이라도 싸워 본 캐릭터만 뽑혀요).' : '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 서버의 모든 캐릭터 가운데에서 뽑혀요.'}</p>` : ''}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
@@ -10415,7 +10498,7 @@ function buildRaid(){
       const week = DBOSS.map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
       setHTML($('#dbBox'), `<div class="card dcard ${left > 0 && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
         <div class="ct">1일 보스 · ${B.name}<span class="tag">${S.dboss.won ? '오늘 토벌함' : `오늘 ${left} / ${DB_TRIES}번`}</span></div>
-        <p class="story">${B.d}. 날마다 보스와 <b>치장 부위</b>가 바뀌어요. ${sun ? `<b>일요일</b>엔 이기면 <b>전설 치장</b>(부위 무작위)이 <b>${Math.round(DB_SUN_P * 100)}%</b> 확률로 하나 나와요.` : `이기면 오늘 부위 <b>${SK_PART[part].name}</b> 치장 하나(모든 등급: ${gp}).`} 이기든 지든 하루 한 번 <b>보석 ${fmt(dbGems())}·엽전 ${fmt(dbGold())}</b>을 줘요. ${DB_TIME}초 혼자 싸움.</p>
+        <p class="story">${B.d}. 날마다 보스와 <b>치장 부위</b>가 바뀌어요. ${sun ? `<b>일요일</b>엔 이기면 <b>전설 치장</b>(부위 무작위)이 <b>${Math.round(DB_SUN_P * 100)}%</b> 확률로 하나 나와요.` : `이기면 오늘 부위 <b>${SK_PART[part].name}</b> 치장 하나(모든 등급: ${gp}).`} 이기든 지든 하루 한 번 <b>보석 ${fmt(dbGems())}·엽전 ${fmt(dbGold())}</b>을 줘요. ${DB_TIME}초 혼자 싸움 — 그냥 두면 이기고 지는 게 반반이라, 금빛 「!」에 <b>[되받기]</b>, 붉은 칸은 <b>피하기</b>, 휘청일 때 기술을 넣어야 이겨요.</p>
         <div class="dbweek">${week}</div>
         <button class="btn ${left > 0 && !raid ? 'primary' : ''}" data-db="go" ${left > 0 && !raid ? '' : 'disabled'}>${raid ? (raid.info.dboss ? '싸우는 중…' : '다른 싸움 중') : S.dboss.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '1일 보스 도전' : '오늘은 다 했어요(내일 다시)'}</button>
       </div></div>`); }
@@ -10603,6 +10686,9 @@ function buildRec(){
     <div class="card"><div class="ct">별호 <span class="tag" id="ti-n"></span></div><p class="small" style="margin:2px 0 6px">이룬 일에 따라 얻어요. 하나를 달면 이름표 위에 보이고 그 효과가 붙어요. 가진 별호마다 공격력·체력 +${TITLE_COL}%.</p><div class="tgrid" id="ti-grid"></div></div>
     <div class="recbtns"><button class="btn" id="lookBtn">꾸미기</button><button class="btn" id="clsBtn">직업 바꾸기</button></div>
     <div class="recbtns" style="margin-top:8px"><button class="btn" id="swBtn">캐릭터 바꾸기</button><button class="btn" id="outBtn">로그아웃</button></div>
+    <div class="ph" style="margin-top:16px"><h2>화면 방향</h2><span class="small">휴대폰을 돌리지 않고 바꿔요</span></div>
+    <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
+      <p class="small" style="margin:6px 0 0">오른쪽 위 [화면 돌리기] 아이콘으로도 가로·세로를 바로 바꿔요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요(그때는 휴대폰을 그 방향으로 들어 주세요).</p></div>
     <div class="ph" style="margin-top:16px"><h2>소리</h2></div>
     <div class="card">
       <label class="check"><input type="checkbox" id="snBgm"> 배경음악 (국악풍)</label><input type="range" id="snBv" min="0" max="1" step="0.05" aria-label="배경음악 크기">
@@ -10613,6 +10699,7 @@ function buildRec(){
     <div class="recbtns"><button class="btn" id="tutBtn">튜토리얼 다시 보기</button><button class="btn" id="noteBtn">업데이트 소식</button></div>
     <div class="recbtns" style="margin-top:8px">${canInstall() ? '<button class="btn primary" id="appBtn">앱으로 설치</button>' : ''}<button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
   $('#lookBtn').addEventListener('click', openLookEditor);
+  panel.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { setOrient(b.dataset.orient, true); panel.querySelectorAll('[data-orient]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.orient === orientMode))); }));
   panel.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => { const h = HOWTO[+b.dataset.how]; playCut(h.shots, {title:'하는 법 · ' + h.t}); }));
   $('#clsBtn').addEventListener('click', () => chooseClass(true));
   $('#swBtn').addEventListener('click', switchChar);
@@ -11893,9 +11980,11 @@ function loop(ts){
 }
 function start(hotData){
   REG = loadReg();
-  refreshStats(); resetRuntime(); resize(); applySpeedBtn(); applyModeBtns();
+  refreshStats(); resetRuntime(); applyRot(); resize(); applySpeedBtn(); applyModeBtns();
   if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement);
   else window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => { const r0 = rotDeg; applyRot(); if (r0 !== rotDeg) resize(); });   // 기기를 돌리면 돌림을 다시 맞춤
+  if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
   setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); }, 200);
@@ -11956,7 +12045,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, DBOSS, startDBoss, finishDBoss, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
