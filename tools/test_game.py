@@ -994,13 +994,26 @@ async def main():
           G.bagAdd({t:'acc', k:'ring', g:4, p:900}, true); const up = S.bag.find(x => x.p === 900); G.bagEquip(up.id);
           const swapped = S.acc.ring.p === 900 && S.bag.some(x => x.p === 500);
           const g0 = S.gems; const sold = G.bagSellWorse(); const leftBag = S.bag.length;
-          S.gems = 1e6; S.mkNpc = {day:'', got:[]}; const o = G.npcOffers(); const nb = G.npcBuy(2); const nb2 = G.npcBuy(2);
+          S.gems = 1e6; S.mkNpc = {day:'', got:[]}; G.npcLuck = 0; const o = G.npcOffers(); const nb = G.npcBuy(2); const nb2 = G.npcBuy(2); G.npcLuck = null;
           G.enterMarket(); const inMk = !!G.market && G.mobs.length === 0; for (let i = 0; i < 40; i++) G.update(0.05); const noMobs = G.mobs.length === 0;
           G.leaveMarket(); for (let i = 0; i < 60; i++) G.update(0.05);
           return {inBag, swapped, sold: sold.n, gemsUp: S.gems > 0, leftBag, offers: o.length, nb, nb2: nb2.err, myth: S.bag.some(x => x.t === 'myth'), inMk, noMobs, back: !G.market && G.mobs.length > 0}; }""")
         check(bg['inBag'] and bg['swapped'] and bg['sold'] == 2 and bg['leftBag'] == 0, f'가방: 약한 장신구는 가방으로, 끼면 옛것이 가방으로, 안 쓰는 것은 팔린다 {bg}')
         check(bg['offers'] == 5 and bg['nb'] == {'ok': True} and bg['nb2'] == 'gone' and bg['myth'] and bg['inMk'] and bg['noMobs'] and bg['back'],
               f'장터: NPC 상인은 날마다 하나씩, 장터 마을에서는 사냥이 멈추고 나오면 다시 사냥 {bg}')
+        # 6-9a) NPC 상인: 12시간마다 바뀌고, 아주 낮은 확률로 귀한 물건(전설 치장·전설 장신구) 하나를 보석 2,000에
+        nr = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true;
+          G.npcLuck = 0; const n0 = G.npcOffers().length, s0 = G.npcSlot(), o0 = JSON.stringify(G.npcOffers());
+          const same = o0 === JSON.stringify(G.npcOffers());
+          G.addTime(G.npcLeft() + 60000); const s1 = G.npcSlot(), o1 = JSON.stringify(G.npcOffers());
+          G.npcLuck = 100; const r = G.npcOffers()[5];
+          S.gems = 5000; S.mkNpc = {day:'', got:[]}; S.bag = []; const g0 = S.gems; const nb = G.npcBuy(5), paid = g0 - S.gems, nb2 = G.npcBuy(5);
+          const got = r.it.t === 'acc' ? (S.acc[r.it.k].g === 4 && S.acc[r.it.k].p === r.it.p) || S.bag.some(x => x.t === 'acc' && x.g === 4 && x.p === r.it.p)
+            : Object.values(S.skin.eq).concat(S.skin.inv).some(x => x.c === r.it.c && x.g === 4);
+          G.npcLuck = null; G.closePage && G.closePage();
+          return {n0, same, changed: s0 !== s1 && o0 !== o1, rare: !!r.rare, price: r.price, t: r.it.t, g: r.it.g, nb, paid, nb2: nb2.err, got}; }""")
+        check(nr['n0'] == 5 and nr['same'] and nr['changed'] and nr['rare'] and nr['price'] == 2000 and nr['g'] == 4 and nr['nb'] == {'ok': True} and nr['paid'] == 2000 and nr['nb2'] == 'gone' and nr['got'],
+              f'장터 상인: 12시간마다 목록이 바뀌고(같은 때엔 그대로), 귀한 물건(전설)은 보석 2,000에 하나만 {nr}')
         # 6-9b) 눌러서 움직이기: 장터에서 누른 칸까지 그림도 따라 걷고, 사냥터에서 땅을 누르면 그 칸으로 가서(반자동) 잠시 버티고, 몬스터를 누르면 그 몬스터를 노린다
         tp = await page.evaluate("""() => { const G = window.__game, S = G.S, h = G.hero; G.quiet = true;
           const at = (tx, ty) => { const rc = document.getElementById('cv').getBoundingClientRect(); const x = 222 + (tx - ty) * 9, y = 40 + (tx + ty) * 4.5;

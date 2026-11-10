@@ -901,6 +901,8 @@ body.portrait .log{bottom:126px}
 .bitem.up{box-shadow:0 0 0 1px rgba(125,255,154,.35),0 0 12px -4px rgba(125,255,154,.6)}
 h3.sub{font-size:13px;margin:14px 0 6px;color:var(--gold)}
 .mklist{display:grid;gap:6px;margin-top:8px}
+.mkrare{border-color:var(--gold);box-shadow:0 0 16px rgba(255,200,90,.28)}
+.mkrare .ct{color:var(--gold)}
 .mkrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;border:1px solid var(--line-2);background:linear-gradient(180deg,var(--panel-2),var(--panel))}
 .mkrow .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--g);background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb,var(--g) 55%,transparent)}
 .mkrow .ic svg{width:18px;height:18px}
@@ -6470,10 +6472,37 @@ async function mkClaim(){
   try { const g = Math.max(0, Math.floor(+(await rpc('samhan_market_claim', {p_token:online.token})) || 0)); S.gems += g; if (g) mkSaveNow(); return {gems:g}; }
   catch (e){ if (e.code === 'bad_token') lostOnline(); return {err:e.code}; }
 }
-// NPC 상인(서버 없이도): 날마다 바뀌는 물건 다섯 가지, 하나씩만
+// NPC 상인(서버 없이도): 12시간마다(0시·12시, 기기 시계) 바뀌는 물건 다섯 가지, 하나씩만.
+// 귀한 물건(2026-11 (39), 사용자 요청): 바뀔 때마다 아주 낮은 확률 NPC_RARE_P로 엔드템 하나를 보석 NPC_RARE_GEMS에 판다
+// (치장이 열렸으면 전설 치장(옵션 최고에 가깝게) 60%·전설 장신구 40%, 아니면 전설 장신구). 같은 때·세계·캐릭터면 늘 같은 목록(다시 들어와도 안 바뀜)
 const strHash = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
+const NPC_RARE_P = 0.02, NPC_RARE_GEMS = 2000, NPC_SK_SHARE = 0.6;
+function npcSlot(){ const d = new Date(now()); return today() + (d.getHours() < 12 ? 'a' : 'b'); }
+function npcLeft(){ const d = new Date(now()); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() < 12 ? 12 : 24).getTime() - now(); }
+function npcRare(){
+  const rnd = rng(strHash(npcSlot() + ':rare:' + S.world + ':' + (session ? session.cid : '')));
+  const luck = window.__game && window.__game.npcLuck != null ? window.__game.npcLuck : 1;
+  if (!(rnd() < NPC_RARE_P * luck)) return null;
+  if (skinOpen() && rnd() < NPC_SK_SHARE){
+    const ch = skCh(), pool = SK_LIST.filter(x => x.c <= ch), list = pool.length ? pool : SK_LIST.slice(0, 1), sk = list[Math.floor(rnd() * list.length)];
+    const P = SK_PART[sk.p], G = SK_GRADES[4], rest = Object.keys(SK_STATS).filter(t => t !== P.stat);
+    for (let i = rest.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+    return {it:{t:'skin', c:sk.c, g:4, l:[P.stat, ...rest].slice(0, G.n).map(t => [t, Math.round(G.se * (0.95 + 0.05 * rnd()) * 100) / 100])}, price:NPC_RARE_GEMS, rare:true};
+  }
+  const ks = ACC_ORDER.filter(accOpen), ak = ks[Math.floor(rnd() * ks.length)];
+  return {it:{t:'acc', k:ak, g:4, p:Math.max(1, Math.round(ACC[ak].base[4] * (1 + effStage(Math.max(1, S.maxStage)) / 60) * 1.12))}, price:NPC_RARE_GEMS, rare:true};
+}
+let npcRareSaid = '';
+function npcRareNote(){   // 귀한 물건이 나오면 한 번 알려 준다(200ms마다 부름)
+  if (!session || cut) return;
+  const key = npcSlot() + ':' + S.world + ':' + session.cid;
+  if (npcRareSaid === key) return;
+  npcRareSaid = key;
+  const r = npcRare();
+  if (r && !(S.mkNpc.day === npcSlot() && S.mkNpc.got.includes(5))) addLog(`보부상 덕보가 귀한 물건(${itemInfo(r.it).name})을 가져왔대요! 장터 [상인]에서 보석 ${fmt(NPC_RARE_GEMS)}에 팔아요(${Math.round(npcLeft() / 3600000)}시간쯤 남음).`, 'gain');
+}
 function npcOffers(){
-  const rnd = rng(strHash(today() + ':' + S.world + ':' + (session ? session.cid : ''))), out = [], wg = Math.min(4, S.world);
+  const rnd = rng(strHash(npcSlot() + ':' + S.world + ':' + (session ? session.cid : ''))), out = [], wg = Math.min(4, S.world);
   for (let k = 0; k < 2; k++){
     const ak = ACC_ORDER[(rnd() * 3) | 0], g = Math.min(4, wg + (rnd() < 0.25 ? 1 : 0)), p = Math.max(1, Math.round(ACC[ak].base[g] * (1 + effStage(Math.max(1, S.maxStage)) / 60) * (0.85 + rnd() * 0.25)));
     out.push({it:{t:'acc', k:ak, g, p}, price:[120, 360, 900, 2400, 6000][g] * (1 + S.world)});
@@ -6482,10 +6511,11 @@ function npcOffers(){
   out.push({it:{t:'myth', k:m.k, p}, price:p * 12});
   out.push({it:{t:'mat', k:MATS[Math.min(2, S.world)].k, n:5}, price:60});
   out.push({it:{t:'dust', n:150 * (1 + S.world)}, price:80});
+  const rare = npcRare(); if (rare) out.push(rare);   // 늘 다섯 번째(번호 5)
   return out;
 }
 function npcBuy(i){
-  if (S.mkNpc.day !== today()) S.mkNpc = {day:today(), got:[]};
+  if (S.mkNpc.day !== npcSlot()) S.mkNpc = {day:npcSlot(), got:[]};
   const o = npcOffers()[i];
   if (!o || S.mkNpc.got.includes(i)) return {err:'gone'};
   if (S.gems < o.price) return {err:'gems'};
@@ -9930,7 +9960,7 @@ async function mkLoad(){
   if (currentTab === 'market') buildTab('market', true);
 }
 function buildMarket(){
-  if (S.mkNpc.day !== today()) S.mkNpc = {day:today(), got:[]};
+  if (S.mkNpc.day !== npcSlot()) S.mkNpc = {day:npcSlot(), got:[]};
   const on = mkOn(), seg = `<div class="seg four" role="group" aria-label="장터 보기">${[['buy', '사기'], ['sell', '팔기'], ['mine', '내 물건'], ['npc', '상인']].map(([k, n]) => `<button id="mk-${k}" aria-pressed="${mkView === k}">${n}</button>`).join('')}</div>`;
   const offNote = `<div class="card"><p class="small" style="margin:0">${MK_ERR.off} 지금은 <b>[상인]</b>에서 NPC 상인과 거래할 수 있어요.</p></div>`;
   let body = '';
@@ -9955,9 +9985,11 @@ function buildMarket(){
         <div class="mklist">${mkMineRows === null || mkLoading ? '<p class="small">불러오는 중…</p>' : mkMineRows.length ? mkMineRows.map(r => mkRowHTML(r.it, r.sold ? '<span class="tag">팔림</span>' : `<button class="btn sm" data-cancel="${r.id}">${r.expired ? '돌려받기' : '내리기'}</button>`, r.sold ? `${esc(r.buyer)}님이 삼 · 보석 ${fmt(r.price)}` : `보석 ${fmt(r.price)}${r.expired ? ' · 기한 지남' : ' · 파는 중'}`)).join('') : '<p class="small">올린 물건이 없어요.</p>'}</div>`;
     }
   } else {
-    const offers = npcOffers();
-    body = `<p class="hint" style="margin-top:10px">떠돌이 상인 <b>보부상 덕보</b>가 날마다 다른 물건을 하나씩만 팔아요(자정에 바뀜). 서버 없이도 거래할 수 있어요. 가방의 물건은 [가방]에서 상인에게 팔 수 있어요.</p>
-      <div class="mklist">${offers.map((o, i) => mkRowHTML(o.it, S.mkNpc.got.includes(i) ? '<span class="tag">오늘 팔림</span>' : `<button class="btn sm primary" data-npc="${i}"><span class="gem"></span>${fmt(o.price)}</button>`)).join('')}</div>`;
+    const offers = npcOffers(), lm = Math.ceil(npcLeft() / 60000), row = (o, i) => mkRowHTML(o.it, S.mkNpc.got.includes(i) ? '<span class="tag">팔림</span>' : `<button class="btn sm primary" data-npc="${i}"><span class="gem"></span>${fmt(o.price)}</button>`);
+    body = `<p class="hint" style="margin-top:10px">떠돌이 상인 <b>보부상 덕보</b>가 <b>12시간마다</b>(0시·12시) 물건을 바꿔요. 물건마다 하나씩만 팔고, 서버 없이도 거래할 수 있어요. 바뀔 때마다 <b>${Math.round(NPC_RARE_P * 100)}%</b> 확률로 <b>귀한 물건</b>(전설 치장·전설 장신구) 하나를 보석 ${fmt(NPC_RARE_GEMS)}에 가져와요. 가방의 물건은 [가방]에서 상인에게 팔 수 있어요.</p>
+      <p class="small" style="margin:4px 0 8px">다음에 바뀔 때까지 <b>${Math.floor(lm / 60)}시간 ${lm % 60}분</b></p>
+      ${offers[5] ? `<div class="card mkrare"><div class="ct">귀한 물건<span class="tag">${Math.round(NPC_RARE_P * 100)}% 확률</span></div>${row(offers[5], 5)}</div>` : ''}
+      <div class="mklist">${offers.slice(0, 5).map(row).join('')}</div>`;
   }
   panel.innerHTML = `<div class="ph"><h2>장터</h2><span class="small">${on ? '온라인 · 다른 용사와 거래' : '혼자 · NPC 상인만'}</span></div>${seg}${mkMsg ? `<p class="small mkmsg">${esc(mkMsg)}</p>` : ''}${body}`;
   mkMsg = '';
@@ -11989,7 +12021,7 @@ function start(hotData){
   if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); npcRareNote(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -12046,7 +12078,7 @@ if (location.search.indexOf('simtest') >= 0){
     subOpen, subGems, get PART1_END(){ return PART1_END; }, get PART2_END(){ return PART2_END; },
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
-    bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
+    bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
