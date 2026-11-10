@@ -68,6 +68,10 @@ SIM = r"""
       }
       for (const gd of G.GUARDS) if (G.guardOpen(gd)) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k)) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지
       if (G.guardOpen(G.GUARDS[1]) && G.S.guard.on !== 'jowang') G.guardSet('jowang');
+      for (const sl of ['weapon', 'armor']) G.ascend(sl);   // 신화·태초 각성(되면 바로)
+      { const keepG = ['weapon', 'armor'].reduce((a, sl) => { const N = G.ascNeed(sl); return a + (!N.max && N.world ? N.A.grudge : 0); }, 0);   // 결이야기: 각성에 쓸 원한 조각은 남기고 낮은 마디부터
+        const so = G.SOULS.filter(x => G.S.soul.own[x.k] && G.soulBond(x.k) < 3).sort((a, b) => G.soulBond(a.k) - G.soulBond(b.k) || b.g - a.g);
+        for (const x of so) { if (G.S.grudge - [10, 30, 60][G.soulBond(x.k)] < keepG || !G.bondUp(x.k)) break; } }
       for (let g = 0; g < 400; g++) {
         let best = null, bs = Infinity;
         for (const k of Object.keys(Wt)) { const b = G.buyInfo(k); if (!b.n) continue; const sc = b.cost * Wt[k]; if (sc < bs) { bs = sc; best = k; } }
