@@ -2059,8 +2059,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-17', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-18', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 눌러서 움직이기'],
+  ['땅·몬스터 누르기', '사냥터·레이드에서 땅을 누르면 용사가 그 칸으로 걸어가요(금빛 표시). 몬스터를 누르면 그 몬스터부터 쳐요. [반자동]이면 도착한 자리에서 6초 동안 버티며 닿는 적만 치고, 그 뒤로는 다시 알아서 사냥해요.'],
+  ['장터에서 안 움직이던 문제', '장터 마을에서 땅을 눌러도 용사가 제자리에 서 있던 문제를 고쳤어요. 이제 누른 곳까지 걸어가요(다른 용사도 걸어 다니는 모습이 보여요).'],
   ['#', '2026-11-10 · 신화 펫 · 보물 동굴 · 퀘스트 바로 가기'],
   ['신화 펫 · 환수', '전설보다 높은 신화 등급 펫 6마리: 부상의 뇌수·바쿠·아마비에, 곤륜의 필방·백택·비휴. 바쿠·백택은 이야기 보상으로 확정, 나머지는 그 땅에 들어간 뒤 펫 소환에서 0.3%(200번 안에 확정).'],
   ['보물 동굴', '[레이드] → [보물 동굴] 하루 2번. 보물 이무기를 쓰러뜨리면 신화 조각과 7% 확률로 신화 보물. 신화 조각 30개로 원하는 신화 보물을 만들어요.'],
@@ -3141,7 +3144,7 @@ function heroDie(){
     addText('불사약!', hero.x, hero.y - 40, '#ffe08a', 12, true); fx.push({type:'awaken', t:0, dur:0.9, color:'#ffe08a', x:hero.x, y:hero.y - 12}); sfx('awaken');
     return;
   }
-  hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
+  hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null; hero.goal = null; hero.holdT = 0; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
   if (raid){
     hero.deadT = 3;
     if (raid.info.tb){ raid.deaths = (raid.deaths || 0) + 1; if (raid.deaths >= TB_LIVES){ hero.deadT = Infinity; for (const a of raid.allies) if (a.down) a.downT = Infinity; addLog(`파티가 ${TB_LIVES}번 쓰러져 더는 일어날 수 없어요!`, 'warn'); return; } }
@@ -3161,7 +3164,7 @@ function heroDie(){
 }
 function respawn(){
   hero.dead = false; hero.hp = ST.maxHp; hero.atkT = 0.3; spawnT = 0.8;
-  hero.tx = hero.fx = 7 + FOX; hero.ty = hero.fy = 6 + FOY; hero.moving = false; hero.dir = 'down';
+  hero.tx = hero.fx = 7 + FOX; hero.ty = hero.fy = 6 + FOY; hero.moving = false; hero.dir = 'down'; hero.goal = null; hero.holdT = 0;
   placeOf(hero);
   fx.push({type:'poof', t:0, dur:0.4, x:hero.x, y:hero.y - 8});
 }
@@ -3267,7 +3270,7 @@ function startFight(info, party, o){
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
-  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false});
+  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0});
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
@@ -3592,7 +3595,7 @@ function finishRaid(){
   const R = raid;
   raid = null;
   mobs = []; projs = []; bossActive = false; bossRef = null; spawnT = 1;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false, goal:null, holdT:0});
   placeOf(hero);
   fx.push({type:'poof', t:0, dur:0.4, x:hero.x, y:hero.y - 8});
   if (currentTab === 'raid') buildTab('raid', true);
@@ -3907,6 +3910,17 @@ function nearestMob(){
   return best;
 }
 
+// 지금 자리에서 바로 칠 수 있는 가장 가까운 적(누른 자리에서 버틸 때)
+function mobInReach(){
+  const C = cls(); let best = null, bd = 1e9;
+  for (const m of mobs){
+    if (m.dead || m.spawnT > 0) continue;
+    const dx = m.tx - hero.tx, dy = m.ty - hero.ty, d = Math.abs(dx) + Math.abs(dy);
+    const ok = C.range === 1 ? d === 1 : Math.hypot(dx, dy) <= C.range + 0.01;
+    if (ok && d < bd){ bd = d; best = m; }
+  }
+  return best;
+}
 function update(dt){
   gtime += dt; S.rec.play += dt;
   if (S.chosen && !raid && !market && S.mode === 'auto') offTrack(dt);
@@ -3929,6 +3943,7 @@ function update(dt){
   if (hero.jobBuffT > 0) hero.jobBuffT -= dt;
   if (hero.dr4T > 0) hero.dr4T -= dt;
   if (hero.invisT > 0) hero.invisT -= dt;
+  if (hero.holdT > 0) hero.holdT -= dt;
 
   // 부상의 해돋이 기운: 사냥 속도와 상관없이 지금까지 나아간 단계만큼 경험치가 조금씩 쌓인다
   if (S.world >= 3 && !hero.dead) gainExp(mExp(S.maxStage) * CONT[S.world].sun * gainMul('exp') * dt);
@@ -3961,9 +3976,17 @@ function update(dt){
     autoPotion(dt);
     updateMove(hero, dt);
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
-    if (!hero.moving){
+    if (!hero.moving && hero.goal){   // 누른 칸으로 걷기(사냥보다 먼저)
+      const [gx, gy] = hero.goal;
+      hero.goalT -= dt;
+      const there = hero.tx === gx && hero.ty === gy;
+      if (!there && hero.goalT > 0 && stepToward(hero, gx, gy, heroStep())) hero.goalBlk = 0;
+      else if (!there && hero.goalT > 0 && (hero.goalBlk += dt) < 0.8){ /* 막혔으면 잠깐 기다렸다 다시 */ }
+      else { hero.goal = null; hero.holdT = TAP_HOLD[S.mode] || TAP_HOLD.auto; hero.target = null; }
+    }
+    if (!hero.moving && !hero.goal){
       let tg = hero.target;
-      if (!tg || tg.dead || tg.spawnT > 0) tg = hero.target = nearestMob();
+      if (!tg || tg.dead || tg.spawnT > 0) tg = hero.target = hero.holdT > 0 ? mobInReach() : nearestMob();
       if (tg){
         hero.idleT = 0;
         const dx = tg.tx - hero.tx, dy = tg.ty - hero.ty, C = cls();
@@ -3972,7 +3995,8 @@ function update(dt){
           hero.engaged = true;
           if (dx || dy) hero.dir = dirOf(dx, dy);
           if (hero.atkT <= 0) attack(tg);
-        } else {
+        } else if (hero.holdT > 0 && !tg.boss){ hero.engaged = false; hero.target = null; }   // 제자리 버티는 중: 닿지 않는 적은 쫓지 않는다
+        else {
           hero.engaged = false;
           if (!stepToward(hero, tg.tx, tg.ty, heroStep())){
             const other = nearestOther(tg);
@@ -3982,7 +4006,7 @@ function update(dt){
       } else {
         hero.engaged = false;
         hero.idleT += dt;
-        if (hero.idleT > 1.2){ hero.idleT = 0; randomStep(hero, heroStep() * 1.5); }
+        if (hero.idleT > 1.2 && !(hero.holdT > 0)){ hero.idleT = 0; randomStep(hero, heroStep() * 1.5); }
       }
     }
   }
@@ -5986,7 +6010,7 @@ function enterMarket(){
   mobs = []; projs = []; bossActive = false; bossRef = null;
   market = {peers:new Map(), target:null, goal:null, sendT:0, say:null, sayT:0};
   document.body.classList.add('in-market');
-  Object.assign(hero, {tx:MK_IN[0], ty:MK_IN[1], fx:MK_IN[0], fy:MK_IN[1], moving:false, dir:'up', dead:false, target:null});
+  Object.assign(hero, {tx:MK_IN[0], ty:MK_IN[1], fx:MK_IN[0], fy:MK_IN[1], moving:false, dir:'up', dead:false, target:null, goal:null, holdT:0});
   placeOf(hero); camSnap = true;
   addLog('장터 마을에 들어왔어요. 땅을 누르면 걸어가고, 상인·알림판 앞으로 가면 거래할 수 있어요.', 'good'); sfx('quest');
   mkSend(true);
@@ -5995,7 +6019,7 @@ function leaveMarket(){
   if (!market) return;
   mkSend(false, true);
   market = null; resetRuntime(); document.body.classList.remove('in-market');
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', target:null});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', target:null, goal:null, holdT:0});
   placeOf(hero); camSnap = true; spawnT = 0.6;
   addLog('사냥터로 돌아왔어요.', 'good');
 }
@@ -6020,6 +6044,7 @@ function mkRecv(m){
 function updateMarket(dt){
   const M = market;
   updateMove(hero, dt);
+  if (!hero.moving && M.goal && !(hero.tx === M.goal[0] && hero.ty === M.goal[1]) && !tileFree(M.goal[0], M.goal[1], hero)) M.goal = null;
   if (!hero.moving && M.goal){
     const [gx, gy] = M.goal;
     if (hero.tx === gx && hero.ty === gy || !stepToward(hero, gx, gy, heroStep())){
@@ -6028,27 +6053,65 @@ function updateMarket(dt){
       mkSend(true);
     } else mkSend(true);
   }
+  placeOf(hero);   // 칸이 바뀐 만큼 그림 자리도 옮긴다(빠져 있어서 눌러도 용사가 멈춰 보였음)
   M.sendT -= dt; if (M.sendT <= 0) mkSend(true);
   for (const [id, p] of M.peers){
     p.seen -= dt; if (p.seen <= 0){ M.peers.delete(id); continue; }
     updateMove(p, dt);
     if (!p.moving && (p.tx !== p.gx || p.ty !== p.gy)){ const dx = Math.sign(p.gx - p.tx), dy = dx ? 0 : Math.sign(p.gy - p.ty); startMove(p, p.tx + dx, p.ty + dy, 0.22); }
+    placeOf(p);
   }
   if (M.sayT > 0) M.sayT -= dt;
   updatePets(dt);
 }
 function heroSayNpc(n){ market.say = {name:n.name, text:n.say, x:isoX(n.tx, n.ty), y:isoY(n.tx, n.ty)}; market.sayT = 3; }
-// 장면을 누르면: 장터에서는 그 칸으로 걸어간다(상인을 누르면 그 앞까지)
-function mkCanvasClick(e){
-  if (!market || cut) return;
+// 장면을 누르면: 장터에서는 그 칸으로 걸어간다(상인을 누르면 그 앞까지). 사냥터·레이드는 sceneClick
+function sceneTile(e){
   const r = cv.getBoundingClientRect(), x = camX + (e.clientX - r.left) / scale, y = camY + (e.clientY - r.top) / scale;
   const u = (x - IOX) / (IW / 2), v = (y - IOY) / (IH / 2);
-  let tx = Math.round((u + v) / 2), ty = Math.round((v - u) / 2);
+  return {x, y, tx:Math.round((u + v) / 2), ty:Math.round((v - u) / 2)};
+}
+function mkCanvasClick(e){
+  if (!market || cut) return;
+  const T = sceneTile(e), x = T.x, y = T.y;
+  let tx = T.tx, ty = T.ty;
   const n = MK_NPC.find(q => Math.abs(isoX(q.tx, q.ty) - x) < 12 && y > isoY(q.tx, q.ty) - 34 && y < isoY(q.tx, q.ty) + 6) || mkNpcAt(tx, ty);
   if (n){ tx = n.tx; ty = n.ty + 1; market.goalNpc = n; } else market.goalNpc = null;
   tx = Math.max(0, Math.min(COLS - 1, tx)); ty = Math.max(TOPR, Math.min(ROWS - 1, ty));
   market.goal = [tx, ty];
   fx.push({type:'poof', t:0, dur:0.3, x:isoX(tx, ty), y:isoY(tx, ty)});
+}
+// 사냥터·레이드에서 장면을 누르면(2026-11 (18)): 몬스터를 누르면 그 몬스터를 노리고, 땅을 누르면 그 칸으로 걸어간다.
+// 도착하면 잠시(반자동 TAP_HOLD.semi초·자동 TAP_HOLD.auto초) 그 자리에서 닿는 적만 치고, 그 뒤로는 다시 알아서 사냥한다
+const TAP_HOLD = {auto:1.5, semi:6};
+function fieldClick(e){
+  if (cut || market || (!session && !window.__game) || hero.dead) return;
+  const T = sceneTile(e);
+  let best = null, bd = 1e9;
+  for (const m of mobs){
+    if (m.dead || m.spawnT > 0) continue;
+    const h = mobHeight(m), half = Math.max(8, h * (m.raid ? 0.35 : 0.45));
+    if (Math.abs(T.x - m.x) > half || T.y < m.y - h - 3 || T.y > m.y + 5) continue;
+    const d = Math.abs(T.x - m.x) + Math.abs(T.y - (m.y - h / 2));
+    if (d < bd){ bd = d; best = m; }
+  }
+  if (best){
+    hero.target = best; hero.goal = null; hero.holdT = 0;
+    fx.push({type:'ring', t:0, dur:0.35, x:best.x, y:best.y - 2, color:'#ff7a5a', r:10});
+    return;
+  }
+  const tx = Math.max(0, Math.min(COLS - 1, T.tx)), ty = Math.max(TOPR, Math.min(ROWS - 1, T.ty));
+  hero.goal = [tx, ty]; hero.goalT = 8; hero.goalBlk = 0; hero.holdT = 0; hero.target = null; hero.engaged = false;
+  fx.push({type:'poof', t:0, dur:0.3, x:isoX(tx, ty), y:isoY(tx, ty)});
+}
+// 누른 칸 표시: 발밑에 깜빡이는 금빛 마름모
+function drawGoalMark(){
+  const g = market ? market.goal : hero.goal;
+  if (!g) return;
+  const x = isoX(g[0], g[1]), y = isoY(g[0], g[1]) + 1, pu = 0.5 + 0.5 * Math.sin(gtime * 8);
+  b.save(); b.globalAlpha = 0.55 + 0.35 * pu; b.strokeStyle = '#ffd24a'; b.lineWidth = 1.2;
+  b.beginPath(); b.moveTo(x, y - IH / 2); b.lineTo(x + IW / 2, y); b.lineTo(x, y + IH / 2); b.lineTo(x - IW / 2, y); b.closePath(); b.stroke();
+  b.globalAlpha = 0.18 + 0.12 * pu; b.fillStyle = '#ffd24a'; b.fill(); b.restore();
 }
 // 장터 그리기: NPC·알림판·다른 용사(이름표는 drawMarketTags)
 function drawMarketEnt(e){
@@ -6172,7 +6235,7 @@ function upFx(el, text, c){ const t = performance.now(); if (t - upFxT < 90) ret
 
 /* ================= 그리기 ================= */
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-cv.addEventListener('click', e => mkCanvasClick(e));   // 장터 마을: 누른 칸으로 걷기
+cv.addEventListener('click', e => { if (market) mkCanvasClick(e); else fieldClick(e); });   // 누른 칸으로 걷기(장터·사냥터·레이드)
 const buf = document.createElement('canvas'); buf.width = VW * RS; buf.height = H * RS;
 const b = buf.getContext('2d');
 let dpr = 1, scale = 1;
@@ -6739,6 +6802,7 @@ function render(){
   ents.push({y:hero.y + 0.1, hero:true});
   if (market){ for (const n of MK_NPC) ents.push({y:isoY(n.tx, n.ty) + 1, npc:n}); for (const p2 of market.peers.values()) ents.push({y:p2.y, peer:p2}); }
   ents.sort((a, b2) => a.y - b2.y);
+  drawGoalMark();
   drawVfx(true);
   for (const e of ents){ if (e.hero) drawEntityHero(); else if (e.npc || e.peer) drawMarketEnt(e); else if (e.a) drawAlly(e.a); else if (e.pet) drawPet(e.pet); else drawMob(e.m); }
   for (const p of parts) if (p.type === 'gem'){ b.globalAlpha = Math.max(0, 1 - p.t / p.dur); P(p.x - 1, p.y - 2, 3, 1, '#7fdcff'); P(p.x - 2, p.y - 1, 5, 1, '#5ac8f0'); P(p.x - 1, p.y, 3, 1, '#2a88b0'); P(p.x, p.y + 1, 1, 1, '#2a88b0'); P(p.x, p.y - 3, 1, 1, '#ffffff'); b.globalAlpha = 1; }
@@ -7556,7 +7620,7 @@ function applyModeBtns(){
 }
 elMode.addEventListener('click', () => {
   S.mode = S.mode === 'semi' ? 'auto' : 'semi'; applyModeBtns(); sfx('click');
-  addLog(S.mode === 'semi' ? '반자동: 사냥은 알아서, 기술은 칸을 눌러 직접 써요.' : '자동: 사냥도 기술도 알아서 해요.', 'good');
+  addLog(S.mode === 'semi' ? '반자동: 기술은 칸을 눌러 직접 써요. 땅을 누르면 그 칸으로 걷고 잠시 그 자리에서 버텨요. 몬스터를 누르면 그 몬스터부터 쳐요.' : '자동: 사냥도 기술도 알아서 해요. 땅이나 몬스터를 누르면 그쪽으로 가요.', 'good');
 });
 elBossMode.addEventListener('click', () => {
   S.bossAuto = !S.bossAuto; S.autoBoss = S.bossAuto; bossRetry = 0; applyModeBtns(); sfx('click');
@@ -8800,7 +8864,8 @@ const HOWTO = [
   {ic:'⚔', t:'사냥과 보스', d:'몹 25마리 → 보스', shots:[
     ['village', 'hero,kkachi,m:frog:#5fbf4a,m:boar:#7a4a2a', 'shake', [['까치', '용사님은 알아서 몬스터를 찾아 싸워요. 25마리를 잡으면…'], ['', '위 가운데 「보스까지」 막대가 꽉 차요.']]],
     ['village', 'hero,m:boar:#b04a2a', 'flash', [['까치', '보스가 나타나요! 30초 안에 쓰러뜨리면 다음 단계예요.'], ['까치', '[보스 자동]이면 알아서 도전하고, [보스 수동]이면 가운데 아래 [보스 도전!]을 눌러요.']]],
-    ['village', 'hero,kkachi', 'sparkle', [['까치', '지면 같은 단계에서 조금 더 사냥해 힘을 키우면 돼요. 저승부터 보스는 더 크고 세요!']]]]},
+    ['village', 'hero,kkachi', 'sparkle', [['까치', '지면 같은 단계에서 조금 더 사냥해 힘을 키우면 돼요. 저승부터 보스는 더 크고 세요!']]],
+    ['village', 'hero,kkachi,m:frog:#5fbf4a', 'light', [['까치', '땅을 누르면 용사가 그 칸으로 걸어가요. 몬스터를 누르면 그 몬스터부터 쳐요!'], ['까치', '[반자동]이면 도착한 자리에서 6초 동안 버티며 닿는 적만 치고, 그 뒤로는 다시 알아서 사냥해요.']]]]},
   {ic:'✦', t:'기술 쓰기', d:'자동·반자동·직접', shots:[
     ['sky', 'hero,kkachi', 'light', [['까치', '오른쪽 아래 기술 칸은 저절로 써요. 칸을 누르면 바로 쓰고요.']]],
     ['sky', 'hero,kkachi', 'flash', [['까치', '칸을 길게 누르면 그 기술만 「수동」이 돼요. 준비되면 반짝여요.'], ['까치', '[반자동]이면 사냥은 알아서, 기술은 모두 직접 눌러요. 보스 앞에서 몰아 쓰면 짜릿해요!']]]]},
@@ -9734,7 +9799,7 @@ async function pushCloud(){
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
@@ -10088,7 +10153,7 @@ if (location.search.indexOf('simtest') >= 0){
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
-    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; },
+    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
 }
 

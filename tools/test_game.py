@@ -691,6 +691,22 @@ async def main():
         check(bg['inBag'] and bg['swapped'] and bg['sold'] == 2 and bg['leftBag'] == 0, f'가방: 약한 장신구는 가방으로, 끼면 옛것이 가방으로, 안 쓰는 것은 팔린다 {bg}')
         check(bg['offers'] == 5 and bg['nb'] == {'ok': True} and bg['nb2'] == 'gone' and bg['myth'] and bg['inMk'] and bg['noMobs'] and bg['back'],
               f'장터: NPC 상인은 날마다 하나씩, 장터 마을에서는 사냥이 멈추고 나오면 다시 사냥 {bg}')
+        # 6-9b) 눌러서 움직이기: 장터에서 누른 칸까지 그림도 따라 걷고, 사냥터에서 땅을 누르면 그 칸으로 가서(반자동) 잠시 버티고, 몬스터를 누르면 그 몬스터를 노린다
+        tp = await page.evaluate("""() => { const G = window.__game, S = G.S, h = G.hero; G.quiet = true;
+          const at = (tx, ty) => { const rc = document.getElementById('cv').getBoundingClientRect(); const x = 222 + (tx - ty) * 9, y = 40 + (tx + ty) * 4.5;
+            return {clientX: rc.left + (x - G.camX) * G.scale, clientY: rc.top + (y - G.camY) * G.scale}; };
+          G.enterMarket(); for (let i = 0; i < 10; i++) G.update(0.05);
+          const x0 = h.x; document.getElementById('cv').dispatchEvent(new MouseEvent('click', Object.assign({bubbles: true}, at(h.tx - 4, h.ty + 2))));
+          const goal = G.market.goal && G.market.goal.slice(); for (let i = 0; i < 80; i++) G.update(0.05);
+          const mkMoved = h.x !== x0 && h.tx === goal[0] && h.ty === goal[1];
+          G.leaveMarket(); S.mode = 'semi'; for (let i = 0; i < 20; i++) G.update(0.05);
+          for (const m of G.mobs) m.dead = true; G.update(0.05);
+          const gx = h.tx + 3, gy = h.ty - 2; G.fieldClick(at(gx, gy)); const fg = !!h.goal;
+          for (let i = 0; i < 60; i++) G.update(0.05); const arrived = h.tx === gx && h.ty === gy && h.holdT > 2;
+          for (let i = 0; i < 40; i++) G.update(0.2); const m = G.mobs.find(q => !q.dead && q.spawnT <= 0);
+          let picked = false; if (m){ const mm = Object.assign({}, at(m.tx, m.ty)); mm.clientY -= 6 * G.scale; G.fieldClick(mm); picked = h.target === m; }
+          S.mode = 'auto'; return {goal, mkMoved, fg, arrived, picked}; }""")
+        check(tp['mkMoved'] and tp['fg'] and tp['arrived'] and tp['picked'], f'눌러서 움직이기: 장터에서 걸어가고, 사냥터 땅을 누르면 그 칸으로·몬스터를 누르면 그 몬스터를 {tp}')
         # 6-10) 신화 펫·환수: 1부엔 소환에 안 나오고, 부상에 가면 그 땅의 환수(이야기 환수는 빼고)가 소환에 나온다. 보물 동굴·신화 조각. 함께하는 싸움은 늘 자동 기술
         mp = await page.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world; G.quiet = true;
           S.world = 0; const pool0 = G.mythPetPool().length; S.world = 3; const pool3 = G.mythPetPool().map(i => G.PETS[i].name);
