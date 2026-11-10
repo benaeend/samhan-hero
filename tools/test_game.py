@@ -35,6 +35,9 @@ SIM = r"""
   if (opts.curve) Object.assign(G.CURVE, opts.curve);
   if (opts.busang) Object.assign(G.BUSANG, opts.busang);
   if (opts.expk) G.EXP_K[3] = opts.expk;
+  if (opts.kunlun) Object.assign(G.KUNLUN, opts.kunlun);
+  if (opts.expk4) G.EXP_K[4] = opts.expk4;
+  if (opts.late) Object.assign(G.LATE_K, opts.late);
   if (opts.load) { Object.assign(G.S, G.mergeState(JSON.parse(opts.load)));   // 예전 저장도 새 칸을 채워서
     G.S.cls = cls; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
   G.S.buyMode = 1;

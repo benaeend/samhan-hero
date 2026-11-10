@@ -3298,7 +3298,7 @@ function makeMob(boss, tx, ty){
   const m = {
     type, color:boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
-    hp:mHp(s) * (boss ? 10 * BOSS_K.hp[S.world] : 1), atk:mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5),
+    hp:mHp(s) * (boss ? 10 * BOSS_K.hp[S.world] : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5),
     gold:mGold(s) * (boss ? 10 : FIELD.rew) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : FIELD.rew), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
@@ -6247,7 +6247,7 @@ function godRaidInfo(i){
 const BUSANG = {e0:76, r:0.3, xr:0.1, sun:1};   // xr: 경험치는 단계마다 천계 0.1단계만큼만 늘어(앞서 간 직업이 눈덩이처럼 빨라지지 않게), sun: 해돋이 기운(초당 몹 몇 마리분 경험치)
 const busE = s => BUSANG.e0 + BUSANG.r * (s - 1);
 // 3부 곤륜: 부상 끝자락에서 이어지는 세기(같은 꼴). 이어 가는 세계마다 세기·경험치·해돋이(곤륜은 서왕모의 복숭아 향기) 값
-const KUNLUN = {e0:106, r:0.3, xr:0.1, sun:1};
+const KUNLUN = {e0:106, r:0.3, xr:0.1, sun:1, mobK:1};   // mobK: 곤륜 일반 몬스터 체력 배율(보스는 그대로)
 const CONT = {3:BUSANG, 4:KUNLUN};
 const contE = (s, w = S.world) => CONT[w].e0 + CONT[w].r * (s - 1);
 const BUSANG_SPAN = [12, 24, 36, 48, 60];
