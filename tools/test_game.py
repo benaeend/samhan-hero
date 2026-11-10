@@ -754,6 +754,16 @@ async def main():
           return {own, eq, atkUp: +(a1 / a0).toFixed(3), spawned, caught}; }""")
         check(te['own'] and te['eq'] == 'hunt1' and te['atkUp'] > 1.02 and te['spawned'] and te['caught'],
               f'별호: 몬스터 1만 마리면 「도깨비 사냥꾼」을 얻어 달고 공격력이 오르고, 급보 손님이 나타나 잡히거나 사라진다 {te}')
+        # 6-8g) 백귀야행: 60초 동안 요괴 떼를 잡고, 그 수만큼 보상. 단계·처치 수(보스까지)는 그대로, 하루 2번
+        pr = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.parade = {day:'', n:0, best:0}; G.setStage(Math.max(1, S.stage)); S.gold = 0; S.dust = 0; const st0 = S.stage, k0 = S.kills, left0 = G.paradeLeft(), g0 = S.gold, d0 = S.dust;
+          G.startParade(); const on = !!G.parade;
+          for (let i = 0; i < 1400 && G.parade; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; }
+          const out = {on, done: !G.parade, best: S.parade.best, left: [left0, G.paradeLeft()], stage: S.stage === st0, kills: S.kills === k0,
+            gold: S.gold > g0, dust: S.dust > d0};
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); return out; }""")
+        check(pr['on'] and pr['done'] and pr['best'] > 0 and pr['left'] == [2, 1] and pr['stage'] and pr['kills'] and pr['gold'] and pr['dust'],
+              f'백귀야행: 60초 동안 요괴를 잡고 잡은 수만큼 엽전·쇳가루, 단계·보스까지 처치 수는 그대로, 하루 2번 {pr}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
@@ -808,7 +818,7 @@ async def main():
           const B = G.patBoss(); B.maxHp = B.hp = 1e40; const lv = G.patLv(B);
           // 붉은 칸: 자동 손이 피하면 안 맞고, 못 피하면 맞는다
           const tiles = dodge => { G.HAND.dodge = dodge ? 1 : 0; G.hero.hp = G.ST.maxHp; B.atk = G.ST.maxHp * 0.3; B.stunT = 0; B.pat.grogT = 0; B.pat.tel = null; B.pat.cd = 0.01; B.pat.n = 0;
-            const h0 = S.rec.patHits || 0; let seen = false; for (let i = 0; i < 80; i++){ G.update(0.05); const T = B.pat.tel; if (T && T.kind === 'tiles') seen = true; if (seen && !T) break; }
+            const h0 = S.rec.patHits || 0; let seen = false; for (let i = 0; i < 80; i++){ G.update(0.05); const T = B.pat.tel; if (T && T.kind === 'tiles'){ seen = true; if (!dodge){ T.set.add(G.hero.tx + ',' + G.hero.ty); if (G.hero.fx != null) T.set.add(G.hero.fx + ',' + G.hero.fy); } } if (seen && !T) break; }
             return {seen, hit: (S.rec.patHits || 0) > h0}; };
           const tA = tiles(true), tB = tiles(false);
           // 되받기: 단추를 누르면 막고 보스가 묶인다

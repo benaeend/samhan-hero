@@ -2146,8 +2146,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-22', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-23', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 백귀야행'],
+  ['백귀야행', '[레이드] → [백귀야행] 하루 2번. 60초 동안 온갖 요괴(도깨비·처녀귀신·여우·아귀·장승…)가 쉴 새 없이 몰려와요. 잡은 수만큼 엽전(몬스터 3마리분씩)·쇳가루·보석·재료를, 부상부터는 고삐 조각도 받아요. 그동안 단계 보스는 안 나오고 쓰러져도 단계가 내려가지 않아요. 최고 기록이 남아요.'],
+  ['자동 피하기 고침', '자동으로 붉은 칸을 피한 뒤 보스를 쫓다가 다시 붉은 칸에 걸어 들어가 맞던 문제를 고쳤어요. 이제 칸이 터질 때까지 밖에서 기다려요.'],
   ['#', '2026-11-10 · 별호 · 급보'],
   ['별호 18가지', '몬스터 1만 마리·레이드 100번·첫 환생·바다 건너기·되받기 100번처럼 이룬 일에 따라 별호를 얻어요. 하나를 달면 이름표 위에 금빛으로 보이고 그 효과(공격력·체력·보스 피해·경험치·엽전·보석·치명타 피해)가 붙어요. 가진 별호마다 공격력·체력 +0.5%. [정보] → 별호.'],
   ['급보', '사냥하는 동안 10분 안팎마다 깜짝 손님이 나타나요: 황금 도깨비(엽전)·보물 너구리(보석·쇳가루)·떠도는 넋(경험치). 20초 안에 잡아야 해요. 용사가 먼저 쫓아가고, 눌러서 직접 노려도 돼요.'],
@@ -2399,7 +2402,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0}, expBank:0, title:{own:{}, eq:''},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0},
   };
 }
 function mergeState(d){
@@ -2506,6 +2509,7 @@ function mergeState(d){
   for (const sl of SOULS) if (so.own && so.own[sl.k]){ out.soul.own[sl.k] = true; out.soul.star[sl.k] = Math.min(SOUL_STAR_MAX, Math.max(0, Math.floor(+(so.star && so.star[sl.k])) || 0)); }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
+  out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
   out.title = {own:{}, eq:''}; for (const t of TITLES) if (ti.own && ti.own[t.k]) out.title.own[t.k] = true; if (out.title.own[ti.eq]) out.title.eq = ti.eq;
   if (out.mode !== 'semi') out.mode = 'auto';
@@ -3274,7 +3278,7 @@ function killMob(m){
   if (m.boss){ gainExp(m.exp * xm); bossWin(); return; }
   addLog(`${m.name} 처치 · 경험 +${fmt(m.exp * xm)}`);
   gainExp(m.exp * xm);
-  S.kills = Math.min(FIELD.kills, S.kills + 1); offHunt.k++;
+  if (parade) parade.kills++; else { S.kills = Math.min(FIELD.kills, S.kills + 1); offHunt.k++; }
   ev('kill');
   if (isGateStage(S.stage) && Math.random() < FIELD.rew) rollAcc(false);
   if (Math.random() < MAT_DROP.mob * FIELD.rew) gainMat(1);
@@ -3313,6 +3317,7 @@ function heroDie(){
     if (raid.info.tb){ raid.deaths = (raid.deaths || 0) + 1; if (raid.deaths >= TB_LIVES){ hero.deadT = Infinity; for (const a of raid.allies) if (a.down) a.downT = Infinity; addLog(`파티가 ${TB_LIVES}번 쓰러져 더는 일어날 수 없어요!`, 'warn'); return; } }
     addLog('용사가 쓰러졌습니다… 동료들이 버티는 사이 다시 일어나요.', 'warn'); return;
   }
+  if (parade){ hero.deadT = 2; addLog('쓰러졌어요… 곧 다시 일어나 요괴를 막아요.', 'warn'); return; }
   const wasBoss = bossActive;
   if (bossActive) bossFail('용사가 쓰러짐');
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; }
@@ -3474,6 +3479,7 @@ function startRaid(i){
 }
 function startFight(info, party, o){
   if (market) leaveMarket();
+  if (parade) finishParade();
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
@@ -3559,7 +3565,7 @@ function tbCan(diff){
 const TB_LIVES = 5;   // 타임 보스: 파티 전체가 다섯 번까지만 일어날 수 있다
 let tbJoinedId = '';
 // 타임 보스가 열려 있으면 접속한 용사는 저절로 참가를 알린다(모두 함께 싸움)
-function tbAutoJoin(){ const w = tbWindow(); if (!w.open || !session || market || tbJoinedId === w.id) return; tbJoinedId = w.id; tbJoin(); }
+function tbAutoJoin(){ const w = tbWindow(); if (!w.open || !session || market || parade || tbJoinedId === w.id) return; tbJoinedId = w.id; tbJoin(); }
 function tbJoin(){
   if (!room || !session) return;
   room.emit('tb', {w:tbWindow().id, n:S.name, c:S.cls, d:Math.round(dpsOf(ST)), h:Math.round(ST.maxHp), l:S.look}).catch(() => {});
@@ -3783,7 +3789,11 @@ function updatePat(dt){
   if (T){
     T.t += dt;
     if (T.kind === 'tiles'){
-      if (T.auto.ok && !T.auto.done && T.t >= T.auto.at){ T.auto.done = true; const [x, y] = heroTile(); if (!hero.dead && T.set.has(x + ',' + y)) heroRoll(false); }
+      if (T.auto.ok && T.t >= T.auto.at && !hero.dead){   // 자동 손: 붉은 칸 안이면 구르고(3번까지), 밖이면 터질 때까지 들어가지 않고 버틴다
+        const [x, y] = heroTile();
+        if (T.set.has(x + ',' + y)){ if (!(hero.rollT > 0) && (T.auto.n || 0) < 3){ T.auto.n = (T.auto.n || 0) + 1; heroRoll(false); } }
+        else if (!(hero.dodgeT > 0)) hero.dodgeT = Math.max(0.1, T.T - T.t + 0.15);
+      }
       if (T.t >= T.T){
         P.tel = null;
         const [x, y] = heroTile();
@@ -3973,6 +3983,56 @@ function finishDummy(){
 }
 /* 보물 동굴(2026-11 (17)): 하루 2번, 보물 이무기를 60초 안에 쓰러뜨리면 신화 조각(3 + 세계)과 7% 확률로 신화 보물(약하면 가방으로).
    지면 조각 1개. 조각 30개로 원하는 신화 보물을 하나 만든다(운에만 기대지 않게). 이무기 세기는 최고 단계 − 5 */
+/* ================= 백귀야행(2026-11 (23)) =================
+   [레이드]의 다섯 번째 칸. 하루 PARADE_TRIES번, PARADE_TIME초 동안 사냥터에 온갖 요괴가 쉴 새 없이 몰려온다. 잡은 수만큼 보상.
+   그동안 단계 보스는 안 나오고, 쓰러져도 단계가 내려가지 않는다 */
+const PARADE_TRIES = 2, PARADE_TIME = 60, PARADE_MAX = 24;
+const PARADE_MOBS = [['dokkaebi', '#5a8ae0', '외눈 도깨비'], ['ghost', '#d8e8ff', '처녀귀신'], ['fox', '#e8a050', '여우 요괴'], ['bat', '#7a5aa8', '흡혈 박쥐'], ['wisp', '#8ff0ff', '도깨비불'],
+  ['agwi', '#a86a4a', '굶주린 아귀'], ['shade', '#3a3a5a', '그림자 요괴'], ['totem', '#a87a4a', '떠도는 장승'], ['raccoon', '#8a6a4a', '둔갑 너구리'], ['frog', '#5fbf4a', '두꺼비 요괴']];
+let parade = null;
+function paradeLeft(){ if (S.parade.day !== dummyDay()){ S.parade.day = dummyDay(); S.parade.n = 0; } return PARADE_TRIES - S.parade.n; }
+function startParade(){
+  if (parade || raid || bossActive || market || paradeLeft() <= 0 || !session && !window.__game) return false;
+  S.parade.n++;
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
+  parade = {t:PARADE_TIME, kills:0, spawnT:0.3};
+  hero.goal = null; hero.holdT = 0;
+  addLog(`백귀야행! ${PARADE_TIME}초 동안 몰려오는 요괴를 최대한 많이 잡아요.`, 'warn'); sfx('boss'); shake = 0.3;
+  if (!fxOff()) fxBanner('백귀야행', '온갖 요괴가 몰려와요!', '#c8a0ff', '34%', 1.6);
+  return true;
+}
+function updateParade(dt){
+  const P = parade;
+  P.t -= dt;
+  if (P.t <= 0){ finishParade(); return; }
+  P.spawnT -= dt;
+  if (P.spawnT <= 0){
+    P.spawnT = 0.35 + Math.random() * 0.25;
+    for (let k = 0; k < 2 && aliveMobs().length < PARADE_MAX; k++){
+      const spot = spawnTile(3) || spawnTile(2); if (!spot) break;
+      const [type, color, name] = PARADE_MOBS[(Math.random() * PARADE_MOBS.length) | 0], m = makeMob(false, spot[0], spot[1]);
+      Object.assign(m, {type, color, name, aggro:true}); m.hp = m.maxHp = m.hp * 1.5;
+      mobs.push(m); fx.push({type:'poof', t:0, dur:0.35, x:m.x, y:m.y - 6});
+    }
+  }
+}
+function finishParade(){
+  const P = parade, k = P.kills; parade = null;
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
+  spawnT = 1.2;
+  const gold = mGold(Math.max(1, S.stage)) * k * 3 * gainMul('gold'), gems = Math.round(Math.floor(k / 3) * gemMul()), dust = k * (1 + S.world);
+  const mat = Math.floor(k / 25), piece = S.world >= 3 ? Math.floor(k / 50) : 0;
+  S.gold += gold; S.gems += gems; S.dust += dust; if (mat) gainMat(mat, true); if (piece) gainPiece(piece, true);
+  const best = k > (S.parade.best || 0); if (best) S.parade.best = k;
+  S.rec.parades = (S.rec.parades || 0) + 1; recWin(false, true);
+  addLog(`백귀야행 끝! 요괴 ${k}마리 · 엽전 +${fmt(gold)} · 보석 +${gems} · 쇳가루 +${dust}${mat ? ` · 재료 +${mat}` : ''}${piece ? ` · 고삐 조각 +${piece}` : ''}`, 'gain'); sfx('win');
+  saveLocal();
+  if (!(window.__game && window.__game.quiet)) showModal('백귀야행 · 끝', `<p>요괴 <b>${k}마리</b>를 잡았어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
+    <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
+    ${mat ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${mat}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}</ul>
+    <p class="small" style="margin-top:8px">오늘 ${paradeLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
+  return {kills:k, gold, gems, dust, mat, piece};
+}
 const VAULT_TRIES = 2, VAULT_TIME = 60, VAULT_MYTH_P = 0.07, SHARD_COST = 30;   // 신화 보물 7%(사용자 요청)
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
@@ -4340,7 +4400,7 @@ function mobInReach(){
 }
 function update(dt){
   gtime += dt; S.rec.play += dt;
-  if (S.chosen && !raid && !market && S.mode === 'auto') offTrack(dt);
+  if (S.chosen && !raid && !market && !parade && S.mode === 'auto') offTrack(dt);
   if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
@@ -4368,6 +4428,7 @@ function update(dt){
   if (market){ updateMarket(dt); return; }   // 장터 마을: 사냥 멈춤
   // 레이드 / 보스·소환
   if (raid) updateRaid(dt);
+  else if (parade) updateParade(dt);
   else if (bossActive){
     bossTime -= dt;
     if (bossTime <= 0) bossFail('시간 초과');
@@ -5439,7 +5500,7 @@ const EVTS = [
 ];
 let evtT = 300;
 function updateEvt(dt){
-  if (!session || raid || bossActive || market || hero.dead || cut) return;
+  if (!session || raid || bossActive || market || parade || hero.dead || cut) return;
   evtT -= dt;
   if (evtT > 0) return;
   evtT = EVT_GAP[0] + Math.random() * EVT_GAP[1];
@@ -6702,6 +6763,7 @@ function mkBoardSprite(){
 }
 function enterMarket(){
   if (!session && !window.__game) return;
+  if (parade){ addLog('백귀야행 중에는 장터에 갈 수 없어요.', 'warn'); return; }
   if (raid){ addLog('싸우는 중에는 장터에 갈 수 없어요.', 'warn'); return; }
   if (cut) return;
   closePage(); setChat(false);
@@ -7587,11 +7649,11 @@ function drawOverlay(){
   drawBuffsAndSay(cw);
   ctx.textBaseline = 'middle';
   ctx.font = '800 13px SamhanSans, sans-serif';
-  const label = market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? '레이드 · ' + raid.info.label : stageLabel(S.stage);
+  const label = market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? '레이드 · ' + raid.info.label : parade ? `백귀야행 · 요괴 ${parade.kills}마리 · ${Math.max(0, Math.ceil(parade.t))}초` : stageLabel(S.stage);
   const tw = Math.ceil(ctx.measureText(label).width);
   box(cx - tw / 2 - 10, y0, tw + 20, 22);
   ctx.fillStyle = raid ? '#ffb39a' : '#f3e6c8'; ctx.textAlign = 'center'; ctx.fillText(label, cx, y0 + 11.5); ctx.textAlign = 'left';
-  if (market) return;   // 장터 마을에는 보스 막대가 없다
+  if (market || parade) return;   // 장터 마을·백귀야행에는 보스 막대가 없다
   const bRef = raid ? raid.boss : bossActive ? bossRef : null;
   const y1 = y0 + 27;
   if (bRef){
@@ -8465,6 +8527,7 @@ function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
   else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.vault ? '보물 동굴' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (parade){ cls = 'fight'; txt = '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / PARADE_TIME); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
   else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
@@ -9554,7 +9617,7 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴']];
+  const segs = [['raid', '레이드'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
   const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
   if (raidView === 'tb'){
@@ -9610,6 +9673,22 @@ function buildRaid(){
       setText($('#vLeft'), `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
       for (const m of list){ setText(panel.querySelector(`[data-vmc="${m.k}"]`), `지금 +${S.myth[m.k] || 0}% · 만들면 +${mythPower(m, vaultD())}%`); const bt = panel.querySelector(`[data-vm="${m.k}"]`); bt.disabled = S.mythShard < SHARD_COST; }
       const b = $('#vGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.vault ? '싸우는 중…' : '다른 싸움 중') : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)');
+    };
+  }
+  if (raidView === 'parade'){
+    panel.innerHTML = top + `
+      <div class="card dcard"><div class="dport"><img src="${bossPortrait('dokkaebi', '#7a5aa8')}" alt=""></div>
+        <div><div class="ct">백귀야행<span class="tag" id="pLeft"></span></div>
+        <p class="story">밤길에 온갖 요괴가 줄지어 몰려와요! ${PARADE_TIME}초 동안 쉴 새 없이 나타나는 요괴를 최대한 많이 잡아요(하루 ${PARADE_TRIES}번). 잡은 수만큼 <b>엽전·보석·쇳가루·재료</b>${S.world >= 3 ? '·<b>고삐 조각</b>' : ''}을 받아요. 그동안 단계 보스는 안 나오고, 쓰러져도 단계가 내려가지 않아요.</p></div></div>
+      <div class="card"><div class="ct">보상<span class="small" id="pBest"></span></div>
+        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 3마리마다 보석 1 · 25마리마다 재료 1${S.world >= 3 ? ' · 50마리마다 고삐 조각 1' : ''}</p></div>
+      <button class="btn primary big" id="pGo">백귀야행 시작</button>`;
+    wireSeg();
+    $('#pGo').addEventListener('click', () => { if (startParade()) closePage(); });
+    return () => {
+      const left = paradeLeft();
+      setText($('#pLeft'), `오늘 ${left} / ${PARADE_TRIES}번`); setText($('#pBest'), S.parade.best ? `최고 기록 ${S.parade.best}마리` : '');
+      const b = $('#pGo'); b.disabled = !!raid || !!parade || left <= 0; setText(b, parade ? '백귀야행 중…' : raid ? '다른 싸움 중' : left > 0 ? '백귀야행 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
   if (raidView === 'dummy'){
@@ -10649,7 +10728,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
-  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0;
+  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
   placeOf(hero); camSnap = true;
@@ -10971,7 +11050,7 @@ if (location.search.indexOf('simtest') >= 0){
     update, buyStat, upgradeSkill, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
-    TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
+    startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
