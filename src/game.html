@@ -853,7 +853,10 @@ body:not(.portrait) .hud-pets:empty{display:none}
 .hud-pets button{display:flex;align-items:center;gap:4px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);border-radius:999px;padding:1px 8px 1px 1px;color:var(--text);font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit}
 .hud-pets img{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#3a4a6e,#121a2c);image-rendering:pixelated;object-fit:contain;border:1px solid rgba(255,255,255,.18)}
 .hud-pets .pt-atk{border-color:rgba(255,120,120,.45)}.hud-pets .pt-def{border-color:rgba(120,180,255,.45)}.hud-pets .pt-sup{border-color:rgba(120,230,160,.45)}
-body:not(.portrait) .qtrack{top:136px}
+body:not(.portrait) .qtrack{top:var(--qtTop,136px)}
+/* 가로 화면: 왼쪽 위 상태창·이야기 칸을 화면 높이에 맞춰 줄인다(--uiS, resize에서 계산). 휴대폰 가로에서 용사·몬스터를 덜 가리게(2026-11 (27), 사용자 요청) */
+body:not(.portrait) .hud,body:not(.portrait) .qtrack{transform:scale(var(--uiS,1));transform-origin:0 0}
+body:not(.portrait) .topr{transform:scale(var(--uiS,1));transform-origin:100% 0}
 body:not(.portrait) .topr .sbtn{width:32px;height:32px;border-radius:10px}
 body:not(.portrait) .mini{top:50px;right:8px;width:156px;height:94px;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 body:not(.portrait) .mini canvas{display:block;width:100%;height:100%}
@@ -2191,8 +2194,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-26', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-27', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 가로 화면 상태창 · 후반 직업 맞춤'],
+  ['가로 화면 상태창 자동 크기', '휴대폰을 가로로 들면 왼쪽 위 상태창·이야기 칸과 오른쪽 위 재화 줄이 화면 높이에 맞춰 작아져요(높이 500px 이상이면 그대로). 용사와 몬스터를 덜 가려요.'],
+  ['후반 직업 맞춤', '3·4차 전직 뒤 직업 차이가 너무 컸어요. 자객의 깃털 분신은 절반 세기로(4차 그림자 난무는 조금 세게), 술사의 식신 행렬·우레 아홉 줄기는 더 세게, 도인의 신명 굿춤은 20초 동안 공격력이 크게 오르게 바꿨어요.'],
   ['#', '2026-11-10 · 타임 보스 개편'],
   ['만들어 둔 캐릭터 모두 함께', '타임 보스에 이 기기에 만들어 둔 캐릭터가 모두(같은 계정의 다른 캐릭터 포함) 함께 싸워요. 지금 접속한 다른 용사도 함께해요(24명까지).'],
   ['보스가 모인 용사들의 전투력에 맞춰져요', '보스 체력은 모두가 실제로 넣는 피해(기술·넋·펫 포함)를 노말 120초·지옥 150초 동안 모은 만큼, 공격은 맞는 용사 체력의 8%(지옥 14%)예요. 약한 캐릭터와 강한 캐릭터가 섞여도 누구나 1~2분쯤 걸리는 싸움이 돼요. 캐릭터마다 보스전에서 넣은 피해를 기억해 두었다가 그 세기로 함께 싸워요.'],
@@ -7307,6 +7313,21 @@ function resize(){
   cv.style.left = Math.round((sw - cw) / 2) + 'px'; cv.style.top = top + 'px';
   if (buf.width !== VW * RS){ buf.width = VW * RS; buf.height = H * RS; }
   sc.style.setProperty('--cvt', top + 'px'); sc.style.setProperty('--cvh', ch + 'px');
+  // 가로 화면: 화면 높이 500px 이상이면 그대로, 낮을수록 작게(최소 UI_S_MIN)
+  const vh = window.innerHeight || sh;
+  uiS = land ? Math.max(UI_S_MIN, Math.min(1, vh / 500)) : 1;
+  document.documentElement.style.setProperty('--uiS', uiS.toFixed(3));
+  placeQt();
+}
+const UI_S_MIN = 0.72;
+let uiS = 1;
+// 이야기 칸은 (줄어든) 상태창 바로 아래에(상태창 높이는 펫 줄에 따라 바뀐다)
+function placeQt(){
+  const h = $('.hud'), q = $('#qtrack');
+  if (!h || !q) return;
+  if (document.body.classList.contains('portrait')){ q.style.removeProperty('--qtTop'); return; }
+  const t = Math.round(h.offsetTop + h.offsetHeight * uiS + 8 * uiS);
+  if (q.style.getPropertyValue('--qtTop') !== t + 'px') q.style.setProperty('--qtTop', t + 'px');
 }
 const P = (x, y, w, h, c) => { b.fillStyle = c; b.fillRect(Math.round(x), Math.round(y), w, h); };
 function pline(x0, y0, x1, y1, c){
@@ -10412,6 +10433,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalOpen
 // 장면 위 이야기 퀘스트 알림판(누르면 퀘스트 페이지)
 function updateQTrack(){
   const el = $('#qtrack'), on = !!session && !cut && S.quest.tut !== 0;
+  placeQt();
   if (el.hidden === on) el.hidden = !on;
   if (!on) return;
   const q = mainQuest(), pr = questProg(q), done = questCur(q) >= q.n;
