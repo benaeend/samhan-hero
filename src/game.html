@@ -1343,10 +1343,10 @@ const refinePct = lv => 4 * lv + 0.3 * lv * lv;
 const REFINE_CAP_A = [15, 22, 25], REFINE_INHERIT = 15, REFINE_T_RATE = 0.7;
 const refineCap = slot => S.refine[slot].t || slot === 'weapon' ? REFINE_MAX : REFINE_CAP_A[Math.min(2, S.world)];
 /* 밸런스 2차(2026-11 (28)): 부상·곤륜(2부부터)은 성장의 무게를 재련에서 모음(아바타·탈것·넋·별호)으로 옮긴다.
-   재련 효과 ×REFINE_LATE, 모음 효과 ×LATE_COL(lateCol()). 전체 세기는 거의 그대로(곤륜 100시간 무사 기준 +9%쯤) */
+   재련은 2부로 계승된 뒤 새로 오르는 몫만 ×REFINE_LATE(건널 때 손해 없음), 모음 효과 ×LATE_COL(lateCol()). 전체 세기는 거의 그대로(곤륜 100시간 무사 기준 +9%쯤) */
 const REFINE_LATE = 0.75, LATE_COL = 1.5;
 const lateCol = () => S.world >= 3 ? LATE_COL : 1;
-const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return (r.t ? (r.base || 0) + refinePct(lv) - refinePct(REFINE_INHERIT) : refinePct(lv)) * (S.world >= 3 ? REFINE_LATE : 1); };
+const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return r.t ? (r.base || 0) + (refinePct(lv) - refinePct(REFINE_INHERIT)) * REFINE_LATE : refinePct(lv); };   // 계승된 몫은 그대로, 2부부터 새로 오르는 몫만 ×REFINE_LATE
 function refineInherit(){
   let n = 0;
   for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if (r.t) continue; r.base = refinePct(r.lv); r.lv = REFINE_INHERIT; r.drops = 0; r.t = 1; n++; }
