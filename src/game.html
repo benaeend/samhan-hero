@@ -77,6 +77,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--sky);outline-of
 .bar .tr i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px}
 .bar.hp i{background:linear-gradient(90deg,#ff3d61,#ff8a5b);box-shadow:0 0 8px rgba(255,79,109,.6)}
 .bar.xp i{background:linear-gradient(90deg,var(--gold-2),#ffe08a);box-shadow:0 0 8px var(--glow)}
+.bar.mp i{background:linear-gradient(90deg,#3a7bff,#7ad8ff);box-shadow:0 0 8px rgba(90,160,255,.6)}
+.bar.mp .tr{height:6px}
 .bar .num{min-width:56px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
 
 /* 장면 */
@@ -118,6 +120,20 @@ canvas{display:block;width:100%;image-rendering:pixelated;touch-action:manipulat
 button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .sk .mn{display:none;position:absolute;left:0;right:0;bottom:0;z-index:3;font-size:7.5px;font-weight:800;line-height:9px;text-align:center;color:#1c1303;background:var(--gold)}
 .sk.manual .mn{display:block}
+.sk.nomp > svg{opacity:.45;filter:saturate(.3) hue-rotate(180deg)}
+.sk.nomp{box-shadow:inset 0 -3px 0 #3a7bff}
+.mpv{color:#7ab8ff;font-weight:700}
+.pre-box{margin-top:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line-2)}
+.pre-h{font-size:12px;font-weight:800;color:var(--gold);margin:6px 0 4px;display:flex;align-items:center;gap:6px}
+.pre-h.dim{color:var(--text-soft)}
+.pre-row{display:flex;flex-wrap:wrap;gap:5px}
+.pre-sk{display:flex;align-items:center;gap:4px;padding:3px 8px 3px 4px;border-radius:999px;background:rgba(159,231,255,.08);border:1px solid rgba(159,231,255,.25);font-size:11px;font-weight:700}
+.pre-sk svg{width:16px;height:16px;color:#9fe7ff}
+.pre-sk i{font-style:normal}
+.pre-sk.new{border-color:var(--gold);background:rgba(255,204,77,.12)}
+.pre-sk.new svg{color:var(--gold)}
+.pre-chk{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px;color:var(--text-soft)}
+.chip.on{background:var(--gold);color:#2a1a04;border-color:var(--gold)}
 .sk.manual{border-color:rgba(159,231,255,.6)}
 .sk.manual.rdy{animation:skrdy 0.9s ease-in-out infinite}
 @keyframes skrdy{50%{box-shadow:0 0 0 1px rgba(159,231,255,.8) inset,0 0 14px rgba(159,231,255,.9)}}
@@ -140,9 +156,15 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .ph h2{font-weight:800;font-size:18px;margin:0;text-wrap:balance;display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
 .ph h2::before{content:"";width:4px;height:18px;border-radius:2px;background:linear-gradient(180deg,#ffe08a,var(--gold-2));box-shadow:0 0 8px var(--glow)}
 .hint{font-size:12.5px;color:var(--text-soft);margin:2px 0 10px}
-.fz.fold{display:-webkit-box;-webkit-line-clamp:1;line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-.fzb{display:block;margin:-6px 0 8px auto;padding:2px 6px;border:0;background:none;color:var(--gold);font:inherit;font-size:11.5px;font-weight:800;cursor:pointer}
-.fzb:hover{text-decoration:underline}
+.qhide{display:none!important}
+.qmark{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,204,77,.7);background:rgba(255,204,77,.12);color:var(--gold);font:inherit;font-size:12px;font-weight:900;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;vertical-align:middle;margin-left:4px}
+.qmark:hover{background:rgba(255,204,77,.28)}
+.qmark.qline{width:auto;height:22px;border-radius:999px;padding:0 9px;font-size:11px;margin:0 0 6px;display:inline-flex;align-items:center}
+.page .panel{position:relative}
+.tipb{position:absolute;z-index:40;padding:10px 12px;border-radius:14px;background:#1b2238;border:1px solid rgba(255,204,77,.55);color:var(--text);font-size:12.5px;line-height:1.55;box-shadow:0 10px 26px rgba(0,0,0,.6);animation:tipIn .14s ease-out}
+.tipb::before{content:"";position:absolute;top:-7px;left:calc(var(--ax,20px) - 7px);width:12px;height:12px;background:#1b2238;border-left:1px solid rgba(255,204,77,.55);border-top:1px solid rgba(255,204,77,.55);transform:rotate(45deg)}
+.tipb b{color:var(--gold)}
+@keyframes tipIn{from{opacity:0;transform:translateY(-4px)}}
 .qch{display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .dbweek{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 8px}.dbweek span{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--text-soft)}.dbweek span.on{border-color:var(--gold);color:var(--gold);font-weight:800}
 .mode{display:flex;gap:4px}
@@ -859,6 +881,101 @@ body:not(.portrait) .tab[aria-selected="true"]{background:none;box-shadow:none;c
 body:not(.portrait) .tab[aria-selected="true"] svg{background:radial-gradient(circle at 50% 32%,#fff0b8,#e0a52a 70%);color:#2a1a04;border-color:#fff2c0;box-shadow:0 0 16px rgba(255,204,77,.65)}
 body:not(.portrait) .tab[aria-selected="true"]::before{display:none}
 body:not(.portrait) .tab .dot{top:0;left:calc(50% + 11px);width:10px;height:10px;border:2px solid #0c111d}
+.tabs{position:relative;z-index:20}
+/* 가로 화면 메뉴 화면 정리(2026-11 (41), 사용자 요청: 휴대폰 가로에서 펫·장비 창이 너무 커서 한눈에 안 들어옴):
+   칸(장비·펫)은 크기를 묶고, 목록은 두 줄로, 휴대폰 가로(body.cmp)에서는 머리·메뉴 줄·카드·글자를 줄인다 */
+body:not(.portrait) #page .grid{grid-template-columns:34px repeat(4,minmax(0,64px)) 40px repeat(4,minmax(0,64px));justify-content:start}
+body:not(.portrait) #page .pgrid{grid-template-columns:34px repeat(5,minmax(0,68px)) 40px repeat(5,minmax(0,68px));justify-content:start}
+body:not(.portrait) #page .pgrid.pmyth{grid-template-columns:repeat(auto-fill,minmax(68px,74px))}
+body:not(.portrait) #page ul.list{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+body:not(.portrait) #page .bgrid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}
+body:not(.portrait) #page .skgrid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+body.cmp:not(.portrait) .tabs{height:48px;padding-top:2px;padding-bottom:calc(2px + env(safe-area-inset-bottom))}
+body.cmp:not(.portrait) .tab{flex-basis:60px;font-size:9.5px;gap:1px}
+body.cmp:not(.portrait) .tab svg{width:28px;height:28px;padding:6px}
+body.cmp:not(.portrait) .tab .dot{width:8px;height:8px;left:calc(50% + 8px)}
+body.cmp .page-head{padding:4px 10px 4px calc(10px + env(safe-area-inset-left));gap:6px}
+body.cmp .page-head h1{font-size:15px}
+body.cmp .pg-ic{width:24px;height:24px;border-radius:8px}
+body.cmp .pg-ic svg{width:14px;height:14px}
+body.cmp .pg-close{width:30px;height:30px;border-radius:9px;font-size:14px}
+body.cmp .page-head .cur.sm{padding:2px 8px;font-size:11px}
+body.cmp .page .panel{padding:8px max(10px,calc((100% - 900px) / 2)) 16px;font-size:12.5px}
+body.cmp #page .card{padding:8px 10px;margin:6px 0;gap:5px;border-radius:12px}
+body.cmp #page .ct{font-size:13px;gap:6px}
+body.cmp #page .ph{margin:0 0 4px}
+body.cmp #page .ph h2{font-size:15px}
+body.cmp #page .row{padding:6px 8px;gap:8px;grid-template-columns:30px 1fr auto;border-radius:12px}
+body.cmp #page .btn{padding:6px 10px;font-size:12px;border-radius:10px}
+body.cmp #page .btn.big{padding:8px;font-size:13px}
+body.cmp #page .seg button,body.cmp #page .qsegb{padding:5px 4px;font-size:12px}
+body.cmp #page .qseg{margin-bottom:6px}
+body.cmp #page .gbtn{padding:6px 10px;min-height:0}
+body.cmp #page .summon{margin:6px 0 4px;gap:6px}
+body.cmp #page p{margin:4px 0}
+body.cmp .me-board{padding:6px;gap:4px 6px}
+body.cmp .ms{width:44px}
+body.cmp .ms-ic{width:36px;height:36px;border-radius:9px}
+body.cmp .ms-ic svg{width:19px;height:19px}
+body.cmp .ms-ic img{width:32px;height:32px}
+body.cmp .ms-nm{font-size:8.5px;max-width:48px}
+body.cmp .me-fig img{width:min(120px,100%)}
+body:not(.portrait) .me-col{display:grid;grid-template-columns:repeat(2,auto);align-content:center;gap:5px}
+body.cmp #page .panel > *{zoom:.92}
+body.cmp #page .pslots{gap:6px;margin:6px 0}
+body.cmp #page .pslot{min-height:0;padding:4px;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:6px;justify-items:start;text-align:left;align-items:center}
+body.cmp #page .pslot b{grid-column:1/-1}
+body.cmp #page .pslot img{grid-row:2/4;width:40px;height:32px}
+body.cmp #page .pslot .empty{margin:4px 0}
+body.cmp #page .gbtn{flex-direction:row;justify-content:center;gap:8px}
+body.cmp .tipb{zoom:1}
+/* 내 정보 */
+.me{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;align-items:start}
+body.portrait .me{grid-template-columns:1fr}
+.me-board{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto 1fr auto;gap:6px 8px;padding:10px;border-radius:18px;
+  background:radial-gradient(ellipse at 50% 46%,rgba(255,204,77,.14),rgba(10,14,26,.85) 62%);border:1px solid rgba(255,204,77,.4);box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
+.me-top,.me-bot{grid-column:1/-1;display:flex;justify-content:center;gap:5px;flex-wrap:wrap;align-items:flex-start}
+.me-bot{border-top:1px solid rgba(255,255,255,.08);padding-top:6px}
+.me-lab{writing-mode:vertical-rl;font-size:10px;font-weight:800;color:var(--gold);align-self:center;letter-spacing:2px}
+.me-col{display:flex;flex-direction:column;gap:5px}
+.me-fig{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+.me-fig img{width:min(150px,100%);aspect-ratio:64/60;image-rendering:pixelated;filter:drop-shadow(0 8px 6px rgba(0,0,0,.55))}
+.me-tt{font-size:11px;font-weight:900;color:var(--gold);margin-bottom:-4px}
+.me-nm{font-size:14px;font-weight:900;margin-top:2px}
+.me-sub{font-size:11px;color:var(--text-soft);text-align:center}
+.ms{position:relative;width:50px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:0;cursor:pointer;color:var(--text)}
+.ms-ic{position:relative;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.3));border:2px solid var(--g);box-shadow:inset 0 0 12px -4px var(--g),0 2px 6px rgba(0,0,0,.4)}
+.ms-ic svg{width:22px;height:22px;color:var(--g)}
+.ms-ic img{width:38px;height:38px;object-fit:contain;image-rendering:pixelated}
+.ms-ic .sw{width:22px;height:22px;border-radius:6px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 10px var(--g)}
+.ms-lv{position:absolute;right:-6px;bottom:-5px;font-size:8.5px;font-weight:900;padding:0 3px;border-radius:5px;background:#0c111d;border:1px solid var(--g);color:#fff;white-space:nowrap;line-height:13px}
+.ms-nm{font-size:9px;font-weight:700;line-height:1.15;max-width:54px;text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;color:var(--text-soft)}
+.ms.empty .ms-ic{border-style:dashed;opacity:.45;box-shadow:none}
+.ms:hover .ms-ic{transform:translateY(-1px)}
+.me-side{display:grid;gap:8px}
+.me-side .card{margin:0;padding:10px 12px}
+.me-r{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.07)}
+.me-r span{color:var(--text-soft)}
+.me-r b{text-align:right}
+.me-sk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.me-ski{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:10px;border:1px solid rgba(159,231,255,.25);background:rgba(159,231,255,.06);color:var(--text);font-size:10.5px;font-weight:700;cursor:pointer;min-width:0}
+.me-ski svg{width:16px;height:16px;flex:none;color:#9fe7ff}
+.me-ski i{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}
+.me-ski b{font-size:9.5px;color:var(--gold)}
+.me-pets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:4px}
+.me-pet{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px;border-radius:10px;border:1px solid var(--g,rgba(255,255,255,.15));background:rgba(255,255,255,.04);color:var(--text-soft);font-size:10px;font-weight:700;cursor:pointer}
+.me-pet img{width:40px;height:34px;object-fit:contain;image-rendering:pixelated}
+.me-pet.empty{border-style:dashed;opacity:.5;min-height:52px;justify-content:center}
+.hud{cursor:pointer}
+.more-menu{position:absolute;bottom:calc(100% + 8px);left:8px;z-index:30;display:grid;grid-template-columns:repeat(5,64px);gap:4px;padding:10px 8px 8px;border-radius:18px;
+  background:linear-gradient(180deg,#1d2640,#0d1220);border:1px solid rgba(255,204,77,.45);box-shadow:0 12px 30px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.4);animation:moreIn .16s ease-out}
+.more-menu[hidden]{display:none}
+@keyframes moreIn{from{opacity:0;transform:translateY(8px) scale(.96)}}
+.tabs .more-menu .tab{flex:none;width:64px;min-height:58px;max-height:none;padding:4px 0;font-size:11px;color:#c3cbdc;justify-content:flex-start;gap:3px}
+.tabs .more-menu .tab svg{width:34px;height:34px;padding:8px;box-sizing:border-box;border-radius:50%;background:radial-gradient(circle at 50% 32%,#41507a,#151c2e 75%);border:1.5px solid rgba(255,204,77,.55);color:#ffd977}
+.tabs .more-menu .tab[aria-selected="true"] svg{background:radial-gradient(circle at 50% 32%,#fff0b8,#e0a52a 70%);color:#2a1a04}
+.tabs .more-menu .tab[aria-selected="true"]::before{display:none}
+.tabs .more-menu .tab .dot{top:0;left:calc(50% + 9px)}
 body:not(.portrait) .bigboss{display:grid;position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(6px + env(safe-area-inset-bottom));z-index:8;width:84px;height:84px;border-radius:50%;
   border:2px solid rgba(255,204,77,.8);background:radial-gradient(circle at 50% 32%,#8a2636,#2a0a12 72%);color:#ffe8b0;place-items:center;align-content:center;gap:1px;cursor:pointer;
   box-shadow:0 0 0 4px rgba(6,8,14,.75),0 8px 22px rgba(0,0,0,.6);touch-action:manipulation;font-family:inherit}
@@ -984,6 +1101,7 @@ body.in-market .act{display:none}
     </div>
     <div class="bars">
       <div class="bar hp"><span>체력</span><span class="tr"><i id="hpfill"></i></span><span class="num" id="hpnum">0</span></div>
+      <div class="bar mp"><span>마나</span><span class="tr"><i id="mpfill"></i></span><span class="num" id="mpnum">0</span></div>
       <div class="bar xp"><span>경험</span><span class="tr"><i id="xpfill"></i></span><span class="num" id="xpnum">0%</span></div>
     </div>
     <div class="hud-pets" id="hudPets"></div>
@@ -1059,16 +1177,22 @@ body.in-market .act{display:none}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 3h4l1 2 1-2h4l4 4-3 4-2-1v11H8V10l-2 1-3-4z"/></svg>장비</button>
     <button class="tab" role="tab" id="tab-pet" data-tab="pet" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4h3v5H5zm11 0h3v5h-3zM2 10h3v4H2zm17 0h3v4h-3zM9 11h6v2h2v5h-2v2H9v-2H7v-5h2z"/></svg>펫</button>
-    <button class="tab" role="tab" id="tab-quest" data-tab="quest" aria-selected="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h18v14h-8l-5 4v-4H3zm8 3v6h2V6zm0 8v2h2v-2z"/></svg>퀘스트<i class="dot"></i></button>
     <button class="tab" role="tab" id="tab-raid" data-tab="raid" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 2h2v20H5zm3 1h12l-3 5 3 5H8z"/></svg>레이드<i class="dot"></i></button>
+    <button class="tab more" role="tab" id="tab-more" aria-selected="false" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>더보기<i class="dot"></i></button>
+    <div class="more-menu" id="moreMenu" hidden role="menu" aria-label="더보기 메뉴">
+    <button class="tab" role="tab" id="tab-quest" data-tab="quest" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h18v14h-8l-5 4v-4H3zm8 3v6h2V6zm0 8v2h2v-2z"/></svg>퀘스트<i class="dot"></i></button>
     <button class="tab" role="tab" id="tab-shop" data-tab="shop" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6v2h-1v2h3v2h2v2h1v9h-1v2H5v-2H4v-9h1V8h2V6h3V4H9zm2 10v2h-1v2h4v-2h-1v-2z"/></svg>상점<i class="dot"></i></button>
     <button class="tab" role="tab" id="tab-rec" data-tab="rec" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h12l2 2v16H5zm3 4v2h8V7zm0 4v2h8v-2zm0 4v2h5v-2z"/></svg>정보</button>
     <button class="tab" role="tab" id="tab-bag" data-tab="bag" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6v3h-1v2h3l2 3v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-9l2-3h3V5H9zm-1 10v2h8v-2z"/></svg>가방<i class="dot"></i></button>
+    <button class="tab" role="tab" id="meBtn" data-tab="me" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 2h6v2h2v6h-2v2H9v-2H7V4h2zm-4 12h14v2h2v6H3v-6h2z"/></svg>내 정보</button>
+    </div>
   </nav>
   <button class="bigboss" id="bigBoss" aria-label="보스 도전"><svg class="ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" class="rb"/><circle cx="20" cy="20" r="17" class="rf" id="bbRing"/></svg><b id="bbTxt">보스</b><i id="bbSub"></i></button>
 </div>
@@ -1197,24 +1321,25 @@ const CLASSES = {
   musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'균형 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0.003, range:1, skillMul:1.1, dr:10,
     role:'균형', traits:['체력이 높고 받는 피해 -10%, 체력 회복도 조금 더 빨라요', '여럿을 베는 기술·한 적을 노리는 기술·힘을 북돋는 기술을 고루 써요', '레이드에서는 보스의 눈길을 끌어 동료를 지켜요'],
     weapon:'검', armor:'갑옷', wtype:'sword', base:'#8a5a3a', pants:'#4a3a2e', belt:'#d8b34a', fx:'#ffffff', boltFx:'flash', nukeFx:'slashes', proj:null,
-    skills:['회오리 베기', '일섬', '투혼', '천지 가르기', '천둥 연격', '기세 꺾기', '장군의 호령', '신장 강림', '팔갈래 폭풍', '개천벽지'], awaken:'개천 일격', awaken4:'반고의 개천'},
+    skills:['회오리 베기', '일섬', '투혼', '천지 가르기', '천둥 연격', '기세 꺾기', '장군의 호령', '신장 강림', '팔갈래 폭풍', '개천벽지', '호위 진형'], awaken:'개천 일격', awaken4:'반고의 개천'},
   jagaek:{name:'자객', desc:'보스의 급소를 노리는 그림자 사냥꾼', tags:'보스 특화 · 근접', hpMul:0.95, atkMul:1, spdMul:1.25, critAdd:0.08, regenAdd:0, range:1, skillMul:1,
     bossMul:1.3, aoeMul:0.8, oneMul:1.15, petMul:1.6, accMul:1.2, evade:0.2,
     role:'보스 특화', traits:['보스·수문장·레이드 보스에게 주는 피해 +30%, 한 적을 노리는 기술 +15%, 몸놀림이 빨라 공격의 20%를 피해요', '여럿을 치는 기술은 80%만 들어가서 몬스터 떼를 치우는 건 느려요', '공격 펫 피해 1.6배, 장신구 효과 1.2배 — 펫·장신구를 잘 맞춰야 사냥터를 빨리 밀어요'],
     weapon:'단검', armor:'야행복', wtype:'dagger', base:'#3a3450', pants:'#22202c', belt:'#8a2b2b', fx:'#e0607a', boltFx:'cross', nukeFx:'rain', proj:null,
-    skills:['그림자 베기', '급소 찌르기', '바람 걸음', '비도 난무', '그림자 연환', '급소 낙인', '월영 난무', '귀영 천살', '깃바람 분신', '무영 월광살'], awaken:'월하 만영참', awaken4:'광한 무영참'},
+    skills:['그림자 베기', '급소 찌르기', '바람 걸음', '비도 난무', '그림자 연환', '급소 낙인', '월영 난무', '귀영 천살', '깃바람 분신', '무영 월광살', '그믐 맹약'], awaken:'월하 만영참', awaken4:'광한 무영참'},
   sulsa:{name:'술사', desc:'처음엔 약하지만 갈수록 무서워지는 마력', tags:'후반 강함 · 원거리', hpMul:0.7, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0, range:4, skillMul:1.1,
     grow:[0.6, 1.5], shield:true,
     role:'늦게 피는 꽃', traits:['마력 성장: 공격력이 처음 60%에서 레벨을 올릴수록 커져 천계 만렙에 150%(이승 100 → 저승 200 → 천계 300을 모두 셈)', '체력이 가장 낮아요(70%). 보스 앞에서 쉽게 쓰러져요', '「마력 보호막」이 최대 체력의 40%(기술 레벨마다 +1%)를 막아요 — 보스가 나올 때 맞춰 쓰면 좋아요'],
     weapon:'지팡이', armor:'도포', wtype:'staff', base:'#3f5f9a', pants:'#2e3555', belt:'#d8b34a', fx:'#ff8a3a', boltFx:'zig', nukeFx:'meteor', proj:'fire',
-    skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌', '식신 행렬', '구천 현뢰'], awaken:'천화 강림', awaken4:'구천 천화'},
+    skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌', '식신 행렬', '구천 현뢰', '오행 공명'], awaken:'천화 강림', awaken4:'구천 천화'},
   doin:{name:'도인', desc:'준비 부적을 겹겹이 쌓아 한 방에 터뜨려요', tags:'한방 · 원거리', hpMul:1.1, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0.003, range:3, skillMul:1,
-    role:'한방', traits:['공격 기술은 3개뿐(Lv.5 · 1차 전직 · 환생 뒤). 대신 늘 치명타로 크게 터져요', '나머지는 준비 기술: 봉인(받는 피해↑)·회복·도력(다음 공격 2.5배↑)·팔괘(치명타 피해↑)·대굿(공격 기술 다시 쓰기)', '준비 기술을 다 건 뒤 공격 기술을 직접 누르면 게임에서 가장 큰 한 방이 나와요(자동은 그때그때 써요)'],
-    sk:[{kind:'d_atk1', cd:10, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, icon:'pearl'},
-      {kind:'d_bagua', cd:30, icon:'crit'}, {kind:'d_atk3', cd:40, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}, {kind:'d_shin', cd:30, icon:'jobC', job:3}],
-    order:[7, 8, 1, 2, 4, 3, 0, 6, 5, 9],
+    role:'한방', traits:['공격 기술은 다섯(천벌 부적 · 도력 일격 · 팔괘진 · 하늘의 심판 · 오방신장). 늘 치명타로 크게 터져요 — 도력 일격·팔괘진은 때리면서 나를 북돋는 「버프 겸 공격」', '나머지는 준비 기술: 봉인(받는 피해↑)·회복·대굿(공격 기술 다시 쓰기)·굿춤, 4차 전직의 오색 보천(공격 기술 피해↑·방패)', '준비 기술을 다 건 뒤 큰 공격 기술을 직접 누르면 게임에서 가장 큰 한 방이 나와요(자동은 그때그때 써요)'],
+    sk:[{kind:'d_atk1', cd:10, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, icon:'pearl', atk:true},
+      {kind:'d_bagua', cd:30, icon:'crit', atk:true}, {kind:'d_atk3', cd:40, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}, {kind:'d_shin', cd:30, icon:'jobC', job:3},
+      {kind:'d_bocheon', cd:40, icon:'jobD', job:4}],   // 도인 공격 기술은 다섯(2026-11 (41), 사용자 요청): 도력 일격·팔괘진이 버프 겸 공격이 되고, 4차 오색 보천은 공격 기술을 키우는 준비 기술로
+    order:[7, 10, 9, 8, 1, 2, 4, 3, 0, 6, 5],
     weapon:'부채', armor:'도포', wtype:'fan', base:'#e6e0cc', pants:'#bdb59c', belt:'#b8382f', fx:'#f3d36b', boltFx:'pillar', nukeFx:'pillars', proj:'charm',
-    skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 모으기', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿', '신명 굿춤', '오색 보천'], awaken:'사신 강림', awaken4:'삼국 신수 강림'},
+    skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 일격', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿', '신명 굿춤', '오색 보천', '축원 굿'], awaken:'사신 강림', awaken4:'삼국 신수 강림'},
 };
 const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin'];
 const W_PRE = ['나무', '무쇠', '청동', '백은', '신령'];
@@ -1249,12 +1374,13 @@ const SKILLS = [
   {key:'jobB',   unlock:1,  job:2, cd:32, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
   {key:'jobC',   unlock:1,  job:3, cd:26, base:5e10, growth:1.9, max:30},  // 3차 전직 기술(부상)
   {key:'jobD',   unlock:1,  job:4, cd:40, base:5e12, growth:1.9, max:30},  // 4차 전직 기술(곤륜)
+  {key:'party',  unlock:30, cd:40, base:1e5,  growth:1.9, max:30},  // 파티 버프(2026-11 (41), 직업마다 하나: 나와 함께 싸우는 동료 모두)
 ];
 // 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
-const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'jobD'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'jobD'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 // 자동으로 쓸 때의 순서(2026-11 (20), 사용자 요청): 피해를 키워 주는 기술 먼저 — 공격력 버프(3칸) → 약점(6칸) → 1차 전직(약점도 걺) → 2차 전직(공격력 버프도 줌) → 큰 기술.
 // 한 번에 하나씩, AUTO_GAP초 간격을 두고 써서 앞 기술의 효과를 받은 뒤 다음 기술이 들어간다(도인은 CLASSES.doin.order)
-const SK_AUTO_ORDER = [2, 5, 6, 7, 8, 9, 3, 1, 4, 0], AUTO_GAP = 0.1;
+const SK_AUTO_ORDER = [10, 2, 5, 6, 7, 8, 9, 3, 1, 4, 0], AUTO_GAP = 0.1;   // 파티 버프(10)가 맨 앞
 let autoGap = 0;
 const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
@@ -1264,38 +1390,103 @@ const skOpen = i => { const d = skDef(i); return S.level >= d.unlock && (!d.job 
 const skCap = i => Math.min(SKILLS[i].max, 10 + 5 * (S.job || 0), 4 + Math.floor(cumLv() / 6));
 const skLv = i => skOpen(i) ? Math.min(S.skills[SKILLS[i].key] || 0, skCap(i)) : 0;
 /* 전투 기술 칸(2026-11 (40), 사용자 요청: 실제 전투에서는 5~6개만): 익힌 기술 가운데 SK_SLOTS(6)개만 끼워 쓴다(S.skSet = 칸 번호).
-   S.skSetMan이 거짓이면(기본) 새 기술을 익힐 때마다 직업별 순서 SK_PICK으로 저절로 골라 끼우고, [기술]에서 직접 바꾸면 그 뒤로는 내가 고른 대로 */
+   S.skSetMan이 거짓이면(기본) 새 기술을 익힐 때마다 직업·전직 단계별 순서 skPick(SK_PRE.mix)으로 저절로 골라 끼우고, [기술]에서 직접 바꾸면 그 뒤로는 내가 고른 대로 */
 const SK_SLOTS = 6;
-const SK_PICK = {musa:[0, 1, 2, 6, 7, 8, 9, 3, 5, 4], jagaek:[0, 1, 2, 6, 7, 8, 9, 4, 5, 3], sulsa:[0, 2, 6, 7, 8, 9, 3, 1, 5, 4], doin:[5, 7, 3, 1, 2, 8, 0, 9, 6, 4]};   // 천계·부상 끝 저장에서 6칸 조합마다 보스(0.65)·몹 떼(0.35) 피해를 재서 가장 좋은 순서(bal skpick.py)
+const skPick = () => skPreList('mix');   // 평소 사냥 조합: 전직 단계마다 보스(0.65)·몹 떼(0.35) 피해로 가장 좋은 6칸(아래 SK_PRE.mix)
 function skSetFix(){
   if (!Array.isArray(S.skSet)) S.skSet = [];
   S.skSet = S.skSet.filter((i, k, a) => Number.isInteger(i) && i >= 0 && i < SKILLS.length && a.indexOf(i) === k).slice(0, SK_SLOTS);
-  const pick = SK_PICK[S.cls] || SK_PICK.musa;
+  const pick = skPick();
   if (!S.skSetMan){ const want = pick.filter(i => skOpen(i)).slice(0, SK_SLOTS); if (want.join() !== S.skSet.slice().sort((a, b) => pick.indexOf(a) - pick.indexOf(b)).join()) S.skSet = want; }
   else for (const i of pick) if (S.skSet.length < SK_SLOTS && skOpen(i) && !S.skSet.includes(i)) S.skSet.push(i);   // 직접 고른 뒤에도 빈 칸은 채움
 }
-const skIn = i => (S.skSet || []).includes(i);
+/* 싸움별 추천 기술 조합(2026-11 (41), 사용자 요청: 레이드 시작 전에 직업별 가장 좋은 조합을 저절로 골라 보여 줌):
+   boss = 혼자 보스(1일 보스·보물 동굴·허수아비·전직 시험) · party = 동료와 함께(레이드·타임 보스·강림 레이드, 파티 버프 넣음) · mob = 몹 떼(백귀야행) · mix = 평소 사냥(전투 칸 자동 고르기).
+   전직 단계마다(1차까지·2차·3차·4차) 저승·천계·곤륜 3차·4차 저장에서 6칸 조합을 모두 재서(bal skpick2·skdoin) 가장 좋은 것 + 나머지 순서. 익힌 것 가운데 앞에서 6개.
+   싸움 동안만 그 조합(skPreset), 끝나면 원래 칸으로 */
+const SK_PRE = {
+  musa:{boss:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,5,6,7,8,4,0,3,10,9], [2,5,6,7,8,9,1,0,4,3,10]],
+    party:[[10,0,1,2,6,4,3,5,7,8,9], [10,0,1,6,7,2,4,3,5,8,9], [10,2,6,7,8,1,5,4,0,3,9], [10,2,7,8,9,1,0,5,6,4,3]],
+    mob:[[0,1,2,3,5,6,10,4,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,5,6,7,8,3,1,4,10,9], [2,5,6,7,8,9,0,1,3,4,10]],
+    mix:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [1,2,5,6,7,8,0,3,4,10,9], [2,5,6,7,8,9,1,0,4,3,10]]},
+  jagaek:{boss:[[0,1,2,4,5,6,10,3,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,4,6,7,8,3,0,5,10,9], [2,4,5,7,8,9,1,3,0,6,10]],
+    party:[[10,1,2,4,6,0,3,5,7,8,9], [10,1,2,6,7,4,0,3,5,8,9], [10,2,6,7,8,1,4,0,3,5,9], [10,2,7,8,9,1,0,5,4,6,3]],
+    mob:[[0,1,2,3,6,10,4,5,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,5,6,7,8,3,10,1,4,9], [2,5,6,7,8,9,0,3,4,1,10]],
+    mix:[[0,1,2,3,4,6,10,5,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [2,3,4,6,7,8,1,0,10,5,9], [2,5,6,7,8,9,4,1,3,0,10]]},
+  sulsa:{boss:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,5,6,7,8,0,3,4,10,9], [2,5,6,7,8,9,1,3,4,0,10]],
+    party:[[10,0,1,2,6,4,3,5,7,8,9], [10,1,2,6,7,0,4,3,5,8,9], [10,2,5,7,8,6,4,1,0,3,9], [10,2,8,9,7,1,4,5,0,6,3]],
+    mob:[[0,1,2,3,6,10,5,4,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,3,6,7,8,5,10,1,4,9], [0,2,5,6,7,9,8,3,10,1,4]],
+    mix:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [0,2,5,6,7,8,3,1,4,10,9], [2,5,6,7,8,9,0,1,3,4,10]]},
+  doin:{boss:[[1,2,3,4,5,10,6,0,7,8,9], [0,2,3,4,5,7,1,10,6,8,9], [1,2,3,5,7,8,4,6,0,10,9], [1,2,3,5,8,9,4,0,10,6,7]],
+    party:[[10,2,3,4,5,1,0,6,7,8,9], [10,1,3,5,7,0,2,4,6,8,9], [10,1,3,8,5,2,6,7,4,0,9], [10,3,5,8,9,1,2,0,4,6,7]],
+    mob:[[1,2,3,4,5,6,0,10,7,8,9], [0,1,2,3,4,7,5,6,10,8,9], [1,2,3,5,6,8,4,7,0,10,9], [1,2,3,6,8,9,4,0,5,10,7]],
+    mix:[[1,2,3,4,5,6,0,10,7,8,9], [1,2,3,4,5,6,7,0,10,8,9], [1,2,3,5,6,8,4,7,0,10,9], [1,2,3,6,8,9,5,4,0,10,7]]},
+};
+const FIGHT_KIND_NAME = {boss:'혼자 하는 보스', party:'함께하는 레이드', mob:'몹 떼'};
+let skPreset = null, presetNext;   // presetNext: 다음 싸움에 쓸 조합(undefined = 저절로 추천, null = 지금 칸 그대로)
+const skTier = () => Math.max(0, Math.min(3, (S.job || 0) - 1));   // 0: 1차까지 · 1: 2차 · 2: 3차 · 3: 4차
+const skPreList = k => ((SK_PRE[S.cls] || SK_PRE.musa)[k] || SK_PRE.musa.mix)[skTier()];
+const skPresetFor = k => skPreList(k).filter(i => skOpen(i)).slice(0, SK_SLOTS);
+const fightKind = info => !info ? 'boss' : info.parade ? 'mob' : info.dummy || info.vault || info.dboss || info.job ? 'boss' : 'party';
+const curSet = () => skPreset || S.skSet || [];
+const skIn = i => curSet().includes(i);
+function presetTake(kind){ skPreset = presetNext !== undefined ? presetNext : S.presetMode === 'off' ? null : skPresetFor(kind); presetNext = undefined; skBarKey = ''; lastCast = null; }
+function presetDrop(){ if (skPreset){ skPreset = null; skBarKey = ''; } }
+// 싸움 전 창: 추천 조합과 지금 조합을 나란히. [시작]을 누르면 고른 대로(presetRead)
+function presetHTML(kind){
+  const rec = skPresetFor(kind), cur = (S.skSet || []).slice(0, SK_SLOTS);
+  const row = (L, mark) => `<div class="pre-row">${L.map(i => `<span class="pre-sk${mark && !cur.includes(i) ? ' new' : ''}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i></span>`).join('') || '<span class="small">익힌 기술이 없어요</span>'}</div>`;
+  const same = rec.slice().sort().join() === cur.slice().sort().join();
+  return `<div class="pre-box"><div class="pre-h">추천 기술 조합 · ${FIGHT_KIND_NAME[kind]}<span class="tag">${cls().name}</span></div>${row(rec, true)}
+    ${same ? '<p class="small" style="margin:4px 0 0">지금 끼운 기술이 추천 조합과 같아요.</p>' : `<div class="pre-h dim">지금 끼운 기술</div>${row(cur)}`}
+    <label class="pre-chk"><input type="checkbox" id="preUse" ${S.presetMode === 'off' ? '' : 'checked'}> 이번 싸움은 추천 조합으로(끝나면 원래대로)</label>
+    <label class="pre-chk"><input type="checkbox" id="preAuto" ${S.presetMode === 'auto' ? 'checked' : ''}> 다음부터 묻지 않고 늘 추천 조합으로</label></div>`;
+}
+function presetRead(kind){
+  const u = $('#preUse'), a = $('#preAuto');
+  if (a && a.checked) S.presetMode = 'auto'; else if (S.presetMode === 'auto') S.presetMode = 'ask';
+  presetNext = u && !u.checked ? null : skPresetFor(kind);
+}
+function presetAsk(kind, title, go){
+  const G = window.__game;
+  if (G && G.quiet || S.presetMode === 'auto' || S.presetMode === 'off'){ presetNext = S.presetMode === 'off' ? null : skPresetFor(kind); const r = go(); presetNext = undefined; return r; }
+  showModal(`${title} · 기술 조합`, presetHTML(kind), [{label:'취소'}, {label:'시작', primary:true, fn:() => { presetRead(kind); go(); presetNext = undefined; }}]);
+  return false;
+}
 function skToggle(i){   // [기술]에서 끼우기·빼기
   if (!skOpen(i)) return false;
   skSetFix(); S.skSetMan = true;
-  if (skIn(i)) S.skSet = S.skSet.filter(x => x !== i);
+  if (S.skSet.includes(i)) S.skSet = S.skSet.filter(x => x !== i);
   else { if (S.skSet.length >= SK_SLOTS) return false; S.skSet.push(i); }
   skBarKey = ''; return true;
 }
 function skSetAuto(){ S.skSetMan = false; skSetFix(); skBarKey = ''; }
-/* 연계(콤보, 2026-11 (40), 사용자 요청): 바로 앞에 쓴 기술(COMBO_WIN초 안)과 이번 기술이 짝이 맞으면 '연계!' — COMBO_T초 동안 기술 피해 +p%.
-   두 기술을 모두 전투 칸에 끼워야 하고, 자동 순서로 저절로 이어지는 짝(auto)과 직접 순서를 맞춰야 하는 짝이 있다 */
-const COMBO_WIN = 3, COMBO_T = 5;
+/* 연계(콤보, 2026-11 (40) → (41) 사용자 요청: 너무 셈, 확률로 저절로): 짝이 되는 두 기술을 COMBO_WIN초 안에 이어 쓰면(순서는 상관없음)
+   COMBO_P 확률로 '연계!' — COMBO_T초 동안 기술 피해 +p%. 두 기술을 모두 전투 칸에 끼워야 하고, 자동·직접 어느 쪽이든 저절로 터진다 */
+const COMBO_WIN = 4, COMBO_T = 5, COMBO_P = 0.35;
+/* 마나(2026-11 (41), 사용자 요청: 기술 = 재사용 시간 + 마나): 최대 MP_MAX, 초당 MP_REGEN씩 찬다(싸움을 시작하면 가득).
+   기술마다 마나 = 재사용 시간 × MP_K(반올림, 체력 회복 능력치·각인과 상관없음). 모자라면 그 기술은 기다리고 다음 기술로 넘어간다.
+   그래서 재사용 줄임(도력 각인·탈것)이나 대굿(재사용 초기화)으로 기술을 몰아 쓰면 마나가 먼저 바닥난다 */
+const MP_MAX = 100, MP_REGEN = 7, MP_K = 0.9;
+const skMp = i => Math.max(1, Math.round(skDef(i).cd * MP_K));
 const COMBOS = [
-  {k:'c1', a:0, b:1, name:'이어 치기', p:25},
-  {k:'c2', a:2, b:3, name:'기세 싣기', p:35},
-  {k:'c3', a:5, b:4, name:'약점 몰아치기', p:35},
-  {k:'c4', a:6, b:7, name:'스승의 가르침', p:30, auto:true},
-  {k:'c5', a:8, b:9, name:'하늘땅 연계', p:40, auto:true},
-  {k:'c6', a:9, b:3, name:'끝없는 연환', p:30, auto:true},
+  {k:'c1', a:0, b:1, name:'이어 치기', p:10},
+  {k:'c2', a:2, b:3, name:'기세 싣기', p:12},
+  {k:'c3', a:5, b:4, name:'약점 몰아치기', p:12},
+  {k:'c4', a:6, b:7, name:'스승의 가르침', p:12},
+  {k:'c5', a:8, b:9, name:'하늘땅 연계', p:15},
+  {k:'c6', a:9, b:3, name:'끝없는 연환', p:10},
+  {k:'c7', a:10, b:2, name:'함께 북돋기', p:10},
 ];
 let lastCast = null, skFixKey = '';   // {i, t} 바로 앞에 쓴 기술
-const comboFor = i => lastCast && gtime - lastCast.t <= COMBO_WIN ? COMBOS.find(c => c.a === lastCast.i && c.b === i && skIn(c.a) && skIn(c.b)) || null : null;
+const comboPair = i => lastCast && lastCast.i !== i && gtime - lastCast.t <= COMBO_WIN ? COMBOS.find(c => (c.a === lastCast.i && c.b === i || c.b === lastCast.i && c.a === i) && skIn(c.a) && skIn(c.b)) || null : null;
+function comboFor(i){   // 짝이 맞으면 COMBO_P 확률로(시험의 benchAvg는 확률만큼 약하게 늘 켬)
+  const c = comboPair(i);
+  if (!c) return null;
+  const G = window.__game;
+  if (G && G.benchAvg) return Object.assign({}, c, {p:c.p * COMBO_P});
+  return Math.random() < COMBO_P * (G && G.comboLuck != null ? G.comboLuck : 1) ? c : null;
+}
 const comboMul = () => hero.comboT > 0 ? 1 + (hero.comboP || 0) / 100 : 1;
 // 반자동이면 기술은 모두 직접. 다만 다른 용사·동료와 함께하는 싸움(레이드·타임 보스 등)에서는 늘 모든 기술을 자동으로(사용자 요청)
 const coopFight = () => !!raid && !!raid.allies && raid.allies.length > 0;
@@ -1303,13 +1494,66 @@ const skAuto = i => coopFight() || S.mode !== 'semi' && !(S.skManual && S.skManu
 const skLockText = i => { const d = skDef(i); return d.reb ? '환생' : d.job ? d.job + '차' : 'Lv.' + d.unlock; };
 const skLockLong = i => { const d = skDef(i); return d.reb ? '환생하면 익힘' : d.job ? `${d.job}차 전직 때 익힘` : `Lv.${d.unlock}에 익힘`; };
 // 도인 기술 수치
-const dAtkPct = (k, l) => ({d_atk1:230, d_atk2:440, d_atk3:2300})[k] * (1 + 0.1 * (l - 1));
+const D_ATK = {d_atk1:200, d_atk2:650, d_atk3:1700, d_charge:650, d_bagua:800};   // 도인 공격 기술 다섯(공격력 %, 레벨마다 +10%). 도력 일격·팔괘진은 버프 겸 공격(2026-11 (41))
+const dAtkPct = (k, l) => D_ATK[k] * (1 + 0.1 * (l - 1));
 const dSealPct = l => 30 + 2 * (l - 1);
 const dChargeMul = l => 2.5 + 0.05 * (l - 1);
 const dBaguaAdd = l => 60 + 4 * (l - 1);
 const dGutAtk = l => 50 + (l - 1);          // 만신 대굿 공격력 +%(예전엔 레벨 효과가 없었음)
 // 후반(3·4차 전직) 직업 맞춤(2026-11 (27)): 같은 장비·능력치에서 무사=1 기준 보스 피해 목표 자객 1.4~1.7·술사 1.2~1.4·도인 1.0~1.3(bench)
-const LATE_K = {clone:0.3, cloneMob:0.6, jagaekD:0.14, sulsaC:1.0, sulsaD:0.38, doinD:0.9, shinA:120, shinB:4, shinT:20};   // 예전: 분신 0.6·자객 4차 0.08·식신 0.67·우레 0.17·굿춤 20+0.5/레벨 12초
+const LATE_K = {clone:0.3, cloneMob:0.6, jagaekD:0.14, sulsaC:1.0, sulsaD:0.38, doinB:130, shinA:120, shinB:4, shinT:20};   // 예전: 분신 0.6·자객 4차 0.08·식신 0.67·우레 0.17·굿춤 20+0.5/레벨 12초. doinB 오색 보천(공격 기술 피해 +%)
+const dBocheonPct = l => LATE_K.doinB + 2 * (l - 1);   // 도인 4차 오색 보천: 15초 동안 공격 기술 피해 +%
+/* 파티 버프(2026-11 (41), 사용자 요청: 캐릭터마다 하나씩): 11번째 기술 칸(Lv.30). 나와 함께 싸우는 동료 모두에게 PB_T초.
+   무사 호위 진형(받는 피해↓·공격력↑) · 자객 그믐 맹약(치명타 확률·피해↑) · 술사 오행 공명(기술 피해↑·보호막) · 도인 축원 굿(체력 회복·공격력·공격 속도↑).
+   레이드·타임 보스·강림 레이드의 동료(다른 용사 캐릭터)도 자기 직업의 파티 버프를 PB_CD초마다 걸어 준다. 같은 직업 버프는 겹치지 않고 새로 걸린다.
+   그만큼 함께하는 레이드 보스는 파티의 직업 수 × PB_RAID_K만큼 단단해진다(pbRaidK) */
+const PB_T = 20, PB_CD = 40, PB_RAID_K = 0.05;
+const PB = {
+  musa:{dr:l => 15 + 0.5 * (l - 1), atk:l => 10 + 0.5 * (l - 1), col:'#ffd977'},
+  jagaek:{cr:l => 10 + 0.3 * (l - 1), cd:l => 30 + (l - 1), col:'#ff7a9a'},
+  sulsa:{sk:l => 15 + 0.6 * (l - 1), col:'#9fe7ff'},
+  doin:{atk:l => 8 + 0.4 * (l - 1), spd:l => 10 + 0.5 * (l - 1), col:'#8ff0a0'},
+};
+const PB_SH = 20, PB_HEAL = 25;   // 술사 보호막·도인 회복(최대 체력 %)
+let pbT = {}, pbL = {};   // 지금 걸려 있는 파티 버프(직업별 남은 초·레벨)
+const pbV = (c, f) => (pbT[c] || 0) > 0 && PB[c][f] ? PB[c][f](pbL[c] || 1) : 0;
+const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 100);
+const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('jagaek', 'cr') / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
+const pbLvOf = a => a.npc ? 8 : Math.max(1, Math.min(30, 4 + Math.floor((+a.level || 100) / 6)));   // 동료의 파티 버프 레벨(어림)
+const pbRaidK = (party = []) => { const cs = new Set(party.filter(a => a.npc || (+a.level || 100) >= SKILLS[10].unlock).map(a => a.cls)); if (skOpen(10)) cs.add(S.cls); return 1 + PB_RAID_K * cs.size; };
+function pbDesc(c, l){
+  if (c === 'musa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 받는 피해 -${fmt(PB.musa.dr(l))}%·공격력 +${fmt(PB.musa.atk(l))}%`;
+  if (c === 'jagaek') return `함께 싸우는 동료 모두 ${PB_T}초 동안 치명타 확률 +${fmt(PB.jagaek.cr(l))}%·치명타 피해 +${fmt(PB.jagaek.cd(l))}%`;
+  if (c === 'sulsa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 기술 피해 +${fmt(PB.sulsa.sk(l))}%, 최대 체력 ${PB_SH}% 보호막`;
+  return `함께 싸우는 동료 모두 체력 ${PB_HEAL}% 회복, ${PB_T}초 동안 공격력 +${fmt(PB.doin.atk(l))}%·공격 속도 +${fmt(PB.doin.spd(l))}%`;
+}
+function pbGain(l, n){
+  const c = S.cls, P = PB[c], pp = v => '+' + fmt(Math.round(v * 10) / 10) + '%';
+  if (c === 'musa') return {lab:'공격력', a:pp(P.atk(l)), b:pp(P.atk(n)), g:((100 + P.atk(n)) / (100 + P.atk(l)) - 1) * 100, extra:`받는 피해 -${fmt(P.dr(l))}% → -${fmt(P.dr(n))}%`};
+  if (c === 'jagaek') return {lab:'치명타 피해', a:pp(P.cd(l)), b:pp(P.cd(n)), g:((100 + P.cd(n)) / (100 + P.cd(l)) - 1) * 100, extra:`치명타 확률 ${pp(P.cr(l))} → ${pp(P.cr(n))}`};
+  if (c === 'sulsa') return {lab:'기술 피해', a:pp(P.sk(l)), b:pp(P.sk(n)), g:((100 + P.sk(n)) / (100 + P.sk(l)) - 1) * 100};
+  return {lab:'공격력·속도', a:`${pp(P.atk(l))}·${pp(P.spd(l))}`, b:`${pp(P.atk(n))}·${pp(P.spd(n))}`, g:((100 + P.atk(n)) * (100 + P.spd(n)) / ((100 + P.atk(l)) * (100 + P.spd(l))) - 1) * 100};
+}
+// who = 건 동료(없으면 나)
+function partyBuff(c, lv, who){
+  const P = PB[c];
+  if (!P) return false;
+  pbL[c] = (pbT[c] || 0) > 0 ? Math.max(pbL[c] || 1, lv) : lv; pbT[c] = PB_T;
+  const mates = raid && raid.allies ? raid.allies.filter(a => !a.down) : [];
+  if (c === 'sulsa'){
+    if (!hero.dead){ hero.shield = Math.max(hero.shield || 0, ST.maxHp * PB_SH / 100); hero.shieldT = Math.max(hero.shieldT || 0, 12); }
+    for (const a of mates){ a.shield = Math.max(a.shield || 0, a.maxHp * PB_SH / 100); a.shieldT = 12; }
+  }
+  if (c === 'doin'){
+    if (!hero.dead) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * PB_HEAL / 100);
+    for (const a of mates) a.hp = Math.min(a.maxHp, a.hp + a.maxHp * PB_HEAL / 100);
+  }
+  const src = who || hero, nm = CLASSES[c].skills[10];
+  addText(`${who ? who.name + ' · ' : ''}${nm}!`, src.x, src.y - (who ? 38 : 46), P.col, who ? 10 : 13, true);
+  if (!fxOff()){ for (const e of [hero, ...mates]) if (!e.dead) fx.push({type:'ring', t:0, dur:0.7, x:e.x, y:e.y - 4, color:P.col, r:16}); fx.push({type:'aura', t:0, dur:0.9, color:P.col}); }
+  if (!who) sfx('skill');
+  return true;
+}
 const dShinAtk = l => LATE_K.shinA + LATE_K.shinB * (l - 1);   // 신명 굿춤 공격력 +%
 // 술사 마력 보호막(최대 체력의 %)
 const shieldPct = l => 40 + (l - 1);
@@ -1328,14 +1572,15 @@ function skillDesc(i, l){
   if (d.kind === 'd_atk3') return `가장 튼튼한 적 하나에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해 · <b>늘 치명타</b>`;
   if (d.kind === 'd_seal') return `준비: 보이는 적 모두 10초 동안 받는 피해 +${dSealPct(l)}%`;
   if (d.kind === 'd_heal') return `준비: 체력 30% 회복, 8초 동안 공격력 +${roarAtk(l)}%·공격 속도 +${roarSpd(l)}%`;
-  if (d.kind === 'd_charge') return `준비: 다음 공격 기술 하나의 피해 ×${dChargeMul(l).toFixed(2)}`;
-  if (d.kind === 'd_bagua') return `준비: 10초 동안 치명타 피해 +${dBaguaAdd(l)}%`;
+  if (d.kind === 'party') return pbDesc(S.cls, l);
+  if (d.kind === 'd_charge') return `버프 겸 공격: 가장 튼튼한 적 하나에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해(<b>늘 치명타</b>) + 다음 큰 공격 기술(천벌 부적·하늘의 심판·오방신장) 피해 ×${dChargeMul(l).toFixed(2)}`;
+  if (d.kind === 'd_bagua') return `버프 겸 공격: 10초 동안 치명타 피해 +${dBaguaAdd(l)}%, 그리고 대상 주변 적 모두에게 공격력의 ${fmt(dAtkPct(d.kind, l))}% 피해(<b>늘 치명타</b>)`;
+  if (d.kind === 'd_bocheon') return `준비: 15초 동안 공격 기술 다섯의 피해 +${fmt(dBocheonPct(l))}%, 10초 동안 최대 체력 50%만큼 막는 방패`;
   if (d.kind === 'd_gut') return `준비: 공격 기술 재사용 시간을 모두 없애고 12초 동안 공격력 +${fmt(dGutAtk(l))}%`;
   if (d.kind === 'd_shin') return `준비: ${LATE_K.shinT}초 동안 공격 속도 +30%·공격력 +${fmt(dShinAtk(l))}%, 1초마다 체력 3% 회복`;
   if (d.kind === 'jobD'){
     if (S.cls === 'jagaek') return `2초 동안 모습을 감추고(맞지 않음) 보이는 적 모두를 12번 연달아 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.jagaekD * sm))}%씩, 모두 치명타`;
     if (S.cls === 'sulsa') return `우레 아홉 줄기가 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.sulsaD * sm))}%씩, 마지막 줄기는 보이는 적 모두`;
-    if (S.cls === 'doin') return `오색 빛이 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.doinD * sm))}%, 10초 동안 최대 체력 50%만큼 막는 방패`;
     return `하늘과 땅을 가르는 일격: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
   }
   if (d.kind === 'jobC'){
@@ -1372,8 +1617,9 @@ function skillGain(i, l){
     case 'd_atk1': case 'd_atk2': case 'd_atk3': return dmg(x => dAtkPct(k, x) * sm);
     case 'd_seal': return amp('적이 받는 피해', dSealPct);
     case 'd_heal': return atkSpd();
-    case 'd_charge': return {lab:'다음 공격', a:'×' + dChargeMul(l).toFixed(2), b:'×' + dChargeMul(n).toFixed(2), g:(dChargeMul(n) / dChargeMul(l) - 1) * 100};
-    case 'd_bagua': { const cd = ST.critDmg * 100; return {lab:'치명타 피해', a:pp(dBaguaAdd(l)), b:pp(dBaguaAdd(n)), g:((cd + dBaguaAdd(n)) / (cd + dBaguaAdd(l)) - 1) * 100}; }
+    case 'd_charge': { const r = dmg(x => dAtkPct(k, x) * sm); r.extra = `다음 공격 ×${dChargeMul(l).toFixed(2)} → ×${dChargeMul(n).toFixed(2)}`; return r; }
+    case 'd_bagua': { const r = dmg(x => dAtkPct(k, x) * sm); r.extra = `치명타 피해 ${pp(dBaguaAdd(l))} → ${pp(dBaguaAdd(n))}`; return r; }
+    case 'd_bocheon': return amp('공격 기술 피해', dBocheonPct);
     case 'd_gut': return amp('공격력', dGutAtk);
     case 'd_shin': return amp('공격력', dShinAtk);
     case 'roar': { const r = atkSpd(); if (C.shield) r.extra = `보호막 ${shieldPct(l)}% → ${shieldPct(n)}%`; return r; }
@@ -1384,7 +1630,8 @@ function skillGain(i, l){
     case 'jobA': return dmg(x => jobAPct(x) * sm * am);
     case 'jobB': return dmg(x => jobBPct(x) * sm * am);
     case 'jobC': return S.cls === 'jagaek' ? dmg(x => LATE_K.clone * 100 * (1 + 0.03 * (x - 1)), '분신 한 대') : dmg(x => jobCPct(x) * sm * (S.cls === 'sulsa' ? LATE_K.sulsaC : 1), S.cls === 'sulsa' ? '식신 하나' : '한 번 피해');
-    case 'jobD': return dmg(x => jobDPct(x) * sm * ({jagaek:LATE_K.jagaekD, sulsa:LATE_K.sulsaD, doin:LATE_K.doinD}[S.cls] || 1), {jagaek:'한 번 피해', sulsa:'줄기 하나'}[S.cls] || '피해');
+    case 'jobD': return dmg(x => jobDPct(x) * sm * ({jagaek:LATE_K.jagaekD, sulsa:LATE_K.sulsaD}[S.cls] || 1), {jagaek:'한 번 피해', sulsa:'줄기 하나'}[S.cls] || '피해');
+    case 'party': return pbGain(l, n);
   }
   return dmg(x => meteorPct(x) * sm * am);
 }
@@ -2351,9 +2598,20 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-8', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-9', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-10 · 도인 · 파티 버프 · 마나 · 전멸기 · 강림 레이드 · 메뉴 정리'],
+  ['도인 공격 기술 다섯', '「도력 일격」(가장 튼튼한 적을 치고 도력을 모음)·「팔괘진」(치명타 피해↑와 함께 둘레를 침)이 버프 겸 공격이 되어 공격 기술이 다섯이에요. 4차 「오색 보천」은 공격 기술 다섯의 피해를 키우는 준비 기술로 바뀌었어요. 후반 도인이 몹 떼에 약하던 것(무사의 절반)이 비슷해졌어요.'],
+  ['파티 버프', '직업마다 하나(Lv.30): 무사 「호위 진형」(받는 피해↓·공격력↑) · 자객 「그믐 맹약」(치명타↑) · 술사 「오행 공명」(기술 피해↑·보호막) · 도인 「축원 굿」(회복·공격력·속도↑). 함께 싸우는 동료도 저마다 걸어 줘요. 그만큼 함께하는 레이드 보스가 조금 단단해졌어요.'],
+  ['싸움별 추천 기술 조합', '레이드·보스 싸움을 시작하기 전에 직업과 싸움(혼자 보스·함께하는 레이드·몹 떼)에 맞는 6칸을 저절로 골라 보여 줘요. 싸움 동안만 그 조합, 끝나면 원래대로. [기술]에서 「늘 추천 조합」·「쓰지 않음」도 골라요.'],
+  ['연계는 확률로, 약하게', '짝이 되는 두 기술을 4초 안에 이어 쓰면(순서 상관없이) 35% 확률로 저절로 「연계!」 — 기술 피해 +10~15%(예전 +25~40%).'],
+  ['마나', '기술을 쓰면 재사용 시간과 함께 마나가 들어요(최대 100, 초당 7). 체력 막대 아래 파란 막대예요. 마나가 모자란 기술 칸은 어둡게 보여요.'],
+  ['레이드 전멸기', '함께하는 레이드의 보스는 체력이 반쯤 깎이면 전멸기를 써요. 모두 죽기 직전까지 깎이고, 회복약(인삼·산삼 탕약)이 있으면 저절로 마셔 버티고 없으면 쓰러져요. [상점]에서 회복약을 챙겨 두세요.'],
+  ['강림 레이드', '[레이드] → [강림]. 매일 다른 신장이 내려와요. 나 + 다른 용사 3명이 저절로 모여(같은 직업은 2명까지) 함께 싸우고, 이기면 아바타 하나(강림 전용 아바타 25%). 하루 2번, 첫 환생 뒤부터.'],
+  ['1일 보스는 천계부터', '1일 보스는 이야기 17장(천계, 치장이 열리는 장)부터 열려요. 초반에 치장을 얻어 너무 세지던 것을 막았어요.'],
+  ['메뉴 정리 · 내 정보', '아래 메뉴는 다섯 + [더보기](퀘스트·상점·정보·가방·내 정보). 왼쪽 위 상태창을 누르면 「내 정보」에서 낀 장비·장신구·비전 장비·치장·변신·탈것·아바타와 능력치를 한눈에 봐요.'],
+  ['? 설명 · 가로 화면', '긴 설명은 접는 대신 「?」를 누르면 말풍선으로 보여요. 휴대폰 가로 화면에서 메뉴 창의 글자·칸·단추를 줄이고, 장비·펫 칸을 두 줄씩 놓아 한눈에 들어오게 했어요.'],
   ['#', '2026-11-10 · 변신 개편 · 기술 6칸과 연계 · 초각성 · 저승/천계 레이드'],
   ['변신은 보스 싸움에서 한 번', '착용한 변신을 보스 싸움·레이드에서 한 판에 딱 한 번, 기술 줄 위 [변신] 단추로 30초 동안 써요(일반 몹 사냥 중엔 못 써요). 자동이면 보스가 나오자마자, 단추를 길게 누르면 수동. 효과는 \'몇 단계만큼\'이라 어느 땅에서나 비슷하게 세고, 사신(1부)의 힘은 부상·곤륜에서 60%로 줄어요(부상에서 청룡이 너무 셌어요).'],
   ['새 변신 여섯', '부상: 까마귀 텐구(이야기 「텐구 장수」)·여우불 구미·붉은 오니 / 곤륜: 황룡(이야기 「곤륜 가는 길」)·촉룡·정위. 이야기 것이 아닌 변신은 1일 보스(이기면 4%)·꾸미기 상자(1.5%)에서, 60번 안에 하나는 꼭.'],
@@ -2529,7 +2787,7 @@ function defaultState(){
   return {
     v:1, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
     up:{atk:0, hp:0, crit:0, critDmg:0, aspd:0, regen:0},
-    skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0},
+    skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0, party:0},
     gear:{weapon:{count:Array(20).fill(0), seen:Array(20).fill(false)}, armor:{count:Array(20).fill(0), seen:Array(20).fill(false)}},
     equip:{weapon:-1, armor:-1},
     rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0, bossAll:0, raidAll:0},
@@ -2551,7 +2809,7 @@ function defaultState(){
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, mythShard:0,
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, gr:{day:'', n:0, won:false, pity:0}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, asc:{weapon:0, armor:0},
   };
 }
@@ -2567,7 +2825,7 @@ function mergeState(d){
   out.craft = base.craft;
   for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0), el:Math.max(0, Math.min(ENGR_LV_MAX, c.el | 0))}; }
   out.skManual = d.skManual && typeof d.skManual === 'object' ? d.skManual : {};
-  out.skSet = Array.isArray(d.skSet) ? d.skSet.filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : []; out.skSetMan = !!d.skSetMan;
+  out.skSet = Array.isArray(d.skSet) ? d.skSet.filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : []; out.skSetMan = !!d.skSetMan; out.presetMode = ['ask', 'auto', 'off'].includes(d.presetMode) ? d.presetMode : 'ask';
   out.equip = Object.assign(base.equip, d.equip || {});
   // 새로 생긴 칸: 예전 저장에는 없으므로 기본값을 채운다
   out.name = typeof d.name === 'string' ? d.name.slice(0, 8) : '';
@@ -2662,7 +2920,8 @@ function mergeState(d){
   for (const it of Array.isArray(d.bag) ? d.bag.slice(0, BAG_MAX) : []){ const c = mkClean(it); if (c && (c.t === 'acc' || c.t === 'myth')){ c.id = Number.isInteger(it.id) && it.id > 0 ? it.id : ++out.bagSeq; out.bagSeq = Math.max(out.bagSeq, c.id); out.bag.push(c); } }
   out.petMythPity = Math.max(0, Math.floor(+d.petMythPity) || 0);
   out.vault = {day:d.vault && typeof d.vault.day === 'string' ? d.vault.day : '', n:Math.max(0, Math.floor(+(d.vault && d.vault.n)) || 0)};
-  { const db = d.dboss && typeof d.dboss === 'object' ? d.dboss : {}; out.dboss = {day:typeof db.day === 'string' ? db.day : '', n:Math.max(0, Math.floor(+db.n) || 0), paid:!!db.paid, won:!!db.won}; } out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
+  { const db = d.dboss && typeof d.dboss === 'object' ? d.dboss : {}; out.dboss = {day:typeof db.day === 'string' ? db.day : '', n:Math.max(0, Math.floor(+db.n) || 0), paid:!!db.paid, won:!!db.won}; }
+  { const g = d.gr && typeof d.gr === 'object' ? d.gr : {}; out.gr = {day:typeof g.day === 'string' ? g.day : '', n:Math.max(0, Math.floor(+g.n) || 0), won:!!g.won, pity:Math.max(0, Math.floor(+g.pity) || 0)}; } out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
   out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
   out.mount = {own:{}, star:{}, piece:Math.max(0, Math.floor(+mt.piece) || 0), ride:''};
@@ -2699,7 +2958,7 @@ const after = (sec, fn) => later.push({t:sec, fn});
 const hero = {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
   engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0, shinT:0, cloneT:0, cloneAcc:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
-const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7, jobC:8, jobD:9};
+const skillCd = {spin:1.5, bolt:2, roar:2, meteor:3, combo:4, mark:5, jobA:6, jobB:7, jobC:8, jobD:9, party:1};
 let raid = null;      // 레이드 진행 중일 때만 채워진다
 let session = null;   // {acc, cid}: 지금 플레이 중인 계정·캐릭터
 
@@ -2772,7 +3031,7 @@ function computeStats(up = S.up){
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => comboMul() * (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * fxNow.skill * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
+const skillMulX = () => comboMul() * (1 + pbV('sulsa', 'sk') / 100) * (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * fxNow.skill * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 /* 실제 보스 피해(2026-11 (26)): 기본 초당 피해(dpsOf)에는 기술·넋·펫·보스 피해 배율이 빠져 있어 후반엔 실제보다 수십 배 작다.
    보스·레이드 싸움에서 용사 쪽(용사·펫·넋)이 보스에게 넣은 피해 ÷ 싸운 시간을 재어, dpsOf의 몇 배인지(S.rec.rdpsK, 평균)를 기억한다.
@@ -2806,8 +3065,8 @@ function statValue(k, st){
     case 'regen': return (st.regen * 100).toFixed(1) + '%/초';
   }
 }
-const atkBuff = () => (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1);
-const spdBuff = () => (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
+const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1);
+const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + barrack().gain + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
@@ -3299,6 +3558,7 @@ let potCd = 0;
 function autoPotion(dt){
   potCd = Math.max(0, potCd - dt);
   if (potCd > 0 || hero.dead || hero.hp >= ST.maxHp * 0.3) return;
+  if (raid && raid.wipe && (raid.wipe.st === 1 || raid.wipe.st === 2)) return;   // 전멸기가 다 깎을 때까지 기다렸다 마신다
   const danger = bossActive || !!raid;
   let k = null, h = 0;
   if (S.inv.elixir > 0 && (danger || S.inv.potion <= 0)){ k = 'elixir'; h = 1; }
@@ -3481,9 +3741,9 @@ let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정
 function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
-  const sc = hero.soulCritT > 0 ? hero.soulCrit / 100 : 0;
+  const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit + sc;
-  const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + sc * 2;
+  const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100;
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : PAT.grogMul : 1;
   const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') * fxNow.boss : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
@@ -3709,7 +3969,7 @@ function raidParty(info){
   const heroDps = dpsOf(ST), out = [];
   const others = allChars().filter(c => !(session && c.acc === session.acc && c.cid === session.cid) && c.ally)
     .sort((a, b) => b.ally.dps - a.ally.dps).slice(0, partyOf(info) - 1);
-  for (const o of others) out.push({name:o.name, cls:o.cls, look:cleanLook(o.look), armorG:o.armorG, weaponG:o.weaponG, dps:o.ally.dps, maxHp:o.ally.maxHp, own:true});
+  for (const o of others) out.push({name:o.name, cls:o.cls, look:cleanLook(o.look), armorG:o.armorG, weaponG:o.weaponG, dps:o.ally.dps, maxHp:o.ally.maxHp, own:true, level:+o.level || 1});
   for (let k = 0; out.length < partyOf(info) - 1; k++){
     const n = NPCS[k % NPCS.length], gr = Math.min(4, Math.max(0, info.g - 1));
     out.push({name:n.name, cls:n.cls, look:{outfit:n.outfit, hair:n.hair, hat:'class', skin:k % 3}, armorG:gr, weaponG:gr,
@@ -3719,8 +3979,8 @@ function raidParty(info){
 }
 function startRaid(i){
   if (raid || !raidReady(i) || !session && !window.__game) return false;
-  const info = raidAt(i), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1);
-  startFight(info, raidParty(info), {hp:10 * mHp(ref) / 15 * eff * 40, atk:mAtk(ref) * 3, aoe:mAtk(ref) * 2, time:RAID_TIME});
+  const info = raidAt(i), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), party = raidParty(info);
+  startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:mAtk(ref) * 3, aoe:mAtk(ref) * 2, time:RAID_TIME});   // 파티 버프만큼 단단하게(2026-11 (41))
   addLog(`${info.label} 토벌 시작! ${RAID_TIME}초 안에 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨려요.`, 'warn');
   return true;
 }
@@ -3733,7 +3993,8 @@ function startFight(info, party, o){
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
-  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0});
+  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, mp:MP_MAX, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0});
+  presetTake(fightKind(info));   // 싸움별 추천 기술 조합(끝나면 presetDrop)
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
@@ -3794,7 +4055,7 @@ const TB_DIFF = {
 /* 타임 보스 세기(2026-11 (26), 사용자 요청): 모인 용사들의 전투력에 맞춘다.
    (2026-11 (38)부터 체력은 FIT로 맞춤 — 아래 TB_LEAD 근처 설명. hpSec는 예전 값으로 남겨 둠) 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe, 방어는 tbHeroHp로 빼고).
    그래서 약한 캐릭터·강한 캐릭터가 섞여도 누구나 똑같이 위협받고, 사람이 많을수록 보스도 단단해진다 */
-const tbHeroHp = () => ST.maxHp / Math.max(0.05, takenK());   // 방어로 줄어드는 몫을 미리 되돌려, 맞으면 최대 체력의 그 %가 깎인다
+const tbHeroHp = () => ST.maxHp / Math.max(0.05, takenK(true));   // 파티 버프(호위 진형)의 받는 피해 줄임은 빼지 않는다(동료가 걸어 준 만큼 덜 맞음)   // 방어로 줄어드는 몫을 미리 되돌려, 맞으면 최대 체력의 그 %가 깎인다
 const bossHit = (B, tg, mul = 1) => B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul;
 const bossAoe = (B, tg) => B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.aoe : B.aoe;
 function tbWindow(){
@@ -3849,11 +4110,11 @@ function tbFromSummary(name, sm, mine){
     level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine};
 }
 // 같은 직업은 나까지 TB_CLS_CAP명, 모두 TB_PICK명
-function tbCapPick(pool, rnd){
+function tbCapPick(pool, rnd, max = TB_PICK, cap = TB_CLS_CAP){
   pool = pool.slice();
   for (let i = pool.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const n = {[S.cls]:1}, out = [];
-  for (const o of pool){ if (out.length >= TB_PICK) break; if ((n[o.cls] || 0) >= TB_CLS_CAP) continue; n[o.cls] = (n[o.cls] || 0) + 1; out.push(o); }
+  for (const o of pool){ if (out.length >= max) break; if ((n[o.cls] || 0) >= cap) continue; n[o.cls] = (n[o.cls] || 0) + 1; out.push(o); }
   return out;
 }
 function tbPickLocal(){
@@ -3961,7 +4222,8 @@ function pickRaidTarget(){
   return null;
 }
 function damageAlly(a, d){
-  const dmg = d * (0.9 + Math.random() * 0.2);
+  let dmg = d * (0.9 + Math.random() * 0.2) * (1 - pbV('musa', 'dr') / 100);
+  if (a.shield > 0){ const ab = Math.min(a.shield, dmg); a.shield -= ab; dmg -= ab; }   // 술사 파티 버프 보호막
   a.hp -= dmg; a.hurt = 0.12;
   addText('-' + fmt(dmg), a.x, a.y - 30, '#ff8a7a', 9);
   if (a.hp <= 0){ a.hp = 0; a.down = true; a.downT = 6; a.swing = 0;
@@ -3970,7 +4232,7 @@ function damageAlly(a, d){
 // 함께하는 동료의 기술·초각성기(2026-11 (17)): 다른 용사의 캐릭터가 기본 공격만 하던 문제를 고침. NPC 동료는 작은 기술만
 function allySkill(a, B){
   const C = CLASSES[a.cls], nm = (C.skills || [])[(Math.random() * 6) | 0] || '기술', hy = B.y - mobHeight(B) * 0.5;
-  const dmg = a.hit * (a.npc ? 2.5 : 4.5) * (0.85 + Math.random() * 0.3);
+  const dmg = a.hit * pbAllyMul() * (a.npc ? 2.5 : 4.5) * (0.85 + Math.random() * 0.3);
   a.swing = 0.3;
   if (!fxOff()){ vadd({type:'glow', x:B.x, y:hy, r:14, col:C.fx || '#ffffff', dur:0.4}); vSparks(B.x, hy, 6, C.fx || '#ffffff', 60, 18); }
   addText(nm, a.x, a.y - 34, C.fx || '#ffe08a', 10, true);
@@ -3978,7 +4240,7 @@ function allySkill(a, B){
 }
 function allyAwaken(a, B){
   a.awk = true;
-  const C = CLASSES[a.cls], dmg = a.hit * a.aspd * AWAKEN_SEC;   // 동료 초각성도 그 동료 피해 AWAKEN_SEC초 몫(예전 60번 휘두른 만큼)
+  const C = CLASSES[a.cls], dmg = a.hit * pbAllyMul() * a.aspd * AWAKEN_SEC;   // 동료 초각성도 그 동료 피해 AWAKEN_SEC초 몫(예전 60번 휘두른 만큼)
   fx.push({type:'awaken', t:0, dur:1.1, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5}); shake = Math.max(shake, 0.35);
   addText(`${a.name} · ${C.awaken}!`, a.x, a.y - 40, '#ffd24a', 12, true);
   for (let k = 0; k < 4; k++) after(k * 0.15, () => { if (raid && !B.dead) hit(B, dmg / 4, 'ally'); });
@@ -3986,8 +4248,9 @@ function allyAwaken(a, B){
 function allyAttack(a, B){
   a.swing = 0.2;
   const C = CLASSES[a.cls];
-  if (!C.proj){ fx.push({type:'slash', t:0, dur:0.16, x:a.x, y:a.y - 8, dir:a.dir, color:C.fx}); hit(B, a.hit, 'ally'); }
-  else projs.push({kind:C.proj, x:a.x, y:a.y - 12, tg:B, trail:[], dmg:a.hit, hk:'ally'});
+  const d = a.hit * pbAllyMul();
+  if (!C.proj){ fx.push({type:'slash', t:0, dur:0.16, x:a.x, y:a.y - 8, dir:a.dir, color:C.fx}); hit(B, d, 'ally'); }
+  else projs.push({kind:C.proj, x:a.x, y:a.y - 12, tg:B, trail:[], dmg:d, hk:'ally'});
 }
 function healParty(a){
   const all = [];
@@ -4118,7 +4381,7 @@ function updatePat(dt){
   if (hero.rollCd > 0) hero.rollCd -= dt;
   if (hero.dodgeT > 0) hero.dodgeT -= dt;
   const B = patBoss(), lv = patLv(B);
-  if (!lv || B.spawnT > 0) return;
+  if (!lv || B.spawnT > 0 || raid && wipeBusy(raid) && B === raid.boss) return;   // 전멸기 동안은 다른 큰 공격 없음
   const P = B.pat || (B.pat = {stg:100, cd:3 + Math.random() * 2, tel:null, grogT:0, n:0, wipes:lv >= 3 ? (B.raid ? [0.6, 0.25] : [0.5]) : []});
   if (P.grogT > 0){ P.grogT -= dt; if (P.grogT <= 0) P.stg = 100; return; }
   if (B.stunT > 0) return;
@@ -4211,6 +4474,96 @@ function drawPatMarks(){
   }
   ctx.textAlign = 'left';
 }
+/* ===== 레이드 전멸기(2026-11 (41), 사용자 요청) =====
+   함께하는 레이드(레이드·타임 보스·강림 레이드)의 보스마다 전멸기 하나. 보스 체력 WIPE.hp 아래나 WIPE.t초가 지나면 한 번:
+   ① 예고 WIPE.warn초(화면이 어두워지고 보스에게 힘이 모임, 이 동안 보스는 다른 공격을 안 함)
+   ② 터짐 → WIPE.drain초 동안 모두의 체력이 막을 수 없이 1까지 깎인다(죽지는 않음, 보호막·방어 무시)
+   ③ WIPE.grace초 안에 체력을 WIPE.alive 넘게 되찾지 못하면 쓰러진다 — 회복약(인삼·산삼 탕약)을 갖고 있으면 저절로 마셔서 버티고,
+      없으면 쓰러진다(불사약·축원 굿·지원 펫 회복으로도 버틸 수 있음). 동료는 저마다 회복약을 마신다 */
+const WIPE = {hp:0.5, t:40, warn:2.6, drain:1.2, grace:2.4, alive:0.15};
+const WIPE_KIND = {
+  fire:{n:'업화 강림', c:'#ff5a1a', c2:'#ffd24a'}, tide:{n:'해일 삼킴', c:'#2a8aff', c2:'#bff0ff'}, void:{n:'저승 문 열기', c:'#8a3aff', c2:'#ff5a8a'},
+  storm:{n:'천뢰 심판', c:'#ffe066', c2:'#9fe7ff'}, quake:{n:'산 무너뜨리기', c:'#c8782a', c2:'#ffcc88'}, frost:{n:'만년 설한', c:'#9fe0ff', c2:'#ffffff'},
+};
+const WIPE_TYPE = {dokkaebi:'fire', oni:'fire', phoenix:'fire', fox:'fire', bulgasari:'quake', haetae:'storm', totem:'quake', bear:'quake', tiger:'storm', serpent:'tide', frog:'tide', toad:'tide', kappa:'tide',
+  shade:'void', judge:'void', ghost:'void', skel:'void', agwi:'void', king:'void', yukionna:'frost', yukiko:'frost', soldier:'storm', tengu:'storm', hawk:'storm', crow:'fire', monkey:'quake', wolf:'fire', izanami:'void', wisp:'frost', yaksha:'storm', oxhead:'void', horsehead:'void'};
+const wipeKind = B => WIPE_KIND[WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm'][Math.max(0, Math.min(4, S.world))]];
+const wipeOn = R => R && !R.info.dummy && !R.info.vault && !R.info.dboss && !R.info.job && !(window.__game && window.__game.wipeOff);
+const wipeBusy = R => !!(R && R.wipe && R.wipe.st >= 1 && R.wipe.st <= 3);
+function updateWipe(R, dt){
+  const B = R.boss, W = R.wipe || (R.wipe = {st:0});
+  if (B.dead || B.spawnT > 0 || W.st >= 4) return false;
+  if (W.st === 0){
+    if (B.hp > B.maxHp * WIPE.hp && R.limit - R.time < WIPE.t) return false;
+    const K = wipeKind(B);
+    Object.assign(W, {st:1, t:WIPE.warn, K, name:`${B.name}의 ${K.n}`, mt:0});
+    addLog(`전멸기 「${K.n}」! 회복약이 없으면 버티지 못해요!`, 'warn'); sfx('boss'); shake = Math.max(shake, 0.3);
+    if (!fxOff()){ fxBanner('전멸기', W.name, K.c2, '30%', 1.8); vadd({type:'rune', x:B.x, y:B.y, r:70, col:K.c, dur:WIPE.warn + 0.4, ground:true, spin:0}); vadd({type:'rune', x:B.x, y:B.y, r:46, col:K.c2, dur:WIPE.warn + 0.4, ground:true, spin:2}); }
+    return true;
+  }
+  W.t -= dt;
+  if (W.st === 1){   // 예고: 힘이 보스에게 모인다
+    W.mt -= dt;
+    if (W.mt <= 0 && !fxOff()){ W.mt = 0.22; const hy = B.y - mobHeight(B) * 0.5; vadd({type:'implode', x:B.x, y:hy, r:60 + Math.random() * 30, col:Math.random() < 0.5 ? W.K.c : W.K.c2, dur:0.5}); vSparks(B.x, hy, 6, W.K.c2, 60, 30); }
+    if (W.t <= 0){
+      W.st = 2; W.t = WIPE.drain; W.h0 = hero.hp; W.a0 = R.allies.map(a => a.hp);
+      shake = 0.9; sfx('awaken');
+      if (!fxOff()){
+        const hy = B.y - mobHeight(B) * 0.5;
+        vadd({type:'flash', col:'#ffffff', a:0.25, dur:0.35}); vadd({type:'nova', x:B.x, y:hy, col:W.K.c, dur:0.9}); vadd({type:'nova', x:B.x, y:hy, col:W.K.c2, dur:1.2, delay:0.15});
+        vadd({type:'rays', x:B.x, y:hy, col:W.K.c, dur:1.2, rot:Math.random() * 6}); vadd({type:'shock', x:B.x, y:B.y, r0:10, r1:260, w:7, col:W.K.c, dur:0.9, ground:true});
+        for (const e of [hero, ...R.allies]) if (!e.dead && !e.down){ vadd({type:'pillar', x:e.x, y:e.y, w:16, col:W.K.c, dur:1}); vBoom(e.x, e.y - 10, W.K.c2, true); }
+        skCut = {name:W.K.n, col:W.K.c2, t:0, dur:1.4};
+      }
+    }
+    return true;
+  }
+  if (W.st === 2){   // 막을 수 없이 1까지 깎인다
+    const k = Math.max(0, W.t / WIPE.drain);
+    if (!hero.dead) hero.hp = Math.max(1, Math.min(hero.hp, 1 + (W.h0 - 1) * k));
+    R.allies.forEach((a, j) => { if (!a.down) a.hp = Math.max(1, Math.min(a.hp, 1 + ((W.a0[j] || a.hp) - 1) * k)); });
+    if (W.t <= 0){
+      W.st = 3; W.t = WIPE.grace; potCd = 0;
+      if (!hero.dead){ hero.hp = 1; hero.shield = 0; addText('숨이 넘어가요!', hero.x, hero.y - 44, '#ff8a8a', 13, true); }
+      R.allies.forEach(a => { if (!a.down){ a.hp = 1; a.shield = 0; a.potT = 0.4 + Math.random() * 1.4; } });
+    }
+    return true;
+  }
+  if (W.st === 3){   // 회복약을 마셔 버티거나, 못 마시면 쓰러진다
+    for (const a of R.allies) if (!a.down && a.potT > 0){ a.potT -= dt; if (a.potT <= 0){ a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.4); addText('탕약', a.x, a.y - 30, '#8ff0a0', 9, true); } }
+    if (W.t <= 0){
+      W.st = 4;
+      if (!hero.dead){
+        if (hero.hp < ST.maxHp * WIPE.alive){ addText('회복약이 없어요…', hero.x, hero.y - 46, '#ff8a8a', 12, true); addLog(`전멸기 「${W.K.n}」에 쓰러졌어요. 회복약(인삼·산삼 탕약)을 갖고 있으면 저절로 마셔 버텨요.`, 'warn'); hero.hp = 0; hero.shield = 0; heroDie(); }
+        else { addText('버텼다!', hero.x, hero.y - 46, '#8ff0a0', 13, true); S.rec.wipes = (S.rec.wipes || 0) + 1; }
+      }
+      for (const a of R.allies) if (!a.down && a.hp < a.maxHp * WIPE.alive) damageAlly(a, a.hp * 2);
+    }
+    return true;
+  }
+  return false;
+}
+// 전멸기 예고·숨넘어감: 화면을 어둡게(도트 층, 보통 섞기)
+function drawWipeFx(){
+  const W = raid && raid.wipe; if (!W || W.st < 1 || W.st > 3 || fxOff()) return;
+  const a = W.st === 1 ? 0.42 * (1 - W.t / WIPE.warn) + 0.08 : W.st === 2 ? 0.45 : 0.3 + 0.12 * Math.sin(gtime * 10);
+  b.save(); b.globalCompositeOperation = 'source-over';
+  const g = b.createRadialGradient(camX + VW / 2, camY + H / 2, H * 0.2, camX + VW / 2, camY + H / 2, VW * 0.7);
+  g.addColorStop(0, `rgba(10,0,20,${(a * 0.45).toFixed(3)})`); g.addColorStop(1, hexA(W.st === 3 ? '#5a0010' : '#0a0014', Math.min(0.75, a * 1.6)));
+  b.fillStyle = g; b.fillRect(camX, camY, VW, H);
+  b.restore();
+}
+// 숨넘어감 동안 용사 머리 위 남은 초
+function drawWipeMarks(){
+  const W = raid && raid.wipe; if (!W || W.st !== 3 || hero.dead) return;
+  const x = (hero.x - camX) * scale, y = (hero.y - 58 - camY) * scale, ok = hero.hp >= ST.maxHp * WIPE.alive;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.font = '900 20px SamhanSans, sans-serif'; ctx.lineWidth = 5; ctx.strokeStyle = '#1a0004';
+  const t = ok ? '버팀!' : `${Math.max(0, W.t).toFixed(1)}`;
+  ctx.strokeText(t, x, y); ctx.fillStyle = ok ? '#8ff0a0' : '#ff5a5a'; ctx.fillText(t, x, y);
+  if (!ok){ ctx.font = '800 11px SamhanSans, sans-serif'; ctx.lineWidth = 3; ctx.strokeText('회복약!', x, y + 16); ctx.fillStyle = '#ffd0d0'; ctx.fillText('회복약!', x, y + 16); }
+  ctx.textAlign = 'left';
+}
 function updateRaid(dt){
   const R = raid, B = R.boss;
   if (R.ending){ R.endT -= dt; if (R.endT <= 0) finishRaid(); return; }
@@ -4236,9 +4589,15 @@ function updateRaid(dt){
     if (a.atkT <= 0){ a.atkT = 1; allyAttack(a, B); }
     a.skT = (a.skT == null ? 2 + Math.random() * 4 : a.skT) - dt;   // 동료도 기술을 쓴다
     if (a.skT <= 0){ a.skT = 6 + Math.random() * 3; allySkill(a, B); }
+    if (a.shieldT > 0){ a.shieldT -= dt; if (a.shieldT <= 0) a.shield = 0; }
+    if (a.npc || (+a.level || 100) >= SKILLS[10].unlock){   // 동료도 자기 직업의 파티 버프를 건다
+      a.pbT = (a.pbT == null ? 1.5 + (a.seed || 0) * 0.8 + Math.random() * 2 : a.pbT) - dt;
+      if (a.pbT <= 0){ a.pbT = PB_CD; partyBuff(a.cls, pbLvOf(a), a); }
+    }
     if (!a.npc && !a.awk && (R.limit - R.time >= 14 || B.hp <= B.maxHp * 0.6)) allyAwaken(a, B);   // 다른 용사(실제 캐릭터)는 초각성기도
     if (a.cls === 'doin'){ a.healT -= dt; if (a.healT <= 0){ a.healT = 4; healParty(a); } }
   }
+  if (wipeOn(R) && updateWipe(R, dt)) return;   // 전멸기 동안 보스는 다른 공격을 안 함
   if (B.dead || B.spawnT > 0 || patBusy(B)) return;
   B.atkT -= dt;
   if (B.atkT <= 0){
@@ -4336,7 +4695,7 @@ function startParade(){
   S.parade.n++;
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   parade = {t:PARADE_TIME, kills:0, spawnT:0.3};
-  hero.goal = null; hero.holdT = 0;
+  hero.goal = null; hero.holdT = 0; hero.mp = MP_MAX; presetTake('mob');
   addLog(`백귀야행! ${PARADE_TIME}초 동안 몰려오는 요괴를 최대한 많이 잡아요.`, 'warn'); sfx('boss'); shake = 0.3;
   if (!fxOff()) fxBanner('백귀야행', '온갖 요괴가 몰려와요!', '#c8a0ff', '34%', 1.6);
   return true;
@@ -4357,7 +4716,7 @@ function updateParade(dt){
   }
 }
 function finishParade(){
-  const P = parade, k = P.kills; parade = null; ev('parade');
+  const P = parade, k = P.kills; parade = null; presetDrop(); ev('parade');
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   spawnT = 1.2;
   const gold = mGold(Math.max(1, S.stage)) * k * 3 * gainMul('gold'), gems = Math.round(Math.floor(k / 3) * gemMul()), dust = k * (1 + S.world);
@@ -4404,9 +4763,11 @@ function skinDropPart(part, g){
   const sk = list[Math.floor(Math.random() * list.length)];
   return skinGet(skMake(sk, g), true);
 }
+// 1일 보스는 치장이 열리는 장(SK_CH0, 천계 17장)부터(2026-11 (41), 사용자 요청: 저레벨이 치장을 먹어 밸런스가 깨짐)
+const dbOpen = () => skinOpen() || S.world >= 2 || !!(window.__game && window.__game.dbForce);
 function startDBoss(){
   dbCheck();
-  if (raid || dbLeft() <= 0 || (!session && !window.__game)) return false;
+  if (raid || !dbOpen() || dbLeft() <= 0 || (!session && !window.__game)) return false;
   S.dboss.n++;
   const B = dbBoss(), sun = dbDay() === 0, s = Math.max(1, S.maxStage - (sun ? 0 : 3));
   const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0,
@@ -4441,6 +4802,101 @@ function finishDBoss(R){
   showModal(R.win ? '1일 보스 토벌' : '1일 보스 실패', `<p><b>${B.name}</b>${R.win ? `${josa(B.name, '을', '를')} 쓰러뜨렸어요!` : `${josa(B.name, '을', '를')} ${DB_TIME}초 안에 쓰러뜨리지 못했어요. 오늘 ${dbLeft()}번 더 도전할 수 있어요.`}</p>
     ${out.length ? `<ul class="rewards">${out.map(x => `<li>${x}</li>`).join('')}</ul>` : '<p class="small">참가 보상은 오늘 이미 받았어요.</p>'}`, [{label:'확인', primary:true}]);
   return {win:R.win, out, skin};
+}
+/* ===== 강림 레이드(2026-11 (41), 사용자 요청): 매일 하는 4인 협동 레이드 =====
+   나 + 다른 용사 캐릭터 GR.pick(3)명(타임 보스처럼 저절로 모임: 온라인이면 서버의 캐릭터, 아니면 이 기기 캐릭터, 같은 직업은 나까지 GR.cap(2)명, 모자라면 NPC 동료).
+   요일마다 다른 신장이 내려온다. 하루 GR.tries번, 이기면 그날은 끝. 체력은 모인 파티의 피해에 맞춰(FIT) GR.tgt초쯤, 제한 GR.time초 — 그냥 두면 대개 이기지만
+   쓰러지거나 전멸기를 못 버티면 질 수 있다. 보상은 아바타: GR.avP 확률(천장 GR.pity번)로 강림 레이드에서만 나오는 아바타, 아니면 꾸미기 상자의 아바타 하나(이미 있으면 보석).
+   열림: 첫 환생 뒤(저승부터) — 초반에 얻으면 아바타 도감 효과로 밸런스가 깨진다(사용자 요청) */
+const GANGLIM = [
+  {name:'강림한 천왕 신장', type:'yaksha', color:'#ffd24a'},
+  {name:'바람 신장 풍백', type:'hawk', color:'#bfe8ff'},
+  {name:'불의 신장 적제', type:'dokkaebi', color:'#ff5a2a'},
+  {name:'비의 신장 우사', type:'serpent', color:'#3a8aff'},
+  {name:'구름 신장 운사', type:'wisp', color:'#e8eef8'},
+  {name:'우레 신장 뇌공', type:'haetae', color:'#ffe066'},
+  {name:'땅의 신장 황제', type:'bulgasari', color:'#c8a050'},
+];
+const GR = {tries:2, time:120, tgt:100, hit:0.04, aoe:0.03, pick:3, cap:2, avP:0.25, pity:8, src:'강림 레이드'};
+const grOpen = () => S.reb.n >= 1 || S.world >= 1;
+const grBoss = () => GANGLIM[new Date(now()).getDay()];
+function grCheck(){ if (S.gr.day !== dummyDay()) S.gr = {day:dummyDay(), n:0, won:false, pity:S.gr.pity || 0}; }
+const grLeft = () => { grCheck(); return S.gr.won ? 0 : GR.tries - S.gr.n; };
+let grPick = {key:'', list:null};
+const grKey = () => dummyDay() + ':' + (session ? session.acc + '/' + session.cid : '');
+async function grFetchPick(){
+  if (!session || !online || grPick.key === grKey() && grPick.list) return;
+  const key = grKey();
+  try {
+    const rows = await rpc('samhan_tb_pick', {p_token:online.token, p_cid:session.cid, p_cls:S.cls});
+    if (Array.isArray(rows)){ const seen = new Set([S.name]), pool = []; for (const r of rows){ const o = r && tbFromSummary(r.name, r.summary, r.mine); if (o && !seen.has(o.name)){ seen.add(o.name); pool.push(o); } }
+      grPick = {key, list:tbCapPick(pool, rng(strHash('gr:' + key)), GR.pick, GR.cap)}; }
+  } catch (e){ if (e.code === 'bad_token') lostOnline(); }
+}
+function grOthers(){
+  const key = grKey();
+  if (grPick.key === key && grPick.list) return grPick.list;
+  if (!session) return [];
+  const seen = new Set([S.name]), pool = [];
+  for (const c of allChars()) if (!(c.acc === session.acc && c.cid === session.cid) && c.ally && !seen.has(c.name)){ seen.add(c.name); const o = tbFromSummary(c.name, c, c.acc === session.acc); if (o) pool.push(o); }
+  return tbCapPick(pool, rng(strHash('gr:' + key)), GR.pick, GR.cap);
+}
+function grParty(){
+  const party = grOthers().map(o => ({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG),
+    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true, level:o.level}));
+  const n = {[S.cls]:1}; for (const a of party) n[a.cls] = (n[a.cls] || 0) + 1;
+  for (let k = 0; party.length < GR.pick && k < NPCS.length * 2; k++){   // 모자라면 NPC 동료(같은 직업 2명까지)
+    const N = NPCS[k % NPCS.length]; if ((n[N.cls] || 0) >= GR.cap) continue; n[N.cls] = (n[N.cls] || 0) + 1;
+    const gr = gradeOf(S.equip.weapon);
+    party.push({name:N.name, cls:N.cls, look:{outfit:N.outfit, hair:N.hair, hat:'class', skin:k % 3}, armorG:gr, weaponG:gr, dps:realDps() * NPC_SHARE[N.cls], maxHp:ST.maxHp * (N.cls === 'musa' ? 1.3 : 0.85), npc:true});
+  }
+  return party;
+}
+function startGangrim(){
+  grCheck();
+  if (raid || parade || market || !grOpen() || grLeft() <= 0 || !session && !window.__game) return false;
+  S.gr.n++;
+  const B = grBoss(), party = grParty();
+  const partyDps = realDps() + party.reduce((t, a) => t + a.dps * (a.npc ? 1 : TB_ALLY_SK), 0);
+  const info = {gr:true, label:'강림 레이드', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:party.length + 1, ref:Math.max(1, S.maxStage), g:0, day:dummyDay()};
+  info.fit = fitNew(GR.tgt, partyDps, 'fitKg');
+  startFight(info, party, {hp:info.fit.rate * GR.tgt, atk:ST.maxHp * GR.hit, aoe:ST.maxHp * GR.aoe, time:GR.time});
+  raid.boss.tbPct = {hit:GR.hit, aoe:GR.aoe};
+  addLog(`강림 레이드! ${B.name}${josa(B.name, '이', '가')} 내려왔어요. ${party.length + 1}명이 함께 ${GR.time}초 안에 쓰러뜨려요.`, 'warn');
+  if (!fxOff()) fxBanner('강림 레이드', B.name, '#ffe08a', '34%', 1.6);
+  return true;
+}
+// 이기면 아바타 하나: 강림 전용(GR.avP, 천장 GR.pity) 아니면 꾸미기 상자 아바타(옷 20·망토 30·펫 꾸미기 50%, 없는 것을 먼저)
+function grAvatar(){
+  const luck = window.__game && window.__game.grLuck != null ? window.__game.grLuck : 1;
+  S.gr.pity = (S.gr.pity || 0) + 1;
+  const ex = AVATARS.filter(a => a.src === GR.src && !S.av.own[a.k]);
+  if (ex.length && (Math.random() < GR.avP * luck || S.gr.pity >= GR.pity)){ const a = ex[(Math.random() * ex.length) | 0]; S.gr.pity = 0; giveAvatar(a.k, true); return {a, isNew:true, ex:true}; }
+  let r = Math.random() * 100, type = 'pet'; for (const [t, p] of [['char', 20], ['cape', 30], ['pet', 50]]){ if (r < p){ type = t; break; } r -= p; }
+  const pool = avBoxPool().filter(a => a.type === type), fresh = pool.filter(a => !S.av.own[a.k]), list = fresh.length && Math.random() < 0.7 ? fresh : pool;
+  const a = list[(Math.random() * list.length) | 0]; if (!a) return null;
+  const isNew = !S.av.own[a.k]; giveAvatar(a.k, !isNew); if (!isNew) S.gems += AV_DUP_GEMS;
+  return {a, isNew};
+}
+function finishGangrim(R){
+  const I = R.info, cross = !!I.day && I.day !== dummyDay();
+  if (!cross) grCheck();
+  if (!R.win){
+    addLog(`강림 레이드 실패… ${cross ? '' : `오늘 ${grLeft()}번 더 도전할 수 있어요.`}`, 'warn'); sfx('fail');
+    if (!(window.__game && window.__game.quiet)) showModal('강림 레이드 실패', `<p>${GR.time}초 안에 <b>${I.bossName}</b>${josa(I.bossName, '을', '를')} 쓰러뜨리지 못했어요.${cross ? '' : ` 오늘 ${grLeft()}번 더 도전할 수 있어요.`}</p><p class="small">전멸기는 회복약(인삼·산삼 탕약)이 있어야 버텨요. [상점]에서 사 두세요.</p>`, [{label:'확인', primary:true}]);
+    return {win:false};
+  }
+  if (!cross) S.gr.won = true;
+  recWin(true, true); S.rec.gr = (S.rec.gr || 0) + 1; ev('raid');
+  const gold = mGold(Math.max(1, S.maxStage)) * 200 * gainMul('gold'); S.gold += gold;
+  const av = grAvatar(); refreshStats(); saveLocal(); sfx('win');
+  if (av) announce(`${S.name}님의 파티가 강림 레이드에서 ${av.ex ? '강림 아바타' : '아바타'} 「${av.a.name}」${josa(av.a.name, '을', '를')} 얻었어요!`);
+  addLog(`강림 레이드 토벌! 엽전 +${fmt(gold)}${av ? ` · 아바타 ${av.a.name}${av.isNew ? '' : `(이미 있어 보석 ${AV_DUP_GEMS})`}` : ''}`, 'gain');
+  if (window.__game && window.__game.quiet) return {win:true, av, gold};
+  showModal('강림 레이드 토벌', `<p><b>${I.bossName}</b>${josa(I.bossName, '을', '를')} ${I.party}명이 함께 돌려보냈어요!</p>
+    <ul class="rewards">${av ? `<li style="color:${av.ex ? 'var(--myth)' : 'var(--gold)'}">${av.a.name}<span>${av.ex ? '강림 레이드 아바타' : '아바타'}${av.isNew ? ' · 새로 얻음' : ` · 이미 있어 보석 ${AV_DUP_GEMS}`}</span></li>` : ''}<li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li></ul>
+    <p class="small" style="margin-top:8px">강림 아바타는 ${Math.round(GR.avP * 100)}% 확률(${GR.pity}번 안에 꼭)로 나와요. 아바타는 [장비] → [아바타]에서 입어요.</p>`, [{label:'확인', primary:true}]);
+  return {win:true, av, gold};
 }
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
@@ -4477,7 +4933,7 @@ function craftMyth(k){
 }
 function finishRaid(){
   const R = raid;
-  raid = null;
+  raid = null; presetDrop();
   mobs = []; projs = []; bossActive = false; bossRef = null; spawnT = 1;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false, goal:null, holdT:0});
   placeOf(hero);
@@ -4488,6 +4944,7 @@ function finishRaid(){
   if (info.dummy){ finishDummy(R); return; }
   if (info.vault){ finishVault(R); return; }
   if (info.dboss){ finishDBoss(R); return; }
+  if (info.gr){ finishGangrim(R); return; }
   if (info.job){ finishJobTrial(R); return; }
   if (R.win){
     const rw = raidReward(info);
@@ -4583,13 +5040,15 @@ function attack(tg){
 // 직업별 기술 피해 배율(자객: 한 적 노리기 +30%, 여럿 치기 55%)
 const AOE_KINDS = ['spin', 'meteor', 'jobA', 'jobB'], ONE_KINDS = ['bolt', 'combo'];
 const kindMul = k => { const C = cls(); return AOE_KINDS.includes(k) ? C.aoeMul || 1 : ONE_KINDS.includes(k) ? C.oneMul || 1 : 1; };
-const SELF_KINDS = ['roar', 'd_heal', 'd_charge', 'd_bagua', 'd_gut'];
+const SELF_KINDS = ['roar', 'd_heal', 'd_gut', 'd_shin', 'd_bocheon', 'party'];
 function tryCast(i, lv, manual){
+  const mp = skMp(i);
+  if ((hero.mp ?? MP_MAX) < mp){ if (manual){ addText('마나 부족', hero.x, hero.y - 44, '#7ab8ff', 11, true); sfx('click'); } return false; }
   const cb = comboFor(i), prev = [hero.comboT, hero.comboP];
   if (cb){ hero.comboT = COMBO_T; hero.comboP = cb.p; }   // 연계는 이번 기술부터 받는다
   const ok = castSkill(i, lv, manual);
   if (!ok){ if (cb){ hero.comboT = prev[0]; hero.comboP = prev[1]; } return false; }
-  lastCast = {i, t:gtime};
+  lastCast = {i, t:gtime}; hero.mp = Math.max(0, (hero.mp ?? MP_MAX) - mp);
   if (cb){ S.rec.combos = (S.rec.combos || 0) + 1; addText(`연계 · ${cb.name}!`, hero.x, hero.y - 48, '#ffe08a', manual ? 14 : 12, true); if (manual) addLog(`연계 「${cb.name}」! ${COMBO_T}초 동안 기술 피해 +${cb.p}%`, 'good'); }
   if (!fxOff()) skillVfx(i, manual);
   return true;
@@ -4601,6 +5060,7 @@ function castSkill(i, lv, manual){
   if (!alive.length && !SELF_KINDS.includes(kind)) return false;
   const mul = C.skillMul * atkBuff() * skillMulX() * kindMul(kind);
   const tg = hero.target && !hero.target.dead ? hero.target : alive[0];
+  if (kind === 'party') return partyBuff(S.cls, lv, null);
   if (kind.startsWith('d_')) return doinCast(kind, lv, alive, tg, mul);
   if (kind === 'jobC') return jobCCast(lv, alive, tg, mul);
   if (kind === 'jobD') return jobDCast(lv, alive, tg, mul);
@@ -4667,15 +5127,40 @@ function castSkill(i, lv, manual){
 }
 function doinCast(kind, lv, alive, tg, mul){
   const C = cls();
+  const boc = hero.bocheonT > 0 ? 1 + (hero.bocheonP || 0) / 100 : 1;   // 4차 오색 보천: 공격 기술 다섯 모두
+  if (kind === 'd_charge'){   // 버프 겸 공격: 가장 튼튼한 적을 치고 도력을 모은다(이 한 방은 도력을 쓰지 않음)
+    const t2 = alive.reduce((a, b) => b.hp > a.hp ? b : a);
+    fx.push({type:'pillar', t:0, dur:0.45, x:t2.x, y:t2.y - 10}); shake = Math.max(shake, 0.25);
+    hit(t2, ST.atk * mul * boc * dAtkPct(kind, lv) / 100, 'skill', true);
+    hero.charge = dChargeMul(lv);
+    addText(`도력 ×${hero.charge.toFixed(1)}`, hero.x, hero.y - 40, '#ffd24a', 12, true);
+    fx.push({type:'aura', t:0, dur:0.9, color:'#ffd24a'}); sfx('skill');
+    return true;
+  }
+  if (kind === 'd_bagua'){   // 버프 겸 공격: 팔괘진을 펴(치명타 피해↑) 대상 둘레를 친다
+    hero.baguaT = 10; hero.baguaAdd = dBaguaAdd(lv);
+    const tgs = alive.filter(m => Math.hypot(m.x - tg.x, m.y - tg.y) <= 44);
+    for (const m of tgs) hit(m, ST.atk * mul * boc * dAtkPct(kind, lv) / 100, 'skill', true);
+    addText('팔괘진!', hero.x, hero.y - 40, '#9fe7ff', 12, true);
+    fx.push({type:'ring', t:0, dur:0.6, x:tg.x, y:tg.y - 4, color:'#f3d36b', r:30}); fx.push({type:'ring', t:0, dur:0.6, x:hero.x, y:hero.y - 4, color:'#f3d36b', r:22}); sfx('skill');
+    return true;
+  }
+  if (kind === 'd_bocheon'){   // 4차 오색 보천: 공격 기술 피해↑ + 방패
+    hero.bocheonT = 15; hero.bocheonP = dBocheonPct(lv);
+    hero.shield = Math.max(hero.shield || 0, ST.maxHp * 0.5); hero.shieldT = 10;
+    addText('오색 보천!', hero.x, hero.y - 46, '#ffe08a', 13, true);
+    fx.push({type:'awaken', t:0, dur:1, color:'#ffe08a', x:hero.x, y:hero.y - 12}); sfx('awaken');
+    return true;
+  }
   if (kind === 'd_atk1' || kind === 'd_atk2' || kind === 'd_atk3'){
-    const ch = hero.charge > 1 ? hero.charge : 1; hero.charge = 0;
+    const ch = (hero.charge > 1 ? hero.charge : 1) * boc; hero.charge = 0;
     const tgs = kind === 'd_atk1' ? alive.filter(m => Math.hypot(m.x - tg.x, m.y - tg.y) <= 40) : kind === 'd_atk3' ? [alive.reduce((a, b) => b.hp > a.hp ? b : a)] : alive;
     if (!tgs.length) return false;
     if (kind === 'd_atk1') fx.push({type:'pillar', t:0, dur:0.5, x:tg.x, y:tg.y - 10});
     else { fx.push({type:'awaken', t:0, dur:1, color:C.fx, x:hero.x, y:hero.y - 12}); fx.push({type:C.nukeFx, t:0, dur:0.9, pts:tgs.slice(0, 8).map(m => [m.x, m.y - 6]), seed:Math.random() * 1000}); }
     shake = kind === 'd_atk3' ? 0.7 : kind === 'd_atk2' ? 0.45 : 0.2;
     for (const m of tgs) hit(m, ST.atk * mul * dAtkPct(kind, lv) * ch / 100, 'skill', true);
-    if (ch > 1) addText('도력 폭발!', hero.x, hero.y - 44, '#ffd24a', 13, true);
+    if (hero.charge === 0 && ch > boc) addText('도력 폭발!', hero.x, hero.y - 44, '#ffd24a', 13, true);
     sfx(kind === 'd_atk1' ? 'skill' : 'awaken');
     return true;
   }
@@ -4690,18 +5175,6 @@ function doinCast(kind, lv, alive, tg, mul){
     hero.hp = Math.min(ST.maxHp, hero.hp + h);
     addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 12);
     fx.push({type:'heal', t:0, dur:0.9}); fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
-    return true;
-  }
-  if (kind === 'd_charge'){
-    hero.charge = dChargeMul(lv);
-    addText(`도력 ×${hero.charge.toFixed(1)}`, hero.x, hero.y - 40, '#ffd24a', 12, true);
-    fx.push({type:'aura', t:0, dur:0.9, color:'#ffd24a'});
-    return true;
-  }
-  if (kind === 'd_bagua'){
-    hero.baguaT = 10; hero.baguaAdd = dBaguaAdd(lv);
-    addText('팔괘진!', hero.x, hero.y - 40, '#9fe7ff', 12, true);
-    fx.push({type:'ring', t:0, dur:0.6, x:hero.x, y:hero.y - 4, color:'#f3d36b', r:26});
     return true;
   }
   if (kind === 'd_shin'){
@@ -4737,11 +5210,6 @@ function jobDCast(lv, alive, tg, mul){
       fx.push({type:cls().boltFx || 'zig', t:0, dur:0.35, x:m.x, y:m.y - mobHeight(m) * 0.5, seed:Math.random() * 1000});
       hit(m, atk * P * LATE_K.sulsaD, 'skill');
     });
-    return true;
-  }
-  if (S.cls === 'doin'){
-    for (const m of alive) hit(m, atk * P * LATE_K.doinD, 'skill', true);
-    hero.shield = Math.max(hero.shield || 0, ST.maxHp * 0.5); hero.shieldT = 10;
     return true;
   }
   for (const m of alive) hit(m, atk * P * (m.boss || m.raid ? 2 : 1), 'skill');
@@ -4869,7 +5337,7 @@ function update(dt){
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
-    hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * (raid && raid.info.fit ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt);   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
+    if (!(raid && wipeBusy(raid))) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * (raid && raid.info.fit ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt);   // 전멸기 동안엔 저절로 차지 않음(회복약·회복 기술로만)   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
     autoPotion(dt);
     updateMove(hero, dt);
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
@@ -4958,6 +5426,9 @@ function update(dt){
   if (hero.shieldT > 0){ hero.shieldT -= dt; if (hero.shieldT <= 0) hero.shield = 0; }
   if (hero.baguaT > 0) hero.baguaT -= dt;
   if (hero.gutT > 0) hero.gutT -= dt;
+  if (hero.bocheonT > 0) hero.bocheonT -= dt;
+  if (!hero.dead && (hero.mp ?? MP_MAX) < MP_MAX) hero.mp = Math.min(MP_MAX, (hero.mp ?? MP_MAX) + MP_REGEN * dt);
+  for (const c in pbT) if (pbT[c] > 0) pbT[c] -= dt;
   if (hero.shinT > 0){ hero.shinT -= dt; if (!hero.dead) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * 0.03 * dt); }
   if (hero.cloneT > 0){
     hero.cloneT -= dt;
@@ -5753,6 +6224,11 @@ const AVATARS = [
   {k:'q_peach', type:'pet', name:'복숭아빛', tint:'#ffb8c8', src:'이야기(서왕모의 잔치)'},
   {k:'q_fox', type:'pet', name:'여우불빛', tint:'#bfe0ff', src:'box', w:3},
   {k:'q_jade', type:'pet', name:'옥빛', tint:'#9fe8c8', src:'box', w:4},
+  {k:'c_ganglim', type:'char', name:'신장 금갑', outfit:'#c8a24a', deco:'armor', src:'강림 레이드'},
+  {k:'c_pungbaek', type:'char', name:'풍백 바람옷', outfit:'#8ad0e0', deco:'sash', src:'강림 레이드'},
+  {k:'p_ganglim', type:'cape', name:'강림 금빛 망토', capeC:'#e8b830', star:true, src:'강림 레이드'},
+  {k:'p_unsa', type:'cape', name:'운사 구름 망토', capeC:'#c8d4ec', star:true, src:'강림 레이드'},
+  {k:'q_halo', type:'pet', name:'신장 빛무리', tint:'#ffe8a0', src:'강림 레이드'},
 ];
 for (const c of CLASS_ORDER) for (const j of [1, 2, 3, 4]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
@@ -8232,7 +8708,7 @@ function skillVfx(i, manual){
   const ts = vTargets(), tg = hero.target && !hero.target.dead ? hero.target : ts[0];
   const tank = ts.length ? ts.reduce((a, b2) => b2.maxHp > a.maxHp ? b2 : a) : null;
   const hx = hero.x, hy = hero.y;
-  const big = ['meteor', 'jobA', 'jobB', 'jobC', 'jobD', 'd_atk3', 'd_gut'].includes(kind);
+  const big = ['meteor', 'jobA', 'jobB', 'jobC', 'jobD', 'd_atk3', 'd_gut', 'd_bocheon', 'party'].includes(kind);
   vadd({type:'rune', x:hx, y:hy, r:big ? 30 : 18, col, dur:big ? 1.1 : 0.7, ground:true, spin:Math.random() * 6});
   vadd({type:'shock', x:hx, y:hy, r0:4, r1:big ? 54 : 30, w:big ? 4 : 2.5, col:'#ffffff', dur:big ? 0.6 : 0.4, ground:true});
   vSparks(hx, hy - 10, big ? 16 : 8, col, big ? 110 : 70, 50);
@@ -8271,8 +8747,18 @@ function skillVfx(i, manual){
       vadd({type:'pillar', x:hx, y:hy, w:16, col:c2, dur:0.8});
       vadd({type:'shock', x:hx, y:hy, r0:6, r1:34, w:3, col:c2, dur:0.6, ground:true});
       vMotes(hx, hy - 6, 18, c2);
-      if (kind === 'd_charge') vadd({type:'implode', x:hx, y:hy - 12, r:40, col:c2, dur:0.6});
-      if (kind === 'd_bagua') vadd({type:'rune', x:hx, y:hy, r:40, col:'#ffd24a', dur:1.2, ground:true, spin:0, oct:true});
+      if (kind === 'd_charge'){ vadd({type:'implode', x:hx, y:hy - 12, r:40, col:c2, dur:0.6}); if (tank){ const [x, y] = vAt(tank); vBeam(x, y, '#ffd24a', 12, 0.5); vBoom(x, y, '#ffd24a', false); } }
+      if (kind === 'd_bagua'){ vadd({type:'rune', x:hx, y:hy, r:40, col:'#ffd24a', dur:1.2, ground:true, spin:0, oct:true}); if (tg){ const [x, y] = vAt(tg); vadd({type:'rune', x, y:y + 8, r:34, col:'#f3d36b', dur:1, ground:true, spin:0, oct:true}); vadd({type:'shock', x, y:y + 6, r0:6, r1:44, w:4, col:'#ffd24a', dur:0.5, ground:true}); vSparks(x, y, 14, '#ffd24a', 90); } }
+      break; }
+    case 'party': {   // 파티 버프: 나와 동료 발밑마다 빛 고리
+      const pc = (PB[S.cls] || {}).col || col;
+      vadd({type:'flash', col:pc, a:0.16, dur:0.35});
+      for (const e of [hero, ...(raid && raid.allies ? raid.allies.filter(a => !a.down) : [])]){ vadd({type:'pillar', x:e.x, y:e.y, w:12, col:pc, dur:0.8}); vadd({type:'shock', x:e.x, y:e.y, r0:4, r1:26, w:3, col:pc, dur:0.6, ground:true}); vMotes(e.x, e.y - 6, 8, pc); }
+      vadd({type:'rune', x:hx, y:hy, r:48, col:pc, dur:1.3, ground:true, spin:Math.random() * 6});
+      break; }
+    case 'd_bocheon': {   // 오색 보천: 다섯 빛기둥
+      ['#ff5a5a', '#ffd24a', '#5fd07c', '#4aa8ff', '#f4f4ff'].forEach((c2, k) => { const a = k * 1.2566; vadd({type:'pillar', x:hx + Math.cos(a) * 18, y:hy + Math.sin(a) * 9, w:9, col:c2, dur:0.9, delay:k * 0.06}); });
+      vadd({type:'nova', x:hx, y:hy - 10, col:'#ffe08a', dur:0.8}); vadd({type:'flash', col:'#fff6d0', a:0.2, dur:0.35});
       break; }
     case 'meteor': case 'd_atk2': {
       vadd({type:'flash', col, a:0.22, dur:0.4});
@@ -8500,6 +8986,7 @@ function render(){
   for (const p of projs) drawProj(p);
   for (const e of fx) drawFx(e);
   drawVfx(false);
+  drawWipeFx();
   b.setTransform(RS, 0, 0, RS, 0, 0);
   if (!market) drawWeather(Rg);
 
@@ -8527,7 +9014,7 @@ function drawTexts(){
     ctx.textAlign = 'left'; }
   if (!cut && !market) for (const m of mobs) if (m.evt && !m.dead && m.spawnT <= 0) nameTag(`${m.name} ${Math.ceil(m.evtLife)}초`, (m.x - camX) * scale, (m.y - mobHeight(m) - 4 - camY) * scale, {bg:'rgba(120,80,10,.9)', line:'rgba(255,220,120,.9)', color:'#fff2c8', size:9.5});
   if (market && !cut) drawMarketTags();
-  if (!cut && !market) drawPatMarks();
+  if (!cut && !market){ drawPatMarks(); drawWipeMarks(); }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of texts){
     ctx.globalAlpha = 1 - Math.max(0, (t.t - 0.55) / 0.35);
@@ -9333,12 +9820,12 @@ function holdButton(btn, fn){
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const elLv = $('#lv'), elCls = $('#clsName'), elCp = $('#cp'), elGold = $('#gold'), elGems = $('#gems'), elNick = $('#nick');
-const elHp = $('#hpfill'), elHpN = $('#hpnum'), elXp = $('#xpfill'), elXpN = $('#xpnum');
+const elHp = $('#hpfill'), elHpN = $('#hpnum'), elXp = $('#xpfill'), elXpN = $('#xpnum'), elMp = $('#mpfill'), elMpN = $('#mpnum');
 const elBoss = $('#bossBtn'), elSpeed = $('#speedBtn');
 // 기술 줄: 누르면 바로 쓰기, 길게 누르면 자동/수동 바꾸기
 let skillEls = {};
 let skBarKey = '';
-const skBarList = () => (S.skSet || []).slice(0, SK_SLOTS);
+const skBarList = () => curSet().slice(0, SK_SLOTS);
 function buildSkillbar(){
   const list = skBarList();
   skBarKey = S.cls + ':' + list.join(','); skillEls = {};
@@ -9386,6 +9873,7 @@ function updateHud(){
   if (currentTab){ setText($('#pgGold'), fmt(S.gold)); setText($('#pgGems'), fmt(S.gems)); }
   const hr = Math.max(0, hero.hp / ST.maxHp);
   elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmt(hero.hp) + '/' + fmt(ST.maxHp));
+  const mpv = hero.mp ?? MP_MAX; elMp.style.width = (mpv / MP_MAX * 100).toFixed(1) + '%'; setText(elMpN, Math.floor(mpv) + '/' + MP_MAX);
   const atCap = S.level >= levelCap(), xr = atCap ? 1 : Math.min(1, S.exp / expNeed(S.level));
   elXp.style.width = (xr * 100).toFixed(1) + '%'; setText(elXpN, atCap ? `만렙 · 모음 ${(S.expBank || 0).toFixed(1)}` : (xr * 100).toFixed(1) + '%');
   const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid && bossGate().ok;
@@ -9395,7 +9883,8 @@ function updateHud(){
   updateActBtns();
   skBarList().forEach(i => {
     const sk = SKILLS[i], r = skillEls[sk.key]; if (!r) return;
-    const lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), rdy = man && !(skillCd[sk.key] > 0);
+    const lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), nomp = !locked && (hero.mp ?? MP_MAX) < skMp(i), rdy = man && !nomp && !(skillCd[sk.key] > 0);
+    if (r.el.classList.contains('nomp') !== nomp) r.el.classList.toggle('nomp', nomp);
     if (r.el.classList.contains('locked') !== locked) r.el.classList.toggle('locked', locked);
     if (r.el.classList.contains('manual') !== man) r.el.classList.toggle('manual', man);
     if (r.el.classList.contains('rdy') !== rdy) r.el.classList.toggle('rdy', rdy);
@@ -9574,7 +10063,7 @@ function buildJob(){
     <p class="hint">전직 시험은 동료 둘과 함께 ${RAID_TIME}초 안에 스승을 이기면 통과예요. 지면 몇 번이든 다시 도전할 수 있어요. 직업을 바꿔도 전직 단계는 남아요.</p>
     ${card(1)}${card(2)}${S.world >= 3 || S.job >= 2 ? card(3) : ''}${S.world >= 4 || S.job >= 3 ? card(4) : ''}`;
   wireGrowSeg();
-  panel.querySelectorAll('[data-tier]').forEach(bt => bt.addEventListener('click', () => { if (startJobTrial(+bt.dataset.tier)) buildTab('grow', true); }));
+  panel.querySelectorAll('[data-tier]').forEach(bt => bt.addEventListener('click', () => { if (!raid) presetAsk('boss', '전직 시험', () => { if (startJobTrial(+bt.dataset.tier)){ buildTab('grow', true); return true; } }); }));
   return () => {
     panel.querySelectorAll('[data-tier]').forEach(bt => { const t = +bt.dataset.tier, ok = jobReady(t) && !raid; bt.disabled = !ok; bt.classList.toggle('primary', ok);
       if (raid && raid.info.job === t) setText(bt, '시험 중…'); });
@@ -9771,8 +10260,12 @@ function buildSkill(){
         <div><div class="nm">${skillName(i)}<span class="l" data-r="lv"></span></div><div class="val" data-r="desc"></div><div class="nx" data-r="nx"></div></div>
         <div style="display:grid;gap:4px;justify-items:end"><button class="btn sm" data-eq="${i}"></button><button class="buy" id="skbuy-${sk.key}"><span class="coin"></span><span data-r="cost"></span></button></div></li>`).join('')}
     </ul>
-    <div class="card" style="margin-top:14px"><div class="ct">연계(콤보)<span class="tag">${COMBO_T}초 동안 기술 피해↑</span></div>
-      <p class="small" style="margin:0 0 6px">두 기술을 모두 전투 칸에 끼우고, 앞 기술을 쓴 뒤 <b>${COMBO_WIN}초 안에</b> 다음 기술을 쓰면 「연계!」가 터져요. <b>자동</b> 표시는 자동 순서로도 저절로 이어지는 짝이고, 나머지는 기술 칸을 직접 눌러 순서를 맞춰야 해요.</p>
+    <div class="card" style="margin-top:14px"><div class="ct">싸움별 추천 조합<span class="tag" id="preMode"></span></div>
+      <p class="small" style="margin:0 0 6px">레이드·보스 싸움을 시작하기 전에 ${cls().name}에게 가장 좋은 ${SK_SLOTS}칸을 저절로 골라 보여 줘요. 싸움 동안만 그 조합으로 싸우고, 끝나면 원래 칸으로 돌아와요.</p>
+      <div id="preList"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button class="chip" data-pm="ask">싸움 전에 묻기</button><button class="chip" data-pm="auto">늘 추천 조합</button><button class="chip" data-pm="off">쓰지 않음</button></div></div>
+    <div class="card" style="margin-top:14px"><div class="ct">연계(콤보)<span class="tag">${Math.round(COMBO_P * 100)}% 확률 · ${COMBO_T}초 동안 기술 피해↑</span></div>
+      <p class="small" style="margin:0 0 6px">짝이 되는 두 기술을 모두 전투 칸에 끼우면, 하나를 쓰고 <b>${COMBO_WIN}초 안에</b> 다른 하나를 쓸 때(순서는 상관없음) <b>${Math.round(COMBO_P * 100)}% 확률로 저절로</b> 「연계!」가 터져요.</p>
       <ul class="traits" id="skCombos"></ul></div>
     <div class="card ${S.awaken ? 'ready' : ''}" style="margin-top:14px">
       <div class="ct"><span style="color:var(--gold)">초각성기</span> · ${cls().awaken}<span class="tag">${S.awaken ? '익힘' : '잠김'}</span></div>
@@ -9781,6 +10274,7 @@ function buildSkill(){
     </div>`;
   wireSkillSeg();
   $('#skAutoPick').addEventListener('click', () => { if (S.skSetMan) skSetAuto(); else { skSetFix(); S.skSetMan = true; } sfx('click'); refreshPanel(); });
+  panel.querySelectorAll('[data-pm]').forEach(b => b.addEventListener('click', () => { S.presetMode = b.dataset.pm; sfx('click'); refreshPanel(); }));
   panel.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.eq; if (!skToggle(i)) addLog(skOpen(i) ? `전투 칸은 ${SK_SLOTS}개까지예요. 먼저 다른 기술을 빼요.` : '아직 익히지 않은 기술이에요.'); else sfx('click'); refreshPanel(); }));
   const refs = SKILLS.map((sk, i) => {
     const row = $('#sk-' + sk.key);
@@ -9793,10 +10287,13 @@ function buildSkill(){
     skSetFix();
     setText($('#skSetN'), `${(S.skSet || []).length}/${SK_SLOTS} · ${S.skSetMan ? '직접 고름' : '자동으로 고름'}`);
     setText($('#skAutoPick'), S.skSetMan ? '자동으로 고르기' : '지금: 자동으로 고름 (누르면 직접 고르기)');
-    setHTML($('#skCombos'), COMBOS.map(c => { const on = skIn(c.a) && skIn(c.b); return `<li style="${on ? '' : 'opacity:.55'}"><b>${c.name}</b> · ${esc(skillName(c.a))} → ${esc(skillName(c.b))} · 기술 피해 +${c.p}%${c.auto ? ' · 자동' : ''}${on ? '' : ' (두 기술을 끼워야 해요)'}</li>`; }).join(''));
-    for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = skIn(i), open = skOpen(i); setText(b, on ? '빼기' : '끼우기'); b.disabled = !open || (!on && (S.skSet || []).length >= SK_SLOTS); b.classList.toggle('primary', on); }
+    setHTML($('#skCombos'), COMBOS.map(c => { const on = (S.skSet || []).includes(c.a) && (S.skSet || []).includes(c.b); return `<li style="${on ? '' : 'opacity:.55'}"><b>${c.name}</b> · ${esc(skillName(c.a))} ↔ ${esc(skillName(c.b))} · 기술 피해 +${c.p}%${on ? '' : ' (두 기술을 끼워야 해요)'}</li>`; }).join(''));
+    const pmN = {ask:'싸움 전에 묻기', auto:'늘 추천 조합', off:'쓰지 않음'}; setText($('#preMode'), pmN[S.presetMode || 'ask']);
+    for (const b of panel.querySelectorAll('[data-pm]')) b.classList.toggle('on', (S.presetMode || 'ask') === b.dataset.pm);
+    setHTML($('#preList'), ['party', 'boss', 'mob'].map(k => `<div class="pre-h">${FIGHT_KIND_NAME[k]}</div><div class="pre-row">${skPresetFor(k).map(i => `<span class="pre-sk">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i></span>`).join('') || '<span class="small">익힌 기술이 없어요</span>'}</div>`).join(''));
+    for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = (S.skSet || []).includes(i), open = skOpen(i); setText(b, on ? '빼기' : '끼우기'); b.disabled = !open || (!on && (S.skSet || []).length >= SK_SLOTS); b.classList.toggle('primary', on); }
     for (const r of refs){
-      const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
+      const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초 · <span class="mpv">마나 ${skMp(r.i)}</span>${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
       const cap = skCap(r.i);
       setHTML(r.nx, lv && lv < cap ? skillGainHTML(r.i, lv) : lv ? (cap < r.sk.max ? `지금 최대 Lv.${cap} — ${S.job < 4 && 10 + 5 * S.job <= 4 + Math.floor(cumLv() / 6) ? '다음 전직' : '레벨을 올리면'} 더 올릴 수 있어요` : '최대 레벨이에요') : '');
       if (!lv){
@@ -10753,18 +11250,38 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];
+  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
   const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
+  if (raidView === 'gr'){
+    panel.innerHTML = top + `<div id="grBox"></div><div id="raidLive2"></div>`;
+    wireSeg(); grFetchPick();
+    $('#grBox').addEventListener('click', e => { if (e.target.closest('[data-gr]') && !raid && grOpen() && grLeft() > 0) presetAsk('party', '강림 레이드', () => { if (startGangrim()){ closePage(); return true; } }); });
+    return () => {
+      grCheck();
+      const B = grBoss(), left = grLeft(), party = grParty(), days = '일월화수목금토', open = grOpen(), ok = open && left > 0 && !raid;
+      const exAll = AVATARS.filter(a => a.src === GR.src), exOwn = exAll.filter(a => S.av.own[a.k]).length;
+      setHTML($('#grBox'), `<div class="card dcard ${ok ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
+        <div class="ct">강림 레이드 · ${B.name}<span class="tag">${!open ? '잠김' : S.gr.won ? '오늘 토벌함' : `오늘 ${left} / ${GR.tries}번`}</span></div>
+        <p class="story">날마다 다른 신장이 내려와요. <b>나 + 다른 용사 ${GR.pick}명</b>이 저절로 모여 함께 싸워요(${online ? '서버의 캐릭터' : '이 기기의 캐릭터'} 가운데, 같은 직업은 나까지 ${GR.cap}명, 모자라면 NPC 동료). 보스 체력은 모인 파티에 맞춰져요. 보스 체력이 반쯤 깎이면 <b>전멸기</b> — 모두 죽기 직전까지 깎이고, <b>회복약이 없으면 쓰러져요</b>. 이기면 <b>아바타</b> 하나(강림 전용 ${Math.round(GR.avP * 100)}%, ${GR.pity}번 안에 꼭).</p>
+        <div class="dbweek">${GANGLIM.map((b, i) => `<span class="${i === new Date(now()).getDay() ? 'on' : ''}">${days[i]} ${b.name.split(' ').pop()}</span>`).join('')}</div>
+        <div class="dl"><span>함께</span><b>${['나'].concat(party.map(a => `${esc(a.name)}(${CLASSES[a.cls].name}${a.npc ? '·NPC' : ''})`)).join(', ')}</b></div>
+        <div class="dl"><span>강림 아바타</span><b>${exOwn} / ${exAll.length} · ${exAll.map(a => `<span style="${S.av.own[a.k] ? 'color:var(--gold)' : 'opacity:.55'}">${a.name}</span>`).join(' · ')}</b></div>
+        <div class="dl"><span>회복약</span><b>인삼 ${fmt(S.inv.potion)} · 산삼 ${fmt(S.inv.elixir)}</b></div>
+        <button class="btn ${ok ? 'primary' : ''}" data-gr="go" ${ok ? '' : 'disabled'}>${!open ? '첫 환생 뒤(저승)부터 열려요' : raid ? (raid.info.gr ? '싸우는 중…' : '다른 싸움 중') : S.gr.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '강림 레이드 입장' : '오늘은 다 했어요(내일 다시)'}</button>
+      </div></div>`);
+    };
+  }
   if (raidView === 'tb'){
     panel.innerHTML = top + `<div id="tbBox"></div><div id="dbBox"></div><div id="raidLive"></div>`;
-    $('#dbBox').addEventListener('click', e => { if (e.target.closest('[data-db]') && startDBoss()) closePage(); });
+    $('#dbBox').addEventListener('click', e => { if (e.target.closest('[data-db]') && !raid && dbOpen() && dbLeft() > 0) presetAsk('boss', '1일 보스', () => { if (startDBoss()){ closePage(); return true; } }); });
     wireSeg();
     $('#tbBox').addEventListener('click', e => {
       const bt = e.target.closest('[data-tb]');
       if (!bt) return;
       if (bt.dataset.tb === 'join'){ tbJoin(); addLog('타임 보스 참가를 알렸어요. 다른 사람이 모이길 기다려요.', 'good'); return; }
-      if (startTimeBoss(bt.dataset.tb)) buildTab('raid');
+      const d = bt.dataset.tb; if (tbCan(d)) return;
+      presetAsk('party', '타임 보스', () => { if (startTimeBoss(d)){ buildTab('raid'); return true; } });
     });
     return () => {
     const w = tbWindow(), users = tbUsers(), others = tbOthers();
@@ -10777,7 +11294,8 @@ function buildRaid(){
       ${users < 2 ? `<p class="small">${online ? '아직 함께 싸울 캐릭터가 없어요(한 번이라도 싸워 본 캐릭터만 뽑혀요).' : '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 서버의 모든 캐릭터 가운데에서 뽑혀요.'}</p>` : ''}
       <div class="dbtns">${['normal', 'hell'].map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
     </div></div>`);
-    { dbCheck(); const B = dbBoss(), sun = dbDay() === 0, part = sun ? null : dbPart(), left = dbLeft(), days = '일월화수목금토';
+    if (!dbOpen()) setHTML($('#dbBox'), `<div class="card dcard"><div class="dport"><img src="${bossPortrait(dbBoss().type, dbBoss().color)}" alt=""></div><div><div class="ct">1일 보스<span class="tag">잠김</span></div><p class="story">이야기 <b>${SK_CH0}장(천계)</b>에 닿으면 열려요. 이기면 치장(장비 위에 끼우는 장식)을 줘요.</p><button class="btn" disabled>이야기 ${SK_CH0}장부터</button></div></div>`);
+    else { dbCheck(); const B = dbBoss(), sun = dbDay() === 0, part = sun ? null : dbPart(), left = dbLeft(), days = '일월화수목금토';
       const gp = DB_GP.map((v, g) => `${GRADES[g].name} ${v}%`).join(' · ');
       const week = DBOSS.map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
       setHTML($('#dbBox'), `<div class="card dcard ${left > 0 && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
@@ -10809,7 +11327,7 @@ function buildRaid(){
       <div id="raidLive"></div>
       <button class="btn primary big" id="vGo">보물 동굴 들어가기</button>`;
     wireSeg();
-    $('#vGo').addEventListener('click', () => { if (startVault()) closePage(); });
+    $('#vGo').addEventListener('click', () => { if (!raid && vaultLeft() > 0) presetAsk('boss', '보물 동굴', () => { if (startVault()){ closePage(); return true; } }); });
     panel.querySelectorAll('[data-vm]').forEach(b => b.addEventListener('click', () => {
       const M = MYTHS.find(x => x.k === b.dataset.vm), r = craftMyth(b.dataset.vm);
       if (r){ addLog(`신화 조각으로 ${M.name} +${r.p}%를 만들었어요${r.up ? '!' : ' (지금 것이 더 세서 가방으로)'}`, 'gain'); sfx('rare'); playFx('craft', {el:b, ok:true}); }
@@ -10831,7 +11349,7 @@ function buildRaid(){
         <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 3마리마다 보석 1 · 25마리마다 재료 1${S.world >= 3 ? ' · 50마리마다 고삐 조각 1' : ''}</p></div>
       <button class="btn primary big" id="pGo">백귀야행 시작</button>`;
     wireSeg();
-    $('#pGo').addEventListener('click', () => { if (startParade()) closePage(); });
+    $('#pGo').addEventListener('click', () => { if (!raid && !parade && paradeLeft() > 0) presetAsk('mob', '백귀야행', () => { if (startParade()){ closePage(); return true; } }); });
     return () => {
       const left = paradeLeft();
       setText($('#pLeft'), `오늘 ${left} / ${PARADE_TRIES}번`); setText($('#pBest'), S.parade.best ? `최고 기록 ${S.parade.best}마리` : '');
@@ -10849,7 +11367,7 @@ function buildRaid(){
       <div id="raidLive"></div>
       <button class="btn primary big" id="dGo">허수아비 수련 시작</button>`;
     wireSeg();
-    $('#dGo').addEventListener('click', () => { if (startDummy()){ closePage(); } });
+    $('#dGo').addEventListener('click', () => { if (!raid) presetAsk('boss', '허수아비 수련', () => { if (startDummy()){ closePage(); return true; } }); });
     return () => {
       const left = dummyLeft(), T = dummyTiers();
       setText($('#dLeft'), `오늘 ${left} / ${DUMMY_TRIES}번`);
@@ -10914,8 +11432,9 @@ function confirmRaid(i){
   showModal(`${info.label} 토벌`, `
     <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 기다려요. ${partyOf(info)}인 파티로 자동 전투를 해요.</p>
     <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>
-    <p class="small" style="margin-top:8px">${own ? `이 기기의 다른 캐릭터 ${own}명이 함께해요. ` : ''}NPC 동료의 힘은 내 용사에 맞춰져요. 무사는 보스의 공격을 받아 주고, 도인은 파티를 치유해요. 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개).</p>`,
-    [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (startRaid(i)) buildTab('raid'); }}]);
+    <p class="small" style="margin-top:8px">${own ? `이 기기의 다른 캐릭터 ${own}명이 함께해요. ` : ''}NPC 동료의 힘은 내 용사에 맞춰져요. 무사는 보스의 공격을 받아 주고, 도인은 파티를 치유해요. 동료도 저마다 파티 버프를 걸어 줘요. 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개).</p>
+    ${S.presetMode === 'ask' || !S.presetMode ? presetHTML('party') : ''}`,
+    [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (S.presetMode === 'ask' || !S.presetMode) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skPresetFor('party'); if (startRaid(i)) buildTab('raid'); presetNext = undefined; }}]);
 }
 
 /* --- 정보 --- */
@@ -10959,6 +11478,72 @@ const HOWTO = [
   {ic:'☾', t:'쉬는 동안', d:'오프라인 보상·상점', shots:[
     ['sky', 'hero,kkachi', 'light', [['까치', '창을 닫아도 12시간까지 보상이 쌓여요(직접 할 때의 절반).'], ['까치', '[상점]의 오늘의 선물은 하루 한 번 공짜예요. 탕약은 위험할 때 저절로 마셔요.']]]]},
 ];
+/* --- 내 정보(2026-11 (41), 사용자 요청: 무슨 장비와 치장을 끼고 있는지 한 번에) ---
+   왼쪽 위 얼굴(상태창)을 누르면 열린다. 가운데 내 용사, 둘레에 낀 것(위: 변신·탈것·아바타 / 왼쪽: 장비·비전 장비 / 오른쪽: 장신구 / 아래: 치장 다섯 부위),
+   옆에 능력치·전투 기술·펫·넋·신화 보물. 칸을 누르면 그 메뉴로 간다 */
+function meSlot(o){
+  const col = o.g != null && o.g >= 0 ? GRADES[Math.min(GRADES.length - 1, o.g)].color : 'rgba(255,255,255,.22)';
+  const inner = o.img ? `<img src="${o.img}" alt="">` : o.sw ? `<i class="sw" style="background:${o.sw}"></i>` : SVG[o.ic] || '';
+  return `<button type="button" class="ms${o.empty ? ' empty' : ''}" style="--g:${col}" data-go="${o.go || ''}" aria-label="${esc(o.cap)}: ${esc(o.nm)}" title="${esc(o.cap)} · ${esc(o.nm)}">
+    <span class="ms-ic">${inner}${o.lv ? `<b class="ms-lv">${esc(o.lv)}</b>` : ''}</span><span class="ms-nm">${esc(o.empty ? o.cap : o.nm)}</span></button>`;
+}
+function meSlots(){
+  const gear = slot => { const i = S.equip[slot]; return i < 0 ? {cap:GEAR[slot].label, nm:'없음', ic:GEAR[slot].icon, empty:true, go:'gear:' + slot}
+    : {cap:GEAR[slot].label, nm:gearName(slot, i), ic:GEAR[slot].icon, g:gearG(slot), lv:S.refine[slot].lv ? refLvText(refEffLv(slot)) : '', go:'gear:' + slot}; };
+  const craft = c => { const t = S.craft[c.k].t; return t ? {cap:c.name, nm:`${c.name} ${t}단계`, ic:c.icon, g:Math.min(4, Math.floor((t - 1) / 2)), lv:S.craft[c.k].el ? '각' + S.craft[c.k].el : '', go:'gear:craft'} : {cap:c.name, nm:'없음', ic:c.icon, empty:true, go:'gear:craft'}; };
+  const acc = k => { const A = S.acc[k]; return A.g >= 0 ? {cap:ACC[k].name, nm:ACC[k].names[A.g], ic:ACC[k].icon, g:A.g, lv:'+' + A.p + '%', go:'gear:acc'} : {cap:ACC[k].name, nm:accOpen(k) ? '없음' : '잠김', ic:ACC[k].icon, empty:true, go:'gear:acc'}; };
+  const F = formOf(), M = rideM(), avC = AV[S.av.char], avP = AV[S.av.cape], avQ = AV[S.av.pet];
+  const top = [
+    F ? {cap:'변신', nm:F.name, sw:F.color, g:F.part >= 3 ? 4 : 3, go:'gear:form'} : {cap:'변신', nm:'없음', ic:'burst', empty:true, go:'gear:form'},
+    M ? {cap:'탈것', nm:M.name, img:mountImg(M.k), g:M.g, go:'gear:mount'} : {cap:'탈것', nm:'없음', ic:'speed', empty:true, go:'gear:mount'},
+    avC ? {cap:'옷', nm:avC.name, sw:avC.outfit, g:3, go:'gear:av'} : {cap:'옷', nm:'기본', ic:'armor', empty:true, go:'gear:av'},
+    avP ? {cap:'망토', nm:avP.name, sw:avP.capeC, g:avP.star ? 4 : 3, go:'gear:av'} : {cap:'망토', nm:'없음', ic:'gift', empty:true, go:'gear:av'},
+    avQ ? {cap:'펫 꾸미기', nm:avQ.name, sw:avQ.tint || '#ffd0e0', g:2, go:'gear:av'} : {cap:'펫 꾸미기', nm:'없음', ic:'pearl', empty:true, go:'gear:av'},
+  ];
+  const left = [gear('weapon'), gear('armor'), ...CRAFT_SLOTS.map(craft)];
+  const right = ACC_ORDER.map(acc);
+  const bot = SK_PARTS.map(P => { const it = S.skin.eq[P.k]; return it ? {cap:P.name, nm:SKC[it.c].name, sw:SKC[it.c].col, g:it.g, lv:it.l.length + '줄', go:'gear:skin'} : {cap:P.name, nm:skinOpen() ? '없음' : `${SK_CH0}장부터`, ic:'charm', empty:true, go:'gear:skin'}; });
+  return {top, left, right, bot};
+}
+function meKey(){ return JSON.stringify([S.cls, S.level, S.job, S.world, S.equip, S.refine.weapon.lv, S.refine.armor.lv, S.acc, S.craft.w.t, S.craft.a.t, S.craft.n.t, S.form.eq, S.mount.ride, S.av, Object.values(S.skin.eq).map(x => x && x.c + ':' + x.g), curSet(), S.petEq, S.soul.eq, S.title.eq, S.look, Math.round(power(ST))]); }
+function buildMe(){
+  let key = '';
+  panel.innerHTML = '<div id="meBox"></div>';
+  return () => {
+    const k = meKey(); if (k === key) return; key = k;
+    const L = meSlots(), ex = Object.assign(heroEx(), {form:''}), st = ST;
+    const fig = lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), 'down', ex);
+    const tt = TT[S.title.eq] && S.title.own[S.title.eq] ? TT[S.title.eq].name : '';
+    const row = (a, b) => `<div class="me-r"><span>${a}</span><b>${b}</b></div>`;
+    const myth = MYTHS.filter(m => (S.myth[m.k] || 0) > 0);
+    setHTML($('#meBox'), `<div class="me">
+      <div class="me-board">
+        <div class="me-top">${L.top.map(meSlot).join('')}</div>
+        <div class="me-col">${L.left.map(meSlot).join('')}</div>
+        <div class="me-fig">${tt ? `<div class="me-tt">「${esc(tt)}」</div>` : ''}<img src="${fig}" alt="내 용사"><div class="me-nm">${esc(S.name || '나')}</div><div class="me-sub">Lv.${S.level} · ${esc(jobName())} · ${WORLD_NAME[S.world] || ''}</div></div>
+        <div class="me-col">${L.right.map(meSlot).join('')}</div>
+        <div class="me-bot"><span class="me-lab">치장</span>${L.bot.map(meSlot).join('')}</div>
+      </div>
+      <div class="me-side">
+        <div class="card"><div class="ct">능력치<span class="tag">전투력 ${fmt(power(st))}</span></div>
+          ${row('공격력', statValue('atk', st))}${row('체력', statValue('hp', st))}${row('치명타 확률', statValue('crit', st).split(' · ')[0])}${row('치명타 피해', statValue('critDmg', st))}
+          ${row('공격 속도', statValue('aspd', st))}${row('체력 회복', statValue('regen', st))}${row('받는 피해', '-' + Math.round((1 - takenK()) * 100) + '%')}${row('마나', `${MP_MAX} · 초당 ${MP_REGEN}`)}</div>
+        <div class="card"><div class="ct">전투 기술<span class="tag">${curSet().length}/${SK_SLOTS}</span></div><div class="me-sk">${curSet().map(i => `<button type="button" class="me-ski" data-go="skill" title="${esc(skillName(i))} Lv.${skLv(i)}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i><b>${skLv(i)}</b></button>`).join('') || '<span class="small">없음</span>'}</div></div>
+        <div class="card"><div class="ct">함께하는 것</div>
+          <div class="me-pets">${PET_TYPE_ORDER.map(t => { const i = eqPet(t); return i < 0 ? `<button type="button" class="me-pet empty" data-go="pet"><span>${PET_TYPES[t].name}</span></button>` : `<button type="button" class="me-pet" data-go="pet" style="--g:${GRADES[PETS[i].g].color}" title="${esc(PETS[i].name)}"><img src="${petImg(i)}" alt=""><span>${esc(PETS[i].name)} Lv.${S.pets.lv[i]}</span></button>`; }).join('')}</div>
+          ${soulOpen() ? row('넋 주머니', soulEq().map(k => esc(SL[k].name)).join(', ') || '비어 있음') : ''}
+          ${row('신화 보물', myth.length ? myth.map(m => `${m.name} +${S.myth[m.k]}%`).join(' · ') : '없음')}</div>
+      </div></div>`);
+  };
+}
+function meGo(e){
+  const b = e.target.closest('[data-go]'); if (!b || !b.dataset.go || currentTab !== 'me') return;
+  const [t, sub] = b.dataset.go.split(':');
+  if (t === 'gear'){ gearSlot = sub; gearSel = -1; }
+  if (t === 'skill') skillView = 'skill';
+  sfx('click'); buildTab(t);
+}
+panel.addEventListener('click', meGo);
 function buildRec(){
   const items = [['r-max', '최고 단계'], ['r-kills', '잡은 몬스터'], ['r-boss', '물리친 보스'], ['r-raid', '레이드 클리어'], ['r-atk', '공격력'], ['r-hp', '체력'], ['r-dps', '초당 피해 (예상)'], ['r-play', '수련 시간']];
   panel.innerHTML = `
@@ -11176,38 +11761,54 @@ function buildJourney(){
   let last = sig();
   return () => { const now = sig(); if (now !== last && currentTab === 'map'){ last = now; const sl = sc.scrollLeft; buildTab('map'); const s2 = $('#jmScroll'); if (s2) s2.scrollLeft = sl; } };
 }
-const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec, bag:buildBag, map:buildJourney, market:buildMarket};
+const BUILDERS = {grow:buildGrow, skill:buildSkill, gear:buildGear, pet:buildPet, quest:buildQuest, raid:buildRaid, shop:buildShop, rec:buildRec, bag:buildBag, map:buildJourney, market:buildMarket, me:buildMe};
 const PAGE_META = {map:['여정 지도', 'mapBtn'], market:['장터', 'mkBtn']};   // 메뉴 칸이 없는 페이지: 제목과 아이콘을 가져올 단추
 // 메뉴 페이지: 오른쪽(세로 화면은 아래) 메뉴를 누르면 장면을 덮는 별도 화면으로 열린다. 같은 메뉴를 다시 누르거나 ✕·Esc로 닫는다
 let currentTab = null, refresher = null;
-/* 설명 접기(2026-11 (34), 사용자 요청: 메뉴 화면의 설명이 너무 길다): 긴 안내 글(.hint·.story·긴 .small)은 처음엔 한 줄만 보이고
-   [설명 펼치기]로 다 본다. 펼친 글은 기억해 둔다(이 기기). 이야기 퀘스트 본문처럼 id가 있는 글은 그대로 */
-const FOLD_KEY = 'samhan-fold-open';
-const foldOpen = (() => { try { return new Set(JSON.parse(localStorage.getItem(FOLD_KEY) || '[]')); } catch (e){ return new Set(); } })();
-function foldSave(){ try { localStorage.setItem(FOLD_KEY, JSON.stringify([...foldOpen].slice(-300))); } catch (e) {} }
+/* 설명 말풍선(2026-11 (41), 사용자 요청: 펼치기·접기가 조잡함): 긴 안내 글(.hint·.story·긴 .small)은 숨기고 「?」 단추를 붙인다.
+   카드 제목(.ct)·페이지 제목(.ph) 옆에 붙이고, 붙일 곳이 없으면 그 자리에 작은 [? 설명]. 누르면 말풍선으로 보여 주고 다른 곳을 누르면 닫힌다.
+   이야기 퀘스트 본문처럼 id가 있는 글은 그대로 */
 function foldHints(root){
   if (!root) return;
   for (const el of root.querySelectorAll('p.hint:not(.fz), p.story:not(.fz):not([id]), p.small:not(.fz):not([id])')){
     el.classList.add('fz');
-    const t = el.textContent.trim(), lim = el.classList.contains('hint') ? 50 : el.classList.contains('story') ? 80 : 160;
+    const t = el.textContent.trim(), lim = el.classList.contains('hint') ? 50 : el.classList.contains('story') ? 70 : 140;
     if (t.length < lim) continue;
-    const key = String(strHash(t.slice(0, 60))), bt = document.createElement('button');
-    bt.type = 'button'; bt.className = 'fzb';
-    const set = open => { el.classList.toggle('fold', !open); bt.textContent = open ? '접기 ▴' : '설명 펼치기 ▾'; bt.setAttribute('aria-expanded', String(open)); };
-    set(foldOpen.has(key));
-    bt.addEventListener('click', e => { e.stopPropagation(); const open = el.classList.contains('fold'); if (open) foldOpen.add(key); else foldOpen.delete(key); foldSave(); set(open); });
-    el.after(bt);
+    el.classList.add('qhide');
+    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'qmark'; bt.textContent = '?'; bt.setAttribute('aria-label', '설명 보기'); bt._tip = el;
+    const card = el.closest('.card'), head = card && card.querySelector('.ct'), prev = el.previousElementSibling;
+    if (head && !head.querySelector('.qmark')) head.appendChild(bt);
+    else if (prev && prev.matches('.ph') && !prev.querySelector('.qmark')) (prev.querySelector('h2') || prev).appendChild(bt);
+    else { bt.classList.add('qline'); bt.textContent = '? 설명'; el.before(bt); }
   }
 }
+let tipFor = null;
+function hideTip(){ const b = $('#tipB'); if (b) b.remove(); tipFor = null; }
+function showTip(bt){
+  if (tipFor === bt){ hideTip(); return; }
+  hideTip(); tipFor = bt;
+  const b = document.createElement('div'); b.id = 'tipB'; b.className = 'tipb'; b.setAttribute('role', 'tooltip');
+  b.innerHTML = bt._tip.innerHTML; panel.appendChild(b);
+  let x = 0, y = 0, e = bt;   // 패널 안 좌표(offset 사슬이라 화면을 돌려도 맞음)
+  while (e && e !== panel){ x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; if (e && e !== panel && !panel.contains(e)){ x -= panel.offsetLeft; y -= panel.offsetTop; break; } }
+  const w = Math.min(340, panel.clientWidth - 20); b.style.width = w + 'px';
+  const left = Math.max(10, Math.min(panel.clientWidth - w - 10, x + bt.offsetWidth / 2 - w / 2));
+  b.style.left = left + 'px'; b.style.top = (y + bt.offsetHeight + 8) + 'px';
+  b.style.setProperty('--ax', Math.max(14, Math.min(w - 14, x + bt.offsetWidth / 2 - left)) + 'px');
+  sfx('click');
+}
+panel.addEventListener('click', e => { const q = e.target.closest('.qmark'); if (q){ e.stopPropagation(); e.preventDefault(); showTip(q); return; } if (!e.target.closest('#tipB')) hideTip(); });
 function buildTab(key, keepScroll){
   if (!key || !BUILDERS[key]) return;
   const top = panel.scrollTop, pg = $('#page'), was = !pg.hidden && currentTab === key;
   currentTab = key;
   document.querySelectorAll('.tab').forEach(bt => bt.setAttribute('aria-selected', String(bt.dataset.tab === key)));
-  const tb = $('#tab-' + key), pm = PAGE_META[key];
+  $('#tab-more').setAttribute('aria-selected', String(MORE_TABS.includes(key)));
+  const tb = $('#tab-' + key) || (key === 'me' ? $('#meBtn') : null), pm = PAGE_META[key];
   if (tb){ setText($('#pageTitle'), tb.textContent.trim()); const sv = tb.querySelector('svg'); setHTML($('#pageIc'), sv ? sv.outerHTML : ''); }
   else if (pm){ setText($('#pageTitle'), pm[0]); const sv = $('#' + pm[1]) && $('#' + pm[1]).querySelector('svg'); setHTML($('#pageIc'), sv ? sv.outerHTML : ''); }
   if (pg.hidden){ pg.hidden = false; pg.style.animation = 'none'; void pg.offsetWidth; pg.style.animation = ''; }
+  hideTip();
   refresher = BUILDERS[key]();
   refreshPanel();
   foldHints(panel);
@@ -11219,12 +11820,25 @@ function closePage(){
 }
 function refreshPanel(){ if (refresher && currentTab){ refresher(); foldHints(panel); } }
 document.querySelectorAll('.tab').forEach(bt => bt.addEventListener('click', () => {
-  if (!session && !window.__game) return;
+  if (!session && !window.__game || !bt.dataset.tab) return;
+  setMore(false);
   setChat(false);
   if (currentTab === bt.dataset.tab && !$('#page').hidden) closePage(); else buildTab(bt.dataset.tab);
 }));
 $('#pageClose').addEventListener('click', closePage);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalOpen){ if (chatOpen) setChat(false); else if (!$('#page').hidden) closePage(); } });
+$('.hud').addEventListener('click', e => { if (e.target.closest('[data-pt]') || !session && !window.__game) return; setChat(false); setMore(false); if (currentTab === 'me' && !$('#page').hidden) closePage(); else buildTab('me'); });   // 왼쪽 위 상태창 → 내 정보
+/* 아래 메뉴 줄 정리(2026-11 (41), 사용자 요청: 메뉴가 너무 길다): 자주 쓰는 다섯(수련·기술·장비·펫·레이드)만 줄에 두고,
+   퀘스트·상점·정보·가방·내 정보는 [더보기]를 누르면 위로 뜨는 작은 판에. 빨간 점은 [더보기]에도 */
+const MORE_TABS = ['quest', 'shop', 'rec', 'bag', 'me'];
+function setMore(open){
+  const m = $('#moreMenu'), bt = $('#tab-more');
+  if (m.hidden === !open) return;
+  m.hidden = !open; bt.setAttribute('aria-expanded', String(open));
+  if (open){ const nav = bt.parentElement, w = m.offsetWidth || 260; m.style.left = Math.max(6, Math.min(nav.clientWidth - w - 6, bt.offsetLeft + bt.offsetWidth / 2 - w / 2)) + 'px'; }
+}
+$('#tab-more').addEventListener('click', e => { e.stopPropagation(); if (!session && !window.__game) return; setChat(false); setMore($('#moreMenu').hidden); sfx('click'); });
+document.addEventListener('click', e => { if (!$('#moreMenu').hidden && !e.target.closest('#moreMenu') && !e.target.closest('#tab-more')) setMore(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modalOpen){ if (!$('#moreMenu').hidden) setMore(false); else if (chatOpen) setChat(false); else if (!$('#page').hidden) closePage(); } });
 // 장면 위 이야기 퀘스트 알림판(누르면 퀘스트 페이지)
 function updateQTrack(){
   const el = $('#qtrack'), on = !!session && !cut && S.quest.tut !== 0;
@@ -11328,6 +11942,7 @@ function updateDots(){
   shopCheck();
   $('#tab-shop').classList.toggle('has-dot', on && !(S.shop.got.gift >= 1));
   $('#tab-gear').classList.toggle('has-dot', on && craftReady());
+  $('#tab-more').classList.toggle('has-dot', ['quest', 'shop', 'bag'].some(k => $('#tab-' + k).classList.contains('has-dot')));
   updateChatHead();
   roomTrack();   // 캐릭터·레벨이 바뀌면 접속자 목록에 다시 알림(10초에 한 번까지)
 }
@@ -11336,7 +11951,7 @@ function updateDots(){
 const prevCache = new Map();
 function lookPreview(c, look, aG, wG, dir = 'down', ex){
   look = cleanLook(look);
-  const key = [c, look.outfit, look.hair, look.hat, look.skin, aG, wG, dir, ex ? [ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape].join(',') : ''].join('|');
+  const key = [c, look.outfit, look.hair, look.hat, look.skin, aG, wG, dir, ex ? [ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape, ex.sk ? JSON.stringify(ex.sk) : ''].join(',') : ''].join('|');
   let u = prevCache.get(key);
   if (!u){
     const sp = personSprite(c, look, aG, wG, dir, 0, false, ex);
@@ -11920,8 +12535,8 @@ async function pushCloud(){
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0});
-  placeOf(hero); camSnap = true;
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:MP_MAX});
+  placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
 }
@@ -11950,7 +12565,7 @@ const offlineKps = () => S.off.kps > 0 ? S.off.kps : Math.min(OFF_KPS_MAX, S.rec
    이기면 다음 단계, 한 단계에서 OFF_BOSS_TRIES(5)번 지면 그 사냥터에서 계속 사냥한 것으로 셈한다.
    이길지는 실제 보스 피해(realDps)로 30초 안에 쓰러뜨리는지와 보스 공격을 버티는지(takenK·회복)로 어림해 굴린다 */
 const OFF_BOSS_TRIES = 5, OFF_BOSS_X = [0.8, 1.3], OFF_BOSS_PMAX = 0.95, OFF_BOSS_MAXN = 400;   // x = (30초·버티는 시간 중 짧은 쪽) ÷ 보스를 쓰러뜨리는 데 드는 시간. 온라인 시뮬 150판과 맞춤
-const takenK = () => (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * skMul('def') * (1 - (cls().evade || 0));
+const takenK = noPb => (noPb ? 1 : 1 - pbV('musa', 'dr') / 100) * (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * skMul('def') * (1 - (cls().evade || 0));
 function offBossOdds(s = S.stage){
   const w = S.world, hp = mHp(s) * 10 * BOSS_K.hp[w], tk = hp / Math.max(1e-9, realDps());
   const take = 2 * BOSS_K.atk[w] * mAtk(s) * takenK() - ST.regen * ST.maxHp;
@@ -12310,7 +12925,7 @@ if (location.search.indexOf('simtest') >= 0){
     // 피해 측정: 안 죽는 보스 하나(또는 몬스터 6마리)를 sec초 동안 때린다. 초당 피해·가장 큰 한 방을 돌려준다
     bench(sec, pack, each){
       resetRuntime(); mobs = []; projs = []; raid = null;
-      Object.assign(hero, {dead:false, hp:ST.maxHp, buffT:0, shield:0, charge:0, baguaT:0, gutT:0, jobBuffT:0, tx:8, ty:8, fx:8, fy:8, moving:false, target:null});
+      Object.assign(hero, {dead:false, hp:ST.maxHp, mp:MP_MAX, buffT:0, shield:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, jobBuffT:0, tx:8, ty:8, fx:8, fy:8, moving:false, target:null});
       placeOf(hero);
       for (const k in skillCd) skillCd[k] = 0;
       const mk = (b, x, y) => { const m = makeMob(b, x, y); m.hp = m.maxHp = 1e300; m.spawnT = 0; m.atk = 0; mobs.push(m); return m; };
@@ -12332,7 +12947,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };

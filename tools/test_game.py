@@ -215,6 +215,14 @@ def watch(page, errors, tag=''):
     page.on('console', lambda m: errors.append(f'{tag}{m.type}: {m.text}') if m.type in ('error', 'warning') else None)
 
 
+async def tab(page, key):
+    # 퀘스트·상점·정보·가방은 [더보기] 판 안에 있다(2026-11 (41))
+    if key in ('quest', 'shop', 'rec', 'bag'):
+        if await page.is_hidden('#moreMenu'):
+            await page.click('#tab-more')
+    await page.click('#tab-' + key)
+
+
 async def fresh(page):
     await page.goto(URL)
     await page.evaluate("() => { localStorage.clear(); sessionStorage.clear(); Storage.prototype.setItem = function(){}; }")
@@ -350,7 +358,7 @@ async def main():
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '6_재련.png'))
         check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 +1~+3은 반드시 성공한다')
-        await page.click('#tab-quest')
+        await tab(page, 'quest')
         await page.wait_for_timeout(400)
         await page.screenshot(path=str(OUT / '7_퀘스트.png'))
         await page.click('#mainClaim')
@@ -379,9 +387,30 @@ async def main():
         st = await page.evaluate('() => ({raids: window.__game.S.rec.raids, raid: !!window.__game.raid, tk: window.__game.S.raid.tk})')
         check(st['raids'] == 1 and not st['raid'] and st['tk'] == 2, f'레이드를 깨면 보상을 받고 토벌패 1개를 쓴다 {st}')
         await page.click('#modal-btn-0')
-        await page.click('#tab-rec')
+        await tab(page, 'rec')
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '12_정보.png'), full_page=True)
+        # 아래 메뉴 [더보기]·내 정보·? 말풍선(2026-11 (41))
+        await page.evaluate("() => window.__game.closePage()")
+        await page.click('#tab-more'); await page.wait_for_timeout(250)
+        mv = await page.is_visible('#moreMenu')
+        await page.screenshot(path=str(OUT / '36_더보기.png'))
+        await page.click('#meBtn'); await page.wait_for_timeout(400)
+        me = await page.evaluate("() => ({t: document.querySelector('#pageTitle').textContent, n: document.querySelectorAll('#meBox .ms').length, more: document.querySelector('#moreMenu').hidden})")
+        await page.screenshot(path=str(OUT / '37_내정보.png'))
+        await page.evaluate("() => window.__game.closePage()")
+        await page.click('.hud'); await page.wait_for_timeout(300)
+        me2 = await page.evaluate("() => document.querySelector('#pageTitle').textContent")
+        await page.evaluate("() => window.__game.buildTab('skill')"); await page.wait_for_timeout(300)
+        qn = await page.evaluate("() => document.querySelectorAll('#panel .qmark').length")
+        await page.click('#panel .qmark'); await page.wait_for_timeout(250)
+        tip = await page.evaluate("() => { const b = document.querySelector('#tipB'); return b ? b.textContent.length : 0; }")
+        await page.screenshot(path=str(OUT / '38_설명말풍선.png'))
+        await page.mouse.click(5, 300); await page.wait_for_timeout(150)
+        tip2 = await page.evaluate("() => !!document.querySelector('#tipB')")
+        await page.evaluate("() => window.__game.closePage()")
+        check(mv and me['t'] == '내 정보' and me['n'] >= 20 and me['more'] and me2 == '내 정보', f'[더보기] 판·내 정보(왼쪽 위 상태창을 눌러도 열림) {me} {me2}')
+        check(qn >= 1 and tip > 20 and not tip2, f'긴 설명은 ?를 누르면 말풍선으로, 다른 곳을 누르면 닫힘 (?{qn}개, 글자 {tip})')
 
         await page.evaluate('() => window.__game.showNotes()')
         await page.wait_for_timeout(300)
@@ -389,7 +418,7 @@ async def main():
         await page.click('#modal-btn-0')
 
         # 4-2) 상점·물약·부적
-        await page.click('#tab-shop')
+        await tab(page, 'shop')
         await page.click('.shop-cats [data-c="pack"]')
         await page.click('#shb-gift')
         await page.click('.shop-cats [data-c="potion"]')
@@ -447,7 +476,7 @@ async def main():
         await page.evaluate("() => { window.__game.gateOff = true; window.__game.noFork = true; }")
         check(await page.evaluate('() => window.__game.S.name') == '홍길동', '다시 열면 같은 캐릭터로 이어진다')
         check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 결과가 저장된다')
-        await page.click('#tab-rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
+        await tab(page, 'rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
         await page.fill('#lg-id', 'tester'); await page.fill('#lg-pw', '0000'); await page.click('#modal-btn-0')
         await page.wait_for_timeout(600)
         check('맞지 않아요' in await page.inner_text('#lg-err'), '틀린 비밀번호는 막는다')
@@ -548,7 +577,7 @@ async def main():
           const h0 = G.hiddenQuest(); G.claimHidden(); S.rec.raids += 10; G.claimHidden(); S.refine.armor.lv = 25; G.claimHidden();
           const ready = G.jobReady(2); G.grantJob(2); G.claimHidden(); return {shown: !!h0 && h0.hidden, hid: S.quest.hid, ready, job: S.job, saja: !!S.av.own.c_saja}; }""")
         check(hq['shown'] and hq['ready'] and hq['hid'] == 4 and hq['job'] == 2 and hq['saja'], f'저승을 마치면 히든 퀘스트가 나타나고, 다 하면 2차 전직을 한다 {hq}')
-        await page.click('#tab-quest'); await page.wait_for_timeout(300)
+        await tab(page, 'quest'); await page.wait_for_timeout(300)
         hv = await page.evaluate("""() => { const G = window.__game, S = G.S; const ok1 = G.rebirthReady(); const r = G.doRebirth();
           const ok2 = G.rebirthReady(); return {ok1, world: S.world, reb: S.reb.n, again: ok2, cap: S.level}; }""")
         check(hv['ok1'] and hv['world'] == 2 and hv['reb'] == 2 and not hv['again'], f'두 번째 환생으로 천계에 오르고, 환생은 두 번까지다 {hv}')
@@ -615,8 +644,8 @@ async def main():
         check(man['m'] and man['cd'] == 0 and 'manual' in man['cls'] and man['back'], f'기술 칸을 길게 누르면 수동이 되고, 수동 기술은 저절로 쓰지 않는다 {man}')
         dn = await page.evaluate("""() => { const G = window.__game, S = G.S; G.setClass('doin'); S.level = 120; const rb = S.reb.n; S.reb.n = 0; G.unlockSkills();
           const before = G.skLv(5); S.reb.n = 1; G.unlockSkills(); const after = G.skLv(5); S.reb.n = rb; G.unlockSkills();
-          const atk = [0, 1, 2, 3, 4, 5, 6, 7].filter(i => G.skDef(i).atk).length; return {before, after, atk}; }""")
-        check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 3, f'도인은 공격 기술이 3개이고, 세 번째는 환생해야 열린다 {dn}')
+          const atk = [...Array(11).keys()].filter(i => G.skDef(i).atk).length; return {before, after, atk}; }""")
+        check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 5, f'도인은 공격 기술이 다섯(도력 일격·팔괘진은 버프 겸 공격)이고, 하늘의 심판은 환생해야 열린다 {dn}')
         sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.castNow(2);
           return {shield: G.hero.shield / G.ST.maxHp}; }""")
         check(sh['shield'] >= 0.399, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
@@ -725,7 +754,7 @@ async def main():
           // 지면: 참가 보상만
           G.dbCheck(); S.dboss.n = 1; const lose = G.finishDBoss({win:false}); const gemsLose = S.gems - g0; const lose2 = G.finishDBoss({win:false});
           // 이기면: 그날 부위 치장(일요일이 아니면 늘 하나)
-          const ok = G.startDBoss(); const B = G.raid && G.raid.boss; if (B){ G.raid.info.fit = null; B.hp = 1; } for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
+          G.dbForce = true; const ok = G.startDBoss(); const B = G.raid && G.raid.boss; if (B){ G.raid.info.fit = null; B.hp = 1; } for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
           const got = S.skin.inv.concat(Object.values(S.skin.eq)), parts = got.map(it => G.SKC[it.c].p);
           // 여러 날 흉내: 월~토는 그 부위, 일요일은 전설만
           const grades = [0, 0, 0, 0, 0], partOk = [];
@@ -740,7 +769,7 @@ async def main():
         fh = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
           S.dboss = {day:'', n:0, paid:false, won:false}; S.buff.def = 600; G.refreshStats(); G.dbCheck();
-          const ok = G.startDBoss(), R = G.raid, B = R.boss; let rise = 0, last = 1;
+          G.dbForce = true; const ok = G.startDBoss(), R = G.raid, B = R.boss; let rise = 0, last = 1;
           for (let i = 0; i < 200 && G.raid; i++){ G.update(0.05); const f = B.hp / B.maxHp; if (f > last + 1e-6) rise++; last = f; }
           const norm = +(G.bossHit(B, G.hero) * G.takenK() / G.ST.maxHp).toFixed(3), pct = B.tbPct.hit, dk = +G.takenK().toFixed(2);
           const base0 = R.info.fit.base, done0 = R.tbDone, rate = G.fitRate();
@@ -758,7 +787,7 @@ async def main():
           const a = G.tbFromSummary('<!--x', {cls:'constructor', armorG:99, weaponG:-7, ally:{dps:5, maxHp:9, rd:'x'}}, false);
           if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
           S.skin = {eq:{}, inv:[], seq:0, found:{}}; S.dboss = {day:'', n:0, paid:false, won:false}; G.dbCheck(); G.dbLuck = 100;
-          const ok = G.startDBoss(), R = G.raid; R.info.day = '1999-1-1'; R.info.paid0 = false; const g0 = S.gems;
+          G.dbForce = true; const ok = G.startDBoss(), R = G.raid; R.info.day = '1999-1-1'; R.info.paid0 = false; const g0 = S.gems;
           R.info.fit = null; R.boss.hp = 1; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
           const today = {n:S.dboss.n, paid:S.dboss.paid, won:S.dboss.won}, gems = S.gems > g0, skins = Object.values(S.skin.eq).concat(S.skin.inv).length;
           G.dbLuck = null; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
@@ -811,13 +840,13 @@ async def main():
           const t1 = G.skToggle(set[0]), full = S.skSet.length;
           S.skSetMan = true; S.skSet = [0, 1, 2, 3, 4, 5]; for (const k in G.skillCd) G.skillCd[k] = 0; G.hero.dead = false;
           G.hero.dead = false; S.mode = 'semi'; S.kills = G.FIELD.kills; G.startBoss(); const B3 = G.bossRef; if (B3){ B3.hp = B3.maxHp = 1e300; B3.atk = 0; } for (let i = 0; i < 30; i++) G.update(0.05); for (const k in G.skillCd) G.skillCd[k] = 0;
-          const c0 = S.rec.combos || 0, k0 = G.castNow(2), k1 = G.castNow(3), combo = (S.rec.combos || 0) - c0, cm = G.comboMul();
+          G.comboLuck = 10; const c0 = S.rec.combos || 0, k0 = G.castNow(2), k1 = G.castNow(3), combo = (S.rec.combos || 0) - c0, cm = G.comboMul(); G.comboLuck = null;
           if (G.bossActive && B3){ B3.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
           const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), cap1, cap3, lvEff, set, t1, full, combo, cm: +cm.toFixed(2), k0, k1};
           G.PAT.off = false; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return out; }""")
         check(nf['noHunt'] and nf['ok1'] and nf['up'] > 1.3 and not nf['again'] and nf['ended'] and nf['still'] and not nf['again2'] and nf['autoOn'] and nf['endAfter']
               and abs(nf['fx1'] - 1.24 ** 1.5) < 0.01 and abs(nf['fx3'] - 1.0709 ** (1.5 * 0.6)) < 0.005 and nf['tg3'] > nf['fx3']
-              and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) == 6 and nf['t1'] and nf['full'] == 5 and nf['combo'] == 1 and nf['cm'] == 1.35 and nf['k0'] and nf['k1'],
+              and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) == 6 and nf['t1'] and nf['full'] == 5 and nf['combo'] == 1 and nf['cm'] == 1.12 and nf['k0'] and nf['k1'],
               f'변신: 사냥 중엔 못 쓰고 보스 싸움에서 한 번만 30초(자동이면 시작하자마자)·단계 값(부상에선 사신 60%)·기술 최대 레벨(1차 15·3차 25)·전투 칸 6개·연계 {nf}')
         aw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
@@ -827,6 +856,52 @@ async def main():
           const want = G.realDps() * G.AWAKEN_SEC, used = R.awk.used; R.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
           Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return {ok, used, want: want > 0}; }""")
         check(aw['ok'] and aw['used'] and aw['want'], f'초각성은 한 싸움에 한 번, 내 실제 보스 피해 몇 초 몫으로 {aw}')
+
+        # 6-4j) 2026-11 (41): 도인 공격 기술 다섯·파티 버프·마나·추천 조합·전멸기·강림 레이드·1일 보스 열림
+        nw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), was = [G.PAT.off, G.gateOff]; G.quiet = true; G.PAT.off = true; G.gateOff = true;
+          if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
+          const out = {};
+          G.setClass('doin'); out.doinAtk = [...Array(11).keys()].filter(i => G.skDef(i).atk).map(i => G.skDef(i).kind);
+          G.setClass('musa'); S.level = 60; S.job = 1; G.unlockSkills(); G.refreshStats();
+          out.party = G.skLv(10) > 0;
+          // 추천 조합: 레이드를 시작하면 파티 버프가 든 조합, 끝나면 원래대로
+          S.skSetMan = false; S.skSet = []; G.skSetFix(); const before = S.skSet.slice();
+          S.raid.tk = 3; S.inv.potion = 0; S.inv.elixir = 0; S.myth.elixir = 0; S.petEq.sup = -1; const ok = G.startRaid(0), R = G.raid, B = R.boss;
+          out.preset = (G.skPreset || []).slice(); out.presetHasParty = out.preset.includes(10); out.bar = G.curSet().includes(10);
+          // 파티 버프: 동료가 걸어 주면 내 공격력이 오르고, 내 것도 건다
+          const a0 = G.ST.atk * G.atkBuffX(); G.partyBuff('doin', 10, R.allies[0]); out.pbAtk = +(G.ST.atk * G.atkBuffX() / a0).toFixed(3); out.pbOn = G.pbT.doin > 0;
+          // 마나: 기술을 쓰면 줄고, 모자라면 못 씀
+          G.hero.mp = G.MP_MAX; for (const k in G.skillCd) G.skillCd[k] = 0; S.mode = 'semi';
+          B.hp = B.maxHp = 1e300; for (let i = 0; i < 20; i++) G.update(0.05);
+          const mp0 = G.hero.mp, c1 = G.castNow(10); out.mpUsed = +(mp0 - G.hero.mp).toFixed(1); out.c1 = c1; out.cost = G.skMp(10);
+          G.hero.mp = 0; for (const k in G.skillCd) G.skillCd[k] = 0; out.noMp = !G.castNow(0) && !G.castNow(1);
+          // 전멸기: 보스 체력 절반 아래 → 예고 → 1까지 깎임 → 회복약이 없으면 쓰러짐
+          G.hero.dead = false; G.hero.hp = G.ST.maxHp; B.atk = 0; B.aoe = 0; B.hp = B.maxHp * 0.45; let st = []; let low = Infinity;
+          for (let i = 0; i < 160 && G.raid; i++){ G.update(0.05); if (R.wipe && !st.includes(R.wipe.st)) st.push(R.wipe.st); if (!G.hero.dead) low = Math.min(low, G.hero.hp); if (R.wipe && R.wipe.st >= 4) break; }
+          out.wipeSt = st; out.low = low; out.diedNoPot = G.hero.dead;
+          R.time = 0; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05);
+          out.after = (G.skPreset === null) && G.curSet().join() === before.join();
+          // 회복약이 있으면 저절로 마셔 버팀
+          S.inv.potion = 5; S.raid.tk = 3; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.startRaid(0); const R2 = G.raid, B2 = R2.boss; B2.atk = 0; B2.aoe = 0; B2.hp = B2.maxHp * 0.45;
+          for (let i = 0; i < 160 && G.raid; i++){ G.update(0.05); if (R2.wipe && R2.wipe.st >= 4) break; }
+          out.livePot = !G.hero.dead && G.hero.hp > G.ST.maxHp * 0.15; out.potUsed = 5 - S.inv.potion; out.wipeName = R2.wipe && R2.wipe.name;
+          R2.time = 0; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05);
+          // 1일 보스·강림 레이드 열림
+          G.dbForce = false; S.reb.n = 0; S.world = 0; S.quest.main = 5; out.dbLock = !G.dbOpen() && !G.startDBoss(); out.grLock = !G.grOpen() && !G.startGangrim();
+          S.reb.n = 1; S.world = 1; G.applyWorld(); G.refreshStats(); S.gr = {day:'', n:0, won:false, pity:0};
+          out.grOk = G.startGangrim(); const R3 = G.raid; out.grParty = R3 ? R3.allies.length + 1 : 0;
+          const cls = [S.cls].concat(R3 ? R3.allies.map(a => a.cls) : []); out.grCap = Math.max(...Object.values(cls.reduce((m, c) => (m[c] = (m[c] || 0) + 1, m), {})));
+          const av0 = Object.keys(S.av.own).filter(k => S.av.own[k]).length; G.grLuck = 100;
+          if (R3){ R3.info.fit = null; R3.boss.hp = 0.0001; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); }
+          G.grLuck = null; out.grWon = S.gr.won; out.grAv = Object.keys(S.av.own).filter(k => S.av.own[k]).length - av0;
+          out.grEx = G.AVATARS.filter(a => a.src === '강림 레이드' && S.av.own[a.k]).length;
+          G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
+        check(len(nw['doinAtk']) == 5 and 'd_charge' in nw['doinAtk'] and 'd_bagua' in nw['doinAtk'], f'도인 공격 기술은 다섯(도력 일격·팔괘진이 버프 겸 공격) {nw["doinAtk"]}')
+        check(nw['party'] and nw['presetHasParty'] and nw['bar'] and nw['pbOn'] and nw['pbAtk'] > 1.05 and nw['after'], f'레이드: 추천 조합(파티 버프 포함)으로 싸우고 끝나면 원래대로, 동료의 파티 버프로 공격력↑ {nw}')
+        check(nw['c1'] and abs(nw['mpUsed'] - nw['cost']) < 1.5 and nw['noMp'], f'마나: 기술을 쓰면 마나가 줄고, 모자라면 못 씀 {nw}')
+        check(nw['wipeSt'][:3] == [1, 2, 3] and nw['low'] <= 1.5 and nw['diedNoPot'] and nw['livePot'] and nw['potUsed'] >= 1, f'전멸기: 1까지 깎이고 회복약이 없으면 쓰러짐, 있으면 마셔 버팀 {nw}')
+        check(nw['dbLock'] and nw['grLock'] and nw['grOk'] and nw['grParty'] == 4 and nw['grCap'] <= 2 and nw['grWon'] and nw['grAv'] >= 1 and nw['grEx'] >= 1,
+              f'1일 보스·강림 레이드는 초반엔 잠김, 강림 레이드는 4명(같은 직업 2명까지)·이기면 아바타 {nw}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
@@ -1260,7 +1335,7 @@ async def main():
         check(off['name'] == '산골' and not off['online'], f'인터넷이 끊겨도 게임이 열리고 돌아간다 {off}')
         await pp.screenshot(path=str(OUT / '24_오프라인.png'))
         await ctxP.set_offline(False)
-        await pp.click('#tab-rec')
+        await tab(pp, 'rec')
         check(await pp.is_visible('#appBtn'), '[정보] 탭에 [앱으로 설치] 단추가 있다')
         await ctxP.close()
         srv.shutdown()
