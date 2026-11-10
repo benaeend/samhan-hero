@@ -884,6 +884,7 @@ async def main():
           const col = G.soulCol() > 0, eq = G.soulEq().length === 1;
           S.kills = 25; S.autoBoss = true; for (let i = 0; i < 12; i++) G.update(0.05);
           const B = G.patBoss(); B.maxHp = B.hp = 1e40; const lv = G.patLv(B);
+          const eqKeep = S.soul.eq.slice(); S.soul.eq = ['', '']; G.soulG = 0;   // 손컨 점검 동안은 넋이 끼어들지 않게(묶기·버팀 깎기)
           // 붉은 칸: 자동 손이 피하면 안 맞고, 못 피하면 맞는다
           const tiles = dodge => { G.HAND.dodge = dodge ? 1 : 0; G.hero.hp = G.ST.maxHp; B.atk = G.ST.maxHp * 0.3; B.stunT = 0; B.pat.grogT = 0; B.pat.tel = null; B.pat.cd = 0.01; B.pat.n = 0;
             const h0 = S.rec.patHits || 0; let seen = false; for (let i = 0; i < 80; i++){ G.update(0.05); const T = B.pat.tel; if (T && T.kind === 'tiles'){ seen = true; if (!dodge){ T.set.add(G.hero.tx + ',' + G.hero.ty); if (G.hero.fx != null) T.set.add(G.hero.fx + ',' + G.hero.fy); } } if (seen && !T) break; }
@@ -897,7 +898,6 @@ async def main():
           B.stunT = 0; B.pat.tel = null; B.pat.stg = 5; G.hero.hp = G.ST.maxHp; B.pat.cd = 99; G.patStg(B, 10);
           const grog = B.pat.grogT > 0; for (let i = 0; i < 100; i++) G.update(0.05); const back = B.pat.grogT <= 0 && B.pat.stg === 100;
           // 큰 살: 못 끊으면 최대 체력의 절반 넘게 깎인다
-          const eqKeep = S.soul.eq.slice(); S.soul.eq = ['', '']; G.soulG = 0;   // 넋(강림도령 묶기)이 큰 살을 멈추지 않게
           B.pat.grogT = 0; B.pat.stg = 100; B.stunT = 0; B.gate = true; B.pat.wipes = [1.01]; B.pat.cd = 99; G.hero.hp = G.ST.maxHp; G.hero.shield = 0;
           for (let i = 0; i < 3; i++) G.update(0.05); const wiping = !!(B.pat.tel && B.pat.tel.kind === 'wipe'); B.pat.stg = 1e9;
           let low = 1; for (let i = 0; i < 140 && B.pat.tel; i++){ G.update(0.05); low = Math.min(low, G.hero.hp / G.ST.maxHp); G.hero.hp = Math.max(G.hero.hp, 1); }
