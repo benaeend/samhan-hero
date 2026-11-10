@@ -653,6 +653,29 @@ async def main():
               and ob['p5'] > 0 and ob['winB'] >= 3 and ob['stB'] == 5 + ob['winB'],
               f'오프라인 보스: 5번 지면 그 사냥터에서 사냥(단계 그대로), 이기면 다음 단계로 올라간다 {ob}')
 
+        # 6-4e) 장별 치장: 천계 17장부터 몹에게서, 지나온 장 것만, 줄 수 = 등급, 1~2줄로 다 채워도 3.5단계·전설로 10단계, 더 좋으면 바로 낌, 저장 다듬기
+        sk = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const qi = ch => G.MAIN_Q.findIndex(q => q.ch === ch), out = {};
+          S.skin = {eq:{}, inv:[], seq:0, found:{}}; G.refreshStats();
+          S.quest.main = qi(12); out.closed = !G.skinOpen();
+          S.world = 2; S.quest.main = qi(20); const a0 = G.ST.atk; let bad = 0; const chs = new Set();
+          for (let i = 0; i < 300; i++){ const it = G.skinDrop(null, true).it; chs.add(it.c);
+            if (it.c > 20 || it.g > 1 || it.l.length !== G.SK_GRADES[it.g].n || new Set(it.l.map(l => l[0])).size !== it.l.length || it.l[0][0] !== G.SK_PARTS.find(P => P.k === G.SKC[it.c].p).stat) bad++; }
+          out.bad = bad; out.maxCh = Math.max(...chs); out.eq = Object.keys(S.skin.eq).length; out.atkUp = G.ST.atk > a0;
+          out.better = Object.values(S.skin.eq).every(e => S.skin.inv.filter(x => G.SKC[x.c].p === G.SKC[e.c].p).every(x => G.skSE(x) <= G.skSE(e) + 1e-9));
+          const fill = g => { for (const P of G.SK_PARTS){ const sk = G.SK_LIST.find(x => x.p === P.k); S.skin.eq[P.k] = {id:900, c:sk.c, g, l:G.skMake(sk, g).l.map(([t]) => [t, G.SK_GRADES[g].se])}; } G.refreshStats(); return +G.skinSum().se.toFixed(2); };
+          out.low = fill(1); out.top = fill(4);
+          const gc = ch => { S.quest.main = qi(ch); const n = [0, 0, 0, 0, 0]; for (let i = 0; i < 1500; i++) n[G.skinDrop(null, true).it.g]++; return n; };
+          const g30 = gc(30), g33 = gc(33), g42 = gc(42); out.g4line = [g30[3] + g30[4], g33[3], g33[4], g42[4]];
+          const d = JSON.parse(JSON.stringify(S)); d.skin.eq.guard = {id:5, c:20, g:0, l:[['atk', 9]]}; d.skin.inv = [{id:6, c:99, g:0, l:[['atk', 0.1]]}];
+          const m = G.mergeState(d); out.clean = [m.skin.eq.guard ? 'kept' : 'dropped', m.skin.inv.length];
+          S.quest.main = qi(20); S.off.kps = 3; S.bossAuto = false; G.skLuck = null; const o = G.offlineReward(3600); out.offSk = o.skins;
+          document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click();
+          Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.quiet = false; return out; }""")
+        check(sk['closed'] and sk['bad'] == 0 and sk['maxCh'] == 20 and sk['eq'] >= 4 and sk['atkUp'] and sk['better'] and sk['low'] <= 3.5 and 9.5 <= sk['top'] <= 10
+              and sk['g4line'][0] == 0 and sk['g4line'][1] > 0 and sk['g4line'][2] == 0 and sk['g4line'][3] > 0 and sk['clean'] == ['dropped', 0] and sk['offSk'] >= 3,
+              f'장별 치장: 17장부터·지나온 장 것만·줄 수=등급, 1~2줄로 다 채워도 3.5단계 이하·전설은 10단계, 4줄은 2부 후반·전설은 3부 중반부터, 오프라인에도 나온다 {sk}')
+
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
         bs = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.setClass('musa');
           if (S.world < 2){ S.world = 2; S.reb.n = 2; }
