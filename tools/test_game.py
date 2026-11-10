@@ -102,7 +102,9 @@ SIM = r"""
       if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
       if (G.S.gems >= 6000 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
       G.buyShop('gift');
-      if (G.S.inv.potion < 20) { const pp = G.SHOP.find(x => x.id === 'potion').price(); if (pp < G.S.gold * 0.05) G.buyShop('potion'); }
+      // 물약(2026-11 (43)): 체력·마나 자동 회복이 느려져 인삼 탕약·감로수를 사서 씀 — 100개 묶음이 엽전의 5%보다 싸면 묶음, 아니면 10개
+      for (const [k, lo] of [['potion', 40], ['mana', 80]]) if ((G.S.inv[k] || 0) < lo){ const big = G.SHOP.find(x => x.id === k + '100'), sm = G.SHOP.find(x => x.id === k);
+        if (big.price() < G.S.gold * 0.05) G.buyShop(k + '100'); else if (sm.price() < G.S.gold * 0.15) G.buyShop(k); }
       if (!opts.nocraft) for (const k of ['w', 'n', 'a']) {   // 조합 공방: 최적 각인으로, 노리개 보석은 지갑의 60%까지만
         if (!G.S.craft[k].e && !G.S.craft[k].e2) G.pickEngr(k, G.ENGR_BEST[cls][k]);
         const n = G.craftNeed(k);
@@ -419,14 +421,16 @@ async def main():
 
         # 4-2) 상점·물약·부적
         await tab(page, 'shop')
+        inv0 = await page.evaluate('() => Object.assign({}, window.__game.S.inv)')
         await page.click('.shop-cats [data-c="pack"]')
         await page.click('#shb-gift')
         await page.click('.shop-cats [data-c="potion"]')
         await page.click('#shb-potion')
+        await page.click('#shb-mana')
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '16_상점.png'))
         inv = await page.evaluate('() => window.__game.S.inv')
-        check(inv['potion'] == 15, f'오늘의 선물·인삼 탕약 10개를 산다 {inv}')
+        check(inv['potion'] == inv0['potion'] + 15 and inv['mana'] == inv0['mana'] + 15, f'오늘의 선물·인삼 탕약 10개·감로수 10개를 산다 {inv0} → {inv}')
         await page.click('.shop-cats [data-c="charm"]')
         await page.click('#shb-b_atk')
         st = await page.evaluate('() => ({buff: window.__game.S.buff.atk})')
@@ -434,6 +438,10 @@ async def main():
         drank = await page.evaluate('''() => { const G = window.__game; const n = G.S.inv.potion; G.hero.hp = G.ST.maxHp * 0.1; G.update(0.05);
           return {before: n, after: G.S.inv.potion, hp: G.hero.hp / G.ST.maxHp}; }''')
         check(drank['after'] == drank['before'] - 1 and drank['hp'] > 0.4, f'체력이 낮으면 탕약을 저절로 마신다 {drank}')
+        await page.click('#pageClose')
+        mp = await page.evaluate('''() => { const G = window.__game; G.hero.mp = 10; const n = G.S.inv.mana; document.querySelector('#pot-mana').click();
+          return {before: n, after: G.S.inv.mana, mp: G.hero.mp, shown: document.querySelector('#pot-mana b').textContent, vis: !!document.querySelector('#potBar').offsetParent}; }''')
+        check(mp['after'] == mp['before'] - 1 and mp['mp'] >= 50 and mp['vis'], f'기술 줄 위 물약 칸(감로수)을 누르면 마나를 채운다 {mp}')
         await page.wait_for_timeout(500)
         await page.screenshot(path=str(OUT / '17_부적표시.png'))
 
@@ -931,6 +939,11 @@ async def main():
           // 보스 도전 기운: 지면 다음 보스 체력이 줄어든다
           const bs0 = S.bossPity; S.bossPity = {k:'', n:0}; out.pity0 = G.bossPityMul(); G.bossFail('시험'); G.bossFail('시험'); out.pity2 = G.bossPityMul(); out.pityN = G.bossPityN(); S.bossPity = bs0;
           out.icons = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].every(i => G.hasSkIcon(i)) && G.skCol(10) !== G.skCol(0);
+          // 다른 용사 정보 창(진행도)
+          G.quiet = false; G.showUserInfo(Object.assign({}, c[0], {q:50, tw:12, pv:1234, world:1, maxStage:40, job:1, cum:150, rd:G.realDps(), maxHp:G.ST.maxHp}));
+          const mb = document.querySelector('#modal'); out.uinfo = !!mb && !mb.hidden && /이야기 진행/.test(mb.textContent) && /1,234점/.test(mb.textContent) && /12 [/] 300층/.test(mb.textContent);
+          document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click(); G.quiet = true;
+          out.sumBad = JSON.stringify(G.sumProg({q:1e9, tw:-5, tt:'__proto__', world:99, job:'x'}));
           // 본캐: 배럭 효과 없음
           const b0 = G.barrack(); G.setMainChar(true); out.main = G.isMainChar() && G.barrack().main && G.barrack().stat === 0; G.setMainChar(false); out.mainOff = !G.isMainChar(); out.brExp = b0.exp <= b0.gain;
           G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
@@ -942,8 +955,9 @@ async def main():
         check(nk['tc'] and nk['tcWipes'] == 3 and nk['tcWipe'] and nk['godWin'] == 1 and nk['seed'] and nk['tWing'], f'태초의 신: 전멸기 세 번, 이기면 태초의 씨앗·태초의 날개 {nk}')
         check(nk['pvpN'] >= 1 and nk['pv'] and nk['pvPct'] and nk['pvUp'], f'결투: 상대 목록에서 골라 싸우고 이기면 점수 {nk}')
         check(nk['pvMove'] and nk['pvHurt'] >= 1 and nk['pvSc'] == 1 and nk['pvDraw'], f'결투 상대가 용사 크기로 걸어오고 공격한다 {nk}')
-        check(nk['pity0'] == 1 and nk['pityN'] == 2 and abs(nk['pity2'] - 0.94) < 1e-9, f'보스 도전 기운: 두 번 지면 보스 체력 -6% {nk}')
+        check(nk['pity0'] == 1 and nk['pityN'] == 2 and abs(nk['pity2'] - 0.90) < 1e-9, f'보스 도전 기운: 두 번 지면 보스 체력 -10% {nk}')
         check(nk['icons'], f'기술 아이콘이 모두 있고(파티 버프 포함) 칸마다 색이 다르다 {nk}')
+        check(nk['uinfo'] and '"tt":""' in nk['sumBad'] and '"tw":0' in nk['sumBad'] and '"world":4' in nk['sumBad'], f'다른 용사 정보 창: 이야기·탑·결투 점수가 보이고 남이 보낸 값은 다듬는다 {nk.get("uinfo")} {nk.get("sumBad")}')
         check(nk['main'] and nk['mainOff'] and nk['brExp'], f'본캐는 배럭 효과를 받지 않음, 배럭 경험치는 엽전보다 적게 {nk}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드

@@ -552,7 +552,21 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 .qtrack.ready{border-color:rgba(255,204,77,.6);box-shadow:0 0 16px rgba(255,204,77,.25)}
 .log{left:calc(8px + env(safe-area-inset-left));right:auto;bottom:10px;width:min(360px,44%);z-index:3}
 .ctrl{position:absolute;right:8px;bottom:8px;z-index:3;display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto;gap:6px;padding:0;background:none;border:0;align-items:end}
-.ctrl .skills{grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:repeat(6,40px);gap:6px;justify-content:end}
+.ctrl .skills{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:repeat(6,40px);gap:6px;justify-content:end}
+/* 물약 칸(2026-11 (43), 사용자 요청): 기술 줄 바로 위, 개수가 보이고 누르면 바로 마심 */
+.ui-top{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.ui-top img{width:72px;height:68px;image-rendering:pixelated;border-radius:14px;background:radial-gradient(circle at 50% 40%,#2a3554,#10162a 75%);border:1px solid var(--line-2);flex:none}
+.ui-nm{font-size:17px;font-weight:900}.ui-tt{margin-left:6px;font-size:11.5px;font-weight:800;color:var(--gold)}
+.ui-sec{font-size:12.5px;margin:8px 0 3px;color:var(--text-soft)}.ui-sec b{color:var(--text)}
+.ui-bar{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}.ui-bar i{display:block;height:100%;border-radius:999px}
+.potbar{grid-column:1/-1;grid-row:3;display:flex;justify-content:flex-end;gap:6px}
+.pot{display:flex;align-items:center;gap:3px;height:28px;padding:0 9px 0 4px;border-radius:999px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:900;color:#fff;
+  background:linear-gradient(180deg,rgba(28,34,52,.92),rgba(12,16,28,.92));border:1px solid var(--pb);box-shadow:0 2px 8px rgba(0,0,0,.45);touch-action:manipulation;user-select:none;-webkit-user-select:none;position:relative;overflow:hidden}
+.pot svg{width:19px;height:19px;color:var(--pc);filter:drop-shadow(0 0 4px var(--pb))}
+.pot b{min-width:14px;text-align:right;font-variant-numeric:tabular-nums}
+.pot[hidden]{display:none}
+.pot.empty{opacity:.5}.pot.empty b{color:#ff9a9a}
+.pot i{position:absolute;left:0;bottom:0;height:2px;width:calc(var(--p,0) * 100%);background:var(--pc);opacity:.8}
 .ctrl .skills .sk{width:40px;height:40px}.ctrl .skills .sk svg{width:21px;height:21px}
 :where(body.short) .ctrl .skills .sk{width:38px;height:38px}
 .sk.empty{opacity:.45;font-size:18px;font-weight:900;color:var(--gold);border-style:dashed}
@@ -759,6 +773,7 @@ body.portrait .qtrack{top:auto;left:8px;width:calc(100% - 16px)}
 body.portrait .log{width:auto;right:8px}
 body.portrait .ctrl{left:8px;right:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
 body.portrait .ctrl .skills{display:flex;gap:4px}
+body.portrait .ctrl .potbar{flex-basis:100%;justify-content:flex-start}
 body.portrait .formb{flex-basis:100%;height:34px}
 body.portrait .btn-mode{height:30px;font-size:11px;padding:0 8px}
 body.portrait .sk{width:34px;height:34px;border-radius:10px}
@@ -890,6 +905,7 @@ body:not(.portrait) .tab[aria-selected="true"] svg{background:radial-gradient(ci
 body:not(.portrait) .tab[aria-selected="true"]::before{display:none}
 body:not(.portrait) .tab .dot{top:0;left:calc(50% + 11px);width:10px;height:10px;border:2px solid #0c111d}
 .tabs{position:relative;z-index:20}
+body.more-open .bigboss{z-index:8}   /* 큰 보스 단추는 아래 메뉴 줄 위에(2026-11 (43): 메뉴 줄 z-index 20에 덮여 잘리던 것), [더보기] 판이 열리면 그 아래로 */
 /* 가로 화면 메뉴 화면 정리(2026-11 (41), 사용자 요청: 휴대폰 가로에서 펫·장비 창이 너무 커서 한눈에 안 들어옴):
    칸(장비·펫)은 크기를 묶고, 목록은 두 줄로, 휴대폰 가로(body.cmp)에서는 머리·메뉴 줄·카드·글자를 줄인다 */
 body:not(.portrait) #page .grid{grid-template-columns:34px repeat(4,minmax(0,64px)) 40px repeat(4,minmax(0,64px));justify-content:start}
@@ -1013,21 +1029,21 @@ body:not(.portrait) #setList{display:grid;grid-template-columns:repeat(auto-fill
 .tabs .more-menu .tab[aria-selected="true"] svg{background:radial-gradient(circle at 50% 32%,#fff0b8,#e0a52a 70%);color:#2a1a04}
 .tabs .more-menu .tab[aria-selected="true"]::before{display:none}
 .tabs .more-menu .tab .dot{top:0;left:calc(50% + 9px)}
-body:not(.portrait) .bigboss{display:grid;position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(6px + env(safe-area-inset-bottom));z-index:8;width:84px;height:84px;border-radius:50%;
+body:not(.portrait) .bigboss{display:grid;position:absolute;right:calc(14px + env(safe-area-inset-right));bottom:calc(6px + env(safe-area-inset-bottom));z-index:22;width:66px;height:66px;border-radius:50%;
   border:2px solid rgba(255,204,77,.8);background:radial-gradient(circle at 50% 32%,#8a2636,#2a0a12 72%);color:#ffe8b0;place-items:center;align-content:center;gap:1px;cursor:pointer;
   box-shadow:0 0 0 4px rgba(6,8,14,.75),0 8px 22px rgba(0,0,0,.6);touch-action:manipulation;font-family:inherit}
 .bigboss .ring{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);transform:rotate(-90deg);pointer-events:none}
 .bigboss .rb{fill:none;stroke:rgba(255,255,255,.14);stroke-width:2.6}
 .bigboss .rf{fill:none;stroke:#ffcc4d;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:106.8;stroke-dashoffset:106.8;transition:stroke-dashoffset .3s}
-.bigboss b{font-size:16px;font-weight:900;line-height:1.05;position:relative;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.bigboss i{font-style:normal;font-size:10.5px;font-weight:800;color:#ffd977;position:relative}
+.bigboss b{font-size:13.5px;font-weight:900;line-height:1.05;position:relative;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.bigboss i{font-style:normal;font-size:9.5px;font-weight:800;color:#ffd977;position:relative}
 .bigboss.ready{background:radial-gradient(circle at 50% 32%,#ff6b7c,#9a1229 72%);animation:bbpulse 1s ease-in-out infinite}
 .bigboss.fight{background:radial-gradient(circle at 50% 32%,#d8344a,#45101a 72%)}
 .bigboss.fight .rf{stroke:#ff5a6e}
 .bigboss.off{filter:saturate(.4) brightness(.8)}
 @keyframes bbpulse{50%{box-shadow:0 0 0 4px rgba(6,8,14,.75),0 0 30px rgba(255,90,110,.9)}}
 body:not(.portrait) .scene > .btn-boss{display:none}
-body:not(.portrait) .ctrl{bottom:30px}
+body:not(.portrait) .ctrl{bottom:34px}   /* 큰 보스 단추(66px, (43)에 84에서 줄임)와 기술 줄이 겹치지 않게 */
 body:not(.portrait) .hud{grid-template-columns:54px 1fr;column-gap:9px;padding:7px 10px 8px 7px;align-items:center}
 body:not(.portrait) .hud .face{display:block;grid-row:1/3;width:54px;height:54px;border-radius:50%;overflow:hidden;position:relative;
   background:radial-gradient(circle at 50% 38%,#4a5a84,#141b2e 75%);border:2px solid rgba(255,204,77,.65);box-shadow:0 0 12px rgba(255,204,77,.22)}
@@ -1162,6 +1178,7 @@ body.in-market .act{display:none}
   <button class="btn-boss" id="bossBtn" hidden>보스 도전</button>
   <div class="ctrl">
     <button type="button" class="formb" id="formBtn" hidden aria-label="변신"><img id="formImg" alt=""><b id="formName">변신</b><span class="fs" id="formState"></span><span class="fm" id="formMode">자동</span><i class="fbar" aria-hidden="true"></i></button>
+    <div class="potbar" id="potBar"></div>
     <div class="skills" id="skillbar"></div>
     <div class="sp"></div>
     <button class="btn-mode" id="modeBtn" aria-label="전투: 자동 (누르면 반자동)">자동</button>
@@ -1325,6 +1342,7 @@ const SVG = {
   roar:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2h2v4h-2zM4 5h2v2h2v2H6V7H4zm14 0h2v2h-2v2h-2V7h2zM9 10h6v2h2v6h-2v2H9v-2H7v-6h2zM2 13h4v2H2zm16 0h4v2h-4z"/></svg>',
   meteor:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h3v2h2v2h2v2H8V7H6V5H3zm4 0h3v2h2v2h-2V5H7zm-4 4h2v3h2v2H5v-2H3zm10 3h4v2h2v2h2v4h-2v2h-2v2h-4v-2h-2v-2H9v-4h2v-2h2z"/></svg>',
   potion:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2h4v3h-1v2h3v2h1v11h-1v2H8v-2H7V9h1V7h3V5h-1zm-1 9v7h6v-7z"/></svg>',
+  mana:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2h4v3h-1v2h3v2h1v11h-1v2H8v-2H7V9h1V7h3V5h-1zm2 9c-1.6 2-2.5 3.4-2.5 4.6a2.5 2.5 0 0 0 5 0c0-1.2-.9-2.6-2.5-4.6z"/></svg>',
   elixir:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2h4v3h-1v2h3v2h1v11h-1v2H8v-2H7V9h1V7h3V5h-1zm1 8v2H9v2h2v3h2v-3h2v-2h-2v-2z"/></svg>',
   charm:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h10v20H7zm2 3v2h6V5zm2 4v3H9v2h2v2h2v-2h2v-2h-2V9zm-2 9v2h6v-2z"/></svg>',
   whet:'<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 8h3V6h6v2h3v2h2v7h-2v2H6v-2H4v-7h2zm2 4v2h8v-2z"/></svg>',
@@ -1537,7 +1555,11 @@ const COMBO_WIN = 4, COMBO_T = 5, COMBO_P = 0.35;
 /* 마나(2026-11 (41), 사용자 요청: 기술 = 재사용 시간 + 마나): 최대 MP_MAX, 초당 MP_REGEN씩 찬다(싸움을 시작하면 가득).
    기술마다 마나 = 재사용 시간 × MP_K(반올림, 체력 회복 능력치·각인과 상관없음). 모자라면 그 기술은 기다리고 다음 기술로 넘어간다.
    그래서 재사용 줄임(도력 각인·탈것)이나 대굿(재사용 초기화)으로 기술을 몰아 쓰면 마나가 먼저 바닥난다 */
-const MP_MAX = 100, MP_REGEN = 7, MP_K = 0.9;
+const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.9;   // (2026-11 (43), 사용자 요청: 저절로 너무 빨리 참) 7 → 5. 기술 여섯(+파티 버프)을 쉬지 않고 쓰면 초당 6 가까이 드니, 모자란 몫은 감로수(마나 물약)로(3.5로 했더니 시뮬 레벨업이 1.5배 느려짐)
+/* 물약(2026-11 (43), 사용자 요청: 자동 회복이 너무 빨라 물약을 안 먹음 → 엽전으로 물약을 사서 마시는 구조).
+   체력 자동 회복은 REGEN_K배(예전의 절반), 마나는 초당 5. 인삼 탕약(체력 30% 아래면 40%)·산삼 탕약(위험하면 가득)·감로수(마나 30 아래면 +MANA_POT)를
+   저절로 마시고, 기술 줄 위 물약 칸을 누르면 바로 마신다. 값은 크게 내림(인삼 10개 = 몹 40마리 엽전, 감로수 10개 = 30마리) */
+const REGEN_K = 0.5, MANA_POT = 40, MANA_AT = 30, MANA_CD = 4;
 const skMp = i => Math.max(1, Math.round(skDef(i).cd * MP_K));
 const COMBOS = [
   {k:'c1', a:0, b:1, name:'이어 치기', p:10},
@@ -2593,9 +2615,12 @@ const BUFFS = {
 };
 const BUFF_ADD = 10 * 60, BUFF_MAX = 60 * 60;
 const SHOP = [
-  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요.', cur:'gold', price:() => Math.max(60, Math.round(mGold(S.maxStage) * 150)), inv:'potion', n:10, max:999},
-  {id:'elixir', cat:'potion', icon:'elixir', name:'산삼 탕약', desc:'보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 12, inv:'elixir', n:1, max:999},
-  {id:'elixir10', cat:'potion', icon:'elixir', name:'산삼 탕약 묶음', tag:'10+1', desc:'산삼 탕약 10개 값에 11개! 보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 120, inv:'elixir', n:11, max:999},
+  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(20, Math.round(mGold(S.maxStage) * 40)), inv:'potion', n:10, max:9999},
+  {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
+  {id:'mana', cat:'potion', icon:'mana', name:'감로수 10개', desc:'마나 물약. 마나가 30 아래로 떨어지면 싸우는 동안 저절로 마셔 마나를 40 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(15, Math.round(mGold(S.maxStage) * 30)), inv:'mana', n:10, max:9999},
+  {id:'mana100', cat:'potion', icon:'mana', name:'감로수 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 마나가 30 아래면 저절로 마셔 40 채워요.', cur:'gold', price:() => Math.max(110, Math.round(mGold(S.maxStage) * 225)), inv:'mana', n:100, max:9999},
+  {id:'elixir', cat:'potion', icon:'elixir', name:'산삼 탕약', desc:'보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 6, inv:'elixir', n:1, max:999},
+  {id:'elixir10', cat:'potion', icon:'elixir', name:'산삼 탕약 묶음', tag:'10+1', desc:'산삼 탕약 10개 값에 11개! 보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 60, inv:'elixir', n:11, max:999},
   {id:'b_atk', cat:'charm', icon:'charm', buff:'atk', cur:'gems', price:() => 60},
   {id:'b_spd', cat:'charm', icon:'charm', buff:'spd', cur:'gems', price:() => 60},
   {id:'b_def', cat:'charm', icon:'charm', buff:'def', cur:'gems', price:() => 50},
@@ -2606,7 +2631,7 @@ const SHOP = [
   {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
   {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 90},
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
-  {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개.', cur:'free', price:() => 0, daily:1},
+  {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개·감로수 5개.', cur:'free', price:() => 0, daily:1},
 ];
 const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'], ['pack', '꾸러미']];
 
@@ -2671,12 +2696,14 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 const NOTE_VER = '2026-11-10-11', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
-  ['#', '2026-11-10 · 결투 다듬기 · 보스 도전 기운 · 허수아비·백귀야행 · 탑 세기'],
+  ['#', '2026-11-10 · 물약 · 결투 다듬기 · 보스 도전 기운 · 허수아비·백귀야행 · 탑 세기'],
+  ['물약', '체력 자동 회복은 절반, 마나는 초당 7 → 5로 줄이고 물약 값을 크게 내렸어요. 인삼 탕약(10개·100개 묶음)·새 마나 물약 「감로수」(마나 30 아래면 +40)·산삼 탕약(보석 6). 기술 줄 위 물약 칸에 개수가 보이고, 누르면 바로 마셔요.'],
   ['결투', '상대가 용사와 같은 크기로 걸어오고 기본 공격·기술·초각성을 써요. 위 글자는 「결투 · 상대 이름」. 결투에서는 물약 없이, 회복 절반, 한 방은 상대 체력의 25%까지 — 같은 세기면 반쯤 이겨요.'],
-  ['보스 도전 기운', '같은 단계 보스에게 질 때마다 다음 도전에서 그 보스 체력이 3%씩(최대 20%) 줄어요. 이기면 처음부터.'],
+  ['천계 끝 보스 · 도전 기운', '천계 76단계(영소보전)부터 단계 보스 체력을 한 단계마다 3.5%씩 덜어요(9-8은 약 45%). 같은 단계 보스에게 질 때마다 다음 도전에서 그 보스 체력이 5%씩(최대 40%) 더 줄어요. 세 번 지면 조합 공방 비전 장비가 모자란지 알려 줘요.'],
   ['허수아비 · 백귀야행', '허수아비 등급 기준을 낮춰 막힌 단계에서도 4등급, 조금 앞서면 5등급. 백귀야행 요괴 체력 1배, 보석 2마리·재료 20마리·고삐 조각 40마리마다.'],
   ['천공의 탑 세기', '층마다 그 세계 이야기 끝보다 더 세져요(300층 = 곤륜 95단계만큼). 태초의 신도 그만큼 세져요. 탑에서 쓰러지면 바로 실패.'],
-  ['기술 아이콘', '파티 버프 기술 아이콘(깃발)을 고치고, 기술마다 아이콘 색을 다르게 했어요.'],
+  ['다른 용사 정보', '[결투] 목록의 그림·이름이나 채팅 「지금 접속 중」의 이름을 누르면 그 용사의 직업·레벨·세계·이야기 진행·천공의 탑·결투 점수·전투력을 볼 수 있어요.'],
+  ['큰 보스 단추 · 기술 아이콘', '가로 화면 큰 보스 단추가 메뉴 줄에 잘리던 것을 고치고 작게(기술 칸을 안 가림). 파티 버프 기술 아이콘(깃발)을 고치고 기술마다 아이콘 색을 다르게 했어요.'],
   ['#', '2026-11-10 · 천공의 탑 · 태초의 신 · 결투 · 장비 세트 · 그래픽'],
   ['천공의 탑', '[더보기] → 천공의 탑. 1~300층, 층마다 세기가 정해진 수호자와 혼자 60초(10층마다 문지기·전멸기). 기술 조합·장비를 저절로 바꾸지 않으니 들어가기 전 정비 창에서 직접 골라요(조합 3칸 저장). 지면 하루 5번 가운데 하나를 써요. 처음 오른 층마다 보석·쇳가루, 10층마다 높은 등급 무기·갑옷, 50·150·250층 날개, 100·200층 탈것(운룡·천마).'],
   ['태초의 신', '300층을 오르면 깨어나는 최종 레이드 보스. 나 + 다른 용사 3명, 180초, 전멸기 세 번과 창세의 빛. 처음 이기면 엔드 아이템 「태초의 씨앗」·「태초의 날개」·별호 「태초를 넘은 자」, 주마다 엔드 상자(엔드 아이템 하나는 꼭).'],
@@ -2884,7 +2911,7 @@ function defaultState(){
     week:{key:'', wp:{}, wgot:[], wall:false},
     sub:{act:{}, done:{}}, dummy:{day:'', n:0, best:0},
     raid:{first:{}, tk:TICKET_MAX, tkT:0},
-    inv:{potion:0, elixir:0, whet:0}, buff:{atk:0, spd:0, def:0, gold:0, exp:0}, shop:{day:'', got:{}}, useWhet:false,
+    inv:{potion:20, elixir:0, whet:0, mana:20}, buff:{atk:0, spd:0, def:0, gold:0, exp:0}, shop:{day:'', got:{}}, useWhet:false,
     myth:{sword:0, mirror:0, bell:0, pearl:0, flute:0, kusa:0, yata:0, maga:0, uchi:0, pangu:0, sail:0, elixir:0, ose:0},
     world:0, best:{s0:1, l0:1, s1:0, l1:0, s2:0, l2:0, s3:0, l3:0},
     job:0, av:{own:{}, char:'', cape:'', pet:'', wing:''},
@@ -2943,7 +2970,7 @@ function mergeState(d){
   const rd = d.raid || {};
   out.raid = {first:Object.assign({}, rd.first || {}), tk:Number.isInteger(rd.tk) ? Math.min(TICKET_MAX + 9, Math.max(0, rd.tk)) : TICKET_MAX, tkT:+rd.tkT || 0};
   const num = (o, k, mx) => Math.min(mx, Math.max(0, Math.floor(+(o && o[k])) || 0));
-  out.inv = {potion:num(d.inv, 'potion', 999), elixir:num(d.inv, 'elixir', 999), whet:num(d.inv, 'whet', 999)};
+  out.inv = {potion:num(d.inv, 'potion', 9999), elixir:num(d.inv, 'elixir', 999), whet:num(d.inv, 'whet', 999), mana:num(d.inv, 'mana', 9999)};
   out.buff = {};
   for (const k of Object.keys(BUFFS)) out.buff[k] = Math.min(BUFF_MAX, Math.max(0, +(d.buff && d.buff[k]) || 0));
   out.shop = {day:d.shop && typeof d.shop.day === 'string' ? d.shop.day : '', got:Object.assign({}, (d.shop && d.shop.got) || {})};
@@ -3125,7 +3152,7 @@ function computeStats(up = S.up){
       * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk'),
     maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp'),
-    regen: 0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100,
+    regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K,
     crit: Math.min(1, crRaw), critOver: crOver,
     critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg'),
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100),
@@ -3648,7 +3675,7 @@ function buyShop(id){
   else if (it.buff) S.buff[it.buff] = Math.min(BUFF_MAX, S.buff[it.buff] + BUFF_ADD);
   else if (id === 'ticket') S.raid.tk++;
   else if (id === 'goldbag') S.gold += mGold(S.maxStage) * 300;
-  else if (id === 'gift'){ S.gems += 10; S.inv.potion = Math.min(999, S.inv.potion + 5); }
+  else if (id === 'gift'){ S.gems += 10; S.inv.potion = Math.min(9999, S.inv.potion + 5); S.inv.mana = Math.min(9999, (S.inv.mana || 0) + 5); }
   else if (id === 'avbox'){ S.gems += AV_BOX; const r = openAvatarBox(); if (r) playFx('box', {el:$('#avBox'), miss:r.miss, rare:!r.miss && r.isNew && r.a.type !== 'pet', pity:r.pity, sub:r.a && r.a.name}); if (r && !(window.__game && window.__game.quiet)) showModal('꾸미기 상자', r.miss
       ? `<p>아쉬워요! 위로품 <b>인삼 탕약 10개</b>가 나왔어요.</p><p class="small">새 옷·망토 확정까지 ${Math.max(0, AV_PITY - S.avPity)}번 남았어요.</p>`
       : `<p>${r.pity ? '<b style="color:var(--gold)">천장 확정!</b> ' : ''}<b>${r.a.name}</b>${r.isNew ? ' — 새 아바타예요! [장비] → [아바타]에서 입혀 보세요.' : ` — 이미 있어서 보석 ${AV_DUP_GEMS}개로 바꿨어요.`}</p>`, [{label:'확인', primary:true}]); }
@@ -3656,22 +3683,40 @@ function buyShop(id){
   return true;
 }
 let potCd = 0;
+let manaCd = 0;
 function autoPotion(dt){
-  potCd = Math.max(0, potCd - dt);
+  potCd = Math.max(0, potCd - dt); manaCd = Math.max(0, manaCd - dt);
+  autoMana();
   if (potCd > 0 || hero.dead || hero.hp >= ST.maxHp * 0.3) return;
   if (raid && raid.info.pvp) return;   // 결투는 물약 없이(상대도 못 마심)
   if (raid && raid.wipe && (raid.wipe.st === 1 || raid.wipe.st === 2)) return;   // 전멸기가 다 깎을 때까지 기다렸다 마신다
   const danger = bossActive || !!raid;
-  let k = null, h = 0;
-  if (S.inv.elixir > 0 && (danger || S.inv.potion <= 0)){ k = 'elixir'; h = 1; }
-  else if (S.inv.potion > 0){ k = 'potion'; h = 0.4; }
-  if (!k) return;
-  S.inv[k]--; potCd = 3; sfx('potion');
+  drinkHp(S.inv.elixir > 0 && (danger || S.inv.potion <= 0) ? 'elixir' : 'potion');
+}
+const manaFight = () => !!(raid || bossActive || parade || hero.engaged);
+function autoMana(){ if (!hero.dead && manaCd <= 0 && (hero.mp ?? MP_MAX) < MANA_AT && manaFight()) drinkMana(); }
+function drinkMana(manual){
+  if (hero.dead || manaCd > 0 || (S.inv.mana || 0) <= 0 || (raid && raid.info.pvp) || (hero.mp ?? MP_MAX) >= MP_MAX - 1) return false;
+  S.inv.mana--; manaCd = manual ? 1 : MANA_CD; hero.mp = Math.min(MP_MAX, (hero.mp ?? MP_MAX) + MANA_POT); sfx('potion');
+  addText('감로수 +' + MANA_POT, hero.x, hero.y - 40, '#8fc8ff', 11, true);
+  return true;
+}
+// 물약 칸을 누르면 바로(potCd 0.8초). 결투에서는 못 마심
+function drinkPot(k){
+  if (k === 'mana') return drinkMana(true);
+  if (hero.dead || potCd > 0.8 || (raid && raid.info.pvp) || hero.hp >= ST.maxHp - 1) return false;
+  return drinkHp(k, true);
+}
+function drinkHp(k, manual){
+  const h = k === 'elixir' ? 1 : 0.4;
+  if (!k || (S.inv[k] || 0) <= 0) return false;
+  S.inv[k]--; potCd = manual ? 0.8 : 3; sfx('potion');
   if (raid && raid.wipe && raid.wipe.st === 3) raid.wipe.drank = true;   // 전멸기: 회복약을 마셔야 버팀
   const amt = ST.maxHp * h * (1 + rideAb('pot') / 100);
   hero.hp = Math.min(ST.maxHp, hero.hp + amt);
   addText(k === 'elixir' ? '산삼 탕약!' : '인삼 탕약', hero.x, hero.y - 40, '#8ff0a0', 11, true);
   fx.push({type:'heal', t:0, dur:0.7});
+  return true;
 }
 function tickBuffs(dt){ for (const k in S.buff) if (S.buff[k] > 0) S.buff[k] = Math.max(0, S.buff[k] - dt); }
 
@@ -3802,7 +3847,7 @@ function makeMob(boss, tx, ty){
   const m = {
     type, color:boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
-    hp:mHp(s) * (boss ? 10 * BOSS_K.hp[S.world] : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5),
+    hp:mHp(s) * (boss ? 10 * bossHpK(s) : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5),
     gold:mGold(s) * (boss ? 10 : FIELD.rew) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : FIELD.rew), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
@@ -3822,6 +3867,11 @@ const aliveMobs = () => mobs.filter(m => !m.dead);
 const maxField = () => Math.min(FIELD.max, FIELD.base + Math.floor((S.stage - 1) / FIELD.step) + (S.world ? FIELD.world : 0));   // 단계가 오를수록 사냥터에 몹이 더 많이
 // 저승부터 단계 보스는 더 크고 세다(체력·공격 배율 BOSS_K, 그림 2.6배, 세계 빛깔 오라)
 const BOSS_K = {hp:[1, 1.4, 1.5, 1.5, 1.5], atk:[1, 1.3, 1.4, 1.4, 1.4]}, BOSS_AURA = ['', '#ff3a2a', '#ffd24a', '#ff7ac8', '#7affd8'];
+/* 천계 끝 단계 보스 덜기(2026-11 (43), 사용자 요청: 천계 영소보전 9-8(88단계)이 너무 빡빡함). 천계는 단계마다 몬스터 체력이 ×1.256이라
+   76단계부터 단계 보스가 시뮬 네 직업 모두 20~40시간 막혔다(--long 100: 86단계 60~67시간, 88~91에서 100시간까지). 76단계부터 한 단계마다 보스 체력 HEAVEN_EASE.per씩 덜고 min까지.
+   잡몹·레이드·탑·부상(천계 곡선을 빌려 씀)은 그대로 — 단계 보스만 */
+const HEAVEN_EASE = {from:75, per:0.035, min:0.5};
+const bossHpK = s => BOSS_K.hp[S.world] * (S.world === 2 ? Math.max(HEAVEN_EASE.min, 1 - HEAVEN_EASE.per * Math.max(0, s - HEAVEN_EASE.from)) : 1);
 const mobScale = m => m.sc || (m.boss ? (S.world >= 1 && !m.raid ? 2.2 : 1.8) : 1);   // 2026-11 (42) 사용자 요청: 보스가 너무 큼(예전 2.6·2)
 function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return spH(sp) * sc + (FLOAT[m.type] || 0) * sc; }
 
@@ -3949,7 +3999,7 @@ let gateNoteT = -1e9;
 function gateNote(bg){ if (gtime - gateNoteT < 60) return; gateNoteT = gtime; addLog(`다음 단계 보스가 잠겨 있어요: ${bg.why}.`, 'warn'); }
 /* 보스 도전 기운(2026-11 (43), 사용자 요청: Lv266에 9-8 보스가 빡빡함): 같은 단계 보스에게 질 때마다 다음 도전에서 그 보스 체력이 BOSS_PITY.per씩 줄어든다(최대 max).
    이기거나 다른 단계로 가면 처음부터. 벽은 그대로 두되, 몇 번 부딪히면 넘을 수 있게. 오프라인 보스 자동 도전도 같이 센다 */
-const BOSS_PITY = {per:0.03, max:0.2};
+const BOSS_PITY = {per:0.05, max:0.4};   // 천계 끝은 단계마다 보스 체력 ×1.26이라 20%로는 한 단계도 안 됨 → 40%(약 2단계)
 const bossPityKey = () => `${S.world}:${S.stage}`;
 const bossPityN = () => S.bossPity && S.bossPity.k === bossPityKey() ? S.bossPity.n : 0;
 const bossPityMul = () => 1 - Math.min(BOSS_PITY.max, bossPityN() * BOSS_PITY.per);
@@ -3973,6 +4023,9 @@ function bossFail(reason){
   bossPityAdd();
   const pity = Math.round((1 - bossPityMul()) * 100);
   addLog((S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`) + ` · 도전 기운: 다음엔 보스 체력 -${pity}%`, 'warn');
+  // 세 번째 실패부터: 이 단계 몬스터가 가정하는 조합 공방 단계보다 낮으면 알려 줌(몬스터 체력에 craftComp가 곱해져 있어 비전 장비가 없으면 몇 단계 뒤처짐)
+  if (bossPityN() === 3){ const need = S.world > 2 ? CRAFT_MAX : craftExpT(S.world, S.stage), have = Math.min(S.craft.w.t, S.craft.a.t, S.craft.n.t);
+    if (have < need) addLog(`이 사냥터 몬스터는 조합 공방 비전 장비 ${need}단계를 갖췄다고 보고 세져요. 지금 가장 낮은 칸이 ${have}단계 — [장비] → [조합 공방]에서 올리면 훨씬 쉬워요.`, 'gain'); }
 }
 function bossWin(){
   bmeterEnd();
@@ -4224,8 +4277,8 @@ const tbKey = () => tbWindow().id + ':' + (session ? session.acc + '/' + session
 const tbNum = v => Math.min(1e300, Math.max(0, +v || 0));
 function tbFromSummary(name, sm, mine){
   if (typeof name !== 'string' || !sm || typeof sm !== 'object' || !sm.ally || typeof sm.ally !== 'object') return null;
-  return {name:name.slice(0, 8), cls:hasK(CLASSES, sm.cls) ? sm.cls : 'musa', look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
-    level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine};
+  return Object.assign({name:name.slice(0, 8), cls:hasK(CLASSES, sm.cls) ? sm.cls : 'musa', look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
+    level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine}, sumProg(sm));
 }
 // 같은 직업은 나까지 TB_CLS_CAP명, 모두 TB_PICK명
 function tbCapPick(pool, rnd, max = TB_PICK, cap = TB_CLS_CAP){
@@ -5244,7 +5297,7 @@ async function pvpFetch(more){
 }
 function pvpCands(){
   const myRd = Math.max(1, realDps()), seen = new Set([S.name]), pool = [];
-  const add = o => { if (!o || seen.has(o.name)) return; seen.add(o.name); pool.push({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG), rd:allyRd(o), maxHp:Math.max(1, +o.maxHp || 1), level:o.level || 0, mine:!!o.mine}); };
+  const add = o => { if (!o || seen.has(o.name)) return; seen.add(o.name); pool.push(Object.assign({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG), rd:allyRd(o), maxHp:Math.max(1, +o.maxHp || 1), level:o.level || 0, mine:!!o.mine}, sumProg(o))); };
   for (const o of pvpPool.list) add(o);
   if (session) for (const c of allChars()) if (!(c.acc === session.acc && c.cid === session.cid) && c.ally) add(tbFromSummary(c.name, c, c.acc === session.acc));
   for (const o of (tbPick.list || []).concat(grPick.list || [])) add(o);
@@ -10421,7 +10474,7 @@ function updateHud(){
   setText(elCp, fmt(power(ST)));
   setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems)); setText(elDustTop, fmt(S.dust));
   const pc = S.world >= 3 || S.mount.piece > 0; if (elCurPiece.hidden === pc) elCurPiece.hidden = !pc; if (pc) setText(elPieceTop, fmt(S.mount.piece));
-  updateFace(); updatePetFaces(); updateBigBoss();
+  updateFace(); updatePetFaces(); updateBigBoss(); updatePotBar();
   if (currentTab){ setText($('#pgGold'), fmt(S.gold)); setText($('#pgGems'), fmt(S.gems)); }
   const hr = Math.max(0, hero.hp / ST.maxHp);
   elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmt(hero.hp) + '/' + fmt(ST.maxHp));
@@ -10532,6 +10585,26 @@ function updatePetFaces(){
   elPets.querySelectorAll('[data-pt]').forEach(b => b.addEventListener('click', () => { if (currentTab !== 'pet') $('#tab-pet').click(); }));
 }
 // 큰 보스 단추: 고리가 보스까지 남은 처치만큼 차오르고, 다 차면 눌러서 바로 도전(보스 수동이어도). 싸우는 중엔 남은 체력
+// 물약 칸(기술 줄 위): 인삼 탕약 · 산삼 탕약(있을 때만) · 감로수
+const POTS = [['potion', '인삼 탕약', '#ff8a9a'], ['elixir', '산삼 탕약', '#ffd977'], ['mana', '감로수', '#7ab8ff']];
+let potBarKey = '';
+function buildPotBar(){
+  const el = $('#potBar'); if (!el) return;
+  el.innerHTML = POTS.map(([k, n, c]) => `<button type="button" class="pot" id="pot-${k}" data-pot="${k}" style="--pc:${c};--pb:${hexA(c, 0.5)}" aria-label="${n}">${SVG[k]}<b>0</b><i></i></button>`).join('');
+  el.addEventListener('click', e => { const b = e.target.closest('[data-pot]'); if (!b) return; if (drinkPot(b.dataset.pot)){ updatePotBar(); } else sfx('click'); });
+}
+function updatePotBar(){
+  for (const [k] of POTS){
+    const b = $('#pot-' + k); if (!b) continue;
+    const n = S.inv[k] || 0, cd = k === 'mana' ? manaCd / MANA_CD : potCd / 3;
+    const key = n + ':' + (cd > 0 ? Math.ceil(cd * 10) : 0);
+    if (b.dataset.k === key) continue; b.dataset.k = key;
+    b.hidden = k === 'elixir' && n <= 0;
+    b.querySelector('b').textContent = n > 999 ? '999+' : n;
+    b.classList.toggle('empty', n <= 0);
+    b.style.setProperty('--p', Math.max(0, Math.min(1, cd)).toFixed(2));
+  }
+}
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
@@ -11245,7 +11318,7 @@ function buildBag(){
       setHTML($('#bagGrid'), items.length ? items.map(bagItemHTML).join('') : '<p class="small" style="grid-column:1/-1">아직 빈 가방이에요. 수문장(지역 9번째 단계)·타임 보스에서 장신구가, 오프라인·퀘스트 행운에서 신화 보물이 나와요.</p>');
       $('#bagGrid').querySelectorAll('[data-bid]').forEach(b => b.addEventListener('click', () => bagItemModal(+b.dataset.bid)));
     }
-    const st = [['쇳가루', S.dust, '#c8c0b0'], ['고삐 조각', S.mount.piece, '#c8b0ff'], ...MATS.map(M => [M.name, S.mat[M.k] || 0, M.color]), ['인삼 탕약', S.inv.potion, '#8ff0a0'], ['산삼 탕약', S.inv.elixir, '#ffd977'], ['숫돌', S.inv.whet, '#9fe7ff'], ['토벌패', raidTickets(), '#ffcc4d']];
+    const st = [['쇳가루', S.dust, '#c8c0b0'], ['고삐 조각', S.mount.piece, '#c8b0ff'], ...MATS.map(M => [M.name, S.mat[M.k] || 0, M.color]), ['인삼 탕약', S.inv.potion, '#8ff0a0'], ['산삼 탕약', S.inv.elixir, '#ffd977'], ['감로수', S.inv.mana || 0, '#7ab8ff'], ['숫돌', S.inv.whet, '#9fe7ff'], ['토벌패', raidTickets(), '#ffcc4d']];
     setHTML($('#bagStack'), st.map(([n, v, c]) => `<span style="color:${c}">${n} <b>${fmt(Math.floor(v))}</b></span>`).join(''));
     const spare = ['weapon', 'armor'].reduce((a, s) => a + S.gear[s].count.reduce((x, c, i) => x + Math.max(0, c - (S.equip[s] === i ? 1 : 0)), 0), 0);
     setText($('#bagGear'), `남는 장비 조각 ${fmt(spare)}개 — [장비]에서 합성하거나 [재련]에서 갈아 쇳가루로(기본 장비는 장터에서 거래하지 않아요).`);
@@ -12187,12 +12260,45 @@ function buildTower(){
   };
 }
 /* --- 결투 화면: 상대 목록이 모두 뜨고 내가 골라 싸운다 --- */
+/* 다른 용사 정보 창(2026-11 (43), 사용자 요청: 상대 유저의 정보창·진행도): 결투 목록의 그림·이름, 채팅 「지금 접속 중」 이름을 누르면.
+   서버·이 기기의 캐릭터 요약(charSummary: 모습·직업·레벨·세계·최고 단계·누적 레벨·전직·환생·이야기·천공의 탑·결투 점수·별호·실제 보스 피해·최대 체력)으로 보여 준다 */
+function userFind(name){
+  const pool = pvpPool.list.concat(tbPick.list || [], grPick.list || []);
+  let o = pool.find(x => x && x.name === name);
+  if (!o && session) for (const c of allChars()) if (c.name === name && c.ally){ o = tbFromSummary(c.name, c, c.acc === session.acc); break; }
+  return o || null;
+}
+function showUserInfo(o, basic){
+  if (!o && !basic) return;
+  const me = o && o.name === S.name;
+  o = o || {name:basic.n, cls:hasK(CLASSES, basic.c) ? basic.c : 'musa', level:basic.l || 0, world:basic.w || 0, look:null, armorG:0, weaponG:0};
+  const C = CLASSES[o.cls] || CLASSES.musa, w = Math.max(0, Math.min(4, o.world || 0)), q = o.q || 0, Q = MAIN_Q[Math.min(MAIN_Q.length - 1, Math.max(0, q))];
+  const ch = Q ? CHAPTERS[Q.ch] || '' : '', rel = o.rd && o.maxHp ? Math.sqrt((Math.max(1, o.rd) / Math.max(1, realDps())) * (o.maxHp / ST.maxHp)) : 0;
+  const bar = (v, n, c) => `<div class="ui-bar"><i style="width:${Math.max(2, Math.min(100, v / Math.max(1, n) * 100)).toFixed(1)}%;background:${c}"></i></div>`;
+  const row = (k, v) => `<div class="dl"><span>${k}</span><b>${v}</b></div>`;
+  const gname = g => g >= 0 ? `<span style="color:${GRADES[g].color}">${GRADES[g].name}</span>` : '-';
+  const full = !o.npc && (o.q > 0 || o.tw > 0);   // 예전 요약(진행도 없음)·그림자 결투자는 자세한 진행도 없이
+  const html = `<div class="ui-top"><img src="${lookPreview(o.cls, o.look, o.armorG || 0, o.weaponG || 0, 'down')}" alt="">
+      <div><b class="ui-nm">${esc(o.name)}</b>${o.tt && TT[o.tt] ? `<span class="ui-tt">「${esc(TT[o.tt].name)}」</span>` : ''}
+        <div class="small">${esc(o.job ? jobName(o.cls, o.job) : C.name)} · Lv.${o.level || '?'}${o.cum ? ` · 누적 Lv.${fmt(o.cum)}` : ''}${o.reb ? ` · 환생 ${o.reb}번` : ''}</div>
+        <div class="small">${o.npc ? '그림자 결투자 · 연습 상대' : WORLD_NAME[w] + (full ? ` · 최고 ${stageLabelW(w, o.maxStage)}` : '')}</div></div></div>
+    ${full ? `<div class="ui-sec">이야기 진행 <b>${fmt(q)} / ${MAIN_Q.length}</b>${ch ? ` · ${esc(ch)}` : ''}</div>${bar(q, MAIN_Q.length, 'linear-gradient(90deg,#ffd24a,#ff9a3a)')}
+    <div class="ui-sec">세계 <b>${w + 1} / 5</b> · ${WORLD_NAME.map((n, i) => `<span style="color:${i <= w ? 'var(--gold)' : 'var(--muted)'}">${n}</span>`).join(' → ')}</div>
+    <div class="ui-sec">천공의 탑 <b>${fmt(o.tw || 0)} / ${TOWER.max}층</b></div>${bar(o.tw || 0, TOWER.max, 'linear-gradient(90deg,#9fe7ff,#7a9aff)')}
+    ${row('결투 점수', `${fmt(o.pv || 1000)}점 · ${pvpTier(o.pv || 1000)}`)}${row('전직', o.job ? `${o.job}차 · ${esc(jobName(o.cls, o.job))}` : '아직')}` :
+    `<p class="small">${o.npc ? '다른 용사가 없을 때 나오는 연습 상대예요. 세기는 나와 비슷하게 맞춰져요.' : '이 용사는 아직 자세한 진행도를 올리지 않았어요(그 용사가 새 판으로 한 번 저장하면 보여요).'}</p>`}
+    ${o.rd ? row('보스에 넣는 피해', fmt(o.rd) + '/초') : ''}${o.maxHp && o.maxHp > 1 ? row('최대 체력', fmt(o.maxHp)) : ''}
+    ${o.weaponG != null && o.look ? row('무기 · 갑옷', `${gname(o.weaponG)} · ${gname(o.armorG)}`) : ''}
+    ${rel && !me ? row('나와 견주면', `<span style="color:${rel > 1.15 ? '#ff8a8a' : rel < 0.87 ? '#8ff0a0' : 'var(--text)'}">×${rel.toFixed(2)}</span>`) : ''}`;
+  showModal(`${o.mine ? '내 캐릭터' : '용사 정보'} · ${esc(o.name)}`, html, [{label:'닫기', primary:true}]);
+}
 function buildPvp(){
   panel.innerHTML = `<div id="pvpHead"></div><div class="pv-tools"><button class="chip" id="pvMore">목록 새로 고침</button><span class="small" id="pvN"></span></div><div class="pv-list" id="pvList"></div>`;
   let cands = [], candKey = '';
   pvpFetch();
   $('#pvMore').addEventListener('click', () => { sfx('click'); pvpFetch(true); candKey = ''; refreshPanel(); });
-  $('#pvList').addEventListener('click', e => { const b = e.target.closest('[data-pv]'); if (b && !raid && pvpLeft() > 0){ const o = cands[+b.dataset.pv]; if (o) presetAsk('boss', '결투', () => { if (startPvp(o)){ closePage(); return true; } }); } });
+  $('#pvList').addEventListener('click', e => { const u = e.target.closest('[data-uinfo]'); if (u){ const o = cands[+u.dataset.uinfo]; if (o){ sfx('click'); showUserInfo(o); } return; }
+    const b = e.target.closest('[data-pv]'); if (b && !raid && pvpLeft() > 0){ const o = cands[+b.dataset.pv]; if (o) presetAsk('boss', '결투', () => { if (startPvp(o)){ closePage(); return true; } }); } });
   return () => {
     pvpCheck();
     const key = pvpPool.list.length + ':' + Math.round(Math.log10(Math.max(1, realDps())) * 10) + ':' + Math.round(Math.log10(ST.maxHp) * 10);
@@ -12203,8 +12309,8 @@ function buildPvp(){
         <div class="dl"><span>전적</span><b>${S.pvp.win}승 ${S.pvp.lose}패 · 오늘 ${left} / ${PVP.tries}번</b></div>
         <p class="small" style="margin:0">아래 목록에서 상대를 골라 1:1로 ${PVP.time}초 겨뤄요(시간이 다 되면 체력이 더 남은 쪽이 이겨요). 세기가 같으면 둘 다 ${PVP.t}초쯤에 쓰러질 만큼이라 기술·초각성이 승패를 갈라요. 센 상대를 이기면 점수를 많이 받아요. 점수 구간마다 칭호(무명 → 이름난 → 고수 → 명인 → 천하제일), 1,400·1,600점에는 별호.</p></div>`);
     setText($('#pvN'), `상대 ${cands.length}명${online ? (pvpPool.busy ? ' · 서버에서 받는 중…' : ' · 서버의 용사') : ' · 이 기기의 캐릭터'}`);
-    setHTML($('#pvList'), cands.map((o, i) => `<div class="pv-row"><img src="${lookPreview(o.cls, o.look, o.armorG, o.weaponG, 'right')}" alt="">
-        <div class="pv-nm"><b>${esc(o.name)}</b><span>${CLASSES[o.cls].name}${o.level ? ` · Lv.${o.level}` : ''}${o.npc ? ' · 그림자' : o.mine ? ' · 내 캐릭터' : ''}</span></div>
+    setHTML($('#pvList'), cands.map((o, i) => `<div class="pv-row"><img src="${lookPreview(o.cls, o.look, o.armorG, o.weaponG, 'right')}" alt="" data-uinfo="${i}" style="cursor:pointer">
+        <div class="pv-nm" data-uinfo="${i}" style="cursor:pointer"><b>${esc(o.name)} <small style="color:var(--gold)">정보 ›</small></b><span>${CLASSES[o.cls].name}${o.level ? ` · Lv.${o.level}` : ''}${o.npc ? ' · 그림자' : o.mine ? ' · 내 캐릭터' : ''}</span></div>
         <div class="pv-st"><b style="color:${o.rel > 1.15 ? '#ff8a8a' : o.rel < 0.87 ? '#8ff0a0' : 'var(--text)'}">세기 ×${o.rel.toFixed(2)}</b><span>+${pvpGain(o.rel)} / -${pvpLoss(o.rel)}</span></div>
         <button class="btn sm ${can ? 'primary' : ''}" data-pv="${i}" ${can ? '' : 'disabled'}>${raid ? '싸움 중' : left > 0 ? '결투' : '내일'}</button></div>`).join('') || '<p class="small">상대가 없어요.</p>');
   };
@@ -12503,7 +12609,7 @@ const MORE_TABS = ['quest', 'shop', 'rec', 'bag', 'me', 'tower', 'pvp'];
 function setMore(open){
   const m = $('#moreMenu'), bt = $('#tab-more');
   if (m.hidden === !open) return;
-  m.hidden = !open; bt.setAttribute('aria-expanded', String(open));
+  m.hidden = !open; bt.setAttribute('aria-expanded', String(open)); document.body.classList.toggle('more-open', !!open);
   if (open){ const nav = bt.parentElement, w = m.offsetWidth || 260; m.style.left = Math.max(6, Math.min(nav.clientWidth - w - 6, bt.offsetLeft + bt.offsetWidth / 2 - w / 2)) + 'px'; }
 }
 $('#tab-more').addEventListener('click', e => { e.stopPropagation(); if (!session && !window.__game) return; setChat(false); setMore($('#moreMenu').hidden); sfx('click'); });
@@ -12542,7 +12648,7 @@ function updateChatHead(){
   if (!box.hidden){
     setText($('#chatOnBtn'), `지금 접속 중 ${list.length}명 ${chatOnOpen ? '▴' : '▾'}`);
     $('#chatOnBtn').setAttribute('aria-expanded', String(chatOnOpen));
-    const html = chatOnOpen ? list.slice(0, 40).map(p => `<span class="chat-u${p.me ? ' me' : ''}" style="--c:${(CLASSES[p.c] || {}).fx || '#c8d0e0'}">${esc(p.n)}${p.me ? '(나)' : ''}<small>${p.c ? CLASSES[p.c].name : ''}${p.l ? ` Lv.${p.l}` : ''}${p.w ? ` · ${WORLD_NAME[p.w]}` : ''}</small></span>`).join('') + (list.length > 40 ? `<span class="chat-u">외 ${list.length - 40}명</span>` : '') : '';
+    const html = chatOnOpen ? list.slice(0, 40).map(p => `<span class="chat-u${p.me ? ' me' : ''}" data-un="${esc(p.n)}" role="button" style="cursor:pointer;--c:${(CLASSES[p.c] || {}).fx || '#c8d0e0'}">${esc(p.n)}${p.me ? '(나)' : ''}<small>${p.c ? CLASSES[p.c].name : ''}${p.l ? ` Lv.${p.l}` : ''}${p.w ? ` · ${WORLD_NAME[p.w]}` : ''}</small></span>`).join('') + (list.length > 40 ? `<span class="chat-u">외 ${list.length - 40}명</span>` : '') : '';
     setHTML($('#chatOnList'), html);
   }
   const b = $('#chatBtn');
@@ -12554,6 +12660,8 @@ $('#mapBtn').addEventListener('click', () => { if (!session && !window.__game) r
 $('#chatBtn').addEventListener('click', () => { if (!session) return; setChat(!chatOpen); if (chatOpen && window.matchMedia && window.matchMedia('(pointer: fine)').matches) $('#chatInput').focus({preventScroll:true}); });
 $('#chatClose').addEventListener('click', () => setChat(false));
 $('#chatOnBtn').addEventListener('click', () => { chatOnOpen = !chatOnOpen; updateChatHead(); });
+$('#chatOnList').addEventListener('click', e => { const u = e.target.closest('[data-un]'); if (!u) return; const n = u.dataset.un, p = roomList.find(x => x.n === n); sfx('click');
+  if (p && p.me){ setChat(false); buildTab('me'); return; } showUserInfo(userFind(n), p || {n}); });
 $('#chatForm').addEventListener('submit', e => { e.preventDefault(); const inp = $('#chatInput'); if (sendChat(inp.value)) inp.value = ''; });
 // 채팅 보기: 전체 / 용사들(나·다른 사람) / 마을(NPC·부탁) / 알림
 const CHAT_F = [['#ch-all', 'all'], ['#ch-user', 'user'], ['#ch-npc', 'npc'], ['#ch-sys', 'sys']];
@@ -13060,7 +13168,13 @@ function lostOnline(msg){
   if (session) addLog(msg || '서버 로그인이 끊겼어요. 다시 로그인하면 서버에 이어서 저장돼요(지금은 이 기기에 저장 중).', 'warn');
 }
 // 캐릭터 요약(목록·레이드 동료용)
-const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level});
+const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level,
+  job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || ''});
+// 다른 용사 요약의 진행도 다듬기(남이 보낸 값이라 범위·키를 막음)
+const sumProg = sm => ({world:Math.max(0, Math.min(4, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
+  maxStage:Math.max(1, Math.min(9999, Math.floor(+sm.maxStage) || 1)), job:Math.max(0, Math.min(4, Math.floor(+sm.job) || 0)), reb:Math.max(0, Math.min(2, Math.floor(+sm.reb) || 0)),
+  q:Math.max(0, Math.min(MAIN_Q.length, Math.floor(+sm.q) || 0)), tw:Math.max(0, Math.min(TOWER.max, Math.floor(+sm.tw) || 0)), pv:Math.max(0, Math.min(99999, Math.floor(+sm.pv) || 1000)),
+  tt:typeof sm.tt === 'string' && hasK(TT, sm.tt) ? sm.tt : ''});
 // 서버의 내 캐릭터 목록을 이 기기 목록과 합친다. 이 기기에만 있는 캐릭터는 서버로 올린다
 async function syncChars(acc){
   if (!online) return;
@@ -13076,6 +13190,7 @@ async function syncChars(acc){
       look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
       ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1), rd:Math.max(0, +sm.ally.rd || 0)} : undefined, t:+it.t || 0, srvT:+it.t || 0,
       world:Math.max(0, Math.min(4, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, +sm.level || 1)))};
+    { const P = sumProg(sm); for (const k of ['job', 'reb', 'q', 'tw', 'pv', 'tt']) ent[k] = P[k]; }
     if (!loc) A.chars.push(ent);
     else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
   }
@@ -13148,8 +13263,9 @@ function saveLocal(){
   const A = REG.accounts[session.acc], ch = A && A.chars.find(c => c.cid === session.cid);
   if (!ch) return;
   const sum = {name:S.name, cls:S.cls, level:S.level, maxStage:S.maxStage, look:S.look, armorG:gradeOf(S.equip.armor), weaponG:gradeOf(S.equip.weapon),
-    ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp), rd:Math.round(realDps())}, world:S.world, cum:cumLv()};
-  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum]);
+    ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp), rd:Math.round(realDps())}, world:S.world, cum:cumLv(),
+    job:S.job || 0, reb:S.reb.n || 0, q:S.quest.main || 0, tw:S.tower.best || 0, pv:S.pvp.pt || 1000, tt:S.title.eq || ''};   // 진행도(2026-11 (43), 다른 용사가 내 정보 창으로 봄)
+  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum, o.job, o.reb, o.q, o.tw, o.pv, o.tt]);
   if (pick(ch) !== pick(sum)){ Object.assign(ch, sum, {t:now()}); A.t = now(); saveReg(); }
 }
 function bootCloud(){
@@ -13237,7 +13353,7 @@ const offlineKps = () => S.off.kps > 0 ? S.off.kps : Math.min(OFF_KPS_MAX, S.rec
 const OFF_BOSS_TRIES = 5, OFF_BOSS_X = [0.8, 1.3], OFF_BOSS_PMAX = 0.95, OFF_BOSS_MAXN = 400;   // x = (30초·버티는 시간 중 짧은 쪽) ÷ 보스를 쓰러뜨리는 데 드는 시간. 온라인 시뮬 150판과 맞춤
 const takenK = noPb => (noPb ? 1 : 1 - pbV('musa', 'dr') / 100) * (1 - petDR() / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100) * skMul('def') * (1 - (cls().evade || 0));
 function offBossOdds(s = S.stage){
-  const w = S.world, hp = mHp(s) * 10 * BOSS_K.hp[w] * (s === S.stage ? bossPityMul() : 1), tk = hp / Math.max(1e-9, realDps());
+  const w = S.world, hp = mHp(s) * 10 * bossHpK(s) * (s === S.stage ? bossPityMul() : 1), tk = hp / Math.max(1e-9, realDps());
   const take = 2 * BOSS_K.atk[w] * mAtk(s) * takenK() - ST.regen * ST.maxHp;
   const live = take > 0 ? ST.maxHp * (S.myth.elixir > 0 ? 1.5 : 1) / take : 1e9;
   const x = Math.min(BOSS_TIME, live) / tk;
@@ -13552,7 +13668,7 @@ function loop(ts){
 }
 function start(hotData){
   REG = loadReg();
-  refreshStats(); resetRuntime(); applyRot(); resize(); applySpeedBtn(); applyModeBtns();
+  refreshStats(); resetRuntime(); applyRot(); resize(); applySpeedBtn(); applyModeBtns(); buildPotBar();
   if (window.ResizeObserver) new ResizeObserver(resize).observe(cv.parentElement);
   else window.addEventListener('resize', resize);
   window.addEventListener('resize', () => { const r0 = rotDeg; applyRot(); if (r0 !== rotDeg) resize(); });   // 기기를 돌리면 돌림을 다시 맞춤
@@ -13617,7 +13733,7 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
