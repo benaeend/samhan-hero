@@ -924,6 +924,13 @@ async def main():
           out.tcWipe = st1; TC.boss.hp = 0.0001; TC.wipe = {st:4, i:9}; for (let i = 0; i < 200 && G.raid; i++) G.update(0.05); out.godWin = S.tower.godWin; out.seed = S.tower.seed; out.tWing = !!S.av.own.w_taecho; G.taechoForce = false;
           // 결투
           const c = G.pvpCands(); out.pvpN = c.length; const pt0 = S.pvp.pt; out.pv = G.startPvp(c[0]); out.pvPct = !!(G.raid && G.raid.boss.tbPct); G.raid.boss.hp = 0.0001; for (let i = 0; i < 120 && G.raid; i++) G.update(0.05); out.pvUp = S.pvp.pt > pt0 && S.pvp.win >= 1;
+          // 결투 상대가 걸어오고(사람 크기) 치거나 기술을 쓰는지(2026-11 (43))
+          S.pvp.n = 0; G.startPvp(c[0]); const PB = G.raid.boss; PB.hp = PB.maxHp = PB.maxHp * 1e6; const p0 = [PB.tx, PB.ty]; let hurt = 0, hp = G.hero.hp, mv = false;
+          for (let i = 0; i < 200 && G.raid; i++){ G.update(0.05); if (PB.tx !== p0[0] || PB.ty !== p0[1]) mv = true; if (G.hero.hp < hp) hurt++; hp = G.hero.hp; }
+          out.pvMove = mv; out.pvHurt = hurt; out.pvSc = PB.sc; out.pvDraw = !!PB.pvpLook; G.raid.time = 0; for (let i = 0; i < 80 && G.raid; i++) G.update(0.05);
+          // 보스 도전 기운: 지면 다음 보스 체력이 줄어든다
+          const bs0 = S.bossPity; S.bossPity = {k:'', n:0}; out.pity0 = G.bossPityMul(); G.bossFail('시험'); G.bossFail('시험'); out.pity2 = G.bossPityMul(); out.pityN = G.bossPityN(); S.bossPity = bs0;
+          out.icons = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].every(i => G.hasSkIcon(i)) && G.skCol(10) !== G.skCol(0);
           // 본캐: 배럭 효과 없음
           const b0 = G.barrack(); G.setMainChar(true); out.main = G.isMainChar() && G.barrack().main && G.barrack().stat === 0; G.setMainChar(false); out.mainOff = !G.isMainChar(); out.brExp = b0.exp <= b0.gain;
           G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
@@ -934,6 +941,9 @@ async def main():
               f'천공의 탑: 층마다 정해진 세기, 저절로 조합 안 바꿈, 지면 하루 횟수 하나, 50층 날개 {nk}')
         check(nk['tc'] and nk['tcWipes'] == 3 and nk['tcWipe'] and nk['godWin'] == 1 and nk['seed'] and nk['tWing'], f'태초의 신: 전멸기 세 번, 이기면 태초의 씨앗·태초의 날개 {nk}')
         check(nk['pvpN'] >= 1 and nk['pv'] and nk['pvPct'] and nk['pvUp'], f'결투: 상대 목록에서 골라 싸우고 이기면 점수 {nk}')
+        check(nk['pvMove'] and nk['pvHurt'] >= 1 and nk['pvSc'] == 1 and nk['pvDraw'], f'결투 상대가 용사 크기로 걸어오고 공격한다 {nk}')
+        check(nk['pity0'] == 1 and nk['pityN'] == 2 and abs(nk['pity2'] - 0.94) < 1e-9, f'보스 도전 기운: 두 번 지면 보스 체력 -6% {nk}')
+        check(nk['icons'], f'기술 아이콘이 모두 있고(파티 버프 포함) 칸마다 색이 다르다 {nk}')
         check(nk['main'] and nk['mainOff'] and nk['brExp'], f'본캐는 배럭 효과를 받지 않음, 배럭 경험치는 엽전보다 적게 {nk}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
