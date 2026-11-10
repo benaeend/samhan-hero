@@ -670,7 +670,7 @@ async def main():
           const after = {world: S.world, lv: S.level, st: S.stage, region: G.KUNLUN_REGIONS[0].name};
           S.best.s4 = 8; S.raid.tk = 3; const r0 = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
           for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
-          S.level = 470; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 44);
+          S.level = G.JOB4_LV || 480; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 44);
           const jr = G.jobReady(4); const tr = G.startJobTrial(4); const steps = [];
           for (let i = 0; i < 12000 && (G.raid || S.job < 4); i++){ G.update(0.05); if (G.raid && !steps.includes(G.raid.info.bossName)) steps.push(G.raid.info.bossName); }
           return {ready, ok, after, r0, name, k0: !!S.raid.first.k0, jr, tr, steps, job: S.job, jobD: S.skills.jobD, cape: S.av.cape}; }""")
@@ -847,6 +847,14 @@ async def main():
           const out = {n: G.PETS.length, none0: newIdx.every(i => !c0[i]), some4: newIdx.filter(i => c4[i]).length, imgs};
           Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.refreshStats(); return out; }""")
         check(np_['n'] == 29 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
+        # 6-8m) 퀘스트 창: 오늘의 할 일 보상을 받아도 창이 닫히지 않는다(사용자 요청)
+        await page.evaluate("""() => { const G = window.__game, S = G.S; G.dailyCheck(); S.quest.dgot = []; for (const d of G.DAILY) S.quest.dp[d.key] = d.goal; G.quiet = false; G.buildTab('quest'); }""")
+        await page.wait_for_timeout(200); await page.click('[data-qv=daily]'); await page.wait_for_timeout(200)
+        g0 = await page.evaluate("() => window.__game.S.gems")
+        await page.click('.qdaily .qrow .btn'); await page.wait_for_timeout(300)
+        qs = await page.evaluate("() => ({open: !document.querySelector('#page').hidden, got: window.__game.S.quest.dgot.length, gems: window.__game.S.gems})")
+        check(qs['open'] and qs['got'] == 1 and qs['gems'] > g0, f'퀘스트 창: 오늘의 할 일 보상을 받아도 퀘스트 창에 그대로 있다 {qs}')
+        await page.evaluate("() => { const G = window.__game; G.closePage(); G.quiet = true; }")
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
