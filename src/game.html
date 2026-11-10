@@ -180,6 +180,9 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .seg.four{grid-template-columns:repeat(4,1fr)}
 .seg.six{grid-template-columns:repeat(5,1fr)}
 .card.hidq{border-color:rgba(169,139,255,.55);box-shadow:0 0 0 1px rgba(169,139,255,.25),0 0 22px rgba(169,139,255,.18)}
+.card.forkq{border-color:rgba(255,204,77,.5);box-shadow:0 0 0 1px rgba(255,204,77,.2),0 0 18px rgba(255,204,77,.12)}
+.forks{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}.forks li{display:grid;gap:2px;padding:10px 12px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line)}
+.forks li b{color:var(--gold);font-size:14px}.forks li span{font-size:12.5px;color:var(--text-soft)}.forks li em{font-style:normal;font-size:11.5px;color:var(--jade)}
 .card.hidq .ct span:first-child{color:#c8b4ff}
 .matrow{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px}
 .mat{display:inline-flex;align-items:center;gap:5px;color:var(--text-soft)}
@@ -906,6 +909,9 @@ body.in-market .act{display:none}
 .classes.souls{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.souls .ccard{cursor:default}.souls .ccard img{width:64px;height:60px;image-rendering:pixelated}
 .souls .ccard.on{border-color:var(--g);box-shadow:0 0 0 1px var(--g),0 0 14px -4px var(--g)}
 .souls .ccard em{font-style:normal;font-size:10.5px;color:var(--text-soft);line-height:1.35}
+.souls .bond{font-size:10.5px;color:#ff9aa8;font-weight:800;letter-spacing:.5px}.souls .bond i{font-style:normal;color:var(--text-dim);font-weight:600}
+.bondtale{display:flex;gap:12px;align-items:center;margin-bottom:8px}.bondtale img{width:64px;height:60px;image-rendering:pixelated;flex:none;filter:drop-shadow(0 0 8px rgba(255,154,168,.5))}.bondtale p{margin:0;font-size:14px;line-height:1.6}
+.grudge{display:inline-flex;align-items:center;gap:4px;color:#ff9aa8;font-weight:800}.grudge:before{content:'';width:9px;height:9px;transform:rotate(45deg);background:linear-gradient(135deg,#ff9aa8,#7a2a4a);border-radius:2px;box-shadow:0 0 6px rgba(255,90,120,.6)}
 .spouch{display:flex;gap:10px;flex-wrap:wrap}
 .spouch .slot{display:flex;align-items:center;gap:8px;min-width:180px;padding:6px 12px 6px 6px;border-radius:14px;border:1px dashed var(--line-2);background:rgba(255,255,255,.03)}
 .spouch .slot.on{border-style:solid;border-color:var(--g);box-shadow:0 0 12px -4px var(--g)}
@@ -1987,7 +1993,7 @@ const MAIN_Q = [
     c:['yellowriver', 'yu,hero', '', [['우', '물을 막으면 넘치고, 길을 내 주면 바다로 간다.'], ['나', '삽 한 자루로 강을 다스리시는군요.']]]},
   {ch:36, t:'상류', s:'곤륜 레이드 「상류」에서 아홉 머리 뱀을 막아요. 탈것 「응룡」을 얻어요.', k:'raidK', key:'k1', n:1, gems:17500, mount:'eunglong',
     c:['yellowriver', 'yu,hero,m:serpent:#3a6a8a', 'shake', [['', '아홉 머리 뱀이 물러가자 날개 달린 용이 꼬리로 땅을 그어 물길을 냈어요.'], ['우', '응룡이 너를 따르겠다는구나.']]]},
-  {ch:36, t:'자라 장수', s:'곤륜 3-1에 닿아요(자라 장수를 물리쳐요).', k:'s4', n:25, gems:18000,
+  {ch:36, t:'자라 장수', s:'곤륜 3-1에 닿아요(자라 장수를 물리쳐요). 아바타 「치수 도롱이」를 얻어요.', k:'s4', n:25, gems:18000, av:'c_dorong',
     c:['yellowriver', 'hero,kkachi', 'sparkle', [['까치', '물이 빠졌어요! 마을 사람들이 돌아와요.']]]},
   {ch:37, t:'비 오는 다리', s:'곤륜 3-5에 닿아요.', k:'s4', n:29, gems:18000,
     c:['westlake', 'baisuzhen,hero', '', [['', '비 오는 다리 위에 흰 옷 여인과 푸른 옷 여인이 서 있었어요.'], ['흰 뱀', '사람이 되고 싶었을 뿐이에요. 그게 죄인가요?']]]},
@@ -2013,13 +2019,13 @@ const MAIN_Q = [
     c:['kunlunmt', 'hero,m:tiger:#8a3a3a', 'dark', [['궁기', '착한 놈부터 잡아먹는 게 내 법이다.'], ['', '그때 뿔이 빛나는 해태가 궁기와 용사 사이를 가로막았어요.']]]},
   {ch:40, t:'도올', s:'곤륜 레이드 「도올」을 물리쳐요. 탈것 「해태」를 얻어요.', k:'raidK', key:'k6', n:1, gems:22500, mount:'haetae',
     c:['kunlunmt', 'hero,kkachi,m:haetae:#d8c070', 'sparkle', [['까치', '해태가 {name}님을 골랐어요!'], ['', '옳고 그름을 가리는 짐승이 사흉을 심판하고 용사 곁에 섰어요.']]]},
-  {ch:40, t:'곤륜 가는 길', s:'곤륜 5-10에 닿아요.', k:'s4', n:58, gems:23000,
+  {ch:40, t:'곤륜 가는 길', s:'곤륜 5-10에 닿아요. 「곤륜 운무 망토」를 얻어요.', k:'s4', n:58, gems:23000, av:'p_kunlun',
     c:['kunlunmt', 'hero,wukong', '', [['손오공', '저 위가 곤륜이다. 아홉 문이 있지. 셈 잘하냐?']]]},
   {ch:41, t:'아홉 문의 문지기', s:'곤륜 6-1에 닿아요(육오를 물리쳐요).', k:'s4', n:61, gems:23500,
     c:['kunlunmt', 'hero,m:tiger:#e8c070', '', [['육오', '곤륜의 아홉 문은 셈할 줄 아는 자에게만 열린다.'], ['나', '싸워서 열 문이 아니라면, 셈부터 하죠.']]]},
   {ch:41, t:'구천현녀의 두루마리', s:'레벨 450을 달성해요.', k:'l4', n:450, gems:24000,
     c:['kunlunmt', 'jiutian,hero', 'light', [['구천현녀', '이기는 법보다 싸우지 않고 이기는 법이 먼저다.']]]},
-  {ch:41, t:'서왕모의 잔치', s:'곤륜 6-3에 닿아요. 신화 보물 「서왕모의 불사약」과 탈것 「백록」을 얻어요.', k:'s4', n:63, gems:24500, myth:'elixir', mount:'baekrok',
+  {ch:41, t:'서왕모의 잔치', s:'곤륜 6-3에 닿아요. 신화 보물 「서왕모의 불사약」과 탈것 「백록」을 얻어요. 펫 꾸미기 「복숭아빛」도요.', k:'s4', n:63, gems:24500, av:'q_peach', myth:'elixir', mount:'baekrok',
     c:['palace', 'xiwangmu,hero,kkachi', 'sparkle', [['서왕모', '하늘 기둥이 다시 흔들리고 있다. 이 약과 흰 사슴을 가져가거라.'], ['까치', '흰 사슴이 {name}님 손을 핥아요!']]]},
   {ch:42, t:'부주산', s:'곤륜 6-6에 닿아요.', k:'s4', n:66, gems:25000,
     c:['buzhou', 'hero,kkachi', 'shake', [['', '하늘을 받치던 기둥, 부주산. 물의 신의 군사들이 몰려왔어요.']]]},
@@ -2031,7 +2037,7 @@ const MAIN_Q = [
     c:['kunlunmt', 'nuwa,hero', 'light', [['여와', '깨진 것을 버리지 않고 기우는 것, 그게 사람을 빚은 까닭이란다.']]]},
   {ch:43, t:'모자란 돌 하나', s:'레벨 460을 달성해요.', k:'l4', n:460, gems:27000,
     c:['kunlunmt', 'nuwa,hero,kkachi', 'sparkle', [['', '오색 돌이 하나 모자랐어요. 용사는 세 나라에서 모은 보물을 꺼냈어요.'], ['여와', '천부인과 삼종신기와 곤륜의 신기… 이것이면 되겠다.']]]},
-  {ch:43, t:'오색 돌', s:'곤륜 7-1에 닿아요(부유를 물리쳐요). 신화 보물 「오색 돌」과 탈것 「기린」을 얻어요.', k:'s4', n:73, gems:28000, myth:'ose', mount:'girin',
+  {ch:43, t:'오색 돌', s:'곤륜 7-1에 닿아요(부유를 물리쳐요). 신화 보물 「오색 돌」과 탈것 「기린」을 얻어요. 아바타 「오색 비단옷」도요.', k:'s4', n:73, gems:28000, av:'c_ose', myth:'ose', mount:'girin',
     c:['kunlunmt', 'nuwa,hero,m:haetae:#ffd860', 'sparkle', [['', '하늘이 기워진 날, 무지개 아래 기린이 나타났어요.'], ['까치', '{name}님, 세 스승님의 시험이 기다리고 있어요!']]]},
   {ch:44, t:'세 스승의 시험', s:'[수련] → [전직]에서 세 스승의 시험(1차 스승 → 강림도령 → 3차 스승)을 넘어 4차 전직해요.', k:'job', n:4, gems:30000,
     c:['kunlunmt', 'hero,gangrim,kkachi', 'flash', [['강림도령', '저승에서 처음 본 아이가 여기까지 왔구나.'], ['나', '모두 덕분이에요.']]]},
@@ -2041,7 +2047,7 @@ const MAIN_Q = [
     c:['skyrift', 'hero,wukong,gangrim,kkachi', 'light', [['손오공', '베지 마! 혼돈은 구멍을 뚫으면 죽는다는 얘기, 몰라?'], ['나', '알아. 그래서 다시 재우는 거야. 하늘을 꿰매면서.']]]},
   {ch:45, t:'하늘을 꿰매다', s:'곤륜 7-8에 닿아요.', k:'s4', n:80, gems:34000,
     c:['sky', 'hero,kkachi', 'sparkle', [['', '세 나라의 하늘이 하나로 이어지고, 천마의 원한이 맑게 개었어요.']]]},
-  {ch:45, t:'다리를 놓는 새', s:'레벨 480을 달성해요.', k:'l4', n:480, gems:36000,
+  {ch:45, t:'다리를 놓는 새', s:'레벨 480을 달성해요. 「오작교 깃 망토」를 얻어요.', k:'l4', n:480, gems:36000, av:'p_magpie',
     c:['sky', 'kkachi,hero', 'light', [['까치', '저는 원래 다리를 놓는 새예요. 하늘과 하늘 사이에요.'], ['나', '그래서 늘 길을 먼저 알았구나.']]]},
   {ch:45, t:'세 하늘의 신화', s:'레벨 500(곤륜 만렙)에 닿아요.', k:'l4', n:500, gems:40000,
     c:['palace', 'xiwangmu,amaterasu,jumong,hero,kkachi', 'sparkle', [['', '세 나라의 신들이 하늘 문 앞에 모여 용사를 배웅했어요.'], ['까치', '{name}, 이제 세 하늘의 신화예요.']]]},
@@ -2146,8 +2152,12 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-10-23', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-10-24', NOTE_KEY = 'samhan-note-seen';
 const NOTES = [
+  ['#', '2026-11-10 · 갈림길 · 원한 조각 · 결이야기 · 곤륜 아바타'],
+  ['갈림길', '30장 「눈보라의 약속」과 37장 「뇌봉탑의 원한」을 마치면 두 길 가운데 하나를 골라요. 어느 길이든 이야기는 똑같이 이어지고, 길마다 별호(체력·엽전·경험치·보스 피해)와 뒷이야기가 달라요. 이미 지나왔다면 [퀘스트]에서 골라요.'],
+  ['원한 조각 · 결이야기', '천마가 남긴 원한 조각이 부상·곤륜에 흩어져 있어요. 단계 보스·레이드·타임 보스·보물 동굴·백귀야행·급보에서 모아, [기술] → [넋 부름]에서 넋마다 결이야기 3마디를 들려주면 조각이 풀려요. 마디마다 그 넋의 힘 +15%, 모음 효과 +50%.'],
+  ['곤륜 아바타', '곤륜 이야기에서 「치수 도롱이」·「곤륜 운무 망토」·「복숭아빛」·「오색 비단옷」·「오작교 깃 망토」를 받아요(지나온 이야기 것은 들어올 때). 꾸미기 상자에는 부상부터 벚꽃 무복·물결 무늬 망토·여우불빛, 곤륜부터 옥 갑주·봉황 깃 망토·옥빛이 더해져요.'],
   ['#', '2026-11-10 · 백귀야행'],
   ['백귀야행', '[레이드] → [백귀야행] 하루 2번. 60초 동안 온갖 요괴(도깨비·처녀귀신·여우·아귀·장승…)가 쉴 새 없이 몰려와요. 잡은 수만큼 엽전(몬스터 3마리분씩)·쇳가루·보석·재료를, 부상부터는 고삐 조각도 받아요. 그동안 단계 보스는 안 나오고 쓰러져도 단계가 내려가지 않아요. 최고 기록이 남아요.'],
   ['자동 피하기 고침', '자동으로 붉은 칸을 피한 뒤 보스를 쫓다가 다시 붉은 칸에 걸어 들어가 맞던 문제를 고쳤어요. 이제 칸이 터질 때까지 밖에서 기다려요.'],
@@ -2402,7 +2412,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:''}, a:{t:0, e:'', e2:''}, n:{t:0, e:'', e2:''}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0,
   };
 }
 function mergeState(d){
@@ -2505,13 +2515,16 @@ function mergeState(d){
   for (const m of MOUNTS) if (mt.own && mt.own[m.k]){ out.mount.own[m.k] = true; out.mount.star[m.k] = Math.min(MOUNT_STAR_MAX, Math.max(0, Math.floor(+(mt.star && mt.star[m.k])) || 0)); }
   if (out.mount.own[mt.ride]) out.mount.ride = mt.ride;
   const so = d.soul && typeof d.soul === 'object' ? d.soul : {};
-  out.soul = {own:{}, star:{}, eq:['', ''], pity:Math.max(0, Math.floor(+so.pity) || 0)};
-  for (const sl of SOULS) if (so.own && so.own[sl.k]){ out.soul.own[sl.k] = true; out.soul.star[sl.k] = Math.min(SOUL_STAR_MAX, Math.max(0, Math.floor(+(so.star && so.star[sl.k])) || 0)); }
+  out.soul = {own:{}, star:{}, eq:['', ''], pity:Math.max(0, Math.floor(+so.pity) || 0), bond:{}};
+  for (const sl of SOULS) if (so.own && so.own[sl.k]){ out.soul.own[sl.k] = true; out.soul.star[sl.k] = Math.min(SOUL_STAR_MAX, Math.max(0, Math.floor(+(so.star && so.star[sl.k])) || 0));
+    const b = Math.min(BOND_MAX, Math.max(0, Math.floor(+(so.bond && so.bond[sl.k])) || 0)); if (b) out.soul.bond[sl.k] = b; }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
   out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
   out.title = {own:{}, eq:''}; for (const t of TITLES) if (ti.own && ti.own[t.k]) out.title.own[t.k] = true; if (out.title.own[ti.eq]) out.title.eq = ti.eq;
+  out.fork = {}; for (const f of FORKS){ const v = d.fork && d.fork[f.k]; if (v === 0 || v === 1) out.fork[f.k] = v; }
+  out.grudge = Math.max(0, Math.min(1e6, Math.floor(+d.grudge) || 0));
   if (out.mode !== 'semi') out.mode = 'auto';
   out.bossAuto = out.bossAuto !== false;
   if (![1, 10, 'max'].includes(out.buyMode)) out.buyMode = 1;
@@ -3358,6 +3371,7 @@ function bossWin(){
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
   S.gems += gems; S.rec.bosses++; recWin(true, false);
   if (wasGate) rollAcc(true);
+  gainGrudge(wasGate ? GRUDGE.gate : GRUDGE.boss, true);
   bossGearDrop();
   gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
@@ -3596,7 +3610,7 @@ function finishTimeBoss(R){
   S.tb[info.diff] = info.w;
   const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold');
   S.gold += gold; S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true);
-  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb);
+  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true);
   const luck = window.__game && window.__game.tbLuck || 1, drops = [];
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck){
     let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
@@ -3940,14 +3954,14 @@ function raidReward(info){
   S.gems += gems; S.gold += gold;
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
   const piece = info.busang || info.kunlun ? gainPiece((info.kunlun ? MOUNT_PIECE.kunlun : MOUNT_PIECE.busang) + (first ? MOUNT_PIECE.first : 0), true) : 0;
-  const soul = soulDrop('raid');
+  const soul = soulDrop('raid'), grudge = gainGrudge(GRUDGE.raid + (first ? GRUDGE.raidFirst : 0), true);
   S.raid.first[info.key] = true; S.rec.raids++; recWin(true, true);
   if (info.hell) S.rec.hraids = (S.rec.hraids || 0) + 1;
   if (raidTickets() >= TICKET_MAX) S.raid.tkT = now();
   S.raid.tk = Math.max(0, S.raid.tk - 1);
   refreshStats();
   ev('raid');
-  return {gems, gold, items, first, mat, piece, soul};
+  return {gems, gold, items, first, mat, piece, soul, grudge};
 }
 /* 허수아비 수련(솔로 레이드): 하루 3번, 30초 동안 허수아비에게 넣은 피해로 1~5등급 보상(엽전·보석·재료·장신구) */
 const DUMMY_TRIES = 3, DUMMY_TIME = 30, DUMMY_T = [2, 5, 10, 20, 40];   // 등급 기준 = 지금 세계 최고 단계 몹 체력 ×
@@ -4023,15 +4037,16 @@ function finishParade(){
   const gold = mGold(Math.max(1, S.stage)) * k * 3 * gainMul('gold'), gems = Math.round(Math.floor(k / 3) * gemMul()), dust = k * (1 + S.world);
   const mat = Math.floor(k / 25), piece = S.world >= 3 ? Math.floor(k / 50) : 0;
   S.gold += gold; S.gems += gems; S.dust += dust; if (mat) gainMat(mat, true); if (piece) gainPiece(piece, true);
+  const grudge = gainGrudge(k / GRUDGE.paradePer, true);
   const best = k > (S.parade.best || 0); if (best) S.parade.best = k;
   S.rec.parades = (S.rec.parades || 0) + 1; recWin(false, true);
   addLog(`백귀야행 끝! 요괴 ${k}마리 · 엽전 +${fmt(gold)} · 보석 +${gems} · 쇳가루 +${dust}${mat ? ` · 재료 +${mat}` : ''}${piece ? ` · 고삐 조각 +${piece}` : ''}`, 'gain'); sfx('win');
   saveLocal();
   if (!(window.__game && window.__game.quiet)) showModal('백귀야행 · 끝', `<p>요괴 <b>${k}마리</b>를 잡았어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
     <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
-    ${mat ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${mat}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}</ul>
+    ${mat ? `<li style="color:${MATS[Math.min(2, S.world)].color}">${mat}<span>${MATS[Math.min(2, S.world)].name}</span></li>` : ''}${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}${grudge ? `<li style="color:#ff8a9a">${grudge}<span>원한 조각</span></li>` : ''}</ul>
     <p class="small" style="margin-top:8px">오늘 ${paradeLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
-  return {kills:k, gold, gems, dust, mat, piece};
+  return {kills:k, gold, gems, dust, mat, piece, grudge};
 }
 const VAULT_TRIES = 2, VAULT_TIME = 60, VAULT_MYTH_P = 0.07, SHARD_COST = 30;   // 신화 보물 7%(사용자 요청)
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
@@ -4048,7 +4063,7 @@ function startVault(){
 }
 function finishVault(R){
   const win = R.win, shard = win ? vaultShards() : 1;
-  if (win) recWin(true, true);
+  if (win){ recWin(true, true); gainGrudge(GRUDGE.vault, true); }
   S.mythShard += shard;
   const m = win && Math.random() < VAULT_MYTH_P * (window.__game && window.__game.vaultLuck || 1) ? dropMyth(vaultD(), null, true) : null;
   const M = m && MYTHS.find(x => x.k === m.k), soul = win ? soulDrop('vault') : null;
@@ -4093,6 +4108,7 @@ function finishRaid(){
         <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
         <li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(rw.mat)}<span>${MATS[Math.min(2, S.world)].name} (조합 재료)</span></li>
         ${rw.piece ? `<li style="color:#c8b0ff">${rw.piece}<span>고삐 조각 (탈것 별·천리마·산군 범)</span></li>` : ''}
+        ${rw.grudge ? `<li style="color:#ff8a9a">${rw.grudge}<span>원한 조각 (넋의 결이야기)</span></li>` : ''}
         ${rw.soul ? `<li style="color:${GRADES[SL[rw.soul.k].g].color}">${SL[rw.soul.k].name}<span>${soulDropText(rw.soul)}</span></li>` : ''}
         ${rw.items.map(r => `<li style="color:${GRADES[Math.floor(r.it / 4)].color}">${gearName(r.slot, r.it)}<span>${GRADES[Math.floor(r.it / 4)].name} ${GEAR[r.slot].label}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
       </ul>
@@ -5252,6 +5268,10 @@ const AVATARS = [
   {k:'c_foxfire', type:'char', name:'여우불 무복', outfit:'#e8f0ff', deco:'sash', src:'이야기(여우불 들판)'},
   {k:'c_tengu', type:'char', name:'텐구 깃옷', outfit:'#2a2a3a', deco:'fur', src:'이야기(구라마산)'},
   {k:'c_storm', type:'char', name:'폭풍 갑주', outfit:'#3a4a7a', deco:'armor', src:'이야기(여덟 머리의 뱀)'},
+  {k:'c_dorong', type:'char', name:'치수 도롱이', outfit:'#8a7a4a', deco:'fur', src:'이야기(자라 장수)'},
+  {k:'c_ose', type:'char', name:'오색 비단옷', outfit:'#e8c84a', deco:'saekdong', src:'이야기(오색 돌)'},
+  {k:'c_sakura', type:'char', name:'벚꽃 무복', outfit:'#f0b8c8', deco:'sash', src:'box', w:3},
+  {k:'c_jade', type:'char', name:'옥 갑주', outfit:'#5aa88a', deco:'armor', src:'box', w:4},
   {k:'p_red', type:'cape', name:'붉은 비단 망토', capeC:'#b8382f', src:'box'},
   {k:'p_cloud', type:'cape', name:'구름 망토', capeC:'#eef2fa', src:'box'},
   {k:'p_night', type:'cape', name:'밤하늘 망토', capeC:'#23264a', star:true, src:'box'},
@@ -5260,6 +5280,10 @@ const AVATARS = [
   {k:'p_ink', type:'cape', name:'먹구름 망토', capeC:'#3a3a48', src:'box'},
   {k:'p_dragon', type:'cape', name:'용비늘 망토', capeC:'#2a7a5a', star:true, src:'이야기(영소보전)'},
   {k:'p_tengu', type:'cape', name:'텐구 깃 망토', capeC:'#1a1a2a', star:true, src:'이야기(구라마산)'},
+  {k:'p_kunlun', type:'cape', name:'곤륜 운무 망토', capeC:'#d8e4f0', star:true, src:'이야기(곤륜 가는 길)'},
+  {k:'p_magpie', type:'cape', name:'오작교 깃 망토', capeC:'#1c2a4c', star:true, src:'이야기(다리를 놓는 새)'},
+  {k:'p_wave', type:'cape', name:'물결 무늬 망토', capeC:'#2a5a8a', src:'box', w:3},
+  {k:'p_phoenix', type:'cape', name:'봉황 깃 망토', capeC:'#e0582f', star:true, src:'box', w:4},
   {k:'q_gat', type:'pet', name:'꼬마 갓', acc:'gat', src:'box'},
   {k:'q_ribbon', type:'pet', name:'빨간 리본', acc:'ribbon', src:'box'},
   {k:'q_flower', type:'pet', name:'꽃관', acc:'flower', src:'box'},
@@ -5268,6 +5292,9 @@ const AVATARS = [
   {k:'q_bell', type:'pet', name:'방울 목걸이', acc:'bell', src:'box'},
   {k:'q_snow', type:'pet', name:'눈꽃빛', tint:'#dff0ff', src:'box'},
   {k:'q_gold', type:'pet', name:'황금빛', tint:'#ffd24a', src:'이야기(화과산)'},
+  {k:'q_peach', type:'pet', name:'복숭아빛', tint:'#ffb8c8', src:'이야기(서왕모의 잔치)'},
+  {k:'q_fox', type:'pet', name:'여우불빛', tint:'#bfe0ff', src:'box', w:3},
+  {k:'q_jade', type:'pet', name:'옥빛', tint:'#9fe8c8', src:'box', w:4},
 ];
 for (const c of CLASS_ORDER) for (const j of [1, 2, 3, 4]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
@@ -5350,7 +5377,7 @@ function rideMount(k){
 }
 // 이야기에서 받았어야 할 탈것(탈것이 생기기 전에 그 이야기를 지난 저장)
 function mountCatchUp(){
-  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); }
+  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); }
 }
 
 /* 탈것 그림: 64×48 HD, 왼쪽을 본다. 안장 가운데 (33.5, 16)에 용사가 앉는다 */
@@ -5471,6 +5498,10 @@ const TITLES = [
   {k:'soul', name:'넋을 부르는 자', need:'넋 8종 모시기', prog:() => [soulN(), 8], eff:{atk:5}},
   {k:'west', name:'서쪽 끝의 용사', need:'곤륜에 닿기', prog:() => [S.world >= 4 ? 1 : 0, 1], eff:{exp:8}},
   {k:'three', name:'세 하늘의 용사', need:'이야기를 모두 마쳐요', prog:() => [S.quest.main, MAIN_Q.length], eff:{atk:10, hp:10}},
+  {k:'f_snowA', name:'약속을 지킨 자', need:'갈림길(30장)에서 「말하지 않는다」', prog:() => [S.fork.snow === 0 ? 1 : 0, 1], eff:{hp:8}, fork:true},
+  {k:'f_snowB', name:'등불을 건 자', need:'갈림길(30장)에서 「등불을 걸어 둔다」', prog:() => [S.fork.snow === 1 ? 1 : 0, 1], eff:{gold:10}, fork:true},
+  {k:'f_towerA', name:'인연을 이어 준 자', need:'갈림길(37장)에서 「그 사람에게 보낸다」', prog:() => [S.fork.tower === 0 ? 1 : 0, 1], eff:{exp:8}, fork:true},
+  {k:'f_towerB', name:'흰 뱀의 벗', need:'갈림길(37장)에서 「함께 길을 간다」', prog:() => [S.fork.tower === 1 ? 1 : 0, 1], eff:{boss:8}, fork:true},
 ];
 const TT = Object.fromEntries(TITLES.map(t => [t.k, t]));
 const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해'};
@@ -5488,6 +5519,96 @@ function titleCheck(){
   }
   if (got) refreshStats();
   return got;
+}
+
+/* ================= 갈림길(2026-11 (24)) =================
+   이야기 두 군데(30장·37장)에서 두 길 가운데 하나를 고른다. 어느 길이든 이야기는 똑같이 이어지고(막히지 않음),
+   고른 길에 따라 별호(효과가 다름)와 짧은 뒷이야기가 다르다. 한 번 고르면 바꿀 수 없다. 지나온 갈림길은 [퀘스트]에서 고른다 */
+const FORKS = [
+  {k:'snow', at:'눈보라의 약속', ch:30, bg:'snowpass', cast:'hero,m:yukionna:#eef4ff', fx:'ice',
+   q:'유키온나와 「오늘 본 것을 아무에게도 말하지 않겠다」고 약속했어요. 그런데 산 아래 마을에는 그녀가 기다리던 사람이 아직 살고 있대요. 어떻게 할까요?',
+   a:[{t:'말하지 않는다', d:'약속은 약속. 아무것도 전하지 않고 산을 내려가요.', title:'f_snowA', lines:[['나', '아무에게도 말하지 않을게요.'], ['유키온나', '…고마워. 이번 약속은 녹지 않겠네.']]},
+      {t:'등불을 걸어 둔다', d:'말은 하지 않되, 산장 처마에 등불 하나를 걸어 길을 밝혀 둬요.', title:'f_snowB', lines:[['', '용사는 말없이 산장 처마에 등불을 걸었어요.'], ['유키온나', '말하지 않고도 길을 밝히는구나. …그 사람이 언젠가 저 불빛을 보겠지.']]}]},
+  {k:'tower', at:'뇌봉탑의 원한', ch:37, bg:'westlake', cast:'hero,baisuzhen', fx:'light',
+   q:'탑에서 풀려난 흰 뱀은 은혜를 갚겠다며 따라오려 해요. 하지만 그녀에게는 비 오는 다리에서 만난 그 사람이 있어요.',
+   a:[{t:'그 사람에게 보낸다', d:'은혜는 됐어요. 기다리는 사람에게 어서 가라고 등을 밀어 줘요.', title:'f_towerA', lines:[['나', '은혜는 됐어요. 그 사람이 기다려요.'], ['흰 뱀', '…네. 비 오는 다리에서 다시 만날게요. 고마워요.']]},
+      {t:'함께 길을 간다', d:'곤륜 가는 길이 험하니 잠시 함께 가며 서로를 지켜요.', title:'f_towerB', lines:[['흰 뱀', '그럼 곤륜 들머리까지만 함께 갈게요. 그다음엔 그 사람에게로.'], ['', '흰 뱀은 길을 막는 요괴의 약한 곳을 하나하나 알려 주었어요.']]}]},
+];
+const forkIdx = f => MAIN_Q.findIndex(q => q.t === f.at);
+const forkPending = () => FORKS.filter(f => S.fork[f.k] == null && forkIdx(f) >= 0 && S.quest.main > forkIdx(f));
+let forkAsked = {};
+function forkPick(k, i){
+  const f = FORKS.find(x => x.k === k), A = f && f.a[i];
+  if (!A || S.fork[k] != null) return false;
+  S.fork[k] = i;
+  titleCheck();
+  gainGrudge(FORK_GRUDGE, true);
+  refreshStats(); saveLocal();
+  addLog(`갈림길: 「${A.t}」을 골랐어요. 별호 「${TT[A.title].name}」(${titleEffText(TT[A.title])})${S.world >= 3 ? ` · 원한 조각 +${FORK_GRUDGE}` : ''}`, 'good');
+  if (!(window.__game && window.__game.quiet)) playCut([[f.bg, f.cast, f.fx, A.lines]], {title:`갈림길 · ${A.t}`});
+  return true;
+}
+function forkAsk(f){
+  if (!f || S.fork[f.k] != null) return;
+  forkAsked[f.k] = true;
+  showModal(`갈림길 · ${CHAPTERS[f.ch] || ''}`, `<p>${f.q}</p>
+    <ul class="forks">${f.a.map((A, i) => `<li><b>${i ? '둘' : '하나'}. ${A.t}</b><span>${A.d}</span><em>별호 「${TT[A.title].name}」 · ${titleEffText(TT[A.title])}</em></li>`).join('')}</ul>
+    <p class="small">어느 길이든 이야기는 똑같이 이어져요. 한 번 고르면 바꿀 수 없어요. 「나중에」를 누르면 [퀘스트]에서 고를 수 있어요.</p>`,
+    [{label:f.a[0].t, primary:true, fn:() => forkPick(f.k, 0)}, {label:f.a[1].t, primary:true, fn:() => forkPick(f.k, 1)}, {label:'나중에'}]);
+}
+// 이야기 연출·싸움이 끝난 뒤 한가할 때 한 번 묻는다(접속마다 한 번)
+function updateFork(){
+  if (!session || cut || modalOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noFork))) return;
+  const f = forkPending().find(x => !forkAsked[x.k]);
+  if (f) forkAsk(f);
+}
+
+/* ================= 원한 조각·결이야기(2026-11 (24)) =================
+   천마가 남긴 원한 조각(S.grudge)이 부상·곤륜에 흩어져 있다. 부상부터 단계 보스·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길에서 모은다.
+   [기술] → [넋 부름]에서 넋마다 결이야기 BOND_MAX마디를 들려주며 조각을 풀어 준다(BOND_COST). 마디마다 그 넋의 힘 +BOND_K, 모음 효과 +BOND_COL */
+const GRUDGE = {boss:1, gate:3, raid:3, raidFirst:5, tb:6, vault:2, evt:2, paradePer:20};
+const FORK_GRUDGE = 20, BOND_MAX = 3, BOND_COST = [10, 30, 60], BOND_K = 0.15, BOND_COL = 0.5;
+const soulBond = k => (S.soul.bond && S.soul.bond[k]) || 0;
+function gainGrudge(n, quiet){
+  n = Math.floor(n);
+  if (S.world < 3 || n <= 0) return 0;
+  S.grudge = (S.grudge || 0) + n;
+  if (!quiet) addLog(`원한 조각 +${n}`, 'gain');
+  return n;
+}
+const SOUL_BOND = {
+  ureong:['가난한 총각이 "이 농사 지어 누구랑 먹고 사나" 한숨 쉬자, "나랑 먹고 살지" 하는 소리가 들렸대요.', '몰래 지켜보니 물항아리 속 우렁이에서 각시가 나와 따뜻한 밥을 지어 두었어요.', '각시는 "조금만 더 기다려 달라" 했대요. 서두른 마음을 탓하지 않고, 지금도 몰래 누군가의 밥상을 차린대요.'],
+  ondal:['가난해 밥을 빌어 눈먼 어머니를 모시던 온달을 사람들은 바보라 불렀어요.', '평강 공주는 "바보 온달에게 시집보낸다"던 아버지의 말을 지켜 온달을 찾아왔어요.', '공주와 함께 말 타기와 활쏘기를 익힌 온달은 사냥 대회에서 으뜸이 되고, 나라를 지키는 장수가 되었어요.'],
+  cheoyong:['동해 용왕의 아들 처용은 신라 임금을 따라 서울에 와서 벼슬을 받았어요.', '역신이 집에 든 것을 보고도 처용은 성내지 않고 노래하며 춤추며 물러났어요.', '그 너그러움에 감동한 역신은 처용의 얼굴 그림만 보아도 그 집에 들지 않겠다고 약속했대요.'],
+  oneuli:['들판에서 학의 품에 자란 아이는 날짜를 몰라 "오늘이"라 불렸어요.', '부모를 찾아 원천강 가는 길에 연꽃나무와 큰 뱀과 글 읽는 도령의 부탁을 하나씩 받아 주었어요.', '부모를 만나고 돌아오며 받은 부탁의 답을 모두 전해 준 오늘이는 계절을 전하는 선녀가 되었대요.'],
+  seo:['연오랑이 바위를 타고 바다 건너로 가자, 세오녀도 남편을 찾아 같은 바위에 올랐어요.', '두 사람이 떠나자 신라의 해와 달이 빛을 잃었어요.', '세오녀가 짠 고운 비단으로 하늘에 제사를 지내자 해와 달이 다시 빛났대요.'],
+  bihyeong:['비형랑은 밤마다 궁궐을 빠져나가 도깨비들과 어울려 놀았어요.', '임금의 부탁을 받자 도깨비들을 불러 하룻밤 사이에 개울에 돌다리를 놓았대요.', '그 뒤로 비형랑의 이름을 적어 문에 붙이면 나쁜 도깨비가 달아났다고 해요.'],
+  jacheong:['자청비는 남자 옷을 입고 글공부를 떠났다가 하늘나라 문도령을 만났어요.', '숱한 시험을 이겨 내고 하늘에서 문도령과 혼인했어요.', '하늘의 난리를 막은 상으로 오곡 씨앗을 받아 땅에 내려와 농사를 돌보는 신이 되었대요.'],
+  woochi:['전우치는 선녀처럼 꾸며 임금에게서 황금 들보를 받아 내 굶주린 사람들을 먹였대요.', '그림 속 나귀를 타고 사라지는 재주로 잡으러 온 사람들을 번번이 따돌렸어요.', '스승 화담에게 도술로 한 수 배운 뒤, 더 깊은 도를 닦으러 산으로 떠났대요.'],
+  hong:['아버지를 아버지라 부르지 못하던 홍길동은 집을 떠났어요.', '활빈당을 이끌고 욕심 많은 벼슬아치의 재물을 가난한 이들에게 나눠 주었어요.', '마침내 바다 건너 율도국을 세워 모두가 차별 없이 사는 나라를 만들었대요.'],
+  gangrim:['원님의 명을 받은 강림은 저승의 염라대왕을 모셔 오라는 어려운 길을 떠났어요.', '조왕신과 문을 지키는 신의 도움으로 저승길을 찾아 염라대왕을 모셔 왔어요.', '그 용기를 눈여겨본 염라대왕이 강림을 저승 차사로 데려갔대요.'],
+  seolmun:['설문대할망은 치마폭에 흙을 날라 섬을 만들고 한라산을 쌓았어요.', '해진 치마 구멍으로 흘린 흙덩이가 오름 수백 개가 되었대요.', '할망은 섬사람들에게 "속옷 한 벌만 지어 주면 뭍까지 다리를 놓아 주마" 했대요.'],
+  eulji:['큰 군대가 고구려로 밀려오자 을지문덕은 일부러 지는 척 적을 깊이 끌어들였어요.', '적장에게 "공은 이미 높으니 이제 그만 돌아가라"는 시를 보냈어요.', '물러나는 적을 살수에서 막아 나라를 지켰어요.'],
+  bari:['일곱째 딸로 태어나 버려진 바리공주는 자라서 부모가 병들었다는 소식을 들었어요.', '아무도 가려 하지 않던 저승 끝 서천 꽃밭으로 홀로 생명수를 구하러 떠났어요.', '생명수로 부모를 살린 바리공주는 죽은 이의 넋을 좋은 곳으로 이끄는 신이 되었대요.'],
+  jumong:['알에서 태어난 주몽은 일곱 살에 손수 활을 만들어 파리를 맞혔대요.', '시기하는 이들을 피해 남쪽으로 떠날 때, 물고기와 자라가 떠올라 다리를 놓아 주었어요.', '졸본 땅에 이르러 고구려를 세웠어요.'],
+  admiral:['장군은 거북선을 만들고 수군을 훈련하며 바다를 지킬 준비를 했어요.', '남은 배가 열두 척뿐일 때도 "아직 열두 척이 있다"며 물러서지 않았어요.', '명량의 거센 물살을 이용해 훨씬 많은 배를 물리치고 바다를 지켰어요.'],
+  haemosu:['해모수는 다섯 용이 끄는 수레를 타고 아침이면 내려오고 저녁이면 하늘로 돌아갔어요.', '웅심연 물가에서 물의 신 하백의 딸 유화를 만났어요.', '잉어·수달·사슴·꿩으로 변한 하백과 재주를 겨루어 이기고 사위로 인정받았대요.'],
+  mago:['마고할미는 하늘과 땅이 갈라지기 전부터 있었다는 큰 할미예요.', '치마에 돌과 흙을 날라 산과 섬을 빚었대요.', '할미가 지나간 자리마다 강과 골짜기가 생겼고, 지금도 산마다 할미의 발자국이 남아 있대요.'],
+};
+function bondUp(k){
+  const s = SL[k], b = soulBond(k);
+  if (!s || !S.soul.own[k] || b >= BOND_MAX || (S.grudge || 0) < BOND_COST[b]) return false;
+  S.grudge -= BOND_COST[b];
+  S.soul.bond[k] = b + 1; refreshStats(); saveLocal();
+  S.rec.bonds = (S.rec.bonds || 0) + 1;
+  const line = (SOUL_BOND[k] || [])[b] || s.tale;
+  addLog(`결이야기 「${s.name}」 ${b + 1}마디: 원한 조각 ${BOND_COST[b]}개가 풀려 흩어졌어요. 넋의 힘 +${Math.round(BOND_K * 100)}%`, 'good');
+  if (!(window.__game && window.__game.quiet)){
+    showModal(`결이야기 · ${s.name} ${b + 1}/${BOND_MAX}`, `<div class="bondtale"><img alt="" src="${soulImg(k)}"><p>${line}</p></div>
+      <p class="small">이야기를 들은 원한 조각 ${BOND_COST[b]}개가 스르르 풀려 흩어졌어요. 「${s.name}」의 힘 <b>+${Math.round(BOND_K * 100)}%</b>, 모음 효과 <b>+${Math.round(BOND_COL * 100)}%</b>.</p>`, [{label:'확인', primary:true}]);
+    if (!fxOff()) playFx('up', {el:$('#so-' + k)});
+  }
+  return true;
 }
 
 /* ================= 급보(2026-11 (22)) =================
@@ -5517,6 +5638,7 @@ function updateEvt(dt){
 function evtReward(m){
   const E = EVTS.find(e => e.k === m.evt); S.rec.events = (S.rec.events || 0) + 1;
   let txt = '';
+  gainGrudge(GRUDGE.evt, true);
   if (m.evt === 'gold'){ const g = mGold(S.stage) * 200 * gainMul('gold'); S.gold += g; txt = `엽전 +${fmt(g)}`; }
   else if (m.evt === 'gem'){ const g = Math.round((10 + 5 * S.world) * gemMul()), d = 10 * (1 + S.world); S.gems += g; S.dust += d; txt = `보석 +${g} · 쇳가루 +${d}`; }
   else { const x = mExp(S.stage) * 150 * gainMul('exp'); gainExp(x); txt = `경험치 +${fmt(x)}`; if (soulOpen()) S.soul.pity = Math.min(SOUL_PITY - 1, S.soul.pity + 1); }
@@ -5568,9 +5690,9 @@ const SOUL_FULL = 100, SOUL_RATE = 4, SOUL_STAR_MAX = 5, SOUL_PITY = 40, SOUL_DU
 const SOUL_P = {raid:0.04, tb:0.08, vault:0.05}, SOUL_GW = [0, 40, 30, 18, 9, 3], SOUL_COL = [0, 0.5, 1, 1.5, 2, 3];
 const soulOpen = () => S.world >= 3;
 const soulSlots = () => S.job >= 4 ? 2 : 1;
-const soulK = k => 1 + 0.2 * (S.soul.star[k] || 0);
+const soulK = k => (1 + 0.2 * (S.soul.star[k] || 0)) * (1 + BOND_K * soulBond(k));
 const soulN = () => SOULS.filter(s => S.soul.own[s.k]).length;
-function soulCol(){ let p = 0; for (const s of SOULS) if (S.soul.own[s.k]) p += SOUL_COL[s.g]; return p; }
+function soulCol(){ let p = 0; for (const s of SOULS) if (S.soul.own[s.k]) p += SOUL_COL[s.g] * (1 + BOND_COL * soulBond(s.k)); return p; }
 const soulEq = () => S.soul.eq.slice(0, soulSlots()).filter(k => k && S.soul.own[k]);
 let soulG = 0, soulApp = [];   // 넋의 기운(싸우는 동안 참)·지금 나타난 넋(그림)
 function soulValText(s, k = soulK(s.k)){
@@ -5870,10 +5992,12 @@ function giveAvatar(k, quiet){
   return true;
 }
 // 꾸미기 상자: 상자에서 나오는 아바타 중 하나(이미 있으면 보석으로)
+// 꾸미기 상자에 나오는 것: 'box' 아바타 가운데 그 땅(w)에 들어가 본 것만(부상 3·곤륜 4)
+const avBoxPool = () => AVATARS.filter(a => a.src === 'box' && (!a.w || S.world >= a.w));
 function openAvatarBox(){
   if (S.gems < AV_BOX) return null;
   S.gems -= AV_BOX;
-  const box = AVATARS.filter(a => a.src === 'box');
+  const box = avBoxPool();
   const rare = box.filter(a => a.type !== 'pet' && !S.av.own[a.k]);
   S.avPity = (S.avPity || 0) + 1;
   let type;
@@ -8719,17 +8843,19 @@ function wireSkillSeg(){ for (const v of ['skill', 'soul']) $('#kv-' + v).addEve
 function buildSoul(){
   const open = soulOpen(), card = s => `<div class="ccard" id="so-${s.k}" style="--g:${GRADES[s.g].color}">
       <img alt="" src="${soulImg(s.k)}"><b style="color:${GRADES[s.g].color}">${s.name}</b><i class="mstar" data-r="star"></i>
-      <span>${SOUL_KIND[s.kind]}<br><b data-r="val" style="color:var(--text)"></b></span><em>${s.tale}</em>
-      <div class="mbtns"><button class="btn sm" data-k="${s.k}"></button></div></div>`;
+      <span>${SOUL_KIND[s.kind]}<br><b data-r="val" style="color:var(--text)"></b></span><em>${s.tale}</em><span class="bond" data-r="bond"></span>
+      <div class="mbtns"><button class="btn sm" data-k="${s.k}"></button><button class="btn sm" data-bond="${s.k}"></button></div></div>`;
   panel.innerHTML = `${skillSegHTML()}
-    <div class="ph"><h2>넋 부름</h2><span class="small">모신 넋 <b id="soN"></b> · 모음 효과 공격력·체력 <b id="soCol"></b></span></div>
+    <div class="ph"><h2>넋 부름</h2><span class="small">모신 넋 <b id="soN"></b> · 모음 효과 공격력·체력 <b id="soCol"></b> · <span class="grudge" id="soGrudge"></span></span></div>
     <p class="hint">${open ? `싸우는 동안 <b>넋의 기운</b>이 ${Math.round(SOUL_FULL / SOUL_RATE)}초쯤에 가득 차면 주머니의 넋이 용사 곁에 나타나 한 번 도와요. <b>[자동]</b>이면 저절로, <b>[반자동]</b>이면 기술 칸 왼쪽의 <b>넋 구슬</b>을 눌러요(키보드 Q).
       넋 구슬은 부상·곤륜 레이드(${SOUL_P.raid * 100}%)·타임 보스(${SOUL_P.tb * 100}%)·보물 동굴(${SOUL_P.vault * 100}%)에서 나오고, ${SOUL_PITY}번 안에 하나는 꼭 나와요(지금 <b id="soPity"></b>).
-      같은 넋이 또 오면 별 +1(최대 5, 별마다 +20%), 별이 가득하면 보석 ${SOUL_DUP_GEMS}. 모신 넋마다 공격력·체력이 올라요(고급 0.5% ~ 신화 3%).` : '2부 부상으로 건널 때 강림도령에게 <b>넋 주머니</b>를 받아요. 그때부터 옛이야기 속 넋을 모실 수 있어요.'}</p>
+      같은 넋이 또 오면 별 +1(최대 5, 별마다 +20%), 별이 가득하면 보석 ${SOUL_DUP_GEMS}. 모신 넋마다 공격력·체력이 올라요(고급 0.5% ~ 신화 3%).<br>
+      <b style="color:#ff9aa8">원한 조각</b>(부상·곤륜의 단계 보스·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길)으로 넋마다 <b>결이야기</b> ${BOND_MAX}마디를 들려주면 조각이 풀려요(${BOND_COST.join('·')}개). 마디마다 그 넋의 힘 +${Math.round(BOND_K * 100)}%, 모음 효과 +${Math.round(BOND_COL * 100)}%.` : '2부 부상으로 건널 때 강림도령에게 <b>넋 주머니</b>를 받아요. 그때부터 옛이야기 속 넋을 모실 수 있어요.'}</p>
     <div class="card"><div class="ct">넋 주머니 <span class="tag">${soulSlots()}칸${S.job >= 4 ? '' : ' · 4차 전직 뒤 2칸'}</span></div><div class="spouch" id="soPouch"></div></div>
     ${[5, 4, 3, 2, 1].map(g => `<h3 class="sub" style="color:${GRADES[g].color}">${GRADES[g].name} 넋</h3><div class="classes souls">${SOULS.filter(s => s.g === g).map(card).join('')}</div>`).join('')}`;
   wireSkillSeg();
-  panel.querySelectorAll('.souls .btn').forEach(bt => bt.addEventListener('click', () => {
+  panel.querySelectorAll('.souls [data-bond]').forEach(bt => bt.addEventListener('click', () => { bondUp(bt.dataset.bond); refreshPanel(); }));
+  panel.querySelectorAll('.souls [data-k]').forEach(bt => bt.addEventListener('click', () => {
     const k = bt.dataset.k, at = S.soul.eq.slice(0, soulSlots()).indexOf(k);
     if (at >= 0) S.soul.eq[at] = '';
     else { let sl = S.soul.eq.slice(0, soulSlots()).findIndex(x => !x); if (sl < 0) sl = soulSlots() - 1; equipSoul(k, sl); addLog(`넋 「${SL[k].name}」${josa(SL[k].name, '을', '를')} 주머니에 모셨어요.`, 'good'); }
@@ -8737,7 +8863,7 @@ function buildSoul(){
   }));
   let pouchSig = '';
   return () => {
-    setText($('#soN'), `${soulN()}/${SOULS.length}`); setText($('#soCol'), `+${fmt(soulCol())}%`); const pe = $('#soPity'); if (pe) setText(pe, `${S.soul.pity}/${SOUL_PITY}`);
+    setText($('#soN'), `${soulN()}/${SOULS.length}`); setText($('#soCol'), `+${fmt(soulCol())}%`); setText($('#soGrudge'), `원한 조각 ${fmt(S.grudge || 0)}`); const pe = $('#soPity'); if (pe) setText(pe, `${S.soul.pity}/${SOUL_PITY}`);
     const sig = S.soul.eq.join() + soulSlots();
     if (sig !== pouchSig){ pouchSig = sig;
       setHTML($('#soPouch'), [...Array(soulSlots()).keys()].map(i => { const k = S.soul.eq[i], s = k && SL[k]; return s ? `<div class="slot on" style="--g:${GRADES[s.g].color}"><img alt="" src="${soulImg(k)}"><div><b>${s.name}</b><br><span class="small">${soulValText(s)}</span></div></div>` : `<div class="slot"><span class="small">빈 칸 · 아래에서 [모시기]</span></div>`; }).join('')); }
@@ -8746,7 +8872,10 @@ function buildSoul(){
       c.querySelector('img').style.filter = own ? '' : 'brightness(0) opacity(.4)';
       setText(c.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(SOUL_STAR_MAX - st) : '');
       setText(c.querySelector('[data-r=val]'), soulValText(s, own ? soulK(s.k) : 1));
-      const bt = c.querySelector('.btn'); setText(bt, on ? '내리기' : own ? '모시기' : '아직 못 만남'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
+      const bt = c.querySelector('[data-k]'); setText(bt, on ? '내리기' : own ? '모시기' : '아직 못 만남'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
+      const bd = soulBond(s.k), bb = c.querySelector('[data-bond]'), full = bd >= BOND_MAX;
+      setText(c.querySelector('[data-r=bond]'), own ? `결 ${'●'.repeat(bd)}${'○'.repeat(BOND_MAX - bd)}` : '');
+      bb.hidden = !own || full; if (own && !full){ setText(bb, `결이야기 ${BOND_COST[bd]}`); bb.title = `원한 조각 ${BOND_COST[bd]}개로 결이야기 듣기`; bb.disabled = (S.grudge || 0) < BOND_COST[bd]; }
       c.classList.toggle('on', on);
     }
   };
@@ -9206,7 +9335,7 @@ function buildAvatar(){
       const a = AV[bt.dataset.k], own = !!S.av.own[a.k], on = S.av[a.type] === a.k, img = bt.querySelector('[data-r=img]');
       const src = avPreview(a); if (img._s !== src){ img._s = src; img.src = src; }
       img.style.filter = own ? '' : 'brightness(0) opacity(.35)';
-      setText(bt.querySelector('[data-r=st]'), on ? '입는 중' : own ? '누르면 입기' : (a.src === 'box' ? '꾸미기 상자' : a.src));
+      setText(bt.querySelector('[data-r=st]'), on ? '입는 중' : own ? '누르면 입기' : (a.src === 'box' ? (a.w ? `꾸미기 상자(${WORLD_NAME[a.w]}부터)` : '꾸미기 상자') : a.src));
       bt.setAttribute('aria-pressed', String(on));
     });
   };
@@ -9541,8 +9670,14 @@ function buildQuest(){
       <div class="meter"><i id="hqBar"></i></div>
       <div class="dl"><span id="hqProg"></span><b>히든 퀘스트</b></div>
       <button class="btn primary" id="hidClaim">보상 받기</button>
+    </div>
+    <div class="card forkq" id="forkCard" hidden>
+      <div class="ct"><span>갈림길</span><span class="tag">어느 길이든 이야기는 이어져요</span></div>
+      <p class="story" id="forkTxt"></p>
+      <button class="btn primary" id="forkGo">길 고르기</button>
     </div>`;
   wireSeg();
+  $('#forkGo').addEventListener('click', () => { const f = forkPending()[0]; if (f) forkAsk(f); });
   $('#mainClaim').addEventListener('click', () => { closePage(); claimMain(); });   // 사냥 화면으로 돌아가 연출을 본다
   $('#hidClaim').addEventListener('click', () => { if (claimHidden()) closePage(); });
   $('#replayBtn').addEventListener('click', openReplay);
@@ -9570,6 +9705,9 @@ function buildQuest(){
       $('#hqBar').style.width = Math.max(0, Math.min(100, hcur / hgoal * 100)).toFixed(1) + '%';
       const hb = $('#hidClaim'); hb.disabled = !hd; setText(hb, hd ? '보상 받기' : '진행 중'); hc.classList.toggle('ready', hd);
     }
+    const fk = forkPending()[0], fc = $('#forkCard');
+    fc.hidden = !fk;
+    if (fk) setText($('#forkTxt'), `${CHAPTERS[fk.ch] || ''} — 「${fk.at}」 뒤의 갈림길: ${fk.a[0].t} / ${fk.a[1].t}. 아직 고르지 않았어요.`);
   };
 }
 
@@ -11025,7 +11163,7 @@ function start(hotData){
   else window.addEventListener('resize', resize);
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -11085,7 +11223,7 @@ if (location.search.indexOf('simtest') >= 0){
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
-    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, openAvatarBox, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
+    startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };
 }
 

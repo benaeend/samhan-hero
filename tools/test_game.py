@@ -342,7 +342,7 @@ async def main():
         await page.click('#cutSkip')
 
         # 4) 레이드: 화면 캡처 후 끝까지 자동 진행
-        await page.evaluate("() => { window.__game.gateOff = true; }")   # 이 뒤 점검은 이야기를 건너뛰고 세계를 옮겨 다닌다(이야기·레벨 문은 6-8e에서 따로 본다)
+        await page.evaluate("() => { window.__game.gateOff = true; window.__game.noFork = true; }")   # 이 뒤 점검은 이야기를 건너뛰고 세계를 옮겨 다닌다(이야기·레벨 문은 6-8e에서 따로 본다)
         await page.click('#tab-raid')
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '8_레이드목록.png'))
@@ -425,7 +425,7 @@ async def main():
         await page.evaluate("() => window.dispatchEvent(new Event('pagehide'))")
         await page.goto(URL)
         await page.wait_for_function('() => window.__game.session', timeout=8000)
-        await page.evaluate("() => { window.__game.gateOff = true; }")
+        await page.evaluate("() => { window.__game.gateOff = true; window.__game.noFork = true; }")
         check(await page.evaluate('() => window.__game.S.name') == '홍길동', '다시 열면 같은 캐릭터로 이어진다')
         check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 결과가 저장된다')
         await page.click('#tab-rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
@@ -764,6 +764,23 @@ async def main():
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); return out; }""")
         check(pr['on'] and pr['done'] and pr['best'] > 0 and pr['left'] == [2, 1] and pr['stage'] and pr['kills'] and pr['gold'] and pr['dust'],
               f'백귀야행: 60초 동안 요괴를 잡고 잡은 수만큼 엽전·쇳가루, 단계·보스까지 처치 수는 그대로, 하루 2번 {pr}')
+        # 6-8h) 곤륜·부상 아바타(상자는 그 땅에 가야), 갈림길(고르면 별호·원한 조각), 원한 조각은 부상부터, 결이야기(넋 힘·모음 효과)
+        fk = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          S.world = 0; const pool0 = G.avBoxPool().length, g0 = G.gainGrudge(5, true);
+          G.setWorld(3); const pool3 = G.avBoxPool().length; S.av.own = {}; S.quest.main = G.MAIN_Q.length; G.mountCatchUp(); const avs = ['c_dorong', 'p_kunlun', 'q_peach', 'c_ose', 'p_magpie'].every(k => S.av.own[k]);
+          S.fork = {}; S.grudge = 0; S.title.own = {}; S.title.eq = ''; const pend = G.forkPending().map(f => f.k).join();
+          const ok = G.forkPick('snow', 1), again = G.forkPick('snow', 0); G.titleCheck();
+          const fork = {snow: S.fork.snow, tB: !!S.title.own.f_snowB, tA: !!S.title.own.f_snowA, grudge: S.grudge, left: G.forkPending().map(f => f.k).join()};
+          S.soul.own = {}; S.soul.star = {}; S.soul.bond = {}; G.giveSoul('ondal', true); const k0 = G.soulK('ondal'), c0 = G.soulCol();
+          S.grudge = 99; const b = [G.bondUp('ondal'), G.bondUp('ondal'), G.bondUp('ondal'), G.bondUp('ondal')];
+          const bond = {b, lv: G.soulBond('ondal'), left: S.grudge, k: +(G.soulK('ondal') / k0).toFixed(2), col: +(G.soulCol() / c0).toFixed(2), lines: G.SOULS.every(x => (G.SOUL_BOND[x.k] || []).length === 3)};
+          Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.setStage(S.stage); G.refreshStats();
+          return {pool0, pool3, g0, avs, pend, ok, again, fork, bond}; }""")
+        check(fk['pool3'] - fk['pool0'] == 3 and fk['avs'] and fk['g0'] == 0, f'곤륜·부상 아바타: 상자 아바타는 그 땅에 가야 나오고, 지난 이야기의 아바타는 들어올 때 받는다. 원한 조각은 부상부터 {fk}')
+        check(fk['pend'] == 'snow,tower' and fk['ok'] and not fk['again'] and fk['fork']['snow'] == 1 and fk['fork']['tB'] and not fk['fork']['tA'] and fk['fork']['grudge'] == 20 and fk['fork']['left'] == 'tower',
+              f'갈림길: 지나온 갈림길을 고르면 그 길의 별호와 원한 조각 20, 다시 고를 수 없다 {fk}')
+        check(fk['bond']['b'] == [True, True, False, False] and fk['bond']['lv'] == 2 and fk['bond']['left'] == 59 and fk['bond']['k'] == 1.3 and fk['bond']['col'] == 2.0 and fk['bond']['lines'],
+              f'결이야기: 원한 조각 10·30·60으로 마디마다 넋의 힘 +15%·모음 효과 +50% {fk}')
         # 6-9) 가방·장터: 약한 장신구는 가방으로, 끼면 바꿔 끼고 옛것은 가방으로, 안 쓰는 것 팔기, NPC 상인, 장터 마을 들어갔다 나오기
         bg = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; S.bag = []; S.acc.ring = {g:3, p:500};
           G.giveAccX('ring', 0); const inBag = S.bag.length === 1 && S.bag[0].k === 'ring';
@@ -829,10 +846,12 @@ async def main():
           B.stunT = 0; B.pat.tel = null; B.pat.stg = 5; G.hero.hp = G.ST.maxHp; B.pat.cd = 99; G.patStg(B, 10);
           const grog = B.pat.grogT > 0; for (let i = 0; i < 100; i++) G.update(0.05); const back = B.pat.grogT <= 0 && B.pat.stg === 100;
           // 큰 살: 못 끊으면 최대 체력의 절반 넘게 깎인다
+          const eqKeep = S.soul.eq.slice(); S.soul.eq = ['', '']; G.soulG = 0;   // 넋(강림도령 묶기)이 큰 살을 멈추지 않게
           B.pat.grogT = 0; B.pat.stg = 100; B.stunT = 0; B.gate = true; B.pat.wipes = [1.01]; B.pat.cd = 99; G.hero.hp = G.ST.maxHp; G.hero.shield = 0;
           for (let i = 0; i < 3; i++) G.update(0.05); const wiping = !!(B.pat.tel && B.pat.tel.kind === 'wipe'); B.pat.stg = 1e9;
           let low = 1; for (let i = 0; i < 140 && B.pat.tel; i++){ G.update(0.05); low = Math.min(low, G.hero.hp / G.ST.maxHp); G.hero.hp = Math.max(G.hero.hp, 1); }
           // 넋 부름: 기운이 차면 넋이 나타나 보스를 친다(자동)
+          S.soul.eq = eqKeep;
           B.pat.cd = 99; S.mode = 'auto'; G.soulG = 100; const hp0 = B.hp; let app = false; for (let i = 0; i < 30; i++){ G.update(0.05); if (G.soulApp.length) app = true; }
           const casted = app && G.soulG < 100 && (S.rec.souls || 0) > 0;
           Object.assign(G.HAND, H); Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
