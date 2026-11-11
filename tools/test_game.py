@@ -78,6 +78,12 @@ SIM = r"""
       }
       for (const gd of G.GUARDS) if (G.guardOpen(gd)) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k)) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지
       if (G.guardOpen(G.GUARDS[1]) && G.S.guard.on !== 'jowang') G.guardSet('jowang');
+      let elRes = 0;   // 오장 영약(2026-11 (46)): 달일 것이 남았으면 엽전을 모아 두었다가(능력치에는 모은 몫을 빼고 씀) 값이 되면 달이고 추천 처방을 고름
+      if (!opts.noelix && G.S.world >= 3) for (const O of G.ORGANS) {
+        if (G.S.world < O.w) continue; const st = G.elSt(O.k);
+        for (let z = 0; z < 10 && !G.elDone(st); z++) { if (G.elCost(st).gold > G.S.gold || !G.elBrew(O.k)) break; G.elPick(G.elBestCard()); }
+        if (!G.elDone(st) && !elRes) elRes = Math.min(G.S.gold * (opts.elsave ?? 0.6), G.elCost(st).gold); }
+      G.S.gold -= elRes;
       { const fb = G.formBest(); if (fb && G.S.form.eq !== fb) G.S.form.eq = fb; }   // 변신: 가장 센 것을 착용(보스·레이드에서 자동으로 한 번)
       for (const sl of ['weapon', 'armor']) G.ascend(sl);   // 신화·태초 각성(되면 바로)
       { const keepG = ['weapon', 'armor'].reduce((a, sl) => { const N = G.ascNeed(sl); return a + (!N.max && N.world ? N.A.grudge : 0); }, 0);   // 결이야기: 각성에 쓸 원한 조각은 남기고 낮은 마디부터
@@ -92,6 +98,7 @@ SIM = r"""
         else if (best) { if (!G.buyStat(best)) break; }
         else break;
       }
+      G.S.gold += elRes;
       while (G.S.gems >= 450 + 400) {   // 재련·조합에 쓸 보석은 남겨 둔다
         if (G.S.rec.psum * 2 < G.S.rec.summons) { if (G.S.gems < 900) break; G.petSummon(10); }
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
@@ -949,6 +956,29 @@ async def main():
           const mb = document.querySelector('#modal'); out.uinfo = !!mb && !mb.hidden && /이야기 진행/.test(mb.textContent) && /1,234점/.test(mb.textContent) && /12 [/] 300층/.test(mb.textContent);
           document.querySelector('#modal-btn-0') && document.querySelector('#modal-btn-0').click(); G.quiet = true;
           out.sumBad = JSON.stringify(G.sumProg({q:1e9, tw:-5, tt:'__proto__', world:99, job:'x'}));
+          // (44) 레이드 리셋권 · 신화 보물: 그 부에 가야 낌 · 신화 보물 제작
+          S.dummy.n = 3; S.parade.n = 2; S.gems += 1000; S.shop.got = {}; const okR = G.buyShop('rreset'); out.rreset = okR && S.dummy.n === 0 && S.parade.n === 0 && !G.buyShop('rreset');
+          const w0 = S.world; S.world = 1; const bagN = S.bag.length; const dm = G.dropMyth(50, 'kusa', true, true); out.mythLock = !!dm.locked && S.bag.length === bagN + 1 && !S.myth.kusa;
+          const bid = S.bag.length ? S.bag[S.bag.length - 1].id : -1; out.mythNoEquip = !G.bagEquip(bid) && !S.myth.kusa;
+          S.mat.m0 = 5000; S.mat.m1 = 5000; S.mythShard = 500; S.gems += 20000; const acc0 = G.mwMul('acc');
+          G.mwLuck = 0; const f1 = G.mwCraft('geumcheok'); G.mwLuck = 1; const s1 = G.mwCraft('geumcheok'); const a1 = G.mwMul('acc');
+          G.mwLuck = 0; const u0 = G.mwUp('geumcheok'); G.mwLuck = 1; const u1 = G.mwUp('geumcheok'); const a2 = G.mwMul('acc');
+          for (let i = 0; i < 6; i++) G.mwUp('geumcheok'); const a5 = G.mwMul('acc'); G.mwLuck = null;
+          out.mc = {fail: !!f1 && !f1.ok, ok: !!s1 && s1.ok && acc0 === 1 && a1 === 1.3, up: !!u0 && !u0.ok && !!u1 && u1.ok && a2 === 1.4,
+            cap: a5 === 1.8 && S.mw.geumcheok.lv === 5 && G.mwUp('geumcheok') === null, lockedOk: G.mwCraft('saingeom') === null, a:[acc0, a1, a2, a5]};
+          S.mw.geumcheok = {own:false, lv:0, cf:0, uf:0}; G.refreshStats(); S.world = w0;
+          // (46) 오장 영약: 부상에서 간·심·비만, 처방 고르기·횟수·다시 달이기·저장 다듬기
+          { const w1 = S.world, g1 = S.gold, m1 = S.mat.m2; S.world = 3; S.elix = {o:{}, offer:null, qi:0}; S.gold = 1e300; S.mat.m2 = 1e6; S.gems += 5000; S.grudge = (S.grudge || 0) + 100; G.refreshStats();
+            const a0 = G.ST.atk, lockPye = G.elBrew('pye') === null, of = G.elBrew('sim'), two = G.elBrew('gan') === null;
+            G.elSt('sim').l = [['atk', 0], ['boss', 0]]; S.elix.offer.c = [{k:'a'}, {k:'qi'}, {k:'big', i:1}];
+            const q = G.elPick(1); G.elBrew('sim'); S.elix.offer.c = [{k:'a'}, {k:'b'}, {k:'rest'}]; G.elPick(0);   // 기운 모으기 뒤 +2
+            const lvA = G.elSt('sim').l[0][1], tUsed = G.elSt('sim').t; G.refreshStats();
+            for (let i = 0; i < 20; i++){ if (!G.elBrew('sim')) break; G.elPick(G.elBestCard()); }
+            const done = G.elDone(G.elSt('sim')), atkUp = G.ST.atk > a0, rs = G.elReset('sim') && G.elSt('sim').t === 0 && G.elSt('sim').n === 1;
+            G.elBrew('gan'); const m = G.mergeState(JSON.parse(JSON.stringify(S))), keepOf = !!m.elix.offer && m.elix.offer.o === 'gan';
+            const bad = JSON.parse(JSON.stringify(S)); bad.elix.o.gan.l = [['__proto__', 99], ['atk', 7]]; bad.elix.offer = {o:'sin', c:[{k:'zz'}]}; const m2 = G.mergeState(bad);
+            out.elx = {lockPye, of:!!of && of.c.length === 3, two, q:q && q.k === 'qi', lvA, tUsed, done, atkUp, rs, keepOf, clean:JSON.stringify(m2.elix.o.gan.l) === '[["atk",5],["hp",5]]' && m2.elix.offer === null};
+            S.elix = {o:{}, offer:null, qi:0}; S.world = w1; S.gold = g1; S.mat.m2 = m1; G.refreshStats(); }
           // 본캐: 배럭 효과 없음
           const b0 = G.barrack(); G.setMainChar(true); out.main = G.isMainChar() && G.barrack().main && G.barrack().stat === 0; G.setMainChar(false); out.mainOff = !G.isMainChar(); out.brExp = b0.exp <= b0.gain;
           G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
@@ -962,6 +992,11 @@ async def main():
         check(nk['pvMove'] and nk['pvHurt'] >= 1 and nk['pvSc'] == 1 and nk['pvDraw'], f'결투 상대가 용사 크기로 걸어오고 공격한다 {nk}')
         check(nk['pity0'] == 1 and nk['pityN'] == 2 and abs(nk['pity2'] - 0.90) < 1e-9, f'보스 도전 기운: 두 번 지면 보스 체력 -10% {nk}')
         check(nk['icons'], f'기술 아이콘이 모두 있고(파티 버프 포함) 칸마다 색이 다르다 {nk}')
+        E = nk['elx']
+        check(E['lockPye'] and E['of'] and E['two'] and E['q'] and E['lvA'] == 2 and E['tUsed'] == 2 and E['done'] and E['atkUp'] and E['rs'] and E['keepOf'] and E['clean'],
+              f'오장 영약: 부상에선 폐가 잠김·처방 세 장·한 번에 한 장만·기운 모으기 뒤 +2·횟수를 다 쓰면 굳음·공격력↑·다시 달이기·처방 저장·나쁜 값 다듬기 {E}')
+        check(nk['rreset'] and nk['mythLock'] and nk['mythNoEquip'] and nk['mc']['fail'] and nk['mc']['ok'] and nk['mc']['up'] and nk['mc']['cap'] and nk['mc']['lockedOk'],
+              f'레이드 리셋권(하루 1번)·2부 신화 보물은 부상 전엔 가방에서 못 낌·신화 제작 장비(제작 실패·성공 1.3배·강화 1.4배·+5 1.8배 상한·땅 제한) {nk.get("rreset")} {nk.get("mythLock")} {nk.get("mythNoEquip")} {nk.get("mc")}')
         check(nk['uinfo'] and '"tt":""' in nk['sumBad'] and '"tw":0' in nk['sumBad'] and '"world":4' in nk['sumBad'], f'다른 용사 정보 창: 이야기·탑·결투 점수가 보이고 남이 보낸 값은 다듬는다 {nk.get("uinfo")} {nk.get("sumBad")}')
         check(nk['main'] and nk['mainOff'] and nk['brExp'], f'본캐는 배럭 효과를 받지 않음, 배럭 경험치는 엽전보다 적게 {nk}')
 
