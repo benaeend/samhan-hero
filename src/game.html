@@ -124,6 +124,8 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .sk.nomp{box-shadow:inset 0 -3px 0 #3a7bff}
 .mpv{color:#7ab8ff;font-weight:700}
 .pre-box{margin-top:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line-2)}
+.pre-pot{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-2);font-size:11.5px;color:var(--text);display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.pre-pot i{flex-basis:100%;font-style:normal;font-size:10.5px;color:var(--muted)}.pre-pot .pot-low{color:#ff8a7a;font-weight:800}
 .pre-h{font-size:12px;font-weight:800;color:var(--gold);margin:6px 0 4px;display:flex;align-items:center;gap:6px}
 .pre-h.dim{color:var(--text-soft)}
 .pre-row{display:flex;flex-wrap:wrap;gap:5px}
@@ -607,7 +609,7 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 .log{left:calc(8px + env(safe-area-inset-left));right:auto;bottom:10px;width:min(360px,44%);z-index:3}
 .ctrl{position:absolute;right:8px;bottom:8px;z-index:3;display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto;gap:6px;padding:0;background:none;border:0;align-items:end}
 .ctrl .skills{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:repeat(6,40px);gap:6px;justify-content:end}
-.ctrl .skills.many{grid-template-columns:repeat(6,36px);gap:5px}.ctrl .skills.many .sk{width:36px;height:36px}.ctrl .skills.many .sk svg{width:19px;height:19px}   /* 익힌 기술 전부(최대 11) — 두 줄 */
+.ctrl .skills.many{grid-template-columns:repeat(4,40px);gap:6px}   /* 7~8칸 — 네 개씩 두 줄(물의 신화) */
 /* 물약 칸(2026-11 (43), 사용자 요청): 기술 줄 바로 위, 개수가 보이고 누르면 바로 마심 */
 .ui-top{display:flex;gap:12px;align-items:center;margin-bottom:8px}
 .ui-top img{width:72px;height:68px;image-rendering:pixelated;border-radius:14px;background:radial-gradient(circle at 50% 40%,#2a3554,#10162a 75%);border:1px solid var(--line-2);flex:none}
@@ -1529,7 +1531,7 @@ const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'j
 // 자동으로 쓸 때의 순서(2026-11 (20), 사용자 요청): 피해를 키워 주는 기술 먼저 — 공격력 버프(3칸) → 약점(6칸) → 1차 전직(약점도 걺) → 2차 전직(공격력 버프도 줌) → 큰 기술.
 // 한 번에 하나씩, AUTO_GAP초 간격을 두고 써서 앞 기술의 효과를 받은 뒤 다음 기술이 들어간다(도인은 CLASSES.doin.order)
 const SK_AUTO_ORDER = [10, 2, 5, 6, 7, 8, 9, 3, 1, 4, 0], AUTO_GAP = 0.1;   // 파티 버프(10)가 맨 앞
-let autoGap = 0;
+let autoGap = 0, skReadyT = {};   // skReadyT[기술] = 재사용이 끝난 때(먼저 준비된 기술부터 쓰려고)
 const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 // 기술 아이콘 빛깔(2026-11 (43), 사용자 요청: 기술 아이콘 색이 다 똑같음): 칸마다 다른 색. skIc(i)는 아이콘 칸에 붙일 class·style
@@ -1543,39 +1545,60 @@ const skCap = i => Math.min(SKILLS[i].max, 10 + 5 * (S.job || 0), 4 + Math.floor
 const skLv = i => skOpen(i) ? Math.min(S.skills[SKILLS[i].key] || 0, skCap(i)) : 0;
 /* 전투 기술 칸(2026-11 (40), 사용자 요청: 실제 전투에서는 5~6개만): 익힌 기술 가운데 SK_SLOTS(6)개만 끼워 쓴다(S.skSet = 칸 번호).
    S.skSetMan이 거짓이면(기본) 새 기술을 익힐 때마다 직업·전직 단계별 순서 skPick(SK_PRE.mix)으로 저절로 골라 끼우고, [기술]에서 직접 바꾸면 그 뒤로는 내가 고른 대로 */
-const SK_SLOTS = 11;   // (2026-11 (43), 사용자 요청: 6개 → 익힌 기술 전부) 칸 수 = 기술 수. [빼기]로 고른 것(S.skOff)만 자동으로 안 씀
-const skPick = () => skPreList('mix');   // 평소 사냥 조합: 전직 단계마다 보스(0.65)·몹 떼(0.35) 피해로 가장 좋은 6칸(아래 SK_PRE.mix)
-function skSetFix(){   // 전투 칸 = 익힌 기술 전부(추천 순서) − [빼기]로 뺀 것(S.skOff). 예전 '직접 고른 뒤에도 빈 칸은 채움'이 뺀 기술을 곧바로 다시 끼우던 버그도 이걸로 없어짐
-  if (!Array.isArray(S.skOff)) S.skOff = [];
-  S.skSet = skPick().filter(i => skLv(i) > 0 && !S.skOff.includes(i)).slice(0, SK_SLOTS);   // 열렸어도 아직 안 배운(레벨 0) 칸은 빼고
+const SK_SLOTS = 8;   // (물의 신화, 확정) 싸움에 들고 가는 기술은 8개까지. (43)의 '익힌 기술 전부(11)'는 기술이 직업마다 15개가 되면 화면도 밸런스도 감당이 안 돼서. 초각성기·넋 부름·변신은 따로
+const skPick = () => skPreList('mix');   // 평소 사냥 조합: 전직 단계마다 보스(0.65)·몹 떼(0.35) 피해로 가장 좋은 8칸(아래 SK_PRE.mix)
+const skLearned = i => skLv(i) > 0;      // 열렸어도 아직 안 배운(레벨 0) 칸은 못 끼움
+/* 전투 칸 S.skSet(8칸): S.skSetMan이 거짓이면(기본 · [추천 조합으로]) 익힌 기술 가운데 추천 순서 skPick 앞에서 8개를 저절로.
+   [기술]에서 [빼기]·[넣기]를 하면 직접 고른 것(S.skSetMan)으로 — 그 뒤로는 내가 고른 대로 두고, 새로 익힌 기술만 빈 칸이 있을 때 한 번 저절로 끼운다(S.skKnown = 이미 본 기술).
+   예전 저장(S.skV ≠ 2: '익힌 기술 전부 − 뺀 것 S.skOff')은 skMigrate가 한 번 옮긴다: 8개를 넘으면 추천 8개로 정리하고 알림(S.skNote), 아니면 뺀 것을 뺀 그대로 */
+function skMigrate(){
+  const off = (Array.isArray(S.skOff) ? S.skOff : []).filter(skLearned), rest = skPick().filter(i => skLearned(i) && !off.includes(i));
+  if (rest.length > SK_SLOTS){ S.skSetMan = false; S.skNote = true; }
+  else if (off.length){ S.skSetMan = true; S.skSet = rest; }
+  else S.skSetMan = false;
+  S.skOff = []; S.skKnown = SKILLS.map((_, i) => i).filter(skLearned); S.skV = 2;
+}
+function skSetFix(){
+  if (S.skV !== 2) skMigrate();
+  if (!Array.isArray(S.skKnown)) S.skKnown = [];
+  if (S.skSetMan){
+    const set = (S.skSet || []).filter((i, k, a) => skLearned(i) && a.indexOf(i) === k).slice(0, SK_SLOTS);
+    for (const i of skPick()) if (skLearned(i) && !S.skKnown.includes(i) && !set.includes(i) && set.length < SK_SLOTS) set.push(i);   // 새로 익힌 기술: 빈 칸이 있으면
+    S.skSet = set;
+  } else S.skSet = skPick().filter(skLearned).slice(0, SK_SLOTS);
+  S.skKnown = SKILLS.map((_, i) => i).filter(skLearned);
 }
 /* 싸움별 추천 기술 조합(2026-11 (41), 사용자 요청: 레이드 시작 전에 직업별 가장 좋은 조합을 저절로 골라 보여 줌):
    boss = 혼자 보스(1일 보스·보물 동굴·허수아비·전직 시험) · party = 동료와 함께(레이드·타임 보스·강림 레이드, 파티 버프 넣음) · mob = 몹 떼(백귀야행) · mix = 평소 사냥(전투 칸 자동 고르기).
-   전직 단계마다(1차까지·2차·3차·4차) 저승·천계·곤륜 3차·4차 저장에서 6칸 조합을 모두 재서(bal skpick2·skdoin) 가장 좋은 것 + 나머지 순서. 익힌 것 가운데 앞에서 6개.
+   (물의 신화, 8칸) 전직 단계마다(1차까지·2차·3차·4차) 익힌 기술에서 8개를 고르는 모든 조합(2차 9가지·3차 45가지·4차 165가지)을
+   무사 저장(docs/patch-sea/sim: 부상에 막 건넌 때·곤륜에 막 들어선 때·3부 끝)에서 직업만 바꿔 bench(보스 30초·몹 떼 20초, 기술 레벨은 고르게)로 재서 가장 좋은 8개 + 나머지 순서
+   (tools/sim_skpre.py가 이 표를 찍어 준다. 윗자리 조합끼리는 차이가 3% 안쪽이라 돌릴 때마다 조금씩 바뀐다). 익힌 것 가운데 앞에서 8개.
+   1차까지는 익힌 기술이 8개 이하라 모두 낀다. party는 파티 버프(10)를 꼭 넣은 것 가운데 보스 최고, mix는 보스 0.65·몹 떼 0.35.
+   (도인은 보스용과 몹 떼용이 크게 갈린다: 4차 mix(=보스 최고)는 몹 떼에서 최고의 61%, 3차 mix(=몹 떼 최고)는 보스에서 80%)
    싸움 동안만 그 조합(skPreset), 끝나면 원래 칸으로 */
 const SK_PRE = {
-  musa:{boss:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,5,6,7,8,4,0,3,10,9], [2,5,6,7,8,9,1,0,4,3,10]],
-    party:[[10,0,1,2,6,4,3,5,7,8,9], [10,0,1,6,7,2,4,3,5,8,9], [10,2,6,7,8,1,5,4,0,3,9], [10,2,7,8,9,1,0,5,6,4,3]],
-    mob:[[0,1,2,3,5,6,10,4,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,5,6,7,8,3,1,4,10,9], [2,5,6,7,8,9,0,1,3,4,10]],
-    mix:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [1,2,5,6,7,8,0,3,4,10,9], [2,5,6,7,8,9,1,0,4,3,10]]},
-  jagaek:{boss:[[0,1,2,4,5,6,10,3,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,4,6,7,8,3,0,5,10,9], [2,4,5,7,8,9,1,3,0,6,10]],
-    party:[[10,1,2,4,6,0,3,5,7,8,9], [10,1,2,6,7,4,0,3,5,8,9], [10,2,6,7,8,1,4,0,3,5,9], [10,2,7,8,9,1,0,5,4,6,3]],
-    mob:[[0,1,2,3,6,10,4,5,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,5,6,7,8,3,10,1,4,9], [2,5,6,7,8,9,0,3,4,1,10]],
-    mix:[[0,1,2,3,4,6,10,5,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [2,3,4,6,7,8,1,0,10,5,9], [2,5,6,7,8,9,4,1,3,0,10]]},
-  sulsa:{boss:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,4,6,7,3,5,10,8,9], [1,2,5,6,7,8,0,3,4,10,9], [2,5,6,7,8,9,1,3,4,0,10]],
-    party:[[10,0,1,2,6,4,3,5,7,8,9], [10,1,2,6,7,0,4,3,5,8,9], [10,2,5,7,8,6,4,1,0,3,9], [10,2,8,9,7,1,4,5,0,6,3]],
-    mob:[[0,1,2,3,6,10,5,4,7,8,9], [0,2,3,6,7,10,1,4,5,8,9], [0,2,3,6,7,8,5,10,1,4,9], [0,2,5,6,7,9,8,3,10,1,4]],
-    mix:[[0,1,2,3,4,6,5,10,7,8,9], [0,1,2,3,6,7,4,5,10,8,9], [0,2,5,6,7,8,3,1,4,10,9], [2,5,6,7,8,9,0,1,3,4,10]]},
-  doin:{boss:[[1,2,3,4,5,10,6,0,7,8,9], [0,2,3,4,5,7,1,10,6,8,9], [1,2,3,5,7,8,4,6,0,10,9], [1,2,3,5,8,9,4,0,10,6,7]],
-    party:[[10,2,3,4,5,1,0,6,7,8,9], [10,1,3,5,7,0,2,4,6,8,9], [10,1,3,8,5,2,6,7,4,0,9], [10,3,5,8,9,1,2,0,4,6,7]],
-    mob:[[1,2,3,4,5,6,0,10,7,8,9], [0,1,2,3,4,7,5,6,10,8,9], [1,2,3,5,6,8,4,7,0,10,9], [1,2,3,6,8,9,4,0,5,10,7]],
-    mix:[[1,2,3,4,5,6,0,10,7,8,9], [1,2,3,4,5,6,7,0,10,8,9], [1,2,3,5,6,8,4,7,0,10,9], [1,2,3,6,8,9,5,4,0,10,7]]},
+  musa:{boss:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,4,5,6,7,8,10,3,0,9], [2,4,5,6,7,8,9,10,3,0,1]],
+    party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,1,2,4,5,6,7,8,3,0,9], [10,2,4,5,6,7,8,9,3,0,1]],
+    mob:[[0,1,2,3,4,5,6,10,7,8,9], [0,2,3,4,5,6,7,10,1,8,9], [0,2,3,5,6,7,8,10,4,1,9], [2,3,5,6,7,8,9,10,0,4,1]],
+    mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [2,3,4,5,6,7,8,10,0,1,9], [2,3,5,6,7,8,9,10,4,0,1]]},
+  jagaek:{boss:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,4,5,6,7,8,10,3,0,9], [2,4,5,6,7,8,9,10,0,1,3]],
+    party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,1,2,4,5,6,7,8,3,0,9], [10,2,4,5,6,7,8,9,0,1,3]],
+    mob:[[0,1,2,3,4,5,6,10,7,8,9], [0,2,3,4,5,6,7,10,1,8,9], [0,2,3,5,6,7,8,10,4,1,9], [2,3,5,6,7,8,9,10,0,4,1]],
+    mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [2,3,4,5,6,7,8,10,1,0,9], [2,4,5,6,7,8,9,10,0,3,1]]},
+  sulsa:{boss:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [2,3,4,5,6,7,8,10,1,0,9], [0,1,2,5,7,8,9,10,4,6,3]],
+    party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,2,3,4,5,6,7,8,1,0,9], [10,0,1,2,5,7,8,9,4,6,3]],
+    mob:[[0,1,2,3,4,5,6,10,7,8,9], [0,2,3,4,5,6,7,10,1,8,9], [0,2,3,5,6,7,8,10,4,1,9], [2,3,5,6,7,8,9,10,0,4,1]],
+    mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [2,3,4,5,6,7,8,10,0,1,9], [2,3,5,6,7,8,9,10,4,0,1]]},
+  doin:{boss:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [0,2,3,4,5,7,8,10,1,6,9], [1,2,3,4,5,7,8,9,10,0,6]],
+    party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,0,2,3,4,5,7,8,1,6,9], [10,1,2,3,5,7,8,9,4,0,6]],
+    mob:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,3,4,5,6,7,8,10,0,9], [1,2,3,4,6,7,8,9,5,10,0]],
+    mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,3,4,5,6,7,8,10,0,9], [1,2,3,4,5,7,8,9,6,10,0]]},
 };
 const FIGHT_KIND_NAME = {boss:'혼자 하는 보스', party:'함께하는 레이드', mob:'몹 떼'};
 let skPreset = null, presetNext;   // presetNext: 다음 싸움에 쓸 조합(undefined = 저절로 추천, null = 지금 칸 그대로)
 const skTier = () => Math.max(0, Math.min(3, (S.job || 0) - 1));   // 0: 1차까지 · 1: 2차 · 2: 3차 · 3: 4차
 const skPreList = k => ((SK_PRE[S.cls] || SK_PRE.musa)[k] || SK_PRE.musa.mix)[skTier()];
-const skPresetFor = k => skPreList(k).filter(i => skOpen(i) && !(S.skOff || []).includes(i)).slice(0, SK_SLOTS);   // [빼기]로 뺀 기술은 싸움 추천에도 안 넣음
+const skPresetFor = k => skPreList(k).filter(i => skOpen(i)).slice(0, SK_SLOTS);
 const fightKind = info => !info ? 'boss' : info.tower ? 'tower' : info.parade ? 'mob' : info.dummy || info.vault || info.dboss || info.job || info.pvp ? 'boss' : 'party';   // 천공의 탑은 저절로 바꾸지 않음
 const curSet = () => skPreset || S.skSet || [];
 const skIn = i => curSet().includes(i);
@@ -1586,15 +1609,23 @@ const skPreMine = kind => { const L = S.skPre && Array.isArray(S.skPre[kind]) ? 
 const skRaidSet = kind => skPreMine(kind) || skPresetFor(kind);
 function presetTake(kind){ skPreset = kind === 'tower' ? null : presetNext !== undefined ? presetNext : S.presetMode === 'off' ? null : skRaidSet(kind); presetNext = undefined; skBarKey = ''; lastCast = null; }
 function presetDrop(){ if (skPreset){ skPreset = null; skBarKey = ''; } }
+// 싸움 전 창의 물약 줄(물의 신화): 싸움이 시작되면 물약을 살 수 없으니 들고 가는 수를 보여 주고, 적으면 붉은 글씨 + [사러 가기]
+const POT_LOW = {potion:10, elixir:1, mana:10};
+const potLowAny = () => Object.keys(POT_LOW).some(k => (S.inv[k] || 0) < POT_LOW[k]);
+function potNoteHTML(){
+  const row = [['potion', '인삼 탕약'], ['elixir', '산삼 탕약'], ['mana', '감로수']].map(([k, n]) => { const v = S.inv[k] || 0; return `<span${v < POT_LOW[k] ? ' class="pot-low"' : ''}>${n} <b>${fmt(v)}</b></span>`; }).join(' · ');
+  return `<div class="pre-pot" id="prePotBox"><span>들고 가는 물약 — ${row}</span>${potLowAny() ? '<button type="button" class="chip" id="prePot">사러 가기</button>' : ''}<i>싸움이 시작되면 물약을 살 수 없어요(들고 간 것은 마실 수 있어요).</i></div>`;
+}
+function potShopGo(){ modalLock = false; hideModal(); shopCat = 'potion'; if (currentTab === 'shop') buildTab('shop', true); else { if (currentTab) closePage(); $('#tab-shop').click(); } }
 // 싸움 전 창: 이번 싸움의 6칸(누르면 끼우기·빼기) + 추천으로·사냥 칸 그대로
 let preSel = [];
 function presetHTML(kind){
   preSel = skRaidSet(kind).slice();
   return `<div class="pre-box" data-kind="${kind}"><div class="pre-h">${FIGHT_KIND_NAME[kind]} 조합<span class="tag" id="preCnt"></span></div>
-    <p class="small" style="margin:0 0 6px">익힌 기술을 눌러 이번 싸움에 쓸 기술을 골라요(모두 써도 돼요). 고른 조합은 이 싸움 종류에 기억해 두고 다음에도 저절로 골라요. 싸움이 끝나면 사냥 칸으로 돌아와요.</p>
+    <p class="small" style="margin:0 0 6px">익힌 기술을 눌러 이번 싸움에 쓸 기술을 골라요(${SK_SLOTS}개까지). 고른 조합은 이 싸움 종류에 기억해 두고 다음에도 저절로 골라요. 싸움이 끝나면 사냥 칸으로 돌아와요.</p>
     <div class="pre-row" id="preGrid"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button type="button" class="chip" id="preRec">추천 조합으로</button><button type="button" class="chip" id="preHunt">사냥 칸 그대로</button></div>
-    <label class="pre-chk"><input type="checkbox" id="preAuto" ${S.presetMode === 'auto' ? 'checked' : ''}> 다음부터 묻지 않고 이 조합으로 바로 시작</label></div>`;
+    <label class="pre-chk"><input type="checkbox" id="preAuto" ${S.presetMode === 'auto' ? 'checked' : ''}> 다음부터 묻지 않고 이 조합으로 바로 시작</label>${potNoteHTML()}</div>`;
 }
 function presetWire(kind){
   const draw = () => {
@@ -1609,6 +1640,7 @@ function presetWire(kind){
     if (b){ const i = +b.dataset.ps; if (preSel.includes(i)) preSel = preSel.filter(x => x !== i); else if (preSel.length < SK_SLOTS) preSel.push(i); sfx('click'); draw(); return; }
     if (e.target.closest('#preRec')){ preSel = skPresetFor(kind).slice(); sfx('click'); draw(); }
     if (e.target.closest('#preHunt')){ preSel = (S.skSet || []).slice(0, SK_SLOTS); sfx('click'); draw(); }
+    if (e.target.closest('#prePot')){ sfx('click'); potShopGo(); }
   };
 }
 function presetRead(kind){
@@ -1626,20 +1658,41 @@ function presetAsk(kind, title, go){
   showModal(`${title} · 기술 조합`, presetHTML(kind), [{label:'취소'}, {label:'시작', primary:true, fn:() => { presetRead(kind); go(); presetNext = undefined; }}], () => presetWire(kind));
   return false;
 }
-function skToggle(i){   // [기술]에서 끼우기·빼기
-  if (!skOpen(i)) return false;
-  if (!Array.isArray(S.skOff)) S.skOff = [];
-  if (S.skOff.includes(i)) S.skOff = S.skOff.filter(x => x !== i); else S.skOff.push(i);
-  skSetFix(); skBarKey = ''; return true;
+// [기술]에서 끼우기·빼기. 8칸이 찼는데 더 끼우려 하면 'full'을 돌려주고(화면이 무엇을 뺄지 물음), swap(대신 뺄 기술)을 주면 그 자리에 끼움
+function skToggle(i, swap){
+  if (!skLearned(i)) return false;
+  skSetFix();
+  const set = (S.skSet || []).slice();
+  if (set.includes(i)) set.splice(set.indexOf(i), 1);
+  else if (set.length < SK_SLOTS) set.push(i);
+  else if (swap != null && set.includes(swap)) set[set.indexOf(swap)] = i;
+  else return 'full';
+  S.skSet = set; S.skSetMan = true; skBarKey = ''; return true;
 }
-function skSetAuto(){ S.skOff = []; skSetFix(); skBarKey = ''; }
+function skSetAuto(){ S.skSetMan = false; skSetFix(); skBarKey = ''; }
+// 8칸이 찼을 때: 지금 낀 8개 가운데 무엇을 빼고 i를 넣을지 고르는 창
+function skSwapAsk(i, done){
+  const set = (S.skSet || []).slice(0, SK_SLOTS);
+  showModal('무엇을 뺄까요?', `<p>전투 기술은 <b>${SK_SLOTS}개</b>까지 낄 수 있어요. <b>${esc(skillName(i))}</b>${josa(skillName(i), '을', '를')} 넣으려면 뺄 기술 하나를 눌러 주세요.</p>
+    <div class="pre-row" id="swGrid">${set.map(j => `<button type="button" class="pre-sk pick on ${skIc(j)}" data-sw="${j}">${SVG[skDef(j).icon]}<i>${esc(skillName(j))}</i></button>`).join('')}</div>`,
+    [{label:'그만두기'}], () => { $('#swGrid').onclick = e => { const b = e.target.closest('[data-sw]'); if (!b) return; skToggle(i, +b.dataset.sw); sfx('click'); hideModal(); if (done) done(); }; });
+}
+// 예전 저장에서 8개를 넘게 쓰던 용사: 추천 8개로 정리했다고 한 번 알림(한가할 때. 자동 점검은 __game.noSkNote로 끔)
+function updateSkNote(){
+  if (!S.skNote || !session || cut || modalOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noSkNote !== false))) return;
+  S.skNote = false;
+  showModal('장착 기술이 8칸으로 바뀌었어요', `<p>이제 싸움에는 익힌 기술 가운데 <b>${SK_SLOTS}개</b>만 들고 가요(초각성기·넋 부름·변신은 따로예요). 지금까지 쓰던 기술이 ${SK_SLOTS}개를 넘어서 <b>추천 조합 ${SK_SLOTS}개</b>로 정리해 두었어요.</p>
+    <div class="pre-row">${(S.skSet || []).map(j => `<span class="pre-sk ${skIc(j)}">${SVG[skDef(j).icon]}<i>${esc(skillName(j))}</i></span>`).join('')}</div>
+    <p class="small" style="margin-top:8px">[기술]에서 <b>[빼기]·[넣기]</b>로 바꿀 수 있고, 레이드·보스 싸움 조합은 시작 전 창에서 따로 골라요.</p>`,
+    [{label:'확인'}, {label:'기술 보러 가기', primary:true, fn:() => { skillView = 'skill'; buildTab('skill'); }}]);
+}
 /* 연계(콤보, 2026-11 (40) → (41) 사용자 요청: 너무 셈, 확률로 저절로): 짝이 되는 두 기술을 COMBO_WIN초 안에 이어 쓰면(순서는 상관없음)
    COMBO_P 확률로 '연계!' — COMBO_T초 동안 기술 피해 +p%. 두 기술을 모두 전투 칸에 끼워야 하고, 자동·직접 어느 쪽이든 저절로 터진다 */
 const COMBO_WIN = 4, COMBO_T = 5, COMBO_P = 0.35;
 /* 마나(2026-11 (41), 사용자 요청: 기술 = 재사용 시간 + 마나): 최대 MP_MAX, 초당 MP_REGEN씩 찬다(싸움을 시작하면 가득).
    기술마다 마나 = 재사용 시간 × MP_K(반올림, 체력 회복 능력치·각인과 상관없음). 모자라면 그 기술은 기다리고 다음 기술로 넘어간다.
    그래서 재사용 줄임(도력 각인·탈것)이나 대굿(재사용 초기화)으로 기술을 몰아 쓰면 마나가 먼저 바닥난다 */
-const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.6;   // MP_K (44) 0.9 → 0.6: 익힌 기술을 모두 쓰게 하자 마나가 크게 모자라 사냥 범위 기술이 굶고 감로수에 엽전이 새서(시뮬 천계 레벨업 1.5배 느려짐). 전부 쓰면 초당 6.6쯤 들어 회복 5보다 조금 모자람   // (2026-11 (43), 사용자 요청: 저절로 너무 빨리 참) 7 → 5. 기술 여섯(+파티 버프)을 쉬지 않고 쓰면 초당 6 가까이 드니, 모자란 몫은 감로수(마나 물약)로(3.5로 했더니 시뮬 레벨업이 1.5배 느려짐)
+const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.75;   // (물의 신화) 8칸: 0.6 → 0.75 — 8개를 쉬지 않고 쓰면 초당 6쯤 들어 회복 5보다 조금 모자람(모자란 몫은 감로수, 없으면 아래 '먼저 준비된 기술부터' 순서로 조금씩 늦어짐)  //   // MP_K (44) 0.9 → 0.6: 익힌 기술을 모두 쓰게 하자 마나가 크게 모자라 사냥 범위 기술이 굶고 감로수에 엽전이 새서(시뮬 천계 레벨업 1.5배 느려짐). 전부 쓰면 초당 6.6쯤 들어 회복 5보다 조금 모자람   // (2026-11 (43), 사용자 요청: 저절로 너무 빨리 참) 7 → 5. 기술 여섯(+파티 버프)을 쉬지 않고 쓰면 초당 6 가까이 드니, 모자란 몫은 감로수(마나 물약)로(3.5로 했더니 시뮬 레벨업이 1.5배 느려짐)
 /* 물약(2026-11 (43), 사용자 요청: 자동 회복이 너무 빨라 물약을 안 먹음 → 엽전으로 물약을 사서 마시는 구조).
    체력 자동 회복은 REGEN_K배(예전의 절반), 마나는 초당 5. 인삼 탕약(체력 30% 아래면 40%)·산삼 탕약(위험하면 가득)·감로수(마나 30 아래면 +MANA_POT)를
    저절로 마시고, 기술 줄 위 물약 칸을 누르면 바로 마신다. 값은 크게 내림(인삼 10개 = 몹 40마리 엽전, 감로수 10개 = 30마리) */
@@ -2073,7 +2126,7 @@ const ACC = {
   pae:{name:'패옥', names:['나무 패옥', '청동 패옥', '백옥 패옥', '비취 패옥', '곤륜 옥 패옥'], stat:'경험치·엽전', base:[3, 5, 8, 12, 18], sc:300, icon:'pae', w:4},
 };
 const ACC_ORDER = ['ring', 'ear', 'brace', 'neck', 'pae'];
-const ACC_DROP = {mob:{ring:0.004, ear:0.0008, brace:0.0008, neck:0.0008, pae:0.0008}, gate:{ring:0.08, ear:0.015, brace:0.015, neck:0.04, pae:0.04}, raid:{neck:0.03, pae:0.03}};
+const ACC_DROP = {mob:{ring:0.004, ear:0.0008, brace:0.0008, neck:0.0008, pae:0.0008}, gate:{ring:0.06, ear:0.01, brace:0.01, neck:0.04, pae:0.04}, raid:{neck:0.03, pae:0.03}};
 const accOpen = k => !ACC[k].w || S.world >= ACC[k].w;
 const ACC_GRADE_P = [0.55, 0.28, 0.12, 0.04, 0.01], ACC_DUP_GEMS = 50;
 
@@ -2087,11 +2140,11 @@ const MATS = [
   {k:'m1', name:'망자의 넋', color:'#ff8a7a'},
   {k:'m2', name:'하늘 조각', color:'#9fe7ff'},
 ];
-const MAT_DROP = {boss:2, gate:6, raid:8, raidFirst:10, tb:15, mob:0.012};   // (48) 사용자 요청 '수급처가 너무 빡빡': 예전 1·3·4·6·8·0.5%
+const MAT_DROP = {boss:2, gate:4, raid:6, raidFirst:10, tb:10, mob:0.008};   // (48) 사용자 요청 '수급처가 너무 빡빡': 예전 1·3·4·6·8·0.5% → 2·6·8·15·1.2% → (물의 신화, 새 등급 전에 한 번 조임) 2·4·6·10·0.8%. 처음 한 번 받는 것(raidFirst)은 그대로
 // (48) 새 수급처: 허수아비 등급별·백귀야행 n마리마다·1일 보스(참가/승리)·강림·보물 동굴·오늘의 할 일 모두·급보·탑 층마다
 const MAT_SRC = {dummy:[0, 2, 4, 6, 9, 12], paradePer:8, dbJoin:5, dbWin:10, gr:12, vault:6, dall:10, evt:3, tower:1, shop:10};
 // 신화 조각 수급처: 레이드(확률)·첫 토벌·타임 보스·수문장·1일 보스·강림·오늘의 할 일 모두·보물 동굴(짐)
-const SHARD_SRC = {raidP:0.5, raidFirst:3, tb:2, tbHell:4, gate:1, dboss:2, gr:3, dall:2, vaultLose:2};   // 상점에서는 팔지 않는다(사용자 요청: 사서 모으면 너무 쉬워짐)
+const SHARD_SRC = {raidP:0.3, raidFirst:3, tb:2, tbHell:4, gate:1, dboss:2, gr:3, dall:2, vaultLose:2};   // 상점에서는 팔지 않는다(사용자 요청: 사서 모으면 너무 쉬워짐)
 const gainShard = n => { n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); if (n > 0) S.mythShard = (S.mythShard || 0) + n; return n; };
 const CRAFT_T = [   // w 세계, need 열리는 단계(그 세계 최고 단계), mat 재료 수, gear [장비 등급, 개수], gems 노리개 보석
   {w:0, need:21, mat:20,  gear:[1, 2], gems:150},
@@ -2695,7 +2748,7 @@ const WEEKLY = [
   {key:'dall', name:'오늘의 할 일 모두 끝내기 5일', goal:5, gems:600, ex:'piece'},
 ];
 const WEEK_OF = {kill:'kill', boss:'boss', raid:'raid', tb:'tb', parade:'parade', gsummon:'summon', psummon:'summon', refine:'refine', enh:'refine', dall:'dall'};
-const WEEK_K = [1, 1.5, 2, 3, 4], WEEK_ALL = 3000, WEEK_SHARD = 50, WEEK_PIECE = 15;
+const WEEK_K = [1, 1.5, 2, 3, 4], WEEK_ALL = 3000, WEEK_SHARD = 40, WEEK_PIECE = 15;
 /* ================= 상점 =================
    흔한 RPG 상점 구성(자동 물약·버프 부적·강화 보조 재료·입장권·하루 선물·재화 꾸러미)을 참고해 이름과 수치는 새로 지었다. */
 const BUFFS = {
@@ -2750,7 +2803,7 @@ const MYTHS = [
 // 신화 보물을 낄 수 있는 땅(2026-11 (44), 사용자 요청: 어디서든 나와도 그 부에 들어가야 착용 — 레벨 제한처럼). 2부 보물은 부상, 3부 보물은 곤륜부터
 const mythOk = m => S.world >= (m.w || 0);
 const mythReqText = m => (m.w || 0) >= 3 ? `${WORLD_NAME[m.w]}(${m.w - 1}부)` : WORLD_NAME[m.w || 0];
-const RAID_MYTH_P = 0.02;
+const RAID_MYTH_P = 0.012;   // (물의 신화) 2% → 1.2%
 const MT_BY = Object.fromEntries(MYTHS.map(m => [m.k, m]));   // 레이드를 이기면 이 확률로 아무 신화 보물(이야기·제작 것 빼고 모두 가운데, 아직 못 끼는 것도)
 const mythPower = (m, D) => m.pow || Math.round((10 + D) * m.mul);
 /* 신화 제작 장비(2026-11 (45), 사용자 요청: 로스트아크의 '만들고 → 강화하는' 무기 같은 느낌 — 극악으로 어렵게, 효율은 일반 장비의 1.3~1.5배, 강화해도 최대 1.8배, 강화 상한 5강, 강화마다 오라가 달라짐).
@@ -2834,9 +2887,17 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-6', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-13-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '물의 신화 업데이트 · 밸런스와 장착 기술 8칸'],
+  ['장착 기술 8칸', '싸움에는 익힌 기술 가운데 8개만 들고 가요(초각성기·넋 부름·변신은 따로). 처음에는 추천 조합으로 저절로 골라 주고, [기술]에서 [빼기]·[넣기]로 바꿀 수 있어요. 8칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 물어요. 8개를 넘게 쓰던 용사는 추천 조합 8개로 정리해 두었어요. 싸움별 추천 조합(혼자 보스·함께하는 레이드·몹 떼)도 8칸에 맞춰 다시 쟀어요.'],
+  ['마나', '기술 마나가 조금 늘었어요(8개를 쉬지 않고 쓰면 조금 모자라는 정도). 대신 마나가 모자랄 때는 먼저 준비된 기술부터 차례로 써서, 큰 범위 기술이 마나에 밀려 못 나가는 일이 없어요.'],
+  ['싸움 중 물약 구매 금지', '레이드·타임 보스·강림·1일 보스·보물 동굴·천공의 탑·전직 시험·허수아비·백귀야행이 시작되면 물약(상점의 물약 칸·오늘의 선물·꾸미기 상자·장터의 탕약)을 살 수 없어요. 들고 간 물약은 그대로 마실 수 있고, 시작 전 창에서 들고 가는 수를 알려 줘요(적으면 [사러 가기]). 일반 사냥·단계 보스 중에는 살 수 있어요.'],
+  ['초각성 줄임', '초각성기 피해: 내 보스 피해 8초 몫 → 5초 몫(4차 전직 뒤 12초 → 8초 몫). 동료의 초각성도 5초 몫.'],
+  ['드롭·레이드 보상 줄임', '세계 재료(수문장 6 → 4, 레이드 8 → 6, 타임 보스 15 → 10, 몬스터 1.2% → 0.8%), 신화 조각(레이드 50% → 30%, 보물 동굴 조금 줄임, 주간 상자 50 → 40), 레이드 신화 보물 2% → 1.2%, 수문장 장신구(반지 8% → 6%, 귀걸이·팔찌 1.5% → 1%), 넋 구슬 확정 40번째 → 50번째, 장터 상인 귀한 물건 2% → 1.5%. 레이드류 보석 1.5배 → 1.2배, 타임 보스 150·300 → 100·200, 강림 250 → 180, 보물 동굴 120 → 90. 첫 토벌·이야기 보상과 이미 가진 것은 그대로예요.'],
+  ['보스 자동 다시 도전', '같은 단계 보스에게 여러 번 져서 도전 기운이 다 찬 뒤(8번)에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 못 이길 보스에 시간을 쓰는 대신 그동안 사냥해서 더 빨리 커요. [보스] 단추를 누르면 언제든 바로 도전할 수 있어요.'],
+  ['고침', '4차 전직을 마친 용사가 다시 접속하면 3차로 돌아가던 문제를 고쳤어요(4차 기술을 익힌 기록이 있으면 4차로 되돌려요). 부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 예전 것(무기 +20 재련)으로 되돌아가던 문제도 고쳤어요(되돌아갔던 용사는 건너기 퀘스트까지 되찾아요).'],
   ['#', '2026-11-11 · 채팅 확성기'],
   ['채팅 확성기', '용사가 채팅으로 한 말(내 말·다른 용사의 말)이 확성기 공지처럼 게임 화면 위 가운데에 띠로 잠깐 떠요. 채팅창을 닫고 사냥·레이드를 하거나 메뉴를 보고 있어도 보여요. 여럿이 말하면 차례로, 긴 글은 옆으로 흘러요. 주민(마을) 수다와 알림은 채팅창에만 나와요. [정보] → 채팅 확성기에서 끌 수 있어요.'],
   ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
@@ -3082,7 +3143,7 @@ function defaultState(){
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}, neck:{g:-1, p:0}, pae:{g:-1, p:0}},
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
-    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], avPity:0, petPity:0, petMythPity:0, useProtect:false,
+    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0},
   };
@@ -3099,7 +3160,9 @@ function mergeState(d){
   out.craft = base.craft;
   for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0), el:Math.max(0, Math.min(ENGR_LV_MAX, c.el | 0))}; }
   out.skManual = d.skManual && typeof d.skManual === 'object' ? d.skManual : {};
-  out.skSet = Array.isArray(d.skSet) ? d.skSet.filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : []; out.skSetMan = false; out.skOff = Array.isArray(d.skOff) ? d.skOff.filter((i, k, a) => Number.isInteger(i) && i >= 0 && i < SKILLS.length && a.indexOf(i) === k) : [];   // (43) 예전 6칸 직접 고름은 버리고 전부 쓰기로 out.presetMode = ['ask', 'auto', 'off'].includes(d.presetMode) ? d.presetMode : 'ask'; out.isMain = !!d.isMain;
+  { const skl = v => Array.isArray(v) ? v.filter((i, k, a) => Number.isInteger(i) && i >= 0 && i < SKILLS.length && a.indexOf(i) === k) : [];
+    out.skV = d.skV === 2 ? 2 : 0;   // 2 = 8칸 방식(물의 신화). 예전 저장(익힌 기술 전부 − skOff)은 들어올 때 skMigrate가 옮긴다
+    out.skSet = skl(d.skSet).slice(0, SK_SLOTS); out.skSetMan = out.skV === 2 && !!d.skSetMan; out.skOff = out.skV === 2 ? [] : skl(d.skOff); out.skKnown = out.skV === 2 ? skl(d.skKnown) : []; out.skNote = out.skV === 2 && !!d.skNote; }
   out.skPre = {}; if (d.skPre && typeof d.skPre === 'object') for (const k of ['boss', 'party', 'mob']) if (Array.isArray(d.skPre[k])) out.skPre[k] = d.skPre[k].filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS);
   out.equip = Object.assign(base.equip, d.equip || {});
   // 새로 생긴 칸: 예전 저장에는 없으므로 기본값을 채운다
@@ -3119,7 +3182,12 @@ function mergeState(d){
   const q = d.quest;
   out.quest = Object.assign(base.quest, q || {});
   if (!q) out.quest.tut = -1;                 // 예전부터 하던 사람은 튜토리얼을 건너뛴다
-  out.quest.sv = q && (q.sv === 2 || q.sv === 3) ? q.sv : 1;      // 3이 아니면 enterChar에서 새 이야기로 옮긴다
+  // 이야기 판 번호: 2~5는 그대로(5 = 지금 판, migrateStory가 건드리지 않음), 그 밖(아주 예전 저장)은 1 → enterChar에서 새 이야기로 옮긴다.
+  // (물의 신화 버그 고침) 예전에는 여기서 2·3만 받아 지금 판(5) 저장도 들어올 때마다 1로 바뀌었고, migrateStory가 이야기를 처음부터 다시 훑어
+  // '지금은 조건이 안 맞는' 옛 퀘스트에서 멈췄다 — 부상에 건너가 재련이 계승(+15)되면 「붉은 새의 깃털」(무기 +20)으로 이야기가 되돌아감.
+  // 그렇게 되돌아간 저장은 세계로 되찾는다: 부상에 있으면 적어도 건너기 퀘스트(CROSS_Q), 곤륜이면 CROSS_Q4까지는 한 것
+  out.quest.sv = q && [2, 3, 4, 5].includes(q.sv) ? q.sv : 1;
+  if (out.quest.sv === 5){ const m0 = Math.max(0, Math.floor(+out.quest.main) || 0), w = +d.world || 0, need = w >= 4 ? CROSS_Q4 : w >= 3 ? CROSS_Q : 0; out.quest.main = Math.max(m0, need); }
   out.quest.hid = Math.max(0, Math.floor(+out.quest.hid) || 0); out.quest.hidBase = Math.max(0, +out.quest.hidBase || 0);
   if (!out.quest.dp || typeof out.quest.dp !== 'object') out.quest.dp = {};
   { const w = d.week && typeof d.week === 'object' ? d.week : {}, wp = {};   // 주간 퀘스트
@@ -3156,7 +3224,8 @@ function mergeState(d){
     s3:Math.max(0, Math.floor(+bd.s3) || 0, out.world === 3 ? out.maxStage : 0), l3:Math.max(0, Math.floor(+bd.l3) || 0, out.world === 3 ? out.level : 0),
     s4:Math.max(0, Math.floor(+bd.s4) || 0, out.world === 4 ? out.maxStage : 0), l4:Math.max(0, Math.floor(+bd.l4) || 0, out.world === 4 ? out.level : 0)};
   out.best.l0 = Math.min(LV_CAP[0], out.best.l0); out.best.l1 = Math.min(LV_CAP[1], out.best.l1);
-  out.job = Math.min(3, Math.max(0, Math.floor(+d.job) || 0));
+  out.job = Math.min(JOB_MAX, Math.max(0, Math.floor(+d.job) || 0));
+  if (out.job === 3 && d.skills && d.skills.jobD > 0) out.job = 4;   // (물의 신화) 버그 고침: 예전에는 여기서 3까지만 받아 4차 전직자가 다시 들어오면 3차로 내려갔다. 4차 기술(jobD)을 익힌 기록이 있으면 4차로 되돌린다
   const av = d.av && typeof d.av === 'object' ? d.av : {};
   out.av = {own:{}, char:'', cape:'', pet:'', wing:''};
   for (const a of AVATARS) if (av.own && av.own[a.k]) out.av.own[a.k] = true;
@@ -3831,9 +3900,17 @@ function claimDailyAll(){
 function questAnyReady(){ dailyCheck(); weekCheck(); return mainReady() || DAILY.some(dailyReady) || dailyAllReady() || WEEKLY.some(weekReady) || weekAllReady(); }
 /* --- 상점 --- */
 function shopCheck(){ const d = today(); if (S.shop.day !== d){ S.shop.day = d; S.shop.got = {}; } }
+/* 싸움 중 물약 구매 금지(물의 신화, 확정): 레이드·타임 보스·강림·1일 보스·보물 동굴·천공의 탑·전직 시험·허수아비·결투·백귀야행이 시작되면
+   물약이 나오는 것(상점의 물약 칸·오늘의 선물·꾸미기 상자(위로품이 탕약)·장터와 상인의 탕약)을 살 수 없다. 전멸기를 물약을 사 가며 끝없이 버티지 못하게.
+   들고 간 물약을 마시는 것, 일반 사냥·단계 보스 중에 사는 것은 그대로 */
+const potLock = () => !!((raid && !raid.ending) || parade);
+const POT_LOCK_MSG = '싸움이 끝난 뒤에 살 수 있어요';
+const shopGivesPot = it => it.cat === 'potion' || it.id === 'gift' || it.id === 'avbox';
+const itemIsPot = it => !!it && it.t === 'stack' && (it.k === 'potion' || it.k === 'elixir' || it.k === 'mana');
 function shopState(it){
   shopCheck();
   const price = it.price(), got = S.shop.got[it.id] || 0;
+  if (potLock() && shopGivesPot(it)) return {price, ok:false, why:'싸움 뒤에', lock:true};
   if (it.daily && got >= it.daily) return {price, ok:false, why:it.cur === 'free' ? '내일 다시' : '오늘 다 샀어요'};
   if (it.inv && S.inv[it.inv] + it.n > it.max) return {price, ok:false, why:'가방이 가득'};
   if (it.buff && S.buff[it.buff] + BUFF_ADD > BUFF_MAX) return {price, ok:false, why:'60분 가득'};
@@ -4054,7 +4131,7 @@ const bossHpK = s => BOSS_K.hp[S.world] * (S.world === 2 ? Math.max(HEAVEN_EASE.
 // 익힌 기술을 전부 쓰게 하며(2026-11 (43), 사용자 요청: 6칸 → 전부) 단계 보스 체력을 '적당히' 올림: 익힌 기술이 6개를 넘으면 하나마다 +SK_BOSS_PER.
 // 잰 값(bench, 감로수 넉넉히): 전부 쓰면 6칸보다 보스 피해 1.0~1.5배(대개 1.1~1.3) — 그 절반쯤만 올려 손해 없이 조금 빨라지게. 레이드 칸 콘텐츠·레이드는 그대로
 const SK_BOSS_PER = 0.03;
-const skBossK = () => 1 + SK_BOSS_PER * Math.max(0, SKILLS.reduce((n, _, i) => n + (skOpen(i) ? 1 : 0), 0) - 6);
+const skBossK = () => 1 + SK_BOSS_PER * Math.min(SK_SLOTS - 6, Math.max(0, SKILLS.reduce((n, _, i) => n + (skOpen(i) ? 1 : 0), 0) - 6));   // (물의 신화) 8칸이라 최대 +6%에서 멈춤(예전엔 11개 +15%)
 const mobScale = m => m.sc || (m.boss ? (S.world >= 1 && !m.raid ? 2.2 : 1.8) : 1);   // 2026-11 (42) 사용자 요청: 보스가 너무 큼(예전 2.6·2)
 function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return spH(sp) * sc + (FLOAT[m.type] || 0) * sc; }
 
@@ -4205,7 +4282,7 @@ function bossFail(reason){
   if (window.__game && window.__game.onBoss) window.__game.onBoss('fail');
   bossPityAdd();
   const pity = Math.round((1 - bossPityMul()) * 100);
-  addLog((S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`) + ` · 도전 기운: 다음엔 보스 체력 -${pity}%`, 'warn');
+  addLog((S.bossAuto ? `보스 도전 실패 (${reason}). ${waitText(bossRetryT())} 수련한 뒤 다시 도전해요${bossRetryT() > BOSS_RETRY ? '(바로 하려면 [보스] 단추)' : ''}.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`) + ` · 도전 기운: 다음엔 보스 체력 -${pity}%`, 'warn');
   // 세 번째 실패부터: 이 단계 몬스터가 가정하는 조합 공방 단계보다 낮으면 알려 줌(몬스터 체력에 craftComp가 곱해져 있어 비전 장비가 없으면 몇 단계 뒤처짐)
   if (bossPityN() === 3){ const need = S.world > 2 ? CRAFT_MAX : craftExpT(S.world, S.stage), have = Math.min(S.craft.w.t, S.craft.a.t, S.craft.n.t);
     if (have < need) addLog(`이 사냥터 몬스터는 조합 공방 비전 장비 ${need}단계를 갖췄다고 보고 세져요. 지금 가장 낮은 칸이 ${have}단계 — [장비] → [조합 공방]에서 올리면 훨씬 쉬워요.`, 'gain'); }
@@ -4349,6 +4426,7 @@ function startFight(info, party, o){
   mobs = []; projs = [];
   Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, mp:MP_MAX, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0});
   presetTake(fightKind(info));   // 싸움별 추천 기술 조합(끝나면 presetDrop)
+  if (!info.pvp && potLowAny() && !(window.__game && window.__game.quiet)) addLog(`물약이 얼마 없어요(인삼 ${S.inv.potion || 0} · 산삼 ${S.inv.elixir || 0} · 감로수 ${S.inv.mana || 0}). 싸움이 시작되면 살 수 없으니 다음엔 미리 챙겨요.`, 'warn');
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
@@ -4374,7 +4452,7 @@ function startFight(info, party, o){
   if (currentTab === 'raid') buildTab('raid', true);
 }
 /* 초각성기: 레이드(타임 보스 포함)마다 한 번. 12초가 지나거나 보스 체력이 60% 아래로 내려가면 저절로 쓴다 */
-const AWAKEN_PCT = 15000, AWAKEN_SEC = 8, AWAKEN_SEC4 = 12;   // AWAKEN_PCT는 예전 값(설명용), 지금은 실제 보스 피해 몇 초 몫
+const AWAKEN_PCT = 15000, AWAKEN_SEC = 5, AWAKEN_SEC4 = 8;   // AWAKEN_PCT는 예전 값(설명용), 지금은 실제 보스 피해 몇 초 몫. (물의 신화) 8·12초 → 5·8초 몫(넋 부름·변신과 겹쳐 한 판에 큰 한 방이 너무 많음). 동료 초각성도 5초 몫
 function castAwaken(){
   const R = raid, B = R.boss, C = cls();
   R.awk.used = true; R.awk.show = 1.8;
@@ -4559,7 +4637,7 @@ function finishTimeBoss(R){
   }
   if (!S.tb) S.tb = {};
   S.tb[info.diff] = info.w;
-  const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold'), tbGem = raidGemBase(info.diff === 'hell' ? 300 : 150);
+  const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold'), tbGem = raidGemBase(info.diff === 'hell' ? TB_GEMS.hell : TB_GEMS.normal);
   S.gold += gold; S.gems += tbGem; S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true); ev('tb');
   gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true); { const n = gainShard(info.diff === 'hell' ? SHARD_SRC.tbHell : SHARD_SRC.tb); if (n) addLog(`신화 조각 +${n}`, 'gain'); }
   const luck = window.__game && window.__game.tbLuck || 1, drops = [], slot = new Date(info.w || now()).getHours() / 3 | 0, SR = TB_REW[slot] || TB_REW[0], spec = [];
@@ -5027,7 +5105,8 @@ function raidReward(info){
 /* 허수아비 수련(솔로 레이드): 하루 3번, 30초 동안 허수아비에게 넣은 피해로 1~5등급 보상(엽전·보석·재료·장신구) */
 /* 레이드 보석(2026-11 (44), 사용자 요청: 레이드 리셋권(보석 800)을 파니 레이드에서 보석을 더): 레이드·허수아비·백귀야행·1일 보스 보석 ×RAID_GEM_K,
    타임 보스·강림·보물 동굴은 이기면 보석 raidGemBase × 세계 배율(WEEK_K)을 새로 줌 */
-const RAID_GEM_K = 1.5, RRESET_GEMS = 800;
+const RAID_GEM_K = 1.2, RRESET_GEMS = 800;   // RAID_GEM_K (물의 신화) 1.5 → 1.2
+const TB_GEMS = {normal:100, hell:200}, GR_GEMS = 180, VAULT_GEMS = 90;   // (물의 신화) 타임 보스 150·300 → 100·200, 강림 250 → 180, 보물 동굴 120 → 90
 // 레이드 리셋권(2026-11 (44), 사용자 요청: 하루 1번, 보석 800): 레이드 칸 콘텐츠의 오늘 횟수와 토벌패
 function raidReset(){
   dummyLeft(); paradeLeft(); vaultLeft(); dbCheck(); grCheck();
@@ -5277,7 +5356,7 @@ function finishGangrim(R){
   }
   if (!cross) S.gr.won = true;
   recWin(true, true); S.rec.gr = (S.rec.gr || 0) + 1; ev('raid');
-  const gold = mGold(Math.max(1, S.maxStage)) * 200 * gainMul('gold'), grGem = raidGemBase(250); S.gold += gold; S.gems += grGem;
+  const gold = mGold(Math.max(1, S.maxStage)) * 200 * gainMul('gold'), grGem = raidGemBase(GR_GEMS); S.gold += gold; S.gems += grGem;
   const grMat = gainMat(MAT_SRC.gr, true), grShard = gainShard(SHARD_SRC.gr);
   const av = grAvatar(); refreshStats(); saveLocal(); sfx('win');
   if (av) announce(`${S.name}님의 파티가 강림 레이드에서 ${av.ex ? '강림 아바타' : '아바타'} 「${av.a.name}」${josa(av.a.name, '을', '를')} 얻었어요!`);
@@ -5377,19 +5456,20 @@ function towerAsk(){
     <div class="pre-box"><div class="pre-h">${f}층 ${f % 10 === 0 ? '문지기 ' : ''}${esc(B.name)}<span class="tag">${WORLD_NAME[w] || ''} ${st}단계만큼 · ${TOWER.time}초</span></div>
       <div class="pre-h dim">지금 끼운 기술 (사냥 칸)</div><div class="pre-row" id="twCur">${(S.skSet || []).map(i => `<span class="pre-sk ${skIc(i)}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i></span>`).join('') || '<span class="small">없음</span>'}</div>
       <div class="pre-h dim">저장한 조합 불러오기</div><div class="pre-row">${[0, 1, 2].map(k => { const v = skSaveGet(k); return `<button type="button" class="chip" data-tw-ld="${k}" ${v ? '' : 'disabled'}>조합 ${k + 1}${v ? ` (${v.length}칸)` : ' 비어 있음'}</button>`; }).join('')}<button type="button" class="chip" data-tw-sv="1">지금 조합 저장 →</button></div>
-      <p class="small" style="margin:6px 0 0">이기면 보상: ${towerRewardText(f).join(' · ')}</p></div>`;
+      <p class="small" style="margin:6px 0 0">이기면 보상: ${towerRewardText(f).join(' · ')}</p>${potNoteHTML()}</div>`;
   showModal(`천공의 탑 ${f}층 · 정비`, html(), [{label:'기술 정비하러', fn:() => { skillView = 'skill'; buildTab('skill'); }}, {label:'도전', primary:true, fn:() => { presetNext = null; if (startTower()) closePage(); presetNext = undefined; }}],
     () => { $('#mBody').onclick = e => {
       const ld = e.target.closest('[data-tw-ld]'), sv = e.target.closest('[data-tw-sv]');
       if (ld){ skSaveLoad(+ld.dataset.twLd); sfx('click'); setHTML($('#mBody'), html()); }
       if (sv){ const k = [0, 1, 2].find(x => !skSaveGet(x)); skSavePut(k == null ? 0 : k); sfx('click'); setHTML($('#mBody'), html()); }
+      if (e.target.closest('#prePot')){ sfx('click'); potShopGo(); }
     }; });
   return true;
 }
 // 기술 조합 저장 칸(사용자 요청: 프리셋은 저장 가능하게) — 사냥 칸(S.skSet)을 3칸까지 저장·불러오기
 const skSaveGet = k => { const v = S.skSaves && S.skSaves[k]; return Array.isArray(v) && v.length ? v.filter(i => skOpen(i)).slice(0, SK_SLOTS) : null; };
 function skSavePut(k){ if (!S.skSaves) S.skSaves = [null, null, null]; S.skSaves[k] = (S.skSet || []).slice(0, SK_SLOTS); }
-function skSaveLoad(k){ const v = skSaveGet(k); if (!v) return false; S.skOff = SKILLS.map((_, i) => i).filter(i => skOpen(i) && !v.includes(i)); skSetFix(); skBarKey = ''; return true; }
+function skSaveLoad(k){ const v = skSaveGet(k); if (!v) return false; skSetFix(); S.skSet = v.filter(skLearned).slice(0, SK_SLOTS); S.skSetMan = true; skSetFix(); skBarKey = ''; return true; }
 
 /* ===== 태초의 신(2026-11 (42), 최종 레이드 보스): 천공의 탑 300층을 오르면 열린다 =====
    나 + 다른 용사 3명(강림 레이드처럼 저절로 모임, 같은 직업 2명까지). 180초, 곤륜 끝보다 단단하고 전멸기를 세 번(체력 75·50·25%),
@@ -5623,7 +5703,7 @@ function finishPvp(R){
 
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
-const vaultShards = () => 5 + 2 * Math.min(4, S.world);   // (48) 3+세계 → 5+2×세계
+const vaultShards = () => 4 + Math.min(4, S.world);   // (48) 3+세계 → 5+2×세계 → (물의 신화) 4+세계
 function startVault(){
   if (raid || vaultLeft() <= 0 || (!session && !window.__game)) return false;
   S.vault.n++;
@@ -5635,7 +5715,7 @@ function startVault(){
 }
 function finishVault(R){
   const win = R.win, shard = win ? vaultShards() : SHARD_SRC.vaultLose;
-  const vGem = win ? raidGemBase(120) : 0;
+  const vGem = win ? raidGemBase(VAULT_GEMS) : 0;
   if (win){ recWin(true, true); gainGrudge(GRUDGE.vault, true); S.gems += vGem; gainMat(MAT_SRC.vault, true); }
   S.mythShard += shard;
   const m = win && Math.random() < VAULT_MYTH_P * (window.__game && window.__game.vaultLuck || 1) ? dropMyth(vaultD(), null, true, true) : null;
@@ -6046,7 +6126,7 @@ function update(dt){
     bossTime -= dt;
     if (bossTime <= 0) bossFail('시간 초과');
   } else if (!hero.dead){
-    if (S.kills >= FIELD.kills && !S.autoBoss && S.bossAuto){ bossRetry += dt; if (bossRetry >= BOSS_RETRY){ S.autoBoss = true; bossRetry = 0; } }   // 보스 자동: 실패해도 잠시 수련한 뒤 다시
+    if (S.kills >= FIELD.kills && !S.autoBoss && S.bossAuto){ bossRetry += dt; if (bossRetry >= bossRetryT()){ S.autoBoss = true; bossRetry = 0; } }   // 보스 자동: 실패해도 잠시 수련한 뒤 다시
     if (S.kills >= FIELD.kills && S.autoBoss){ const bg = bossGate(); if (bg.ok) startBoss(); else { S.autoBoss = false; bossRetry = 0; gateNote(bg); } }
     else {
       spawnT -= dt;
@@ -6061,7 +6141,7 @@ function update(dt){
   }
 
   updatePat(dt); updateSoul(dt); updateEvt(dt); updateForm(dt);
-  { const k = [S.cls, S.level, S.job, S.reb.n, S.world, (S.skOff || []).join(','), (S.skSet || []).length].join(':'); if (k !== skFixKey){ skFixKey = k; skSetFix(); } }   // 새 기술을 익히면 전투 칸을 다시 고름
+  { const k = [S.cls, S.level, S.job, S.reb.n, S.world, S.skSetMan ? 1 : 0, (S.skSet || []).join(','), SKILLS.map((_, i) => skLearned(i) ? 1 : 0).join('')].join(':'); if (k !== skFixKey){ skFixKey = k; skSetFix(); } }   // 새 기술을 익히면 전투 칸을 다시 고름
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
@@ -6173,11 +6253,25 @@ function update(dt){
   if (!hero.dead){
     if (autoGap > 0) autoGap -= dt;
     if (hero.comboT > 0) hero.comboT -= dt;
+    const rdy = [];
     for (const i of cls().order || SK_AUTO_ORDER){
       const key = SKILLS[i].key, lv = skLv(i);
-      if (!lv || !skIn(i)) continue;   // 전투 칸(6칸)에 낀 기술만
-      skillCd[key] = Math.max(0, (skillCd[key] || 0) - dt);
-      if (autoGap <= 0 && skillCd[key] <= 0 && skAuto(i) && tryCast(i, lv)){ skillCd[key] = skCdOf(i); autoGap = AUTO_GAP; }
+      if (!lv || !skIn(i)) continue;   // 전투 칸(8칸)에 낀 기술만
+      const was = skillCd[key] || 0;
+      skillCd[key] = Math.max(0, was - dt);
+      if (skillCd[key] <= 0){ if (was > 0 || skReadyT[key] == null) skReadyT[key] = gtime; if (skAuto(i)) rdy.push(i); }
+    }
+    // (물의 신화) 마나가 모자라 기다리는 기술이 있으면, 그보다 늦게 준비된 기술은 새치기하지 않는다(마나가 넉넉하면 예전처럼 위 순서대로).
+    // 예전에는 마나가 모자랄 때 재사용이 짧은 싼 기술이 마나를 계속 채 가서 큰 기술(범위 기술)이 영영 못 나가 사냥이 몇 배 느려졌다
+    if (autoGap <= 0 && rdy.length){
+      const mp = hero.mp ?? MP_MAX;
+      let block = Infinity;
+      for (const i of rdy) if (mp < skMp(i)) block = Math.min(block, skReadyT[SKILLS[i].key]);
+      for (const i of rdy){
+        const key = SKILLS[i].key;
+        if (mp < skMp(i) || skReadyT[key] > block) continue;
+        if (tryCast(i, skLv(i))){ skillCd[key] = skCdOf(i); skReadyT[key] = null; autoGap = AUTO_GAP; break; }
+      }
     }
   }
 }
@@ -6796,6 +6890,7 @@ const JOBS = {
     {name:'천무', weapon:'오색 천선', cape:'오색 날개옷', capeC:'#ff8ad0', teacher:'여와', ch:43}],
 };
 const JOB_BONUS = [{atk:0, hp:0, skill:0}, {atk:30, hp:30, skill:20}, {atk:80, hp:80, skill:50}, {atk:150, hp:150, skill:90}, {atk:250, hp:250, skill:140}];
+const JOB_MAX = 4;   // 지금 있는 가장 높은 전직(저장을 불러올 때 이 값까지 받는다 — 새 전직을 더하면 꼭 같이 올린다)
 const JOB3_LV = 350, JOB4_LV = 480;   // 4차: 460 → 480(2026-11 (27), 곤륜은 레벨이 4차를 막게 해 직업 차이를 줄임)
 // 3차 전직: 부상에서 Lv.350 + 내 직업 스승이 나오는 장을 마치면
 const chapterDone = ch => { let last = -1; MAIN_Q.forEach((q, i) => { if (q.ch === ch) last = i; }); return last >= 0 && S.quest.main > last; };
@@ -7854,7 +7949,7 @@ const SOULS = [
 const SL = Object.fromEntries(SOULS.map(s => [s.k, s]));
 const SOUL_KIND = {nuke:'한 적에게 큰 피해', aoe:'모든 적에게 피해', quake:'모든 적에게 피해 + 보스를 2초 묶음', mark:'모든 적이 받는 피해 +%', bind:'보스를 3초 묶고 받는 피해 +%',
   heal:'체력 회복 + 보호막', cdr:'모든 기술 재사용 줄임', crit:'10초 동안 치명타 확률·피해 +', grace:'12초 동안 공격력 +% · 체력 회복 · 보호막'};
-const SOUL_FULL = 100, SOUL_RATE = 4, SOUL_STAR_MAX = 5, SOUL_PITY = 40, SOUL_DUP_GEMS = 600;
+const SOUL_FULL = 100, SOUL_RATE = 4, SOUL_STAR_MAX = 5, SOUL_PITY = 50, SOUL_DUP_GEMS = 600;
 const SOUL_P = {raid:0.04, tb:0.08, vault:0.05}, SOUL_GW = [0, 40, 30, 18, 9, 3], SOUL_COL = [0, 0.5, 1, 1.5, 2, 3];
 const soulOpen = () => S.world >= 3;
 const soulSlots = () => S.job >= 4 ? 2 : 1;
@@ -8144,7 +8239,7 @@ function mkGive(o){
   return true;
 }
 const mkOn = () => !!online && !!session && session.acc === online.acc;
-const MK_ERR = {gone:'이미 팔렸거나 내려간 물건이에요.', mk_full:`한 번에 ${MK_MAX}개까지만 올릴 수 있어요.`, bad_item:'올릴 수 없는 물건이에요(치장·조각·소모품은 서버 준비가 끝나면 올릴 수 있어요).', bad_price:`값은 보석 1 ~ ${fmt(MK_PRICE_MAX)}이에요.`, own:'내 물건은 살 수 없어요.',
+const MK_ERR = {fight:`싸우는 중에는 물약을 살 수 없어요. ${POT_LOCK_MSG}.`, gone:'이미 팔렸거나 내려간 물건이에요.', mk_full:`한 번에 ${MK_MAX}개까지만 올릴 수 있어요.`, bad_item:'올릴 수 없는 물건이에요(치장·조각·소모품은 서버 준비가 끝나면 올릴 수 있어요).', bad_price:`값은 보석 1 ~ ${fmt(MK_PRICE_MAX)}이에요.`, own:'내 물건은 살 수 없어요.',
   gems:'보석이 모자라요.', bag:'가방이 가득 찼어요. 가방을 정리해 주세요.', no_fn:'장터 서버를 준비하는 중이에요. 그동안 [상인]에서 NPC 상인과 거래할 수 있어요.', net:'서버에 닿지 않아요. 잠시 뒤에 다시 해 봐요.', bad_token:'서버 로그인이 끊겼어요. 다시 로그인해 주세요.', off:'온라인 서버에 로그인하면 다른 용사와 거래할 수 있어요.'};
 const mkErrText = c => MK_ERR[c] || MK_ERR.net;
 function mkSaveNow(){ saveLocal(); pushOnline(); }
@@ -8164,6 +8259,7 @@ async function mkList(kind){
 async function mkBuy(row){
   if (!mkOn()) return {err:'off'};
   if (row.mine) return {err:'own'};
+  if (potLock() && itemIsPot(row.it)) return {err:'fight'};
   if (S.gems < row.price) return {err:'gems'};
   if ((row.it.t === 'acc' || row.it.t === 'myth') && S.bag.length >= BAG_MAX) return {err:'bag'};
   S.gems -= row.price;
@@ -8189,7 +8285,7 @@ async function mkClaim(){
 // 귀한 물건(2026-11 (39), 사용자 요청): 바뀔 때마다 아주 낮은 확률 NPC_RARE_P로 엔드템 하나를 보석 NPC_RARE_GEMS에 판다
 // (치장이 열렸으면 전설 치장(옵션 최고에 가깝게) 60%·전설 장신구 40%, 아니면 전설 장신구). 같은 때·세계·캐릭터면 늘 같은 목록(다시 들어와도 안 바뀜)
 const strHash = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
-const NPC_RARE_P = 0.02, NPC_RARE_GEMS = 2000, NPC_SK_SHARE = 0.6;
+const NPC_RARE_P = 0.015, NPC_RARE_GEMS = 2000, NPC_SK_SHARE = 0.6;
 function npcSlot(){ const d = new Date(now()); return today() + (d.getHours() < 12 ? 'a' : 'b'); }
 function npcLeft(){ const d = new Date(now()); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() < 12 ? 12 : 24).getTime() - now(); }
 function npcRare(){
@@ -8231,6 +8327,7 @@ function npcBuy(i){
   if (S.mkNpc.day !== npcSlot()) S.mkNpc = {day:npcSlot(), got:[]};
   const o = npcOffers()[i];
   if (!o || S.mkNpc.got.includes(i)) return {err:'gone'};
+  if (potLock() && itemIsPot(o.it)) return {err:'fight'};
   if (S.gems < o.price) return {err:'gems'};
   if ((o.it.t === 'acc' || o.it.t === 'myth') && S.bag.length >= BAG_MAX) return {err:'bag'};
   S.gems -= o.price; S.mkNpc.got.push(i); mkGive(o.it); saveLocal();
@@ -11023,6 +11120,12 @@ elBossMode.addEventListener('click', () => {
 elSpeed.addEventListener('click', () => { S.speed = S.speed === 2 ? 1 : 2; applySpeedBtn(); applyModeBtns(); });
 let bossRetry = 0;   // 보스 자동일 때 실패 뒤 다시 도전까지 기다린 시간
 const BOSS_RETRY = 45;
+/* 보스 자동 다시 도전 간격(물의 신화): 도전 기운(실패마다 보스 체력 -5%, 8번이면 -40%로 다 참)이 다 찬 뒤에도 지면 그 뒤로는 45초 → 90초 → 3분 → 6분 → 10분으로 벌린다.
+   예전에는 99번을 져도 45초마다 다시 도전해서(보스전 30초 + 몹이 새로 나오는 시간) 사냥 시간의 절반 넘게를 못 이길 보스에 썼고, 마나까지 떨어지면 몹을 거의 못 잡아
+   천계 끝에서 레벨이 멈췄다(진행 시뮬 420시간에 천계 Lv.214). [보스 도전] 단추를 누르면 언제든 바로 도전할 수 있다 */
+const BOSS_RETRY_MAX = 600;
+const bossRetryT = () => { const n = bossPityN() - Math.round(BOSS_PITY.max / BOSS_PITY.per); return n <= 0 ? BOSS_RETRY : Math.min(BOSS_RETRY_MAX, BOSS_RETRY * Math.pow(2, n)); };
+const waitText = sec => sec >= 90 ? `${Math.floor(sec / 60)}분${sec % 60 >= 1 ? ' ' + Math.floor(sec % 60) + '초' : ''}` : `${Math.max(1, Math.ceil(sec))}초`;
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
 function updateHud(){
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
@@ -11038,7 +11141,7 @@ function updateHud(){
   elXp.style.width = (xr * 100).toFixed(1) + '%'; setText(elXpN, atCap ? `만렙 · 모음 ${(S.expBank || 0).toFixed(1)}` : (xr * 100).toFixed(1) + '%');
   const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid && bossGate().ok;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
-  if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '보스 도전!');
+  if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '보스 도전!');
   if (skBarKey !== S.cls + ':' + skBarList().join(',')) buildSkillbar();
   updateActBtns();
   skBarList().forEach(i => {
@@ -11169,7 +11272,7 @@ function updateBigBoss(){
   else if (parade){ cls = 'fight'; txt = '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / PARADE_TIME); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
-  else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
+  else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '눌러서 시작'; p = 1; }
   if (!session && !window.__game) cls = 'off';
   const vis = $('#page').hidden ? '' : 'hidden'; if (elBig.style.visibility !== vis) elBig.style.visibility = vis;   // 메뉴 화면이 열려 있으면 숨김
   if (elBig.className !== 'bigboss ' + cls) elBig.className = 'bigboss ' + cls;
@@ -11490,7 +11593,7 @@ function buildSkill(){
     <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).
       칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).</p>
     <div class="card" style="margin-top:10px"><div class="ct">사냥(스테이지) 기술 칸<span class="tag" id="skSetN"></span></div>
-      <p class="small" style="margin:0 0 8px">익힌 기술은 <b>모두</b> 자동으로 써요(새 기술을 익히면 바로 들어가요). 쓰기 싫은 기술은 <b>[빼기]</b>, 다시 쓰려면 <b>[넣기]</b>. <b>레이드·보스 싸움 조합은 따로</b> — 아래 「레이드별 조합」과 싸움 시작 전 창에서 골라요. 기술 최대 레벨은 <b>전직할 때마다 +5</b>(처음 10 · 1차 15 · 2차 20 · 3차 25 · 4차 30)이고, 레벨이 낮을 때는 레벨에 따라서도 막혀요.</p>
+      <p class="small" style="margin:0 0 8px">싸움에는 익힌 기술 가운데 <b>${SK_SLOTS}개</b>만 들고 가요(초각성기·넋 부름·변신은 따로). 처음에는 <b>추천 조합</b>으로 저절로 골라 주고, <b>[빼기]·[넣기]</b>로 직접 바꿀 수 있어요. ${SK_SLOTS}칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 물어요. <b>레이드·보스 싸움 조합은 따로</b> — 아래 「레이드별 조합」과 싸움 시작 전 창에서 골라요. 기술 최대 레벨은 <b>전직할 때마다 +5</b>(처음 10 · 1차 15 · 2차 20 · 3차 25 · 4차 30)이고, 레벨이 낮을 때는 레벨에 따라서도 막혀요.</p>
       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" id="skAutoPick"></button></div></div>
     <ul class="list">${SKILLS.map((sk, i) => `
       <li class="row" id="sk-${sk.key}"><div class="ic ${skIc(i)}">${SVG[skDef(i).icon]}</div>
@@ -11513,7 +11616,7 @@ function buildSkill(){
   $('#skAutoPick').addEventListener('click', () => { skSetAuto(); sfx('click'); refreshPanel(); });
   panel.querySelectorAll('[data-pm]').forEach(b => b.addEventListener('click', () => { S.presetMode = b.dataset.pm; sfx('click'); refreshPanel(); }));
   $('#preList').addEventListener('click', e => { const b = e.target.closest('[data-prerst]'); if (b && S.skPre){ delete S.skPre[b.dataset.prerst]; sfx('click'); refreshPanel(); } });
-  panel.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.eq; if (!skToggle(i)) addLog('아직 익히지 않은 기술이에요.'); else sfx('click'); refreshPanel(); }));
+  panel.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.eq, r = skToggle(i); if (!r) addLog('아직 익히지 않은 기술이에요.'); else if (r === 'full') skSwapAsk(i, refreshPanel); else sfx('click'); refreshPanel(); }));
   const refs = SKILLS.map((sk, i) => {
     const row = $('#sk-' + sk.key);
     const r = {sk, i, lv:row.querySelector('[data-r=lv]'), desc:row.querySelector('[data-r=desc]'), nx:row.querySelector('[data-r=nx]'), btn:$('#skbuy-' + sk.key)};
@@ -11523,13 +11626,13 @@ function buildSkill(){
   });
   return () => {
     skSetFix();
-    { const open = SKILLS.filter((_, i) => skOpen(i)).length; setText($('#skSetN'), `${(S.skSet || []).length}/${open} 사용 · 뺀 기술 ${(S.skOff || []).filter(i => skOpen(i)).length}개`); }
-    setText($('#skAutoPick'), (S.skOff || []).length ? '뺀 기술 모두 다시 넣기' : '지금: 익힌 기술 모두 사용');
+    { const learned = SKILLS.filter((_, i) => skLearned(i)).length; setText($('#skSetN'), `${SK_SLOTS}칸 중 ${(S.skSet || []).length}칸 · 익힌 기술 ${learned}개${S.skSetMan ? ' · 직접 고름' : ' · 추천 조합'}`); }
+    setText($('#skAutoPick'), S.skSetMan ? '추천 조합으로 되돌리기' : '지금: 추천 조합(저절로 고름)');
     setHTML($('#skCombos'), COMBOS.map(c => { const on = (S.skSet || []).includes(c.a) && (S.skSet || []).includes(c.b); return `<li style="${on ? '' : 'opacity:.55'}"><b>${c.name}</b> · ${esc(skillName(c.a))} ↔ ${esc(skillName(c.b))} · 기술 피해 +${c.p}%${on ? '' : ' (두 기술을 끼워야 해요)'}</li>`; }).join(''));
     const pmN = {ask:'싸움 전에 묻기', auto:'늘 추천 조합', off:'쓰지 않음'}; setText($('#preMode'), pmN[S.presetMode || 'ask']);
     for (const b of panel.querySelectorAll('[data-pm]')) b.classList.toggle('on', (S.presetMode || 'ask') === b.dataset.pm);
     setHTML($('#preList'), ['party', 'boss', 'mob'].map(k => `<div class="pre-h">${FIGHT_KIND_NAME[k]}<span class="tag">${skPreMine(k) ? '내 조합' : '추천'}</span>${skPreMine(k) ? `<button type="button" class="chip" data-prerst="${k}">추천으로</button>` : ''}</div><div class="pre-row">${skRaidSet(k).map(i => `<span class="pre-sk ${skIc(i)}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i></span>`).join('') || '<span class="small">익힌 기술이 없어요</span>'}</div>`).join(''));
-    for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = (S.skSet || []).includes(i), open = skOpen(i); setText(b, on ? '빼기' : '넣기'); b.disabled = !open; b.classList.toggle('primary', on); }
+    for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = (S.skSet || []).includes(i), open = skLearned(i); setText(b, on ? '빼기' : '넣기'); b.disabled = !open; b.classList.toggle('primary', on); }
     for (const r of refs){
       const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초 · <span class="mpv">마나 ${skMp(r.i)}</span>${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
       const cap = skCap(r.i);
@@ -11960,7 +12063,7 @@ const BAG_STACK = [
   {k:'m0', n:'요괴 정수', icon:'crystal', c:'#7fdc6a', get:() => S.mat.m0 || 0, use:'이승 재료. [장비] → [조합](비전 무기·갑옷·노리개 만들기·각인 강화)에 써요. 저승에 가면 대장장이가 망자의 넋으로 <b>계승</b>해 줘요.', get2:'이승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m1', n:'망자의 넋', icon:'crystal', c:'#ff8a7a', get:() => S.mat.m1 || 0, use:'저승 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비(금척)에 써요. 천계에 가면 하늘 조각으로 <b>계승</b>돼요.', get2:'저승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m2', n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계·부상·곤륜 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷) · [수련] → [영약]에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 천공의 탑 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
-  {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(절반 확률, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
+  {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
   {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
@@ -12024,9 +12127,9 @@ function buildMarket(){
     }
   } else {
     const offers = npcOffers(), lm = Math.ceil(npcLeft() / 60000), row = (o, i) => mkRowHTML(o.it, S.mkNpc.got.includes(i) ? '<span class="tag">팔림</span>' : `<button class="btn sm primary" data-npc="${i}"><span class="gem"></span>${fmt(o.price)}</button>`);
-    body = `<p class="hint" style="margin-top:10px">떠돌이 상인 <b>보부상 덕보</b>가 <b>12시간마다</b>(0시·12시) 물건을 바꿔요. 물건마다 하나씩만 팔고, 서버 없이도 거래할 수 있어요. 바뀔 때마다 <b>${Math.round(NPC_RARE_P * 100)}%</b> 확률로 <b>귀한 물건</b>(전설 치장·전설 장신구) 하나를 보석 ${fmt(NPC_RARE_GEMS)}에 가져와요. 가방의 물건은 [가방]에서 상인에게 팔 수 있어요.</p>
+    body = `<p class="hint" style="margin-top:10px">떠돌이 상인 <b>보부상 덕보</b>가 <b>12시간마다</b>(0시·12시) 물건을 바꿔요. 물건마다 하나씩만 팔고, 서버 없이도 거래할 수 있어요. 바뀔 때마다 <b>${+(NPC_RARE_P * 100).toFixed(1)}%</b> 확률로 <b>귀한 물건</b>(전설 치장·전설 장신구) 하나를 보석 ${fmt(NPC_RARE_GEMS)}에 가져와요. 가방의 물건은 [가방]에서 상인에게 팔 수 있어요.</p>
       <p class="small" style="margin:4px 0 8px">다음에 바뀔 때까지 <b>${Math.floor(lm / 60)}시간 ${lm % 60}분</b></p>
-      ${offers[5] ? `<div class="card mkrare"><div class="ct">귀한 물건<span class="tag">${Math.round(NPC_RARE_P * 100)}% 확률</span></div>${row(offers[5], 5)}</div>` : ''}
+      ${offers[5] ? `<div class="card mkrare"><div class="ct">귀한 물건<span class="tag">${+(NPC_RARE_P * 100).toFixed(1)}% 확률</span></div>${row(offers[5], 5)}</div>` : ''}
       <div class="mklist">${offers.slice(0, 5).map(row).join('')}</div>`;
   }
   panel.innerHTML = `<div class="ph"><h2>장터</h2><span class="small">${on ? '온라인 · 다른 용사와 거래' : '혼자 · NPC 상인만'}</span></div>${seg}${mkMsg ? `<p class="small mkmsg">${esc(mkMsg)}</p>` : ''}${body}`;
@@ -12144,7 +12247,8 @@ function buildShop(){
   const items = SHOP.filter(it => it.cat === shopCat);
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
-    <p class="hint">물약은 위험할 때 저절로 마셔요. 부적은 싸우는 동안에만 시간이 줄어요. <b style="color:var(--gold)">10+1</b> 묶음은 10개 값에 11개를 줘요.</p>
+    <p class="hint">물약은 위험할 때 저절로 마셔요. 부적은 싸우는 동안에만 시간이 줄어요. <b style="color:var(--gold)">10+1</b> 묶음은 10개 값에 11개를 줘요. 레이드·타임 보스·천공의 탑 같은 <b>싸움이 시작되면 물약은 살 수 없어요</b>(들고 간 물약은 마실 수 있어요). 미리 챙겨 가세요!</p>
+    <p class="small" id="shopLock" hidden style="margin:0 0 8px;color:#ff8a7a;font-weight:700">지금은 싸우는 중이라 물약을 살 수 없어요. ${POT_LOCK_MSG}.</p>
     <div class="shop-cats mode" role="group" aria-label="상점 분류">${SHOP_CATS.map(([k, n]) => `<button class="chip" data-c="${k}" aria-pressed="${k === shopCat}">${n}</button>`).join('')}</div>
     <ul class="list">${items.map(it => {
       const t = shopItemText(it), bc = it.buff ? BUFFS[it.buff].color : '';
@@ -12165,7 +12269,8 @@ function buildShop(){
     return {it, btn, on:row.querySelector('[data-r=on]'), p:btn.querySelector('[data-r=p]')};
   });
   return () => {
-    setHTML($('#bag'), `가방: 인삼 <b>${S.inv.potion}</b> · 산삼 <b>${S.inv.elixir}</b> · 숫돌 <b>${S.inv.whet}</b> · 토벌패 <b>${raidTickets()}</b>`);
+    setHTML($('#bag'), `가방: 인삼 <b>${S.inv.potion}</b> · 산삼 <b>${S.inv.elixir}</b> · 감로수 <b>${S.inv.mana || 0}</b> · 숫돌 <b>${S.inv.whet}</b> · 토벌패 <b>${raidTickets()}</b>`);
+    { const sl = $('#shopLock'); if (sl) sl.hidden = !(potLock() && items.some(shopGivesPot)); }
     for (const r of refs){
       const st = shopState(r.it), it = r.it;
       let on = '';
@@ -13443,7 +13548,7 @@ function chooseClass(canCancel){
 function setClass(c){
   const changed = S.cls !== c || !S.chosen;
   S.cls = c; S.chosen = true;
-  if (changed){ S.skSet = []; S.skOff = []; skSetFix(); skBarKey = ''; }
+  if (changed){ S.skSet = []; S.skOff = []; S.skSetMan = false; S.skKnown = []; skSetFix(); skBarKey = ''; }
   refreshStats(); hero.hp = ST.maxHp; hero.target = null;
   buildTab(currentTab, true);
   if (changed) addLog(`${CLASSES[c].name}의 길을 걷습니다.`, 'good');
@@ -14032,7 +14137,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
-  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; parade = null;
+  mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:MP_MAX});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
@@ -14389,7 +14494,7 @@ function start(hotData){
   if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); updateInh(); npcRareNote(); if (session) skSetFix(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); updateInh(); npcRareNote(); if (session){ skSetFix(); updateSkNote(); } }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem(KP + 'samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -14462,6 +14567,7 @@ if (BETA){
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
+    potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateSkNote, noSkNote:true, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, CLASSES, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,

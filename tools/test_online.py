@@ -272,10 +272,10 @@ async def main():
               return {n: (L.rows || []).length, seller: row && row.name, b, again, gems: G.S.gems, bag: G.S.bag.map(x => x.k + x.g + ':' + x.p)}; }""")
             check(post['r'].get('id') and post['left'] == 0 and lst['seller'] == '온라인용사' and lst['b'] == {'ok': True} and (lst['again'] or {}).get('err') == 'gone'
                   and lst['gems'] == 880 and lst['bag'] == ['ring2:50'], f'장터: 올린 물건을 다른 계정이 보석으로 사고, 두 번은 못 산다 {post} {lst}')
-            mine = await A.evaluate("""async () => { const G = window.__game, S = G.S; const m = await G.mkMine(); const g0 = S.gems; const c = await G.mkClaim();
+            mine = await A.evaluate("""async () => { const G = window.__game, S = G.S; const m = await G.mkMine(); const g0 = S.gems; const c = await G.mkClaim(); const g1 = S.gems;   // 받은 직후에 바로 잼(그 뒤 올리고 내리는 동안 사냥으로 번 보석이 섞이지 않게)
               S.dust = Math.max(S.dust, 100); const d0 = S.dust; const p = await G.mkPost({t:'dust'}, 50, 10); const d1 = S.dust;
               const m2 = await G.mkMine(); const row = (m2.rows || []).find(r => r.it.t === 'dust'); const x = row ? await G.mkCancel(row.id) : null;
-              return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: S.gems - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
+              return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: g1 - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
             check(mine['sold'] == 1 and mine['claim'] == 114 and mine['gemsUp'] == 114 and mine['dustOut'] == 50 and mine['dustBack'] == 50 and mine['cancel'] == {'ok': True},
                   f'장터: 판 값(수수료 5%)을 받고, 안 팔린 물건은 내려서 돌려받는다 {mine}')
             # 장터: 치장·신화 조각도 다른 용사와 보석으로 거래, 기본 장비는 못 올린다

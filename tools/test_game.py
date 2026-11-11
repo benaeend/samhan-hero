@@ -140,7 +140,7 @@ SIM = r"""
         if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
       }
     }
-    if (t >= nextRetry) { nextRetry = t + 60; G.S.autoBoss = true; }
+    // 보스 다시 도전은 게임의 [보스 자동]에 맡긴다(예전엔 여기서 60초마다 억지로 도전시켰음 — 물의 신화: 도전 기운이 다 찬 뒤엔 간격이 벌어짐)
     mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
     if (opts.snaps && G.S.world === 3 && !('cross' in snaps)) snaps.cross = JSON.stringify(G.S);
@@ -1104,7 +1104,7 @@ async def main():
         check(ih['n0']['past'] and ih['n0']['mat'] == 75 and ih['n0']['rate'] == 100 and ih['n0']['gear'] is None and ih['n0']['mk'] == 'm1' and ih['ok'] is True and ih['t'] == 3 and ih['left'] == 5,
               f'계승 조합: 지난 땅의 밀린 조합식은 재료 절반·장비 조건 없음·확정 성공 {ih["n0"]} {ih["ok"]} {ih["t"]} {ih["left"]}')
         check(ih['rUnlocked'] == 0 and ih['rv'] in ('dummy', 'parade', 'vault', 'tb'), f'저승 초입(레이드 잠김)의 레이드 부탁 「바로 가기」는 지금 할 수 있는 칸으로 간다 {ih["rv"]}')
-        check(ih['shop'] and ih['drop'] == [2, 6, 8, 12], f'재료 수급처: 상점 재료 꾸러미(신화 조각은 안 팖), 드롭량 늘림 {ih["shop"]} {ih["drop"]}')
+        check(ih['shop'] and ih['drop'] == [2, 4, 6, 12], f'재료 수급처: 상점 재료 꾸러미(신화 조각은 안 팖), 드롭량(물의 신화에서 수문장 4·레이드 6으로 조임) {ih["shop"]} {ih["drop"]}')
         await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(250)
         await page.click('.mat.mtip[data-mtip="m1"]'); await page.wait_for_timeout(200)
         tipt = await page.evaluate("() => (document.querySelector('#tipB') || {}).textContent || ''")
@@ -1366,7 +1366,7 @@ async def main():
           const g1 = G.skillGain(0, 1).g, gMax = G.SKILLS.every((sk, i) => G.skillGain(i, 5).g > 0);
           S.world = 0; S.soul = {own:{}, star:{}, eq:['', ''], pity:0}; const d0 = G.soulDrop('raid');
           G.setWorld(3); S.stage = 15; S.maxStage = 20; S.level = 320; S.job = 3; S.up.atk = 200; S.up.hp = 400; G.refreshStats();
-          S.soul.pity = 39; const d1 = G.soulDrop('raid'); const k1 = d1 && d1.k; const d2 = G.giveSoul(k1, true);
+          S.soul.pity = G.SOUL_PITY - 1; const d1 = G.soulDrop('raid'); const k1 = d1 && d1.k; const d2 = G.giveSoul(k1, true);
           const col = G.soulCol() > 0, eq = G.soulEq().length === 1;
           S.kills = 25; S.autoBoss = true; for (let i = 0; i < 12; i++) G.update(0.05);
           const B = G.patBoss(); B.maxHp = B.hp = 1e40; const lv = G.patLv(B);
@@ -1394,7 +1394,7 @@ async def main():
           Object.assign(G.HAND, H); Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
           return {g1: +g1.toFixed(1), gMax, d0, k1: !!k1, star: d2 && d2.star, col, eq, lv, tA, tB, ctr, stun, counters, grog, back, wiping, low: +low.toFixed(2), casted}; }""")
         check(so['g1'] == 10 and so['gMax'], f'기술 미리보기: 레벨을 올리면 몇 % 세지는지 모든 칸에서 보인다(회오리 Lv1→2 +10%) {so}')
-        check(so['d0'] is None and so['k1'] and so['star'] == 1 and so['col'] and so['eq'], f'넋 부름: 1부엔 넋 구슬이 안 나오고, 2부에선 40번 천장·같은 넋은 별·주머니에 저절로 모심 {so}')
+        check(so['d0'] is None and so['k1'] and so['star'] == 1 and so['col'] and so['eq'], f'넋 부름: 1부엔 넋 구슬이 안 나오고, 2부에선 50번 천장·같은 넋은 별·주머니에 저절로 모심 {so}')
         check(so['lv'] == 2 and so['tA']['seen'] and not so['tA']['hit'] and so['tB']['hit'] and so['ctr'] == 'counter' and so['stun'] and so['grog'] and so['back'],
               f'보스 손컨: 붉은 칸(피하면 안 맞고 못 피하면 맞음)·되받기 단추·버팀을 깨면 휘청 {so}')
         check(so['wiping'] and so['low'] <= 0.5 and so['casted'], f'큰 살을 못 끊으면 체력이 크게 깎이고, 넋의 기운이 차면 넋이 나타나 돕는다 {so}')
@@ -1475,6 +1475,83 @@ async def main():
         check(got['lv'] == 23 and got['st'] == 27 and got['tut'] == -1, f'예전 진행을 이어받는다 {got}')
         await ctxC.close()
 
+        # 9-9) 물의 신화 1단계: 밸런스 숫자·싸움 중 물약 구매 금지·장착 기술 8칸·4차 전직 저장·보스 다시 도전 간격
+        #       (곤륜 끝 4차 무사 저장 = 베타의 시험용 캐릭터 tools/beta_saves 가운데 레벨이 가장 높은 것)
+        late = max((json.loads(f.read_text(encoding='utf-8')) for f in (ROOT / 'tools' / 'beta_saves').glob('*.json')), key=lambda d: d['save'].get('level', 0))['save']
+        ctxS = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        sp = await ctxS.new_page()
+        watch(sp, errors, '1단계 ')
+        await fresh(sp)
+        await signup(sp, 'seatest', 'abcd', '바다용사')
+        s1 = await sp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          const old = JSON.parse(JSON.stringify(save)); delete old.skV; delete old.skKnown; old.skSetMan = false; old.skOff = [];
+          Object.assign(S, G.mergeState(old)); S.name = '바다용사'; G.refreshStats(); G.setStage(S.stage);
+          out.job = S.job; const d3 = JSON.parse(JSON.stringify(old)); d3.job = 3; out.jobFix = G.mergeState(d3).job; d3.skills.jobD = 0; out.job3 = G.mergeState(d3).job;   // 4차가 3차로 내려가던 저장 되돌리기
+          { const dq = JSON.parse(JSON.stringify(old)); dq.world = 3; dq.quest.main = 120; dq.quest.sv = 5; dq.refine.weapon.lv = 15; const mq = G.mergeState(dq); out.sv = [mq.quest.sv, mq.quest.main]; dq.quest.main = 30; out.svFix = G.mergeState(dq).quest.main === G.CROSS_Q; }
+          G.skSetFix(); const learned = G.SKILLS.map((_, i) => i).filter(i => G.skLv(i) > 0);
+          out.learned = learned.length; out.n = S.skSet.length; out.note = S.skNote; out.man = S.skSetMan; out.v = S.skV; out.rec = S.skSet.join() === G.skPresetFor('mix').join();
+          const x = learned.find(i => !S.skSet.includes(i)), a0 = S.skSet[0]; out.full = G.skToggle(x); out.sw = G.skToggle(x, a0) === true && S.skSet.includes(x) && !S.skSet.includes(a0) && S.skSet.length === 8 && S.skSetMan;
+          G.skToggle(S.skSet[1]); for (let i = 0; i < 20; i++) G.update(0.05); G.skSetFix(); out.stay7 = S.skSet.length === 7;
+          G.skSavePut(0); G.skSetAuto(); out.auto = S.skSet.length === 8 && !S.skSetMan; out.ld = G.skSaveLoad(0) && S.skSet.length === 7 && S.skSetMan; G.skSetAuto();
+          S.skV = 0; S.skOff = learned.slice(0, 3); S.skSetMan = false; S.skNote = false; G.skSetFix(); out.mig = S.skSetMan && S.skSet.length === learned.length - 3 && !learned.slice(0, 3).some(i => S.skSet.includes(i)) && !S.skNote;
+          G.skSetAuto(); out.bossK = G.skBossK(); out.pre = ['boss', 'party', 'mob'].every(k => G.skPresetFor(k).length === 8) && G.skPresetFor('party')[0] === 10;
+          out.k = [G.SK_SLOTS, G.AWAKEN_SEC, G.AWAKEN_SEC4, G.MP_K, G.RAID_GEM_K, G.TB_GEMS.normal, G.TB_GEMS.hell, G.GR_GEMS, G.VAULT_GEMS, G.SOUL_PITY, G.RAID_MYTH_P, G.MAT_DROP.gate, G.MAT_DROP.raid, G.MAT_DROP.tb, G.MAT_DROP.mob, G.SHARD_SRC.raidP, G.ACC_DROP.gate.ring, G.ACC_DROP.gate.ear, G.vaultShards(), G.WEEK_SHARD, G.NPC_RARE_P];
+          // 싸움 중 물약 구매 금지
+          out.lock0 = G.potLock(); S.gold = 1e30; S.gems = 1e6; S.raid.tk = 3; S.inv.potion = 3; S.inv.mana = 3; S.inv.elixir = 0; out.low = G.potLowAny();
+          out.buy0 = G.buyShop('potion') && S.inv.potion === 13; const p0 = S.inv.potion;
+          out.raid = G.startRaid(0); if (G.raid){ const B = G.raid.boss; B.hp = B.maxHp = 1e300; B.atk = 0; G.PAT.off = true; } out.lock1 = G.potLock(); out.buy1 = G.buyShop('potion') || G.buyShop('mana') || G.buyShop('elixir') || G.buyShop('gift') || G.buyShop('avbox'); out.same = S.inv.potion === p0;
+          out.why = G.shopState(G.SHOP.find(x => x.id === 'mana100')).why; out.whet = G.buyShop('whet'); out.npc = G.npcBuy(0).err !== 'fight';
+          G.quiet = false; return out; }""", late)
+        await tab(sp, 'shop')
+        await sp.wait_for_timeout(500)
+        s2 = await sp.evaluate("""() => ({lock: !document.querySelector('#shopLock').hidden, dis: document.querySelector('#shb-potion').disabled && document.querySelector('#shb-mana').disabled && document.querySelector('#shb-elixir').disabled, txt: document.querySelector('#shb-potion').textContent,
+          bar: document.querySelectorAll('#skillbar .sk').length, many: document.querySelector('#skillbar').classList.contains('many')})""")
+        await sp.screenshot(path=str(OUT / '26_싸움중_상점잠김.png'))
+        s3 = await sp.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; if (G.raid){ G.raid.time = 0; for (let i = 0; i < 300 && G.raid; i++) G.update(0.05); }
+          G.PAT.off = false; const out = {lock2: G.potLock(), buy2: G.buyShop('potion')};
+          // 보스 다시 도전 간격: 도전 기운(8번)이 다 찬 뒤로는 45초, 90초, 3분 … 10분
+          S.bossPity = {k: S.world + ':' + S.stage, n: 0}; const t = n => { S.bossPity.n = n; return G.bossRetryT(); }; out.retry = [t(0), t(8), t(9), t(10), t(12), t(99)]; S.bossPity.n = 0;
+          G.quiet = false; G.closePage(); return out; }""")
+        check(s1['job'] == 4 and s1['jobFix'] == 4 and s1['job3'] == 3, f'4차 전직 저장을 다시 불러와도 4차 그대로이고(예전엔 3차로 내려감), 4차 기술을 익힌 기록이 있으면 되돌린다 {s1["job"]} {s1["jobFix"]} {s1["job3"]}')
+        check(s1['sv'] == [5, 120] and s1['svFix'], f'부상에서 재련이 계승(+15)된 저장을 다시 불러와도 이야기가 옛 퀘스트(무기 +20)로 되돌아가지 않고, 되돌아갔던 저장은 건너기 퀘스트까지 되찾는다 {s1["sv"]} {s1["svFix"]}')
+        check(s1['learned'] == 11 and s1['n'] == 8 and s1['note'] and not s1['man'] and s1['v'] == 2 and s1['rec'] and s1['full'] == 'full' and s1['sw'] and s1['stay7'] and s1['auto'] and s1['ld'] and s1['mig']
+              and abs(s1['bossK'] - 1.06) < 1e-9 and s1['pre'] and s2['bar'] == 8 and s2['many'],
+              f'장착 기술 8칸: 예전 저장은 추천 8개로 정리(알림)·뺀 기술은 그대로 옮김, 꽉 차면 무엇을 뺄지 고르기, [빼기]는 유지, 저장 조합, 싸움별 추천 8개, 기술 줄 8칸, 단계 보스 체력 +6%까지 {s1} {s2}')
+        check(s1['k'] == [8, 5, 8, 0.75, 1.2, 100, 200, 180, 90, 50, 0.012, 4, 6, 10, 0.008, 0.3, 0.06, 0.01, 4 + 4, 40, 0.015], f'밸런스 숫자(초각성 5·8초, 마나 0.75배, 레이드 보석·재료·신화 조각·장신구·넋 구슬 천장) {s1["k"]}')
+        check(not s1['lock0'] and s1['low'] and s1['buy0'] and s1['raid'] and s1['lock1'] and not s1['buy1'] and s1['same'] and s1['why'] == '싸움 뒤에' and s1['whet'] and s1['npc']
+              and s2['lock'] and s2['dis'] and '싸움 뒤에' in s2['txt'] and not s3['lock2'] and s3['buy2'],
+              f'싸움이 시작되면 물약(상점 물약 칸·선물·꾸미기 상자)을 살 수 없고 다른 물건은 살 수 있으며, 끝나면 다시 살 수 있다 {s1["lock1"]} {s1["buy1"]} {s2} {s3}')
+        check(s3['retry'] == [45, 45, 90, 180, 600, 600], f'보스 자동 다시 도전: 도전 기운이 다 찬 뒤엔 간격이 45초에서 90초, 3분 … 10분으로 벌어진다 {s3["retry"]}')
+        # 정비 창의 물약 줄·[사러 가기], 8칸이 찼을 때 [넣기] → 무엇을 뺄지, 예전 저장 알림 창
+        await sp.evaluate("""() => { const G = window.__game, S = G.S; S.inv.potion = 3; S.inv.mana = 3; S.inv.elixir = 0; S.presetMode = 'ask'; S.raid.tk = 3; }""")
+        await tab(sp, 'raid')
+        await sp.wait_for_timeout(400)
+        await sp.evaluate("""() => { const b = [...document.querySelectorAll('#page button[data-i]')].find(x => !x.disabled); if (b) b.click(); }""")
+        await sp.wait_for_selector('#prePotBox', timeout=4000)
+        pn = await sp.evaluate("""() => ({low: document.querySelectorAll('#prePotBox .pot-low').length, go: !!document.querySelector('#prePot'), n: document.querySelector('#preCnt').textContent})""")
+        await sp.screenshot(path=str(OUT / '26b_정비창_물약.png'))
+        await sp.click('#prePot')
+        await sp.wait_for_timeout(500)
+        pg = await sp.evaluate("""() => ({shop: !!document.querySelector('#shb-potion'), modal: document.querySelector('#modal').hidden, raid: !!window.__game.raid})""")
+        check(pn['low'] == 3 and pn['go'] and '8/8' in pn['n'] and pg['shop'] and pg['modal'] and not pg['raid'], f'싸움 전 정비 창에 들고 가는 물약 수가 보이고, 적으면 붉은 글씨 + [사러 가기]로 상점 물약 칸에 간다 {pn} {pg}')
+        await tab(sp, 'skill')
+        await sp.wait_for_timeout(400)
+        await sp.evaluate("""() => { const b = [...document.querySelectorAll('#page [data-eq]')].find(x => x.textContent === '넣기' && !x.disabled); b.scrollIntoView(); b.click(); }""")
+        await sp.wait_for_selector('#swGrid [data-sw]')
+        await sp.screenshot(path=str(OUT / '26c_기술_무엇을뺄까.png'))
+        sw0 = await sp.evaluate('() => window.__game.S.skSet.slice()')
+        await sp.click('#swGrid [data-sw]')
+        await sp.wait_for_timeout(300)
+        sw1 = await sp.evaluate("""() => ({set: window.__game.S.skSet.slice(), man: window.__game.S.skSetMan, tag: document.querySelector('#skSetN').textContent, modal: document.querySelector('#modal').hidden})""")
+        await sp.screenshot(path=str(OUT / '26d_기술_8칸.png'))
+        check(len(sw1['set']) == 8 and sw1['set'] != sw0 and sw0[0] not in sw1['set'] and sw1['man'] and '8칸 중 8칸' in sw1['tag'] and sw1['modal'], f'[기술]에서 8칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 묻고 바꿔 끼운다 {sw0} {sw1}')
+        await sp.evaluate("""() => { const G = window.__game; G.closePage(); G.noSkNote = false; G.S.skNote = true; }""")
+        await sp.wait_for_selector('#mTitle:has-text("8칸")', timeout=4000)
+        await sp.screenshot(path=str(OUT / '26e_8칸_알림.png'))
+        await sp.click('#modal-btn-0')
+        check(not await sp.evaluate('() => window.__game.S.skNote'), '8개를 넘게 쓰던 예전 저장은 추천 8개로 정리했다는 알림 창이 한 번 뜬다')
+        await ctxS.close()
+
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
@@ -1537,6 +1614,7 @@ async def main():
         check(m0 == {'beta': False, 'on': True, 'pwa': True} and b0['beta'] and not b0['on'] and not b0['pwa'] and not b0['man'] and b0['tag'] and '베타' in b0['ver'],
               f'베타 빌드는 온라인 서버·앱 설치를 끄고 베타 띠를 보여 준다 {m0} {b0}')
         await bp.screenshot(path=str(OUT / '25_베타_로그인.png'))
+        await bp.evaluate('() => { window.__game.noFork = true; }')   # 시험용 캐릭터(후반 저장)에 들어가면 뜨는 갈림길 창은 이 점검에서 끔
         await signup(bp, 'betatest', 'abcd', '베타용사')
         await bp.wait_for_timeout(6500)   # 저장(5초마다)과 본 게임 보관본 되돌리기(6초 뒤)를 기다림
         b1 = await bp.evaluate(r'''async () => {
@@ -1565,7 +1643,7 @@ async def main():
                 await bp.wait_for_timeout(1500)
                 bs = await bp.evaluate('''() => { const G = window.__game, S = G.S; G.update(0.05); G.render();
                   return {name: S.name, lv: S.level, w: S.world, q: S.quest.main, atk: G.ST.atk > 0, cut: !!G.cut, n: JSON.parse(localStorage.getItem('beta-samhan-accounts-v1')).accounts.betatest.chars.length}; }''')
-                check(bs['lv'] > 1 and bs['atk'] and bs['n'] == 2 and bs['name'] != '베타용사', f'시험용 캐릭터 {bi + 1}번으로 바로 들어간다 {bs}')
+                check(bs['lv'] > 1 and bs['atk'] and bs['n'] == 2 and bs['name'] != '베타용사' and bs['q'] >= 113, f'시험용 캐릭터 {bi + 1}번으로 바로 들어간다(이야기 진행도 그대로) {bs}')
                 if bi == 0:
                     await bp.screenshot(path=str(OUT / '25d_베타_시험용_시작.png'))
                 await bp.click('#charBtn'); await bp.click('#modal-btn-1')
