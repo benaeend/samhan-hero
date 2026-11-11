@@ -1,7 +1,7 @@
 /* 삼한 용사 키우기 — 오프라인 도우미(서비스 워커)
    인터넷이 되면 언제나 새 파일을 받아 쓰고(그래서 업데이트가 바로 반영됨), 안 되면 마지막으로 받아 둔 파일을 쓴다.
    이 파일의 동작을 바꿨을 때만 CACHE 이름의 숫자를 올린다. index.html만 바뀐 경우엔 그대로 둔다. */
-const CACHE = 'samhan-v2';
+const CACHE = 'samhan-v3';   // v3(2026-11 물의 신화): 앱 아이콘을 삼족오로 바꿔, 이미 설치한 앱도 새 아이콘을 받게
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
 
 self.addEventListener('install', e => {

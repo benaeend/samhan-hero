@@ -305,6 +305,46 @@ async def main():
             await A.screenshot(path=str(OUT / '34_온라인_접속중.png'))
             await A.evaluate("() => window.__game.setChat(false)")
 
+            # 캐릭터 6칸(물의 신화 2단계): 서버는 한 계정 6명까지 받고 7번째는 거절한다
+            tok = await A.evaluate('() => window.__game.online.token')
+
+            def dbx(sql):
+                with pg.conn() as c, c.cursor() as cur:
+                    cur.execute(sql)
+
+            def srv_save(cid, name):
+                try:
+                    db("select samhan_save(%s::uuid, %s, %s, '{}'::jsonb, %s, 1)", tok, cid, name, '{"v":1}')
+                    return 'ok'
+                except Exception as e:
+                    return 'too_many' if 'too_many' in str(e) else str(e)[:80]
+            r6 = [srv_save(f'cxsix{i}', f'여섯칸{i}') for i in range(1, 7)]   # 이미 1명 + 5명 = 6명, 그다음은 7번째
+            n6 = db("select count(*) from samhan_chars where acc = 'online1'")[0][0]
+            check(r6 == ['ok'] * 5 + ['too_many'] and n6 == 6, f'캐릭터 6칸: 서버가 한 계정 6명까지 저장하고 7번째는 막는다 {r6} {n6}')
+            # 서버가 아직 4칸이면(주인이 setup.sql을 다시 실행하기 전): 5번째 캐릭터는 이 기기에만 저장하고 게임은 그대로, 서버가 6칸이 되면 저절로 올라간다
+            setup = (ROOT / 'supabase' / 'setup.sql').read_text(encoding='utf-8')
+            f0 = setup.index('create or replace function public.samhan_save'); fn6 = setup[f0:setup.index('end $$;', f0) + len('end $$;')]
+            assert 'n >= 6' in fn6
+            dbx("delete from samhan_chars where acc = 'online1' and cid in ('cxsix4', 'cxsix5')")   # 서버에 4명(예전 한도)
+            dbx(fn6.replace('n >= 6', 'n >= 4'))
+            await A.evaluate('() => window.__game.switchChar()')
+            await A.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            await tg.create_char(A, '다섯째', 'musa')
+            await A.evaluate('() => window.__game.pushOnline()'); await A.wait_for_timeout(700)
+            if await A.is_hidden('#moreMenu'): await A.click('#tab-more')
+            await A.click('#tab-rec'); await A.wait_for_timeout(400)
+            m1 = await A.evaluate("""() => { const G = window.__game, ch = G.REG.accounts.online1.chars.find(c => c.name === '다섯째');
+              return {err: ch && ch.srvErr, inGame: !!G.session && G.S.name === '다섯째', note: document.querySelector('#r-save').textContent}; }""")
+            srv1 = db("select count(*) from samhan_chars where acc = 'online1' and name = '다섯째'")[0][0]
+            await A.screenshot(path=str(OUT / '35_온라인_서버4칸.png'))
+            dbx(fn6)                                                                           # 서버가 6칸이 됨(setup.sql 다시 실행)
+            await A.evaluate('() => window.__game.pushOnline()'); await A.wait_for_timeout(700)
+            m2 = await A.evaluate("""() => { const G = window.__game, ch = G.REG.accounts.online1.chars.find(c => c.name === '다섯째'); return {err: (ch && ch.srvErr) || '', note: document.querySelector('#r-save').textContent}; }""")
+            srv2 = db("select count(*) from samhan_chars where acc = 'online1' and name = '다섯째'")[0][0]
+            check(m1['err'] == 'many' and m1['inGame'] and '이 기기에만 저장 중' in m1['note'] and srv1 == 0 and m2['err'] == '' and '서버에 자동 저장' in m2['note'] and srv2 == 1,
+                  f'서버가 아직 4칸이어도 5번째 캐릭터로 게임이 되고(이 기기에만 저장 중이라고 알림), 서버가 6칸이 되면 저절로 서버에 올라간다 {m1} {srv1} {m2} {srv2}')
+            await A.evaluate("() => window.__game.closePage()")
+
             # 서버가 생기기 전(또는 연결이 안 될 때) 만든 계정은 다음 로그인 때 서버로 옮겨진다
             ctxD, D = await device('http://127.0.0.1:9')
             await tg.signup(D, 'local1', 'pass0000', '옮길용사', 'doin')

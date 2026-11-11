@@ -329,7 +329,10 @@ async def main():
         await page.fill('#lg-pw2', '1234')
         await page.click('#modal-btn-0')
         await page.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
-        await page.click('#modal-btn-0')
+        slots = await page.evaluate("() => ({empty: document.querySelectorAll('#mBody .char.empty').length, max: window.__game.MAX_CHARS, txt: document.querySelector('#mBody').textContent})")
+        check(slots['empty'] == 6 and slots['max'] == 6 and '6명까지' in slots['txt'], f'캐릭터 고르기: 한 계정 6칸(빈 칸 여섯)이 보인다 {slots["empty"]} {slots["max"]}')
+        await page.screenshot(path=str(OUT / '1b_캐릭터6칸.png'))
+        await page.click('#mBody .char.empty')      # 빈 칸을 눌러도 새 캐릭터 만들기
         await page.wait_for_selector('#cc-name')
         await page.fill('#cc-name', '홍길동'); await page.click('#cc-musa')
         await page.click('.lookwrap [data-k="outfit"][data-v="5"]'); await page.click('.lookwrap [data-k="hat"][data-v="3"]')
@@ -1123,6 +1126,76 @@ async def main():
         check(ih1['rows'] >= 1 and ih1['go'] and ih1['later'] and '저승' in ih1['say'] and ih2['m0'] == 0 and not ih2['open'] and ih2['hidden'] and ih2['w'] == 1,
               f'계승 화면: 새 땅 첫 화면에 대장장이가 나타나 대상을 보여 주고, [계승하기]를 누르면 연출 뒤 닫힌다 {ih1} {ih2}')
 
+        # 6-6z) 물의 신화 2단계: 부별 탭·거르기·도감, 알림 연출 틀(한 번에 하나·두루마리·줄이기·다시 보기)
+        pt = await page.evaluate("""() => { const G = window.__game, S = G.S; window.__keepPt = JSON.stringify(S); G.quiet = true;
+          for (const k of ['tab', 'own', 'sort', 'kd']) for (const x of Object.keys(G.PV[k])) delete G.PV[k][x];
+          const tabs = () => [...document.querySelectorAll('.partbar .ptab')].map(b => b.dataset.ptab + (b.classList.contains('on') ? '*' : '') + (b.classList.contains('lock') ? 'L' : '') + (b.querySelector('.dot') ? '!' : ''));
+          const vis = () => [...document.querySelectorAll('#panel [data-part]')].filter(e => !e.classList.contains('part-off')).map(e => +e.dataset.part);
+          S.pseen = {}; S.world = 0; for (let i = 0; i < 15; i++) S.pets.lv[i] = i < 6 ? 1 : 0; for (let i = 15; i < S.pets.lv.length; i++) S.pets.lv[i] = 0;
+          G.buildTab('pet'); const t0 = tabs(), v0 = vis();
+          document.querySelector('.ptab.lock').click(); const lockKept = G.PV.tab.pet == null;      // 잠긴 부는 눌러도 안 열림
+          S.world = 4; G.buildTab('pet'); const t4 = tabs(), v4 = vis();                        // 곤륜(3부): 처음 열리는 탭 = 지금 있는 부
+          document.querySelector('[data-ptab="0"]').click(); const vAll = vis().length;
+          document.querySelector('[data-pf="own"]').click(); const vOwn = vis().length;
+          document.querySelector('[data-pkd="atk"]').click(); const vAtk = [...document.querySelectorAll('#panel [data-part]:not(.part-off)')].map(e => e.dataset.kd);
+          document.querySelector('[data-pkd=""]').click(); document.querySelector('[data-pf="own"]').click();
+          document.querySelector('[data-ptab="3"]').click(); S.pets.lv[7] = 1; G.partApply(); const dot = tabs();   // 다른 부(1부)에서 새로 얻으면 그 탭에 빨간 점
+          document.querySelector('[data-ptab="1"]').click(); const dot2 = tabs(), isNew = document.querySelector('[data-pk="p7"]').classList.contains('part-new') || S.pseen.pet.includes('p7');
+          S.raid.first = {'0':true, h1:true, g2:true, b0:true}; G.buildTab('raid'); document.querySelector('[data-rv="raid"]').click(); const rt = tabs(), past = document.querySelectorAll('.rcard.past').length, pastVis = [...document.querySelectorAll('.rcard.past')].filter(e => !e.closest('.part-off')).length;
+          document.querySelector('[data-ptab="1"]').click(); const rt1 = tabs(), r1 = vis(), curHidden = !!document.querySelector('#raid-0').closest('.part-off');
+          document.querySelector('[data-ptab="3"]').click();
+          G.buildTab('rec'); const dexRows = document.querySelectorAll('#dexBox tbody tr').length, dex = [1, 2, 3].map(p => G.dexSum(p)), dexT = ['dex1', 'dex2', 'dex3'].every(k => G.TITLES.some(t => t.k === k));
+          return {t0, v0n: v0.length, v0max: Math.max(...v0), lockKept, t4, v4, vAll, vOwn, vAtk, dot, dot2, isNew, rt, past, pastVis, rt1, r1: [...new Set(r1)], curHidden, dexRows, dex, dexT}; }""")
+        await page.screenshot(path=str(OUT / '6z_도감.png'))
+        await page.evaluate("() => { const G = window.__game; G.buildTab('pet'); document.querySelector('[data-ptab=\"0\"]').click(); }")
+        await page.wait_for_timeout(300); await page.screenshot(path=str(OUT / '6z_부별탭_펫.png'))
+        await page.evaluate("() => { const G = window.__game; G.buildTab('raid'); document.querySelector('[data-rv=\"raid\"]').click(); document.querySelector('[data-ptab=\"1\"]').click(); }")
+        await page.wait_for_timeout(400); await page.screenshot(path=str(OUT / '6z_부별탭_레이드.png'))
+        await page.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); Object.assign(S, JSON.parse(window.__keepPt)); for (const k of ['tab', 'own', 'sort', 'kd']) for (const x of Object.keys(G.PV[k])) delete G.PV[k][x]; G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.quiet = false; }")
+        check(pt['t0'] == ['0', '1*', '2L', '3L'] and pt['v0n'] == 15 and pt['v0max'] == 1 and pt['lockKept'], f'부별 탭: 1부에서는 2부·3부 탭이 잠겨 있고 그 부의 펫은 안 보인다 {pt["t0"]} {pt["v0n"]}')
+        check(pt['t4'] == ['0', '1', '2', '3*'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
+              f'부별 탭: 처음 열리는 탭은 지금 있는 부, 「전체」·「가진 것만」·종류 거르기가 된다 {pt["t4"]} {pt["vAll"]} {pt["vOwn"]} {pt["vAtk"]}')
+        check('1!' in pt['dot'] and '1*' in pt['dot2'] and pt['isNew'], f'부별 탭: 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점, 열어 보면 사라진다 {pt["dot"]} {pt["dot2"]}')
+        check(pt['rt'] == ['0', '1', '2', '3*'] and pt['past'] == 34 and pt['pastVis'] == 0 and pt['r1'] == [1] and pt['curHidden'],
+              f'레이드 목록: 부별 탭으로 지나온 땅의 레이드 토벌 기록을 본다(이승 8·저승 10·천계 8·부상 8) {pt["rt"]} {pt["past"]} {pt["rt1"]}')
+        check(pt['dexRows'] == 3 and all(d[1] > 0 for d in pt['dex']) and pt['dexT'], f'도감: [정보]에 부별 모음 현황(펫·탈것·아바타·치장·넋 구슬)과 부별 별호 {pt["dex"]}')
+        # 알림 연출 틀: 여럿이면 중요한 것 하나만 저절로(계승 > 8칸), 나머지는 왼쪽 위 두루마리. 「줄이기」면 한 줄 띠로만. [정보]에서 다시 보기
+        await page.evaluate("""() => { const G = window.__game, S = G.S; window.__keepNt = JSON.stringify(S); G.quiet = true; G.closePage(); S.world = 1; S.level = Math.min(S.level, 200); G.applyWorld(); G.refreshStats(); G.setStage(1);
+          S.mat.m0 = 9; S.inh = {w:0}; S.skNote = true; S.noti = {seen:{}, log:[]}; G.notiAuto.clear(); G.setNotiLite(false); G.noInh = false; G.noSkNote = false; G.quiet = false; }""")
+        await page.wait_for_function("() => window.__game.inhOpen", timeout=8000)
+        nt1 = await page.evaluate("() => ({smith: !!document.querySelector('#inhGo'), noti: document.querySelector('#inh').classList.contains('noti')})")
+        await page.click('#inhLater'); await page.wait_for_timeout(900)
+        nt2 = await page.evaluate("() => ({open: window.__game.inhOpen, btn: !document.querySelector('#notiBtn').hidden, cnt: document.querySelector('#notiCnt').textContent, list: window.__game.notiList().map(n => n.k)})")
+        await page.screenshot(path=str(OUT / '6z_알림_두루마리.png'))
+        await page.click('#notiBtn'); await page.wait_for_selector('#notiPick [data-nk="sk8"]'); await page.screenshot(path=str(OUT / '6z_알림_모음.png'))
+        await page.click('#notiPick [data-nk="sk8"]'); await page.wait_for_selector('#inh.noti #notiSay'); await page.wait_for_timeout(500)
+        await page.screenshot(path=str(OUT / '6z_알림_까치.png'))
+        await page.click('#inh .inh-say'); await page.wait_for_timeout(200); await page.click('#notiLater'); await page.wait_for_timeout(300)
+        nt3 = await page.evaluate("""() => { const G = window.__game, S = G.S; const out = {open: G.inhOpen, note: S.skNote, log: S.noti.log.map(x => x.k), list: G.notiList().map(n => n.k)};
+          S.skNote = true; S.noti.seen = {}; G.notiAuto.clear(); G.setNotiLite(true); return out; }""")
+        await page.wait_for_function("() => document.querySelector('#notiBtn').classList.contains('say')", timeout=5000)
+        nt4 = await page.evaluate("() => ({open: window.__game.inhOpen, tx: document.querySelector('#notiTx').textContent, lite: window.__game.notiLite})")
+        await page.screenshot(path=str(OUT / '6z_알림_한줄띠.png'))
+        await page.evaluate("() => { const G = window.__game; G.setNotiLite(false); G.noInh = true; G.noSkNote = true; G.buildTab('rec'); document.querySelector('#notiReviewBtn').click(); }")
+        await page.wait_for_selector('#notiPick [data-ni]'); rv = await page.evaluate("() => document.querySelectorAll('#notiPick [data-ni]').length")
+        await page.click('#notiPick [data-ni]'); await page.wait_for_function("() => window.__game.inhOpen"); await page.wait_for_timeout(300)
+        nt5 = await page.evaluate("""() => { const G = window.__game, S = G.S; const b = document.querySelector('#notiLater') || document.querySelector('#inhLater') || document.querySelector('#inhOk'); const out = {btn: b ? b.textContent : ''}; if (b) b.click();
+          G.quiet = true; G.closePage(); Object.assign(S, JSON.parse(window.__keepNt)); G.notiAuto.clear(); G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.quiet = false; return out; }""")
+        # 업데이트 소식: 이야기꾼 할머니가 세 줄로 간추려 알리고 [자세히]는 소식 창
+        await page.evaluate("() => { const G = window.__game; G.closePage(); localStorage.setItem('samhan-note-seen', 'old'); G.notiAuto.clear(); G.noNoti = false; }")
+        await page.wait_for_selector('#inh.noti #notiSay', timeout=6000); await page.wait_for_timeout(500)
+        await page.screenshot(path=str(OUT / '6z_알림_소식.png'))
+        nw1 = await page.evaluate("() => ({who: document.querySelector('#inh .nm').textContent, say: document.querySelector('#notiSay').textContent, chips: document.querySelectorAll('#inh .pre-sk').length})")
+        for _ in range(4): await page.click('#inh .inh-say'); await page.wait_for_timeout(120)
+        await page.click('#notiGo'); await page.wait_for_selector('#mTitle:has-text("업데이트 소식")')
+        nw2 = await page.evaluate("() => { const G = window.__game; const out = {seen: localStorage.getItem('samhan-note-seen') !== 'old', open: G.inhOpen, list: G.notiList().map(n => n.k)}; G.hideModal(); G.noNoti = true; return out; }")
+        check('할머니' in nw1['who'] and '물의 신화' in nw1['say'] and nw1['chips'] >= 3 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
+              f'업데이트 소식: 이야기꾼 할머니가 찾아와 간추려 주고 [자세히]로 소식 창을 연다(기기마다 한 번) {nw1} {nw2}')
+        check(nt1['smith'] and not nt1['noti'] and not nt2['open'] and nt2['btn'] and nt2['cnt'] == '2' and nt2['list'] == ['inh', 'sk8'],
+              f'알림 연출 틀: 알릴 것이 여럿이면 중요한 것(계승) 하나만 저절로 찾아오고 나머지는 왼쪽 위 두루마리에 모인다 {nt1} {nt2}')
+        check(not nt3['open'] and not nt3['note'] and nt3['log'][0] == 'sk8' and nt3['list'] == ['inh'], f'알림 연출 틀: 두루마리에서 골라 보면 본 것으로 적히고 목록에서 빠진다(계승은 할 때까지 남음) {nt3}')
+        check(not nt4['open'] and ('까치' in nt4['tx'] or '계승' in nt4['tx']) and nt4['lite'] and rv >= 1 and nt5['btn'], f'알림 연출 줄이기: 인물 대신 한 줄 띠로만 알리고, [정보] → 알림 다시 보기로 지난 알림을 다시 본다 {nt4} {rv} {nt5}')
+
         # 6-7) 탈것: 지난 이야기 보상으로 받기, 마구간(엽전)·고삐 조각으로 얻기, 별 올리기, 타면 걷기·능력
         mt = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true;
           const st0 = G.heroStep(), atk0 = G.ST.atk; G.mountCatchUp(); const own = Object.keys(S.mount.own).sort();
@@ -1195,7 +1268,9 @@ async def main():
           S.gems = 1000; const w0 = S.inv.whet; G.buyShop('whet10'); const whet = S.inv.whet - w0, paid = 1000 - S.gems;
           const A = G.REG.accounts[G.session.acc], n0 = A.chars.length; G.refreshStats(); const atk0 = G.ST.atk, g0 = G.barrack().gain;
           A.chars.push({cid:'zz_test', name:'배럭', cls:'doin', level:400, cum:700, world:3}); G.refreshStats();
-          const br = G.barrack(), atkUp = G.ST.atk / atk0; A.chars = A.chars.filter(c => c.cid !== 'zz_test'); G.refreshStats();
+          const br = G.barrack(), atkUp = G.ST.atk / atk0;
+          for (let i = 0; i < 4; i++) A.chars.push({cid:'zz_test' + i, name:'배럭' + i, cls:'doin', level:400, cum:900, world:4}); G.refreshStats(); const br6 = G.barrack().gain;   // 6칸: 다른 캐릭터 5명
+          A.chars = A.chars.filter(c => !c.cid.startsWith('zz_test')); G.refreshStats();
           S.world = 0; S.level = 100; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(100) * 10);
           const bank = S.expBank; S.world = 1; S.level = 1; const up = G.useExpBank(); const bankAfter = S.expBank, lvAfter = S.level;
           S.world = 0; S.level = 1; S.quest.main = 0; const g1 = G.stageGate(), b1 = G.bossGate(25).ok, b2 = G.bossGate(3).ok;
@@ -1203,9 +1278,10 @@ async def main():
           S.world = 1; S.level = 200; S.raid.first = {}; S.quest.main = G.MAIN_Q.findIndex(q => q.key === 'h0'); const rOpen = [G.raidUnlockedBase(), G.raidUnlocked()];
           S.quest.main = G.MAIN_Q.length + 3; const free = G.stageGate();
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.gateOff = true;
-          return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
+          return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, br6: br6 - g0, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
         check(nw['whet'] == 11 and nw['paid'] == 250, f'상점: 숫돌 10+1 묶음은 250보석에 11개 {nw}')
-        check(nw['stat'] == 14 and abs(nw['atkUp'] - 1.14) < 0.02 and nw['gain'] >= 9, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +14%(50레벨마다 1%), 엽전·경험치도 오른다 {nw}')
+        check(nw['stat'] == 14 and abs(nw['atkUp'] - 1.14) < 0.02 and 6 <= nw['gain'] <= 7, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +14%(50레벨마다 1%), 엽전·경험치 +6%(한 명당 몫 0.7배) {nw}')
+        check(34 <= nw['br6'] <= 36, f'배럭 효과(캐릭터 6칸): 다른 캐릭터 5명이 모두 높아도 엽전 +35%까지(예전 4칸 최대 30%의 +20% 안쪽) {nw["br6"]}')
         check(9.5 <= nw['bank'] <= 10.5 and nw['up'] >= 2 and nw['bankAfter'] == 0, f'만렙 경험치: 만렙에서 버려지던 경험치를 모아 두고 환생 뒤 30%를 레벨로 돌려준다 {nw}')
         check(nw['g1'] == 21 and not nw['b1'] and nw['b2'] and nw['lvGate'] and nw['rOpen'] == [10, 1] and nw['free'],
               f'이야기·레벨 문: 단계 보스는 이야기 진행과 레벨에 맞춰, 저승 레이드는 그 레이드 퀘스트에 닿아야 열린다 {nw}')
@@ -1402,7 +1478,7 @@ async def main():
         await page.wait_for_timeout(1200)
         await page.screenshot(path=str(OUT / '34_장터마을.png'))
         await page.evaluate("() => window.__game.leaveMarket()")
-        await page.evaluate("() => { const G = window.__game; G.quiet = false; G.buildTab('gear'); }")
+        await page.evaluate("() => { const G = window.__game; G.quiet = false; if (!document.querySelector('#modal').hidden) G.hideModal(); G.buildTab('gear'); }")
         await page.click('#seg-mount')
         await page.wait_for_timeout(400)
         await page.screenshot(path=str(OUT / '33_탈것.png'))
@@ -1546,10 +1622,16 @@ async def main():
         await sp.screenshot(path=str(OUT / '26d_기술_8칸.png'))
         check(len(sw1['set']) == 8 and sw1['set'] != sw0 and sw0[0] not in sw1['set'] and sw1['man'] and '8칸 중 8칸' in sw1['tag'] and sw1['modal'], f'[기술]에서 8칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 묻고 바꿔 끼운다 {sw0} {sw1}')
         await sp.evaluate("""() => { const G = window.__game; G.closePage(); G.noSkNote = false; G.S.skNote = true; }""")
-        await sp.wait_for_selector('#mTitle:has-text("8칸")', timeout=4000)
-        await sp.screenshot(path=str(OUT / '26e_8칸_알림.png'))
-        await sp.click('#modal-btn-0')
-        check(not await sp.evaluate('() => window.__game.S.skNote'), '8개를 넘게 쓰던 예전 저장은 추천 8개로 정리했다는 알림 창이 한 번 뜬다')
+        await sp.wait_for_selector('#inh.noti #notiSay', timeout=4000)
+        await sp.wait_for_timeout(500); await sp.screenshot(path=str(OUT / '26e_8칸_알림.png'))
+        n8 = await sp.evaluate("() => ({who: document.querySelector('#inh .nm').textContent, say: document.querySelector('#notiSay').textContent, btns: !document.querySelector('#notiBtns').hidden})")
+        await sp.click('#inh .inh-say'); await sp.wait_for_timeout(300)      # 말은 눌러서 넘김 → 끝에 [나중에]/[바로 가기]
+        n8b = await sp.evaluate("() => ({btns: !document.querySelector('#notiBtns').hidden, go: (document.querySelector('#notiGo') || {}).textContent, sk: document.querySelectorAll('#inh .pre-sk').length})")
+        await sp.screenshot(path=str(OUT / '26f_8칸_알림_끝.png'))
+        await sp.click('#notiGo'); await sp.wait_for_timeout(400)
+        n8c = await sp.evaluate("() => ({note: window.__game.S.skNote, open: window.__game.inhOpen, tab: window.__game.currentTab, log: window.__game.S.noti.log.map(x => x.k)})")
+        check('까치' in n8['who'] and '8' in n8['say'] and not n8['btns'] and n8b['btns'] and n8b['sk'] == 8 and not n8c['note'] and not n8c['open'] and n8c['tab'] == 'skill' and n8c['log'] == ['sk8'],
+              f'8개를 넘게 쓰던 예전 저장은 까치가 찾아와 알린다(알림 연출 틀: 말을 눌러 넘기고 [기술 보러 가기]) {n8} {n8b} {n8c}')
         await ctxS.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
@@ -1621,7 +1703,7 @@ async def main():
           const keys = Object.keys(localStorage), ses = Object.keys(sessionStorage);
           const main = JSON.parse(localStorage.getItem('samhan-accounts-v1') || '{}');
           let cached = null;
-          try { const c = await caches.open('samhan-v2'), r = await c.match(new URL('../index.html', location.href).href); cached = r ? /\/\*BETA_BUILD\*\/(true|false)/.exec(await r.text())[1] : 'none'; } catch (e) { cached = 'err'; }
+          try { const ck = (await caches.keys()).find(k => k.startsWith('samhan-')), c = await caches.open(ck || 'samhan-none'), r = await c.match(new URL('../index.html', location.href).href); cached = r ? /\/\*BETA_BUILD\*\/(true|false)/.exec(await r.text())[1] : 'none'; } catch (e) { cached = 'err'; }
           const regs = (await navigator.serviceWorker.getRegistrations()).map(r => new URL(r.scope).pathname);
           return {beta: keys.filter(k => k.startsWith('beta-')).sort(), other: keys.filter(k => !k.startsWith('beta-')).sort(), ses, mainMark: main.mark, mainAcc: Object.keys(main.accounts || {}), cached, regs, name: window.__game.S.name}; }''')
         check(b1['name'] == '베타용사' and any(k == 'beta-samhan-accounts-v1' for k in b1['beta']) and any(k.startswith('beta-samhan-hero-v1:betatest:') for k in b1['beta'])
@@ -1648,7 +1730,7 @@ async def main():
                     await bp.screenshot(path=str(OUT / '25d_베타_시험용_시작.png'))
                 await bp.click('#charBtn'); await bp.click('#modal-btn-1')
                 await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
-                await bp.evaluate('''() => { const cards = document.querySelectorAll('#mBody .char'); cards[cards.length - 1].click(); }''')   # 방금 만든 시험용 캐릭터를 지워 다음 것을 받을 자리를 냄
+                await bp.evaluate('''() => { const cards = document.querySelectorAll('#mBody .char[data-cid]'); cards[cards.length - 1].click(); }''')   # 방금 만든 시험용 캐릭터를 지워 다음 것을 받을 자리를 냄
                 await bp.click('#cs-del'); await bp.click('#modal-btn-1')
                 await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
                 await bp.click('#cs-beta')

@@ -101,7 +101,7 @@ declare a text := samhan_acc(p_token); n int;
 begin
   if p_save is not null and char_length(p_save) > 400000 then raise exception 'too_big'; end if;
   select count(*) into n from samhan_chars where acc = a and cid <> p_cid;
-  if n >= 4 then raise exception 'too_many'; end if;
+  if n >= 6 then raise exception 'too_many'; end if;   -- 한 계정 캐릭터 6명까지(2026-11 물의 신화: 4 → 6)
   begin
     insert into samhan_chars as c (acc, cid, name, summary, save, save_t, updated_at)
       values (a, p_cid, p_name, coalesce(p_summary, '{}'::jsonb), p_save, coalesce(p_t, 0), now())
