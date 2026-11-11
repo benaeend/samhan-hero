@@ -2,3 +2,5 @@ tools/out/
 __pycache__/
 *.pyc
 .DS_Store
+# 베타 테스트 빌드 결과(tools/build.py --beta). 이 브랜치에는 올리지 않고 main 의 beta/ 폴더에만 따로 올린다
+beta/

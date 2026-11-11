@@ -1369,9 +1369,13 @@ const SPAWN_R = 11;       // 사냥터 몹은 용사에게서 이 칸 수 안쪽
 const BOSS_TIME = 30, OFFLINE_CAP = 12 * 3600;
 // 사냥터: 몹 수(기본+단계마다, 저승부터 더), 나오는 간격, 보스까지 잡을 수(kills), 잡몹 한 마리 보상 배율(rew: 몹이 많아진 만큼 엽전·경험치·보석을 나눠 줌)
 const FIELD = {base:7, step:12, max:16, world:3, gap:0.25, rand:0.2, kills:25, rew:0.75};   // 2026-11 (9): 몹 2배쯤·보스까지 25마리, 한 마리 보상은 0.75배(벽에서 시간당 수입이 예전과 비슷하게)
-const SAVE_KEY = 'samhan-hero-v1';          // 예전(계정 없던 때) 저장 자리. 새 캐릭터로 옮겨 올 때만 읽는다
-const ACC_KEY = 'samhan-accounts-v1';       // 이 기기의 계정·캐릭터 목록
-const SESSION_KEY = 'samhan-session';       // 로그인 유지를 끈 경우 탭이 열려 있는 동안만 기억
+// 베타 테스트 빌드(tools/build.py --beta 만 true로 바꾼다 → beta/index.html). 본 게임과 같은 주소(브라우저 저장 공간)를 쓰므로
+// 저장 자리마다 KP('beta-') 머리말을 붙여 절대 섞이지 않게 하고, 온라인 서버·앱 설치·오프라인 도우미를 끈다. 새 저장 자리를 만들 땐 꼭 KP를 붙인다
+const BETA = /*BETA_BUILD*/false;
+const KP = BETA ? 'beta-' : '';
+const SAVE_KEY = KP + 'samhan-hero-v1';          // 예전(계정 없던 때) 저장 자리. 새 캐릭터로 옮겨 올 때만 읽는다
+const ACC_KEY = KP + 'samhan-accounts-v1';       // 이 기기의 계정·캐릭터 목록
+const SESSION_KEY = KP + 'samhan-session';       // 로그인 유지를 끈 경우 탭이 열려 있는 동안만 기억
 const charKey = (acc, cid) => `${SAVE_KEY}:${acc}:${cid}`;
 const MAX_CHARS = 4;
 const STEP_HERO = 0.2;
@@ -1383,7 +1387,7 @@ let clockSkew = 0;                          // 테스트에서 시간을 빨리 
    claude.ai 아티팩트처럼 다른 곳에 올린 경우에는 아무것도 하지 않는다. */
 const PWA_HOST = (() => {
   try {
-    return window.top === window && /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)
+    return !BETA && window.top === window && /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname)
       && (location.protocol === 'https:' || location.protocol === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(location.hostname));
   } catch (e) { return false; }
 })();
@@ -2830,7 +2834,7 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-6', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-11-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '2026-11-11 · 채팅 확성기'],
@@ -9386,7 +9390,7 @@ let dpr = 1, scale = 1;
    orientMode 'auto'(기기 방향 따라)·'land'(가로)·'port'(세로), 이 기기에 기억(ORIENT_KEY).
    먼저 화면 방향 잠금(screen.orientation.lock, 안드로이드 설치 앱·전체 화면)을 해 보고, 안 되면(아이폰 등) 게임 화면 전체(body)를 90도 돌려 보여 준다.
    돌린 동안 장면 누르기는 localPt가 되돌려 계산하고, 화면 크기는 viewW·viewH(돌린 뒤의 가로·세로)로 본다 */
-const ORIENT_KEY = 'samhan-orient';
+const ORIENT_KEY = KP + 'samhan-orient';
 let orientMode = (() => { try { const v = localStorage.getItem(ORIENT_KEY); return v === 'land' || v === 'port' ? v : 'auto'; } catch (e){ return 'auto'; } })();
 let rotDeg = 0;
 const viewW = () => rotDeg ? innerHeight : innerWidth, viewH = () => rotDeg ? innerWidth : innerHeight;
@@ -10486,7 +10490,7 @@ function announce(text){ if (session) addChat('sys', '알림', text); }
 /* --- 확성기(2026-11 (49), 사용자 요청: 용사가 이야기하면 확성기·공지처럼 게임 화면에 표출) ---
    나·다른 용사가 한 말(addChat의 'me'·'player')은 채팅창에 더해 장면 위 가운데(지역 이름·보스 막대 바로 아래)에 띠로 잠깐 띄운다. 주민(NPC) 수다·알림은 채팅창에만.
    글은 남이 보낸 데이터라 textContent로만 넣는다. 여럿이면 줄 서서 차례로(MEGA.max개, 밀리면 짧게), 긴 글은 옆으로 흐른다. 연출·계승 화면 동안은 기다렸다가(오래된 것은 버림). [정보]에서 끌 수 있다 */
-const MEGA = {hold:4.2, fast:2.4, max:6, old:25000, px:70, runMax:7, key:'samhan-mega'};
+const MEGA = {hold:4.2, fast:2.4, max:6, old:25000, px:70, runMax:7, key:KP + 'samhan-mega'};
 let megaOn = (() => { try { return localStorage.getItem(MEGA.key) !== '0'; } catch (e){ return true; } })();
 let megaQ = [], megaCur = null, megaSeen = 0, ovBot = 55;
 function setMega(on){ megaOn = !!on; try { localStorage.setItem(MEGA.key, megaOn ? '1' : '0'); } catch (e) {} if (!megaOn){ megaQ = []; megaHide(true); } }
@@ -13309,7 +13313,7 @@ function updateQTrack(){
   el.classList.toggle('ready', done);
 }
 $('#qtrack').addEventListener('click', e => { if (e.target.closest('#qtClaim')){ e.stopPropagation(); closePage(); claimMain(); updateQTrack(); return; } if (session || window.__game) questGo(mainQuest()); });   // 누르면 그 퀘스트를 하는 곳으로
-$('#rotClose').addEventListener('click', () => { $('#rotTip').hidden = true; try { localStorage.setItem('samhan-rot-tip', '1'); } catch (e) {} });
+$('#rotClose').addEventListener('click', () => { $('#rotTip').hidden = true; try { localStorage.setItem(KP + 'samhan-rot-tip', '1'); } catch (e) {} });
 
 /* --- 채팅 창 --- */
 function setChat(open){
@@ -13664,6 +13668,7 @@ function showCharSelect(msg){
     });
     $('#cs-out').addEventListener('click', () => { curAcc = null; REG.keep = null; saveReg(); writeSession(null); showLogin('login'); });
     if ($('#cs-del')) $('#cs-del').addEventListener('click', () => { if (pick) confirmDeleteChar(pick); });
+    if (betaHook) betaHook();
   });
 }
 function confirmDeleteChar(cid){
@@ -13808,12 +13813,12 @@ function logout(){
    로그인하면 60일짜리 무작위 표(토큰)를 받아 이 기기에 둔다. 채팅·타임 보스는 실시간 채널 'samhan-world'.
    서버에 닿지 않으면 지금처럼 이 기기 저장으로 놀고, 다시 닿으면 1분마다 올린다. */
 const ONLINE = Object.assign({url:'https://gqconcepvhoyqciwwbbf.supabase.co', key:'sb_publishable_iYTPNM7jQlmlA7ibfhHKaw_UyjTU_0B'}, window.__samhanOnline || {});   // key는 '공개용(publishable) 키'라 여기 적어도 된다(비밀 키는 절대 넣지 않는다)
-const ON_KEY = 'samhan-online-v1';
+const ON_KEY = KP + 'samhan-online-v1';
 const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
 let online = null, onlineLib = null, onlineNote = '';
-const onlineWanted = () => !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
+const onlineWanted = () => !BETA && !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
 // 타이틀 아래 한 줄: 계정이 어디에 저장되는지(온라인 서버 · Claude 저장소 · 이 기기)
-{ const tv = document.querySelector('.t-ver'); if (tv) tv.textContent = '2026.11 업데이트 · ' + (onlineWanted() ? '계정은 서버에 저장돼 다른 기기에서도 이어져요' : window.claude && typeof window.claude.use === 'function' ? '계정은 내 Claude 계정에 저장돼요' : '계정은 이 기기에 저장돼요'); }
+{ const tv = document.querySelector('.t-ver'); if (tv) tv.textContent = BETA ? '베타 테스트 · 저장은 이 기기에만, 본 게임과 따로 보관돼요' : '2026.11 업데이트 · ' + (onlineWanted() ? '계정은 서버에 저장돼 다른 기기에서도 이어져요' : window.claude && typeof window.claude.use === 'function' ? '계정은 내 Claude 계정에 저장돼요' : '계정은 이 기기에 저장돼요'); }
 function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); }); }
 async function onlineClient(){
   if (onlineLib) return onlineLib;
@@ -13962,7 +13967,7 @@ async function onlineRoom(){
 /* ================= 저장·오프라인 보상 ================= */
 let cloud = null, cloudBusy = false;
 const cdocName = (acc, cid) => `samhan-c-${acc}-${cid}`;
-const cdoc = name => cloud.db.doc('data/users/' + cloud.uid + '/' + name);
+const cdoc = name => cloud.db.doc('data/users/' + cloud.uid + '/' + KP + name);
 function saveLocal(){
   if (!session) return;
   S.lastSave = now();
@@ -14193,7 +14198,7 @@ async function boot(){
    음원 파일 없이 Web Audio로 직접 연주한다(저작권 걱정 없음, 오프라인에서도 남).
    가야금(뜯는 소리)·대금(부는 소리)·장구(덩·쿵·덕)·징. 이승은 평조, 저승은 계면조 느낌의 5음 음계.
    브라우저 규칙상 화면을 한 번 눌러야 소리가 난다. */
-const AUD_KEY = 'samhan-audio';
+const AUD_KEY = KP + 'samhan-audio';
 const AUD = {ctx:null, master:null, bgm:null, fx:null, noise:null, track:'', next:0, step:0, phrase:[], deg:0, lastHit:0, set:{bgm:true, sfx:true, bv:0.5, sv:0.7}};
 try { Object.assign(AUD.set, JSON.parse(localStorage.getItem(AUD_KEY) || '{}')); } catch (e) {}
 function audSave(){ try { localStorage.setItem(AUD_KEY, JSON.stringify(AUD.set)); } catch (e) {} audApply(); }
@@ -14385,7 +14390,7 @@ function start(hotData){
   last = performance.now();
   requestAnimationFrame(loop);
   setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); updateInh(); npcRareNote(); if (session) skSetFix(); }, 200);
-  try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
+  try { $('#rotTip').hidden = !!localStorage.getItem(KP + 'samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
   let hotOk = false;
@@ -14403,8 +14408,60 @@ function start(hotData){
     window.claude.hot.snapshot(() => ({save:JSON.stringify(S), acc:session && session.acc, cid:session && session.cid}));
   }
 }
+/* ================= 베타 테스트 빌드 전용 =================
+   아래 '베타 전용' 시작·끝 표시 사이는 tools/build.py가 본 빌드(index.html)에서 통째로 지운다 → beta/index.html(https://…/samhan-hero/beta/)에만 들어간다.
+   베타 띠 · 시험용 캐릭터(미리 키워 둔 저장으로 바로 시작) · 본 게임 오프라인 보관본 지키기 */
+let betaHook = null;   // 캐릭터 고르기 창이 그려진 뒤 부른다(본 빌드에서는 늘 null)
+/*BETA_ONLY_BEGIN*/
+const BETA_SAVES = /*BETA_SAVES*/[];   // build.py --beta 가 tools/beta_saves/*.json 을 넣는다: [{name, label, desc, save}]
+if (BETA){
+  const bst = document.createElement('style');
+  bst.textContent = '#betaTag{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:60;pointer-events:none;writing-mode:vertical-rl;padding:9px 2px;border-radius:0 9px 9px 0;background:rgba(176,42,36,.84);color:#fff;font-size:10px;font-weight:800;letter-spacing:.12em;box-shadow:0 1px 5px rgba(0,0,0,.45);white-space:nowrap}';
+  document.head.appendChild(bst);
+  const btag = document.createElement('div'); btag.id = 'betaTag'; btag.textContent = '베타 테스트';
+  document.body.appendChild(btag);
+  try { document.title = '[베타] ' + document.title; } catch (e) {}
+  // 본 게임의 오프라인 도우미(sw.js, 범위가 /samhan-hero/ 전체)가 이 페이지를 '본 게임 보관본' 자리에 받아 두므로, 조금 뒤 본 게임 파일을 다시 받아 보관본을 되돌려 놓는다
+  try {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller && /\/beta\//.test(location.pathname))
+      setTimeout(() => { fetch('../index.html', {cache:'no-store'}).catch(() => {}); }, 6000);
+  } catch (e) {}
+  const betaMake = x => {
+    const A = REG.accounts[curAcc], err = m => setText($('#bt-err'), m);
+    if (!A) return;
+    if (A.chars.length >= MAX_CHARS) return err(`캐릭터 칸이 가득 찼어요(${MAX_CHARS}명). 캐릭터 하나를 지우고 다시 눌러 주세요.`);
+    let st;
+    try { st = mergeState(JSON.parse(JSON.stringify(x.save))); } catch (e) { return err('이 저장을 불러오지 못했어요.'); }
+    let name = x.name, n = 1;
+    while (allChars().some(c => c.name === name)) name = x.name + (++n);
+    st.name = name; st.chosen = true; st.lastSave = now();
+    const cid = 'c' + now().toString(36) + randHex(2);
+    A.chars.push({cid, name, cls:st.cls, level:st.level, maxStage:st.maxStage, world:st.world, look:st.look, armorG:gradeOf(st.equip.armor), weaponG:gradeOf(st.equip.weapon), t:now()});
+    A.t = now(); saveReg();
+    try { localStorage.setItem(charKey(curAcc, cid), JSON.stringify(st)); } catch (e) {}
+    enterChar(cid, {data:st, hot:true});
+  };
+  const betaPick = () => {
+    const list = BETA_SAVES.map((x, i) => `<button class="char" data-bi="${i}"><img src="${lookPreview(x.save.cls in CLASSES ? x.save.cls : 'musa', x.save.look, gradeOf(x.save.equip.armor), gradeOf(x.save.equip.weapon))}" alt=""><span><b>${esc(x.label)}</b><span>${esc(x.desc)}</span></span></button>`).join('');
+    showModal('시험용 캐릭터 (베타 전용)', `<p>미리 키워 둔 캐릭터로 바로 들어가 새 콘텐츠를 눌러 볼 수 있어요. 고르면 이 계정에 새 캐릭터로 더해져요(한 계정 ${MAX_CHARS}명까지).</p>
+      <div class="chars">${list || '<p class="small">아직 준비된 시험용 캐릭터가 없어요.</p>'}</div><p class="err" id="bt-err" role="alert"></p>`,
+      [{label:'뒤로', keep:() => { showCharSelect(); return true; }}], () => {
+        document.querySelectorAll('#mBody [data-bi]').forEach(el => el.addEventListener('click', () => betaMake(BETA_SAVES[+el.dataset.bi])));
+      });
+  };
+  betaHook = () => {
+    const row = document.querySelector('#mBody .linkrow');
+    if (!row || $('#cs-beta')) return;
+    const b = document.createElement('button'); b.className = 'link'; b.id = 'cs-beta'; b.textContent = '시험용 캐릭터로 시작';
+    row.insertBefore(b, row.children[1] || null);
+    b.addEventListener('click', betaPick);
+  };
+}
+/*BETA_ONLY_END*/
+
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
+    get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, CLASSES, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,

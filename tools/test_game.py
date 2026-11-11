@@ -13,6 +13,7 @@ import base64
 import functools
 import json
 import os
+import subprocess
 import sys
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -1512,6 +1513,69 @@ async def main():
         await tab(pp, 'rec')
         check(await pp.is_visible('#appBtn'), '[정보] 탭에 [앱으로 설치] 단추가 있다')
         await ctxP.close()
+
+        # 11) 베타 테스트 빌드(tools/build.py --beta): 저장 자리가 따로(beta- 머리말)·온라인/앱 설치 끔·베타 띠·시험용 캐릭터, 본 빌드에는 베타 코드가 없음
+        bout = ROOT / 'beta' / 'index.html'   # 진짜 주소(…/samhan-hero/beta/)와 같은 자리. patch 브랜치에는 커밋하지 않는다(.gitignore)
+        br = subprocess.run([sys.executable, str(ROOT / 'tools' / 'build.py'), '--beta'], capture_output=True, text=True)
+        check(br.returncode == 0 and bout.exists(), f'베타 빌드가 만들어진다 {br.stderr[-300:]}')
+        main_html = (ROOT / 'index.html').read_text(encoding='utf-8')
+        check(all(w not in main_html for w in ('BETA_ONLY', 'BETA_SAVES', 'cs-beta', 'betaTag')) and '/*BETA_BUILD*/false' in main_html, '본 빌드(index.html)에는 베타 전용 코드·시험용 저장이 들어가지 않는다')
+        ctxB = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        await ctxB.add_init_script("window.__samhanOnline = {url: 'http://127.0.0.1:9', key: 'sb_publishable_test'};")   # 본 빌드라면 온라인이 켜질 조건(아무 데도 닿지 않는 주소)
+        bp = await ctxB.new_page()
+        await bp.goto(base + 'index.html?simtest')
+        await bp.wait_for_selector('#lg-id')
+        m0 = await bp.evaluate('''async () => { await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(r, 8000))]);
+          localStorage.setItem('samhan-accounts-v1', '{"v":1,"accounts":{},"mark":"main"}');
+          return {beta: window.__game.beta, on: window.__game.onlineWanted, pwa: window.__game.pwa}; }''')
+        await bp.reload(); await bp.wait_for_selector('#lg-id')   # 본 게임의 오프라인 도우미가 이 창을 맡은 상태로
+        watch(bp, errors, '베타 ')
+        await bp.goto(base + 'beta/?simtest')
+        await bp.wait_for_selector('#lg-id')
+        b0 = await bp.evaluate('''() => ({beta: window.__game.beta, on: window.__game.onlineWanted, pwa: window.__game.pwa, man: !!document.querySelector('link[rel=manifest]'),
+          tag: (() => { const e = document.querySelector('#betaTag'); const r = e && e.getBoundingClientRect(); return !!e && r.width > 8 && r.height > 30 && getComputedStyle(e).pointerEvents === 'none'; })(), ver: document.querySelector('.t-ver').textContent, ctl: !!navigator.serviceWorker.controller})''')
+        check(m0 == {'beta': False, 'on': True, 'pwa': True} and b0['beta'] and not b0['on'] and not b0['pwa'] and not b0['man'] and b0['tag'] and '베타' in b0['ver'],
+              f'베타 빌드는 온라인 서버·앱 설치를 끄고 베타 띠를 보여 준다 {m0} {b0}')
+        await bp.screenshot(path=str(OUT / '25_베타_로그인.png'))
+        await signup(bp, 'betatest', 'abcd', '베타용사')
+        await bp.wait_for_timeout(6500)   # 저장(5초마다)과 본 게임 보관본 되돌리기(6초 뒤)를 기다림
+        b1 = await bp.evaluate(r'''async () => {
+          const keys = Object.keys(localStorage), ses = Object.keys(sessionStorage);
+          const main = JSON.parse(localStorage.getItem('samhan-accounts-v1') || '{}');
+          let cached = null;
+          try { const c = await caches.open('samhan-v2'), r = await c.match(new URL('../index.html', location.href).href); cached = r ? /\/\*BETA_BUILD\*\/(true|false)/.exec(await r.text())[1] : 'none'; } catch (e) { cached = 'err'; }
+          const regs = (await navigator.serviceWorker.getRegistrations()).map(r => new URL(r.scope).pathname);
+          return {beta: keys.filter(k => k.startsWith('beta-')).sort(), other: keys.filter(k => !k.startsWith('beta-')).sort(), ses, mainMark: main.mark, mainAcc: Object.keys(main.accounts || {}), cached, regs, name: window.__game.S.name}; }''')
+        check(b1['name'] == '베타용사' and any(k == 'beta-samhan-accounts-v1' for k in b1['beta']) and any(k.startswith('beta-samhan-hero-v1:betatest:') for k in b1['beta'])
+              and b1['other'] == ['samhan-accounts-v1'] and b1['mainMark'] == 'main' and b1['mainAcc'] == [] and all(k.startswith('beta-') for k in b1['ses']),
+              f'베타의 계정·캐릭터·설정은 모두 beta- 자리에 저장되고 본 게임 저장은 건드리지 않는다 {b1}')
+        check(b0['ctl'] and b1['cached'] == 'false' and b1['regs'] == ['/'], f'베타를 열어도 본 게임의 오프라인 보관본은 본 게임 그대로이고, 베타는 오프라인 도우미를 따로 등록하지 않는다 {b0["ctl"]} {b1["cached"]} {b1["regs"]}')
+        await bp.screenshot(path=str(OUT / '25b_베타_플레이.png'))
+        await bp.click('#charBtn'); await bp.click('#modal-btn-1')
+        await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await bp.is_visible('#cs-beta'), '베타의 캐릭터 고르기 창에 [시험용 캐릭터로 시작]이 있다')
+        await bp.click('#cs-beta')
+        await bp.wait_for_selector('#mTitle:has-text("시험용 캐릭터")')
+        await bp.screenshot(path=str(OUT / '25c_베타_시험용캐릭터.png'))
+        nsave = await bp.evaluate('() => document.querySelectorAll("#mBody [data-bi]").length')
+        if nsave:
+            for bi in range(nsave):
+                await bp.click(f'#mBody [data-bi="{bi}"]')
+                await bp.wait_for_function('() => window.__game.session && document.querySelector("#modal").hidden')
+                await bp.wait_for_timeout(1500)
+                bs = await bp.evaluate('''() => { const G = window.__game, S = G.S; G.update(0.05); G.render();
+                  return {name: S.name, lv: S.level, w: S.world, q: S.quest.main, atk: G.ST.atk > 0, cut: !!G.cut, n: JSON.parse(localStorage.getItem('beta-samhan-accounts-v1')).accounts.betatest.chars.length}; }''')
+                check(bs['lv'] > 1 and bs['atk'] and bs['n'] == 2 and bs['name'] != '베타용사', f'시험용 캐릭터 {bi + 1}번으로 바로 들어간다 {bs}')
+                if bi == 0:
+                    await bp.screenshot(path=str(OUT / '25d_베타_시험용_시작.png'))
+                await bp.click('#charBtn'); await bp.click('#modal-btn-1')
+                await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+                await bp.evaluate('''() => { const cards = document.querySelectorAll('#mBody .char'); cards[cards.length - 1].click(); }''')   # 방금 만든 시험용 캐릭터를 지워 다음 것을 받을 자리를 냄
+                await bp.click('#cs-del'); await bp.click('#modal-btn-1')
+                await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+                await bp.click('#cs-beta')
+                await bp.wait_for_selector('#mTitle:has-text("시험용 캐릭터")')
+        await ctxB.close()
         srv.shutdown()
 
         if '--sim' in sys.argv:
