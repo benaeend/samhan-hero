@@ -39,6 +39,7 @@ SIM = r"""
   if (opts.kunlun) Object.assign(G.KUNLUN, opts.kunlun);
   if (opts.expk4) G.EXP_K[4] = opts.expk4;
   if (opts.late) Object.assign(G.LATE_K, opts.late);
+  if (opts.sea) G.seaForce = true;   // 물의 신화 4단계: 4부의 새 성장(투구·어깨·신발·호박석)을 미리 열어 놓고 돌린다(tools/sim_sea.py)
   if (opts.load) { Object.assign(G.S, G.mergeState(JSON.parse(opts.load)));   // 예전 저장도 새 칸을 채워서
     G.S.cls = cls; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
   G.S.buyMode = 1;
@@ -68,6 +69,7 @@ SIM = r"""
         if (lv >= G.refineCap(slot) || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
         G.refineTry(slot);
       }
+      if (G.seaOpen() && !opts.nosea) G.seaGrow();   // 물의 신화 4단계: 4부부터 새 장비 칸(투구·어깨·신발) 소환·합성·재련과 호박석 세공(추천 줄)
       for (const pt of G.PET_TYPE_ORDER) {
         G.petEquipBest(pt);
         const pi = G.eqPet(pt); if (pi < 0) continue;
@@ -148,7 +150,8 @@ SIM = r"""
     if (opts.snaps) { const mm = Math.round(t / 60); if (opts.snaps.includes(mm) && !(mm in snaps) && !G.raid) snaps[mm] = JSON.stringify(G.S); }
     if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계', '부상', '곤륜'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
-      + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`);
+      + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`
+      + (G.seaOpen() ? `, 새 칸 ${G.NEW_SLOTS.map(k => `${G.S.equip[k]}(+${G.S.refine[k].lv})`).join('/')}, 호박석 빛 ${Object.values(G.ambSum().L).reduce((a, b) => a + b, 0)}, 바다 몫 공×${G.seaSum().atk.toFixed(2)}·체×${G.seaSum().hp.toFixed(2)}·받는 피해×${G.seaSum().def.toFixed(2)}` : ''));
   }
   return {log, first, snaps, raids};
 }
@@ -1584,7 +1587,7 @@ async def main():
 
         # 9-9) 물의 신화 1단계: 밸런스 숫자·싸움 중 물약 구매 금지·장착 기술 8칸·4차 전직 저장·보스 다시 도전 간격
         #       (곤륜 끝 4차 무사 저장 = 베타의 시험용 캐릭터 tools/beta_saves 가운데 레벨이 가장 높은 것)
-        late = max((json.loads(f.read_text(encoding='utf-8')) for f in (ROOT / 'tools' / 'beta_saves').glob('*.json')), key=lambda d: d['save'].get('level', 0))['save']
+        late = max((d for d in (json.loads(f.read_text(encoding='utf-8')) for f in sorted((ROOT / 'tools' / 'beta_saves').glob('*.json'))) if not d['save'].get('seaPreview')), key=lambda d: d['save'].get('level', 0))['save']   # 4부 미리 보기 캐릭터는 빼고
         ctxS = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
         sp = await ctxS.new_page()
         watch(sp, errors, '1단계 ')
@@ -1743,6 +1746,119 @@ async def main():
         check('그림자' in jn['who'] and '다시 와라' in jn['say'] and '상위 레이드' in jn['tag'] and jn['img'].startswith('data:image'), f'새 땅에 들어서면 지나온 땅 레이드 보스의 그림자가 찾아와 「진」이 열렸다고 알린다(알림 연출 틀) {jn["who"]} {jn["say"][:30]}')
         await jp.evaluate("() => { window.__game.noJin = true; }")
         await ctxJ.close()
+
+        # 9-11) 물의 신화 4단계: 새 장비 칸(투구·어깨·신발)·재련, 유물 등급, 3차 계승(용궁 진주·한 벌), 호박석 세공 — 4부 전에는 안 보임(시험은 seaForce)
+        ctxE = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        ep = await ctxE.new_page()
+        watch(ep, errors, '4단계 ')
+        await fresh(ep)
+        await signup(ep, 'seatest', 'abcd', '바다용사')
+        e1 = await ep.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          const old = JSON.parse(JSON.stringify(save)); delete old.amber; delete old.sea; for (const k of G.NEW_SLOTS){ delete old.gear[k]; delete old.equip[k]; delete old.refine[k]; } old.gear.weapon.count.length = 20; old.gear.weapon.seen.length = 20;
+          Object.assign(S, G.mergeState(old)); S.name = '바다용사'; G.refreshStats(); G.setStage(S.stage);
+          // 예전 저장: 새 칸은 빈 칸으로 채워지고 낀 무기는 그대로, 남이 보낸 이상한 호박석 값은 다듬는다
+          out.merged = [G.NEW_SLOTS.every(k => S.equip[k] === -1 && S.gear[k].count.length === G.GEAR_N && S.refine[k].lv === 0), S.gear.weapon.count.length, S.equip.weapon === save.equip.weapon, S.amber.raw.join(','), S.sea.kit, S.mat.m3];
+          const bad = G.mergeState({equip:{helm:99, boots:'x'}, refine:{helm:{lv:99, t:9}}, amber:{raw:[5, 'x', 1e9], st:{helm:{g:2, a:['wave', 'reef'], b:'b_atk', v:[99, 3, 2], u:[4, 3, 2], p:5}, weapon:{g:9, a:['wave', 'reef'], b:'b_atk', v:[], u:[]}, armor:{g:0, a:['wave', 'wave'], b:'b_hp', v:[0, 0, 0], u:[0, 0, 0]}, boots:{g:0, a:['wave', 'b_atk'], b:'reef', v:[0, 0, 0], u:[0, 0, 0]}}}});
+          out.clean = [bad.equip.helm, bad.equip.boots, bad.refine.helm.lv, bad.refine.helm.t, bad.amber.raw.join(','), bad.amber.st.helm.v.join(','), bad.amber.st.helm.p, Object.keys(bad.amber.st).join(',')];
+          // 4부 전: 닫혀 있고 아무것도 못 한다
+          const st0 = Object.assign({}, G.ST), tk0 = G.takenK(true), ref0 = G.refineEff('weapon'), res0 = G.gearRes();
+          out.closed = [G.seaOpen(), G.slotsNow().length, G.matW(), G.refineGen(), G.inhPending(), G.seaKit(), G.ambSet('weapon', 0), G.ambCarve('weapon', 0), G.seaGearDrop('raid'), G.amberDrop('jin', true), G.seaGrow(), G.heroGx(), G.seaSum().atk];
+          // 4부(시험으로 엶): 열리기만 해서는 능력치가 그대로, 대장장이 계승 → 재료 1:1 · 재련 3차(효과 그대로) · 한 벌
+          G.seaForce = true; G.refreshStats();
+          out.open = [G.seaOpen(), G.slotsNow().length, G.matW(), G.refineGen(), G.inhPending(), G.ST.atk / st0.atk, G.ST.maxHp / st0.maxHp, Math.abs(G.gearRes() - res0) < 1e-9];
+          const mats = (S.mat.m0 || 0) + (S.mat.m1 || 0) + (S.mat.m2 || 0); out.rows = G.inhDo().map(r => r.kind);
+          out.inh = [S.mat.m0 + S.mat.m1 + S.mat.m2, S.mat.m3 === mats, S.refine.weapon.t, S.refine.weapon.lv, Math.abs(G.refineEff('weapon') - ref0) < 1e-6, S.refine.helm.t, G.NEW_SLOTS.map(k => S.equip[k]).join(','), S.amber.raw.join(','), S.sea.kit, G.seaKit(), G.inhPending()];
+          const m3 = S.mat.m3; G.gainMat(5, true); out.matGain = S.mat.m3 - m3;
+          out.kitUp = [G.ST.atk > st0.atk, G.ST.maxHp > st0.maxHp, G.ST.aspd > st0.aspd, G.takenK(true) < tk0, Math.abs(G.gearRes() - res0) < 1e-9];
+          // 새 칸 재련: 값은 지금 땅 엽전 기준, 올리면 그 칸의 효과가 오른다
+          S.gold = 1e300; S.dust = 1e9; S.gems = 1e6; const c0 = G.refineCost('helm', 0), cw = G.refineCost('weapon', 0), hp1 = G.ST.maxHp, atk1 = G.ST.atk;
+          let okN = 0; for (let k = 0; k < 400 && S.refine.helm.lv < 10; k++){ const r = G.refineTry('helm'); if (r && r.ok) okN++; }
+          out.refine = [c0.g > cw.g * 1000, c0.du === cw.du * G.SLOT.dustK, S.refine.helm.lv, G.refineCap('helm'), G.ST.maxHp > hp1, G.ST.atk === atk1, G.slotFxText('helm').includes('체력')];
+          // 유물: 소환·전설 합성으로는 안 나오고, 얻으면 전설 위 등급. 유물끼리는 합성
+          let top = 0; for (let k = 0; k < 30; k++) for (const r of G.summon('helm', 10)) top = Math.max(top, r.it);
+          S.gear.shoulder.count[19] = 9; S.gear.shoulder.seen[19] = true; const noUp = G.mergeableSets('shoulder', 19);
+          const isNew = G.giveItem('weapon', 20); const gw = G.gearG('weapon'); S.gear.weapon.count[20] = 5; G.mergeAll('weapon');
+          out.relic = [top <= 19, noUp, isNew, S.equip.weapon, gw, G.GRADES[gw].name, G.gearName('weapon', 20).startsWith('용궁'), G.gearEquipPct(20) > G.gearEquipPct(19), G.gearEquipPct(20) < G.gearEquipPct(19) * 1.35, S.gear.weapon.count[21], G.gradeOf(20), G.itemG(24), G.GRADES[8].name];
+          const dr = G.seaGearDrop('raid'), ad = G.amberDrop('jin', true); out.drop = [!!dr && G.ALL_SLOTS.includes(dr.slot) && dr.it >= 16, !!ad && ad.name.includes('호박석')];
+          // 호박석: 박기 → 깎기(성공 −10%·실패 +10%, 25~75%) → 다 깎으면 굳음
+          S.amber.raw = [2, 0, 1]; S.amber.st = {}; S.gold = 1e30;
+          out.set = [G.ambSet('weapon', 1), G.ambSet('weapon', 2), S.amber.raw.join(',')]; const st = G.ambSt('weapon'), g0 = S.gold = G.ambGold(st) * 1000;
+          G.ambLuck = 1; const r1 = G.ambCarve('weapon', 0); const p1 = st.p; G.ambLuck = 0; const r2 = G.ambCarve('weapon', 2), p2 = st.p; G.ambCarve('weapon', 2); const p3 = st.p;
+          out.carve = [st.a.length === 2 && st.a[0] !== st.a[1], G.ambN(st), r1.ok, st.v[0], p1, r2.ok, st.v[2], st.u[2], p2, p3, S.gold < g0];
+          G.ambLuck = 1; for (let k = 0; k < 9; k++) G.ambCarve('weapon', 0); const full = G.ambCarve('weapon', 0), pLow = st.p; S.gold = 0; const poor = G.ambCarve('weapon', 1); S.gold = 1e30;
+          out.carve2 = [st.v[0], full, pLow, poor, G.ambBest(st)]; st.p = 75; out.best = [G.ambBest(st), G.ambDone(st)];
+          G.ambLuck = 0; for (let k = 0; k < 30; k++){ G.ambCarve('weapon', 1); G.ambCarve('weapon', 2); } out.done = [G.ambDone(st), st.u.join(','), st.v.join(',')];
+          // 문양 합계: 같은 문양 빛 10·20·30개에 1·2·3단, 나쁜 문양은 5개부터
+          const mk = (n1, bad) => ({g:2, a:['wave', 'reef'], b:'b_atk', v:[n1, 0, bad], u:[10, 10, 10], p:25}), atkOf = () => { G.refreshStats(); return G.ST.atk; };
+          S.amber.st = {}; const a0 = atkOf(), tiers = [];
+          for (const n of [9, 10, 20, 30]){ S.amber.st = {weapon:mk(Math.min(10, n), 0), armor:mk(Math.min(10, Math.max(0, n - 10)), 0), helm:mk(Math.max(0, n - 20), 0)}; tiers.push(+(atkOf() / a0).toFixed(4)); }
+          S.amber.st = {weapon:mk(0, 4)}; const b4 = +(atkOf() / a0).toFixed(4); S.amber.st = {weapon:mk(0, 5)}; const b5 = +(atkOf() / a0).toFixed(4); S.amber.st = {weapon:mk(0, 10)}; const b10 = +(atkOf() / a0).toFixed(4);
+          out.tiers = tiers; out.badk = [b4, b5, b10]; out.sumT = G.ambSum().tier.wave;
+          // 진: 4부부터 주간 첫 승리에 호박석, 장비는 다섯 칸 가운데
+          S.amber.st = {}; S.amber.raw = [0, 0, 0]; S.jin.day = ''; S.jin.wk = {}; S.inv.potion = 50; G.refreshStats();
+          G.startJin(3, 7); if (G.raid){ G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); } out.jin = S.amber.raw[0] + S.amber.raw[1] + S.amber.raw[2];
+          // 시뮬 성장: 새 칸 소환·합성·재련과 호박석 깎기를 알아서
+          S.amber.raw = [5, 0, 0]; S.gems = 1e5; S.gold = 1e300; S.dust = 1e9; let gn = 0; for (let k = 0; k < 30; k++) gn += G.seaGrow({gems:1, gold:1});
+          out.grow = [gn > 50, G.NEW_SLOTS.every(k => S.refine[k].lv >= 16), G.NEW_SLOTS.every(k => S.equip[k] > 8), G.ALL_SLOTS.every(k => G.ambSt(k) && G.ambDone(G.ambSt(k))), G.power(G.ST) > 0];
+          S.gold = 1e30; S.amber.raw = [3, 2, 1]; S.amber.st.boots = null; delete S.amber.st.boots; G.quiet = false; return out; }""", late)
+        check(e1['merged'] == [True, 28, True, '0,0,0', False, 0] and e1['clean'] == [-1, -1, 25, 4, '5,0,9999', '4,3,2', 25, 'helm'],
+              f'새 장비 칸: 예전 저장에 투구·어깨·신발·호박석 칸이 빈 채로 채워지고(장비 번호 28칸), 이상한 값은 다듬는다 {e1["merged"]} {e1["clean"]}')
+        check(e1['closed'] == [False, 2, 2, 2, False, False, False, None, None, None, 0, None, 1],
+              f'4부 전에는 새 칸·세공·유물·용궁 진주가 모두 닫혀 있다 {e1["closed"]}')
+        check(e1['open'][:5] == [True, 5, 3, 3, True] and e1['open'][5] == 1 and e1['open'][6] == 1 and e1['open'][7]
+              and set(e1['rows']) >= {'mat', 'refine', 'kit'} and e1['inh'] == [0, True, 3, 15, True, 0, '8,8,8', '3,0,0', True, False, False] and e1['matGain'] == 5 and e1['kitUp'] == [True, True, True, True, True],
+              f'3차 계승: 열리기만 해서는 능력치·공명이 그대로, 대장장이가 재료를 용궁 진주로 1:1·재련을 효과 그대로 +15부터·새 칸 한 벌(희귀 I)과 호박석 3개 {e1["open"]} {e1["rows"]} {e1["inh"]}')
+        check(e1['refine'] == [True, True, 10, 25, True, True, True] and e1['relic'] == [True, 0, True, 20, 7, '유물', True, True, True, 1, 4, 8, '영물'] and e1['drop'] == [True, True],
+              f'새 칸 재련(지금 땅 엽전 기준)·유물 등급(소환·전설 합성으로는 안 나오고 유물끼리만 합성, 남에게 보내는 등급은 전설 그대로) {e1["refine"]} {e1["relic"]} {e1["drop"]}')
+        check(e1['set'] == [False, True, '2,0,0'] and e1['carve'] == [True, 10, True, 1, 65, False, 0, 2, 75, 75, True] and e1['carve2'][0] == 10 and e1['carve2'][1] is None and e1['carve2'][2] == 25 and e1['carve2'][3] is None and e1['carve2'][4] == 2
+              and e1['best'] == [1, False] and e1['done'][0] and e1['done'][1] == '10,10,10',
+              f'호박석 세공: 가진 돌만 박고, 성공하면 다음 확률 -10%·실패하면 +10%(25~75%), 줄이 차거나 엽전이 없으면 못 깎고, 추천은 확률이 높을 때 좋은 줄·낮을 때 나쁜 줄 {e1["set"]} {e1["carve"]} {e1["carve2"]} {e1["best"]} {e1["done"]}')
+        check(e1['tiers'] == [1, 1.06, 1.14, 1.25] and e1['badk'] == [1, 0.985, 0.91] and e1['sumT'] == 0 and e1['jin'] >= 1 and e1['grow'] == [True, True, True, True, True],
+              f'문양 합계 10·20·30개에 공격력 +6·14·25%, 나쁜 문양은 5개부터(-1.5%씩), 진 주간 첫 승리에 호박석, 시뮬 성장이 새 칸·세공을 채운다 {e1["tiers"]} {e1["badk"]} 진 {e1["jin"]} {e1["grow"]}')
+        await tab(ep, 'gear')
+        await ep.wait_for_timeout(300)
+        await ep.click('#seg-helm')
+        await ep.wait_for_timeout(300)
+        eu = await ep.evaluate("""() => { const q = s => document.querySelectorAll(s), t = s => (document.querySelector(s) || {}).textContent || '';
+          return {segs: ['helm', 'shoulder', 'boots', 'amber'].map(k => !!document.querySelector('#seg-' + k)), sum: t('#sum1'), cells: q('#page .cell').length, rows: [...q('#page .gl')].map(e => e.textContent), fx: t('#slotFx'), hide: !!document.querySelector('#helmHideChk'), asc: document.querySelector('#ascCard').hidden}; }""")
+        await ep.screenshot(path=str(OUT / '28_새장비칸_투구.png'))
+        await ep.click('#seg-refine')
+        await ep.wait_for_timeout(300)
+        er = await ep.evaluate("""() => ({cards: ['weapon', 'armor', 'helm', 'shoulder', 'boots'].map(k => !!document.querySelector('#rf-' + k)), nm: document.querySelector('#rf-boots .nm').textContent, eff: document.querySelector('#rf-helm [data-r=eff]').textContent})""")
+        await ep.evaluate("() => { document.querySelector('#rf-helm').scrollIntoView(); }")
+        await ep.wait_for_timeout(200)
+        await ep.screenshot(path=str(OUT / '28b_재련_다섯칸.png'))
+        await ep.click('#seg-amber')
+        await ep.wait_for_timeout(300)
+        ea = await ep.evaluate("""() => { const G = window.__game, q = s => document.querySelectorAll(s); G.ambLuck = 1; const empty = document.querySelector('[data-amb="boots"] .tag').textContent;
+          document.querySelector('[data-aset="boots:2"]').click(); const st = G.ambSt('boots'); document.querySelector('[data-acarve="boots:0"]').click();
+          const r = {cards: q('.card.amb').length, sums: q('.amb-sum').length, empty, set: !!st, v: G.ambSt('boots').v[0], msg: document.querySelector('[data-amb="boots"] .amb-msg').textContent, dots: q('[data-amb="boots"] .dots i.on').length, prob: document.querySelector('[data-amb="boots"] .aprob').textContent, rec: q('[data-amb="boots"] .btn.primary').length};
+          G.ambLuck = null; document.querySelector('[data-amb="boots"]').scrollIntoView(); return r; }""")
+        await ep.wait_for_timeout(250)
+        await ep.screenshot(path=str(OUT / '28c_호박석_세공.png'))
+        check(eu['segs'] == [True, True, True, True] and '투구' in eu['sum'] and eu['cells'] == 24 and eu['rows'][-1] == '유물' and '체력' in eu['fx'] and eu['hide'] and eu['asc'],
+              f'[장비]에 투구·어깨·신발·세공 칸: 소환·등급 칸(유물 줄까지)·지금 효과·머리 장식 보이기, 각성 카드는 무기·방어구만 {eu}')
+        check(all(er['cards']) and '신발' in er['nm'] and '투구의 힘' in er['eff'], f'[재련]에 다섯 칸이 모두 보인다 {er}')
+        check(ea['cards'] == 5 and ea['sums'] == 8 and '빈 자리' in ea['empty'] and ea['set'] and ea['v'] == 1 and '성공' in ea['msg'] and ea['dots'] == 1 and '65' in ea['prob'] and ea['rec'] == 1,
+              f'[세공] 화면: 다섯 칸·문양 합계 여덟, 호박석을 박고 깎으면 빛이 들어오고 다음 확률이 내려가며 추천 줄이 보인다 {ea}')
+        await ep.evaluate("""() => { const G = window.__game; G.closePage(); }""")
+        await ep.wait_for_timeout(600)
+        await ep.screenshot(path=str(OUT / '28d_용사_새장비.png'))
+        eg = await ep.evaluate("""() => { const G = window.__game, gx = G.heroGx(); G.S.helmHide = true; const hid = G.heroGx().h; G.S.helmHide = false; return {gx, hid}; }""")
+        check(eg['gx']['h'] >= 0 and eg['gx']['s'] >= 0 and eg['gx']['b'] >= 0 and eg['hid'] == -1, f'용사 모습에 투구·어깨·신발이 등급대로 그려지고, 투구 대신 머리 장식을 보이게 고를 수 있다 {eg}')
+        await ep.evaluate("""() => { const G = window.__game; G.hideModal(); G.closePage(); G.S.noti.seen = {}; G.notiAuto.clear(); G.noAmber = false; }""")
+        await ep.wait_for_selector('#inh.noti #notiSay', timeout=5000)
+        await ep.wait_for_timeout(500)
+        en = await ep.evaluate("() => ({who: document.querySelector('#inh .nm').textContent, say: document.querySelector('#notiSay').textContent, tag: document.querySelector('#inh .tag').textContent, img: (document.querySelector('#inh .noti-npc img') || {}).src || ''})")
+        await ep.screenshot(path=str(OUT / '28e_세공장이_알림.png'))
+        check('세공장이' in en['who'] and '호박석' in en['say'] and '세공' in en['tag'] and en['img'].startswith('data:image'), f'새 장비 칸과 호박석 세공은 바닷가 세공장이가 찾아와 알린다(알림 연출 틀) {en["who"]} {en["say"][:30]}')
+        # 4부가 닫히면(시험 끔) 새 칸·세공 단추가 사라지고, 보던 칸은 무기로 돌아간다
+        ec = await ep.evaluate("""() => { const G = window.__game; G.noAmber = true; G.inhClose(); G.seaForce = false; G.refreshStats(); return {open: G.seaOpen()}; }""")
+        await tab(ep, 'gear')
+        await ep.wait_for_timeout(300)
+        ec2 = await ep.evaluate("""() => ({segs: ['helm', 'shoulder', 'boots', 'amber'].some(k => !!document.querySelector('#seg-' + k)), sum: (document.querySelector('#sum1') || {}).textContent || '', cells: document.querySelectorAll('#page .cell').length})""")
+        check(not ec['open'] and not ec2['segs'] and '무기' in ec2['sum'], f'4부가 아니면 [장비]에 새 칸·세공이 보이지 않는다 {ec2}')
+        await ctxE.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
