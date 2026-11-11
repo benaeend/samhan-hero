@@ -7369,7 +7369,7 @@ const guardNew = () => GUARDS.some(g => guardOpen(g) && !guardLv(g.k));
    장마다 효능 두 줄(0~5단계), 달이기 EL.tries번(엽전 + 지금 세계 재료). 달일 때마다 처방 세 장 가운데 하나를 고른다(S.elix.offer에 남겨 다시 열어도 같음).
    다 쓰면 그 장은 굳음 — 보석·원한 조각으로 처음부터 다시 달일 수 있다. 줄 값은 치장처럼 단계 값(SK_GW), 경험치·엽전은 %.
    합계(최대 50)에 따라 오장 조화: 공격력·체력 단계 값 + 경험치 % — 레벨이 이야기를 막는 구간을 줄인다 */
-const EL = {tries:7, max:5, goldK:8000, goldG:0.15, mat:8, resetGems:300, resetGrudge:20, big:0.6};
+const EL = {tries:7, max:5, goldK:2000, goldG:0.15, mat:8, resetGems:300, resetGrudge:20, big:0.6};
 const ORGANS = [
   {k:'gan', n:'간', el:'목', w:3, c:'#5aff8a', pool:['atk', 'hp', 'exp', 'def'], d:'나무의 기운. 피를 갈무리해 몸을 튼튼하게'},
   {k:'sim', n:'심', el:'화', w:3, c:'#ff6a5a', pool:['atk', 'cdmg', 'boss', 'skill'], d:'불의 기운. 피를 돌려 힘을 끓어오르게'},
