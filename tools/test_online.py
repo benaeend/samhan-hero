@@ -211,6 +211,19 @@ async def main():
             st = await B.evaluate('() => ({gold: Math.floor(window.__game.S.gold), name: window.__game.S.name, cls: window.__game.S.cls})')
             check(st['gold'] >= 123456 and st['name'] == '온라인용사' and st['cls'] == 'sulsa', f'다른 기기에서 서버의 저장을 불러온다 {st}')
 
+            # 기기를 오가며(2026-11 (43) 버그): B에서 키워 올린 뒤, 켜진 채 있던 A가 옛 기록을 올리기 전에 B의 새 기록을 불러온다(덮어쓰지 않음)
+            await B.evaluate("() => { const G = window.__game; G.S.gold = 777777; G.S.level = 33; }")
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')   # 들어올 때 올리던 것이 끝난 뒤 한 번 더
+            await B.wait_for_timeout(600)
+            await A.evaluate("() => { window.__game.S.level = 8; }")
+            await A.evaluate('() => window.__game.pushOnline()')
+            await A.wait_for_timeout(1500)
+            stA = await A.evaluate('() => ({gold: Math.floor(window.__game.S.gold), level: window.__game.S.level})')
+            srvLv = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
+            check(stA['level'] == 33 and stA['gold'] >= 777777 and srvLv == [('33',)], f'켜 둔 다른 기기는 옛 기록으로 덮어쓰지 않고 새 기록을 불러온다 {stA} {srvLv}')
+            await A.evaluate("() => { const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } }")
+            await B.evaluate("() => { const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } }")
+
             # 채팅·타임 보스: 두 기기가 실시간으로 이어진다
             await A.evaluate("() => window.__game.sendChat('안녕하세요 온라인')")
             await B.wait_for_timeout(600)

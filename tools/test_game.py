@@ -438,6 +438,9 @@ async def main():
         drank = await page.evaluate('''() => { const G = window.__game; const n = G.S.inv.potion; G.hero.hp = G.ST.maxHp * 0.1; G.update(0.05);
           return {before: n, after: G.S.inv.potion, hp: G.hero.hp / G.ST.maxHp}; }''')
         check(drank['after'] == drank['before'] - 1 and drank['hp'] > 0.4, f'체력이 낮으면 탕약을 저절로 마신다 {drank}')
+        mauto = await page.evaluate('''() => { const G = window.__game; G.S.inv.mana = 5; G.S.kills = G.FIELD.kills; G.startBoss(); G.hero.mp = 10; for (let i = 0; i < 3; i++) G.update(0.05);
+          const r = {left: G.S.inv.mana, mp: Math.round(G.hero.mp)}; if (G.bossRef){ G.bossRef.hp = 0.0001; for (let i = 0; i < 40 && G.bossActive; i++) G.update(0.05); } for (let i = 0; i < 100; i++) G.update(0.05); return r; }''')   # 감로수 재사용 대기(4초)를 지나 보냄
+        check(mauto['left'] == 4 and mauto['mp'] >= 45, f'싸우는 중 마나가 30 아래면 감로수를 저절로 마신다 {mauto}')
         await page.click('#pageClose')
         mp = await page.evaluate('''() => { const G = window.__game; G.hero.mp = 10; const n = G.S.inv.mana; document.querySelector('#pot-mana').click();
           return {before: n, after: G.S.inv.mana, mp: G.hero.mp, shown: document.querySelector('#pot-mana b').textContent, vis: !!document.querySelector('#potBar').offsetParent}; }''')
@@ -654,7 +657,7 @@ async def main():
           const before = G.skLv(5); S.reb.n = 1; G.unlockSkills(); const after = G.skLv(5); S.reb.n = rb; G.unlockSkills();
           const atk = [...Array(11).keys()].filter(i => G.skDef(i).atk).length; return {before, after, atk}; }""")
         check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 5, f'도인은 공격 기술이 다섯(도력 일격·팔괘진은 버프 겸 공격)이고, 하늘의 심판은 환생해야 열린다 {dn}')
-        sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.castNow(2);
+        sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.hero.mp = G.MP_MAX; G.castNow(2);
           return {shield: G.hero.shield / G.ST.maxHp}; }""")
         check(sh['shield'] >= 0.399, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
         await page.click('#tab-skill'); await page.wait_for_timeout(300)
@@ -845,17 +848,19 @@ async def main():
           S.job = 1; S.level = 100; const cap1 = G.skCap(0); S.job = 3; S.level = 200; S.world = 3; const cap3 = G.skCap(0); S.world = 1; S.job = 1; S.level = 120;
           S.skills.spin = 30; const lvEff = G.skLv(0); S.skills.spin = 5;
           G.unlockSkills(); S.skSetMan = false; S.skSet = []; G.skSetFix(); const set = S.skSet.slice();
-          const t1 = G.skToggle(set[0]), full = S.skSet.length;
-          S.skSetMan = true; S.skSet = [0, 1, 2, 3, 4, 5]; for (const k in G.skillCd) G.skillCd[k] = 0; G.hero.dead = false;
+          const t1 = G.skToggle(set[0]), full = S.skSet.length; for (let i = 0; i < 10; i++) G.update(0.05); const stay = !S.skSet.includes(set[0]) && S.skSet.length === full;   // 뺀 기술이 다시 끼워지지 않음(버그)
+          G.skToggle(set[0]); const back = S.skSet.includes(set[0]);
+          S.skOff = []; G.skSetFix(); for (const k in G.skillCd) G.skillCd[k] = 0; G.hero.dead = false;
+          const ps = G.pickSet('jumong'), psOn = S.setPick === 'jumong'; G.pickSet(''); const psOff = S.setPick === '';
           G.hero.dead = false; S.mode = 'semi'; S.kills = G.FIELD.kills; G.startBoss(); const B3 = G.bossRef; if (B3){ B3.hp = B3.maxHp = 1e300; B3.atk = 0; } for (let i = 0; i < 30; i++) G.update(0.05); for (const k in G.skillCd) G.skillCd[k] = 0;
           G.comboLuck = 10; const c0 = S.rec.combos || 0, k0 = G.castNow(2), k1 = G.castNow(3), combo = (S.rec.combos || 0) - c0, cm = G.comboMul(); G.comboLuck = null;
           if (G.bossActive && B3){ B3.hp = 0.0001; for (let i = 0; i < 60 && G.bossActive; i++) G.update(0.05); }
-          const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), res, cap1, cap3, lvEff, set, t1, full, combo, cm: +cm.toFixed(2), k0, k1};
+          const out = {noHunt, ok1, up: +(a1 / a0).toFixed(3), again, ended, still, again2, autoOn, endAfter, fx1: +fx1.toFixed(3), fx3: +fx3.toFixed(3), tg3: +tg3.toFixed(3), res, cap1, cap3, lvEff, set, t1, full, stay, back, psOn, psOff, combo, cm: +cm.toFixed(2), k0, k1};
           G.PAT.off = false; Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false; return out; }""")
         check(nf['noHunt'] and nf['ok1'] and nf['up'] > 1.3 and not nf['again'] and nf['ended'] and nf['still'] and not nf['again2'] and nf['autoOn'] and nf['endAfter']
               and abs(nf['fx1'] - 1.24 ** (1.5 * nf['res'])) < 0.01 and abs(nf['fx3'] - 1.0709 ** (1.5 * 0.6 * nf['res'])) < 0.005 and nf['tg3'] > nf['fx3']
-              and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) == 6 and nf['t1'] and nf['full'] == 5 and nf['combo'] == 1 and nf['cm'] == 1.12 and nf['k0'] and nf['k1'],
-              f'변신: 사냥 중엔 못 쓰고 보스 싸움에서 한 번만 30초(자동이면 시작하자마자)·단계 값(부상에선 사신 60%)·기술 최대 레벨(1차 15·3차 25)·전투 칸 6개·연계 {nf}')
+              and nf['cap1'] == 15 and nf['cap3'] == 25 and nf['lvEff'] == 15 and len(nf['set']) >= 6 and nf['t1'] and nf['full'] == len(nf['set']) - 1 and nf['stay'] and nf['back'] and nf['psOn'] and nf['psOff'] and nf['combo'] >= 1 and nf['cm'] == 1.12 and nf['k0'] and nf['k1'],
+              f'변신: 사냥 중엔 못 쓰고 보스 싸움에서 한 번만 30초(자동이면 시작하자마자)·단계 값(부상에선 사신 60%)·기술 최대 레벨(1차 15·3차 25)·익힌 기술 전부 쓰기·[빼기]가 유지됨·세트 고르기·연계 {nf}')
         aw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           if (G.raid){ G.raid.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05); }
           S.awaken = true; S.level = 60; S.raid.tk = 3; S.rec.rdpsK = 50; G.refreshStats(); const ok = G.startRaid(0), R = G.raid, B = R.boss; B.hp = B.maxHp = 1e300;
@@ -1070,7 +1075,7 @@ async def main():
           const diag = {mobs: nm.length, near: Math.min(...nm), eng: h.engaged, dead: h.dead, moving: h.moving, sd: h.stepDur, mt: h.mt, goal: h.goal, hold: h.holdT, dodge: h.dodgeT, roll: h.rollT, tg: !!h.target, pos: [h.tx, h.ty], cut: !!G.cut, mk: !!G.market, mode: S.mode, ride: S.mount.ride};
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
           return {order, diag}; }""")
-        check(ao['order'][:2] == ['roar', 'mark'] and 3 <= len(ao['order']) <= 7,
+        check([x for x in ao['order'] if x != 'party'][:2] == ['roar', 'mark'] and 3 <= len(ao['order']) <= 8,   # (44) 기술을 모두 쓰면 파티 버프도 먼저 걸림
               f'자동 기술: 보스 앞에서 공격력 버프·약점을 먼저 쓰고 0.1초 간격으로 하나씩 쓴다 {ao}')
         # 6-8e) 숫돌 10+1·배럭 효과·만렙 경험치 모으기·단계 보스/레이드 이야기·레벨 문
         nw = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true; G.gateOff = false;
