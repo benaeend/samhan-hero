@@ -221,6 +221,40 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .gbadge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;font-weight:800;color:#1a1420;background:radial-gradient(circle at 35% 30%,#fff8e0,var(--gc) 60%,rgba(0,0,0,.4));box-shadow:0 0 12px -2px var(--gc),inset 0 -3px 6px rgba(0,0,0,.3)}
 .card.guard .nm{font-weight:800;font-size:14.5px}.card.guard .nm .l{margin-left:6px;font-size:11.5px;color:var(--text-soft);font-weight:600}.card.guard .val{font-size:12px;color:var(--jade);margin-top:2px}
 .gbt{display:grid;gap:6px;justify-items:stretch;min-width:104px}
+.inh{position:fixed;inset:0;z-index:12;display:grid;place-items:center;padding:12px;background:radial-gradient(130% 70% at 50% 108%,rgba(255,120,40,.42),rgba(40,16,10,.5) 45%,rgba(8,8,14,0) 70%),rgba(6,7,13,.93);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:fade .25s ease-out;overflow:hidden}
+.inh[hidden]{display:none}
+.inh-embers{position:absolute;inset:0;pointer-events:none}.inh-embers i{position:absolute;left:var(--x);bottom:-8px;width:4px;height:4px;border-radius:50%;background:#ffc070;box-shadow:0 0 8px 1px #ff8a3a;opacity:0;animation:inhEmber var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes inhEmber{0%{transform:translate(0,0);opacity:0}12%{opacity:.95}100%{transform:translate(var(--dx),-78vh);opacity:0}}
+.inh-box{position:relative;width:min(540px,100%);max-height:96%;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:22px;background:linear-gradient(180deg,rgba(34,26,24,.96),rgba(18,16,22,.97));border:1px solid rgba(255,180,90,.45);box-shadow:0 24px 60px rgba(0,0,0,.65),0 0 60px -18px rgba(255,140,50,.7),inset 0 1px 0 rgba(255,255,255,.06);animation:rise .25s cubic-bezier(.2,.8,.3,1.2)}
+.inh-top{display:flex;gap:12px;align-items:flex-end}
+.inh-npc{position:relative;flex:0 0 auto;width:132px;height:112px}
+.inh-npc .sm{position:absolute;left:-6px;bottom:6px;width:112px;height:112px;image-rendering:pixelated;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.inh-npc .anv{position:absolute;right:0;bottom:4px;width:70px;height:46px;image-rendering:pixelated;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.inh-npc .hot{position:absolute;right:22px;bottom:40px;width:26px;height:8px;border-radius:3px;background:linear-gradient(90deg,#ffd27a,#ff7a2a);box-shadow:0 0 14px 3px rgba(255,140,50,.85);animation:inhHot 1.4s ease-in-out infinite}
+@keyframes inhHot{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5)}}
+.inh-npc.hit .hot{animation:inhHit .45s ease-out}
+.inh-say{flex:1;min-width:0;position:relative;padding:10px 12px;border-radius:16px;background:#1b2238;border:1px solid rgba(255,204,77,.5);font-size:13px;line-height:1.55}
+.inh-say:before{content:'';position:absolute;left:-7px;bottom:22px;width:12px;height:12px;background:#1b2238;border-left:1px solid rgba(255,204,77,.5);border-bottom:1px solid rgba(255,204,77,.5);transform:rotate(45deg)}
+.inh-say .nm{color:var(--gold);font-size:14px}.inh-say .tag{margin-left:8px;font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(255,180,90,.16);color:#ffc98a}
+.inh-say p{margin:4px 0 0}
+.inh-h{font-weight:800;font-size:13px;color:#ffc98a;letter-spacing:.5px}
+.inh-mid{display:flex;flex-direction:column;gap:8px;min-height:0}.inh-foot{display:flex;flex-direction:column;gap:10px}
+.inh-list{display:grid;gap:6px}
+.inh-row{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;padding:8px 12px;border-radius:14px;background:linear-gradient(160deg,var(--panel-2),var(--panel-3));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:box-shadow .35s,background .35s}
+.inh-row .ic{grid-row:1 / span 2;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:var(--ic);background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px var(--ic)}.inh-row .ic svg{width:20px;height:20px}
+.inh-row .tx{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:13px}.inh-row .tx .fr{color:var(--text-soft);font-size:12px}
+.inh-row .to{font-size:12.5px;color:var(--text-soft)}.inh-row .to i{font-style:normal;color:var(--ic);margin-right:2px}
+.inh-row.info{opacity:.86}.inh-row.info .to{color:#bfe6c8}
+.inh-row.done{background:linear-gradient(160deg,rgba(255,190,90,.2),var(--panel-3));box-shadow:inset 0 0 0 1px var(--gold),0 0 18px -6px var(--gold)}.inh-row.done .to{color:var(--gold);font-weight:800}
+.inh-row.hit{animation:inhHit .5s ease-out}
+@keyframes inhHit{0%{transform:scale(1);filter:brightness(1)}28%{transform:scale(1.045);filter:brightness(2.3)}100%{transform:scale(1);filter:brightness(1)}}
+.inh-keep{margin:0;font-size:11.5px;line-height:1.5;color:var(--text-soft)}.inh-keep b{color:var(--text)}
+.inh-btns{display:flex;gap:8px;justify-content:flex-end}.inh-btns .btn{min-width:110px}
+:where(body.cmp) .inh-box{width:min(880px,100%);display:grid;grid-template-columns:minmax(230px,300px) 1fr;grid-template-rows:auto 1fr;gap:8px 14px;padding:12px}
+:where(body.cmp) .inh-top{grid-column:1;grid-row:1;flex-direction:column;align-items:center;gap:6px}:where(body.cmp) .inh-say:before{display:none}:where(body.cmp) .inh-say{font-size:12px}
+:where(body.cmp) .inh-foot{grid-column:1;grid-row:2;justify-content:flex-end}:where(body.cmp) .inh-mid{grid-column:2;grid-row:1 / span 2;overflow:auto}
+:where(body.cmp) .inh-row{padding:6px 10px}:where(body.cmp) .inh-keep{font-size:10.5px}:where(body.cmp) .inh-btns .btn{min-width:0;flex:1}
+:where(body.cmp) .inh-npc{width:104px;height:88px}:where(body.cmp) .inh-npc .sm{width:88px;height:88px}:where(body.cmp) .inh-npc .anv{width:56px;height:36px}:where(body.cmp) .inh-npc .hot{right:17px;bottom:31px;width:20px;height:6px}
 .elx-set{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.elx-set span{font-size:11.5px;padding:3px 9px;border-radius:999px;background:var(--panel-3);color:var(--text-soft)}
 .elx-set span.on{background:linear-gradient(135deg,#ffd24a,#ff9a3c);color:#2a1a08;font-weight:800}
 .elx{display:grid;gap:8px}.card.elo{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px}
@@ -246,6 +280,7 @@ body.portrait .card.elo{grid-template-columns:auto 1fr}body.portrait .card.elo .
 .stk.none{opacity:.5}
 .stk-pop{display:flex;gap:10px;align-items:center;margin-bottom:6px}.stk-pop .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--sc);background:rgba(255,255,255,.06);border:1px solid color-mix(in srgb,var(--sc) 50%,transparent)}.stk-pop .ic svg{width:30px;height:30px}
 .mat{display:inline-flex;align-items:center;gap:5px;color:var(--text-soft)}
+.mtip{cursor:pointer;text-decoration:underline dotted rgba(255,204,77,.7);text-underline-offset:3px}.mat.mtip{text-decoration:none;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .mat i{width:10px;height:10px;border-radius:3px;background:var(--mc);box-shadow:0 0 8px var(--mc);transform:rotate(45deg)}
 .mat b{color:var(--text)}
 .cic{display:inline-grid;width:18px;height:18px;margin-right:6px;color:var(--gold);vertical-align:-3px}
@@ -898,7 +933,7 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
 @keyframes flipin{0%{transform:rotateY(90deg) scale(.6);filter:brightness(3);opacity:0}60%{transform:rotateY(-10deg) scale(1.08);filter:brightness(1.6);opacity:1}100%{transform:none;filter:none;opacity:1}}
 .res.legend.flip{animation-name:flipin,legglow;animation-duration:.5s,1.6s;animation-iteration-count:1,infinite;animation-delay:calc(var(--i) * 70ms),calc(var(--i) * 70ms + .5s)}
 @keyframes legglow{50%{box-shadow:0 0 26px var(--g),inset 0 0 18px -4px var(--g)}}
-@media (prefers-reduced-motion: reduce){#fxl{display:none}.res.flip{animation:none}}
+@media (prefers-reduced-motion: reduce){#fxl{display:none}.res.flip{animation:none}.inh-embers{display:none}.inh,.inh-box,.inh-row.hit,.inh-npc .hot{animation:none}}
 @media (min-height:640px) and (min-width:1000px){.hud,.topr,.qtrack,.ctrl,.log,.guide{zoom:1.2}}
 
 /* ================= 가로 화면 새 배치(2026-11 (13)) =================
@@ -1793,9 +1828,11 @@ const refineCap = slot => S.refine[slot].t || slot === 'weapon' ? REFINE_MAX : R
 const REFINE_LATE = 0.75, LATE_COL = 1.5;
 const lateCol = () => S.world >= 3 ? LATE_COL : 1;
 const refineEff = (slot, lv) => { const r = S.refine[slot]; lv = lv == null ? r.lv : lv; return r.t ? (r.base || 0) + (refinePct(lv) - refinePct(REFINE_INHERIT)) * REFINE_LATE : refinePct(lv); };   // 계승된 몫은 그대로, 2부부터 새로 오르는 몫만 ×REFINE_LATE
+// 계승 차수: 부상 1차 · 곤륜 2차((48) 사용자 요청: 넘어갈 때마다 계승). 그때까지의 재련 효과(refineEff)를 base로 굳히고 +15부터 다시 벼린다(손해 없음)
+const refineGen = () => Math.max(0, Math.min(2, S.world - 2));
 function refineInherit(){
-  let n = 0;
-  for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if (r.t) continue; r.base = refinePct(r.lv); r.lv = REFINE_INHERIT; r.drops = 0; r.t = 1; n++; }
+  let n = 0; const tg = refineGen();
+  for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if ((r.t || 0) >= tg) continue; r.base = refineEff(k); r.lv = REFINE_INHERIT; r.drops = 0; r.t = tg; n++; }
   if (n) refreshStats();
   return n > 0;
 }
@@ -2023,7 +2060,12 @@ const MATS = [
   {k:'m1', name:'망자의 넋', color:'#ff8a7a'},
   {k:'m2', name:'하늘 조각', color:'#9fe7ff'},
 ];
-const MAT_DROP = {boss:1, gate:3, raid:4, raidFirst:6, tb:8, mob:0.005};
+const MAT_DROP = {boss:2, gate:6, raid:8, raidFirst:10, tb:15, mob:0.012};   // (48) 사용자 요청 '수급처가 너무 빡빡': 예전 1·3·4·6·8·0.5%
+// (48) 새 수급처: 허수아비 등급별·백귀야행 n마리마다·1일 보스(참가/승리)·강림·보물 동굴·오늘의 할 일 모두·급보·탑 층마다
+const MAT_SRC = {dummy:[0, 2, 4, 6, 9, 12], paradePer:8, dbJoin:5, dbWin:10, gr:12, vault:6, dall:10, evt:3, tower:1, shop:10};
+// 신화 조각 수급처: 레이드(확률)·첫 토벌·타임 보스·수문장·1일 보스·강림·오늘의 할 일 모두·보물 동굴(짐)
+const SHARD_SRC = {raidP:0.5, raidFirst:3, tb:2, tbHell:4, gate:1, dboss:2, gr:3, dall:2, vaultLose:2, shop:3};
+const gainShard = n => { n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); if (n > 0) S.mythShard = (S.mythShard || 0) + n; return n; };
 const CRAFT_T = [   // w 세계, need 열리는 단계(그 세계 최고 단계), mat 재료 수, gear [장비 등급, 개수], gems 노리개 보석
   {w:0, need:21, mat:20,  gear:[1, 2], gems:150},
   {w:0, need:51, mat:60,  gear:[2, 2], gems:400},
@@ -2087,11 +2129,12 @@ function craftNeed(k){
   const it = S.craft[k], t = it.t + 1, T = CRAFT_T[t - 1];
   if (!T) return {max:true};
   const sl = CRAFT_SLOTS.find(c => c.k === k), mk = craftMat(t);
-  const o = {t, T, mk, mat:T.mat, haveMat:S.mat[mk] || 0, open:craftOpen(t)};
-  if (sl.gear){ o.gearSlot = sl.gear; o.g = T.gear[0]; o.n = T.gear[1]; o.haveGear = gradeHave(sl.gear, T.gear[0]); }
-  else { o.gems = T.gems; }
-  o.ok = o.open && o.haveMat >= o.mat && (sl.gear ? o.haveGear >= o.n : S.gems >= o.gems) && !!(it.e2 || it.e);
-  o.fails = it.f || 0; o.sure = o.fails >= CRAFT_PITY[t - 1]; o.rate = o.sure ? 100 : CRAFT_RATE[t - 1];
+  const past = T.w < Math.min(2, S.world);   // (48) 계승: 지난 땅의 밀린 조합식은 대장장이가 도와 재료 절반·장비 조건 없음·확정 성공
+  const o = {t, T, mk, mat:past ? Math.ceil(T.mat / 2) : T.mat, haveMat:S.mat[mk] || 0, open:craftOpen(t), past};
+  if (sl.gear && !past){ o.gearSlot = sl.gear; o.g = T.gear[0]; o.n = T.gear[1]; o.haveGear = gradeHave(sl.gear, T.gear[0]); }
+  else if (!sl.gear){ o.gems = past ? Math.ceil(T.gems / 2) : T.gems; }
+  o.ok = o.open && o.haveMat >= o.mat && (o.gearSlot ? o.haveGear >= o.n : o.gems ? S.gems >= o.gems : true) && !!(it.e2 || it.e);
+  o.fails = it.f || 0; o.sure = past || o.fails >= CRAFT_PITY[t - 1]; o.rate = o.sure ? 100 : CRAFT_RATE[t - 1];
   return o;
 }
 function craft(k){
@@ -2109,7 +2152,7 @@ function craft(k){
     let left = n.n;
     const G = S.gear[n.gearSlot];
     for (let i = n.g * 4; i < n.g * 4 + 4 && left > 0; i++){ const use = Math.min(left, G.count[i] - (S.equip[n.gearSlot] === i ? 1 : 0)); if (use > 0){ G.count[i] -= use; left -= use; } }
-  } else S.gems -= n.gems;
+  } else if (n.gems) S.gems -= n.gems;
   it.t = n.t; it.e = it.e2 || it.e; it.e2 = '';
   refreshStats();
   const nm = craftName(k, it.t);
@@ -2625,7 +2668,7 @@ const WEEKLY = [
   {key:'dall', name:'오늘의 할 일 모두 끝내기 5일', goal:5, gems:600, ex:'piece'},
 ];
 const WEEK_OF = {kill:'kill', boss:'boss', raid:'raid', tb:'tb', parade:'parade', gsummon:'summon', psummon:'summon', refine:'refine', enh:'refine', dall:'dall'};
-const WEEK_K = [1, 1.5, 2, 3, 4], WEEK_ALL = 3000, WEEK_SHARD = 30, WEEK_PIECE = 15;
+const WEEK_K = [1, 1.5, 2, 3, 4], WEEK_ALL = 3000, WEEK_SHARD = 50, WEEK_PIECE = 15;
 /* ================= 상점 =================
    흔한 RPG 상점 구성(자동 물약·버프 부적·강화 보조 재료·입장권·하루 선물·재화 꾸러미)을 참고해 이름과 수치는 새로 지었다. */
 const BUFFS = {
@@ -2651,6 +2694,8 @@ const SHOP = [
   {id:'b_exp', cat:'charm', icon:'charm', buff:'exp', cur:'gems', price:() => 40},
   {id:'whet', cat:'mat', icon:'whet', name:'숫돌', desc:'재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 25, inv:'whet', n:1, max:999},
   {id:'whet10', cat:'mat', icon:'whet', name:'숫돌 묶음', tag:'10+1', desc:'숫돌 10개 값에 11개! 재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 250, inv:'whet', n:11, max:999},
+  {id:'matbag', cat:'mat', icon:'crystal', name:'재료 꾸러미', tag:'하루 5번', desc:'지금 있는 땅의 재료 10개(이승 요괴 정수 · 저승 망자의 넋 · 천계부터 하늘 조각). 조합 공방·각인 강화·신화 제작 장비·영약에 써요.', cur:'gold', price:() => Math.max(300, Math.round(mGold(Math.max(1, S.maxStage)) * 500)), daily:5},
+  {id:'shardbag', cat:'mat', icon:'shard', name:'신화 조각 3개', tag:'하루 3번', desc:'신화 보물 만들기(보물 동굴)·신화 제작 장비·장비 각성에 쓰는 조각.', cur:'gems', price:() => 150, daily:3},
   {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
   {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 90},
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
@@ -2763,9 +2808,15 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-3', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-11-4', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
+  ['계승 · 대장장이 쇠돌', '저승·천계·부상·곤륜에 들어서면 첫 화면에 대장장이가 나타나요. 지난 땅의 재료를 이 땅 재료로 그대로 바꿔 주고(요괴 정수 → 망자의 넋 → 하늘 조각), 부상·곤륜에서는 재련을 계승해 줘요(효과 그대로, +15부터 다시 — 곤륜 2차 계승은 새로). 「나중에」를 눌러도 [장비] → [조합]·[재련]의 [대장장이] 단추로 언제든.'],
+  ['계승 조합', '지난 땅에서 밀린 비전 장비 조합식은 재료 절반 · 장비 조건 없음 · 확정 성공으로 만들 수 있어요.'],
+  ['재료 수급처 늘림', '보스·수문장·레이드·타임 보스의 재료를 두 배쯤으로. 허수아비·백귀야행·보물 동굴·1일 보스·강림·오늘의 할 일·천공의 탑에서도 재료가 나와요. 신화 조각도 레이드·타임 보스·수문장·1일 보스·강림에서. [상점] → 재료에 재료 꾸러미(엽전)·신화 조각(보석).'],
+  ['재료 말풍선', '조합 공방·신화 제작·영약·각성 화면의 재료 이름을 누르면 어디에 쓰고 어디서 얻는지 나와요.'],
+  ['고친 것', '저승 초입의 레이드 부탁 [바로 가기]가 잠긴 레이드만 보여 주던 것(이제 허수아비 등 할 수 있는 칸으로) · 신화 제작 장비 실패 때 「조합 성공!」이 뜨던 것.'],
   ['#', '2026-11-11 · 신화 제작 장비 재료 올림'],
   ['신화 제작 장비', '사인검·천사옥대·금척을 만들고 강화하는 데 드는 재료를 크게 올렸어요(한 번에 3~5배). 확률·정성(확정)·효과(1.3 → 1.8배)는 그대로예요.'],
   ['#', '2026-11-11 · 오장 영약 · 신화 제작 장비 · 레이드 리셋권 · 가방 · 세로 화면'],
@@ -3005,7 +3056,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, asc:{weapon:0, armor:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0},
   };
 }
 function mergeState(d){
@@ -3028,7 +3079,7 @@ function mergeState(d){
   out.look = cleanLook(d.look);
   for (const k of ['weapon', 'armor']){
     const r = (d.refine && d.refine[k]) || {};
-    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0)), t:r.t ? 1 : 0, base:Math.max(0, +r.base || 0)};
+    out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0)), t:r.t ? Math.max(1, Math.min(2, Math.floor(+r.t) || 1)) : 0, base:Math.max(0, +r.base || 0)};
   }
   const pd = d.pets || {};
   out.pets = {
@@ -3149,6 +3200,7 @@ function mergeState(d){
       if (l[0][0] === l[1][0]) l[1][0] = O.pool.find(t => t !== l[0][0]);
       out.elix.o[O.k] = {l, t:Math.max(0, Math.min(EL.tries, Math.floor(+v.t) || 0)), n:Math.max(0, Math.min(99, Math.floor(+v.n) || 0))}; }
     const of = e.offer; if (of && typeof of === 'object' && OG[of.o] && out.elix.o[of.o] && Array.isArray(of.c)){ const c = of.c.filter(x => x && hasK(EL_CARD, x.k)).slice(0, 3).map(x => ({k:x.k, i:x.i === 1 ? 1 : 0})); if (c.length) out.elix.offer = {o:of.o, c}; } }
+  out.inh = {w:Math.max(0, Math.min(4, Math.floor(+(d.inh && d.inh.w)) || 0))};
   out.guard = {lv:{}, on:''}; for (const g of GUARDS){ const l = Math.min(GUARD_MAX, Math.max(0, Math.floor(+(gu.lv && gu.lv[g.k])) || 0)); if (l) out.guard.lv[g.k] = l; } if (GD[gu.on]) out.guard.on = gu.on;
   out.skin = skClean(d.skin);
   out.asc = {weapon:0, armor:0}; for (const k of ['weapon', 'armor']) out.asc[k] = Math.max(0, Math.min(ASC.length - 1, Math.floor(+(d.asc && d.asc[k])) || 0));
@@ -3743,7 +3795,8 @@ function claimDailyAll(){
   dailyCheck();
   if (!dailyAllReady()) return false;
   S.quest.dall = true; S.gems += DAILY_ALL; ev('dall');
-  addLog(`오늘의 할 일을 모두 마쳤습니다! 보석 +${DAILY_ALL}`, 'gain');
+  const dm = gainMat(MAT_SRC.dall, true), ds = gainShard(SHARD_SRC.dall);
+  addLog(`오늘의 할 일을 모두 마쳤습니다! 보석 +${DAILY_ALL} · ${MATS[Math.min(2, S.world)].name} +${dm} · 신화 조각 +${ds}`, 'gain');
   questLuck(questDiff({all:true}));
   return true;
 }
@@ -3771,6 +3824,8 @@ function buyShop(id){
   else if (it.buff) S.buff[it.buff] = Math.min(BUFF_MAX, S.buff[it.buff] + BUFF_ADD);
   else if (id === 'ticket') S.raid.tk++;
   else if (id === 'rreset') raidReset();
+  else if (id === 'matbag') gainMat(MAT_SRC.shop, true);
+  else if (id === 'shardbag') gainShard(SHARD_SRC.shop);
   else if (id === 'goldbag') S.gold += mGold(S.maxStage) * 300;
   else if (id === 'gift'){ S.gems += 10; S.inv.potion = Math.min(9999, S.inv.potion + 5); S.inv.mana = Math.min(9999, (S.inv.mana || 0) + 5); }
   else if (id === 'avbox'){ S.gems += AV_BOX; const r = openAvatarBox(); if (r) playFx('box', {el:$('#avBox'), miss:r.miss, rare:!r.miss && r.isNew && r.a.type !== 'pet', pity:r.pity, sub:r.a && r.a.name}); if (r && !(window.__game && window.__game.quiet)) showModal('꾸미기 상자', r.miss
@@ -3826,7 +3881,7 @@ function mergeableSets(slot, i){
 // 조합 공방 재료 지키기(2026-11 (20), 사용자 요청): 다음 비전 무기·갑옷 조합식에 드는 등급 장비는 그 개수만큼 일괄 합성·갈기에서 남긴다
 function craftKeep(slot){
   const c = CRAFT_SLOTS.find(x => x.gear === slot); if (!c) return null;
-  const T = CRAFT_T[S.craft[c.k].t]; if (!T) return null;
+  const T = CRAFT_T[S.craft[c.k].t]; if (!T || T.w < Math.min(2, S.world)) return null;   // 지난 땅의 밀린 조합식(계승 조합)은 장비가 안 듦
   return {g:T.gear[0], n:T.gear[1]};
 }
 function mergeOne(slot, i, keepFor){
@@ -4138,7 +4193,7 @@ function bossWin(){
   if (wasGate) rollAcc(true);
   gainGrudge(wasGate ? GRUDGE.gate : GRUDGE.boss, true);
   bossGearDrop();
-  gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss);
+  gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss); if (wasGate && gainShard(SHARD_SRC.gate)) addLog(`신화 조각 +${SHARD_SRC.gate}`, 'gain');
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
   if (!S.bossAuto) S.autoBoss = false;   // 보스 수동: 다음 보스도 [보스 도전]을 눌러야
   const bk = ['s0', 's1', 's2', 's3', 's4'][S.world];
@@ -4479,7 +4534,7 @@ function finishTimeBoss(R){
   S.tb[info.diff] = info.w;
   const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold'), tbGem = raidGemBase(info.diff === 'hell' ? 300 : 150);
   S.gold += gold; S.gems += tbGem; S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true); ev('tb');
-  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true);
+  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true); { const n = gainShard(info.diff === 'hell' ? SHARD_SRC.tbHell : SHARD_SRC.tb); if (n) addLog(`신화 조각 +${n}`, 'gain'); }
   const luck = window.__game && window.__game.tbLuck || 1, drops = [], slot = new Date(info.w || now()).getHours() / 3 | 0, SR = TB_REW[slot] || TB_REW[0], spec = [];
   SR.f(info.diff === 'hell', spec);   // 이 시간대의 특산물
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck * (spec.accK || 1)){
@@ -4929,6 +4984,7 @@ function raidReward(info){
   for (const r of items) r.isNew = giveItem(r.slot, r.it);
   S.gems += gems; S.gold += gold;
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
+  const shard = gainShard((first ? SHARD_SRC.raidFirst : 0) + (Math.random() < SHARD_SRC.raidP ? 1 : 0));
   const piece = info.busang || info.kunlun ? gainPiece((info.kunlun ? MOUNT_PIECE.kunlun : MOUNT_PIECE.busang) + (first ? MOUNT_PIECE.first : 0), true) : 0;
   const soul = soulDrop('raid'), grudge = gainGrudge(GRUDGE.raid + (first ? GRUDGE.raidFirst : 0), true);
   const accs = info.busang || info.kunlun ? rollAcc('raid') : [];
@@ -4939,7 +4995,7 @@ function raidReward(info){
   S.raid.tk = Math.max(0, S.raid.tk - 1);
   refreshStats();
   ev('raid');
-  return {gems, gold, items, first, mat, piece, soul, grudge, accs, myth};
+  return {gems, gold, items, first, mat, shard, piece, soul, grudge, accs, myth};
 }
 /* 허수아비 수련(솔로 레이드): 하루 3번, 30초 동안 허수아비에게 넣은 피해로 1~5등급 보상(엽전·보석·재료·장신구) */
 /* 레이드 보석(2026-11 (44), 사용자 요청: 레이드 리셋권(보석 800)을 파니 레이드에서 보석을 더): 레이드·허수아비·백귀야행·1일 보스 보석 ×RAID_GEM_K,
@@ -4971,7 +5027,7 @@ function startDummy(){
 function finishDummy(){
   const dmg = dmgMeter, tier = dummyTier(dmg), w = Math.min(4, S.world + 1);
   if (tier) recWin(false, true);
-  const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 150 * gainMul('gold', true)) : 0, gems = Math.round([0, 15, 45, 90, 150, 225][tier] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()), mats = [0, 0, 0, 2, 4, 6][tier];   // (44) ×1.5·세계 배율·1등급도
+  const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 150 * gainMul('gold', true)) : 0, gems = Math.round([0, 15, 45, 90, 150, 225][tier] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()), mats = MAT_SRC.dummy[tier];   // (44) ×1.5·세계 배율·1등급도
   S.gold += gold; S.gems += gems; if (mats) gainMat(mats, true);
   const piece = tier >= 4 ? gainPiece(tier - 3, true) : 0;
   let acc = '';
@@ -5025,7 +5081,7 @@ function finishParade(){
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   spawnT = 1.2;
   const gold = mGold(Math.max(1, S.stage)) * k * 3 * gainMul('gold'), gems = Math.round(Math.floor(k / 2) * gemMul() * RAID_GEM_K), dust = k * (1 + S.world);
-  const mat = Math.floor(k / 20), piece = S.world >= 3 ? Math.floor(k / 40) : 0;
+  const mat = Math.floor(k / MAT_SRC.paradePer), piece = S.world >= 3 ? Math.floor(k / 40) : 0;
   S.gold += gold; S.gems += gems; S.dust += dust; if (mat) gainMat(mat, true); if (piece) gainPiece(piece, true);
   const grudge = gainGrudge(k / GRUDGE.paradePer, true);
   const best = k > (S.parade.best || 0); if (best) S.parade.best = k;
@@ -5089,10 +5145,11 @@ function finishDBoss(R){
   if (!cross) dbCheck();
   const st = cross ? {paid:!!I.paid0, won:false} : S.dboss;
   const B = cross ? DBOSS[I.dow] : dbBoss(), sun = cross ? !!I.sun : dbDay() === 0, part = cross ? I.part : sun ? 'all' : dbPart(), out = [];
-  if (!st.paid){ st.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); }
+  if (!st.paid){ st.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); const m = gainMat(MAT_SRC.dbJoin, true); if (m) out.push(`${MATS[Math.min(2, S.world)].name} ${m}`); }
   let skin = null;
   if (R.win && !st.won){
     st.won = true; recWin(true, true);
+    { const m = gainMat(MAT_SRC.dbWin, true), sh = gainShard(SHARD_SRC.dboss); if (m) out.push(`${MATS[Math.min(2, S.world)].name} ${m}`); if (sh) out.push(`신화 조각 ${sh}`); }
     if (sun){ if (Math.random() < DB_SUN_P * (window.__game && window.__game.dbLuck || 1)) skin = skinDropPart('all', 4); }
     else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; skin = skinDropPart(part, g); }
     if (skin) out.push(`치장: ${skName(skin.it)}${skin.better ? '(바로 낌)' : ''}`);
@@ -5194,9 +5251,10 @@ function finishGangrim(R){
   if (!cross) S.gr.won = true;
   recWin(true, true); S.rec.gr = (S.rec.gr || 0) + 1; ev('raid');
   const gold = mGold(Math.max(1, S.maxStage)) * 200 * gainMul('gold'), grGem = raidGemBase(250); S.gold += gold; S.gems += grGem;
+  const grMat = gainMat(MAT_SRC.gr, true), grShard = gainShard(SHARD_SRC.gr);
   const av = grAvatar(); refreshStats(); saveLocal(); sfx('win');
   if (av) announce(`${S.name}님의 파티가 강림 레이드에서 ${av.ex ? '강림 아바타' : '아바타'} 「${av.a.name}」${josa(av.a.name, '을', '를')} 얻었어요!`);
-  addLog(`강림 레이드 토벌! 엽전 +${fmt(gold)} · 보석 +${fmt(grGem)}${av ? ` · 아바타 ${av.a.name}${av.isNew ? '' : `(이미 있어 보석 ${AV_DUP_GEMS})`}` : ''}`, 'gain');
+  addLog(`강림 레이드 토벌! 엽전 +${fmt(gold)} · 보석 +${fmt(grGem)} · ${MATS[Math.min(2, S.world)].name} +${grMat} · 신화 조각 +${grShard}${av ? ` · 아바타 ${av.a.name}${av.isNew ? '' : `(이미 있어 보석 ${AV_DUP_GEMS})`}` : ''}`, 'gain');
   if (window.__game && window.__game.quiet) return {win:true, av, gold};
   showModal('강림 레이드 토벌', `<p><b>${I.bossName}</b>${josa(I.bossName, '을', '를')} ${I.party}명이 함께 돌려보냈어요!</p>
     <ul class="rewards">${av ? `<li style="color:${av.ex ? 'var(--myth)' : 'var(--gold)'}">${av.a.name}<span>${av.ex ? '강림 레이드 아바타' : '아바타'}${av.isNew ? ' · 새로 얻음' : ` · 이미 있어 보석 ${AV_DUP_GEMS}`}</span></li>` : ''}<li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li></ul>
@@ -5262,7 +5320,8 @@ function finishTower(R){
     S.tower.best = f; recWin(true, true);
     const gems = Math.round((20 + f) * gemMul()); S.gems += gems; out.push(`보석 ${fmt(gems)}`);
     const dust = 5 + Math.floor(f / 5); S.dust += dust; out.push(`쇳가루 ${dust}`);
-    if (f % 5 === 0){ S.mythShard += 2; out.push('신화 조각 2'); }
+    { const m = gainMat(MAT_SRC.tower, true); if (m) out.push(`${MATS[Math.min(2, S.world)].name} ${m}`); }
+    if (f % 5 === 0){ S.mythShard += 3; out.push('신화 조각 3'); }
     if (f % 10 === 0){ const it = towerGearIt(f), sl = f % 20 === 10 ? 'weapon' : 'armor', nw = giveItem(sl, it); out.push(`${GRADES[Math.floor(it / 4)].name} ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`); }
     const M = TOWER_MILE[f];
     if (M){
@@ -5537,7 +5596,7 @@ function finishPvp(R){
 
 function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay(); S.vault.n = 0; } return VAULT_TRIES - S.vault.n; }
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
-const vaultShards = () => 3 + Math.min(4, S.world);
+const vaultShards = () => 5 + 2 * Math.min(4, S.world);   // (48) 3+세계 → 5+2×세계
 function startVault(){
   if (raid || vaultLeft() <= 0 || (!session && !window.__game)) return false;
   S.vault.n++;
@@ -5548,13 +5607,13 @@ function startVault(){
   return true;
 }
 function finishVault(R){
-  const win = R.win, shard = win ? vaultShards() : 1;
+  const win = R.win, shard = win ? vaultShards() : SHARD_SRC.vaultLose;
   const vGem = win ? raidGemBase(120) : 0;
-  if (win){ recWin(true, true); gainGrudge(GRUDGE.vault, true); S.gems += vGem; }
+  if (win){ recWin(true, true); gainGrudge(GRUDGE.vault, true); S.gems += vGem; gainMat(MAT_SRC.vault, true); }
   S.mythShard += shard;
   const m = win && Math.random() < VAULT_MYTH_P * (window.__game && window.__game.vaultLuck || 1) ? dropMyth(vaultD(), null, true, true) : null;
   const M = m && MYTHS.find(x => x.k === m.k), soul = win ? soulDrop('vault') : null;
-  addLog(win ? `보물 동굴 성공! 신화 조각 +${shard} · 보석 +${fmt(vGem)}${M ? ` · 신화 보물 ${M.name}` : ''}` : `보물 이무기가 달아났어요… 신화 조각 +${shard}`, win ? 'gain' : 'warn'); sfx(win ? 'win' : 'fail');
+  addLog(win ? `보물 동굴 성공! 신화 조각 +${shard} · ${MATS[Math.min(2, S.world)].name} +${MAT_SRC.vault} · 보석 +${fmt(vGem)}${M ? ` · 신화 보물 ${M.name}` : ''}` : `보물 이무기가 달아났어요… 신화 조각 +${shard}`, win ? 'gain' : 'warn'); sfx(win ? 'win' : 'fail');
   if (M) announce(`${S.name}님이 보물 동굴에서 신화 보물 ${M.name}${josa(M.name, '을', '를')} 찾았어요!`);
   saveLocal();
   if (!(window.__game && window.__game.quiet)) showModal(win ? '보물 동굴 · 성공' : '보물 동굴 · 실패', `<p>${win ? '보물 이무기를 쓰러뜨렸어요!' : `${VAULT_TIME}초 안에 쓰러뜨리지 못했어요.`}</p>
@@ -5598,7 +5657,7 @@ function finishRaid(){
       <ul class="rewards">
         <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
         <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
-        <li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(rw.mat)}<span>${MATS[Math.min(2, S.world)].name} (조합 재료)</span></li>
+        <li style="color:${MATS[Math.min(2, S.world)].color}">${fmt(rw.mat)}<span>${MATS[Math.min(2, S.world)].name} (조합 재료)</span></li>${rw.shard ? `<li style="color:var(--myth)">${rw.shard}<span>신화 조각</span></li>` : ''}
         ${rw.piece ? `<li style="color:#c8b0ff">${rw.piece}<span>고삐 조각 (탈것 별·천리마·산군 범)</span></li>` : ''}
         ${rw.grudge ? `<li style="color:#ff8a9a">${rw.grudge}<span>원한 조각 (넋의 결이야기)</span></li>` : ''}
         ${rw.myth ? `<li style="color:var(--myth)">${MT_BY[rw.myth.k].name}<span>신화 보물 · ${MT_BY[rw.myth.k].stat} +${rw.myth.p}%${rw.myth.locked ? ` · ${mythReqText(MT_BY[rw.myth.k])}에 가야 낌(가방으로)` : rw.myth.up ? '' : ' (가방으로)'}</span></li>` : ''}
@@ -6342,6 +6401,7 @@ function drawChibi(g, c, view, f, col, look){
       if (jb >= 1){ g.save(); g.translate(-2, 4); g.rotate(0.5); Pl([[1, -1.2], [10, -1.2], [12, 0], [10, 1.2], [1, 1.2]], jb >= 2 ? '#c88aff' : wc); RR(-1, -2.4, 2, 4.8, 1, '#e2c26b'); g.restore();
         Pl([[2, -1.4], [11, -1.4], [12.6, 0], [11, -0.2]], jb >= 2 ? '#e8c8ff' : '#ffffff'); } }
     else if (t === 'spear'){ RR(-12, -1, 38, 2, 1, '#6b4a2b'); Pl([[26, -2.4], [34, 0], [26, 2.4]], wc); RR(23, -2.4, 2.4, 4.8, 1, '#d8433a'); }
+    else if (t === 'hammer'){ RR(-8, -1.1, 22, 2.2, 1, '#7a5230'); RR(-8, -1.1, 22, 0.8, 0.4, '#9a7250'); RR(12, -5, 8.4, 10, 1.8, '#7c8290'); RR(12, -5, 8.4, 3, 1.4, '#c4cad6'); RR(11, -1.6, 1.8, 3.2, 0.6, '#565c68'); }
     else if (t === 'rod'){ RR(-14, -1.4, 42, 2.8, 1.4, '#c8382f'); RR(-14, -1.8, 5, 3.6, 1.2, '#ffd24a'); RR(23, -1.8, 5, 3.6, 1.2, '#ffd24a'); }
     else if (t === 'staff'){ RR(-10, -1.2, 36, 2.4, 1.2, '#7a5230'); RR(-10, -1.2, 36, 0.8, 0.4, '#9a7250'); E(28, 0, 4.2, 4.2, wc); E(27, -1.2, 1.6, 1.4, '#ffffff');
       if (jb >= 1){ g.strokeStyle = jb >= 2 ? '#ffd24a' : '#cfe0ff'; g.lineWidth = 1.4; g.beginPath(); g.arc(28, 0, 6.6, -2.2, 2.2); g.stroke(); }
@@ -7522,6 +7582,118 @@ function forkAsk(f){
     <p class="small">어느 길이든 이야기는 똑같이 이어져요. 한 번 고르면 바꿀 수 없어요. 「나중에」를 누르면 [퀘스트]에서 고를 수 있어요.</p>`,
     [{label:f.a[0].t, primary:true, fn:() => forkPick(f.k, 0)}, {label:f.a[1].t, primary:true, fn:() => forkPick(f.k, 1)}, {label:'나중에'}]);
 }
+/* ================= 계승 · 대장장이 쇠돌(2026-11 (48), 사용자 요청) =================
+   새 땅(저승·천계·부상·곤륜)에 들어선 첫 화면에 대장장이가 나타나 '계승'을 묻는다. 지난 땅에서 쓰던 것이 못 쓰게 되지 않고 이 땅 것으로 이어지게:
+   ① 지난 땅의 재료 → 이 땅 재료(1:1, INH.mat)  ② 재련(부상 1차·곤륜 2차): 효과는 그대로 굳히고 +15부터 다시(refineInherit)
+   ③ 밀린 비전 장비 조합식(지난 땅 단계)은 재료 절반·장비 조건 없음·확정(craftNeed의 past — 늘 켜진 규칙이라 목록에는 안내로)
+   다른 게임의 '윗단계 장비로 계승' 구조만 참고(이름·수치는 새로). S.inh.w = 계승을 마친(대장장이를 만난) 세계.
+   「나중에」면 그대로 두고 접속마다 다시 묻고, [장비] → [조합]·[재련]의 [대장장이] 단추로도 부른다. 시험·시뮬은 __game.noInh로 끄고 inhDo()로 바로 */
+const INH = {mat:1};
+const SMITH = {name:'대장장이 쇠돌', look:{outfit:'#6a4a32', hair:'#3a2a20', hat:'musa', skin:1, beard:true}};
+function inhList(){
+  const rows = [], cur = Math.min(2, S.world), M = MATS[cur];
+  for (let j = 0; j < cur; j++){ const n = Math.floor(S.mat['m' + j] || 0); if (n > 0) rows.push({kind:'mat', j, n, icon:'crystal', c:MATS[j].color, name:MATS[j].name, from:`${fmt(n)}개`, to:`${M.name} ${fmt(Math.floor(n * INH.mat))}개`}); }
+  if (S.world >= 3) for (const k of ['weapon', 'armor']){ const r = S.refine[k]; if ((r.t || 0) >= refineGen()) continue;
+    rows.push({kind:'refine', slot:k, icon:k === 'weapon' ? 'sword' : 'armor', c:'#ffcc4d', name:`${k === 'weapon' ? cls().weapon : cls().armor} 재련`, from:`${r.t ? '계승 ' : ''}+${r.lv}`, to:`계승 +${REFINE_INHERIT} · 효과 그대로, +${REFINE_MAX}까지 다시`}); }
+  // 안내(늘 켜져 있는 것): 밀린 조합식 · 방어구 재련 한도
+  const past = CRAFT_SLOTS.filter(c => { const T = CRAFT_T[S.craft[c.k].t]; return T && T.w < cur; });
+  if (past.length) rows.push({kind:'info', icon:'flute', c:'#ffb347', name:`밀린 비전 장비 조합식 (${past.map(c => c.name).join(' · ')})`, from:`${WORLD_NAME[CRAFT_T[S.craft[past[0].k].t].w]} 단계`, to:'재료 절반 · 장비 조건 없음 · 확정 성공'});
+  if (S.world === 1 || S.world === 2) rows.push({kind:'info', icon:'armor', c:'#9fe7ff', name:`${cls().armor} 재련 한도`, from:`+${REFINE_CAP_A[S.world - 1]}`, to:`+${REFINE_CAP_A[S.world]}까지 열림`});
+  return rows;
+}
+const inhTodo = () => inhList().some(r => r.kind !== 'info');
+const inhPending = () => S.world >= 1 && (((S.inh && S.inh.w) || 0) < S.world || inhTodo());
+// 계승 실행(연출 없이 상태만). 돌려주는 값: 바뀐 줄들
+function inhDo(){
+  if (S.world < 1) return null;
+  const rows = inhList(), cur = Math.min(2, S.world), mk = 'm' + cur;
+  for (const r of rows) if (r.kind === 'mat'){ S.mat[mk] = (S.mat[mk] || 0) + Math.floor(r.n * INH.mat); S.mat['m' + r.j] = 0; }
+  if (rows.some(r => r.kind === 'refine')) refineInherit();
+  if (!S.inh) S.inh = {w:0}; S.inh.w = S.world;
+  refreshStats(); saveLocal();
+  const did = rows.filter(r => r.kind !== 'info');
+  if (did.length) addLog(`대장장이가 계승해 줬어요: ${did.map(r => `${r.name} ${r.from} → ${r.to}`).join(' / ')}`, 'gain');
+  return rows;
+}
+let inhOpen = false, inhAsked = {}, inhImgs = null;
+function inhArt(){
+  if (inhImgs) return inhImgs;
+  const cut = f => { const sp = personSprite('musa', SMITH.look, 1, 1, 'right', f, false, {wtype:'hammer'}); const c = document.createElement('canvas'); c.width = 64; c.height = 64; c.getContext('2d').drawImage(sp, 0, 0); return c.toDataURL(); };
+  const a = document.createElement('canvas'); a.width = 40; a.height = 26; const g = a.getContext('2d');
+  g.fillStyle = '#2c303a'; g.fillRect(8, 22, 24, 4); g.fillStyle = '#3a3f4c'; g.fillRect(12, 18, 16, 5);          // 받침
+  g.fillStyle = '#565c6a'; g.fillRect(15, 11, 10, 8);                                                              // 허리
+  g.fillStyle = '#767c8c'; g.beginPath(); g.moveTo(1, 5); g.lineTo(33, 5); g.lineTo(39, 8); g.lineTo(31, 12); g.lineTo(9, 12); g.lineTo(1, 8); g.closePath(); g.fill();   // 윗면과 뿔
+  g.fillStyle = '#c0c6d4'; g.fillRect(3, 5, 30, 2); g.fillStyle = '#1a1c22'; g.fillRect(8, 25, 24, 1);
+  return inhImgs = {stand:cut(0), swing:cut(3), anvil:a.toDataURL()};
+}
+function inhClose(){ const el = $('#inh'); if (el){ el.hidden = true; el.innerHTML = ''; } inhOpen = false; modalOpen = false; if (currentTab) buildTab(currentTab, true); }
+function inhShow(){
+  if (inhOpen || S.world < 1) return false;
+  let el = $('#inh'); if (!el){ el = document.createElement('div'); el.id = 'inh'; el.className = 'inh'; document.body.insertBefore(el, fxl); }
+  const rows = inhList(), todo = rows.some(r => r.kind !== 'info'), art = inhArt(), W = WORLD_NAME[S.world], first = ((S.inh && S.inh.w) || 0) < S.world;
+  const say = todo
+    ? `${first ? `${W}까지 오셨구먼! ` : ''}옛 땅에서 쓰던 것들, 그냥 두면 녹만 슬지. 내가 <b>${W}</b> 것으로 다시 벼려 줄까? 손해 볼 일은 없네.`
+    : `${first ? `${W}까지 오셨구먼! ` : ''}지금은 따로 벼릴 것이 없네. 들고 온 장비는 이 땅에서도 <b>그대로</b> 쓸 수 있으니 걱정 말게.`;
+  const row = (r, i) => `<div class="inh-row${r.kind === 'info' ? ' info' : ''}" data-i="${i}" style="--ic:${r.c}"><div class="ic">${SVG[r.icon] || ''}</div>
+    <div class="tx"><b>${r.name}</b><span class="fr">${r.from}</span></div><div class="to"><i>→</i> ${r.to}</div></div>`;
+  el.innerHTML = `<div class="inh-embers">${Array.from({length:16}, (_, i) => `<i style="--x:${(i * 6.4 + (i % 3) * 2.2).toFixed(1)}%;--d:${(3.2 + (i % 5) * 0.7).toFixed(1)}s;--dl:${(-(i * 0.47) % 4).toFixed(2)}s;--dx:${((i % 4) - 1.5) * 18}px"></i>`).join('')}</div>
+    <div class="inh-box" role="dialog" aria-modal="true" aria-label="계승">
+      <div class="inh-top"><div class="inh-npc" id="inhNpc"><img class="sm" id="inhSm" src="${art.stand}" alt=""><img class="anv" src="${art.anvil}" alt=""><i class="hot" id="inhHot"></i></div>
+        <div class="inh-say"><b class="nm">${SMITH.name}</b><span class="tag">계승 · ${W}</span><p id="inhSay">${say}</p></div></div>
+      <div class="inh-mid">${rows.length ? `<div class="inh-h">${todo ? '계승 대상' : '이 땅에서 달라지는 것'}</div><div class="inh-list" id="inhList">${rows.map(row).join('')}</div>` : ''}</div>
+      <div class="inh-foot"><p class="inh-keep"><b>그대로 이어 쓰는 것</b> — 무기·방어구와 재련 단계 · 비전 장비(조합 공방) · 장신구 · 신화 보물 · 펫 · 변신 · 아바타 · 보석·쇳가루</p>
+        <div class="inh-btns">${todo ? `<button class="btn" id="inhLater">나중에</button><button class="btn primary" id="inhGo">계승하기</button>` : `<button class="btn primary" id="inhOk">알겠어요</button>`}</div></div>
+    </div>`;
+  el.hidden = false; inhOpen = true; modalOpen = true; hideTip();
+  const done = () => { if (!S.inh) S.inh = {w:0}; S.inh.w = S.world; saveLocal(); inhClose(); };
+  if ($('#inhOk')) $('#inhOk').addEventListener('click', done);
+  if ($('#inhLater')) $('#inhLater').addEventListener('click', () => { addLog('계승은 [장비] → [조합]이나 [재련]의 [대장장이] 단추로 언제든 할 수 있어요.', 'good'); inhClose(); });
+  if ($('#inhGo')) $('#inhGo').addEventListener('click', () => inhRun(rows));
+  sfx('quest');
+  return true;
+}
+function inhRun(rows){
+  const el = $('#inh'), go = $('#inhGo'), later = $('#inhLater'); if (!el || !go) return;
+  go.disabled = true; if (later) later.remove();
+  inhDo();   // 상태는 먼저 바꿔 두고(도중에 닫혀도 안전) 연출만 차례로
+  const art = inhArt(), sm = $('#inhSm'), npc = $('#inhNpc'), box = el.querySelector('.inh-box'), list = [...el.querySelectorAll('.inh-row')];
+  const finish = () => {
+    setHTML($('#inhSay'), `다 됐네! 이 땅에서도 손에 착 감길 걸세. 또 새 땅에 가거든 날 찾게나.`);
+    go.disabled = false; go.textContent = '좋아요!'; go.onclick = inhClose;
+    const ng = go.cloneNode(true); go.replaceWith(ng); ng.addEventListener('click', inhClose);
+  };
+  if (fxOff()){ list.forEach(r => r.classList.add('done')); finish(); return; }
+  const strike = (rowEl, last) => {
+    sm.src = art.swing; npc.classList.remove('hit'); void npc.offsetWidth; npc.classList.add('hit');
+    const [x, y] = fxPos($('#inhHot'));
+    fxSparks(x, y, ['#fff3b0', '#ffb347', '#ff7a2a', '#ffffff'], last ? 30 : 16, last ? 190 : 120, 6);
+    fxAdd('fx-ring', {x:x + 'px', y:y + 'px', c:'#ffb347', s:last ? '14' : '8'}, 800);
+    fxAdd('fx-float', {x:x + 'px', y:(y - 18) + 'px', c:'#ffd76a'}, 900, '깡!');
+    sfx('refOk'); sfx('hit');
+    box.classList.remove('fx-shake'); void box.offsetWidth; box.classList.add('fx-shake');
+    if (rowEl){ rowEl.classList.add('hit', 'done'); const [rx, ry] = fxPos(rowEl.querySelector('.to')); fxSparks(rx, ry, [rowEl.style.getPropertyValue('--ic') || '#ffd76a', '#ffffff'], 10, 70, 5); }
+    setTimeout(() => { sm.src = art.stand; }, 240);
+  };
+  const steps = list.length ? list : [null];
+  steps.forEach((r, i) => setTimeout(() => { if (inhOpen) strike(r, false); }, 350 + i * 620));
+  setTimeout(() => {
+    if (!inhOpen) return;
+    strike(null, true);
+    fxAdd('fx-flash', {c:'rgba(255,190,90,.5)'}, 550);
+    fxAdd('fx-rays', {x:viewW() / 2 + 'px', y:viewH() * 0.42 + 'px', c:'rgba(255,190,100,.55)', d:'2.2s'}, 2200);
+    fxAdd('fx-glow', {x:viewW() / 2 + 'px', y:viewH() * 0.42 + 'px', c:'rgba(255,210,120,.85)'}, 1000);
+    fxSparks(viewW() / 2, viewH() * 0.42, ['#fff3b0', '#ffcc4d', '#ff8a3a', '#ffffff', '#9fe7ff'], 44, 240, 7);
+    fxBanner('계승 완료!', `${WORLD_NAME[S.world]}의 것으로 다시 벼렸어요`, '#ffcc4d', '34%', 2);
+    sfx('rare'); sfx('boss');
+    finish();
+  }, 350 + steps.length * 620 + 250);
+}
+// 새 땅에 들어선 뒤 한가해지면(연출·창·싸움이 없을 때) 대장장이가 나타난다. 접속마다 한 번(「나중에」를 눌렀어도 다음 접속에 다시)
+function updateInh(){
+  if (!session || cut || modalOpen || inhOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noInh))) return;
+  if (S.world < 1 || inhAsked[S.world] || !inhPending()) return;
+  inhAsked[S.world] = true; inhShow();
+}
 // 이야기 연출·싸움이 끝난 뒤 한가할 때 한 번 묻는다(접속마다 한 번)
 function updateFork(){
   if (!session || cut || modalOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noFork))) return;
@@ -7608,6 +7780,7 @@ function evtReward(m){
   if (m.evt === 'gold'){ const g = mGold(S.stage) * 200 * gainMul('gold'); S.gold += g; txt = `엽전 +${fmt(g)}`; }
   else if (m.evt === 'gem'){ const g = Math.round((10 + 5 * S.world) * gemMul()), d = 10 * (1 + S.world); S.gems += g; S.dust += d; txt = `보석 +${g} · 쇳가루 +${d}`; }
   else { const x = mExp(S.stage) * 150 * gainMul('exp'); gainExp(x); txt = `경험치 +${fmt(x)}`; if (soulOpen()) S.soul.pity = Math.min(SOUL_PITY - 1, S.soul.pity + 1); }
+  { const m = gainMat(MAT_SRC.evt, true); if (m) txt += ` · ${MATS[Math.min(2, S.world)].name} +${m}`; }
   addLog(`${E.name}${josa(E.name, '을', '를')} 잡았어요! ${txt}`, 'gain'); sfx('rare');
   addText(txt, m.x, m.y - mobHeight(m) - 14, '#ffe08a', 13, true);
   if (!fxOff()){ vSparks(m.x, m.y - 10, 14, '#ffd24a', 90, 40); vadd({type:'glow', x:m.x, y:m.y - 10, r:20, col:'#ffd24a', dur:0.6}); }
@@ -8196,7 +8369,6 @@ function doCross(){
   S.world = w; S.stage = 1; S.maxStage = 1; S.kills = 0; S.autoBoss = S.bossAuto !== false; S.deathsHere = 0;
   S.best['s' + w] = Math.max(S.best['s' + w] || 0, 1); S.best['l' + w] = Math.max(S.best['l' + w] || 0, S.level);
   raid = null; ST = null; refreshStats(); resetRuntime(); mapCache.clear(); applyWorld(); unlockSkills();
-  if (w === 3 && refineInherit()) addLog(`무기·방어구가 계승됐어요! 재련 효과는 그대로 두고 +${REFINE_INHERIT}부터 다시 벼려요(확률은 낮아져요).`, 'good');
   useExpBank();
   addLog(w === 4 ? '열 개의 해를 쫓아 서쪽 하늘 끝으로 건넜어요. 신들의 산 「곤륜」이에요!' : '동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
   announce(w === 4 ? `${S.name}님이 서쪽 끝 곤륜에 닿았어요!` : `${S.name}님이 바다 건너 부상에 닿았어요!`);
@@ -11047,7 +11219,7 @@ function buildElix(){
       const c = $('#el-' + O.k), open = elOrganOpen(O); c.classList.toggle('lock', !open); c.classList.toggle('busy', !!(of && of.o === O.k));
       const st = open ? elSt(O.k) : null, done = st && elDone(st), cost = st && elCost(st);
       setHTML(c.querySelector('[data-r=lines]'), st ? st.l.map(([t, lv]) => `<div class="elx-ln"><span class="k">${EL_K[t].n}</span><span class="pips">${Array.from({length:EL.max}, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span><span class="v">${lv ? elLineText(t, lv) : ''}</span></div>`).join('') : `<div class="small">${O.w === 4 ? '곤륜' : '부상'}에 닿으면 열려요</div>`);
-      setText(c.querySelector('[data-r=t]'), !st ? '' : done ? (elFull(st) ? '두 효능 모두 최대예요!' : `달이기를 다 썼어요(굳음)${st.n ? ` · 다시 달인 횟수 ${st.n}` : ''}`) : `남은 달이기 ${EL.tries - st.t}/${EL.tries} · ${matNm} ${cost.mat}개${st.n ? ` · 다시 달인 횟수 ${st.n}` : ''}`);
+      setHTML(c.querySelector('[data-r=t]'), !st ? '' : done ? (elFull(st) ? '두 효능 모두 최대예요!' : `달이기를 다 썼어요(굳음)${st.n ? ` · 다시 달인 횟수 ${st.n}` : ''}`) : `남은 달이기 ${EL.tries - st.t}/${EL.tries} · ${mtip('mat', matNm)} ${cost.mat}개${st.n ? ` · 다시 달인 횟수 ${st.n}` : ''}`);
       const bb = c.querySelector('[data-brew]'); bb.disabled = !open || !!of || done || !elCanPay(cost);
       setText(bb.querySelector('[data-r=cost]'), !open ? '잠김' : done ? '다 씀' : fmt(cost.gold));
       const rb = c.querySelector('[data-reset]'); rb.disabled = !open || !st.t || !!(of && of.o === O.k);
@@ -11409,7 +11581,7 @@ function buildGear(){
     if (N.max){ setHTML($('#ascTxt'), `태초까지 깨웠어요. 낀 전설 장비의 장착 효과 <b>×${ASC[2].mul}</b>.`); const b = $('#ascBtn'); b.disabled = true; setText(b, '태초 각성 완료'); return; }
     const c = (a, b) => `<span style="color:${a >= b ? 'var(--good,#8ff0a0)' : '#ff8a7a'}">${fmt(a)}/${fmt(b)}</span>`, nm = GRADES[N.A.g].name;
     setHTML($('#ascTxt'), `전설 ${def.label}를 낀 채로 <b style="color:${GRADES[N.A.g].color}">${nm}</b>의 빛으로 깨워요(${WORLD_NAME[N.A.w]}부터). 낀 전설 장비 장착 효과 <b>×${N.A.mul}</b>, 무기 빛·옷 장식 색이 바뀌어요. 각성은 칸에 남아요.<br>
-      필요: ${N.legend ? '전설 장비 착용 ✓' : '<span style="color:#ff8a7a">전설 장비를 껴요</span>'} · 신화 조각 ${c(N.have.shard, N.A.shard)} · 원한 조각 ${c(N.have.grudge, N.A.grudge)} · ${MATS[+N.mk[1]].name} ${c(N.have.mat, N.A.mat)}`);
+      필요: ${N.legend ? '전설 장비 착용 ✓' : '<span style="color:#ff8a7a">전설 장비를 껴요</span>'} · ${mtip('shard', '신화 조각')} ${c(N.have.shard, N.A.shard)} · ${mtip('grudge', '원한 조각')} ${c(N.have.grudge, N.A.grudge)} · ${mtip(N.mk, MATS[+N.mk[1]].name)} ${c(N.have.mat, N.A.mat)}`);
     const b = $('#ascBtn'); b.disabled = !N.ok; setText(b, N.world ? `${nm} 각성` : `${nm} 각성은 ${WORLD_NAME[N.A.w]}부터`);
   };
 }
@@ -11463,8 +11635,8 @@ function buildCraft(){
     <div class="ph" style="margin-top:10px"><h2>조합 공방</h2><span class="small">${cls().name} 전용</span></div>
     <p class="hint">보스·수문장·레이드·타임 보스가 떨어뜨리는 <b>재료</b>와 소환으로 모은 <b>장비</b>를 섞어 ${cls().name} 전용 비전 장비를 만들어요.
       이승·저승·천계에서 더 깊이 갈 때마다 다음 단계 조합식이 열려요. <b>제때 만들어 두지 않으면 보스·레이드를 깨기가 훨씬 어려워요.</b></p>
-    <div class="card"><div class="ct">재료</div><div class="matrow">${MATS.map(m => `<span class="mat" style="--mc:${m.color}"><i></i>${m.name} <b id="mat-${m.k}"></b></span>`).join('')}</div>
-      <p class="small">보스 ${MAT_DROP.boss}개 · 수문장 ${MAT_DROP.gate}개 · 레이드 ${MAT_DROP.raid}개(첫 토벌 +${MAT_DROP.raidFirst}) · 타임 보스 ${MAT_DROP.tb}개 · 몬스터는 가끔. 지금 있는 세계의 재료가 나와요.</p></div>
+    <div class="card"><div class="ct">재료${S.world >= 1 ? `<button class="btn sm" id="cfInh" style="margin-left:auto">대장장이 · 계승<i class="dot" id="cfInhDot" hidden></i></button>` : ''}</div><div class="matrow">${MATS.map(m => `<span class="mat mtip" data-mtip="${m.k}" style="--mc:${m.color}"><i></i>${m.name} <b id="mat-${m.k}"></b></span>`).join('')}</div>
+      <p class="small">재료 이름을 누르면 어디에 쓰고 어디서 얻는지 나와요. 보스 ${MAT_DROP.boss}개 · 수문장 ${MAT_DROP.gate}개 · 레이드 ${MAT_DROP.raid}개(첫 토벌 +${MAT_DROP.raidFirst}) · 타임 보스 ${MAT_DROP.tb}개 · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 오늘의 할 일 · [상점] 재료 꾸러미. 지금 있는 땅의 재료가 나오고, <b>지난 땅의 재료는 대장장이가 이 땅 재료로 계승</b>해 줘요.</p></div>
     ${CRAFT_SLOTS.map(c => `<div class="card craft" id="cf-${c.k}">
       <div class="ct"><span class="cic">${SVG[c.icon]}</span>${c.name}<span class="tag" data-r="tier"></span></div>
       <div class="cfnow" data-r="now"></div>
@@ -11474,6 +11646,7 @@ function buildCraft(){
     </div>`).join('')}
     <div class="card" id="cfHarm"></div>`;
   wireGearSeg();
+  if ($('#cfInh')) $('#cfInh').addEventListener('click', () => inhShow());
   for (const c of CRAFT_SLOTS){
     const card = $('#cf-' + c.k);
     card.querySelectorAll('[data-e]').forEach(b => b.addEventListener('click', () => { pickEngr(c.k, b.dataset.e); refreshPanel(); }));
@@ -11484,6 +11657,7 @@ function buildCraft(){
   }
   return () => {
     for (const m of MATS) setText($('#mat-' + m.k), fmt(S.mat[m.k] || 0));
+    if ($('#cfInhDot')) $('#cfInhDot').hidden = !inhTodo();
     for (const c of CRAFT_SLOTS){
       const card = $('#cf-' + c.k), it = S.craft[c.k], n = craftNeed(c.k), E = engrOf(c.k, it.e);
       setText(card.querySelector('[data-r=tier]'), it.t ? `${it.t}단계 / ${CRAFT_MAX}` : '아직 없음');
@@ -11498,11 +11672,11 @@ function buildCraft(){
         const have = (a, b) => `<span style="color:${a >= b ? 'var(--good,#8ff0a0)' : '#ff8a7a'}">${fmt(a)}/${fmt(b)}</span>`;
         const parts = [];
         if (it.t) parts.push(craftName(c.k, it.t));
-        parts.push(`${MATS[+n.mk[1]].name} ${have(n.haveMat, n.mat)}`);
+        parts.push(`${mtip(n.mk, MATS[+n.mk[1]].name)} ${have(n.haveMat, n.mat)}`);
         if (n.gearSlot) parts.push(`${GRADES[n.g].name} ${n.gearSlot === 'weapon' ? cls().weapon : cls().armor} ${have(n.haveGear, n.n)}개`);
-        else parts.push(`보석 ${have(S.gems, n.gems)}`);
+        else if (n.gems) parts.push(`보석 ${have(S.gems, n.gems)}`);
         setHTML(card.querySelector('[data-r=rec]'), n.open
-          ? `<b>${n.t}단계 조합식</b>: ${parts.join(' + ')}${sel ? '' : ' · <span style="color:#ff8a7a">각인을 골라요</span>'}<br><span class="small">성공 확률 <b>${n.rate}%</b>${n.sure ? ' (천장 확정)' : ` · 실패하면 재료 절반만 사라지고, ${CRAFT_PITY[n.t - 1] - n.fails}번 더 실패하면 다음은 확정`}</span>`
+          ? `<b>${n.t}단계 조합식</b>: ${parts.join(' + ')}${sel ? '' : ' · <span style="color:#ff8a7a">각인을 골라요</span>'}<br><span class="small">${n.past ? '<b style="color:var(--gold)">계승 조합</b> · 지난 땅의 밀린 조합식이라 대장장이가 도와줘요(재료 절반 · 장비 조건 없음) · ' : ''}성공 확률 <b>${n.rate}%</b>${n.past ? ' (확정)' : n.sure ? ' (천장 확정)' : ` · 실패하면 재료 절반만 사라지고, ${CRAFT_PITY[n.t - 1] - n.fails}번 더 실패하면 다음은 확정`}</span>`
           : `<b>${n.t}단계</b>는 ${WORLD_NAME[n.T.w]} ${n.T.need}단계(${stageLabelW(n.T.w, n.T.need)})에 닿으면 열려요.`);
         btn.disabled = !n.ok; setText(btn, `${n.t}단계 만들기 (${n.rate}%)`);
       }
@@ -11699,19 +11873,24 @@ function buildBag(){
 // 가방의 재료·소모품(2026-11 (44), 사용자 요청: 그림과 함께, 누르면 어디에 쓰는지)
 let bagStSig = '';
 const BAG_STACK = [
-  {n:'인삼 탕약', icon:'potion', c:'#ff8a9a', get:() => S.inv.potion || 0, use:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요. 레이드 전멸기를 버틸 때도 꼭 있어야 해요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물 · 꾸미기 상자 위로품'},
-  {n:'감로수', icon:'mana', c:'#7ab8ff', get:() => S.inv.mana || 0, use:'마나 물약. 싸우는 동안 마나가 30 아래면 저절로 마셔 마나를 40 채워요. 물약 칸을 눌러 바로 마실 수도 있어요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물'},
-  {n:'산삼 탕약', icon:'elixir', c:'#ffd977', get:() => S.inv.elixir || 0, use:'보스·레이드에서 위험하면 인삼 탕약보다 먼저 마셔 체력을 모두 채워요.', get2:'[상점] → 물약(보석)'},
-  {n:'숫돌', icon:'whet', c:'#9fe7ff', get:() => S.inv.whet || 0, use:'[장비] → [재련]에서 함께 쓰면 성공 확률이 1.15배가 돼요.', get2:'[상점] → 재료(보석, 10+1 묶음)'},
-  {n:'쇳가루', icon:'dust', c:'#c8c0b0', get:() => S.dust || 0, use:'무기·방어구 재련에 들어가요(엽전과 함께).', get2:'단계 보스·몹이 떨군 남는 장비를 [재련]의 [남는 장비 갈기]로 · 백귀야행 · 탑 · 마을 부탁'},
-  {n:'토벌패', icon:'ticket', c:'#ffcc4d', get:() => raidTickets(), use:'[레이드]의 토벌에 들어가는 패. 이기면 하나를 써요.', get2:'15분마다 1개씩 저절로(최대 3개) · [상점] · 레이드 리셋권'},
-  {n:'요괴 정수', icon:'crystal', c:'#7fdc6a', get:() => S.mat.m0 || 0, use:'이승 재료. 조합 공방(비전 무기·갑옷·노리개), 각인 강화, 신화 보물 제작에 써요.', get2:'이승의 단계 보스·수문장·레이드·타임 보스, 몹(드물게)'},
-  {n:'망자의 넋', icon:'crystal', c:'#ff8a7a', get:() => S.mat.m1 || 0, use:'저승 재료. 조합 공방·각인 강화·신화 보물 제작에 써요.', get2:'저승의 단계 보스·수문장·레이드·타임 보스, 몹(드물게)'},
-  {n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계부터의 재료. 조합 공방·각인 강화·장비 각성·신화 보물 제작에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스'},
-  {n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물을 만들어요. 장비 각성·신화 보물 제작에도 들어가요.', get2:'보물 동굴 · 탑 5층마다 · 주간 퀘스트 · 타임 보스 15시'},
-  {n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'넋의 결이야기([기술] → [넋 부름])와 장비 각성에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
-  {n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'탈것을 사거나 별을 올려요([장비] → [탈것]).', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
+  {k:'potion', n:'인삼 탕약', icon:'potion', c:'#ff8a9a', get:() => S.inv.potion || 0, use:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요. 레이드 전멸기를 버틸 때도 꼭 있어야 해요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물 · 꾸미기 상자 위로품'},
+  {k:'mana', n:'감로수', icon:'mana', c:'#7ab8ff', get:() => S.inv.mana || 0, use:'마나 물약. 싸우는 동안 마나가 30 아래면 저절로 마셔 마나를 40 채워요. 물약 칸을 눌러 바로 마실 수도 있어요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물'},
+  {k:'elixir', n:'산삼 탕약', icon:'elixir', c:'#ffd977', get:() => S.inv.elixir || 0, use:'보스·레이드에서 위험하면 인삼 탕약보다 먼저 마셔 체력을 모두 채워요.', get2:'[상점] → 물약(보석)'},
+  {k:'whet', n:'숫돌', icon:'whet', c:'#9fe7ff', get:() => S.inv.whet || 0, use:'[장비] → [재련]에서 함께 쓰면 성공 확률이 1.15배가 돼요.', get2:'[상점] → 재료(보석, 10+1 묶음)'},
+  {k:'dust', n:'쇳가루', icon:'dust', c:'#c8c0b0', get:() => S.dust || 0, use:'[장비] → [재련]에서 무기·방어구를 벼릴 때 엽전과 함께 들어가요.', get2:'단계 보스·몹이 떨군 남는 장비를 [재련]의 [남는 장비 갈기]로 · 백귀야행 · 천공의 탑 · 마을 부탁'},
+  {k:'ticket', n:'토벌패', icon:'ticket', c:'#ffcc4d', get:() => raidTickets(), use:'[레이드]의 토벌에 들어가는 패. 이기면 하나를 써요.', get2:'15분마다 1개씩 저절로(최대 3개) · [상점] → 재료 · 레이드 리셋권'},
+  {k:'m0', n:'요괴 정수', icon:'crystal', c:'#7fdc6a', get:() => S.mat.m0 || 0, use:'이승 재료. [장비] → [조합](비전 무기·갑옷·노리개 만들기·각인 강화)에 써요. 저승에 가면 대장장이가 망자의 넋으로 <b>계승</b>해 줘요.', get2:'이승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
+  {k:'m1', n:'망자의 넋', icon:'crystal', c:'#ff8a7a', get:() => S.mat.m1 || 0, use:'저승 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비(금척)에 써요. 천계에 가면 하늘 조각으로 <b>계승</b>돼요.', get2:'저승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
+  {k:'m2', n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계·부상·곤륜 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷) · [수련] → [영약]에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 천공의 탑 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
+  {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(절반 확률, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다 · [상점] → 재료'},
+  {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
+  {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
+// 재료 말풍선(2026-11 (48), 사용자 요청): 재료 이름을 누르면 어디에 쓰고(어느 메뉴) 어디서 얻는지. data-mtip="m0|m1|m2|mat(지금 세계 재료)|shard|grudge|dust|piece|…"
+const STK = Object.fromEntries(BAG_STACK.map(x => [x.k, x]));
+const mtipKey = k => k === 'mat' ? 'm' + Math.min(2, S.world) : k;
+function matTipHTML(k){ const x = STK[mtipKey(k)]; if (!x) return ''; return `<b style="color:${x.c}">${x.n}</b> · 가진 수 <b>${fmt(Math.floor(x.get()))}</b><br><b>어디에 쓰나요</b> ${x.use}<br><b>어디서 얻나요</b> ${x.get2}`; }
+const mtip = (k, inner) => STK[mtipKey(k)] ? `<span class="mtip" data-mtip="${k}">${inner}</span>` : inner;
 /* --- 장터 거래 화면(사기·팔기·내 물건·상인) --- */
 let mkView = 'buy', mkKind = '', mkRows = null, mkMineRows = null, mkMsg = '', mkLoading = false;
 function mkRowHTML(it, right, sub){
@@ -11853,8 +12032,8 @@ function buildMyth(){
   panel.querySelectorAll('[data-mw]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.mw, M = MW_BY[k], st = mwSt(k), r = st.own ? mwUp(k) : mwCraft(k);
     if (!r){ addLog(!mwOk(M) ? `${mythReqText({w:M.w})}에 들어가야 만들 수 있어요.` : st.lv >= MW_MAX ? '이미 +5예요.' : '재료가 모자라요.', 'warn'); sfx('click'); return; }
-    if (r.ok){ sfx('win'); playFx('craft', {el:b, ok:true}); addLog(st.lv ? `${M.name} +${r.lv} 강화 성공! 효과 ×${MW_MUL[r.lv]}${r.sure ? ' (정성이 가득 차 확정)' : ''}` : `${M.name}${josa(M.name, '을', '를')} 만들었어요! 효과 ×${MW_MUL[0]}${r.sure ? ' (정성이 가득 차 확정)' : ''}`, 'gain'); }
-    else { sfx('fail'); playFx('craft', {el:b, ok:false}); addLog(`${M.name} ${st.own ? '강화' : '제작'} 실패… 정성 ${r.n}/${r.pity}`, 'warn'); }
+    if (r.ok){ sfx('win'); playFx('craft', {el:b, sub:`${M.name}${st.lv ? ` +${st.lv}` : ''}`}); addLog(st.lv ? `${M.name} +${r.lv} 강화 성공! 효과 ×${MW_MUL[r.lv]}${r.sure ? ' (정성이 가득 차 확정)' : ''}` : `${M.name}${josa(M.name, '을', '를')} 만들었어요! 효과 ×${MW_MUL[0]}${r.sure ? ' (정성이 가득 차 확정)' : ''}`, 'gain'); }
+    else { sfx('fail'); playFx('craft', {el:b, fail:true}); addLog(`${M.name} ${st.own ? '강화' : '제작'} 실패… 정성 ${r.n}/${r.pity}`, 'warn'); }
     refreshPanel();
   }));
   const matName = k => k === 'shard' ? '신화 조각' : k === 'grudge' ? '원한 조각' : k === 'gems' ? '보석' : k === 'mat' ? MATS[Math.min(2, S.world)].name : (MATS.find(M => M.k === k) || {}).name;
@@ -11870,7 +12049,7 @@ function buildMyth(){
       const st = mwSt(M.k), max = st.own && st.lv >= MW_MAX, c = st.own ? (max ? null : mwCost(M, st.lv)) : M.craft;
       const rate = st.own ? (max ? 0 : MW_UP[st.lv].rate) : M.rate, pity = st.own ? (max ? 0 : MW_UP[st.lv].pity) : M.pity, f = st.own ? st.uf : st.cf;
       setHTML(row.querySelector('[data-r=st]'), st.own ? `<b style="color:${M.color}">+${st.lv}</b> · ${M.slot === 'weapon' ? '무기' : M.slot === 'armor' ? '갑옷' : '장신구'} 효과 ×${MW_MUL[st.lv]}${max ? ' (최대)' : ` → ×${MW_MUL[st.lv + 1]}`}` : `아직 없음 · 만들면 ×${MW_MUL[0]}`);
-      setHTML(row.querySelector('[data-r=need]'), c ? Object.entries(c).map(([k, n]) => `<span style="color:${matHave(k) >= n ? 'var(--jade)' : '#ff9a9a'}">${matName(k)} ${fmt(Math.floor(matHave(k)))}/${fmt(n)}</span>`).join(' · ') : '<span style="color:var(--gold)">최대 강화</span>');
+      setHTML(row.querySelector('[data-r=need]'), c ? Object.entries(c).map(([k, n]) => `<span style="color:${matHave(k) >= n ? 'var(--jade)' : '#ff9a9a'}">${mtip(k, matName(k))} ${fmt(Math.floor(matHave(k)))}/${fmt(n)}</span>`).join(' · ') : '<span style="color:var(--gold)">최대 강화</span>');
       setHTML(row.querySelector('[data-r=rate]'), max ? '' : `${st.own ? `+${st.lv + 1} 강화` : '제작'} 성공 ${Math.round(rate * 1000) / 10}% · 정성 ${f}/${pity}${f + 1 >= pity ? ' · <b style="color:var(--gold)">다음은 확정!</b>' : ''}`);
       const b = row.querySelector('[data-mw]'); setText(b, max ? '최대' : st.own ? '강화' : '제작'); b.disabled = max || !mwOk(M) || !c || !mwHave(c);
     }
@@ -11939,7 +12118,8 @@ function buildRefine(){
   };
   panel.innerHTML = `${gearSegHTML()}
     <p class="hint" style="margin-top:8px">엽전과 쇳가루로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
-    <p class="hint">${S.refine.weapon.t ? `2부에서는 무기·방어구가 <b>계승</b>되어 +${REFINE_INHERIT}부터 다시 벼려요. 1부에서 쌓은 재련 효과는 그대로 남고, 성공 확률은 1부의 ${Math.round(REFINE_T_RATE * 100)}%예요.` : `<b>재련 한도</b>: 무기는 이승에서 +25까지. 방어구는 이승 +${REFINE_CAP_A[0]} → 저승 +${REFINE_CAP_A[1]} → 천계 +${REFINE_CAP_A[2]}. 2부로 건너가면 계승되어 +${REFINE_INHERIT}부터 다시 벼려요.`}</p>
+    <p class="hint">${S.refine.weapon.t ? `부상·곤륜에 건널 때마다 대장장이가 무기·방어구를 <b>계승</b>해 줘요(지금 ${S.refine.weapon.t}차). 그때까지 쌓은 재련 효과는 그대로 굳히고 +${REFINE_INHERIT}부터 다시 벼려요. 성공 확률은 1부의 ${Math.round(REFINE_T_RATE * 100)}%예요.` : `<b>재련 한도</b>: 무기는 이승에서 +25까지. 방어구는 이승 +${REFINE_CAP_A[0]} → 저승 +${REFINE_CAP_A[1]} → 천계 +${REFINE_CAP_A[2]}. 부상·곤륜으로 건너가면 대장장이가 계승해 줘서 +${REFINE_INHERIT}부터 다시 벼려요(효과는 그대로).`}</p>
+    ${S.world >= 3 && ['weapon', 'armor'].some(k => (S.refine[k].t || 0) < refineGen()) ? `<div class="card" style="border-color:var(--gold)"><div class="ct">재련 계승<button class="btn sm primary" id="rfInh" style="margin-left:auto">대장장이 부르기</button></div><p class="small" style="margin:0">${WORLD_NAME[S.world]}에 왔으니 대장장이가 재련을 <b>계승</b>해 줄 수 있어요. 지금 효과는 그대로 두고 +${REFINE_INHERIT}부터 +${REFINE_MAX}까지 다시 벼려 더 세져요.</p></div>` : ''}
     <div class="card grind"><div class="ct">쇳가루 <b id="dustN"></b><span class="small">재련 한 번에 쇳가루가 들어요</span></div>
       <p class="small" style="margin:0">단계 보스가 떨군 기본 장비·소환으로 모은 남는 장비를 갈면 쇳가루가 나와요. 끼고 있는 장비, 지금 등급보다 높은 장비, <b>조합 공방 다음 단계에 드는 장비</b>는 남겨요.</p>
       <button class="btn primary" id="grindBtn">남는 장비 갈기</button></div>
@@ -11948,6 +12128,7 @@ function buildRefine(){
     ${card('weapon')}${card('armor')}
     <p class="rtable">확률 공개 (성공 / 하락 / 부서짐, 나머지는 유지)<br>${REFINE_RATE.map((r, i) => `+${i + 1} ${+(r * (S.refine.weapon.t ? REFINE_T_RATE : 1)).toFixed(1)}%${REFINE_DROP[i] ? ` / ${REFINE_DROP[i]}%` : ''}${REFINE_BREAK[i] ? ` / ${REFINE_BREAK[i]}%` : ''}`).filter((_, i) => !S.refine.weapon.t || i >= REFINE_INHERIT).join(' · ')}</p>`;
   wireGearSeg();
+  if ($('#rfInh')) $('#rfInh').addEventListener('click', () => inhShow());
   const grindMax = () => Math.max(...['weapon', 'armor'].map(sl => S.equip[sl] >= 0 ? Math.floor(S.equip[sl] / 4) : 0)) - 1;
   $('#grindBtn').addEventListener('click', () => { const g = grindGear('weapon', grindMax()) + grindGear('armor', grindMax()); if (g){ sfx('refOk'); refreshPanel(); } });
   $('#whetChk').addEventListener('change', e => { S.useWhet = e.target.checked; refreshPanel(); });
@@ -12094,7 +12275,15 @@ let questView = 'main';
 function questGo(q){   // 「바로 가기」·퀘스트 누르기: 이 퀘스트를 하는 곳으로(사냥·단계·레벨이면 사냥 화면)
   const k = q.k || q.c;
   setChat(false);
-  if (k === 'raids' || k === 'raidK' || k === 'hraids'){ raidView = 'raid'; return buildTab('raid'); }
+  if (k === 'raids' || k === 'raidK' || k === 'hraids'){
+    raidView = 'raid';
+    // 마을 부탁의 '레이드'는 [레이드] 칸의 어느 싸움이든 세므로, 이 땅 레이드가 아직 잠겨 있으면(저승·천계 초입 등) 지금 할 수 있는 칸으로(2026-11 (48) 버그: 저승 초입에 잠긴 레이드 목록만 보임)
+    if (q.c === 'raids' && raidUnlocked() < 1){
+      raidView = dummyLeft() > 0 ? 'dummy' : paradeLeft() > 0 ? 'parade' : vaultLeft() > 0 ? 'vault' : 'tb';
+      addLog(`이 땅의 레이드는 아직 잠겨 있어요. 허수아비·백귀야행·보물 동굴·타임 보스 가운데 아무거나 해도 부탁이 세어져요.`, 'good');
+    }
+    return buildTab('raid');
+  }
   const seg = {refineW:'refine', refineA:'refine', refW:'refine', refA:'refine', myth:'myth', acc:'acc', forms:'form', avatar:'av', summons:'weapon'}[k];
   if (seg){ gearSlot = seg; gearSel = -1; return buildTab('gear'); }
   if (k === 'pets3') return buildTab('pet');
@@ -12181,7 +12370,7 @@ function buildQuest(){
         <div class="matrow small">${['이승', '저승', '천계', '부상', '곤륜'].map((nm, w) => { const L = SUB_Q.filter(q => q.w === w); return `<span>${nm} <b>${L.filter(q => S.sub.done[q.k]).length}</b>/${L.length}</span>`; }).join('')}</div>
         <button class="btn" id="subFind" ${subAvail().length ? '' : 'disabled'}>${subAvail().length ? '마을 사람에게 부탁 묻기' : '지금은 새 부탁이 없어요'}</button>
         ${act.length ? act.map(q => `<div class="card qsub" id="sq-${q.k}"><div class="ct"><span><span class="qbadge sub">${q.who}</span> ${q.t}</span><span class="rchips">${subRewHTML(q)}</span></div>
-          <p class="story">${q.story}</p><div class="qbar"><div class="meter gold big"><i></i></div><span class="pr"></span></div>
+          <p class="story">${q.story}</p>${q.c === 'raids' ? `<p class="small" style="margin:-2px 0 6px">[레이드] 칸의 싸움이면 무엇이든 세요 — 레이드 · 허수아비 · 백귀야행 · 보물 동굴 · 타임 보스 · 강림${raidUnlocked() < 1 ? ` <b style="color:var(--gold)">(이 땅의 레이드는 아직 잠겨 있으니 허수아비부터!)</b>` : ''}</p>` : q.c === 'bosses' ? `<p class="small" style="margin:-2px 0 6px">단계 보스 · 레이드 · 타임 보스 · 보물 동굴 · 전직 시험 어느 보스든 세요.</p>` : ''}<div class="qbar"><div class="meter gold big"><i></i></div><span class="pr"></span></div>
           <button class="btn primary" data-sq="${q.k}">보상 받기</button></div>`).join('') : '<div class="card"><p class="small" style="margin:0">들어 주는 부탁이 없어요.</p></div>'}
         ${doneN ? `<details class="ngrp"><summary><b>마친 부탁</b><span>${doneN}개</span></summary><ul class="rewards notes">${SUB_Q.filter(q => S.sub.done[q.k]).map(q => `<li><b>${q.t}</b><span>${q.who}</span></li>`).join('')}</ul></details>` : ''}`;
       wireSeg();
@@ -12377,7 +12566,7 @@ function buildRaid(){
     panel.innerHTML = top + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('serpent', '#e0b03c')}" alt=""></div>
         <div><div class="ct">보물 동굴<span class="tag" id="vLeft"></span></div>
-        <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>와 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 1개.</p></div></div>
+        <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>·재료 ${MAT_SRC.vault}개·보석과 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 ${SHARD_SRC.vaultLose}개.</p></div></div>
       <div class="card"><div class="ct">신화 조각 <b id="vShard"></b><span class="small">${SHARD_COST}개로 원하는 신화 보물 하나</span></div>
         <p class="small" style="margin:0 0 6px">만들면 지금 힘에 맞는 값(이 정도: +<b id="vPow"></b> × 종류 배율)이 나와요. 지금 것보다 약하면 가방으로 들어가요.</p>
         <ul class="list">${list.map(m => `<li class="qrow"><div><div class="qn"><span><b style="color:${MYTH_COLOR}">${m.name}</b> <span class="small">${m.stat}</span></span><span class="small" data-vmc="${m.k}"></span></div></div><button class="btn sm" data-vm="${m.k}">만들기</button></li>`).join('')}</ul></div>
@@ -12403,7 +12592,7 @@ function buildRaid(){
         <div><div class="ct">백귀야행<span class="tag" id="pLeft"></span></div>
         <p class="story">밤길에 온갖 요괴가 줄지어 몰려와요! ${PARADE_TIME}초 동안 쉴 새 없이 나타나는 요괴를 최대한 많이 잡아요(하루 ${PARADE_TRIES}번). 잡은 수만큼 <b>엽전·보석·쇳가루·재료</b>${S.world >= 3 ? '·<b>고삐 조각</b>' : ''}을 받아요. 그동안 단계 보스는 안 나오고, 쓰러져도 단계가 내려가지 않아요.</p></div></div>
       <div class="card"><div class="ct">보상<span class="small" id="pBest"></span></div>
-        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · 20마리마다 재료 1${S.world >= 3 ? ' · 40마리마다 고삐 조각 1' : ''}</p></div>
+        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · ${MAT_SRC.paradePer}마리마다 재료 1${S.world >= 3 ? ' · 40마리마다 고삐 조각 1' : ''}</p></div>
       <button class="btn primary big" id="pGo">백귀야행 시작</button>`;
     wireSeg();
     $('#pGo').addEventListener('click', () => { if (!raid && !parade && paradeLeft() > 0) presetAsk('mob', '백귀야행', () => { if (startParade()){ closePage(); return true; } }); });
@@ -12420,7 +12609,7 @@ function buildRaid(){
         <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번).</p></div></div>
       <div class="card"><div class="ct">등급 보상<span class="small" id="dBest"></span></div>
         <ul class="list dtiers">${[1, 2, 3, 4, 5].map(t => `<li class="qrow" id="dt-${t}"><div><div class="qn"><span><b>${t}등급</b> <span class="small" data-dt="${t}"></span></span>
-          <span class="rchips">${['<span class="rchip rc-gold">엽전</span>', '<span class="rchip rc-gem">보석 30</span>', '<span class="rchip rc-gem">보석 60</span><span class="rchip rc-mat">재료 2</span>', '<span class="rchip rc-gem">보석 100</span><span class="rchip rc-mat">재료 4</span><span class="rchip rc-acc">반지</span>', '<span class="rchip rc-gem">보석 150</span><span class="rchip rc-mat">재료 6</span><span class="rchip rc-acc">귀걸이·팔찌</span>'][t - 1]}</span></div></div></li>`).join('')}</ul></div>
+          <span class="rchips"><span class="rchip rc-gold">엽전</span><span class="rchip rc-gem">보석 ${fmt(Math.round([0, 15, 45, 90, 150, 225][t] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()))}</span><span class="rchip rc-mat">재료 ${MAT_SRC.dummy[t]}</span>${t === 4 ? '<span class="rchip rc-acc">반지</span>' : t === 5 ? '<span class="rchip rc-acc">귀걸이·팔찌</span>' : ''}</span></div></div></li>`).join('')}</ul></div>
       <div id="raidLive"></div>
       <button class="btn primary big" id="dGo">허수아비 수련 시작</button>`;
     wireSeg();
@@ -12983,7 +13172,9 @@ function showTip(bt){
   b.style.setProperty('--ax', Math.max(14, Math.min(w - 14, x + bt.offsetWidth / 2 - left)) + 'px');
   sfx('click');
 }
-panel.addEventListener('click', e => { const q = e.target.closest('.qmark'); if (q){ e.stopPropagation(); e.preventDefault(); showTip(q); return; } if (!e.target.closest('#tipB')) hideTip(); });
+panel.addEventListener('click', e => { const q = e.target.closest('.qmark'); if (q){ e.stopPropagation(); e.preventDefault(); showTip(q); return; }
+  const m = e.target.closest('[data-mtip]'); if (m && !m.closest('button')){ const h = matTipHTML(m.dataset.mtip); if (h){ e.stopPropagation(); m._tip = {innerHTML:h}; showTip(m); return; } }
+  if (!e.target.closest('#tipB')) hideTip(); });
 function buildTab(key, keepScroll){
   if (!key || !BUILDERS[key]) return;
   const top = panel.scrollTop, pg = $('#page'), was = !pg.hidden && currentTab === key;
@@ -13487,7 +13678,6 @@ async function enterChar(cid, opts = {}){
   S = data ? mergeState(data) : defaultState();
   const kfix = !!S.kunlunFix; delete S.kunlunFix;
   migrateStory(); mountCatchUp();
-  const inh = S.world >= 3 && refineInherit();
   if (!S.name) S.name = ch.name;
   if (!S.chosen){ S.chosen = true; S.cls = CLASSES[ch.cls] ? ch.cls : 'musa'; }
   session = {acc, cid}; A.lastChar = cid;
@@ -13501,7 +13691,6 @@ async function enterChar(cid, opts = {}){
   addLog(`${S.name}님, ${stageLabel(S.stage)}에 들어섰습니다.`, 'good');
   if (opts.imported) addLog('예전 모험을 이어받았습니다.', 'good');
   if (kfix){ addLog(`곤륜 기록을 되찾았어요: 곤륜 ${S.maxStage}단계 · Lv.${S.level}(예전에 다시 들어오면 이승으로 바뀌던 문제를 고쳤어요)`, 'good'); saveLocal(); }
-  if (inh) addLog(`2부에 맞춰 무기·방어구가 계승됐어요. 재련 효과는 그대로, +${REFINE_INHERIT}부터 다시 벼려요.`, 'good');
   if (opts.fresh && !opts.imported) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
   addChat('sys', '알림', `${S.name}님, 어서 오세요! 채팅창에서 주민들과 이야기할 수 있어요.${room ? (onlineWanted() ? ' 지금 접속한 다른 용사들과도 이야기가 이어져요.' : ' 지금 이 페이지를 보는 사람들과도 이야기가 이어져요.') : ''}`);
@@ -14117,7 +14306,7 @@ function start(hotData){
   if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); npcRareNote(); if (session) skSetFix(); }, 200);
+  setInterval(() => { refreshPanel(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); updateInh(); npcRareNote(); if (session) skSetFix(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem('samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -14175,7 +14364,8 @@ if (location.search.indexOf('simtest') >= 0){
     skAuto, coopFight, raidParty,
     givePet, rollPet, mythPetPool, petLuck:null, startVault, finishVault, craftMyth, vaultLeft, vaultLuck:null,
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
-    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, pickSet, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, pickSet, inhList, inhDo, inhPending, inhTodo, inhShow, inhRun, inhClose, get inhOpen(){ return inhOpen; }, noInh:true,   // 자동 점검에서는 대장장이가 저절로 나타나지 않게(계승 점검에서만 false)
+    refineGen, INH, MAT_DROP, MAT_SRC, SHARD_SRC, gainShard, questGo, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };

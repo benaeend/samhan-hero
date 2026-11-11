@@ -108,6 +108,8 @@ SIM = r"""
       if (jobPend && !G.raid) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
       if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
       if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
+      if (G.inhPending()) G.inhDo();     // (48) 새 땅에 오면 대장장이에게 바로 계승(지난 땅 재료 → 이 땅 재료, 부상·곤륜은 재련 계승)
+      for (let z = 0; z < 5; z++) { const mb = G.SHOP.find(x => x.id === 'matbag'); if (mb.price() > G.S.gold * 0.05 || !G.buyShop('matbag')) break; }   // 재료 꾸러미(엽전의 5% 안쪽이면)
       if (G.S.gems >= 6000 && G.AVATARS.some(a => a.src === 'box' && !G.S.av.own[a.k])) G.openAvatarBox();   // 남는 보석으로 꾸미기 상자
       G.buyShop('gift');
       // 물약(2026-11 (43)): 체력·마나 자동 회복이 느려져 인삼 탕약·감로수를 사서 씀 — 100개 묶음이 엽전의 5%보다 싸면 묶음, 아니면 10개
@@ -1006,15 +1008,22 @@ async def main():
           if (S.world < 2){ S.world = 2; S.reb.n = 2; }
           S.level = 290; S.best.l2 = Math.max(S.best.l2, 290); Object.assign(S.up, {atk: 900, hp: 900, crit: 80, critDmg: 120, aspd: 60, regen: 40});
           S.refine.weapon.lv = 25; S.refine.weapon.t = 0; const effW0 = G.refineEff('weapon');
+          S.mat.m0 = 7; S.mat.m1 = 11; const m2a = S.mat.m2 || 0; S.inh = {w:2};
           const before = G.crossReady(); S.quest.main = G.CROSS_Q; const ready = G.crossReady(); const ok = G.doCross(); G.refreshStats();
           const after = {world: S.world, lv: S.level, st: S.stage, region: G.BUSANG_REGIONS[0].name};
-          const inh = {t: S.refine.weapon.t, lv: S.refine.weapon.lv, keep: Math.abs(G.refineEff('weapon') - effW0) < 1e-6, cap: G.refineCap('armor')};
+          // (48) 계승은 대장장이가: 건넌 직후엔 그대로(+25·계승 전), 대상 목록에 재료·재련이 있고, 계승하면 효과 그대로 +15부터·재료는 하늘 조각으로
+          const pre = {t: S.refine.weapon.t, lv: S.refine.weapon.lv, pend: G.inhPending(), kinds: G.inhList().map(r => r.kind + ':' + (r.slot || r.j || ''))};
+          G.inhDo();
+          const inh = {t: S.refine.weapon.t, lv: S.refine.weapon.lv, keep: Math.abs(G.refineEff('weapon') - effW0) < 1e-6, cap: G.refineCap('armor'), pre,
+            mat: S.mat.m0 === 0 && S.mat.m1 === 0 && S.mat.m2 === m2a + 18, w: S.inh.w, pend2: G.inhPending()};
           S.best.s3 = 8; S.raid.tk = 3; const r0 = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
           for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
           S.level = 360; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 34);
           const jr = G.jobReady(3); const tr = G.startJobTrial(3); for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
           return {before, ready, ok, after, inh, r0, name, b0: !!S.raid.first.b0, jr, tr, job: S.job, jobC: S.skills.jobC, cape: S.av.cape}; }""")
-        check(bs['inh']['t'] == 1 and bs['inh']['lv'] == 15 and bs['inh']['keep'] and bs['inh']['cap'] == 25, f'2부: 바다를 건너면 무기·방어구가 계승되어 +15부터(효과는 그대로) {bs["inh"]}')
+        check(bs['inh']['pre']['t'] == 0 and bs['inh']['pre']['lv'] == 25 and bs['inh']['pre']['pend'] and 'refine:weapon' in bs['inh']['pre']['kinds'] and 'mat:1' in bs['inh']['pre']['kinds']
+              and bs['inh']['t'] == 1 and bs['inh']['lv'] == 15 and bs['inh']['keep'] and bs['inh']['cap'] == 25 and bs['inh']['mat'] and bs['inh']['w'] == 3 and not bs['inh']['pend2'],
+              f'2부: 바다를 건너면 대장장이가 계승(재련 +15부터·효과 그대로, 지난 땅 재료 → 하늘 조각) {bs["inh"]}')
         check(not bs['before'] and bs['ready'] and bs['ok'] and bs['after']['world'] == 3 and bs['after']['lv'] == 290 and bs['after']['st'] == 1,
               f'2부: 천계 이야기를 마치면 바다를 건너 부상으로 가고, 레벨은 그대로 단계만 1부터 {bs["after"]}')
         check(bs['r0'] and bs['name'] == '갓파 대왕' and bs['b0'], f'2부: 부상 레이드(갓파 대왕)를 토벌한다 {bs["name"]}')
@@ -1034,17 +1043,57 @@ async def main():
           Object.assign(S.up, {atk: 1600, hp: 1600, crit: 90, critDmg: 160, aspd: 80, regen: 60});
           S.quest.main = G.CROSS_Q4; const ready = G.crossReady(); const ok = G.doCross(); G.refreshStats();
           const after = {world: S.world, lv: S.level, st: S.stage, region: G.KUNLUN_REGIONS[0].name};
+          // (48) 곤륜에서는 재련 2차 계승(그때까지의 효과는 그대로, +15부터 다시)
+          S.refine.weapon.lv = 22; G.refreshStats(); const e0 = G.refineEff('weapon'), ip = G.inhPending(); G.inhDo();
+          const inh2 = {gen: G.refineGen(), p: ip, t: S.refine.weapon.t, lv: S.refine.weapon.lv, keep: Math.abs(G.refineEff('weapon') - e0) < 1e-6, more: G.refineEff('weapon', 25) > e0, pend2: G.inhPending()};
           S.best.s4 = 8; S.raid.tk = 3; const r0 = G.startRaid(0); const name = G.raid && G.raid.info.bossName;
           for (let i = 0; i < 4000 && G.raid; i++) G.update(0.05);
           S.level = G.JOB4_LV || 480; S.quest.main = G.MAIN_Q.findIndex(q => q.ch === 44);
           const jr = G.jobReady(4); const tr = G.startJobTrial(4); const steps = [];
           for (let i = 0; i < 12000 && (G.raid || S.job < 4); i++){ G.update(0.05); if (G.raid && !steps.includes(G.raid.info.bossName)) steps.push(G.raid.info.bossName); }
-          return {ready, ok, after, r0, name, k0: !!S.raid.first.k0, jr, tr, steps, job: S.job, jobD: S.skills.jobD, cape: S.av.cape}; }""")
+          return {ready, ok, after, inh2, r0, name, k0: !!S.raid.first.k0, jr, tr, steps, job: S.job, jobD: S.skills.jobD, cape: S.av.cape}; }""")
+        check(kl['inh2']['gen'] == 2 and kl['inh2']['p'] and kl['inh2']['t'] == 2 and kl['inh2']['lv'] == 15 and kl['inh2']['keep'] and kl['inh2']['more'] and not kl['inh2']['pend2'],
+              f'3부: 곤륜에 건너면 대장장이가 재련을 2차 계승(효과 그대로 +15부터, 다시 올리면 더 셈) {kl["inh2"]}')
         check(kl['ready'] and kl['ok'] and kl['after']['world'] == 4 and kl['after']['lv'] == 400 and kl['after']['st'] == 1,
               f'3부: 부상 이야기를 마치면 곤륜으로 건너가고, 레벨은 그대로 단계만 1부터 {kl["after"]}')
         check(kl['r0'] and kl['k0'], f'3부: 곤륜 레이드(열 개의 해)를 토벌한다 {kl["name"]}')
         check(kl['jr'] and kl['tr'] and len(kl['steps']) == 3 and kl['job'] == 4 and kl['jobD'] >= 1 and kl['cape'] == 'j_musa_4',
               f'3부: 세 스승의 시험(세 판)을 넘으면 4차 전직(개천왕)과 10번째 기술 {kl}')
+
+        # 6-6b) 계승(대장장이)·재료 수급처·재료 말풍선·저승 초입 레이드 부탁(2026-11 (48))
+        ih = await page.evaluate("""() => { const G = window.__game, S = G.S; window.__keep48 = JSON.stringify(S); G.quiet = true; G.closePage(); G.setClass('musa');
+          S.world = 1; S.reb.n = Math.max(1, S.reb.n); S.level = 5; S.maxStage = 3; S.stage = 3; S.best.s1 = 3; S.best.s0 = 101; G.applyWorld(); G.setStage(3);
+          S.inh = {w:0}; S.mat = {m0:40, m1:0, m2:0}; S.craft.w.t = 2; S.craft.w.f = 0; S.craft.w.e = G.ENGR_BEST.musa.w; S.craft.w.e2 = ''; G.refreshStats();
+          const n0 = G.craftNeed('w'), list = G.inhList().map(r => r.kind), pend = G.inhPending();
+          G.inhDo(); const mat = Object.assign({}, S.mat); S.mat.m1 = 80; const ok = G.craft('w');
+          const out = {n0:{mat:n0.mat, past:!!n0.past, rate:n0.rate, gear:n0.gearSlot || null, mk:n0.mk}, list, pend, mat, ok, t:S.craft.w.t, left:S.mat.m1, w:S.inh.w, pend2:G.inhPending()};
+          G.questGo({c:'raids'}); const on = document.querySelector('.qsegb.on'); out.rv = on ? on.dataset.rv : ''; out.rUnlocked = G.raidUnlocked(); G.closePage();
+          S.gold = 1e300; S.gems += 1000; S.shop.got = {}; const mA = S.mat.m1, sA = S.mythShard || 0; const b1 = G.buyShop('matbag'), b2 = G.buyShop('shardbag');
+          out.shop = b1 && b2 && S.mat.m1 === mA + G.MAT_SRC.shop && S.mythShard === sA + G.SHARD_SRC.shop; out.drop = [G.MAT_DROP.boss, G.MAT_DROP.gate, G.MAT_DROP.raid, G.MAT_SRC.dummy[5]];
+          S.mode = 'semi'; S.bossAuto = false; S.autoBoss = false; G.buildTab('gear'); return out; }""")
+        check(ih['pend'] and 'mat' in ih['list'] and ih['mat']['m0'] == 0 and ih['mat']['m1'] == 40 and ih['w'] == 1 and not ih['pend2'],
+              f'계승: 저승에 오면 지난 땅 재료(요괴 정수)가 망자의 넋으로 그대로 계승된다 {ih}')
+        check(ih['n0']['past'] and ih['n0']['mat'] == 75 and ih['n0']['rate'] == 100 and ih['n0']['gear'] is None and ih['n0']['mk'] == 'm1' and ih['ok'] is True and ih['t'] == 3 and ih['left'] == 5,
+              f'계승 조합: 지난 땅의 밀린 조합식은 재료 절반·장비 조건 없음·확정 성공 {ih["n0"]} {ih["ok"]} {ih["t"]} {ih["left"]}')
+        check(ih['rUnlocked'] == 0 and ih['rv'] in ('dummy', 'parade', 'vault', 'tb'), f'저승 초입(레이드 잠김)의 레이드 부탁 「바로 가기」는 지금 할 수 있는 칸으로 간다 {ih["rv"]}')
+        check(ih['shop'] and ih['drop'] == [2, 6, 8, 12], f'재료 수급처: 상점 재료 꾸러미·신화 조각, 드롭량 늘림 {ih["shop"]} {ih["drop"]}')
+        await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(250)
+        await page.click('.mat.mtip[data-mtip="m1"]'); await page.wait_for_timeout(200)
+        tipt = await page.evaluate("() => (document.querySelector('#tipB') || {}).textContent || ''")
+        await page.screenshot(path=str(OUT / '6_재료말풍선.png'))
+        check('어디에 쓰나요' in tipt and '어디서 얻나요' in tipt and '망자의 넋' in tipt, f'재료 이름을 누르면 쓰임새·얻는 곳 말풍선이 뜬다 {tipt[:60]}')
+        await page.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); S.mat.m0 = 12; S.inh = {w:0}; G.quiet = false; G.noInh = false; }")
+        await page.wait_for_function("() => window.__game.inhOpen", timeout=8000)
+        await page.wait_for_timeout(400); await page.screenshot(path=str(OUT / '6_계승_대장장이.png'))
+        ih1 = await page.evaluate("() => ({rows: document.querySelectorAll('#inh .inh-row').length, say: (document.querySelector('#inhSay') || {}).textContent || '', go: !!document.querySelector('#inhGo'), later: !!document.querySelector('#inhLater')})")
+        await page.click('#inhGo'); await page.wait_for_timeout(700); await page.screenshot(path=str(OUT / '6_계승_연출.png'))
+        await page.wait_for_function("() => { const b = document.querySelector('#inh button.primary'); return b && b.textContent === '좋아요!'; }", timeout=15000)
+        await page.wait_for_timeout(300); await page.screenshot(path=str(OUT / '6_계승_완료.png'))
+        await page.click('#inh button.primary'); await page.wait_for_timeout(200)
+        ih2 = await page.evaluate("""() => { const G = window.__game, S = G.S; const out = {m0: S.mat.m0, open: G.inhOpen, hidden: document.querySelector('#inh').hidden, w: S.inh.w, done: document.querySelectorAll('#inh .inh-row.done').length};
+          G.noInh = true; G.quiet = true; Object.assign(S, JSON.parse(window.__keep48)); G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.quiet = false; return out; }""")
+        check(ih1['rows'] >= 1 and ih1['go'] and ih1['later'] and '저승' in ih1['say'] and ih2['m0'] == 0 and not ih2['open'] and ih2['hidden'] and ih2['w'] == 1,
+              f'계승 화면: 새 땅 첫 화면에 대장장이가 나타나 대상을 보여 주고, [계승하기]를 누르면 연출 뒤 닫힌다 {ih1} {ih2}')
 
         # 6-7) 탈것: 지난 이야기 보상으로 받기, 마구간(엽전)·고삐 조각으로 얻기, 별 올리기, 타면 걷기·능력
         mt = await page.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true;
