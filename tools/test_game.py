@@ -320,6 +320,8 @@ async def main():
         # 1) 타이틀·로그인·계정 만들기
         await page.screenshot(path=str(OUT / '1_로그인.png'))
         check(await page.is_visible('#title'), '로그인 전에는 타이틀 화면이 보인다')
+        tsc = await page.evaluate("() => ['.t-scene', '.t-sea', '.t-refl', '.t-spout', '.t-rocks', '.t-moon', '#tEmb'].map(q => { const e = document.querySelector('#title ' + q), r = e && e.getBoundingClientRect(); return !!r && r.width > 4 && r.height > 4; }).concat([document.querySelectorAll('#tHeroes img').length >= 4])")
+        check(all(tsc), f'첫 화면: 달밤의 동해(바다·달 그림자·용오름·대왕암)와 삼족오 문양, 직업 용사들이 그려진다 {tsc}')
         await page.click('#lg-tab-signup')
         await page.fill('#lg-id', 'tester')
         await page.fill('#lg-pw', '1234')
@@ -521,18 +523,29 @@ async def main():
         check(mg['q'] == 1 and not mg2['me']['hidden'] and mg2['me']['who'] == mg2['me']['name'] and mg2['me']['tx'] == '확성기 시험' and 'mg-me' in mg2['me']['cls'], f'내 말도 차례를 기다렸다가 확성기로 뜬다 {mg["q"]} {mg2["me"]}')
         check(mg2['off']['hidden'] and mg2['off']['q'] == 0 and mg2['off']['key'] == '0' and mg2['key'] == '1', f'확성기를 끄면 뜨지 않는다 {mg2["off"]}')
 
-        # 5) 다시 열면 로그인 유지 → 로그아웃 → 틀린/맞는 비밀번호
+        # 5) 다시 열면 늘 로그인 창부터(아이디는 기억, 비밀번호만) → 틀린/맞는 비밀번호 → 같은 캐릭터로 이어 하기 → 로그아웃
         await page.evaluate("() => window.dispatchEvent(new Event('pagehide'))")
         await page.goto(URL)
-        await page.wait_for_function('() => window.__game.session', timeout=8000)
-        await page.evaluate("() => { window.__game.gateOff = true; window.__game.noFork = true; }")
-        check(await page.evaluate('() => window.__game.S.name') == '홍길동', '다시 열면 같은 캐릭터로 이어진다')
-        check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 결과가 저장된다')
-        await tab(page, 'rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
-        await page.fill('#lg-id', 'tester'); await page.fill('#lg-pw', '0000'); await page.click('#modal-btn-0')
+        await page.wait_for_selector('#lg-id'); await page.wait_for_timeout(500)
+        lg = await page.evaluate("() => ({session: !!window.__game.session, id: document.querySelector('#lg-id').value, pw: document.querySelector('#lg-pw').value, title: document.querySelector('#mTitle').textContent, txt: document.querySelector('#mBody').textContent, tok: Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => k.includes('online'))})")
+        await page.screenshot(path=str(OUT / '12_다시열면_로그인.png'))
+        check(not lg['session'] and lg['id'] == 'tester' and lg['pw'] == '' and lg['title'] == '로그인' and '아이디를 기억' in lg['txt'] and lg['tok'] == [],
+              f'다시 열면 늘 로그인 창부터: 아이디는 채워져 있고 비밀번호만 치면 된다(저장된 로그인 표로 바로 들어가지 않음) {lg["session"]} {lg["id"]} {lg["title"]} {lg["tok"]}')
+        await page.fill('#lg-pw', '0000'); await page.click('#modal-btn-0')
         await page.wait_for_timeout(600)
         check('맞지 않아요' in await page.inner_text('#lg-err'), '틀린 비밀번호는 막는다')
         await page.fill('#lg-pw', '1234'); await page.click('#modal-btn-0')
+        await page.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        await page.click('#modal-btn-1')      # 시작하기(마지막에 하던 캐릭터가 골라져 있다)
+        await page.wait_for_function('() => window.__game.session', timeout=8000)
+        await page.evaluate("() => { window.__game.gateOff = true; window.__game.noFork = true; }")
+        check(await page.evaluate('() => window.__game.S.name') == '홍길동', '다시 로그인하면 같은 캐릭터로 이어진다')
+        check(await page.evaluate('() => window.__game.S.refine.weapon.lv') >= 3, '재련 결과가 저장된다')
+        if not await page.is_hidden('#modal'): await page.evaluate('() => window.__game.hideModal()')
+        await tab(page, 'rec'); await page.click('#outBtn'); await page.click('#modal-btn-1')
+        await page.wait_for_selector('#lg-id')
+        check(await page.input_value('#lg-id') == '', '로그아웃하면 기억해 둔 아이디도 지운다')
+        await page.fill('#lg-id', 'tester'); await page.fill('#lg-pw', '1234'); await page.click('#modal-btn-0')
         await page.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
         await page.screenshot(path=str(OUT / '13_캐릭터고르기.png'))
         # 두 번째 캐릭터는 레이드 파티에 동료로 들어온다
@@ -1191,6 +1204,24 @@ async def main():
         nw2 = await page.evaluate("() => { const G = window.__game; const out = {seen: localStorage.getItem('samhan-note-seen') !== 'old', open: G.inhOpen, list: G.notiList().map(n => n.k)}; G.hideModal(); G.noNoti = true; return out; }")
         check('할머니' in nw1['who'] and '물의 신화' in nw1['say'] and nw1['chips'] >= 3 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
               f'업데이트 소식: 이야기꾼 할머니가 찾아와 간추려 주고 [자세히]로 소식 창을 연다(기기마다 한 번) {nw1} {nw2}')
+        # 자리 비움 → 절전 모드(2-1단계): 10분 동안 안 누르면 30초 예고(누르면 취소) → 저장하고 게임을 멈춤 → 누르면 오프라인 보상과 함께 돌아옴
+        af0 = await page.evaluate("() => { const G = window.__game; G.quiet = false; G.closePage(); if (!document.querySelector('#modal').hidden) G.hideModal(); G.afkTest = true; G.setAfk(10); G.addTime(10 * 60 * 1000 + 2000); return G.afkMin; }")
+        await page.wait_for_selector('#afkWarn:not([hidden])', timeout=6000)
+        await page.screenshot(path=str(OUT / '6y_자리비움_예고.png'))
+        await page.mouse.click(420, 200); await page.wait_for_timeout(500)      # 화면을 누르면 취소
+        af1 = await page.evaluate("() => ({warn: !document.querySelector('#afkWarn').hidden, sleep: window.__game.sleepAt})")
+        await page.evaluate("() => window.__game.addTime(10 * 60 * 1000 + 2000)"); await page.wait_for_selector('#afkWarn:not([hidden])', timeout=6000)
+        await page.evaluate("() => window.__game.addTime(31000)"); await page.wait_for_selector('#sleep:not([hidden])', timeout=6000)
+        af2 = await page.evaluate("""async () => { const G = window.__game, S = G.S, p0 = S.rec.play, k0 = S.rec.kills, s0 = S.lastSave; await new Promise(r => setTimeout(r, 1300)); G.saveLocal();
+          return {sleep: G.sleepAt > 0, saved: Math.abs(G.sleepAt - s0) < 2000, frozen: S.rec.play === p0 && S.rec.kills === k0, keep: S.lastSave === s0, txt: document.querySelector('#sleep').textContent}; }""")
+        await page.screenshot(path=str(OUT / '6y_절전모드.png'))
+        lv0 = await page.evaluate("() => { const G = window.__game; G.addTime(2 * 3600 * 1000); return [G.S.gold, G.S.rec.kills]; }")
+        await page.wait_for_timeout(400); slt = await page.inner_text('#slTime')
+        await page.click('#sleep'); await page.wait_for_selector('#mTitle:has-text("다녀오셨습니까")', timeout=6000)
+        af3 = await page.evaluate("""() => { const G = window.__game, S = G.S; const out = {sleep: G.sleepAt, hidden: document.querySelector('#sleep').hidden, gold: S.gold, kills: S.rec.kills}; G.hideModal(); G.afkTest = false; return out; }""")
+        check(af0 == 10 and not af1['warn'] and not af1['sleep'], f'자리 비움: 10분 동안 누르지 않으면 예고가 뜨고, 화면을 누르면 취소된다 {af0} {af1}')
+        check(af2['sleep'] and af2['saved'] and af2['frozen'] and af2['keep'] and '절전 모드' in af2['txt'] and '2시간' in slt, f'절전 모드: 예고 30초 뒤 저장하고 게임 진행을 멈춘다(저장 시각은 그대로) {af2} {slt}')
+        check(af3['sleep'] == 0 and af3['hidden'] and (af3['gold'] > lv0[0] or af3['kills'] > lv0[1]), f'절전 모드에서 화면을 누르면 그 시각부터의 오프라인 보상 창과 함께 돌아온다 {af3} {lv0}')
         check(nt1['smith'] and not nt1['noti'] and not nt2['open'] and nt2['btn'] and nt2['cnt'] == '2' and nt2['list'] == ['inh', 'sk8'],
               f'알림 연출 틀: 알릴 것이 여럿이면 중요한 것(계승) 하나만 저절로 찾아오고 나머지는 왼쪽 위 두루마리에 모인다 {nt1} {nt2}')
         check(not nt3['open'] and not nt3['note'] and nt3['log'][0] == 'sk8' and nt3['list'] == ['inh'], f'알림 연출 틀: 두루마리에서 골라 보면 본 것으로 적히고 목록에서 빠진다(계승은 할 때까지 남음) {nt3}')
