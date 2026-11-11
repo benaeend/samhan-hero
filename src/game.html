@@ -2830,9 +2830,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-6', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-12-1', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-12 · 버그 고침'],
+  ['4차 전직이 3차로 돌아가던 것', '4차 전직을 한 용사가 다시 접속하면 3차로 내려가던 버그를 고쳤어요. 4차 기술을 익힌 기록이 있으면 접속할 때 4차로 되돌려요.'],
+  ['이야기 퀘스트가 되돌아가던 것', '부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 옛 퀘스트(무기 재련)로 되돌아가던 버그를 고쳤어요. 되돌아간 용사는 접속할 때 그 땅에 건너온 대목으로 되찾아요.'],
+  ['못 이기는 보스에 시간을 다 쓰던 것', '보스 자동 도전에서 도전 기운이 다 찬 뒤에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 그 사이 사냥해서 레벨을 올려요. 바로 도전하려면 [보스] 단추를 누르면 돼요.'],
   ['#', '2026-11-11 · 채팅 확성기'],
   ['채팅 확성기', '용사가 채팅으로 한 말(내 말·다른 용사의 말)이 확성기 공지처럼 게임 화면 위 가운데에 띠로 잠깐 떠요. 채팅창을 닫고 사냥·레이드를 하거나 메뉴를 보고 있어도 보여요. 여럿이 말하면 차례로, 긴 글은 옆으로 흘러요. 주민(마을) 수다와 알림은 채팅창에만 나와요. [정보] → 채팅 확성기에서 끌 수 있어요.'],
   ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
@@ -3115,7 +3119,11 @@ function mergeState(d){
   const q = d.quest;
   out.quest = Object.assign(base.quest, q || {});
   if (!q) out.quest.tut = -1;                 // 예전부터 하던 사람은 튜토리얼을 건너뛴다
-  out.quest.sv = q && (q.sv === 2 || q.sv === 3) ? q.sv : 1;      // 3이 아니면 enterChar에서 새 이야기로 옮긴다
+  // 이야기 판 번호: 2~5는 그대로(5 = 지금 판, migrateStory가 건드리지 않음), 그 밖(아주 예전 저장)은 1 → enterChar에서 새 이야기로 옮긴다.
+  // (2026-11-12 버그 고침) 예전에는 2·3만 받아 지금 판(5) 저장도 들어올 때마다 1로 바뀌어, 부상·곤륜에 건너간 뒤 이야기가 옛 퀘스트로 되돌아갔다.
+  // 되돌아간 저장은 세계로 되찾는다: 부상이면 적어도 건너기 퀘스트(CROSS_Q), 곤륜이면 CROSS_Q4까지는 한 것
+  out.quest.sv = q && [2, 3, 4, 5].includes(q.sv) ? q.sv : 1;
+  if (out.quest.sv === 5){ const m0 = Math.max(0, Math.floor(+out.quest.main) || 0), w = +d.world || 0, need = w >= 4 ? CROSS_Q4 : w >= 3 ? CROSS_Q : 0; out.quest.main = Math.max(m0, need); }
   out.quest.hid = Math.max(0, Math.floor(+out.quest.hid) || 0); out.quest.hidBase = Math.max(0, +out.quest.hidBase || 0);
   if (!out.quest.dp || typeof out.quest.dp !== 'object') out.quest.dp = {};
   { const w = d.week && typeof d.week === 'object' ? d.week : {}, wp = {};   // 주간 퀘스트
@@ -3152,7 +3160,8 @@ function mergeState(d){
     s3:Math.max(0, Math.floor(+bd.s3) || 0, out.world === 3 ? out.maxStage : 0), l3:Math.max(0, Math.floor(+bd.l3) || 0, out.world === 3 ? out.level : 0),
     s4:Math.max(0, Math.floor(+bd.s4) || 0, out.world === 4 ? out.maxStage : 0), l4:Math.max(0, Math.floor(+bd.l4) || 0, out.world === 4 ? out.level : 0)};
   out.best.l0 = Math.min(LV_CAP[0], out.best.l0); out.best.l1 = Math.min(LV_CAP[1], out.best.l1);
-  out.job = Math.min(3, Math.max(0, Math.floor(+d.job) || 0));
+  out.job = Math.min(4, Math.max(0, Math.floor(+d.job) || 0));
+  if (out.job === 3 && d.skills && d.skills.jobD > 0) out.job = 4;   // (2026-11-12 버그 고침) 예전에는 3까지만 받아 4차 전직자가 다시 들어오면 3차로 내려갔다. 4차 기술(jobD)을 익힌 기록이 있으면 4차로 되돌린다
   const av = d.av && typeof d.av === 'object' ? d.av : {};
   out.av = {own:{}, char:'', cape:'', pet:'', wing:''};
   for (const a of AVATARS) if (av.own && av.own[a.k]) out.av.own[a.k] = true;
@@ -4201,7 +4210,7 @@ function bossFail(reason){
   if (window.__game && window.__game.onBoss) window.__game.onBoss('fail');
   bossPityAdd();
   const pity = Math.round((1 - bossPityMul()) * 100);
-  addLog((S.bossAuto ? `보스 도전 실패 (${reason}). ${BOSS_RETRY}초 수련한 뒤 다시 도전해요.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`) + ` · 도전 기운: 다음엔 보스 체력 -${pity}%`, 'warn');
+  addLog((S.bossAuto ? `보스 도전 실패 (${reason}). ${waitText(bossRetryT())} 수련한 뒤 다시 도전해요${bossRetryT() > BOSS_RETRY ? '(바로 하려면 [보스] 단추)' : ''}.` : `보스 도전 실패 (${reason}). 수련 후 [보스 도전]을 누르세요.`) + ` · 도전 기운: 다음엔 보스 체력 -${pity}%`, 'warn');
   // 세 번째 실패부터: 이 단계 몬스터가 가정하는 조합 공방 단계보다 낮으면 알려 줌(몬스터 체력에 craftComp가 곱해져 있어 비전 장비가 없으면 몇 단계 뒤처짐)
   if (bossPityN() === 3){ const need = S.world > 2 ? CRAFT_MAX : craftExpT(S.world, S.stage), have = Math.min(S.craft.w.t, S.craft.a.t, S.craft.n.t);
     if (have < need) addLog(`이 사냥터 몬스터는 조합 공방 비전 장비 ${need}단계를 갖췄다고 보고 세져요. 지금 가장 낮은 칸이 ${have}단계 — [장비] → [조합 공방]에서 올리면 훨씬 쉬워요.`, 'gain'); }
@@ -6042,7 +6051,7 @@ function update(dt){
     bossTime -= dt;
     if (bossTime <= 0) bossFail('시간 초과');
   } else if (!hero.dead){
-    if (S.kills >= FIELD.kills && !S.autoBoss && S.bossAuto){ bossRetry += dt; if (bossRetry >= BOSS_RETRY){ S.autoBoss = true; bossRetry = 0; } }   // 보스 자동: 실패해도 잠시 수련한 뒤 다시
+    if (S.kills >= FIELD.kills && !S.autoBoss && S.bossAuto){ bossRetry += dt; if (bossRetry >= bossRetryT()){ S.autoBoss = true; bossRetry = 0; } }   // 보스 자동: 실패해도 잠시 수련한 뒤 다시
     if (S.kills >= FIELD.kills && S.autoBoss){ const bg = bossGate(); if (bg.ok) startBoss(); else { S.autoBoss = false; bossRetry = 0; gateNote(bg); } }
     else {
       spawnT -= dt;
@@ -11019,6 +11028,10 @@ elBossMode.addEventListener('click', () => {
 elSpeed.addEventListener('click', () => { S.speed = S.speed === 2 ? 1 : 2; applySpeedBtn(); applyModeBtns(); });
 let bossRetry = 0;   // 보스 자동일 때 실패 뒤 다시 도전까지 기다린 시간
 const BOSS_RETRY = 45;
+// (2026-11-12 버그 고침) 도전 기운이 다 찬 뒤에도 지면 다시 도전하는 간격을 45초 → 90초 → 3분 → 6분 → 10분으로 벌린다(못 이길 보스에 사냥 시간을 다 쓰던 문제)
+const BOSS_RETRY_MAX = 600;
+const bossRetryT = () => { const n = bossPityN() - Math.round(BOSS_PITY.max / BOSS_PITY.per); return n <= 0 ? BOSS_RETRY : Math.min(BOSS_RETRY_MAX, BOSS_RETRY * Math.pow(2, n)); };
+const waitText = sec => sec >= 90 ? `${Math.floor(sec / 60)}분${sec % 60 >= 1 ? ' ' + Math.floor(sec % 60) + '초' : ''}` : `${Math.max(1, Math.ceil(sec))}초`;
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
 function updateHud(){
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
@@ -11034,7 +11047,7 @@ function updateHud(){
   elXp.style.width = (xr * 100).toFixed(1) + '%'; setText(elXpN, atCap ? `만렙 · 모음 ${(S.expBank || 0).toFixed(1)}` : (xr * 100).toFixed(1) + '%');
   const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid && bossGate().ok;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
-  if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '보스 도전!');
+  if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '보스 도전!');
   if (skBarKey !== S.cls + ':' + skBarList().join(',')) buildSkillbar();
   updateActBtns();
   skBarList().forEach(i => {
@@ -11165,7 +11178,7 @@ function updateBigBoss(){
   else if (parade){ cls = 'fight'; txt = '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / PARADE_TIME); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
-  else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${Math.max(1, Math.ceil(BOSS_RETRY - bossRetry))}초 뒤 자동` : '눌러서 시작'; p = 1; }
+  else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '눌러서 시작'; p = 1; }
   if (!session && !window.__game) cls = 'off';
   const vis = $('#page').hidden ? '' : 'hidden'; if (elBig.style.visibility !== vis) elBig.style.visibility = vis;   // 메뉴 화면이 열려 있으면 숨김
   if (elBig.className !== 'bigboss ' + cls) elBig.className = 'bigboss ' + cls;
