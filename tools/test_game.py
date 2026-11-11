@@ -1154,7 +1154,7 @@ async def main():
           document.querySelector('[data-pkd=""]').click(); document.querySelector('[data-pf="own"]').click();
           document.querySelector('[data-ptab="3"]').click(); S.pets.lv[7] = 1; G.partApply(); const dot = tabs();   // 다른 부(1부)에서 새로 얻으면 그 탭에 빨간 점
           document.querySelector('[data-ptab="1"]').click(); const dot2 = tabs(), isNew = document.querySelector('[data-pk="p7"]').classList.contains('part-new') || S.pseen.pet.includes('p7');
-          S.raid.first = {'0':true, h1:true, g2:true, b0:true}; G.buildTab('raid'); document.querySelector('[data-rv="raid"]').click(); const rt = tabs(), past = document.querySelectorAll('.rcard.past').length, pastVis = [...document.querySelectorAll('.rcard.past')].filter(e => !e.closest('.part-off')).length;
+          S.raid.first = {'0':true, h1:true, g2:true, b0:true}; G.buildTab('raid'); document.querySelector('[data-rv="raid"]').click(); const rt = tabs(), past = document.querySelectorAll('.rcard.jin').length, pastVis = [...document.querySelectorAll('.rcard.jin')].filter(e => !e.closest('.part-off')).length;
           document.querySelector('[data-ptab="1"]').click(); const rt1 = tabs(), r1 = vis(), curHidden = !!document.querySelector('#raid-0').closest('.part-off');
           document.querySelector('[data-ptab="3"]').click();
           G.buildTab('rec'); const dexRows = document.querySelectorAll('#dexBox tbody tr').length, dex = [1, 2, 3].map(p => G.dexSum(p)), dexT = ['dex1', 'dex2', 'dex3'].every(k => G.TITLES.some(t => t.k === k));
@@ -1170,11 +1170,11 @@ async def main():
               f'부별 탭: 처음 열리는 탭은 지금 있는 부, 「전체」·「가진 것만」·종류 거르기가 된다 {pt["t4"]} {pt["vAll"]} {pt["vOwn"]} {pt["vAtk"]}')
         check('1!' in pt['dot'] and '1*' in pt['dot2'] and pt['isNew'], f'부별 탭: 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점, 열어 보면 사라진다 {pt["dot"]} {pt["dot2"]}')
         check(pt['rt'] == ['0', '1', '2', '3*'] and pt['past'] == 34 and pt['pastVis'] == 0 and pt['r1'] == [1] and pt['curHidden'],
-              f'레이드 목록: 부별 탭으로 지나온 땅의 레이드 토벌 기록을 본다(이승 8·저승 10·천계 8·부상 8) {pt["rt"]} {pt["past"]} {pt["rt1"]}')
+              f'레이드 목록: 부별 탭으로 지나온 땅의 레이드(상위 단계 「진」 칸)를 본다(이승 8·저승 10·천계 8·부상 8) {pt["rt"]} {pt["past"]} {pt["rt1"]}')
         check(pt['dexRows'] == 3 and all(d[1] > 0 for d in pt['dex']) and pt['dexT'], f'도감: [정보]에 부별 모음 현황(펫·탈것·아바타·치장·넋 구슬)과 부별 별호 {pt["dex"]}')
         # 알림 연출 틀: 여럿이면 중요한 것 하나만 저절로(계승 > 8칸), 나머지는 왼쪽 위 두루마리. 「줄이기」면 한 줄 띠로만. [정보]에서 다시 보기
         await page.evaluate("""() => { const G = window.__game, S = G.S; window.__keepNt = JSON.stringify(S); G.quiet = true; G.closePage(); S.world = 1; S.level = Math.min(S.level, 200); G.applyWorld(); G.refreshStats(); G.setStage(1);
-          S.mat.m0 = 9; S.inh = {w:0}; S.skNote = true; S.noti = {seen:{}, log:[]}; G.notiAuto.clear(); G.setNotiLite(false); G.noInh = false; G.noSkNote = false; G.quiet = false; }""")
+          S.mat.m0 = 9; S.inh = {w:0}; S.skNote = true; S.noti = {seen:{'jin:w0':1}, log:[]}; G.notiAuto.clear(); G.setNotiLite(false); G.noInh = false; G.noSkNote = false; G.quiet = false; }""")
         await page.wait_for_function("() => window.__game.inhOpen", timeout=8000)
         nt1 = await page.evaluate("() => ({smith: !!document.querySelector('#inhGo'), noti: document.querySelector('#inh').classList.contains('noti')})")
         await page.click('#inhLater'); await page.wait_for_timeout(900)
@@ -1185,7 +1185,7 @@ async def main():
         await page.screenshot(path=str(OUT / '6z_알림_까치.png'))
         await page.click('#inh .inh-say'); await page.wait_for_timeout(200); await page.click('#notiLater'); await page.wait_for_timeout(300)
         nt3 = await page.evaluate("""() => { const G = window.__game, S = G.S; const out = {open: G.inhOpen, note: S.skNote, log: S.noti.log.map(x => x.k), list: G.notiList().map(n => n.k)};
-          S.skNote = true; S.noti.seen = {}; G.notiAuto.clear(); G.setNotiLite(true); return out; }""")
+          S.skNote = true; S.noti.seen = {'jin:w0':1}; G.notiAuto.clear(); G.setNotiLite(true); return out; }""")
         await page.wait_for_function("() => document.querySelector('#notiBtn').classList.contains('say')", timeout=5000)
         nt4 = await page.evaluate("() => ({open: window.__game.inhOpen, tx: document.querySelector('#notiTx').textContent, lite: window.__game.notiLite})")
         await page.screenshot(path=str(OUT / '6z_알림_한줄띠.png'))
@@ -1664,6 +1664,85 @@ async def main():
         check('까치' in n8['who'] and '8' in n8['say'] and not n8['btns'] and n8b['btns'] and n8b['sk'] == 8 and not n8c['note'] and not n8c['open'] and n8c['tab'] == 'skill' and n8c['log'] == ['sk8'],
               f'8개를 넘게 쓰던 예전 저장은 까치가 찾아와 알린다(알림 연출 틀: 말을 눌러 넘기고 [기술 보러 가기]) {n8} {n8b} {n8c}')
         await ctxS.close()
+
+        # 9-10) 물의 신화 3단계: 상위 레이드 「진」(세기 고정·권장 전투력·하루 3번·목숨·탕약 한도·지면 -4%·주간 첫 승리·리셋권 제외·알림)과 해태 수련(46장 전엔 숨김)
+        ctxJ = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        jp = await ctxJ.new_page()
+        watch(jp, errors, '3단계 ')
+        await fresh(jp)
+        await signup(jp, 'jintest', 'abcd', '진용사')
+        j1 = await jp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          const old = JSON.parse(JSON.stringify(save)); delete old.jin; delete old.haetae;
+          Object.assign(S, G.mergeState(old)); S.name = '진용사'; S.myth.elixir = 0; G.refreshStats(); G.setStage(S.stage);
+          out.merged = !!S.jin && S.jin.n === 0 && !!S.jin.wk && !!S.jin.fail && !!S.haetae && G.mergeState({jin:{n:2, wk:{j0:1, zz:1}, fail:{jb7:99}, win:{jh3:'4'}}}).jin.fail.jb7 === 9 && !('zz' in G.mergeState({jin:{wk:{zz:1}}}).jin.wk);
+          out.open = [0, 1, 2, 3, 4].map(w => G.jinOpen(w));
+          out.rec = [[0, 0], [0, 7], [1, 0], [1, 9], [2, 0], [2, 7], [3, 0], [3, 7]].map(([w, i]) => Math.log10(G.jinRec(w, i)));
+          out.tiers = [0.5, 1, 1.5, 3].map(r => G.jinTier(r)[2]);
+          out.k = [G.JIN.tries, G.JIN.lives, G.JIN.pots, G.JIN.auto, G.JIN.failPer, G.JIN.failMax, G.JIN.time];
+          // 세기는 정해져 있다: 내 힘을 두 배로 해도 보스 체력·한 방은 그대로
+          const b1 = G.jinBase(3, 7); G.powK = 2; G.refreshStats(); const b2 = G.jinBase(3, 7); G.powK = 1; G.refreshStats(); out.fixed = b1[0] === b2[0] && b1[1] === b2[1] && b1[2] === b2[2];
+          S.inv.potion = 50; S.inv.elixir = 0; S.inv.mana = 50; S.jin.day = ''; S.raid.first = {};
+          out.left0 = G.jinLeft(); out.start = G.startJin(3, 7); const R = G.raid, B = R.boss; out.hp = B.maxHp === b1[0]; out.info = [R.info.jin, R.info.key, R.info.nkey, R.info.mw, R.info.label]; out.left1 = G.jinLeft(); out.lock = G.potLock(); out.again = G.startJin(3, 6);
+          G.PAT.off = true; B.atk = 0; B.aoe = 0; G.wipeOff = true;
+          // 탕약은 한 판에 10개까지
+          let drunk = 0; for (let k = 0; k < 14; k++){ G.hero.hp = G.ST.maxHp * 0.2; G.potCd = 0; const n0 = S.inv.potion; G.update(0.05); if (S.inv.potion < n0) drunk++; } out.drunk = drunk; out.pots = R.pots;
+          // 세 번째 쓰러지면 끝
+          let falls = 0; for (let k = 0; k < 400 && G.raid && !G.raid.ending; k++){ if (!G.hero.dead){ G.hero.hp = 0; B.atk = G.ST.maxHp * 1e6; B.atkT = 0; } G.update(0.05); falls = R.falls || 0; }
+          out.falls = falls; out.ended = !G.raid || G.raid.ending; for (let k = 0; k < 100 && G.raid; k++) G.update(0.05);
+          out.fail1 = S.jin.fail.jb7; out.pity = G.jinPity('jb7');
+          // 다시 도전: 보스 체력 -4%, 이기면 주간 첫 승리 보상·못 깼던 일반 토벌 기록
+          const g0 = S.gems; G.startJin(3, 7); out.hp2 = Math.abs(G.raid.boss.maxHp / b1[0] - 0.96) < 1e-9; G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05);
+          out.win = [S.jin.win.jb7, !!S.jin.wk.jb7, S.jin.fail.jb7 == null, !!S.raid.first.b7, S.gems > g0]; const g1 = S.gems - g0;
+          const g2 = S.gems; G.startJin(3, 7); G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); out.week = g1 > (S.gems - g2) && S.gems > g2;
+          out.left3 = G.jinLeft(); out.no4 = G.startJin(3, 0); G.raidReset(); out.noReset = G.jinLeft() === 0;   // 하루 3번, 리셋권으로 안 되돌아옴
+          G.addTime(86400000 * 8); out.nextDay = G.jinLeft() === 3 && !S.jin.wk.jb7;   // 다음 주: 횟수·주간 첫 승리 다시
+          G.PAT.off = false; G.wipeOff = false; G.hand = null;
+          // 해태 수련: 46장 전에는 열리지 않는다(시험에서만 강제로)
+          out.hOpen = G.haetaeOpen(); out.hNo = G.startHaetae(); G.haetaeForce = true; out.hGo = G.startHaetae();
+          if (G.raid){ const R2 = G.raid; G.hand = {dodge:0, counter:0}; for (let k = 0; k < 800 && G.raid && !G.raid.ending; k++){ G.update(0.05); out.hD = R2.hDmg; out.hB = R2.hBurns || 0; } for (let k = 0; k < 100 && G.raid; k++) G.update(0.05); }
+          out.hBest = S.haetae.best; out.hLeft = G.haetaeLeft();
+          G.startHaetae(); if (G.raid){ const R3 = G.raid; G.hand = {dodge:1, counter:0}; for (let k = 0; k < 800 && G.raid && !G.raid.ending; k++){ G.update(0.05); out.hB2 = R3.hBurns || 0; } for (let k = 0; k < 100 && G.raid; k++) G.update(0.05); }
+          G.hand = null; G.haetaeForce = false; G.quiet = false; S.jin.day = ''; return out; }""", late)
+        check(j1['merged'] and j1['open'] == [True, True, True, True, False] and j1['tiers'] == ['모자람', '딱 맞음', '넉넉함', '압도적'] and j1['k'] == [3, 3, 10, 0.5, 0.04, 0.2, 90]
+              and all(j1['rec'][k] < j1['rec'][k + 1] for k in (0, 2, 4, 6)) and j1['fixed'],
+              f'상위 레이드 「진」: 예전 저장에 새 칸이 채워지고, 지나온 땅(이승~부상)만 열리며(곤륜 진은 다음 세계에서), 권장 전투력은 레이드마다 커지고 내 힘과 상관없이 정해져 있다 {j1["open"]} {[round(x, 2) for x in j1["rec"]]} {j1["k"]}')
+        check(j1['left0'] == 3 and j1['start'] and j1['hp'] and j1['info'][:4] == [True, 'jb7', 'b7', 3] and j1['left1'] == 2 and j1['lock'] and not j1['again']
+              and j1['drunk'] == 10 and j1['pots'] == 10 and j1['falls'] == 3 and j1['ended'] and j1['fail1'] == 1 and abs(j1['pity'] - 0.04) < 1e-9,
+              f'진 싸움: 들어가면 하루 횟수를 쓰고, 탕약은 한 판에 10개까지, 세 번째 쓰러지면 끝, 지면 다음 도전 보스 체력 -4% {j1["left1"]} 탕약 {j1["drunk"]} 쓰러짐 {j1["falls"]} {j1["fail1"]}')
+        check(j1['hp2'] and j1['win'] == [1, True, True, True, True] and j1['week'] and j1['left3'] == 0 and not j1['no4'] and j1['noReset'] and j1['nextDay'],
+              f'진 보상: 이기면 주간 첫 승리 보상(두 번째는 적게)·못 깼던 일반 토벌 기록, 하루 3번, 레이드 리셋권으로는 안 되돌아오고 다음 날·다음 주에 다시 {j1["win"]} {j1["week"]} {j1["left3"]}')
+        check(not j1['hOpen'] and not j1['hNo'] and j1['hGo'] and j1['hD'] > 0 and j1['hB'] > 0 and j1['hB2'] == 0 and j1['hBest'] > 0 and j1['hLeft'] == 2,
+              f'해태 수련: 46장 전에는 시작할 수 없고(시험에서만), 눈이 붉을 때 치면 불이 되돌아오며 물러서면 안 맞는다 {j1["hOpen"]} 피해 {j1["hD"]:.3g} 불길 {j1["hB"]}/{j1["hB2"]}')
+        await tab(jp, 'raid')
+        await jp.wait_for_timeout(400)
+        jr = await jp.evaluate("""() => { const G = window.__game, q = s => document.querySelectorAll(s), txt = e => e ? e.textContent : '';
+          document.querySelector('[data-rv="raid"]').click(); const segs = [...q('[data-rv]')].map(b => b.dataset.rv);
+          document.querySelector('[data-ptab="2"]').click();
+          const cards = [...q('.rcard.jin')].filter(e => !e.closest('.part-off')), c0 = cards[0];
+          return {segs, n: cards.length, all: q('.rcard.jin').length, pow: txt(c0.querySelector('.rpow.jin')), btn: txt(c0.querySelector('[data-jin]')), dis: c0.querySelector('[data-jin]').disabled, left: txt(document.querySelector('.jin-left')), tier: !!c0.querySelector('.rpow.jin [class^="jt-"]'), hint: txt(document.querySelector('#page')).includes('다음 땅에 들어서면 이 땅의 진')}; }""")
+        await jp.wait_for_timeout(300)
+        await jp.screenshot(path=str(OUT / '27_진_레이드_목록.png'))
+        await jp.evaluate("""() => { const G = window.__game; G.S.presetMode = 'ask'; document.querySelector('.rcard.jin:not(.part-off) [data-jin]:not([disabled])').click(); }""")
+        await jp.wait_for_selector('.jrules', timeout=4000)
+        jm = await jp.evaluate("""() => ({title: document.querySelector('#mTitle').textContent, rules: document.querySelectorAll('.jrules li').length, pot: !!document.querySelector('#prePotBox'), pre: !!document.querySelector('#preGrid'), pow: document.querySelector('#mBody .rpow.jin').textContent})""")
+        await jp.screenshot(path=str(OUT / '27b_진_시작전.png'))
+        await jp.click('#modal-btn-1')      # 출발
+        await jp.wait_for_function('() => window.__game.raid && window.__game.raid.info.jin')
+        await jp.wait_for_timeout(1500)
+        await jp.screenshot(path=str(OUT / '27c_진_싸움.png'))
+        jf = await jp.evaluate("""() => { const G = window.__game; const r = {page: G.currentTab, label: G.raid.info.label, falls: G.raid.falls, wipes: G.raid.info.wipes.length}; G.quiet = true; G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); G.quiet = false; return r; }""")
+        check('haetae' not in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3/3' in jr['left'] and not jr['hint'],
+              f'[레이드] 목록: 지나온 땅의 레이드마다 「진」 칸(권장 전투력·내 전투력 빛깔·오늘 횟수), 해태 수련 칸은 아직 안 보이고 마지막 땅에는 다음 땅 안내가 없다 {jr}')
+        check('진 ·' in jm['title'] and jm['rules'] >= 3 and jm['pot'] and jm['pre'] and '권장 전투력' in jm['pow'] and jf['page'] is None and jf['label'].startswith('진 ·') and jf['falls'] == 0,
+              f'진 시작 전 창(규칙·권장 전투력·조합·들고 가는 물약) → [출발]로 싸움이 시작된다 {jm} {jf}')
+        await jp.evaluate("""() => { const G = window.__game; G.hideModal(); G.closePage(); G.S.noti.seen = {}; G.notiAuto.clear(); G.noJin = false; }""")
+        await jp.wait_for_selector('#inh.noti #notiSay', timeout=5000)
+        await jp.wait_for_timeout(500)
+        jn = await jp.evaluate("() => ({who: document.querySelector('#inh .nm').textContent, say: document.querySelector('#notiSay').textContent, tag: document.querySelector('#inh .tag').textContent, img: (document.querySelector('#inh .noti-npc img') || {}).src || ''})")
+        await jp.screenshot(path=str(OUT / '27d_진_알림.png'))
+        check('그림자' in jn['who'] and '다시 와라' in jn['say'] and '상위 레이드' in jn['tag'] and jn['img'].startswith('data:image'), f'새 땅에 들어서면 지나온 땅 레이드 보스의 그림자가 찾아와 「진」이 열렸다고 알린다(알림 연출 틀) {jn["who"]} {jn["say"][:30]}')
+        await jp.evaluate("() => { window.__game.noJin = true; }")
+        await ctxJ.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()

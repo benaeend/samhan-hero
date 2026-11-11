@@ -769,6 +769,12 @@ body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,
 .rsub{font-size:11.5px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rpow{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:var(--text-soft)}
 .rpow .ok{color:#8ff0c4;font-weight:800}.rpow .bad{color:#ff8a8a;font-weight:800}
+/* 상위 레이드 「진」: 권장 전투력 네 가지 빛깔(모자람·딱 맞음·넉넉함·압도적) */
+.jt-low{color:#ff8a8a;font-weight:800}.jt-fit{color:#ffd96a;font-weight:800}.jt-good{color:#8ff0c4;font-weight:800}.jt-over{color:#9fd0ff;font-weight:800}
+.rcard.jin{border-color:rgba(255,90,110,.38);background:linear-gradient(180deg,rgba(120,24,44,.34),var(--panel))}
+.rcard.jin .rport{position:relative}.rcard.jin .jmark{position:absolute;left:-4px;top:-4px;width:20px;height:20px;border-radius:50%;background:#a01028;color:#ffe9c8;font-size:12px;font-weight:900;display:grid;place-items:center;border:1px solid rgba(255,220,180,.6);box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.rpow.jin{margin:4px 0}.jrules{margin:8px 0;padding-left:18px;font-size:12.5px;line-height:1.55;color:var(--text-soft)}.jrules b{color:var(--text)}
+.tkbadge.jin-left{color:#ffb3bf;border-color:rgba(255,90,110,.45)}
 .rgo{min-width:72px;height:44px;font-size:13px;font-weight:900}
 .tkbadge{font-size:11.5px;font-weight:800;color:var(--gold);background:rgba(255,204,77,.1);border:1px solid rgba(255,204,77,.35);border-radius:999px;padding:2px 9px}
 .dcard{grid-template-columns:72px 1fr;align-items:center}
@@ -1706,7 +1712,7 @@ let skPreset = null, presetNext;   // presetNext: 다음 싸움에 쓸 조합(un
 const skTier = () => Math.max(0, Math.min(3, (S.job || 0) - 1));   // 0: 1차까지 · 1: 2차 · 2: 3차 · 3: 4차
 const skPreList = k => ((SK_PRE[S.cls] || SK_PRE.musa)[k] || SK_PRE.musa.mix)[skTier()];
 const skPresetFor = k => skPreList(k).filter(i => skOpen(i)).slice(0, SK_SLOTS);
-const fightKind = info => !info ? 'boss' : info.tower ? 'tower' : info.parade ? 'mob' : info.dummy || info.vault || info.dboss || info.job || info.pvp ? 'boss' : 'party';   // 천공의 탑은 저절로 바꾸지 않음
+const fightKind = info => !info ? 'boss' : info.tower ? 'tower' : info.parade ? 'mob' : info.dummy || info.haetae || info.vault || info.dboss || info.job || info.pvp ? 'boss' : 'party';   // 천공의 탑은 저절로 바꾸지 않음
 const curSet = () => skPreset || S.skSet || [];
 const skIn = i => curSet().includes(i);
 /* 레이드별 기술 조합(2026-11 (42), 사용자 요청: 레이드마다 저절로 고르고, 시작 전 창에서 고르게. [기술]의 자동 고르기는 사냥(스테이지)용):
@@ -2863,7 +2869,7 @@ const SHOP = [
   {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
   {id:'mana', cat:'potion', icon:'mana', name:'감로수 10개', desc:'마나 물약. 마나가 30 아래로 떨어지면 싸우는 동안 저절로 마셔 마나를 40 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(15, Math.round(mGold(S.maxStage) * 30)), inv:'mana', n:10, max:9999},
   {id:'mana100', cat:'potion', icon:'mana', name:'감로수 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 마나가 30 아래면 저절로 마셔 40 채워요.', cur:'gold', price:() => Math.max(110, Math.round(mGold(S.maxStage) * 225)), inv:'mana', n:100, max:9999},
-  {id:'rreset', cat:'pack', icon:'ticket', name:'레이드 리셋권', tag:'하루 1번', desc:'오늘 쓴 허수아비 수련·백귀야행·보물 동굴·1일 보스·강림 레이드 도전 횟수를 처음으로 되돌리고(이긴 1일 보스·강림도 다시), 토벌패를 가득 채워요.', cur:'gems', price:() => RRESET_GEMS, daily:1},
+  {id:'rreset', cat:'pack', icon:'ticket', name:'레이드 리셋권', tag:'하루 1번', desc:'오늘 쓴 허수아비 수련·백귀야행·보물 동굴·1일 보스·강림 레이드 도전 횟수를 처음으로 되돌리고(이긴 1일 보스·강림도 다시), 토벌패를 가득 채워요. 상위 레이드 「진」의 횟수는 되돌리지 않아요.', cur:'gems', price:() => RRESET_GEMS, daily:1},
   {id:'elixir', cat:'potion', icon:'elixir', name:'산삼 탕약', desc:'보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 6, inv:'elixir', n:1, max:999},
   {id:'elixir10', cat:'potion', icon:'elixir', name:'산삼 탕약 묶음', tag:'10+1', desc:'산삼 탕약 10개 값에 11개! 보스·레이드에서 위험하면 먼저 마셔 체력을 모두 채워요.', cur:'gems', price:() => 60, inv:'elixir', n:11, max:999},
   {id:'b_atk', cat:'charm', icon:'charm', buff:'atk', cur:'gems', price:() => 60},
@@ -2986,13 +2992,19 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-13-3', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-13-4', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '물의 신화 업데이트 · 상위 레이드 「진(眞)」'],
+  ['상위 레이드 「진」', '지나온 땅의 레이드마다 상위 단계 「진」이 생겼어요(이승·시왕·천계·부상 34곳, 다음 땅에 들어서면 그 땅의 진이 열려요). [레이드] 목록에서 부별 탭을 누르면 지나온 땅의 레이드 아래에 나와요.'],
+  ['정해진 세기 · 권장 전투력', '진 보스는 내 힘을 따라 세지지 않아요. 레이드마다 권장 전투력이 있고, 내 전투력과 나란히 「모자람 · 딱 맞음 · 넉넉함 · 압도적」 네 빛깔로 보여 줘요. 키울수록 쉬워져요.'],
+  ['손으로 싸우는 맛', '딱 맞는 전투력에서는 손이 승패를 갈라요. 자동 피하기가 절반만 통하고, 붉은 칸·강타에 맞으면 잠깐 기절해요. 금빛 「!」를 되받으면 보스가 바로 휘청이고 그동안 피해가 2.5배예요. 새 패턴 「쫓는 살」은 발밑을 세 번 연달아 물들여요.'],
+  ['진의 규칙', '하루 3번(모든 진을 합쳐, 레이드 리셋권으로는 안 되돌아와요). 세 번째 쓰러지면 끝, 탕약은 한 판에 10개까지. 질 때마다 그 레이드 보스 체력이 4%씩(최대 20%) 줄어요.'],
+  ['진의 보상', '그 땅에서 가장 좋은 등급의 장비(이승 진은 영웅 IV, 그 뒤로는 전설)·보석·신화 조각·넋 구슬(확률 2배)과 진 전용 아바타 셋(진 토벌대 철갑·진홍 토벌 망토·진홍빛). 레이드마다 주에 한 번 첫 승리 보상을 더 받아요.'],
   ['#', '물의 신화 업데이트 · 화면 정리와 캐릭터 6칸'],
   ['부별 탭', '펫·탈것·아바타·치장·신화 보물·장신구·가방·레이드 목록 맨 위에 「전체 · 1부 · 2부 · 3부」 탭이 생겼어요. 탭마다 가진 개수가 보이고, 처음에는 지금 있는 부가 열려요(마지막에 본 탭을 기억해요). 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점이 떠요. 「가진 것만」·종류 거르기도 있고, 아직 안 간 부는 잠겨 있어요.'],
   ['도감', '[정보]에 부별 도감(펫·탈것·아바타·치장·넋 구슬을 부마다 얼마나 모았는지)이 생겼어요. 부 하나를 다 모으면 별호를 얻어요.'],
-  ['캐릭터 6칸', '한 계정에 캐릭터를 6명까지 만들 수 있어요. 캐릭터가 늘어나는 만큼 배럭 효과의 한 명당 몫은 0.7배가 됐어요(다른 캐릭터 5명이면 엽전 최대 +35% — 예전 3명 최대 +30%).'],
+  ['캐릭터 6칸', '한 계정에 캐릭터를 6명까지 만들 수 있어요. 캐릭터가 늘어나는 만큼 배럭 효과의 한 명당 몫은 0.7배가 됐어요(지금 캐릭터 4명인 계정은 엽전 보너스가 최대 +30% → +21%로 줄고, 6명을 다 채우면 +35%).'],
   ['알림 연출', '알릴 것이 생기면 알리는 인물이 직접 찾아와요(계승은 대장장이 쇠돌, 기술 정리는 까치). 한가할 때 한 번에 하나만 찾아오고 나머지는 왼쪽 위 두루마리에 모여요. [정보]에서 지난 알림을 다시 보거나 「알림 연출 줄이기」(한 줄 띠로만)를 켤 수 있어요.'],
   ['지나온 땅의 레이드', '[레이드] 목록의 부별 탭에서 지나온 땅의 레이드 토벌 기록을 볼 수 있어요.'],
   ['삼족오 아이콘', '게임 아이콘과 첫 화면의 문양이 해 속의 세 발 까마귀 「삼족오」로 바뀌었어요.'],
@@ -3255,7 +3267,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, noti:{seen:{}, log:[]}, pseen:{},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0},
   };
 }
 function mergeState(d){
@@ -3383,6 +3395,9 @@ function mergeState(d){
     const v = d.pvp && typeof d.pvp === 'object' ? d.pvp : {};
     out.pvp = {pt:Math.max(0, Math.floor(+v.pt) || 1000), best:Math.max(1000, Math.floor(+v.best) || 1000), win:nn(v.win), lose:nn(v.lose), day:st(v.day), n:nn(v.n), fw:st(v.fw)};
     out.skSaves = [0, 1, 2].map(k => Array.isArray(d.skSaves) && Array.isArray(d.skSaves[k]) ? d.skSaves[k].filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : null); }
+  { const j = d.jin && typeof d.jin === 'object' ? d.jin : {}, st = v => typeof v === 'string' ? v : '', nn = v => Math.max(0, Math.floor(+v) || 0), kv = (o, f) => { const r = {}; if (o && typeof o === 'object') for (const k of Object.keys(o)) if (/^j[hgbk]?\d{1,2}$/.test(k)){ const v = f(o[k]); if (v) r[k] = v; } return r; };   // 상위 레이드 「진」(물의 신화 3단계)
+    out.jin = {day:st(j.day), n:nn(j.n), week:st(j.week), wk:kv(j.wk, v => !!v), fail:kv(j.fail, v => Math.min(9, nn(v))), win:kv(j.win, nn), pity:nn(j.pity)};
+    const h = d.haetae && typeof d.haetae === 'object' ? d.haetae : {}; out.haetae = {day:st(h.day), n:nn(h.n), best:Math.max(0, +h.best || 0)}; }
   { const g = d.gr && typeof d.gr === 'object' ? d.gr : {}; out.gr = {day:typeof g.day === 'string' ? g.day : '', n:Math.max(0, Math.floor(+g.n) || 0), won:!!g.won, pity:Math.max(0, Math.floor(+g.pity) || 0)}; } out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
   out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
@@ -3500,13 +3515,14 @@ function mythSets(){
   return {sword:m.sword > 0 && m.kusa > 0 && m.pangu > 0 ? k : 0, mirror:m.mirror > 0 && m.yata > 0 && m.elixir > 0 ? k : 0, bell:m.bell > 0 && m.maga > 0 && m.sail > 0 ? k : 0};
 }
 function computeStats(up = S.up){
+  const powK = window.__game && window.__game.powK || 1;   // 시뮬에서만: 공격력·체력을 함께 곱해 전투력을 그 배로(상위 레이드 클리어율 표)
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = fxNow, RB = S.reb.up;
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100, crOver = Math.max(0, crRaw - 1);
   return {
-    atk: 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
+    atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk'),
-    maxHp: 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
+    maxHp: powK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp'),
     regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K,
     crit: Math.min(1, crRaw), critOver: crOver,
@@ -4082,6 +4098,10 @@ function drinkPot(k){
 function drinkHp(k, manual){
   const h = k === 'elixir' ? 1 : 0.4;
   if (!k || (S.inv[k] || 0) <= 0) return false;
+  if (raid && raid.info.jin){   // 상위 레이드 「진」: 탕약(인삼·산삼)은 한 판에 JIN.pots개까지
+    if ((raid.pots || 0) >= JIN.pots){ if (manual || !raid.potWarn){ raid.potWarn = true; addText('탕약을 다 썼어요!', hero.x, hero.y - 44, '#ff8a8a', 11, true); } return false; }
+    raid.pots = (raid.pots || 0) + 1;
+  }
   S.inv[k]--; potCd = manual ? 0.8 : 3; sfx('potion');
   if (raid && raid.wipe && raid.wipe.st === 3) raid.wipe.drank = true;   // 전멸기: 회복약을 마셔야 버팀
   const amt = ST.maxHp * h * (1 + rideAb('pot') / 100);
@@ -4274,8 +4294,9 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && Math.random() < ST.crit + sc;
   const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100;
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
-  const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : PAT.grogMul : 1;
+  const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1;
   const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * skMul('boss') * elMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
   if (kind === 'skill' && mine && !fxOff() && vfx.length < VFX_MAX - 20){ const hy = m.y - mobHeight(m) * 0.5; vSparks(m.x, hy, crit ? 6 : 3, crit ? '#ffd24a' : C.fx || '#ffffff', 55, 18); if (crit) vadd({type:'glow', x:m.x, y:hy, r:10, col:'#ffd24a', dur:0.25}); }
@@ -4343,9 +4364,13 @@ function heroDie(){
     addText('불사약!', hero.x, hero.y - 40, '#ffe08a', 12, true); fx.push({type:'awaken', t:0, dur:0.9, color:'#ffe08a', x:hero.x, y:hero.y - 12}); sfx('awaken');
     return;
   }
-  hero.dead = true; hero.deadT = 2.2; hero.buffT = 0; hero.moving = false; hero.target = null; hero.goal = null; hero.holdT = 0; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
+  hero.dead = true; hero.deadT = 2.2; hero.stunT = 0; hero.buffT = 0; hero.moving = false; hero.target = null; hero.goal = null; hero.holdT = 0; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
   if (raid && (raid.info.pvp || raid.info.tower)){   // 결투·천공의 탑은 혼자 하는 승부라 쓰러지면 바로 짐(2026-11 (43))
     hero.deadT = Infinity; addLog(raid.info.pvp ? '결투에서 쓰러졌어요…' : '탑의 수호자에게 쓰러졌어요…', 'warn'); raidEnd(false); return;
+  }
+  if (raid && raid.info.jin){   // 상위 레이드 「진」: JIN.lives번째 쓰러지면 끝
+    raid.falls = (raid.falls || 0) + 1;
+    if (raid.falls >= JIN.lives){ hero.deadT = Infinity; addLog(`「진」에서는 ${JIN.lives}번째 쓰러지면 물러나야 해요…`, 'warn'); raidEnd(false); return; }
   }
   if (raid){
     hero.deadT = 3;
@@ -4540,7 +4565,7 @@ function startFight(info, party, o){
   if (bossActive){ bossActive = false; bossRef = null; }
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
   mobs = []; projs = [];
-  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, mp:MP_MAX, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0});
+  Object.assign(hero, {tx:6 + FOX, ty:8 + FOY, fx:6 + FOX, fy:8 + FOY, moving:false, dir:'right', dead:false, hp:ST.maxHp, mp:MP_MAX, target:null, buffT:0, atkT:0.5, elixirUsed:false, goal:null, holdT:0, haltT:0, stunT:0});
   presetTake(fightKind(info));   // 싸움별 추천 기술 조합(끝나면 presetDrop)
   if (!info.pvp && potLowAny() && !(window.__game && window.__game.quiet)) addLog(`물약이 얼마 없어요(인삼 ${S.inv.potion || 0} · 산삼 ${S.inv.elixir || 0} · 감로수 ${S.inv.mana || 0}). 싸움이 시작되면 살 수 없으니 다음엔 미리 챙겨요.`, 'warn');
   placeOf(hero);
@@ -4839,10 +4864,11 @@ function healParty(a){
    이승 앞 10단계 보스는 없음, 30단계까지는 붉은 칸만, 그 뒤 되받기, 수문장(이승 31단계부터·저승부터)과 레이드는 큰 살까지 */
 const HAND = {dodge:0.8, counter:0.35, ally:0.75};
 const PAT = {warn:1.4, warnRaid:1.6, cd:[6, 9], counterT:1.1, grog:4, grogMul:1.4, stgK:150, wipeT:6, wipeFieldT:5, wipePct:0.55, tileMul:2.2, blowMul:2.2, rollCd:2.5, wipeStg:40};
+const handP = k => { const hs = window.__game && window.__game.hand; return hs && hs[k] != null ? hs[k] : HAND[k] * (k === 'dodge' && raid && raid.info.jin ? JIN.auto : 1); };   // 상위 레이드 「진」: 자동 피하기가 절반만 통한다. __game.hand = {dodge, counter}: 시뮬의 손 모델(자동·평범·잘함)
 const patBoss = () => market ? null : raid ? (raid.ending || !raid.boss || raid.boss.dead ? null : raid.boss) : bossActive && bossRef && !bossRef.dead ? bossRef : null;
 function patLv(B){
   if (!B || B.dead || PAT.off) return 0;   // PAT.off: 시험·시뮬에서 손컨 없이 견주기
-  if (B.raid) return raid && raid.info && !raid.info.dummy && !raid.info.pvp ? 3 : 0;   // 결투엔 손컨 패턴 없음
+  if (B.raid) return raid && raid.info && !raid.info.dummy && !raid.info.pvp && !raid.info.haetae ? 3 : 0;   // 결투엔 손컨 패턴 없음
   if (S.world === 0 && S.stage <= 10) return 0;
   if (S.world === 0 && S.stage <= 30) return 1;
   return B.gate ? 3 : 2;
@@ -4878,11 +4904,22 @@ function patTiles(B, P){
     for (const [cx, cy] of spots) for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) add(cx + dx, cy + dy);
   }
   P.tel = {kind:'tiles', shape, t:0, T:B.raid ? PAT.warnRaid : PAT.warn, set, tiles:[...set].map(s => s.split(',').map(Number)),
-    auto:{ok:Math.random() < HAND.dodge, at:0.25 + Math.random() * 0.5, done:false}};
+    auto:{ok:Math.random() < handP('dodge'), at:0.25 + Math.random() * 0.5, done:false}};
   if (!S.seenCut.patTiles){ S.seenCut.patTiles = 1; addLog('땅이 붉게 물들면 피하세요! 땅을 누르면 그쪽으로 걷고, [구르기]로 재빨리 빠져요.', 'warn'); }
 }
+// 쫓는 살(상위 레이드 「진」 전용): 용사 발밑 3×3을 JIN.chase번 연달아 물들인다 — 한 번 피하고 끝이 아니라 계속 움직여야 한다
+function patChase(B, P, left = JIN.chase - 1){
+  const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
+  if (!tg) return;
+  const set = new Set(), [hx, hy] = tg === hero ? heroTile() : [tg.tx, tg.ty];
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (inMap(hx + dx, hy + dy)) set.add((hx + dx) + ',' + (hy + dy));
+  const firstW = left === JIN.chase - 1;
+  P.tel = {kind:'tiles', shape:'chase', chain:left, t:0, T:firstW ? JIN.chaseT[0] : JIN.chaseT[1], set, tiles:[...set].map(s => s.split(',').map(Number)),
+    auto:{ok:Math.random() < handP('dodge'), at:0.15 + Math.random() * 0.3, done:false}};
+  if (firstW){ addText('쫓는 살!', B.x, B.y - mobHeight(B) - 14, '#ff9a6a', 13, true); if (!S.seenCut.patChase){ S.seenCut.patChase = 1; addLog('「쫓는 살」! 발밑이 세 번 연달아 붉게 물들어요. 한 번 피한 뒤에도 계속 움직여요.', 'warn'); } }
+}
 function patCounter(B, P){
-  P.tel = {kind:'counter', t:0, T:PAT.counterT, auto:{ok:Math.random() < HAND.counter, at:0.3 + Math.random() * 0.6, done:false}};
+  P.tel = {kind:'counter', t:0, T:PAT.counterT, auto:{ok:Math.random() < handP('counter'), at:0.3 + Math.random() * 0.6, done:false}};
   B.lunge = 0;
   if (!S.seenCut.patCounter){ S.seenCut.patCounter = 1; addLog('보스 머리 위에 금빛 「!」가 뜨면 [되받기]를 눌러요! 막으면 보스가 휘청여요.', 'warn'); }
 }
@@ -4898,12 +4935,13 @@ function counterOk(B, manual){
   addText(manual ? '되받기!' : '되받기', hero.x, hero.y - 40, '#ffe08a', manual ? 15 : 12, true);
   if (fitOn(B)){ hitNoBase = true; hit(B, fitRate() * FIT.ctr, 'skill', true, true); hitNoBase = false; patStg(B, FIT.ctrStg); }   // 타임 보스·1일 보스: 기본 피해(파티) FIT.ctr초 몫 그대로
   else { hit(B, ST.atk * atkBuff() * skillMulX() * cls().skillMul * 5, 'skill', true); patStg(B, 35); }
+  if (raid && raid.info.jin && !B.dead && P && !(P.grogT > 0)){ patBreak(B); P.grogT = JIN.ctrGrog; }   // 상위 레이드 「진」: 되받으면 바로 휘청
   shake = Math.max(shake, 0.3); sfx('crit');
   if (!fxOff()){ vadd({type:'shock', x:hero.x, y:hero.y, r0:4, r1:26, w:3, col:'#ffe08a', dur:0.45, ground:true}); vadd({type:'slashx', x:B.x, y:B.y - mobHeight(B) * 0.5, L:16, a:-0.6, col:'#ffe08a', dur:0.35}); }
 }
 // 구르기: 붉은 칸이면 가장 가까운 안전한 칸으로, 아니면 보스 반대쪽으로 2~3칸. 0.35초 동안 붉은 칸에 맞지 않는다
 function heroRoll(manual){
-  if (hero.dead || market || manual && cut) return false;
+  if (hero.dead || market || manual && cut || hero.stunT > 0) return false;
   if (manual && hero.rollCd > 0) return false;
   const B = patBoss(), tel = telTiles();
   let best = null, bs = 1e9;
@@ -4926,6 +4964,7 @@ function heroRoll(manual){
 }
 // [구르기/되받기] 단추
 function handPress(){
+  if (raid && raid.info.haetae) return haetaeHalt() ? 'halt' : '';   // 해태 수련: 물러서기
   const B = patBoss(), P = B && B.pat;
   if (P && P.tel && P.tel.kind === 'counter' && !hero.dead){ counterOk(B, true); return 'counter'; }
   return heroRoll(true) ? 'roll' : '';
@@ -4961,19 +5000,20 @@ function updatePat(dt){
       if (T.t >= T.T){
         P.tel = null;
         const [x, y] = heroTile();
-        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(bossHit(B, hero, fitOn(B) ? FIT.tile : PAT.tileMul)); S.rec.patHits = (S.rec.patHits || 0) + 1; }
+        if (!hero.dead && !(hero.rollT > 0) && T.set.has(x + ',' + y)){ patHitHero(bossHit(B, hero, patMul(B, 'tile'))); jinStun(JIN.tileStun); S.rec.patHits = (S.rec.patHits || 0) + 1; }
         else if (!hero.dead && T.set.size) S.rec.dodges = (S.rec.dodges || 0) + 1;
-        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, bossHit(B, a, fitOn(B) ? FIT.tile : PAT.tileMul)); }
+        if (raid) for (const a of raid.allies) if (!a.down && T.set.has(a.tx + ',' + a.ty)){ if (Math.random() < HAND.ally) addText('피함', a.x, a.y - 30, '#d8d0ff', 9, true); else damageAlly(a, bossHit(B, a, patMul(B, 'tile'))); }
         shake = Math.max(shake, 0.3); sfx('hit');
         if (!fxOff()) for (const [tx, ty] of T.tiles.filter((_, k) => k % 2 === 0).slice(0, 26)){ const px = isoX(tx, ty), py = isoY(tx, ty); vadd({type:'glow', x:px, y:py - 3, r:8, col:'#ff5a3a', dur:0.35}); vSparks(px, py - 2, 2, '#ff8a5a', 40, 18); }
+        if (T.chain > 0 && !B.dead) patChase(B, P, T.chain - 1);   // 쫓는 살: 다음 물결
       }
     } else if (T.kind === 'counter'){
       if (T.auto.ok && !T.auto.done && T.t >= T.auto.at && !hero.dead){ T.auto.done = true; counterOk(B, false); return; }
       if (T.t >= T.T){
         P.tel = null; B.lunge = 0.25;
         const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
-        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(bossHit(B, hero, fitOn(B) ? FIT.blow : PAT.blowMul)); }
-        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, bossHit(B, tg, fitOn(B) ? FIT.blow : PAT.blowMul)); }
+        if (tg === hero){ addText('강타!', hero.x, hero.y - 44, '#ff7a5a', 12, true); patHitHero(bossHit(B, hero, patMul(B, 'blow'))); jinStun(JIN.blowStun); }
+        else if (tg){ if (Math.random() < HAND.counter) addText('되받기', tg.x, tg.y - 34, '#ffe08a', 10, true); else damageAlly(tg, bossHit(B, tg, patMul(B, 'blow'))); }
         shake = Math.max(shake, 0.25);
       }
     } else if (T.kind === 'wipe' && T.t >= T.T){
@@ -4989,10 +5029,14 @@ function updatePat(dt){
   if (lv >= 3 && P.wipes.length && B.hp <= B.maxHp * P.wipes[0]){ P.wipes.shift(); patWipe(B, P); return; }
   P.cd -= dt;
   if (P.cd <= 0){
-    P.cd = PAT.cd[0] + Math.random() * (PAT.cd[1] - PAT.cd[0]); P.n++;
-    if (lv >= 2 && P.n % (fitOn(B) ? 2 : 3) === 0 && !hero.dead) patCounter(B, P); else patTiles(B, P);   // 타임 보스·1일 보스는 되받기가 더 잦다
+    const jin = !!(raid && raid.info.jin), cd = jin ? [JIN.cdA, JIN.cdB] : PAT.cd;
+    P.cd = cd[0] + Math.random() * (cd[1] - cd[0]); P.n++;
+    if (jin && P.n % JIN.chaseN === 0) patChase(B, P);   // 상위 레이드 「진」: 쫓는 살
+    else if (lv >= 2 && P.n % (fitOn(B) || jin ? 2 : 3) === 0 && !hero.dead) patCounter(B, P); else patTiles(B, P);   // 진·타임 보스·1일 보스는 되받기가 더 잦다   // 타임 보스·1일 보스는 되받기가 더 잦다
   }
 }
+function jinStun(t){ if (!raid || !raid.info.jin || hero.dead || !(t > 0)) return; hero.stunT = Math.max(hero.stunT || 0, t); hero.goal = null; addText('기절!', hero.x, hero.y - 50, '#ffd24a', 12, true); }   // 상위 레이드 「진」: 맞으면 잠깐 아무것도 못 한다(손으로 피하고 되받는 값)
+const patMul = (B, k) => fitOn(B) ? (k === 'tile' ? FIT.tile : FIT.blow) : raid && raid.info.jin ? (k === 'tile' ? JIN.tileMul : JIN.blowMul) : k === 'tile' ? PAT.tileMul : PAT.blowMul;
 const patBusy = m => !!(m.stunT > 0 || m.pat && (m.pat.grogT > 0 || m.pat.tel));   // 묶였거나 휘청이거나 큰 공격을 준비하는 동안 보통 공격을 안 한다
 // 바닥 표시: 붉은 칸(차오르는 안쪽 마름모)·되받기 금빛 고리·큰 살 검붉은 소용돌이
 function drawPatGround(){
@@ -5052,7 +5096,7 @@ const WIPE_KIND = {
 const WIPE_TYPE = {dokkaebi:'fire', oni:'fire', phoenix:'fire', fox:'fire', bulgasari:'quake', haetae:'storm', totem:'quake', bear:'quake', tiger:'storm', serpent:'tide', frog:'tide', toad:'tide', kappa:'tide',
   shade:'void', judge:'void', ghost:'void', skel:'void', agwi:'void', king:'void', yukionna:'frost', yukiko:'frost', soldier:'storm', tengu:'storm', hawk:'storm', crow:'fire', monkey:'quake', wolf:'fire', izanami:'void', wisp:'frost', yaksha:'storm', oxhead:'void', horsehead:'void'};
 const wipeKind = B => WIPE_KIND[WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm'][Math.max(0, Math.min(4, S.world))]];
-const wipeOn = R => R && (R.info.wipe || !R.info.dummy && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp) && !(window.__game && window.__game.wipeOff);   // 탑 문지기(info.wipe)도
+const wipeOn = R => R && (R.info.wipe || !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp) && !(window.__game && window.__game.wipeOff);   // 탑 문지기(info.wipe)도
 const wipeBusy = R => !!(R && R.wipe && R.wipe.st >= 1 && R.wipe.st <= 3);
 function updateWipe(R, dt){
   const B = R.boss, W = R.wipe || (R.wipe = {st:0, i:0}), TH = R.info.wipes || [WIPE.hp];   // 태초의 신은 세 번(75·50·25%)
@@ -5118,6 +5162,14 @@ function drawWipeFx(){
   b.fillStyle = g; b.fillRect(camX, camY, VW, VH);
   b.restore();
 }
+// 기절(상위 레이드 「진」에서 붉은 칸·강타에 맞았을 때): 용사 머리 위에 도는 별
+function drawStunMark(){
+  if (!(hero.stunT > 0) || hero.dead) return;
+  const x = (hero.x - camX) * scale, y = (hero.y - 46 - camY) * scale;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 12px SamhanSans, sans-serif';
+  for (let j = 0; j < 3; j++){ const a = gtime * 5 + j * 2.09; ctx.fillStyle = '#ffd24a'; ctx.fillText('★', x + Math.cos(a) * 13, y + Math.sin(a) * 4); }
+  ctx.textAlign = 'left';
+}
 // 숨넘어감 동안 용사 머리 위 남은 초
 function drawWipeMarks(){
   const W = raid && raid.wipe; if (!W || W.st !== 3 || hero.dead) return;
@@ -5164,6 +5216,7 @@ function updateRaid(dt){
   }
   if (R.info.pvp){ updatePvp(R, B, dt); return; }   // 결투 상대는 걸어 다니며 치고 기술을 쓴다
   updateTaecho(R, dt);
+  if (R.info.haetae) updateHaetae(R, dt);
   if (wipeOn(R) && updateWipe(R, dt)) return;   // 전멸기 동안 보스는 다른 공격을 안 함
   if (B.dead || B.spawnT > 0 || patBusy(B)) return;
   B.atkT -= dt;
@@ -5223,7 +5276,7 @@ function raidReward(info){
    타임 보스·강림·보물 동굴은 이기면 보석 raidGemBase × 세계 배율(WEEK_K)을 새로 줌 */
 const RAID_GEM_K = 1.2, RRESET_GEMS = 800;   // RAID_GEM_K (물의 신화) 1.5 → 1.2
 const TB_GEMS = {normal:100, hell:200}, GR_GEMS = 180, VAULT_GEMS = 90;   // (물의 신화) 타임 보스 150·300 → 100·200, 강림 250 → 180, 보물 동굴 120 → 90
-// 레이드 리셋권(2026-11 (44), 사용자 요청: 하루 1번, 보석 800): 레이드 칸 콘텐츠의 오늘 횟수와 토벌패
+// 레이드 리셋권(2026-11 (44), 사용자 요청: 하루 1번, 보석 800): 레이드 칸 콘텐츠의 오늘 횟수와 토벌패. 상위 레이드 「진」·해태 수련의 횟수는 되돌리지 않는다(물의 신화, PLAN 「레이드 보상 줄이기」)
 function raidReset(){
   dummyLeft(); paradeLeft(); vaultLeft(); dbCheck(); grCheck();
   S.dummy.n = 0; S.parade.n = 0; S.vault.n = 0; S.dboss.n = 0; S.dboss.won = false; S.gr.n = 0; S.gr.won = false;
@@ -5855,7 +5908,7 @@ function finishRaid(){
   const R = raid;
   raid = null; presetDrop();
   mobs = []; projs = []; bossActive = false; bossRef = null; spawnT = 1;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false, goal:null, holdT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, moving:false, dir:'down', dead:false, hp:ST.maxHp, target:null, engaged:false, goal:null, holdT:0, haltT:0, stunT:0});
   placeOf(hero);
   fx.push({type:'poof', t:0, dur:0.4, x:hero.x, y:hero.y - 8});
   if (currentTab === 'raid') buildTab('raid', true);
@@ -5869,6 +5922,8 @@ function finishRaid(){
   if (info.taecho){ finishTaecho(R); return; }
   if (info.pvp){ finishPvp(R); return; }
   if (info.job){ finishJobTrial(R); return; }
+  if (info.jin){ finishJin(R); return; }
+  if (info.haetae){ finishHaetae(R); return; }
   if (R.win){
     const rw = raidReward(info);
     addLog(`${info.label} 토벌 성공! 보석 +${rw.gems}`, 'gain'); sfx('win');
@@ -5966,6 +6021,7 @@ const AOE_KINDS = ['spin', 'meteor', 'jobA', 'jobB'], ONE_KINDS = ['bolt', 'comb
 const kindMul = k => { const C = cls(); return AOE_KINDS.includes(k) ? C.aoeMul || 1 : ONE_KINDS.includes(k) ? C.oneMul || 1 : 1; };
 const SELF_KINDS = ['roar', 'd_heal', 'd_gut', 'd_shin', 'd_bocheon', 'party'];
 function tryCast(i, lv, manual){
+  if (hero.stunT > 0) return false;   // 기절(상위 레이드 「진」에서 붉은 칸·강타에 맞으면)
   const mp = skMp(i);
   if ((hero.mp ?? MP_MAX) < mp){ if (manual){ addText('마나 부족', hero.x, hero.y - 44, '#7ab8ff', 11, true); sfx('click'); } return false; }
   const cb = comboFor(i), prev = [hero.comboT, hero.comboP];
@@ -6265,7 +6321,8 @@ function update(dt){
     autoPotion(dt);
     updateMove(hero, dt);
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
-    if (!hero.moving && hero.goal){   // 누른 칸으로 걷기(사냥보다 먼저)
+    if (hero.stunT > 0) hero.stunT -= dt;
+    if (!hero.moving && hero.goal && !(hero.stunT > 0)){   // 누른 칸으로 걷기(사냥보다 먼저)
       const [gx, gy] = hero.goal;
       hero.goalT -= dt;
       const there = hero.tx === gx && hero.ty === gy;
@@ -6273,7 +6330,7 @@ function update(dt){
       else if (!there && hero.goalT > 0 && (hero.goalBlk += dt) < 0.8){ /* 막혔으면 잠깐 기다렸다 다시 */ }
       else { hero.goal = null; hero.holdT = TAP_HOLD[S.mode] || TAP_HOLD.auto; hero.target = null; const tl = telTiles(); if (tl) hero.dodgeT = Math.max(hero.dodgeT || 0, tl.T - tl.t + 0.15); }   // 붉은 칸이 터질 때까지는 보스에게 돌아가지 않는다
     }
-    if (!hero.moving && !hero.goal){
+    if (!hero.moving && !hero.goal && !(hero.stunT > 0)){
       let tg = hero.target;
       if (!tg || tg.dead || tg.spawnT > 0) tg = hero.target = hero.holdT > 0 || hero.dodgeT > 0 ? mobInReach() : nearestMob();
       if (tg){
@@ -6283,7 +6340,7 @@ function update(dt){
         if (inRange){
           hero.engaged = true;
           if (dx || dy) hero.dir = dirOf(dx, dy);
-          if (hero.atkT <= 0) attack(tg);
+          if (hero.atkT <= 0 && !(hero.haltT > 0)) attack(tg);   // haltT: 해태 수련의 물러서기
         } else if (hero.dodgeT > 0 || hero.holdT > 0 && !tg.boss){ hero.engaged = false; if (!tg.boss) hero.target = null; }   // 제자리 버티는 중(누른 자리·구른 뒤): 닿지 않는 적은 쫓지 않는다
         else {
           hero.engaged = false;
@@ -6379,7 +6436,7 @@ function update(dt){
     }
     // (물의 신화) 마나가 모자라 기다리는 기술이 있으면, 그보다 늦게 준비된 기술은 새치기하지 않는다(마나가 넉넉하면 예전처럼 위 순서대로).
     // 예전에는 마나가 모자랄 때 재사용이 짧은 싼 기술이 마나를 계속 채 가서 큰 기술(범위 기술)이 영영 못 나가 사냥이 몇 배 느려졌다
-    if (autoGap <= 0 && rdy.length){
+    if (autoGap <= 0 && rdy.length && !(hero.haltT > 0)){
       const mp = hero.mp ?? MP_MAX;
       let block = Infinity;
       for (const i of rdy) if (mp < skMp(i)) block = Math.min(block, skReadyT[SKILLS[i].key]);
@@ -7212,6 +7269,9 @@ const AVATARS = [
   {k:'p_ganglim', type:'cape', name:'강림 금빛 망토', capeC:'#e8b830', star:true, src:'강림 레이드'},
   {k:'p_unsa', type:'cape', name:'운사 구름 망토', capeC:'#c8d4ec', star:true, src:'강림 레이드'},
   {k:'q_halo', type:'pet', name:'신장 빛무리', tint:'#ffe8a0', src:'강림 레이드'},
+  {k:'c_jin', type:'char', name:'진 토벌대 철갑', outfit:'#6a2434', deco:'armor', src:'진 레이드'},
+  {k:'p_jin', type:'cape', name:'진홍 토벌 망토', capeC:'#a8242e', star:true, src:'진 레이드'},
+  {k:'q_jin', type:'pet', name:'진홍빛', tint:'#ff9aa8', src:'진 레이드'},
   // 날개(2026-11 (42), 천공의 탑·태초의 신 보상): 등 뒤에 그려진다(변신 날개가 있으면 그쪽이 먼저)
   {k:'w_cloud', type:'wing', name:'구름 깃 날개', wingC:['#c8d8f0', '#dfe8f8', '#eef4ff', '#ffffff'], src:'천공의 탑 50층'},
   {k:'w_phoenix', type:'wing', name:'봉황 날개', wingC:['#c8302a', '#ff6a3a', '#ffa040', '#ffe08a'], src:'천공의 탑 150층'},
@@ -8778,6 +8838,214 @@ const RAID_WORLDS = [
   {w:0, n:RAID_DEFS.length, info:i => raidInfo(i), key:i => String(i)}, {w:1, n:KINGS.length, info:i => hellRaidInfo(i), key:i => 'h' + i}, {w:2, n:GOD_RAIDS.length, info:i => godRaidInfo(i), key:i => 'g' + i},
   {w:3, n:BUSANG_RAIDS.length, info:i => busangRaidInfo(i), key:i => 'b' + i}, {w:4, n:KUNLUN_RAIDS.length, info:i => kunlunRaidInfo(i), key:i => 'k' + i}];
 function raidPartCount(p){ let a = 0, b = 0; for (const R of RAID_WORLDS) if (partOfW(R.w) === p){ b += R.n; for (let i = 0; i < R.n; i++) if (S.raid.first[R.key(i)]) a++; } return b ? [a, b] : null; }
+/* ================= 상위 레이드 「진(眞)」(물의 신화 3단계, PLAN 「상위 레이드와 클리어율」) =================
+   지나온 땅의 레이드마다 상위 단계 하나. 그 땅의 다음 세계에 들어서면 열린다(S.world > w, 그 땅에서 일반을 못 깼어도 진으로 도전할 수 있고 이기면 일반 토벌 기록도 채움).
+   · 세기는 레이드마다 정해져 있다(내 힘을 따라 세지지 않음): JIN_W[w].c[직업] = {a, b} — 그 땅 첫·마지막 레이드의 [보스 체력, 한 방, 권장 전투력](log10).
+     기준은 '다음 세계를 지나는 용사'(직업별 진행 시뮬 저장: 첫 레이드 = 막 들어선 때, 마지막 = 거의 다 지난 때). 재는 법·클리어율 표는 tools/sim_jin.py
+   · 손컨: 전멸기 한 번(JIN.wipes)·큰 살 두 번(둘 다 일반과 같음) · 패턴이 더 잦고(cdA~cdB초) 둘에 하나는 되받기 · 새 패턴 「쫓는 살」(용사 발밑을 JIN.chase번 연달아, chaseN번째마다)
+     · 붉은 칸·강타가 더 아프고(tileMul·blowMul) 맞으면 기절(tileStun·blowStun초 — 손으로 피하고 되받는 값) · 자동 피하기는 절반만(JIN.auto) · 되받으면 바로 휘청(JIN.ctrGrog초, 받는 피해 ×JIN.grogMul)
+   · 수치는 클리어율 표(권장 전투력 100%에서 자동 약 30%·평범한 손 약 60%·잘하는 손 90% 이상, tools/sim_jin.py table)에 맞춘 것 — 바꾸면 표를 다시 본다
+   · 하루 JIN.tries번(모든 진을 합쳐, 들어가면 씀. 레이드 리셋권으로 되돌아오지 않음) · JIN.lives번째 쓰러지면 끝 · 탕약(인삼·산삼)은 한 판에 JIN.pots개까지
+   · 질 때마다 그 레이드 보스 체력 −JIN.failPer(최대 −JIN.failMax, 이기면 처음부터)
+   · 보상: 보석·엽전·전설 장비·재료·신화 조각·넋 구슬 확률 2배·진 전용 아바타(JIN.avP, 천장 JIN.pity) + 주마다 레이드별 첫 승리 보상(S.jin.wk) */
+const JIN = {t0:85, a0:0.26, tries:3, time:90, lives:3, pots:10, auto:0.5, cdA:2.5, cdB:3.5, chaseN:5, chase:3, chaseT:[1.2, 0.9], tileMul:3.2, blowMul:3.2, tileStun:1.5, blowStun:3, aoe:0.5, ctrGrog:5, grogMul:2.5, wipes:[0.5], failPer:0.04, failMax:0.2,
+  gemK:3, weekK:0.5, goldK:150, avP:0.08, pity:15, src:'진 레이드'};
+/* 세계별·직업별 기준(log10) [D0, EHP, PW]: a = 그 땅 첫 레이드(다음 세계에 막 들어선 용사), b = 마지막 레이드(다음 세계를 거의 다 지난 용사).
+   사이 레이드는 a → b를 고르게 잇는다(jinBase).
+   적는 값은 [D0 손컨 보너스 없이 보스에 넣는 초당 피해, EHP 최대 체력 ÷ 받는 피해 배율, PW 화면 전투력]이고 보스 체력 = D0 × JIN.t0초, 한 방 = EHP × JIN.a0, 권장 전투력 = PW.
+   직업마다 따로 둔 까닭: 화면 전투력이 같아도 직업마다 실제 보스 피해·버티는 힘이 1.5~2배씩 달라서
+   (같은 값이면 무사는 「딱 맞음」에서 거의 못 깨고 도인은 늘 깸). 표에 없는 직업(새 직업)은 네 직업 평균. 값은 tools/sim_jin.py measure 가 찍어 준다 */
+const JIN_W = [
+  {c:{musa:{a:[6.671, 6.566, 7.096], b:[11.770, 10.826, 11.361]}, jagaek:{a:[7.093, 6.181, 7.080], b:[11.737, 10.530, 11.409]}, sulsa:{a:[7.119, 6.517, 7.332], b:[11.710, 10.266, 11.220]}, doin:{a:[6.671, 6.174, 6.894], b:[11.833, 10.648, 11.272]}}},   // 이승 진: 저승 12단계 → 저승 100단계
+  {c:{musa:{a:[9.683, 8.686, 9.050], b:[13.300, 11.695, 12.379]}, jagaek:{a:[9.727, 8.638, 9.249], b:[13.321, 11.902, 12.740]}, sulsa:{a:[9.738, 8.407, 9.193], b:[13.373, 11.290, 12.504]}, doin:{a:[9.657, 8.500, 8.953], b:[13.383, 11.668, 12.450]}}},   // 시왕 진: 천계 12단계 → 천계 84단계
+  {c:{musa:{a:[13.997, 12.253, 13.310], b:[18.106, 15.505, 16.846]}, jagaek:{a:[13.880, 12.542, 13.121], b:[17.405, 15.202, 15.881]}, sulsa:{a:[13.755, 11.979, 12.965], b:[17.648, 14.738, 16.067]}, doin:{a:[13.986, 12.117, 13.052], b:[17.412, 14.838, 15.893]}}},   // 천계 진: 부상에 막 건넌 때 → 곤륜에 막 들어선 때
+  {c:{musa:{a:[18.100, 15.505, 16.846], b:[21.245, 17.749, 19.401]}, jagaek:{a:[17.409, 15.202, 15.880], b:[21.245, 18.094, 19.025]}, sulsa:{a:[17.649, 14.738, 16.067], b:[21.607, 17.597, 18.861]}, doin:{a:[17.402, 14.839, 15.893], b:[21.501, 17.073, 18.608]}}},   // 부상 진: 곤륜에 막 들어선 때 → 3부 끝
+  {c:{musa:{a:[21.319, 17.749, 19.401], b:[21.719, 18.149, 19.801]}, jagaek:{a:[21.250, 18.093, 19.025], b:[21.650, 18.493, 19.425]}, sulsa:{a:[21.590, 17.597, 18.862], b:[21.990, 17.997, 19.262]}, doin:{a:[21.513, 17.073, 18.608], b:[21.913, 17.473, 19.008]}}},   // 곤륜 진: 3부 끝(4부 바다 들머리) → 임시로 +0.4(4부를 넣으면 4부 저장으로 다시 잼)
+];
+const jinAvg = C => { const L = Object.values(C); if (!L.length) return {a:[0, 0, 0], b:[0, 0, 0]}; const m = f => [0, 1, 2].map(k => L.reduce((t, x) => t + f(x)[k], 0) / L.length); return {a:m(x => x.a), b:m(x => x.b)}; };
+function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (log10 아님, 실제 값)
+  const ov = window.__game && window.__game.jinOv; if (ov) return ov;   // 시뮬(tools/sim_jin.py)에서 기준값을 바꿔 가며 잴 때
+  const JW = JIN_W[w], R = RAID_WORLDS.find(x => x.w === w), V = JW.c[S.cls] || (JW.avg || (JW.avg = jinAvg(JW.c))), f = R.n > 1 ? i / (R.n - 1) : 0;
+  const v = [0, 1, 2].map(k => Math.pow(10, V.a[k] + (V.b[k] - V.a[k]) * f));
+  return [v[0] * JIN.t0, v[1] * JIN.a0, v[2]];
+}
+const jinOpen = w => (S.world > w || !!(window.__game && window.__game.jinForce)) && !!JIN_W[w] && !!RAID_WORLDS.find(R => R.w === w);
+const jinAny = () => RAID_WORLDS.some(R => jinOpen(R.w));
+const jinRec = (w, i) => jinBase(w, i)[2];
+const JIN_TIER = [[0.9, 'low', '모자람'], [1.15, 'fit', '딱 맞음'], [1.8, 'good', '넉넉함'], [Infinity, 'over', '압도적']];
+const jinTier = r => JIN_TIER.find(t => r < t[0]) || JIN_TIER[3];
+function jinCheck(){ const d = dummyDay(), w = weekKey(); if (S.jin.day !== d){ S.jin.day = d; S.jin.n = 0; } if (S.jin.week !== w){ S.jin.week = w; S.jin.wk = {}; } }
+const jinLeft = () => { jinCheck(); return Math.max(0, JIN.tries - S.jin.n); };
+const jinPity = key => Math.min(JIN.failMax, (S.jin.fail[key] || 0) * JIN.failPer);
+function jinInfo(w, i){
+  const R = RAID_WORLDS.find(x => x.w === w), base = R.info(i);
+  return Object.assign({}, base, {jin:true, jw:w, ji:i, mw:w, nkey:base.key, key:'j' + base.key, label:'진 · ' + base.label, bossName:'진 ' + base.bossName, color:mix(base.color, '#a01028', 0.3), sc:2.9, wipes:JIN.wipes, rec:jinRec(w, i)});
+}
+const jinGems = info => Math.round(info.gems * JIN.gemK * RAID_GEM_K * gemMul()), jinWeekGems = info => Math.round(info.firstGems * JIN.weekK * gemMul());
+const jinGearIt = w => Math.min(18, 15 + Math.max(0, w));   // 그 땅 레이드가 주던 가장 높은 등급쯤: 영웅 IV(이승 진) · 전설 I(시왕 진) · II(천계 진) · III(부상 진부터), 네 번에 한 번은 한 단계 위
+function startJin(w, i){
+  jinCheck();
+  const R = RAID_WORLDS.find(x => x.w === w);
+  if (raid || parade || market || !R || !(i >= 0 && i < R.n) || !jinOpen(w) || jinLeft() <= 0 || !session && !window.__game) return false;
+  const info = jinInfo(w, i), [bhp, atk] = jinBase(w, i), pity = 1 - jinPity(info.key), party = raidParty(info), tk = Math.max(0.05, takenK(true));
+  for (const a of party) if (a.npc) a.maxHp = ST.maxHp / tk * (a.cls === 'musa' ? 1.3 : 0.85);   // NPC 동료도 용사만큼은 버틴다(보스 한 방은 방어를 뺀 용사 체력에 맞춘 값이라)
+  S.jin.n++;
+  startFight(info, party, {hp:bhp * pity, atk, aoe:atk * JIN.aoe, time:JIN.time});
+  raid.falls = 0; raid.pots = 0;
+  addLog(`${info.label} 토벌 시작! ${JIN.time}초 · 쓰러질 수 있는 건 ${JIN.lives - 1}번 · 탕약 ${JIN.pots}개까지.`, 'warn');
+  if (!fxOff()) fxBanner('진(眞)', info.bossName, '#ff8a9a', '30%', 1.6);
+  return true;
+}
+function jinReward(info){
+  const key = info.key, week = !S.jin.wk[key], firstN = !S.raid.first[info.nkey], out = [];
+  let gems = jinGems(info) + (week ? jinWeekGems(info) : 0);
+  if (firstN){ gems += Math.round(info.firstGems * gemMul() * RAID_GEM_K); S.raid.first[info.nkey] = true; }   // 그 땅에서 못 깼던 레이드: 일반 첫 토벌 보석도 함께
+  const gold = Math.round(mGold(Math.max(1, S.maxStage)) * JIN.goldK * gainMul('gold', true));
+  S.gems += gems; S.gold += gold;
+  const slot = Math.random() < 0.5 ? 'weapon' : 'armor', it = Math.min(19, jinGearIt(info.jw) + (Math.random() < 0.25 ? 1 : 0)), isNew = giveItem(slot, it);
+  out.push({c:GRADES[Math.floor(it / 4)].color, n:gearName(slot, it), d:`${GRADES[Math.floor(it / 4)].name} ${GEAR[slot].label}${isNew ? ' · 새 장비' : ''}`});
+  const mat = gainMat(MAT_DROP.raid * 2 + (week ? MAT_DROP.raidFirst : 0), true), shard = gainShard(1 + (week ? SHARD_SRC.raidFirst : 0));
+  const piece = S.world >= 3 ? gainPiece(MOUNT_PIECE.kunlun + (week ? MOUNT_PIECE.first : 0), true) : 0, grudge = S.world >= 3 ? gainGrudge(GRUDGE.raid + (week ? GRUDGE.raidFirst : 0), true) : 0;
+  let soul = soulDrop('raid'); if (!soul && soulOpen() && Math.random() < SOUL_P.raid) soul = giveSoul(soulRoll());   // 넋 구슬 확률 2배
+  let av = null;
+  { const luck = window.__game && window.__game.jinLuck != null ? window.__game.jinLuck : 1, ex = AVATARS.filter(a => a.src === JIN.src && !S.av.own[a.k]);
+    S.jin.pity = (S.jin.pity || 0) + 1;
+    if (ex.length && (Math.random() < JIN.avP * luck || S.jin.pity >= JIN.pity)){ av = ex[(Math.random() * ex.length) | 0]; S.jin.pity = 0; giveAvatar(av.k, true); } }
+  S.jin.wk[key] = true; S.jin.win[key] = (S.jin.win[key] || 0) + 1; delete S.jin.fail[key];
+  S.rec.jin = (S.rec.jin || 0) + 1; recWin(true, true);
+  refreshStats(); ev('raid');
+  return {gems, gold, out, mat, shard, piece, grudge, soul, av, week, firstN};
+}
+function finishJin(R){
+  const info = R.info; jinCheck();
+  if (!R.win){
+    S.jin.fail[info.key] = Math.min(Math.round(JIN.failMax / JIN.failPer), (S.jin.fail[info.key] || 0) + 1);
+    const pity = Math.round(jinPity(info.key) * 100);
+    addLog(`${info.label} 토벌 실패… 다음 도전엔 보스 체력 −${pity}%.`, 'warn'); sfx('fail'); saveLocal();
+    if (window.__game && window.__game.quiet) return {win:false};
+    const why = (R.falls || 0) >= JIN.lives ? `<b>${JIN.lives}번</b> 쓰러져 물러났어요.` : `${JIN.time}초 안에 쓰러뜨리지 못했어요.`;
+    showModal('진 · 토벌 실패', `<p><b>${info.bossName}</b> — ${why}</p><p class="small">같은 진 레이드에서 질 때마다 다음 도전의 보스 체력이 ${Math.round(JIN.failPer * 100)}%씩 줄어요(지금 <b>−${pity}%</b>, 최대 −${Math.round(JIN.failMax * 100)}%). 오늘 ${jinLeft()}번 더 도전할 수 있어요.</p>
+      <p class="small">붉은 칸·쫓는 살은 직접 피하고, 금빛 「!」에 [되받기]를 누르면 보스가 바로 휘청여요. 산삼 탕약을 챙기면 한결 수월해요.</p>`, [{label:'확인', primary:true}]);
+    return {win:false};
+  }
+  const rw = jinReward(info);
+  addLog(`${info.label} 토벌 성공! 보석 +${fmt(rw.gems)}${rw.week ? ' (이번 주 첫 승리 보상 포함)' : ''}`, 'gain'); sfx('win');
+  announce(`${S.name}님의 파티가 ${info.bossName}${josa(info.bossName, '을', '를')} 토벌했어요!`);
+  saveLocal();
+  if (window.__game && window.__game.quiet) return rw;
+  const mName = MATS[Math.min(2, S.world)];
+  showModal(`토벌 성공 · ${info.label}`, `
+    <p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 물리쳤어요! ${rw.week ? '<b>이번 주 첫 승리 보상</b>도 함께 받았어요.' : ''}${rw.firstN ? ' 그 땅에서 못 깼던 <b>첫 토벌 보상</b>도 받았어요.' : ''}</p>
+    <ul class="rewards">
+      <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
+      <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
+      ${rw.out.map(o => `<li style="color:${o.c}">${o.n}<span>${o.d}</span></li>`).join('')}
+      <li style="color:${mName.color}">${fmt(rw.mat)}<span>${mName.name} (조합 재료)</span></li>
+      ${rw.shard ? `<li style="color:var(--myth)">${rw.shard}<span>신화 조각</span></li>` : ''}
+      ${rw.piece ? `<li style="color:#c8b0ff">${rw.piece}<span>고삐 조각</span></li>` : ''}
+      ${rw.grudge ? `<li style="color:#ff8a9a">${rw.grudge}<span>원한 조각</span></li>` : ''}
+      ${rw.soul ? `<li style="color:${GRADES[SL[rw.soul.k].g].color}">${SL[rw.soul.k].name}<span>${soulDropText(rw.soul)}</span></li>` : ''}
+      ${rw.av ? `<li style="color:var(--gold)">${rw.av.name}<span>진 전용 아바타!</span></li>` : ''}
+    </ul>
+    <p class="small" style="margin-top:8px">오늘 진 레이드 ${jinLeft()} / ${JIN.tries}번 남았어요. 레이드마다 주에 한 번 첫 승리 보상을 더 받아요.</p>`, [{label:'확인', primary:true}]);
+  return rw;
+}
+// 권장 전투력 줄(레이드 칸·시작 전 창): 내 전투력과 나란히, 네 가지 빛깔
+function jinPowHTML(w, i, pw = power(ST)){
+  const rec = jinRec(w, i), T = jinTier(pw / rec);
+  return `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="jt-${T[1]}">내 ${fmt(pw)} · ${T[2]}</span>`;
+}
+function confirmJin(w, i){
+  jinCheck();
+  if (raid || !jinOpen(w) || jinLeft() <= 0) return false;
+  const info = jinInfo(w, i), party = raidParty(info), pity = Math.round(jinPity(info.key) * 100), ask = S.presetMode === 'ask' || !S.presetMode;
+  showModal(`${info.label}`, `
+    <p><b>${info.bossName}</b> — 세기가 정해져 있는 상위 레이드예요. 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
+    <div class="rpow jin">${jinPowHTML(w, i)}</div>
+    <ul class="jrules"><li>전멸기 · 큰 살 두 번 · 새 패턴 <b>「쫓는 살」</b>(발밑이 세 번 연달아)</li><li><b>자동 피하기가 절반만</b> 통해요 · 붉은 칸·강타에 맞으면 <b>잠깐 기절</b> · 금빛 「!」를 되받으면 보스가 <b>바로 휘청</b></li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지 — 싸움 화면에 <b>「탕약 ${JIN.pots}/${JIN.pots}」</b>로 남은 수가 보여요</li>${pity ? `<li>지난 도전의 기운: 보스 체력 <b>−${pity}%</b></li>` : ''}</ul>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>
+    <p class="small" style="margin-top:8px">들어가면 오늘 횟수 1번을 써요(지금 ${jinLeft()} / ${JIN.tries}번, 이기든 지든). 레이드 리셋권으로는 되돌아오지 않아요.</p>
+    ${ask ? presetHTML('party') : potNoteHTML()}`,
+    [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startJin(w, i)) closePage(); presetNext = undefined; }}],
+    () => { if (ask) presetWire('party'); else { const pb = $('#prePot'); if (pb) pb.addEventListener('click', () => { sfx('click'); potShopGo(); }); } });
+  return true;
+}
+// 알림 연출: 새 땅에 들어서면 지나온 땅의 레이드 보스가 그림자로 찾아와 「다시 와라」
+const jinShadowCache = {};
+function jinShadowImg(w){
+  if (jinShadowCache[w]) return jinShadowCache[w];
+  const R = RAID_WORLDS.find(x => x.w === w), I = R.info(R.n - 1), sp = mobSprite(I.type || 'm_musa', I.color, 0, true), c = document.createElement('canvas'); c.width = 64; c.height = 64;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  const sc = Math.min(60 / sp.width, 60 / sp.height), dw = sp.width * sc, dh = sp.height * sc;
+  g.drawImage(sp, (64 - dw) / 2, 62 - dh, dw, dh);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(30,8,40,.78)'; g.fillRect(0, 0, 64, 64);   // 그림자
+  g.globalCompositeOperation = 'destination-over'; const gr = g.createRadialGradient(32, 40, 4, 32, 40, 30); gr.addColorStop(0, 'rgba(255,70,90,.55)'); gr.addColorStop(1, 'rgba(255,70,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return jinShadowCache[w] = c.toDataURL();
+}
+const jinNewW = () => { for (let w = S.world - 1; w >= 0; w--) if (jinOpen(w)) return w; return -1; };
+notiReg({k:'jin', pri:40, flag:'noJin', who:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w); return {name:`${R.info(R.n - 1).bossName}의 그림자`, img:() => jinShadowImg(w)}; }, tag:'상위 레이드', title:() => `진(眞) · ${WORLD_NAME[Math.max(0, jinNewW())]} 레이드`,
+  one:() => `${WORLD_NAME[Math.max(0, jinNewW())]} 레이드의 상위 단계 「진」이 열렸어요`, when:() => jinNewW() >= 0, key:() => 'w' + jinNewW(),
+  lines:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w); return [`…{name}. <b>다시 와라.</b> 그때의 나는 참모습이 아니었다.`,
+    `<b>${WORLD_NAME[w]} 레이드 ${R.n}곳</b>에 상위 단계 <b>「진(眞)」</b>이 열렸어요. 세기가 정해져 있어서, 권장 전투력에 딱 맞을 땐 손으로 피하고 되받아야 이겨요.`,
+    `하루 <b>${JIN.tries}번</b>, 레이드마다 주에 한 번 <b>첫 승리 보상</b>. 전설 장비·신화 조각·진 전용 아바타가 나와요.`]; },
+  body:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w), pw = power(ST); return `<div class="inh-h">${WORLD_NAME[w]} 진 레이드 · 권장 전투력</div><div class="pre-row">${Array.from({length:R.n}, (_, i) => { const T = jinTier(pw / jinRec(w, i)); return `<span class="pre-sk"><i>${esc(R.info(i).label)} <b class="jt-${T[1]}">${T[2]}</b></i></span>`; }).join('')}</div>`; },
+  go:{label:'바로 가기', fn:() => { raidView = 'raid'; PV.tab.raid = partOfW(Math.max(0, jinNewW())); buildTab('raid'); }}});
+
+/* ================= 해태 수련(물의 신화 3단계 — 허수아비 수련의 상위판. 열림은 46장이라 4부를 넣기 전에는 보이지 않는다) =================
+   30초 동안 돌 해태를 친다. 해태는 옳고 그름을 가리는 짐승이라 '제대로 친 것'만 센다:
+   · 뿔이 빛날 때(HAETAE.horn 구간) 친 피해는 ×hornMul · 눈이 붉을 때(eye 구간) 치면 세지 않고 불을 뿜어 되돌려준다(최대 체력의 burn, 0.4초에 한 번)
+   · [구르기] 단추(스페이스) = 물러서기: 눈이 붉은 동안 공격을 멈춘다. 자동 손은 HAND.dodge 확률로 멈춘다
+   등급 1~7(HAETAE.T × 허수아비와 같은 기준). 보상의 바다 재료·호박석·별호 「해태가 고개 끄덕인」은 4부(5단계)에서 붙인다 */
+const HAETAE = {tries:3, time:30, cyc:7.5, horn:[1.5, 4.5], eye:[5.5, 7.5], hornMul:2, burn:0.1, T:[1.5, 3.5, 6, 9, 13, 18, 25], ch:46, gems:[0, 20, 50, 100, 160, 240, 330, 450], mats:[0, 3, 5, 8, 11, 14, 18, 22]};
+const haetaeHas = () => MAIN_Q.some(q => q.ch >= HAETAE.ch);   // 46장(4부)이 게임에 들어 있나 — 이야기를 다 마친 용사는 skCh()가 99라서 따로 본다
+const haetaeOpen = () => haetaeHas() && skCh() >= HAETAE.ch || !!(window.__game && window.__game.haetaeForce);
+function haetaeLeft(){ if (S.haetae.day !== dummyDay()){ S.haetae.day = dummyDay(); S.haetae.n = 0; } return HAETAE.tries - S.haetae.n; }
+const haetaeTiers = () => HAETAE.T.map(k => k * mHp(Math.max(1, S.maxStage)) * BOSS_K.hp[Math.max(0, Math.min(4, S.world))]);
+const haetaeTier = dmg => haetaeTiers().filter(t => dmg >= t).length;
+const haetaePhase = R => { const t = (R.limit - R.time) % HAETAE.cyc; return t >= HAETAE.horn[0] && t < HAETAE.horn[1] ? 'horn' : t >= HAETAE.eye[0] && t < HAETAE.eye[1] ? 'eye' : ''; };
+function startHaetae(){
+  if (raid || parade || market || !haetaeOpen() || haetaeLeft() <= 0 || !session && !window.__game) return false;
+  S.haetae.n++;
+  const info = {haetae:true, label:'해태 수련', bossName:'돌 해태', type:'haetae', color:'#9aa0a8', region:regionIndex(S.stage), party:1, ref:S.maxStage, g:0, sc:2.6};
+  startFight(info, [], {hp:1e300, atk:0, aoe:0, time:HAETAE.time});
+  raid.hDmg = 0; raid.hPh = ''; raid.hBurnT = 0; hero.haltT = 0;
+  addLog(`해태 수련! ${HAETAE.time}초 — 뿔이 빛날 때 몰아치고, 눈이 붉을 땐 [구르기]로 물러서요.`, 'warn');
+  return true;
+}
+// 해태가 맞을 때: 뿔이 빛나면 두 배로 세고, 눈이 붉으면 세지 않고 불을 되돌려준다
+function haetaeHit(dmg, kind){
+  const R = raid, ph = haetaePhase(R);
+  if (ph === 'eye'){
+    if ((kind === 'basic' || kind === 'skill') && !(hero.haltT > 0) && !(R.hBurnT > 0) && !hero.dead){ R.hBurnT = 0.4; patHitHero(ST.maxHp * HAETAE.burn, true); addText('불길!', hero.x, hero.y - 46, '#ff7a4a', 12, true); R.hBurns = (R.hBurns || 0) + 1; }   // 물러서 있는 동안 늦게 들어간 연타는 세지도 되돌리지도 않는다
+    return;
+  }
+  R.hDmg += dmg * (ph === 'horn' ? HAETAE.hornMul : 1);
+}
+function updateHaetae(R, dt){
+  if (R.hBurnT > 0) R.hBurnT -= dt;
+  if (hero.haltT > 0) hero.haltT -= dt;
+  const ph = haetaePhase(R);
+  if (ph !== R.hPh){
+    R.hPh = ph; const B = R.boss;
+    if (ph === 'horn'){ addText('뿔이 빛난다!', B.x, B.y - mobHeight(B) - 14, '#ffe08a', 13, true); sfx('rare'); if (!fxOff()) vadd({type:'glow', x:B.x, y:B.y - mobHeight(B) * 0.8, r:26, col:'#ffd24a', dur:0.8}); }
+    else if (ph === 'eye'){ addText('눈이 붉다!', B.x, B.y - mobHeight(B) - 14, '#ff5a4a', 13, true); sfx('boss'); if (Math.random() < handP('dodge')) hero.haltT = HAETAE.eye[1] - HAETAE.eye[0] + 0.1;   // 자동 손: 물러서기
+      if (!S.seenCut.haetaeEye){ S.seenCut.haetaeEye = 1; addLog('해태의 눈이 붉을 때 치면 불이 되돌아와요! [구르기]를 눌러 물러서요.', 'warn'); } }
+  }
+}
+function haetaeHalt(){ if (!raid || !raid.info.haetae || hero.dead) return false; const t = (raid.limit - raid.time) % HAETAE.cyc; hero.haltT = t >= HAETAE.eye[0] - 0.6 ? Math.max(0.3, HAETAE.eye[1] - t + 0.05) : 0.8; addText('물러서기', hero.x, hero.y - 40, '#cfe6ff', 11, true); sfx('blip'); return true; }
+function finishHaetae(R){
+  const d = R.hDmg || 0, tier = haetaeTier(d), wk = WEEK_K[Math.max(0, Math.min(4, S.world))];
+  if (tier) recWin(false, true);
+  const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 250 * gainMul('gold', true)) : 0, gems = Math.round(HAETAE.gems[tier] * wk * gemMul()), mats = HAETAE.mats[tier];
+  S.gold += gold; S.gems += gems; if (mats) gainMat(mats, true);
+  if (d > (S.haetae.best || 0)) S.haetae.best = d;
+  addLog(`해태 수련 끝! 제대로 친 피해 ${fmt(d)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
+  if (!(window.__game && window.__game.quiet)) showModal('해태 수련', `<p>${HAETAE.time}초 동안 제대로 친 피해 <b>${fmt(d)}</b></p>
+    <div class="dtier">${[1, 2, 3, 4, 5, 6, 7].map(t => `<span class="${t <= tier ? 'on' : ''}">${t}</span>`).join('')}</div>
+    <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${fmt(gems)}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`, [{label:'확인', primary:true}]);
+  ev('raid');
+  return {dmg:d, tier, gold, gems};
+}
 // 천계 세기 공식(부상은 천계 BUSANG_SHIFT단계 뒤에서 이어진다)
 const heavenHp = x => mobHp(x + HEAVEN_OFF) * Math.pow(CURVE.heavenG, x - 1) * HEAVEN_K * craftComp(2, x);
 // 건너기: 천계 이야기를 마치고 「동해 용왕의 거북」 퀘스트가 되면
@@ -9118,6 +9386,7 @@ function buildMap(ri, w = S.world){
 }
 const mapCache = new Map();
 function getSkyMap(ri){ const key = 'sky:' + ri; let m = mapCache.get(key); if (!m){ m = buildIsoMap(ri, 2); mapCache.set(key, m); } return m; }
+function getMapW(w, ri){ const key = w + ':' + ri; let m = mapCache.get(key); if (!m){ m = buildIsoMap(ri, w); mapCache.set(key, m); } return m; }
 function getMap(ri){ const key = S.world + ':' + ri; let m = mapCache.get(key); if (!m){ m = buildIsoMap(ri); mapCache.set(key, m); } return m; }
 
 /* ================= 쿼터뷰 지도 =================
@@ -10465,11 +10734,11 @@ function updateCam(){
 }
 function render(){
   if (cut){ renderCut(); return; }
-  const ri = raid ? raid.info.region : regionIndex(S.stage), Rg = regionsOf(S.world)[ri];
+  const ri = raid ? raid.info.region : regionIndex(S.stage), mw = raid && raid.info.mw != null ? raid.info.mw : S.world, Rg = regionsOf(mw)[ri] || regionsOf(mw)[0];   // mw: 상위 레이드 「진」은 그 레이드가 있던 땅의 판에서
   b.imageSmoothingEnabled = false;
   updateCam();
   b.setTransform(RS, 0, 0, RS, -camX * RS, -camY * RS);
-  b.drawImage(market ? getMarketMap() : raid && (raid.info.tower || raid.info.taecho) ? getSkyMap(raid.info.taecho || raid.info.f > 150 ? 5 : 0) : getMap(ri), 0, 0, MW, MH);   // 천공의 탑·태초의 신은 구름 위 판
+  b.drawImage(market ? getMarketMap() : raid && (raid.info.tower || raid.info.taecho) ? getSkyMap(raid.info.taecho || raid.info.f > 150 ? 5 : 0) : mw !== S.world ? getMapW(mw, ri) : getMap(ri), 0, 0, MW, MH);   // 천공의 탑·태초의 신은 구름 위 판
   if (Rg.theme === 'cave' && !market) for (const [tx, ty] of CAVE_TORCH){ const fl = Math.floor(gtime * 10 + tx) % 3; P(tx - 2, ty - 15 - fl, 5, 4 + fl, '#ff7a2a'); P(tx - 1, ty - 16 - fl, 3, 3, '#ffd27a'); P(tx, ty - 17 - fl, 1, 2, '#fff2c0'); }
   for (const p of parts) if (p.type === 'coin' && p.t < p.dur){ const a = p.t > p.dur * 0.7 ? 0.5 : 1; b.globalAlpha = a; P(p.x - 1, p.y - 1, 2, 2, '#e0b03c'); P(p.x - 1, p.y - 1, 1, 1, '#fff2a0'); b.globalAlpha = 1; }
   const ents = mobs.map(m => ({y:m.y, m}));
@@ -10516,7 +10785,7 @@ function drawTexts(){
   if (!cut && !market && raid) for (const a of raid.allies) if (!a.down && a.x != null) nameTag(a.name, (a.x - camX) * scale, (a.y - 33 - camY) * scale, a.npc ? {bg:'rgba(60,60,72,.82)', line:'rgba(200,200,210,.6)', color:'#e8e8ee', size:9} : {bg:'rgba(40,96,60,.86)', line:'rgba(150,240,180,.8)', color:'#f0fff4', size:9.5});   // 함께 싸우는 다른 용사 캐릭터의 이름(2026-11 (42), 사용자 요청)
   if (!cut && !market) for (const m of mobs) if (m.evt && !m.dead && m.spawnT <= 0) nameTag(`${m.name} ${Math.ceil(m.evtLife)}초`, (m.x - camX) * scale, (m.y - mobHeight(m) - 4 - camY) * scale, {bg:'rgba(120,80,10,.9)', line:'rgba(255,220,120,.9)', color:'#fff2c8', size:9.5});
   if (market && !cut) drawMarketTags();
-  if (!cut && !market){ drawPatMarks(); drawWipeMarks(); }
+  if (!cut && !market){ drawPatMarks(); drawWipeMarks(); drawStunMark(); }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of texts){
     ctx.globalAlpha = 1 - Math.max(0, (t.t - 0.55) / 0.35);
@@ -10573,12 +10842,12 @@ function drawOverlay(){
     const bt = raid ? raid.time : bossTime, maxT = raid ? raid.limit : BOSS_TIME;
     const bw = Math.round(Math.min(cw * (portrait ? 0.9 : 0.42), 380)), bx = cx - bw / 2;
     box(bx, y1, bw, 22);
-    const k = raid && raid.info.dummy ? Math.min(1, dmgMeter / dummyTiers()[4]) : Math.max(0, bRef.hp / bRef.maxHp);
+    const hae = raid && raid.info.haetae, k = raid && raid.info.dummy ? Math.min(1, dmgMeter / dummyTiers()[4]) : hae ? Math.min(1, (raid.hDmg || 0) / haetaeTiers()[6]) : Math.max(0, bRef.hp / bRef.maxHp);
     rrect(bx + 3, y1 + 3, bw - 6, 16, 8); ctx.fillStyle = 'rgba(120,20,36,.75)'; ctx.fill();
     if (k > 0){ const gr = ctx.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, '#ff3d61'); gr.addColorStop(1, '#ff9a5b');
       rrect(bx + 3, y1 + 3, Math.max(8, Math.round((bw - 6) * k)), 16, 8); ctx.fillStyle = gr; ctx.fill(); }
     ctx.fillStyle = '#fff4e0'; ctx.font = '800 11.5px SamhanSans, sans-serif';
-    ctx.fillText(raid && raid.info.dummy ? `누적 피해 ${fmt(dmgMeter)} · ${dummyTier(dmgMeter)}등급` : bRef.name, bx + 9, y1 + 11.5);
+    ctx.fillText(raid && raid.info.dummy ? `누적 피해 ${fmt(dmgMeter)} · ${dummyTier(dmgMeter)}등급` : hae ? `제대로 친 피해 ${fmt(raid.hDmg || 0)} · ${haetaeTier(raid.hDmg || 0)}등급${raid.hPh === 'horn' ? ' · 뿔 ×2!' : raid.hPh === 'eye' ? ' · 눈이 붉다!' : ''}` : bRef.name, bx + 9, y1 + 11.5);
     ctx.textAlign = 'right'; ctx.fillText(`${Math.max(0, Math.ceil(bt))}초`, bx + bw - 9, y1 + 11.5); ctx.textAlign = 'left';
     ctx.fillStyle = bt < 8 ? '#ff6b5a' : '#ffcc4d'; rrect(bx + 7, y1 + 22, Math.max(2, Math.round((bw - 14) * Math.max(0, bt / maxT))), 2, 1); ctx.fill();
     let ry = y1 + 28;
@@ -10602,7 +10871,7 @@ function drawOverlay(){
     if (raid){
       ctx.font = '700 11px SamhanSans, sans-serif';
       const alive = raid.allies.filter(a => !a.down).length + (hero.dead ? 0 : 1), tot = raid.allies.length + 1;
-      const pl = tot > 1 || raid.info.tb ? `파티 ${alive}/${tot}${raid.info.tb ? ` · 목숨 ${Math.max(0, TB_LIVES - (raid.deaths || 0))}/${TB_LIVES}` : ''}` : '', pw = pl ? Math.ceil(ctx.measureText(pl).width) : -14, al = raid.awk && !raid.awk.used ? '초각성 준비' : '', aw = al ? Math.ceil(ctx.measureText(al).width) + 24 : 0;
+      const pl = tot > 1 || raid.info.tb ? `파티 ${alive}/${tot}${raid.info.tb ? ` · 목숨 ${Math.max(0, TB_LIVES - (raid.deaths || 0))}/${TB_LIVES}` : raid.info.jin ? ` · 목숨 ${Math.max(0, JIN.lives - (raid.falls || 0))}/${JIN.lives} · 탕약 ${Math.max(0, JIN.pots - (raid.pots || 0))}/${JIN.pots}` : ''}` : '', pw = pl ? Math.ceil(ctx.measureText(pl).width) : -14, al = raid.awk && !raid.awk.used ? '초각성 준비' : '', aw = al ? Math.ceil(ctx.measureText(al).width) + 24 : 0;
       const px = cx - (pw + 14 + aw) / 2;
       ovBot = pl || al ? ry + 18 : ry - 4;
       if (pl){ box(px, ry, pw + 14, 18); ctx.fillStyle = '#c8f0c8'; ctx.fillText(pl, px + 7, ry + 9.5); }
@@ -11563,7 +11832,7 @@ function updatePotBar(){
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
-  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (raid){ cls = 'fight'; txt = raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.haetae ? '해태 수련' : raid.info.jin ? '진 레이드' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
   else if (parade){ cls = 'fight'; txt = '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / PARADE_TIME); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
@@ -12990,7 +13259,8 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];
+  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비']].concat(haetaeOpen() ? [['haetae', '해태 수련']] : [], [['vault', '보물 동굴'], ['parade', '백귀야행']]);   // 해태 수련은 46장부터(그 전에는 칸이 안 보임)
+  if (raidView === 'haetae' && !haetaeOpen()) raidView = 'raid';
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
   const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
   if (raidView === 'gr'){
@@ -13098,6 +13368,26 @@ function buildRaid(){
       const b = $('#pGo'); b.disabled = !!raid || !!parade || left <= 0; setText(b, parade ? '백귀야행 중…' : raid ? '다른 싸움 중' : left > 0 ? '백귀야행 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
+  if (raidView === 'haetae'){
+    panel.innerHTML = top + `
+      <div class="card dcard"><div class="dport"><img src="${bossPortrait('haetae', '#9aa0a8')}" alt=""></div>
+        <div><div class="ct">해태 수련<span class="tag" id="hLeft"></span></div>
+        <p class="story">옳고 그름을 가리는 돌 해태 앞에서 혼자 ${HAETAE.time}초. 해태는 <b>제대로 친 것만</b> 세요. <b>뿔이 빛날 때</b> 친 피해는 <b>${HAETAE.hornMul}배</b>, <b>눈이 붉을 때</b> 치면 세지 않고 <b>불을 되돌려줘요</b> — [구르기]로 물러서요. 넣은 피해만큼 <b>1~7등급</b> 보상(하루 ${HAETAE.tries}번).</p></div></div>
+      <div class="card"><div class="ct">등급 보상<span class="small" id="hBest"></span></div>
+        <ul class="list dtiers">${[1, 2, 3, 4, 5, 6, 7].map(t => `<li class="qrow" id="ht-${t}"><div><div class="qn"><span><b>${t}등급</b> <span class="small" data-ht="${t}"></span></span>
+          <span class="rchips"><span class="rchip rc-gold">엽전</span><span class="rchip rc-gem">보석 ${fmt(Math.round(HAETAE.gems[t] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()))}</span><span class="rchip rc-mat">재료 ${HAETAE.mats[t]}</span></span></div></div></li>`).join('')}</ul></div>
+      <div id="raidLive"></div>
+      <button class="btn primary big" id="hGo">해태 수련 시작</button>`;
+    wireSeg();
+    $('#hGo').addEventListener('click', () => { if (!raid && haetaeLeft() > 0) presetAsk('boss', '해태 수련', () => { if (startHaetae()){ closePage(); return true; } }); });
+    return () => {
+      const left = haetaeLeft(), T = haetaeTiers();
+      setText($('#hLeft'), `오늘 ${left} / ${HAETAE.tries}번`);
+      setText($('#hBest'), S.haetae.best ? `최고 기록 ${fmt(S.haetae.best)}` : '');
+      for (let t = 1; t <= 7; t++){ setText(panel.querySelector(`[data-ht="${t}"]`), `제대로 친 피해 ${fmt(T[t - 1])} 이상`); $('#ht-' + t).classList.toggle('ready', (S.haetae.best || 0) >= T[t - 1]); }
+      const b = $('#hGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.haetae ? '수련 중…' : '다른 싸움 중') : left > 0 ? '해태 수련 시작' : '오늘은 다 했어요(내일 다시)');
+    };
+  }
   if (raidView === 'dummy'){
     panel.innerHTML = top + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('scarecrow', '#d8b060')}" alt=""></div>
@@ -13134,20 +13424,37 @@ function buildRaid(){
       <button class="btn rgo" data-i="${i}"></button>
     </div>`);
   }
-  // 지나온 땅의 레이드(부별 탭): 토벌 기록만 보여 준다
-  const past = RAID_WORLDS.filter(R => R.w < S.world).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length;
-    return `<div data-psec><h3 class="sub">${WORLD_NAME[R.w]} 레이드 <span class="small" style="font-weight:600">지나온 땅 · ${done}/${R.n} 토벌</span></h3><div class="rlist rpast">${L.map(info => { const ok = !!S.raid.first[info.key];
+  // 지나온 땅의 레이드(부별 탭): 상위 단계 「진」(물의 신화 3단계) — 레이드마다 한 칸, 권장 전투력·내 전투력·주간 첫 승리 보상
+  jinCheck();
+  const past = RAID_WORLDS.filter(R => R.w < S.world).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length, jOn = jinOpen(R.w);
+    if (!jOn) return `<div data-psec><h3 class="sub">${WORLD_NAME[R.w]} 레이드 <span class="small" style="font-weight:600">지나온 땅 · ${done}/${R.n} 토벌</span></h3><div class="rlist rpast">${L.map(info => { const ok = !!S.raid.first[info.key];
       return `<div class="rcard past${ok ? ' done' : ''}" data-part="${partOfW(R.w)}" data-pk="${info.key}"><div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""></div>
-        <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`; }).join('');
+        <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`;
+    const jdone = L.filter(x => S.jin.win['j' + x.key]).length;
+    return `<div data-psec><div class="ph"><h2>${WORLD_NAME[R.w]} 레이드 · 진(眞)</h2><span class="tkbadge jin-left"></span></div>
+      <p class="hint">지나온 땅 ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
+      <div class="rlist">${L.map((b0, i) => { const info = jinInfo(R.w, i), wk = !S.jin.wk[info.key], n = S.jin.win[info.key] || 0, pity = Math.round(jinPity(info.key) * 100);
+        return `<div class="rcard jin" id="jin-${R.w}-${i}" data-part="${partOfW(R.w)}" data-pk="${b0.key}">
+          <div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""><span class="jmark">眞</span></div>
+          <div class="rbody">
+            <div class="rtop"><b>${info.label}</b><span class="rstate ${wk ? 'new' : 'done'}">${wk ? '주간 첫 승리 보상!' : '이번 주 토벌함 ✓'}</span></div>
+            <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티${n ? ` · 진 토벌 ${n}번` : ''}${S.raid.first[b0.key] ? '' : ' · 일반은 못 깼던 곳(이기면 첫 토벌 보상도)'}${pity ? ` · 보스 체력 −${pity}%` : ''}</div>
+            <div class="rpow jin" data-jp="${R.w}:${i}"></div>
+            <div class="rchips"><span class="rchip rc-gem">보석 ${fmt(jinGems(info))}${wk ? ` +${fmt(jinWeekGems(info))}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[Math.floor(jinGearIt(R.w) / 4)].name} 장비</span><span class="rchip rc-myth">신화 조각${wk ? ` ${1 + SHARD_SRC.raidFirst}` : ''}</span>${soulOpen() ? '<span class="rchip rc-av">넋 구슬 2배</span>' : ''}<span class="rchip rc-av">진 아바타</span></div>
+          </div>
+          <button class="btn rgo" data-jin="${R.w}:${i}"></button>
+        </div>`; }).join('')}</div></div>`; }).join('');
   panel.innerHTML = top + `${partBarHTML()}
     <div data-psec><div class="ph"><h2>${WORLD_NAME[S.world]} 레이드</h2><span class="tkbadge" id="tkInfo"></span></div>
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
     <div id="raidLive"></div>
+    ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
     <div class="rlist">${cards.join('')}</div></div>
     ${past}`;
   wireSeg();
   partWire('raid', {own:k => !!S.raid.first[k], count:raidPartCount, filt:false, fresh:false});
   panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => bt.addEventListener('click', () => confirmRaid(+bt.dataset.i)));
+  panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => bt.addEventListener('click', () => { const [w, i] = bt.dataset.jin.split(':').map(Number); confirmJin(w, i); }));
   return () => {
     const live = $('#raidLive');
     if (raid){
@@ -13164,13 +13471,24 @@ function buildRaid(){
       const i = +bt.dataset.i, info = raidAt(i);
       let t, dis = true;
       if (i >= raidUnlocked()) t = '잠김';
-      else if (raid) t = raid.info.i === i && !raid.info.dummy ? '토벌 중' : '다른 싸움 중';
+      else if (raid) t = raid.info.i === i && !raid.info.dummy && !raid.info.jin && raid.info.key === info.key ? '토벌 중' : '다른 싸움 중';
       else if (tk <= 0) t = `토벌패 ${fmtTime(left / 1000)}`;
       else { t = '입장'; dis = false; }
       setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
       $('#raid-' + i).classList.toggle('ready', !dis);
       const rp = panel.querySelector(`[data-rp="${i}"]`);
       if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>`); }
+    });
+    const jl = jinLeft();
+    panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} 오늘 ${jl}/${JIN.tries}번`));
+    panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => {
+      const [w, i] = bt.dataset.jin.split(':').map(Number);
+      let t, dis = true;
+      if (raid) t = raid.info.jin && raid.info.jw === w && raid.info.ji === i ? '토벌 중' : '다른 싸움 중';
+      else if (jl <= 0) t = '내일 다시';
+      else { t = '진 입장'; dis = false; }
+      setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
+      const rp = panel.querySelector(`[data-jp="${w}:${i}"]`); if (rp) setHTML(rp, jinPowHTML(w, i, pw));
     });
   };
 }
@@ -15078,6 +15396,7 @@ if (BETA){
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
+    power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, CLASSES, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
