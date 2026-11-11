@@ -1858,6 +1858,15 @@ async def main():
         await ep.wait_for_timeout(300)
         ec2 = await ep.evaluate("""() => ({segs: ['helm', 'shoulder', 'boots', 'amber'].some(k => !!document.querySelector('#seg-' + k)), sum: (document.querySelector('#sum1') || {}).textContent || '', cells: document.querySelectorAll('#page .cell').length})""")
         check(not ec['open'] and not ec2['segs'] and '무기' in ec2['sum'], f'4부가 아니면 [장비]에 새 칸·세공이 보이지 않는다 {ec2}')
+        # 세로 화면(짧은 휴대폰): 변신 칸이 오른쪽 단추 줄의 [캐릭터 바꾸기]를 가리지 않는다(2026-11-12 본 게임에 먼저 올린 고침 — 390×640에서 겹쳤음)
+        await ep.evaluate("() => { window.__game.closePage(); }")
+        await ep.set_viewport_size({'width': 390, 'height': 640})
+        await ep.wait_for_timeout(900)
+        pf = await ep.evaluate("""() => { const r = s => { const e = document.querySelector(s); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 ? [b.left, b.top, b.right, b.bottom].map(Math.round) : null; };
+          const f = r('#formBtn'), c = r('#charBtn'), top = c && document.elementFromPoint((c[0] + c[2]) / 2, (c[1] + c[3]) / 2);
+          return {portrait: document.body.classList.contains('portrait'), f, c, hit: !!(f && c) && !(f[2] <= c[0] || c[2] <= f[0] || f[3] <= c[1] || c[3] <= f[1]), press: !!(top && top.closest('#charBtn'))}; }""")
+        await ep.screenshot(path=str(OUT / '28f_세로_변신칸.png'))
+        check(pf['portrait'] and pf['f'] and pf['c'] and not pf['hit'] and pf['f'][2] <= pf['c'][0] and pf['press'], f'세로 화면에서 변신 칸과 [캐릭터 바꾸기]가 겹치지 않고, 그 단추가 눌린다(위에 겹친 빈 상자가 누르기를 가로채지 않음) {pf}')
         await ctxE.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다

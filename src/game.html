@@ -906,7 +906,8 @@ body.portrait .ctrl{left:8px;right:8px;display:flex;flex-wrap:wrap;justify-conte
 body.portrait .ctrl .skills{display:flex;gap:4px}
 body.portrait .ctrl .skills.many{flex-wrap:wrap;flex-basis:100%}body.portrait .ctrl .skills.many .sk{width:38px;height:38px}body.portrait .ctrl .skills.many .sk svg{width:19px;height:19px}
 body.portrait .ctrl .potbar{flex-basis:100%;justify-content:flex-start}
-body.portrait .formb{flex-basis:100%;height:34px}
+body.portrait .ctrl{pointer-events:none}body.portrait .ctrl>:not(.sp){pointer-events:auto}   /* (물의 신화 4단계) 세로 화면이 짧으면 .ctrl 상자가 오른쪽 단추 줄([캐릭터 바꾸기]) 위에 겹친다 — 빈 자리는 누르기를 아래 단추로 흘려보낸다 */
+body.portrait .formb{flex-basis:calc(100% - 54px);max-width:calc(100% - 54px);margin-right:54px;height:34px}   /* (2026-11-12) 세로 화면: 오른쪽 단추 줄의 [캐릭터 바꾸기]를 가리지 않게 변신 칸을 그만큼 짧게 */
 body.portrait .btn-mode{height:30px;font-size:11px;padding:0 8px}
 body.portrait .sk{width:34px;height:34px;border-radius:10px}
 body.portrait .sk svg{width:19px;height:19px}
