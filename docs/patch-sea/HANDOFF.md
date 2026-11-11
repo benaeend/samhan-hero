@@ -94,3 +94,5 @@
 세로 화면에서 변신 칸(`#formBtn`)이 오른쪽 위 단추 줄 셋째 줄의 [캐릭터 바꾸기](`#charBtn`)를 가리던 것. `main`에 CSS 한 줄만 고쳐 올렸다:
 `body.portrait .formb{flex-basis:calc(100% - 54px);max-width:calc(100% - 54px);margin-right:54px;height:34px}`
 **`patch-sea`의 `src/game.html`에도 같은 줄을 넣을 것**(작업 중인 세션과 겹치지 않게 여기서는 넣지 않았다). 넣은 뒤 세로 화면 캡처로 변신 칸 오른쪽에 단추가 보이는지 확인하고, 자동 점검에 「세로 화면에서 변신 칸과 [캐릭터 바꾸기]가 겹치지 않는다」를 더한다.
+
+- **(11-12 08:5x 넣음, `patch-sea` `ff3495e`)** 같은 줄을 넣고 자동 점검(9-11 끝, 390×640 세로 화면)을 더했다. 재 보니 그 화면에서는 변신 칸을 줄여도 아래 조작 상자(`.ctrl`)의 빈 자리가 단추 위에 겹쳐 **보이기만 하고 눌리지 않아서**, `body.portrait .ctrl{pointer-events:none}body.portrait .ctrl>:not(.sp){pointer-events:auto}` 한 줄을 더 넣었다(점검은 겹침과 눌림을 함께 봄). **본 게임(`main`)에는 이 둘째 줄이 아직 없다** — 먼저 올리려면 주인이 말할 때 같은 줄을 `main`에 넣는다. 높이 700쯤에서는 넋 부름 단추(2부부터)가 [캐릭터 바꾸기] 위에 오는 다른 겹침이 남아 있다(PROGRESS.md 물어야 할 것 3).
