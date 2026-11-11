@@ -490,6 +490,33 @@ async def main():
         await page.screenshot(path=str(OUT / '20_채팅.png'))
         await page.click('#chatClose')
 
+        # 4-4b) 확성기: 용사(나·다른 용사)가 한 말은 게임 화면 위 띠로, 주민·알림은 채팅창에만, 글자로만, 끄면 안 뜸
+        mg = await page.evaluate("""async () => { const G = window.__game, el = document.querySelector('#mega'), tx = document.querySelector('#megaTx'), who = document.querySelector('#megaWho'), wait = ms => new Promise(r => setTimeout(r, ms));
+          const o = {on0:G.megaOn};
+          G.setMega(false); G.setMega(true);   // 앞에서 뜬 것·줄 선 것을 비움
+          const s0 = G.megaSeen;
+          G.addChat('npc', '주모 덕이', '주민 말'); G.addChat('sys', '알림', '알림 글'); await wait(350);
+          o.npc = G.megaSeen - s0 + G.megaQ.length; o.hid0 = el.hidden;
+          G.addChat('player', '바람돌이', '<i>기울임</i> 같이 레이드 가요');
+          o.p = {hidden:el.hidden, who:who.textContent, tx:tx.textContent, kids:tx.children.length, cls:el.className, pe:getComputedStyle(el).pointerEvents};
+          const r = el.getBoundingClientRect(), sc = document.querySelector('#scene').getBoundingClientRect(); o.box = [Math.round(r.left - sc.left), Math.round(r.top - sc.top), Math.round(r.width), Math.round(sc.width)];
+          await wait(1300); G.sendChat('확성기 시험'); o.q = G.megaQ.length;
+          return o; }""")
+        await page.wait_for_timeout(450)
+        await page.screenshot(path=str(OUT / '20b_확성기.png'))
+        mg2 = await page.evaluate("""async () => { const G = window.__game, el = document.querySelector('#mega'), tx = document.querySelector('#megaTx'), who = document.querySelector('#megaWho'), wait = ms => new Promise(r => setTimeout(r, ms));
+          G.megaCur.end = 0; G.megaTick(); await wait(700);   // 앞의 것이 끝나면 줄 선 내 말이 뜬다
+          const o = {me:{hidden:el.hidden, who:who.textContent, tx:tx.textContent, cls:el.className, name:G.S.name}};
+          G.setMega(false); G.addChat('player', '바람돌이', '꺼진 뒤'); await wait(300);
+          o.off = {hidden:el.hidden, q:G.megaQ.length, key:localStorage.getItem('samhan-mega')};
+          G.setMega(true); o.key = localStorage.getItem('samhan-mega');
+          return o; }""")
+        check(mg['on0'] and mg['npc'] == 0 and mg['hid0'], f'주민 수다·알림은 확성기로 뜨지 않는다 {mg}')
+        check(not mg['p']['hidden'] and mg['p']['who'] == '바람돌이' and '<i>' in mg['p']['tx'] and mg['p']['kids'] == 0 and 'mg-pl' in mg['p']['cls'] and mg['p']['pe'] == 'none'
+              and mg['box'][2] > 60 and abs(mg['box'][0] + mg['box'][2] / 2 - mg['box'][3] / 2) < 30 and 20 < mg['box'][1] < 200, f'다른 용사가 한 말이 화면 위 가운데 띠(확성기)로 뜨고 글자로만 보인다 {mg}')
+        check(mg['q'] == 1 and not mg2['me']['hidden'] and mg2['me']['who'] == mg2['me']['name'] and mg2['me']['tx'] == '확성기 시험' and 'mg-me' in mg2['me']['cls'], f'내 말도 차례를 기다렸다가 확성기로 뜬다 {mg["q"]} {mg2["me"]}')
+        check(mg2['off']['hidden'] and mg2['off']['q'] == 0 and mg2['off']['key'] == '0' and mg2['key'] == '1', f'확성기를 끄면 뜨지 않는다 {mg2["off"]}')
+
         # 5) 다시 열면 로그인 유지 → 로그아웃 → 틀린/맞는 비밀번호
         await page.evaluate("() => window.dispatchEvent(new Event('pagehide'))")
         await page.goto(URL)

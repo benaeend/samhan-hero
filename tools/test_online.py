@@ -229,6 +229,10 @@ async def main():
             await B.wait_for_timeout(600)
             got = await B.evaluate("() => window.__game.chatMsgs.filter(m => m.kind === 'player').map(m => m.name + ':' + m.text)")
             check(any('안녕하세요 온라인' in g for g in got), f'채팅이 다른 기기로 간다 {got}')
+            mega = await B.evaluate("() => { const G = window.__game, c = G.megaCur, e = document.querySelector('#mega'); return {cur: c ? c.m.kind + ':' + c.m.name + ':' + c.m.text : '', q: G.megaQ.map(m => m.text), hidden: e.hidden, who: document.querySelector('#megaWho').textContent, tx: document.querySelector('#megaTx').textContent}; }")
+            megaA = await A.evaluate("() => { const G = window.__game, c = G.megaCur; return c ? c.m.kind + ':' + c.m.text : G.megaQ.map(m => m.kind + ':' + m.text).join('|'); }")
+            check(('안녕하세요 온라인' in mega['cur'] and mega['cur'].startswith('player:') and not mega['hidden'] and mega['tx'] == '안녕하세요 온라인') or any('안녕하세요 온라인' in t for t in mega['q']), f'다른 용사의 채팅이 확성기(화면 위 띠)로 뜬다 {mega}')
+            check('me:안녕하세요 온라인' in megaA, f'내가 한 말도 내 화면에 확성기로 뜬다 {megaA}')
             tb = await A.evaluate("""async () => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); return G.tbWindow().open; }""")
             await B.evaluate("""() => { const G = window.__game; const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); }""")
             # 타임 보스 동료: 서버에 만들어진 모든 캐릭터 가운데 무작위 10명(같은 직업은 나까지 3명), 계정 아이디는 안 줌

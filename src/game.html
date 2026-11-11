@@ -902,6 +902,28 @@ body.portrait .rotate-tip{top:calc(var(--cvt) + var(--cvh) - 36px);left:50%;tran
 .chcard span{font-size:clamp(16px,3.6vmin,24px);font-weight:800;letter-spacing:3px;color:#ffe6b0;text-shadow:0 2px 0 #000}
 .chcard i{position:absolute;right:10px;bottom:12px;width:28px;height:28px;border-radius:5px;background:#c8282a;box-shadow:inset 0 0 0 2px #ff9a8a;transform:rotate(-8deg);opacity:.85}
 /* ================= 연출 효과 층(레벨업·재련·소환·조합·강화) ================= */
+/* 확성기(2026-11 (49), 사용자 요청): 용사가 채팅으로 한 말을 게임 화면 위 가운데에 공지 띠로. 누르기를 막지 않는다(pointer-events:none) */
+.mega{position:absolute;left:50%;top:60px;z-index:8;transform:translateX(-50%);display:flex;align-items:center;gap:7px;max-width:calc(100% - 20px);padding:5px 14px 5px 6px;border-radius:999px;pointer-events:none;white-space:nowrap;overflow:hidden;
+  background:linear-gradient(100deg,rgba(66,24,90,.95),rgba(22,30,68,.95) 55%,rgba(66,24,90,.95));border:1px solid rgba(255,204,77,.8);box-shadow:0 0 0 1px rgba(0,0,0,.4),0 6px 22px -6px rgba(0,0,0,.75),0 0 20px -4px rgba(255,170,60,.7);color:#fff6dc;font-size:12.5px;font-weight:700;line-height:1.35;animation:megaIn .38s cubic-bezier(.2,1.3,.4,1)}
+.mega.pg{max-width:calc(100% - 120px)}
+body:not(.portrait) .mega{max-width:min(460px,44%)}
+.mega[hidden]{display:none}
+.mega.out{animation:megaOut .28s ease-in forwards}
+.mega::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.26) 50%,transparent 65%);transform:translateX(-120%);animation:megaShine 2.6s ease-in-out .35s infinite}
+.mega-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ffd24a,#ff8a3c);color:#2a1606;box-shadow:0 0 10px -2px #ffb347;animation:megaWob .5s ease-in-out .2s 3}
+.mega-ic svg{width:15px;height:15px}
+.mega-who{flex:none;color:var(--gold);font-weight:900;max-width:9em;overflow:hidden;text-overflow:ellipsis}
+.mega.mg-pl .mega-who{color:#9fe7ff}
+.mega-vp{flex:1 1 auto;min-width:0;overflow:hidden}
+.mega-tx{display:inline-block;vertical-align:top;will-change:transform}
+.mega-tx.run{animation:megaRun var(--md,4s) linear 1s forwards}
+.mega.wrap{white-space:normal;border-radius:16px;align-items:flex-start}.mega.wrap .mega-tx{display:inline;word-break:break-all}
+@keyframes megaIn{from{opacity:0;transform:translateX(-50%) translateY(-10px) scaleX(.6)}to{opacity:1;transform:translateX(-50%) translateY(0) scaleX(1)}}
+@keyframes megaOut{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
+@keyframes megaShine{0%{transform:translateX(-120%)}55%,100%{transform:translateX(120%)}}
+@keyframes megaWob{0%,100%{transform:rotate(0)}30%{transform:rotate(-16deg)}70%{transform:rotate(13deg)}}
+@keyframes megaRun{to{transform:translateX(var(--mx,0px))}}
+@media (prefers-reduced-motion: reduce){.mega,.mega.out,.mega::after,.mega-ic{animation:none}.mega::after{display:none}}
 #fxl{position:fixed;inset:0;z-index:30;pointer-events:none;overflow:hidden}
 .fx-flash{position:absolute;inset:0;background:var(--c,#fff);animation:fxflash .55s ease-out forwards;mix-blend-mode:screen}
 @keyframes fxflash{from{opacity:.75}to{opacity:0}}
@@ -1229,6 +1251,7 @@ body.in-market .act{display:none}
     <button class="mini" id="mapBtn" aria-label="미니맵 · 누르면 여정 지도"><canvas id="mini" width="300" height="180"></canvas><span id="miniLbl"></span>
       <svg class="mini-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M3 6.2 9 3.6l6 2.6 6-2.6v14.2l-6 2.6-6-2.6-6 2.6zM9 3.6v14.2M15 6.2v14.2"/></svg></button>
     <button class="btn-chat" id="chatBtn" aria-pressed="false" aria-label="채팅 열기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18v12H11l-5 4v-4H3zm4 4v2h10V8zm0 3v2h7v-2z"/></svg><i class="dot" id="chatDot"></i></button>
+    <div class="mega" id="mega" hidden aria-hidden="true"><span class="mega-ic"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 9.5v5h3.2l1.6 5h2.4l-1.3-5H10l8 4V5.5l-8 4zm17-2.2v9.4a5 5 0 0 0 0-9.4z"/></svg></span><b class="mega-who" id="megaWho"></b><span class="mega-vp"><span class="mega-tx" id="megaTx"></span></span></div>
     <div class="qtrack" id="qtrack" hidden><b id="qtCh"></b><span id="qtName"></span><span class="qbar"><i id="qtBar"></i></span><span class="qn" id="qtNum"></span><button class="btn primary sm" id="qtClaim">보상 받기</button></div>
     <div class="log" id="log" role="log" aria-live="polite"></div>
   <button class="btn-boss" id="bossBtn" hidden>보스 도전</button>
@@ -2807,9 +2830,11 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-5', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-11-6', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-11 · 채팅 확성기'],
+  ['채팅 확성기', '용사가 채팅으로 한 말(내 말·다른 용사의 말)이 확성기 공지처럼 게임 화면 위 가운데에 띠로 잠깐 떠요. 채팅창을 닫고 사냥·레이드를 하거나 메뉴를 보고 있어도 보여요. 여럿이 말하면 차례로, 긴 글은 옆으로 흘러요. 주민(마을) 수다와 알림은 채팅창에만 나와요. [정보] → 채팅 확성기에서 끌 수 있어요.'],
   ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
   ['계승 · 대장장이 쇠돌', '저승·천계·부상·곤륜에 들어서면 첫 화면에 대장장이가 나타나요. 지난 땅의 재료를 이 땅 재료로 그대로 바꿔 주고(요괴 정수 → 망자의 넋 → 하늘 조각), 부상·곤륜에서는 재련을 계승해 줘요(효과 그대로, +15부터 다시 — 곤륜 2차 계승은 새로). 「나중에」를 눌러도 [장비] → [조합]·[재련]의 [대장장이] 단추로 언제든.'],
   ['계승 조합', '지난 땅에서 밀린 비전 장비 조합식은 재료 절반 · 장비 조건 없음 · 확정 성공으로 만들 수 있어요.'],
@@ -10144,6 +10169,7 @@ function drawOverlay(){
   const tw = Math.ceil(ctx.measureText(label).width);
   box(cx - tw / 2 - 10, y0, tw + 20, 22);
   ctx.fillStyle = raid ? '#ffb39a' : '#f3e6c8'; ctx.textAlign = 'center'; ctx.fillText(label, cx, y0 + 11.5); ctx.textAlign = 'left';
+  ovBot = y0 + 22;
   if (market || parade) return;   // 장터 마을·백귀야행에는 보스 막대가 없다
   const bRef = raid ? raid.boss : bossActive ? bossRef : null;
   const y1 = y0 + 27;
@@ -10176,11 +10202,13 @@ function drawOverlay(){
         ry += 20;
       }
     }
+    ovBot = ry - 4;
     if (raid){
       ctx.font = '700 11px SamhanSans, sans-serif';
       const alive = raid.allies.filter(a => !a.down).length + (hero.dead ? 0 : 1), tot = raid.allies.length + 1;
       const pl = tot > 1 || raid.info.tb ? `파티 ${alive}/${tot}${raid.info.tb ? ` · 목숨 ${Math.max(0, TB_LIVES - (raid.deaths || 0))}/${TB_LIVES}` : ''}` : '', pw = pl ? Math.ceil(ctx.measureText(pl).width) : -14, al = raid.awk && !raid.awk.used ? '초각성 준비' : '', aw = al ? Math.ceil(ctx.measureText(al).width) + 24 : 0;
       const px = cx - (pw + 14 + aw) / 2;
+      ovBot = pl || al ? ry + 18 : ry - 4;
       if (pl){ box(px, ry, pw + 14, 18); ctx.fillStyle = '#c8f0c8'; ctx.fillText(pl, px + 7, ry + 9.5); }
       if (al){ box(px + pw + 24, ry, aw - 10, 18); ctx.fillStyle = '#ffd96a'; ctx.fillText(al, px + pw + 31, ry + 9.5); }
       if (raid.awk && raid.awk.show > 0){
@@ -10198,7 +10226,7 @@ function drawOverlay(){
     ctx.font = '700 11px SamhanSans, sans-serif';
     const lab = S.kills >= n && !S.autoBoss ? '보스 대기' : '보스까지';
     const lw = Math.ceil(ctx.measureText(lab).width), bw = total + lw + 24, bx = cx - bw / 2;
-    box(bx, y1, bw, 20);
+    box(bx, y1, bw, 20); ovBot = y1 + 20;
     ctx.fillStyle = '#f3e6c8'; ctx.fillText(lab, bx + 8, y1 + 10.5);
     const x0 = bx + lw + 15;
     for (let i = 0; i < n; i++){ ctx.fillStyle = i < S.kills ? '#ffcc4d' : 'rgba(255,255,255,.14)'; rrect(x0 + i * (pw + gap), y1 + 5, pw, 10, 3); ctx.fill(); }
@@ -10452,8 +10480,54 @@ function addChat(kind, name, text, extra){
     while (ul.children.length > CHAT_MAX) ul.firstChild.remove();
     if (atEnd || kind === 'me') ul.scrollTop = ul.scrollHeight;
   }
+  if (kind === 'me' || kind === 'player') megaPush(kind, name, text);
 }
 function announce(text){ if (session) addChat('sys', '알림', text); }
+/* --- 확성기(2026-11 (49), 사용자 요청: 용사가 이야기하면 확성기·공지처럼 게임 화면에 표출) ---
+   나·다른 용사가 한 말(addChat의 'me'·'player')은 채팅창에 더해 장면 위 가운데(지역 이름·보스 막대 바로 아래)에 띠로 잠깐 띄운다. 주민(NPC) 수다·알림은 채팅창에만.
+   글은 남이 보낸 데이터라 textContent로만 넣는다. 여럿이면 줄 서서 차례로(MEGA.max개, 밀리면 짧게), 긴 글은 옆으로 흐른다. 연출·계승 화면 동안은 기다렸다가(오래된 것은 버림). [정보]에서 끌 수 있다 */
+const MEGA = {hold:4.2, fast:2.4, max:6, old:25000, px:70, runMax:7, key:'samhan-mega'};
+let megaOn = (() => { try { return localStorage.getItem(MEGA.key) !== '0'; } catch (e){ return true; } })();
+let megaQ = [], megaCur = null, megaSeen = 0, ovBot = 55;
+function setMega(on){ megaOn = !!on; try { localStorage.setItem(MEGA.key, megaOn ? '1' : '0'); } catch (e) {} if (!megaOn){ megaQ = []; megaHide(true); } }
+function megaPush(kind, name, text){
+  if (!megaOn || !session || !text) return;
+  megaQ.push({kind, name:String(name || ''), text:String(text), at:Date.now()});
+  while (megaQ.length > MEGA.max) megaQ.shift();
+  megaTick();
+}
+function megaHide(now){
+  const el = document.getElementById('mega'); megaCur = null; if (!el || el.hidden) return;
+  if (now || reduceMotion){ el.hidden = true; el.classList.remove('out'); return; }
+  el.classList.add('out'); setTimeout(() => { if (!megaCur){ el.hidden = true; el.classList.remove('out'); } }, 280);
+}
+// 자리: 사냥·싸움 화면이면 위 가운데 묶음(지역 이름·보스 막대·파티 칩 `ovBot`) 바로 아래, 메뉴 화면이 열려 있으면 그 머리 줄 안(칸 단추를 가리지 않게)
+function megaPlace(){
+  const el = document.getElementById('mega'); if (!el || el.hidden) return;
+  const pg = document.getElementById('page'), onPg = !!pg && !pg.hidden; el.classList.toggle('pg', onPg);
+  const hd = onPg ? pg.querySelector('.page-head') : null;
+  el.style.top = Math.round(hd ? Math.max(2, (hd.offsetHeight - el.offsetHeight) / 2) : (parseFloat(cv.style.top) || 0) + ovBot + 6) + 'px';
+}
+function megaShow(m){
+  const el = document.getElementById('mega'), tx = document.getElementById('megaTx'); if (!el || !tx) return;
+  el.hidden = true; el.className = 'mega ' + (m.kind === 'me' ? 'mg-me' : 'mg-pl') + (reduceMotion ? ' wrap' : '');   // 'me'·'player'는 다른 화면(내 정보) CSS와 겹쳐서 따로 이름을 쓴다
+  document.getElementById('megaWho').textContent = m.name; tx.textContent = m.text;
+  tx.classList.remove('run'); tx.style.removeProperty('--mx');
+  el.hidden = false; megaPlace();
+  const over = reduceMotion ? 0 : Math.max(0, tx.scrollWidth - tx.parentElement.clientWidth);
+  let hold = megaQ.length >= 2 ? MEGA.fast : MEGA.hold;
+  if (over > 4){ const run = Math.min(MEGA.runMax, over / MEGA.px); tx.style.setProperty('--mx', -over + 'px'); tx.style.setProperty('--md', run.toFixed(2) + 's'); tx.classList.add('run'); hold = Math.max(hold, 1 + run + 1.2); }
+  megaCur = {m, end:performance.now() + hold * 1000}; megaSeen++;
+}
+function megaTick(){
+  if (megaCur){ if (!session) megaHide(true); else if (performance.now() >= megaCur.end) megaHide(); else megaPlace(); return; }
+  if (!megaQ.length) return;
+  if (!session){ megaQ = []; return; }
+  if (cut || inhOpen || document.hidden) return;   // 연출·계승 화면 동안은 기다린다
+  const t = Date.now(); while (megaQ.length && t - megaQ[0].at > MEGA.old) megaQ.shift();
+  const el = document.getElementById('mega'); if (megaQ.length && el && el.hidden) megaShow(megaQ.shift());
+}
+setInterval(megaTick, 150);
 function sendChat(raw){
   const text = cleanChat(raw);
   if (!text || !session) return false;
@@ -12930,6 +13004,9 @@ function buildRec(){
     <div class="ph" style="margin-top:16px"><h2>화면 방향</h2><span class="small">휴대폰을 돌리지 않고 바꿔요</span></div>
     <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">오른쪽 위 [화면 돌리기] 아이콘으로도 가로·세로를 바로 바꿔요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요(그때는 휴대폰을 그 방향으로 들어 주세요).</p></div>
+    <div class="ph" style="margin-top:16px"><h2>채팅 확성기</h2></div>
+    <div class="card"><label class="check"><input type="checkbox" id="megaChk"> 용사들이 채팅으로 한 말을 게임 화면 위에 공지 띠로 보여 주기</label>
+      <p class="small" style="margin:6px 0 0">내가 한 말과 다른 용사가 한 말이 확성기처럼 화면 위 가운데에 잠깐 떠요. 주민(마을) 수다와 알림은 채팅창에만 나와요.</p></div>
     <div class="ph" style="margin-top:16px"><h2>소리</h2></div>
     <div class="card">
       <label class="check"><input type="checkbox" id="snBgm"> 배경음악 (국악풍)</label><input type="range" id="snBv" min="0" max="1" step="0.05" aria-label="배경음악 크기">
@@ -12941,6 +13018,7 @@ function buildRec(){
     <div class="recbtns" style="margin-top:8px">${canInstall() ? '<button class="btn primary" id="appBtn">앱으로 설치</button>' : ''}<button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
   $('#lookBtn').addEventListener('click', openLookEditor);
   $('#brMainBtn').addEventListener('click', () => { if (!session) return; const on = !isMainChar(); if (on) showModal('본캐 지정', `<p><b>${esc(S.name)}</b>${josa(S.name, '을', '를')} 본캐로 정할까요?</p><p class="small">본캐는 <b>배럭 효과를 받지 않아요</b>(공격력·체력·엽전·경험치·보석). 다른 캐릭터들은 그대로 받아요. 언제든 해제할 수 있어요.</p>`, [{label:'취소'}, {label:'본캐로 지정', primary:true, fn:() => { setMainChar(true); refreshPanel(); }}]); else { setMainChar(false); refreshPanel(); } });
+  { const mc = $('#megaChk'); if (mc){ mc.checked = megaOn; mc.addEventListener('change', () => { setMega(mc.checked); sfx('click'); }); } }
   panel.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { setOrient(b.dataset.orient, true); panel.querySelectorAll('[data-orient]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.orient === orientMode))); }));
   panel.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => { const h = HOWTO[+b.dataset.how]; playCut(h.shots, {title:'하는 법 · ' + h.t}); }));
   $('#clsBtn').addEventListener('click', () => chooseClass(true));
@@ -14332,7 +14410,7 @@ if (location.search.indexOf('simtest') >= 0){
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
-    buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
+    buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
