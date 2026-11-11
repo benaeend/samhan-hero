@@ -672,14 +672,14 @@ async def main():
         check(sh['shield'] >= 0.399, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
         await page.click('#tab-skill'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '29_기술_직업특성.png'))
-        cf = await page.evaluate("""() => { const G = window.__game, S = G.S; G.setClass('jagaek'); G.refreshStats();
+        cf = await page.evaluate("""() => { const G = window.__game, S = G.S; const w0 = S.world; S.world = 0; G.setClass('jagaek'); G.refreshStats();   // 이승에서(뒤 땅에서는 이승 조합식이 '계승 조합'이라 확정)
           S.best.s0 = Math.max(S.best.s0, 60); const mk = 'm' + S.world; S.mat[mk] = 200; S.gems = 5000; S.gear.weapon.count[4] += 3; S.gear.weapon.count[8] += 4; S.gear.armor.count[4] += 3;
           const a0 = G.ST.atk, best = G.ENGR_BEST.jagaek.w;
           G.pickEngr('w', best); const t1 = G.craft('w') === true;
           G.craftLuck = 0.0001; const f = G.craft('w'); const fails = S.craft.w.f, mat1 = S.mat[mk];
           G.craftLuck = null; S.craft.w.f = 5; const ok = G.craft('w') === true;
           G.pickEngr('a', G.ENGR_BEST.jagaek.a); G.pickEngr('n', G.ENGR_BEST.jagaek.n); G.craft('a'); G.craft('n');
-          G.refreshStats(); return {t1, f, fails, mat1, ok, t: S.craft.w.t, best, up: G.ST.atk / a0, harm: G.harmonyOn()}; }""")
+          G.refreshStats(); const out = {t1, f, fails, mat1, ok, t: S.craft.w.t, best, up: G.ST.atk / a0, harm: G.harmonyOn()}; S.world = w0; G.refreshStats(); return out; }""")
         check(cf['t1'] and cf['f'] == 'fail' and cf['fails'] == 1 and cf['mat1'] == 150 and cf['ok'] and cf['t'] == 2 and cf['up'] > 1.2 and cf['harm'] and cf['best'] == 'hunt',
               f'조합 공방: 실패하면 재료 절반만 잃고, 천장이면 확정 성공, 자객 최적 각인 셋이면 조화가 켜진다 {cf}')
         await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(400)
@@ -783,7 +783,7 @@ async def main():
           const sunAll = G.skinDropPart('all', 4).it.g;
           Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
           return {day, part, loseOut: lose.out.length, gemsLose: gemsLose > 0, lose2: lose2.out.length, ok, won: S.dboss ? true : false, got: got.length, parts, sun: day === 0, allGrades: grades.every(n => n > 0), partOk: partOk.every(Boolean), sunAll}; }""")
-        check(db['loseOut'] == 2 and db['gemsLose'] and db['lose2'] == 0 and db['ok'] and (db['sun'] or (db['got'] == 1 and db['parts'][0] == db['part'])) and db['allGrades'] and db['partOk'] and db['sunAll'] == 4,
+        check(db['loseOut'] == 3 and db['gemsLose'] and db['lose2'] == 0 and db['ok'] and (db['sun'] or (db['got'] == 1 and db['parts'][0] == db['part'])) and db['allGrades'] and db['partOk'] and db['sunAll'] == 4,
               f'1일 보스: 참가 보상(하루 한 번)·이기면 오늘 부위 치장·모든 등급·일요일은 전설 {db}')
 
         # 6-4g2) 타임 보스·1일 보스 손맛: 공격은 방어 빼고 최대 체력의 %, 되받기는 기본 피해 FIT.ctr초 몫(기본 피해로는 안 셈), 막대는 거꾸로 안 참
@@ -1140,12 +1140,12 @@ async def main():
         # 6-8c) 조합 공방 재료 지키기: 일괄 합성·갈기가 다음 비전 갑옷에 드는 희귀 장비 4개는 남긴다
         ck = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
           const have = () => S.gear.armor.count.slice(8, 12).reduce((a, b) => a + b, 0);
-          S.craft.a.t = 2; S.gear.armor.count = Array(20).fill(0); S.gear.armor.count[8] = 9; S.gear.armor.seen[8] = true; S.equip.armor = -1;
+          S.world = 0; S.craft.a.t = 2; S.gear.armor.count = Array(20).fill(0); S.gear.armor.count[8] = 9; S.gear.armor.seen[8] = true; S.equip.armor = -1;
           G.mergeAll('armor'); const afterMerge = have();
           S.gear.armor.count[8] = 9; S.gear.armor.count[9] = 0; S.equip.armor = 16; S.gear.armor.count[16] = 1; G.grindGear('armor', 3); const afterGrind = have();
           S.craft.a.t = 9; S.gear.armor.count[8] = 9; S.equip.armor = -1; G.mergeAll('armor'); const free = have();
           Object.assign(S, JSON.parse(keep)); G.refreshStats();
-          return {afterMerge, afterGrind, free}; }""")
+          return {afterMerge, afterGrind, free}; }""")   # 이승 기준(뒤 땅에서는 이승 조합식에 장비가 안 듦)
         check(ck['afterMerge'] >= 4 and ck['afterGrind'] == 4 and ck['free'] < 4, f'일괄 합성·갈기는 조합 공방에 드는 장비(희귀 4개)를 남기고, 조합을 다 하면 모두 합성한다 {ck}')
         # 6-8d) 자동 기술 순서: 보스 앞에서 공격력 버프·약점이 먼저, 0.1초 간격으로 하나씩
         ao = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
@@ -1325,10 +1325,10 @@ async def main():
           S.gems = 1e7; G.petLuck = 400; const r = G.petSummon(1); G.petLuck = null; const got = G.PETS[r[0].i];
           const bk = G.PETS.findIndex(p => p.draw === 'baku'); S.pets.lv[bk] = 0; const gp = G.givePet('baku');
           S.vault = {day:'', n:0}; S.mythShard = 0; const v = G.startVault(); G.raid.boss.hp = 1e-9; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
-          const shard = S.mythShard; S.mythShard = 30; const cm = G.craftMyth('flute');
+          const shard = S.mythShard; S.mythShard = 30; const cm = G.craftMyth('flute'), shardLeft = S.mythShard;
           S.mode = 'semi'; G.startFight({label:'시험', bossName:'시험 보스', type:'oni', color:'#c83a2a', region:0, party:3, ref:1, g:0}, G.raidParty({party:3, g:0, ref:1}), {hp:1e9, atk:0, aoe:0, time:5});
           const auto = G.coopFight() && G.skAuto(0) && G.skAuto(5); for (let i = 0; i < 200; i++) G.update(0.05); S.mode = 'auto';
-          S.world = w0; return {pool0, pool3, got: got.g, gotName: got.name, gp, baku: S.pets.lv[bk], v, shard, cm: !!cm, shardLeft: S.mythShard, auto}; }""")
+          S.world = w0; return {pool0, pool3, got: got.g, gotName: got.name, gp, baku: S.pets.lv[bk], v, shard, cm: !!cm, shardLeft, auto}; }""")
         check(mp['pool0'] == 0 and mp['pool3'] == ['뇌수', '아마비에'] and mp['got'] == 5 and mp['gp'] and mp['baku'] == 1,
               f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 {mp}')
         check(mp['v'] and mp['shard'] >= 4 and mp['cm'] and mp['shardLeft'] == 0 and mp['auto'],

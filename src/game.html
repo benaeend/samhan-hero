@@ -7626,7 +7626,7 @@ function inhArt(){
   g.fillStyle = '#c0c6d4'; g.fillRect(3, 5, 30, 2); g.fillStyle = '#1a1c22'; g.fillRect(8, 25, 24, 1);
   return inhImgs = {stand:cut(0), swing:cut(3), anvil:a.toDataURL()};
 }
-function inhClose(){ const el = $('#inh'); if (el){ el.hidden = true; el.innerHTML = ''; } inhOpen = false; modalOpen = false; if (currentTab) buildTab(currentTab, true); }
+function inhClose(){ const el = $('#inh'); if (el){ el.hidden = true; el.innerHTML = ''; } inhOpen = false; modalOpen = !$('#modal').hidden; if (currentTab) buildTab(currentTab, true); }
 function inhShow(){
   if (inhOpen || S.world < 1) return false;
   let el = $('#inh'); if (!el){ el = document.createElement('div'); el.id = 'inh'; el.className = 'inh'; document.body.insertBefore(el, fxl); }
@@ -7688,6 +7688,8 @@ function inhRun(rows){
     finish();
   }, 350 + steps.length * 620 + 250);
 }
+// Esc: 계승 화면에서는 「나중에」·「알겠어요」·「좋아요!」(연출 중에는 그대로)
+document.addEventListener('keydown', e => { if (e.key !== 'Escape' || !inhOpen) return; e.stopImmediatePropagation(); const b = $('#inhLater') || $('#inhOk') || $('#inh .inh-btns .primary'); if (b && !b.disabled) b.click(); }, true);
 // 새 땅에 들어선 뒤 한가해지면(연출·창·싸움이 없을 때) 대장장이가 나타난다. 접속마다 한 번(「나중에」를 눌렀어도 다음 접속에 다시)
 function updateInh(){
   if (!session || cut || modalOpen || inhOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noInh))) return;
@@ -14286,7 +14288,7 @@ function loop(ts){
   let dt = (ts - last) / 1000; last = ts;
   if (dt > 0.25) dt = 0.25;
   if (cut){ updateCut(dt); shake = Math.max(0, shake - dt); }
-  else if (dt > 0){
+  else if (dt > 0 && !inhOpen){   // 계승 화면(대장장이)이 떠 있는 동안은 연출처럼 게임을 멈춘다
     for (let i = 0; i < S.speed; i++){
       let rem = dt;
       while (rem > 0){ const step = Math.min(rem, 0.05); update(step); rem -= step; }
