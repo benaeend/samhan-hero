@@ -1068,15 +1068,15 @@ async def main():
           G.inhDo(); const mat = Object.assign({}, S.mat); S.mat.m1 = 80; const ok = G.craft('w');
           const out = {n0:{mat:n0.mat, past:!!n0.past, rate:n0.rate, gear:n0.gearSlot || null, mk:n0.mk}, list, pend, mat, ok, t:S.craft.w.t, left:S.mat.m1, w:S.inh.w, pend2:G.inhPending()};
           G.questGo({c:'raids'}); const on = document.querySelector('.qsegb.on'); out.rv = on ? on.dataset.rv : ''; out.rUnlocked = G.raidUnlocked(); G.closePage();
-          S.gold = 1e300; S.gems += 1000; S.shop.got = {}; const mA = S.mat.m1, sA = S.mythShard || 0; const b1 = G.buyShop('matbag'), b2 = G.buyShop('shardbag');
-          out.shop = b1 && b2 && S.mat.m1 === mA + G.MAT_SRC.shop && S.mythShard === sA + G.SHARD_SRC.shop; out.drop = [G.MAT_DROP.boss, G.MAT_DROP.gate, G.MAT_DROP.raid, G.MAT_SRC.dummy[5]];
+          S.gold = 1e300; S.gems += 1000; S.shop.got = {}; const mA = S.mat.m1, sA = S.mythShard || 0; const b1 = G.buyShop('matbag'), b2 = G.buyShop('shardbag');   // 신화 조각은 상점에서 안 팖
+          out.shop = b1 && !b2 && S.mat.m1 === mA + G.MAT_SRC.shop && S.mythShard === sA && !G.SHOP.some(x => x.id === 'shardbag'); out.drop = [G.MAT_DROP.boss, G.MAT_DROP.gate, G.MAT_DROP.raid, G.MAT_SRC.dummy[5]];
           S.mode = 'semi'; S.bossAuto = false; S.autoBoss = false; G.buildTab('gear'); return out; }""")
         check(ih['pend'] and 'mat' in ih['list'] and ih['mat']['m0'] == 0 and ih['mat']['m1'] == 40 and ih['w'] == 1 and not ih['pend2'],
               f'계승: 저승에 오면 지난 땅 재료(요괴 정수)가 망자의 넋으로 그대로 계승된다 {ih}')
         check(ih['n0']['past'] and ih['n0']['mat'] == 75 and ih['n0']['rate'] == 100 and ih['n0']['gear'] is None and ih['n0']['mk'] == 'm1' and ih['ok'] is True and ih['t'] == 3 and ih['left'] == 5,
               f'계승 조합: 지난 땅의 밀린 조합식은 재료 절반·장비 조건 없음·확정 성공 {ih["n0"]} {ih["ok"]} {ih["t"]} {ih["left"]}')
         check(ih['rUnlocked'] == 0 and ih['rv'] in ('dummy', 'parade', 'vault', 'tb'), f'저승 초입(레이드 잠김)의 레이드 부탁 「바로 가기」는 지금 할 수 있는 칸으로 간다 {ih["rv"]}')
-        check(ih['shop'] and ih['drop'] == [2, 6, 8, 12], f'재료 수급처: 상점 재료 꾸러미·신화 조각, 드롭량 늘림 {ih["shop"]} {ih["drop"]}')
+        check(ih['shop'] and ih['drop'] == [2, 6, 8, 12], f'재료 수급처: 상점 재료 꾸러미(신화 조각은 안 팖), 드롭량 늘림 {ih["shop"]} {ih["drop"]}')
         await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(250)
         await page.click('.mat.mtip[data-mtip="m1"]'); await page.wait_for_timeout(200)
         tipt = await page.evaluate("() => (document.querySelector('#tipB') || {}).textContent || ''")

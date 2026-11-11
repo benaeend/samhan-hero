@@ -2064,7 +2064,7 @@ const MAT_DROP = {boss:2, gate:6, raid:8, raidFirst:10, tb:15, mob:0.012};   // 
 // (48) 새 수급처: 허수아비 등급별·백귀야행 n마리마다·1일 보스(참가/승리)·강림·보물 동굴·오늘의 할 일 모두·급보·탑 층마다
 const MAT_SRC = {dummy:[0, 2, 4, 6, 9, 12], paradePer:8, dbJoin:5, dbWin:10, gr:12, vault:6, dall:10, evt:3, tower:1, shop:10};
 // 신화 조각 수급처: 레이드(확률)·첫 토벌·타임 보스·수문장·1일 보스·강림·오늘의 할 일 모두·보물 동굴(짐)
-const SHARD_SRC = {raidP:0.5, raidFirst:3, tb:2, tbHell:4, gate:1, dboss:2, gr:3, dall:2, vaultLose:2, shop:3};
+const SHARD_SRC = {raidP:0.5, raidFirst:3, tb:2, tbHell:4, gate:1, dboss:2, gr:3, dall:2, vaultLose:2};   // 상점에서는 팔지 않는다(사용자 요청: 사서 모으면 너무 쉬워짐)
 const gainShard = n => { n = Math.floor(n) + (Math.random() < n % 1 ? 1 : 0); if (n > 0) S.mythShard = (S.mythShard || 0) + n; return n; };
 const CRAFT_T = [   // w 세계, need 열리는 단계(그 세계 최고 단계), mat 재료 수, gear [장비 등급, 개수], gems 노리개 보석
   {w:0, need:21, mat:20,  gear:[1, 2], gems:150},
@@ -2695,7 +2695,6 @@ const SHOP = [
   {id:'whet', cat:'mat', icon:'whet', name:'숫돌', desc:'재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 25, inv:'whet', n:1, max:999},
   {id:'whet10', cat:'mat', icon:'whet', name:'숫돌 묶음', tag:'10+1', desc:'숫돌 10개 값에 11개! 재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 250, inv:'whet', n:11, max:999},
   {id:'matbag', cat:'mat', icon:'crystal', name:'재료 꾸러미', tag:'하루 5번', desc:'지금 있는 땅의 재료 10개(이승 요괴 정수 · 저승 망자의 넋 · 천계부터 하늘 조각). 조합 공방·각인 강화·신화 제작 장비·영약에 써요.', cur:'gold', price:() => Math.max(300, Math.round(mGold(Math.max(1, S.maxStage)) * 500)), daily:5},
-  {id:'shardbag', cat:'mat', icon:'shard', name:'신화 조각 3개', tag:'하루 3번', desc:'신화 보물 만들기(보물 동굴)·신화 제작 장비·장비 각성에 쓰는 조각.', cur:'gems', price:() => 150, daily:3},
   {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
   {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 90},
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
@@ -2808,13 +2807,13 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-11-4', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-11-5', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
   ['계승 · 대장장이 쇠돌', '저승·천계·부상·곤륜에 들어서면 첫 화면에 대장장이가 나타나요. 지난 땅의 재료를 이 땅 재료로 그대로 바꿔 주고(요괴 정수 → 망자의 넋 → 하늘 조각), 부상·곤륜에서는 재련을 계승해 줘요(효과 그대로, +15부터 다시 — 곤륜 2차 계승은 새로). 「나중에」를 눌러도 [장비] → [조합]·[재련]의 [대장장이] 단추로 언제든.'],
   ['계승 조합', '지난 땅에서 밀린 비전 장비 조합식은 재료 절반 · 장비 조건 없음 · 확정 성공으로 만들 수 있어요.'],
-  ['재료 수급처 늘림', '보스·수문장·레이드·타임 보스의 재료를 두 배쯤으로. 허수아비·백귀야행·보물 동굴·1일 보스·강림·오늘의 할 일·천공의 탑에서도 재료가 나와요. 신화 조각도 레이드·타임 보스·수문장·1일 보스·강림에서. [상점] → 재료에 재료 꾸러미(엽전)·신화 조각(보석).'],
+  ['재료 수급처 늘림', '보스·수문장·레이드·타임 보스의 재료를 두 배쯤으로. 허수아비·백귀야행·보물 동굴·1일 보스·강림·오늘의 할 일·천공의 탑에서도 재료가 나와요. 신화 조각도 레이드·타임 보스·수문장·1일 보스·강림에서. [상점] → 재료에 재료 꾸러미(엽전, 하루 5번). 신화 조각은 상점에서 팔지 않아요.'],
   ['재료 말풍선', '조합 공방·신화 제작·영약·각성 화면의 재료 이름을 누르면 어디에 쓰고 어디서 얻는지 나와요.'],
   ['고친 것', '저승 초입의 레이드 부탁 [바로 가기]가 잠긴 레이드만 보여 주던 것(이제 허수아비 등 할 수 있는 칸으로) · 신화 제작 장비 실패 때 「조합 성공!」이 뜨던 것.'],
   ['#', '2026-11-11 · 신화 제작 장비 재료 올림'],
@@ -3825,7 +3824,6 @@ function buyShop(id){
   else if (id === 'ticket') S.raid.tk++;
   else if (id === 'rreset') raidReset();
   else if (id === 'matbag') gainMat(MAT_SRC.shop, true);
-  else if (id === 'shardbag') gainShard(SHARD_SRC.shop);
   else if (id === 'goldbag') S.gold += mGold(S.maxStage) * 300;
   else if (id === 'gift'){ S.gems += 10; S.inv.potion = Math.min(9999, S.inv.potion + 5); S.inv.mana = Math.min(9999, (S.inv.mana || 0) + 5); }
   else if (id === 'avbox'){ S.gems += AV_BOX; const r = openAvatarBox(); if (r) playFx('box', {el:$('#avBox'), miss:r.miss, rare:!r.miss && r.isNew && r.a.type !== 'pet', pity:r.pity, sub:r.a && r.a.name}); if (r && !(window.__game && window.__game.quiet)) showModal('꾸미기 상자', r.miss
@@ -11884,7 +11882,7 @@ const BAG_STACK = [
   {k:'m0', n:'요괴 정수', icon:'crystal', c:'#7fdc6a', get:() => S.mat.m0 || 0, use:'이승 재료. [장비] → [조합](비전 무기·갑옷·노리개 만들기·각인 강화)에 써요. 저승에 가면 대장장이가 망자의 넋으로 <b>계승</b>해 줘요.', get2:'이승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m1', n:'망자의 넋', icon:'crystal', c:'#ff8a7a', get:() => S.mat.m1 || 0, use:'저승 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비(금척)에 써요. 천계에 가면 하늘 조각으로 <b>계승</b>돼요.', get2:'저승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m2', n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계·부상·곤륜 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷) · [수련] → [영약]에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 천공의 탑 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
-  {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(절반 확률, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다 · [상점] → 재료'},
+  {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(절반 확률, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
   {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
