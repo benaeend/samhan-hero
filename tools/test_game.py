@@ -82,6 +82,7 @@ SIM = r"""
       if (!opts.noelix && G.S.world >= 3) for (const O of G.ORGANS) {
         if (G.S.world < O.w) continue; const st = G.elSt(O.k);
         for (let z = 0; z < 10 && !G.elDone(st); z++) { if (G.elCost(st).gold > G.S.gold || !G.elBrew(O.k)) break; G.elPick(G.elBestCard()); }
+        if (G.elDone(st) && st.l[0][1] + st.l[1][1] < 8 && st.n < 3) { const rc = G.elResetCost(st); if (G.S.gems > rc.gems * 3 && (G.S.grudge || 0) >= rc.grudge * 2) G.elReset(O.k); }   // 약하게 굳은 장은 다시 달임
         if (!G.elDone(st) && !elRes) elRes = Math.min(G.S.gold * (opts.elsave ?? 0.6), G.elCost(st).gold); }
       G.S.gold -= elRes;
       { const fb = G.formBest(); if (fb && G.S.form.eq !== fb) G.S.form.eq = fb; }   // 변신: 가장 센 것을 착용(보스·레이드에서 자동으로 한 번)
