@@ -2783,6 +2783,104 @@ async def main():
         await gp.screenshot(path=str(OUT / '44c-gungsa-skills.png'))
         await ctxG.close()
 
+        # 9-18) 물의 신화 8-2단계: 신규 직업 「창객」(1~5차) — 아직 직업 고르기 창에는 안 보이고(CLASS_ALL에만), 시험 훅 setClass로 만들어 본다
+        ctxC = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        cp = await ctxC.new_page()
+        watch(cp, errors, '8-2단계 ')
+        await fresh(cp)
+        await signup(cp, 'changtest', 'abcd', '창잡이')
+        sea3c = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']   # 4부 끝 무사(이 대목만 따로 돌려도 되게 여기서 읽는다)
+        c1 = await cp.evaluate(r"""(arg) => { const [save] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.PAT.off = true; G.wipeOff = true;
+  const run = (sec, f) => { for (let i = 0; i < sec * 20; i++){ G.update(0.05); G.addTime(50); if (f && f(i)) break; } };
+  // 아직 플레이어에게 안 보인다: 직업 고르기·직업 바꾸기 창에는 네 직업만
+  out.order = [G.CLASS_ORDER.includes('changgaek'), G.CLASS_ALL.includes('changgaek'), G.CLASS_ORDER.length];
+  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="changgaek"]').length]; G.hideModal();
+  // 4부 끝 무사 저장에서 직업만 창객으로: 기술 13칸이 모두 나간다(반자동 = 기술은 모두 손으로)
+  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '창잡이'; G.setClass('changgaek'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
+  out.stat = [G.CLASSES.changgaek.range, G.heroRange()];
+  const cast = {};
+  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12]]){
+    S.skSet = set.slice(); S.skSetMan = true; S.skOff = G.SKILLS.map((_, i) => i).filter(i => !set.includes(i));
+    G.bench(8, false, t => { const k = Math.round(t / 0.05); if (k >= 12 && k % 6 === 0){ const i = set[(k - 12) / 6]; if (i != null && !cast[i]){ G.hero.mp = 999; cast[i] = G.castNow(i); } } });
+  }
+  out.cast = G.SKILLS.map((_, i) => !!cast[i]); out.names = G.CLASSES.changgaek.skills.length;
+  out.desc = G.SKILLS.map((_, i) => { const d = G.skillDesc(i, 5), g = G.skillGain(i, 5); return typeof d === 'string' && d.length > 8 && !/undefined|NaN/.test(d) && g && isFinite(g.g); });
+  // 간격: 두 칸 넘게 떨어진 적 +40% · 붙은 적 -20% · 「표사의 기합」 동안 +60%/깎이지 않음 · 펫·넋(기본 공격·기술이 아닌 것)과 다른 직업은 그대로
+  S.skSet = []; const gp = {};
+  G.bench(0.2, false, t => { const k = Math.round(t / 0.05), m = G.mobs[0], H = G.hero; if (k !== 1) return;
+    gp.near = G.gapMul(m, true); const tx0 = m.tx; m.tx = m.fx = H.tx + 2; gp.far = G.gapMul(m, true); H.buffT = 5; gp.roarFar = G.gapMul(m, true); m.tx = m.fx = tx0; gp.roarNear = G.gapMul(m, true); H.buffT = 0; gp.off = G.gapMul(m, false);
+    S.cls = 'musa'; gp.musa = G.gapMul(m, true); S.cls = 'changgaek'; });
+  out.gap = [gp.near, gp.far, gp.roarFar, gp.roarNear, gp.off, gp.musa].map(v => Math.round(v * 100));
+  // 되찌르기: 붙어서 때린 보스를 한 칸 밀어내고(잠깐 비틀), 보스는 다시 걸어와 붙는다
+  const rp = {far:0, back:0};
+  G.bench(6, false, t => { const m = G.mobs[0], H = G.hero, d = Math.abs(m.tx - H.tx) + Math.abs(m.ty - H.ty); if (d >= 2 && !rp.far){ rp.far = t + 0.05; rp.cd = H.ripCd > 0; rp.stun = m.stunT > 0; } if (rp.far && d === 1 && !rp.back) rp.back = t; });
+  out.rip = [rp.far > 0 && rp.far < 1.5, !!rp.cd, !!rp.stun, rp.back > rp.far];
+  // 길동무(파티 버프): 공격·걷는 속도, 파도 타기(5차): 창끝 거리 +1칸
+  S.skSet = [10, 12]; const st0 = G.heroStep();
+  G.bench(1, false, t => { if (Math.round(t / 0.05) === 4){ G.hero.mp = 999; G.castNow(10); } if (Math.round(t / 0.05) === 8){ G.hero.mp = 999; G.castNow(12); } if (Math.round(t / 0.05) === 12) out.wave = [G.heroRange(), G.hero.waveT > 0, G.pbDesc('changgaek', 1).includes('걷는 속도'), G.heroStep() < st0]; });
+  // 전직 1~5차: 스승과 겨뤄 이기면 전직(망토·기술)
+  S.mode = 'auto'; S.job = 0; S.av.cape = ''; for (const k of ['jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobF']) S.skills[k] = 0; G.refreshStats();
+  const jobs = [];
+  for (let tier = 1; tier <= 5; tier++){
+    const ready = tier === 2 ? true : G.jobReady(tier), names = [], types = [];
+    const st = G.startJobTrial(tier, tier === 2 ? 1 : 0);
+    run(60, () => { const R = G.raid; if (R){ if (!names.includes(R.info.bossName)){ names.push(R.info.bossName); types.push(R.info.type); } const B = R.boss; if (B && !B.dead && B.spawnT <= 0 && B.hp > 1) B.hp = 1; } return S.job >= tier && !G.raid; });
+    jobs.push({ready, st, names, types, job:S.job, name:G.jobName(), cape:S.av.cape, own:!!S.av.own['j_changgaek_' + tier], sprite:types.every(t => String(G.bossPortrait(t, '#888888')).startsWith('data:image'))});
+  }
+  out.jobs = jobs; out.jobSk = ['jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobF'].map(k => S.skills[k] >= 1); out.mpMax = G.mpMax ? G.mpMax() : 0;
+  // 초각성기(이름) · 초각성기 2 「바다 꿰는 창」: 8초 동안 보스가 받는 피해 +30% · 레이드 보스는 밀리지 않는다
+  G.aw2Force = true; S.aw2 = Object.assign(S.aw2 || {}, {got:true, tut:true, man:false});
+  S.raid.tk = 3; G.startRaid(0); run(1); { const R = G.raid, B = R.boss, A = R.awk2; B.hp = B.maxHp = 1e300;
+    out.awk = [G.CLASSES.changgaek.awaken, G.CLASSES.changgaek.awaken4, !!R.awk]; if (R.awk && !R.awk.used){ G.castAwaken(); out.awkUsed = R.awk.used; }
+    out.rpRaid = [G.gapPush(B, true), G.aw2Pierce(B)];
+    if (A){ A.g = 100; A.hand = 0; out.aw2 = [G.castAwaken2(true), A.pierceT > 0, Math.round(G.aw2Pierce(B) * 100), G.AW2_SK.changgaek.name]; } else out.aw2 = ['no awk2'];
+    G.raidEnd(false); run(2); }
+  G.aw2Force = false;
+  // 저장했다가 다시 불러와도 창객 그대로
+  const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
+  G.PAT.off = false; G.wipeOff = false; G.hideModal();
+  return out; }""", [sea3c])
+        check(c1['order'] == [False, True, 4] and c1['cards'] == [4, 0], f"창객: 아직 직업 고르기·직업 바꾸기 창에는 안 보인다(모든 직업 목록 CLASS_ALL에만) {c1['order']} {c1['cards']}")
+        check(all(c1['cast']) and all(c1['desc']) and c1['names'] == 13 and c1['stat'] == [2, 2],
+              f"창객: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
+        check(c1['gap'] == [80, 140, 160, 100, 100, 100], f"창객 「간격」: 붙은 적 -20% · 두 칸 밖 +40% · 「표사의 기합」 동안 +60%·붙어도 안 깎임 · 기본 공격·기술이 아닌 것과 다른 직업은 그대로 {c1['gap']}")
+        check(c1['rip'] == [True, True, True, True], f"창객 「되찌르기」: 맞은 직후 되찔러 붙은 보스를 한 칸 밀어내고(잠깐 비틀) 보스는 다시 걸어온다 {c1['rip']}")
+        check(c1['wave'] == [3, True, True, True], f"창객: 파도 타기(5차)가 창끝 거리를 한 칸 늘리고, 길동무(파티 버프)가 걷는 속도를 올린다 {c1['wave']}")
+        cj = c1['jobs']
+        check([j['names'] for j in cj] == [['늙은 표두'], ['강림도령'], ['벤케이'], ['늙은 표두', '강림도령', '벤케이'], ['용궁의 창 장수']] and all(j['st'] and j['ready'] and j['own'] and j['sprite'] for j in cj)
+              and [j['job'] for j in cj] == [1, 2, 3, 4, 5] and [j['name'] for j in cj] == ['표사', '풍운객', '천창', '화첨객', '파랑창'] and cj[4]['cape'] == 'j_changgaek_5' and all(c1['jobSk']) and c1['mpMax'] == 120,
+              f"창객 전직 1~5차: 스승(늙은 표두·강림도령·벤케이·세 스승·용궁의 창 장수)과 겨뤄 이기면 전직·망토·기술 {[(j['names'], j['name'], j['cape']) for j in cj]} {c1['jobSk']}")
+        check(c1['awk'] == ['만부부당', '화첨 난무', True] and c1.get('awkUsed') and c1['aw2'] == [True, True, 130, '바다 꿰는 창'] and c1['rpRaid'] == [False, 1],
+              f"창객: 초각성기(만부부당 → 화첨 난무)·초각성기 2 「바다 꿰는 창」(8초 동안 보스가 받는 피해 +30%) · 레이드 보스는 밀리지 않는다 {c1['awk']} {c1['aw2']} {c1['rpRaid']}")
+        check(c1['re'] == ['changgaek', 5, 'j_changgaek_5'], f"창객: 저장했다가 다시 불러와도 직업·전직·망토 그대로 {c1['re']}")
+        c2 = await cp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, skip = () => { const b = document.querySelector('#cutSkip'); if (G.cut && b) b.click(); };
+          const q = G.MAIN_Q.find(q => q.c && q.c[1] === 'nezha,hero' && q.c[2] === 'fire');
+          const lines = c => { S.cls = c; G.playCut([q.c]); const n = G.cut ? G.cut.lines.length : -1; skip(); return n; };
+          out.nz = [lines('musa'), lines('changgaek'), lines('gungsa')];
+          const shots = c => { S.cls = c; G.playCut(G.CH_OPEN[36]); const n = G.cut ? G.cut.shots.length : 0; skip(); return n; };
+          out.home = [shots('musa'), shots('changgaek')]; S.cls = 'changgaek'; out.end = !G.cut;
+          return out; }""")
+        check(c2['nz'] == [2, 4, 2] and c2['home'] == [1, 2] and c2['end'], f"창객만 보는 대사·연출: 38장 나타의 「너도 창잡이구나」 두 줄 · 곤륜 36장 「고향에 돌아온」 한 컷(다른 직업에게는 안 나옴) {c2}")
+        csheet = await cp.evaluate(r"""() => { const G = window.__game, S = G.S, Z = 3, W = 64 * Z;
+  const cv = document.createElement('canvas'); cv.width = W * 6; cv.height = W * 5; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#5a7a5a'; g.fillRect(0, 0, cv.width, cv.height);
+  const look = {outfit:'auto', hair:'#241c26', hat:'class', skin:0};
+  for (let j = 0; j <= 5; j++){
+    const ex = {job:j, capeC:j ? G.JOBS.changgaek[j - 1].capeC : ''}, gr = Math.min(4, j);
+    [['right', 0], ['right', 3], ['up', 0], ['down', 1]].forEach(([d, f], r) => { const sp = G.personSprite('changgaek', look, gr, gr, d, f, false, ex); g.drawImage(sp, j * W, r * W, W, W); });
+  }
+  ['m_changgaek', 'm3_changgaek', 'm5_changgaek'].forEach((t, i) => { for (const f of [0, 1]){ const sp = G.mobSprite(t, '', f, true); g.drawImage(sp, (i * 2 + f) * W, 4 * W, W, W); } });
+  return cv.toDataURL(); }""")
+        (OUT / '45-changgaek-sheet.png').write_bytes(base64.b64decode(csheet.split(',')[1]))   # 전직 0~5차 × (앞·찌르기·뒤·걷기) + 스승 셋(늙은 표두·벤케이·용궁의 창 장수)
+        await cp.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); G.closePage && G.closePage(); S.mode = 'auto'; G.resetRuntime(); G.setStage(S.stage); G.startBoss(); }")
+        await cp.wait_for_timeout(4000)
+        await cp.screenshot(path=str(OUT / '45b-changgaek-fight.png'))
+        await cp.evaluate("() => { const G = window.__game; if (G.raid) G.raidEnd(false); G.hideModal(); }")
+        await tab(cp, 'skill')
+        await cp.wait_for_timeout(500)
+        await cp.screenshot(path=str(OUT / '45c-changgaek-skills.png'))
+        await ctxC.close()
+
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
