@@ -424,7 +424,7 @@ async def main():
         check(mv and me['t'] == '내 정보' and me['n'] >= 20 and me['more'] and me2 == '내 정보', f'[더보기] 판·내 정보(왼쪽 위 상태창을 눌러도 열림) {me} {me2}')
         check(qn >= 1 and tip > 20 and not tip2, f'긴 설명은 ?를 누르면 말풍선으로, 다른 곳을 누르면 닫힘 (?{qn}개, 글자 {tip})')
 
-        await page.evaluate('() => window.__game.showNotes()')
+        await page.evaluate('() => window.__game.showNotes(true)')
         await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '22_업데이트소식.png'))
         await page.click('#modal-btn-0')

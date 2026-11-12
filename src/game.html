@@ -2705,7 +2705,7 @@ const BUFFS = {
 const BUFF_ADD = 10 * 60, BUFF_MAX = 60 * 60;
 /* 엽전 꾸러미 값(2026-11-12, 주인 요청): 예전엔 어디서나 보석 90개·횟수 제한 없음 — 보석 수입은 뒤로 갈수록 크게 느는데(주간 4배·마을 부탁 40배)
    든 엽전은 단계를 따라 커져서 후반엔 엽전이 사실상 공짜였다(수호신 하나를 끝까지 = 꾸러미 94개 = 보석 8,400). 땅마다 값을 올리고 하루 10번 */
-const GOLDBAG_GEM = [90, 150, 250, 600, 1200];
+const GOLDBAG_GEM = [90, 120, 180, 350, 600];   // (11-13, 주인 요청) 하루 10번 제한을 없애고 값이 오르는 폭을 낮춤(앞: 90·150·250·600·1,200)
 const SHOP = [
   {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(20, Math.round(mGold(S.maxStage) * 40)), inv:'potion', n:10, max:9999},
   {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
@@ -2723,7 +2723,7 @@ const SHOP = [
   {id:'whet10', cat:'mat', icon:'whet', name:'숫돌 묶음', tag:'10+1', desc:'숫돌 10개 값에 11개! 재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 250, inv:'whet', n:11, max:999},
   {id:'matbag', cat:'mat', icon:'crystal', name:'재료 꾸러미', tag:'하루 5번', desc:'지금 있는 땅의 재료 10개(이승 요괴 정수 · 저승 망자의 넋 · 천계부터 하늘 조각). 조합 공방·각인 강화·신화 제작 장비·영약에 써요.', cur:'gold', price:() => Math.max(300, Math.round(mGold(Math.max(1, S.maxStage)) * 500)), daily:5},
   {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
-  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', tag:'하루 10번', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요. 값은 땅마다 달라요(이승 90 · 저승 150 · 천계 250 · 부상 600 · 곤륜 1,200).', cur:'gems', price:() => GOLDBAG_GEM[Math.max(0, Math.min(GOLDBAG_GEM.length - 1, S.world))], daily:10},
+  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요. 값은 땅마다 달라요(이승 90 · 저승 120 · 천계 180 · 부상 350 · 곤륜 600).', cur:'gems', price:() => GOLDBAG_GEM[Math.max(0, Math.min(GOLDBAG_GEM.length - 1, S.world))]},
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
   {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개·감로수 5개.', cur:'free', price:() => 0, daily:1},
 ];
@@ -2849,9 +2849,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 1;   // 저장 판 번호. 아래 staleStop 설명 참고
-const NOTE_VER = '2026-11-12-9', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-13-1', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
-const NOTES = [
+/* (2026-11-13, 주인 요청) 지금까지의 소식은 「시즌 1 개발 내용」으로 묶어 [정보]에서 따로 본다. 「업데이트 소식」(NOTES)은 다음 패치부터 새로 적는다(비어 있으면 들어올 때 뜨지 않는다) */
+const NOTES = [];
+const SEASON1_NOTES = [
+  ['#', '2026-11-13 · 엽전 꾸러미'],
+  ['엽전 꾸러미 다시 손봄', '하루 10번 제한을 없앴어요. 값이 오르는 폭도 낮췄어요(이승 90 · 저승 120 · 천계 180 · 부상 350 · 곤륜 600 보석).'],
   ['#', '2026-11-12 · 삼신할미 · 수호신 값 · 엽전 꾸러미'],
   ['삼신할미가 일찍 와요', '경험치를 올려 주는 수호신 삼신할미가 부상이 아니라 두 번째 환생(천계에 들어설 때)부터 와요. 레벨이 이야기를 막는 구간이 덜 지루하도록 앞당겼어요.'],
   ['엽전 꾸러미 값', '상점의 엽전 꾸러미는 땅마다 값이 달라져요(이승 90 · 저승 150 · 천계 250 · 부상 600 · 곤륜 1,200 보석). 하루 10번까지 살 수 있어요. 뒤로 갈수록 보석은 넉넉한데 꾸러미 값은 그대로라 엽전이 너무 쉽게 모이던 것을 바로잡았어요.'],
@@ -2982,10 +2986,12 @@ function showErrLog(){
   const rows = (Array.isArray(L) ? L : []).slice().reverse().map(x => `<p class="small" style="word-break:break-all;margin:0 0 8px"><b>${esc(new Date(x.t).toLocaleString('ko-KR'))}</b> · ${esc(x.v || '')}${x.tab ? ' · ' + esc(x.tab) : ''}${x.f ? ' · ' + esc(x.f) : ''}<br>${esc(x.m)}<br><span style="opacity:.7">${esc(x.w)}</span></p>`).join('');
   showModal('오류 기록', rows || '<p>적힌 오류가 없어요.</p>', [{label:'지우기', fn:() => { try { localStorage.removeItem(ERR_KEY); } catch (e) {} errSeen = {}; }}, {label:'닫기', primary:true}]);
 }
-function showNotes(){
+function showNotes(season){
+  const LIST = season ? SEASON1_NOTES : NOTES;
+  if (!LIST.length){ showModal('업데이트 소식', '<p>새 소식은 다음 패치부터 여기에 적어요.</p><p>지금까지의 내용은 <b>[더보기] → [정보] → [시즌 1 개발 내용]</b>에서 볼 수 있어요.</p>', [{label:'시즌 1 개발 내용', fn:() => setTimeout(() => showNotes(true), 0)}, {label:'확인', primary:true}]); try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {} return; }
   // 묶음(['#', 이름])마다 접고 펴기. 가장 새 묶음만 펼쳐 둔다
-  const groups = []; for (const [t, d] of NOTES){ if (t === '#') groups.push({g:d, items:[]}); else if (groups.length) groups[groups.length - 1].items.push([t, d]); else groups.push({g:'소식', items:[[t, d]]}); }
-  showModal(`업데이트 소식 · ${NOTE_VER.slice(0, 10)}`, groups.map((G, k) => `<details class="ngrp"${k ? '' : ' open'}><summary><b>${G.g}</b><span>${G.items.length}가지</span></summary>
+  const groups = []; for (const [t, d] of LIST){ if (t === '#') groups.push({g:d, items:[]}); else if (groups.length) groups[groups.length - 1].items.push([t, d]); else groups.push({g:'소식', items:[[t, d]]}); }
+  showModal(season ? '시즌 1 개발 내용' : `업데이트 소식 · ${NOTE_VER.slice(0, 10)}`, groups.map((G, k) => `<details class="ngrp"${k ? '' : ' open'}><summary><b>${G.g}</b><span>${G.items.length}가지</span></summary>
     <ul class="rewards notes">${G.items.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ul></details>`).join(''), [{label:'확인', primary:true}]);
   try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
 }
@@ -11274,7 +11280,7 @@ elBig.addEventListener('click', () => {
   else if (S.kills >= FIELD.kills){ S.autoBoss = true; bossRetry = 0; sfx('click'); }
   else { addLog(`몬스터 ${FIELD.kills - S.kills}마리를 더 잡으면 보스가 나와요.`); sfx('blip'); }
 });
-$('#newsBtn').addEventListener('click', () => { if (session) showNotes(); });
+$('#newsBtn').addEventListener('click', () => { if (session) showNotes(false); });
 // 캐릭터 바꾸기(2026-11 (28), 사용자 요청): 화면 위 아이콘 → 한 번 묻고 저장한 뒤 캐릭터 고르기
 $('#orientBtn').addEventListener('click', () => { const land = !document.body.classList.contains('portrait'); setOrient(land ? 'port' : 'land', true); sfx('click'); addLog(`화면을 ${land ? '세로' : '가로'}로 바꿨어요. [정보]에서 자동(기기 방향 따라)으로 되돌릴 수 있어요.`); });
 $('#charBtn').addEventListener('click', () => {
@@ -13110,7 +13116,7 @@ function buildRec(){
     </div>
     <div class="ph" style="margin-top:16px"><h2>하는 법</h2><span class="small">누르면 까치가 연출로 보여 줘요</span></div>
     <div class="hgrid">${HOWTO.map((h, k) => `<button class="hbtn" data-how="${k}"><span class="hic">${h.ic}</span><b>${h.t}</b><small>${h.d}</small></button>`).join('')}</div>
-    <div class="recbtns"><button class="btn" id="tutBtn">튜토리얼 다시 보기</button><button class="btn" id="noteBtn">업데이트 소식</button><button class="btn" id="errBtn">오류 기록</button></div>
+    <div class="recbtns"><button class="btn" id="tutBtn">튜토리얼 다시 보기</button><button class="btn" id="noteBtn">업데이트 소식</button><button class="btn" id="s1Btn">시즌 1 개발 내용</button><button class="btn" id="errBtn">오류 기록</button></div>
     <div class="recbtns" style="margin-top:8px">${canInstall() ? '<button class="btn primary" id="appBtn">앱으로 설치</button>' : ''}<button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
   $('#lookBtn').addEventListener('click', openLookEditor);
   $('#brMainBtn').addEventListener('click', () => { if (!session) return; const on = !isMainChar(); if (on) showModal('본캐 지정', `<p><b>${esc(S.name)}</b>${josa(S.name, '을', '를')} 본캐로 정할까요?</p><p class="small">본캐는 <b>배럭 효과를 받지 않아요</b>(공격력·체력·엽전·경험치·보석). 다른 캐릭터들은 그대로 받아요. 언제든 해제할 수 있어요.</p>`, [{label:'취소'}, {label:'본캐로 지정', primary:true, fn:() => { setMainChar(true); refreshPanel(); }}]); else { setMainChar(false); refreshPanel(); } });
@@ -13120,7 +13126,8 @@ function buildRec(){
   $('#clsBtn').addEventListener('click', () => chooseClass(true));
   $('#swBtn').addEventListener('click', switchChar);
   $('#outBtn').addEventListener('click', () => showModal('로그아웃할까요?', '<p>지금까지의 모험은 저장돼요. 다음에 아이디와 비밀번호로 다시 들어오면 이어서 할 수 있어요.</p>', [{label:'취소'}, {label:'로그아웃', primary:true, fn:logout}]));
-  $('#noteBtn').addEventListener('click', showNotes);
+  $('#noteBtn').addEventListener('click', () => showNotes(false));
+  $('#s1Btn').addEventListener('click', () => showNotes(true));
   $('#errBtn').addEventListener('click', showErrLog);
   $('#snBgm').checked = AUD.set.bgm; $('#snSfx').checked = AUD.set.sfx; $('#snBv').value = AUD.set.bv; $('#snSv').value = AUD.set.sv;
   $('#snBgm').addEventListener('change', e => { AUD.set.bgm = e.target.checked; audSave(); });
@@ -13880,7 +13887,7 @@ async function enterChar(cid, opts = {}){
   saveLocal();
   const away = t && !opts.fresh && !opts.hot ? (now() - t) / 1000 : 0;
   if (away >= 60) offlineReward(away);
-  else if (!opts.fresh && !notesSeen() && !window.__game) showNotes();
+  else if (!opts.fresh && NOTES.length && !notesSeen() && !window.__game) showNotes();
   if (opts.fresh) try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
   if (online) pushOnline();
   roomTrack(true);   // 채팅창 「지금 접속 중」에 이 캐릭터로 알림
