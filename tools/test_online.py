@@ -378,14 +378,38 @@ async def main():
             keep = await B.evaluate('() => ({gold: Math.floor(window.__game.S.gold), pet: window.__game.S.pets.lv[20]})')
             srvP = db("select (save::json->'pets'->'lv'->>20) from samhan_chars where name = '온라인용사'")
             check(keep['gold'] >= 5000000 and keep['pet'] == 7 and srvP == [('7',)], f'서버 답을 못 받은 내 저장을 다른 기기 것으로 보고 되돌리지 않는다 {keep} {srvP}')
+            # 화면이 갑자기 다시 열린 뒤(2026-11-12): 이 기기에 더 새 기록이 있으면 서버의 내 옛 기록으로 돌아가지 않는다
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(400)
+            await B.evaluate("() => { const G = window.__game, ch = G.REG.accounts[G.session.acc].chars.find(c => c.cid === G.session.cid); ch.syncT -= 120000; G.saveReg(); G.S.pets.lv[21] = 9; G.S.gems += 4321; G.saveLocal(); window.__g = G.S.gems; }")
+            await B.wait_for_timeout(2200)
+            await B.evaluate("async () => { const G = window.__game; await G.enterChar(G.session.cid); }")
+            await B.wait_for_timeout(800)
+            await B.evaluate("() => { const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } }")
+            back3 = await B.evaluate('() => ({pet: window.__game.S.pets.lv[21], same: window.__game.S.gems >= window.__g - 1})')   # (이름 주의: re는 정규식 모듈이라 변수 이름으로 쓰지 않는다)
+            check(back3 == {'pet': 9, 'same': True}, f'다시 들어올 때 이 기기의 더 새 기록을 서버의 내 옛 기록으로 되돌리지 않는다 {back3}')
+            # 옛 화면이 서버에 덮어쓴 기록(판 번호 없음·시각은 더 새것)을 켜 둔 새 화면이 불러오지 않고 다시 올린다
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(400)
+            with pg.conn() as c, c.cursor() as cur:
+                cur.execute("update samhan_chars set save = (((save::jsonb - 'saveBuild' - 'saveDev' - 'saveDev2') || '{\"level\":2}'::jsonb))::text, save_t = save_t + 30000 where name = '온라인용사'")
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(1500)
+            lvB = await B.evaluate('() => window.__game.S.level')
+            srvL = db("select save::json->>'level', save::json->>'saveBuild' from samhan_chars where name = '온라인용사'")
+            SB = int(re.search(r'const SAVE_BUILD = (\d+)', (ROOT / 'src' / 'game.html').read_text(encoding='utf-8')).group(1))   # 게임의 저장 판 번호(패치마다 오른다)
+            check(lvB == 33 and srvL == [('33', str(SB))], f'옛 화면이 덮어쓴 기록은 불러오지 않고 내 기록을 다시 올린다 {lvB} {srvL}')
             # 운영 보상(2026-11-12): 정해 둔 이름의 캐릭터가 서버에 로그인해 들어오면 한 번만 받는다
-            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems; S.name = '가을비'; delete S.gifts['g1112-pet']; G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; delete S.gifts['g1112-pet']; return [g1 - g0, g2 - g1]; }""")
-            check(g == [150000, 0], f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다 {g}')
+            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems, f0 = S.gifts; S.name = '가을비'; S.gifts = {};
+              G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; S.gifts = f0;
+              return [g1 - g0, g2 - g1, G.GIFTS.filter(x => x.name === '가을비').reduce((a, x) => a + x.gems, 0)]; }""")
+            await B.wait_for_timeout(1800)
+            await B.evaluate("() => { const G = window.__game; if (!document.querySelector('#modal').hidden) G.hideModal(); }")   # 운영 보상 창(1.5초 뒤에 뜸)을 닫아 둔다
+            check(g[0] == g[2] and g[0] >= 150000 and g[1] == 0, f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다(그 이름에 걸린 보상 모두) {g}')
             # 저장 보호(2026-11-12): 옛 화면(저장 판 번호가 낮음)이 새 기록을 덮어쓰지 못한다 · 하루 한 번 기록을 따로 남긴다
             await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
             await B.wait_for_timeout(600)
             sb = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = '온라인용사'")
-            SB = int(re.search(r'const SAVE_BUILD = (\d+)', (ROOT / 'src' / 'game.html').read_text(encoding='utf-8')).group(1))   # 게임의 저장 판 번호(패치마다 오른다)
             tok = db("select token::text from samhan_sessions where acc = 'online1' order by expires_at desc limit 1")[0][0]
             err = ''
             try:

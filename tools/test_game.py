@@ -1991,6 +1991,124 @@ async def main():
               f"45장을 마치기 전(곤륜)에는 동해로 건널 수 없고 5차 전직·새 기술·해태 수련이 보이지 않는다 {s4}")
         await ctxS.close()
 
+        # 9-13) 물의 신화 5-1단계: 직업 바꾸기 제한 — 한 주 2번·기술 Lv.1과 재련 처음으로·쓴 재화 80% 환급·경고 창(숫자)·주간 초기화·싸움 중 금지·예전 저장·까치 알림
+        ctxJ = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        jp = await ctxJ.new_page()
+        watch(jp, errors, '5-1단계 ')
+        await fresh(jp)
+        await signup(jp, 'clschg51', 'abcd', '갈림용사')
+        j1 = await jp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          out.new = [!!S.clsNote, G.clsChgLeft(), S.cls, S.chosen];   // 새 캐릭터: 까치 알림 없음 · 2번 남음(처음 고른 것은 세지 않음)
+          S.bossAuto = false; S.autoBoss = false;   // 단계 보스 싸움이 끼어들지 않게
+          S.level = 100; G.unlockSkills(); S.skills.spin = 6; S.skills.bolt = 4;
+          const cost = (k, lv) => { const sk = G.SKILLS.find(x => x.key === k); let c = 0; for (let l = 1; l < lv; l++) c += G.skillCost(sk, l); return c; };
+          const skGold = cost('spin', 6) + cost('bolt', 4);
+          // 재련: 무기 +12는 세기 전의 저장처럼(쓴 재화 기록 없음 → 그 단계까지 평균으로 드는 값), 방어구 +5는 실제로 쓴 것을 적어 둠
+          S.refine.weapon = {lv:12, drops:1, t:0, base:0}; S.refine.armor = {lv:5, drops:0, t:0, base:0, sp:{g:99999, gm:40, du:77}};
+          let og = 0, od = 0; for (let l = 0; l < 12; l++){ const c = G.refineCost('weapon', l); og += c.g; od += c.du; }   // 한 번씩 성공했을 때의 값
+          const av = G.refAvgCost('weapon', 0, 12, false), wg = av.g, wd = av.du; out.avg = [wd > od && wd < od * 4, wg > og && wg < og * 4, G.refAvgCost('weapon', 0, 3, false).du];   // +3까지는 반드시 성공 = 3
+          { const a25 = G.refAvgCost('weapon', 0, 25, false), l25 = G.refAvgCost('weapon', 15, 25, true); out.avg25 = [a25.du > 1500 && a25.du < 3000, l25.du > a25.du]; }   // +25까지 평균 약 400번(쇳가루 약 2,100), 계승 뒤는 확률 0.7배라 더 듦
+          const P = G.clsChgPlan(), tot = skGold + wg + 99999;
+          out.spent = [Math.round(P.spent.gold) === Math.round(tot), P.spent.gems, P.spent.dust === wd + 77];
+          out.back = [P.back.gold === Math.floor(tot * 0.8), P.back.gems, P.back.dust === Math.floor((wd + 77) * 0.8)];
+          out.rows = [P.sk.map(x => x.key + x.lv).join(','), P.rf.map(x => x.slot + x.lv + '>' + x.to).join(',')];
+          S.gold = 1000; S.gems = 100; S.dust = 10; const q0 = [G.questCur({k:'refineW'}), G.questCur({k:'refineA'})];
+          out.same = G.clsChgDo('musa');   // 같은 직업으로는 안 바뀌고 횟수도 그대로
+          out.did = !!G.clsChgDo('jagaek'); out.cls = S.cls;
+          out.got = [S.gold - 1000 === P.back.gold, S.gems - 100, S.dust - 10 === P.back.dust];
+          out.sk = [S.skills.spin, S.skills.bolt, Object.values(S.skills).filter(v => v > 1).length]; out.rf = [S.refine.weapon.lv, S.refine.armor.lv, S.refine.weapon.drops, JSON.stringify(S.refine.armor.sp)];
+          out.left1 = G.clsChgLeft(); out.q = [q0, [G.questCur({k:'refineW'}), G.questCur({k:'refineA'})], G.SUB_STATE.refW()];
+          // 재련 +25를 이룬 뒤 직업을 바꿔도 첫 환생 조건(무기 +25)은 이룬 것으로
+          S.refine.weapon.lv = 25; const rb0 = G.rebirthCheck()[1].ok;
+          // 다시 재련하면 그때부터 쓴 재화를 센다
+          S.refine.armor = {lv:0, drops:0, t:0, base:0, sp:{g:0, gm:0, du:0}}; S.gold = 1e9; S.dust = 1000; const c0 = G.refineCost('armor', 0); G.refineTry('armor'); out.track = [S.refine.armor.sp.g === c0.g, S.refine.armor.sp.du === c0.du, S.refine.armor.lv];
+          // 싸움 중에는 못 바꾼다
+          out.dm = G.startDummy();   // 허수아비 수련(싸움)
+          out.busy = [G.clsChgBusy(), G.clsChgDo('sulsa'), S.cls]; if (G.raid){ G.raid.time = 0; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05); } G.hideModal();
+          out.did2 = !!G.clsChgDo('sulsa'); out.left2 = G.clsChgLeft(); out.rb = [rb0, S.refine.weapon.lv, G.rebirthCheck()[1].ok];
+          out.third = G.clsChgDo('doin'); out.cls3 = S.cls;   // 세 번째는 안 됨
+          G.addTime(8 * 86400000); out.week = [G.clsChgLeft(), !!G.clsChgDo('doin'), S.cls, G.clsChgLeft()];   // 한 주가 지나면 다시 2번
+          G.quiet = false; return out; }""")
+        check(j1['new'] == [False, 2, 'musa', True], f"새 캐릭터는 직업 바꾸기가 2번 남아 있고(처음 고른 것은 세지 않음) 바뀐 규칙 알림이 없다 {j1['new']}")
+        check(j1['spent'] == [True, 40, True] and j1['back'] == [True, 32, True] and j1['rows'] == ['spin6,bolt4', 'weapon12>0,armor5>0'] and j1['avg'] == [True, True, 3] and j1['avg25'] == [True, True],
+              f"직업 바꾸기 계산: 기술에 쓴 엽전 + 재련에 쓴 엽전·보석·쇳가루(세기 전의 단계는 그 단계까지 평균으로 드는 값)의 80%를 돌려준다 {j1['spent']} {j1['back']} {j1['rows']} {j1['avg']} {j1['avg25']}")
+        check(j1['same'] is None and j1['did'] and j1['cls'] == 'jagaek' and j1['got'] == [True, 32, True] and j1['sk'] == [1, 1, 0] and j1['rf'][:3] == [0, 0, 0] and j1['rf'][3] == '{"g":0,"gm":0,"du":0}' and j1['left1'] == 1,
+              f"직업을 바꾸면 기술은 모두 Lv.1, 재련은 모든 칸 +0, 80%를 돌려받고 남은 횟수가 1번이 된다 {j1['cls']} {j1['got']} {j1['sk']} {j1['rf']} {j1['left1']}")
+        check(j1['q'][0] == [12, 5] and j1['q'][1] == [12, 5] and j1['q'][2] == 12 and j1['rb'] == [True, 0, True] and j1['track'] == [True, True, 1],
+              f"재련 단계가 조건인 이야기·부탁·환생 조건은 직업을 바꿔도 이룬 것으로 치고, 다시 재련하면 쓴 재화를 센다 {j1['q']} {j1['rb']} {j1['track']}")
+        check(j1['dm'] and j1['busy'] == [True, None, 'jagaek'] and j1['did2'] and j1['left2'] == 0 and j1['third'] is None and j1['cls3'] == 'sulsa' and j1['week'] == [2, True, 'doin', 1],
+              f"싸움 중에는 못 바꾸고, 한 주 2번을 다 쓰면 못 바꾸며, 월요일이 지나면 다시 2번이 된다 {j1['busy']} {j1['left2']} {j1['third']} {j1['week']}")
+        # 예전 저장(3부 끝 무사, 재련 2차 계승): 불러오면 까치가 바뀐 규칙을 알리고, 바꾸면 계승한 칸은 +15로(굳힌 효과·차수는 그대로)
+        j2 = await jp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.closePage();
+          const old = JSON.parse(JSON.stringify(save)); delete old.clsChg; delete old.clsNote; delete old.refBest; for (const k in old.refine) delete old.refine[k].sp;
+          Object.assign(S, G.mergeState(old)); S.name = '갈림용사'; S.bossAuto = false; S.autoBoss = false; G.migrateStory(); G.applyWorld(); G.refreshStats(); G.setStage(S.stage);
+          out.merged = [S.clsNote, S.clsChg.n, G.clsChgLeft(), JSON.stringify(S.refBest)];
+          const w = S.refine.weapon, a = S.refine.armor; out.ref0 = [w.t, w.lv, Math.round(w.base), a.t, a.lv]; const eff0 = G.refEffLv('weapon');
+          const av = G.refAvgCost('weapon', 15, w.lv, true), sp = G.refSp('weapon'); out.est = [sp.g === av.g && sp.g > 0, sp.du === av.du && sp.du > 1000, sp.gm, !!sp.est];
+          const P = G.clsChgPlan(); out.plan = [P.sk.length, P.rf.map(x => x.slot + ':' + x.t + ':' + x.lv + '>' + x.to).join(','), P.back.gold > 0, P.back.gold < P.spent.gold];
+          window.__j2 = {gold:S.gold, back:P.back.gold, eff0};
+          out.notiK = G.notiList().map(N => N.k);
+          G.quiet = false; G.noClsNote = false; G.updateNoti();
+          const el = document.querySelector('#inh'); out.noti = el && !el.hidden ? el.textContent.slice(0, 400) : '';
+          return out; }""", late)
+        await jp.wait_for_timeout(500)
+        await jp.screenshot(path=str(OUT / '30_직업바꾸기_까치알림.png'))
+        check(j2['merged'][0] is True and j2['merged'][1] == 0 and j2['merged'][2] == 2 and j2['ref0'][0] >= 1 and j2['est'] == [True, True, 0, True],
+              f"예전 저장: 바꾼 횟수 0번으로 시작하고, 재련에 쓴 재화는 계승 뒤 단계까지 평균으로 드는 값으로 친다 {j2['merged']} {j2['ref0']} {j2['est']}")
+        check('cls' in j2['notiK'] and '직업 바꾸기' in j2['noti'] and '한 주에 2번' in j2['noti'], f"예전 저장으로 들어오면 길잡이 까치가 바뀐 규칙을 알린다 {j2['notiK']} {j2['noti'][:60]}")
+        # 화면: [정보] → [직업 바꾸기 (이번 주 2/2)] → 직업 고르기 → [다음] → 경고 창(숫자) → [바꾸기]
+        await jp.evaluate("() => { const G = window.__game; const b = document.querySelector('#notiLater'); if (b) b.click(); G.noClsNote = true; G.hideModal(); }")
+        await tab(jp, 'rec')
+        await jp.wait_for_timeout(400)
+        b0 = await jp.inner_text('#clsBtn')
+        await jp.evaluate("() => document.querySelector('#clsBtn').scrollIntoView({block:'center'})")
+        await jp.click('#clsBtn')
+        await jp.wait_for_timeout(300)
+        m1 = await jp.evaluate("() => ({title: document.querySelector('#mTitle').textContent, left: (document.querySelector('#clsLeft') || {}).textContent || '', cards: document.querySelectorAll('#mBody .ccard').length, txt: document.querySelector('#mBody').textContent})")
+        await jp.screenshot(path=str(OUT / '30b_직업바꾸기_고르기.png'))
+        await jp.click('#modal-btn-1')   # 고르지 않고 [다음]: 창이 그대로이고 안내가 붉게
+        await jp.wait_for_timeout(200)
+        m1b = await jp.evaluate("() => ({open: !document.querySelector('#modal').hidden, title: document.querySelector('#mTitle').textContent, hint: document.querySelector('#clsHint').classList.contains('on')})")
+        await jp.click('#cc-sulsa')
+        await jp.click('#modal-btn-1')
+        await jp.wait_for_timeout(300)
+        m2 = await jp.evaluate(r"""() => { const G = window.__game, P = G.clsChgPlan(), b = document.querySelector('#mBody');
+          return {title: document.querySelector('#mTitle').textContent, left: document.querySelector('#ccLeft').textContent, sk: document.querySelectorAll('#ccSk .cc-it').length, nsk: P.sk.length,
+            rf: document.querySelector('#ccRf').textContent, tb: document.querySelector('#ccTb').textContent, spent: G.fmt(P.spent.gold), back: G.fmt(P.back.gold), lost: G.fmt(P.spent.gold - P.back.gold), dust: G.fmt(P.back.dust),
+            txt: b.textContent, est: b.textContent.includes('평균으로 드는 값'), btns: [...document.querySelectorAll('#mBtns button')].map(x => x.textContent), cls: G.S.cls, fits: document.querySelector('.sheet').scrollWidth <= document.querySelector('.sheet').clientWidth + 1}; }""")
+        await jp.screenshot(path=str(OUT / '30c_직업바꾸기_경고창.png'))
+        await jp.evaluate("() => { const sh = document.querySelector('.sheet'); sh.scrollTop = sh.scrollHeight; }")
+        await jp.wait_for_timeout(150)
+        await jp.screenshot(path=str(OUT / '30d_직업바꾸기_경고창_아래.png'))
+        check('2/2' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 4 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
+              f"[정보]의 단추에 이번 주 남은 횟수가 보이고, 직업 고르기 창이 규칙을 알려 주며 지금 직업 그대로는 넘어가지 않는다 {b0} {m1['left']} {m1b}")
+        check('꼭 읽어' in m2['title'] and '2번 → 1번' in m2['left'] and m2['sk'] == m2['nsk'] and m2['nsk'] >= 5 and '계승 +' in m2['rf'] and '계승 +15' in m2['rf'] and m2['spent'] in m2['tb'] and m2['back'] in m2['tb'] and m2['lost'] in m2['tb'] and m2['dust'] in m2['tb']
+              and m2['est'] and '되돌릴 수 없어요' in m2['txt'] and m2['btns'] == ['취소', '바꾸기'] and m2['cls'] == 'musa' and m2['fits'],
+              f"경고 창: 남은 횟수·처음으로 돌아가는 기술과 재련·돌려받는/사라지는 재화를 숫자로 보여 주고, [바꾸기]를 누르기 전에는 바뀌지 않는다 {m2['left']} {m2['nsk']} {m2['rf'][:60]} {m2['tb'][:80]}")
+        await jp.click('#modal-btn-1')
+        await jp.wait_for_timeout(500)
+        j3 = await jp.evaluate(r"""() => { const G = window.__game, S = G.S, k = window.__j2, w = S.refine.weapon, a = S.refine.armor;
+          return {title: document.querySelector('#mTitle').textContent, open: !document.querySelector('#modal').hidden, body: document.querySelector('#mBody').textContent, cls: S.cls, job: S.job, lv: S.level, gold: S.gold - k.gold >= k.back * (1 - 1e-9),
+            ref: [w.t, w.lv, a.t, a.lv, w.base > 0], sk: Object.values(S.skills).filter(v => v > 1).length, set: S.skSet.length, left: G.clsChgLeft(), note: !!S.clsNote, best: G.refBestOf('weapon') >= k.eff0, eff: G.refEffLv('weapon'),
+            sub: G.SUB_STATE.refW() >= k.eff0, btn: (document.querySelector('#clsBtn') || {}).textContent || '', atkDown: G.ST.atk < 1e999}; }""")
+        await jp.screenshot(path=str(OUT / '30e_직업바꾸기_결과.png'))
+        check(j3['open'] and j3['title'] == '직업을 바꿨어요' and '술사' in j3['body'] and j3['cls'] == 'sulsa' and j3['job'] == late['job'] and j3['lv'] == late['level'] and j3['gold']
+              and j3['ref'][1] == 15 and j3['ref'][3] == 15 and j3['ref'][0] == j2['ref0'][0] and j3['ref'][4] and j3['sk'] == 0 and j3['set'] >= 6 and j3['left'] == 1 and not j3['note'] and j3['best'] and j3['sub'] and '1/2' in j3['btn'],
+              f"[바꾸기]: 직업이 바뀌고(레벨·전직은 그대로) 계승한 재련은 +15로(굳힌 효과는 그대로), 기술은 Lv.1, 80%를 돌려받고 단추가 1/2가 된다 {j3['cls']} {j3['ref']} {j3['sk']} {j3['left']} {j3['btn']}")
+        # 두 번을 다 쓰면 단추를 눌러도 안내만
+        j4 = await jp.evaluate(r"""() => { const G = window.__game; G.hideModal(); G.quiet = true; const ok = !!G.clsChgDo('musa'); G.quiet = false; G.chooseClass(true);
+          return {ok, left: G.clsChgLeft(), title: document.querySelector('#mTitle').textContent, txt: document.querySelector('#mBody').textContent, cards: document.querySelectorAll('#mBody .ccard').length}; }""")
+        check(j4['ok'] and j4['left'] == 0 and j4['cards'] == 0 and '이미 2번' in j4['txt'] and '월요일 0시' in j4['txt'], f"이번 주 두 번을 다 쓰면 [직업 바꾸기]는 다음 주를 안내한다 {j4['left']} {j4['txt'][:50]}")
+        await jp.evaluate("() => window.__game.hideModal()")
+        # 세로 화면에서도 경고 창이 화면 안에 들어온다
+        await jp.set_viewport_size({'width': 390, 'height': 780})
+        await jp.wait_for_timeout(400)
+        j5 = await jp.evaluate(r"""() => { const G = window.__game; G.addTime(8 * 86400000); G.clsChgAsk('jagaek'); const sh = document.querySelector('.sheet'), r = sh.getBoundingClientRect();
+          return {title: document.querySelector('#mTitle').textContent, in: r.left >= -1 && r.right <= innerWidth + 1, nox: sh.scrollWidth <= sh.clientWidth + 1, left: document.querySelector('#ccLeft').textContent}; }""")
+        await jp.screenshot(path=str(OUT / '30f_직업바꾸기_경고창_세로.png'))
+        check('꼭 읽어' in j5['title'] and j5['in'] and j5['nox'] and '2번 → 1번' in j5['left'], f"세로 화면에서도 경고 창이 옆으로 넘치지 않는다(한 주 뒤 다시 2번) {j5}")
+        await ctxJ.close()
+
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
@@ -2045,6 +2163,7 @@ async def main():
           localStorage.setItem('samhan-accounts-v1', '{"v":1,"accounts":{},"mark":"main"}');
           return {beta: window.__game.beta, on: window.__game.onlineWanted, pwa: window.__game.pwa}; }''')
         await bp.reload(); await bp.wait_for_selector('#lg-id')   # 본 게임의 오프라인 도우미가 이 창을 맡은 상태로
+        mk0 = await bp.evaluate("() => Object.fromEntries(Object.keys(localStorage).filter(k => !k.startsWith('beta-')).sort().map(k => [k, localStorage.getItem(k)]))")   # 본 게임이 이 주소에 둔 것(계정 표시 + 이 기기 표 samhan-dev)
         watch(bp, errors, '베타 ')
         await bp.goto(base + 'beta/?simtest')
         await bp.wait_for_selector('#lg-id')
@@ -2062,10 +2181,10 @@ async def main():
           let cached = null;
           try { const ck = (await caches.keys()).find(k => k.startsWith('samhan-')), c = await caches.open(ck || 'samhan-none'), r = await c.match(new URL('../index.html', location.href).href); cached = r ? /\/\*BETA_BUILD\*\/(true|false)/.exec(await r.text())[1] : 'none'; } catch (e) { cached = 'err'; }
           const regs = (await navigator.serviceWorker.getRegistrations()).map(r => new URL(r.scope).pathname);
-          return {beta: keys.filter(k => k.startsWith('beta-')).sort(), other: keys.filter(k => !k.startsWith('beta-')).sort(), ses, mainMark: main.mark, mainAcc: Object.keys(main.accounts || {}), cached, regs, name: window.__game.S.name}; }''')
+          return {beta: keys.filter(k => k.startsWith('beta-')).sort(), other: keys.filter(k => !k.startsWith('beta-')).sort(), otherV: Object.fromEntries(keys.filter(k => !k.startsWith('beta-')).sort().map(k => [k, localStorage.getItem(k)])), ses, mainMark: main.mark, mainAcc: Object.keys(main.accounts || {}), cached, regs, name: window.__game.S.name}; }''')
         check(b1['name'] == '베타용사' and any(k == 'beta-samhan-accounts-v1' for k in b1['beta']) and any(k.startswith('beta-samhan-hero-v1:betatest:') for k in b1['beta'])
-              and b1['other'] == ['samhan-accounts-v1'] and b1['mainMark'] == 'main' and b1['mainAcc'] == [] and all(k.startswith('beta-') for k in b1['ses']),
-              f'베타의 계정·캐릭터·설정은 모두 beta- 자리에 저장되고 본 게임 저장은 건드리지 않는다 {b1}')
+              and 'samhan-accounts-v1' in b1['other'] and b1.pop('otherV') == mk0 and 'beta-samhan-dev' in b1['beta'] and b1['mainMark'] == 'main' and b1['mainAcc'] == [] and all(k.startswith('beta-') for k in b1['ses']),
+              f'베타의 계정·캐릭터·설정은 모두 beta- 자리에 저장되고 본 게임 저장은 건드리지 않는다(본 게임이 둔 것은 글자 하나 안 바뀜) {b1}')
         check(b0['ctl'] and b1['cached'] == 'false' and b1['regs'] == ['/'], f'베타를 열어도 본 게임의 오프라인 보관본은 본 게임 그대로이고, 베타는 오프라인 도우미를 따로 등록하지 않는다 {b0["ctl"]} {b1["cached"]} {b1["regs"]}')
         await bp.screenshot(path=str(OUT / '25b_베타_플레이.png'))
         await bp.click('#charBtn'); await bp.click('#modal-btn-1')
