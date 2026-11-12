@@ -358,9 +358,15 @@ async def main():
             lvB = await B.evaluate('() => window.__game.S.level')
             srvL = db("select save::json->>'level', save::json->>'saveBuild' from samhan_chars where name = '온라인용사'")
             check(lvB == 33 and srvL == [('33', '1')], f'옛 화면이 덮어쓴 기록은 불러오지 않고 내 기록을 다시 올린다 {lvB} {srvL}')
+            # 사라진 탑 이정표 보상 되찾기(2026-11-12)
+            await B.evaluate("async () => { const G = window.__game, S = G.S; S.tower.best = 160; delete S.av.own.w_phoenix; delete S.av.own.w_cloud; delete S.mount.own.unryong; G.saveLocal(); await G.pushOnline(); await G.enterChar(G.session.cid); }")
+            await B.wait_for_timeout(800)
+            await B.evaluate("() => { const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } }")
+            tw = await B.evaluate("() => { const S = window.__game.S; const r = [!!S.av.own.w_phoenix, !!S.av.own.w_cloud, !!S.mount.own.unryong, !!S.av.own.w_galaxy]; S.tower.best = 0; return r; }")
+            check(tw == [True, True, True, False], f'올라간 층까지의 탑 날개·탈것이 빠져 있으면 들어올 때 되찾는다 {tw}')
             # 운영 보상(2026-11-12): 정해 둔 이름의 캐릭터가 서버에 로그인해 들어오면 한 번만 받는다
-            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems; S.name = '가을비'; delete S.gifts['g1112-pet']; G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; delete S.gifts['g1112-pet']; return [g1 - g0, g2 - g1]; }""")
-            check(g == [150000, 0], f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다 {g}')
+            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems; S.name = '가을비'; S.gifts = {}; G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; S.gifts = {}; return [g1 - g0, g2 - g1]; }""")
+            check(g == [240000, 0], f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다 {g}')
             # 저장 보호(2026-11-12): 옛 화면(저장 판 번호가 낮음)이 새 기록을 덮어쓰지 못한다 · 하루 한 번 기록을 따로 남긴다
             await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
             await B.wait_for_timeout(600)

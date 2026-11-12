@@ -2846,11 +2846,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 1;   // 저장 판 번호. 아래 staleStop 설명 참고
-const NOTE_VER = '2026-11-12-5', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-12-6', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '2026-11-12 · 저장 보호'],
   ['방금 얻은 것이 사라지던 버그', '(한 번 더 고침: 뽑는 도중 화면이 새로 열린 뒤 사라지던 것) 펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
+  ['사라진 탑 날개·탈것 되찾기', '천공의 탑을 올라간 기록은 있는데 이정표 보상(50·150·250층 날개, 100·200층 탈것)이 사라진 용사는 접속할 때 자동으로 되찾아요.'],
   ['얻은 것이 사라지던 버그 막기', '며칠째 켜 둔 예전 화면(다른 기기·다른 창·홈 화면 앱)이 같은 캐릭터를 서버에 덮어써서, 새로 얻은 펫 같은 것이 사라지는 일이 있었어요. 이제 예전 화면은 저장을 멈추고 「새로 고침」을 안내해요. 서버에는 캐릭터마다 하루 한 번씩 기록을 따로 남겨요. 한 캐릭터는 한 번에 한 기기에서만 해 주세요.'],
   ['#', '2026-11-12 · 편의 고침'],
   ['허수아비 수련, 5등급이면 바로 끝', '허수아비 수련에서 5등급 피해를 채우면 남은 시간을 기다리지 않고 바로 끝나요. 보상은 그대로 5등급이에요.'],
@@ -7207,6 +7208,11 @@ function rideMount(k){
 }
 // 이야기에서 받았어야 할 탈것(탈것이 생기기 전에 그 이야기를 지난 저장)
 function mountCatchUp(){
+  // 천공의 탑 이정표 보상(날개·탈것)이 빠져 있으면 다시 준다(2026-11-12: 올라간 층 기록은 있는데 날개가 사라진 저장)
+  if (S.tower) for (const [f, M] of Object.entries(TOWER_MILE)) if (S.tower.best >= +f){
+    if (M.av && AV[M.av] && !S.av.own[M.av] && giveAvatar(M.av, true)) addLog(`천공의 탑 ${f}층 보상을 되찾았어요: 날개 「${AV[M.av].name}」`, 'gain');
+    if (M.mount && MT[M.mount] && !S.mount.own[M.mount] && giveMount(M.mount, true)) addLog(`천공의 탑 ${f}층 보상을 되찾았어요: 탈것 「${MT[M.mount].name}」`, 'gain');
+  }
   for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); if (q.acc && ACC[q.acc[0]].w && S.acc[q.acc[0]].g < 0) giveAcc(q.acc[0], q.acc[1]); if (q.form && !S.form.own[q.form] && giveForm(q.form, true)) addLog(`지난 이야기 보상: ${FM[q.form].name} 변신`, 'gain'); }
 }
 
@@ -13791,7 +13797,7 @@ async function enterChar(cid, opts = {}){
         if (c && typeof c.save === 'string' && (st > t + 2000 || (ch.syncT && st > ch.syncT + 1000))){
           const d = JSON.parse(c.save);
           // (2026-11-12) 이 기기에 더 새 기록이 있는데 서버 것을 고르던 두 경우를 막는다: ① 서버 기록이 이 기기가 올린 것(화면이 꺼졌다 다시 열려 syncT가 옛 시각) ② 서버 기록이 옛 화면이 덮어쓴 것(판 번호가 낮음)
-          const mineOlder = data && d && ((st <= t + 2000 && d.saveDev2 && d.saveDev2 === DEV2_ID) || (+d.saveBuild || 0) < (+data.saveBuild || 0));
+          const mineOlder = data && d && ((st <= t + 2000 && d.saveDev2 && d.saveDev2 === DEV2_ID) || ((+d.saveBuild || 0) < (+data.saveBuild || 0) && st - t < STALE_WIN));   // 판 번호 낮은 기록은 이 기기 기록이 10분 안쪽으로 가까울 때만 무시(다른 기기에서 오래 이어 한 것은 받는다)
           if (d && d.v === 1 && !mineOlder){ data = d; t = st; }
         }
         if (c) ch.syncT = st;
@@ -13958,7 +13964,7 @@ function pushOnline(){
    서버에는 저장됐는데 답을 못 받으면(앱을 잠깐 내렸다 올림·느린 연결로 9초 넘김) ch.syncT가 옛 시각으로 남는다. 그러면 다음 올리기 때
    서버의 내 1~2분 전 기록을 '다른 기기가 저장한 새 기록'으로 보고 불러와, 그사이 얻은 것이 통째로 사라졌다.
    이제 저장마다 이 화면의 표(DEV_ID)를 넣고, 서버 기록이 이 화면이 올린 것이면 불러오지 않고 시각만 맞춘다 */
-const DEV_ID = randHex(8);
+const DEV_ID = randHex(8), STALE_WIN = 600000;
 // 이 기기(브라우저)의 표: 화면을 새로 열어도 같다. 서버 기록이 이 기기가 올린 것인지 들어올 때 가린다
 const DEV2_ID = (() => { try { let v = localStorage.getItem('samhan-dev'); if (!v){ v = randHex(10); localStorage.setItem('samhan-dev', v); } return v; } catch (e){ return randHex(10); } })();
 let remoteBusy = false;
@@ -13976,7 +13982,7 @@ async function takeRemote(){
     const d = JSON.parse(c.save);
     if (!d || d.v !== 1) return false;
     if (d.saveDev && d.saveDev === DEV_ID){ ch.syncT = +c.t || st; saveReg(); return false; }   // 이 화면이 올린 기록: 다른 기기가 아니다
-    if ((+d.saveBuild || 0) < (+S.saveBuild || 0)){ ch.syncT = +c.t || st; saveReg(); return false; }   // 옛 화면이 덮어쓴 기록(판 번호가 낮음): 불러오지 않고 내 기록을 다시 올린다
+    if ((+d.saveBuild || 0) < (+S.saveBuild || 0) && st - (+S.lastSave || 0) < STALE_WIN){ ch.syncT = +c.t || st; saveReg(); return false; }   // 옛 화면이 덮어쓴 기록(판 번호가 낮음): 불러오지 않고 내 기록을 다시 올린다
     const cid = session.cid;
     await enterChar(cid, {data:d, remote:+c.t || st});
     addLog('다른 기기에서 이어 한 기록을 불러왔어요.', 'good');
