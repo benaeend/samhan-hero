@@ -162,7 +162,7 @@ SIM = r"""
         raidPend = null;
         let r = G.firstReadyRaid();
         if (r >= 0 && t < raidHold[1]) r = Math.min(r, raidHold[0] - 1);
-        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g', 'b', 'k', 'd'][G.S.world] + j]) { r = j; break; }
+        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g', 'b', 'k', 'd', 'n', 'x'][G.S.world] + j]) { r = j; break; }
         if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
       }
     }
@@ -173,7 +173,7 @@ SIM = r"""
     if (opts.snaps && G.S.world === 3 && !('cross' in snaps)) snaps.cross = JSON.stringify(G.S);
     if (opts.snapQ && !('q' in snaps) && G.S.quest.main >= opts.snapQ && !G.raid) snaps.q = JSON.stringify(G.S);   // 이야기 n번째에 닿은 저장(다음 부 시뮬 출발점)
     if (opts.snaps) { const mm = Math.round(t / 60); if (opts.snaps.includes(mm) && !(mm in snaps) && !G.raid) snaps[mm] = JSON.stringify(G.S); }
-    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${['이승', '저승', '천계', '부상', '곤륜', '동해'][G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
+    if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${G.WORLD_NAME[G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`
       + (G.seaOpen() ? `, 새 칸 ${G.NEW_SLOTS.map(k => `${G.S.equip[k]}(+${G.S.refine[k].lv})`).join('/')}, 호박석 빛 ${Object.values(G.ambSum().L).reduce((a, b) => a + b, 0)}, 바다 몫 공×${G.seaSum().atk.toFixed(2)}·체×${G.seaSum().hp.toFixed(2)}·받는 피해×${G.seaSum().def.toFixed(2)}` : ''));
@@ -706,8 +706,8 @@ async def main():
         await page.screenshot(path=str(OUT / '6c_여정지도.png'))
         await page.click('.jm-node[data-n="16"]'); await page.wait_for_timeout(250)
         jinfo = await page.evaluate("() => document.querySelector('#jmInfo').textContent")
-        check(jm['title'] == '여정 지도' and jm['nodes'] == 37 and jm['now'] and jm['hero'] and jm['painted'] == jm['cvs'] and jm['tags'] >= 30
-              and '천계' in jinfo and '구름 계단' in jinfo, f'여정 지도: 땅 29곳·지금 위치·이야기 장 표시, 땅을 누르면 정보 {jm} / {jinfo[:40]}')
+        check(jm['title'] == '여정 지도' and jm['nodes'] == 43 and jm['now'] and jm['hero'] and jm['painted'] == jm['cvs'] and jm['tags'] >= 30
+              and '천계' in jinfo and '구름 계단' in jinfo, f'여정 지도: 땅 43곳·지금 위치·이야기 장 표시, 땅을 누르면 정보 {jm} / {jinfo[:40]}')
         await page.click('#pageClose'); await page.wait_for_timeout(150)
         check(await page.evaluate("() => document.querySelector('#page').hidden"), '여정 지도를 ✕로 닫는다')
 
@@ -1072,7 +1072,7 @@ async def main():
               f'오장 영약: 부상에선 폐가 잠김·처방 세 장·한 번에 한 장만·기운 모으기 뒤 +2·횟수를 다 쓰면 굳음·공격력↑·다시 달이기·처방 저장·나쁜 값 다듬기 {E}')
         check(nk['rreset'] and nk['mythLock'] and nk['mythNoEquip'] and nk['mc']['fail'] and nk['mc']['ok'] and nk['mc']['up'] and nk['mc']['cap'] and nk['mc']['lockedOk'],
               f'레이드 리셋권(하루 1번)·2부 신화 보물은 부상 전엔 가방에서 못 낌·신화 제작 장비(제작 실패·성공 1.3배·강화 1.4배·+5 1.8배 상한·땅 제한) {nk.get("rreset")} {nk.get("mythLock")} {nk.get("mythNoEquip")} {nk.get("mc")}')
-        check(nk['uinfo'] and '"tt":""' in nk['sumBad'] and '"tw":0' in nk['sumBad'] and '"world":5' in nk['sumBad'], f'다른 용사 정보 창: 이야기·탑·결투 점수가 보이고 남이 보낸 값은 다듬는다 {nk.get("uinfo")} {nk.get("sumBad")}')
+        check(nk['uinfo'] and '"tt":""' in nk['sumBad'] and '"tw":0' in nk['sumBad'] and '"world":7' in nk['sumBad'], f'다른 용사 정보 창: 이야기·탑·결투 점수가 보이고 남이 보낸 값은 다듬는다 {nk.get("uinfo")} {nk.get("sumBad")}')
         check(nk['main'] and nk['mainOff'] and nk['brExp'], f'본캐는 배럭 효과를 받지 않음, 배럭 경험치는 엽전보다 적게 {nk}')
 
         # 6-5) 2부 부상: 바다 건너기(레벨 이어 감), 부상 레이드, 3차 전직, 장 제목 카드
@@ -1648,7 +1648,7 @@ async def main():
           S.bossPity = {k: S.world + ':' + S.stage, n: 0}; const t = n => { S.bossPity.n = n; return G.bossRetryT(); }; out.retry = [t(0), t(8), t(9), t(10), t(12), t(99)]; S.bossPity.n = 0;
           G.quiet = false; G.closePage(); return out; }""")
         check(s1['job'] == 4 and s1['jobFix'] == 4 and s1['job3'] == 3, f'4차 전직 저장을 다시 불러와도 4차 그대로이고(예전엔 3차로 내려감), 4차 기술을 익힌 기록이 있으면 되돌린다 {s1["job"]} {s1["jobFix"]} {s1["job3"]}')
-        check(s1['sv'] == [6, 120] and s1['svFix'], f'부상에서 재련이 계승(+15)된 저장을 다시 불러와도 이야기가 옛 퀘스트(무기 +20)로 되돌아가지 않고, 되돌아갔던 저장은 건너기 퀘스트까지 되찾는다 {s1["sv"]} {s1["svFix"]}')
+        check(s1['sv'] == [8, 120] and s1['svFix'], f'부상에서 재련이 계승(+15)된 저장을 다시 불러와도 이야기가 옛 퀘스트(무기 +20)로 되돌아가지 않고, 되돌아갔던 저장은 건너기 퀘스트까지 되찾는다 {s1["sv"]} {s1["svFix"]}')
         check(s1['learned'] == 11 and s1['n'] == 8 and s1['note'] and not s1['man'] and s1['v'] == 2 and s1['rec'] and s1['full'] == 'full' and s1['sw'] and s1['stay7'] and s1['auto'] and s1['ld'] and s1['mig']
               and abs(s1['bossK'] - 1.06) < 1e-9 and s1['pre'] and s2['bar'] == 8 and s2['many'],
               f'장착 기술 8칸: 예전 저장은 추천 8개로 정리(알림)·뺀 기술은 그대로 옮김, 꽉 차면 무엇을 뺄지 고르기, [빼기]는 유지, 저장 조합, 싸움별 추천 8개, 기술 줄 8칸, 단계 보스 체력 +6%까지 {s1} {s2}')
@@ -1913,18 +1913,18 @@ async def main():
           const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.world, re.best.s5, re.best.l5, re.quest.sv, re.quest.main];
           out.regs = [1, 11, 21, 36].map(s => G.curRegion(s).name); out.raids = [0, 1, 2].map(i => G.sea1RaidInfo(i).label); out.jin4 = G.jinOpen(4); out.jin5 = G.jinOpen(5);
           return out; }""", late)
-        check(s1['q0'] == s1['p3'] and s1['sv'] == 6 and s1['first'] == '마지막 시련' and s1['ch'] == 46 and s1['n'] - s1['p3'] >= 24,
-              f"이야기 6판: 3부 뒤 '끝없는 신화'를 하던 용사는 4부 첫 퀘스트(46장 「마지막 시련」)로 이어진다 {s1['q0']}/{s1['n']} {s1['first']}")
+        check(s1['q0'] == s1['p3'] and s1['sv'] == 8 and s1['first'] == '마지막 시련' and s1['ch'] == 46 and s1['n'] - s1['p3'] >= 24,
+              f"이야기 판 옮기기: 3부 뒤 '끝없는 신화'를 하던 용사는 4부 첫 퀘스트(46장 「마지막 시련」)로 이어진다 {s1['q0']}/{s1['n']} {s1['first']}")
         check(s1['w0'] == 4 and s1['ready'] and not s1['sea0'] and s1['cross'] and s1['w'] == 5 and s1['cap'] == 516 and s1['stage'] == 1 and s1['lv'] == 500 and s1['sea'] and s1['name'] == '동해' and s1['reg'] == '대왕암 앞바다',
               f"4부: 곤륜 이야기를 마치면 동해로 건너가고, 레벨은 그대로 단계만 1부터(상한 516) {s1['w']} {s1['cap']} {s1['reg']}")
-        check(s1['pend'] and s1['refT'] == 3 and s1['kit'] and s1['re'][0] == 5 and s1['re'][1] >= 1 and s1['re'][2] == 500 and s1['re'][3] == 6,
+        check(s1['pend'] and s1['refT'] == 3 and s1['kit'] and s1['re'][0] == 5 and s1['re'][1] >= 1 and s1['re'][2] == 500 and s1['re'][3] == 8,
               f"동해에 닿으면 대장장이가 3차 계승(용궁 병사의 한 벌 포함)을 해 주고, 다시 불러와도 동해 그대로 {s1['refT']} {s1['re']}")
         check(s1['regs'] == ['대왕암 앞바다', '산호 숲', '용궁 뜰', '용궁 뜰'] and s1['raids'] == ['동해 해룡', '역신의 밤', '동해 용왕의 시험'] and s1['jin4'] and not s1['jin5'],
               f"동해 지역 셋·레이드 셋, 곤륜의 진이 열리고 동해의 진은 아직(다음 바다에 들어서야) {s1['regs']} {s1['raids']}")
         # 46장부터 52장까지 자동 진행: 단계 퀘스트는 그 앞 단계의 보스를 진짜로 잡고, 레이드·전직 시험도 진짜로 싸운다(힘은 시험 배율로 넉넉히, 레벨은 바로 올림)
         s2 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {done:[], bosses:{}, raid:{}, got:{}}; G.quiet = true; G.powK = 60; G.wipeOff = true; G.refreshStats();
           const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
-          for (let guard = 0; guard < 80 && S.quest.main < G.MAIN_Q.length; guard++){
+          for (let guard = 0; guard < 80 && S.quest.main < G.PART4A_END; guard++){
             const q = G.MAIN_Q[S.quest.main];
             if (q.k === 's5'){
               for (let s = Math.max(S.maxStage, q.n - 2); s < q.n; s++){   // 마지막 한두 단계는 진짜 보스
@@ -1940,12 +1940,12 @@ async def main():
             if (q.myth) out.got[q.myth].push(S.myth[q.myth]); out.done.push(q.ch);
           }
           G.powK = 1; G.refreshStats();
-          out.q = S.quest.main; out.n = G.MAIN_Q.length; out.next = G.mainQuest().t; out.nextK = G.mainQuest().k; out.lv = S.level; out.st = S.maxStage;
+          out.q = S.quest.main; out.n = G.PART4A_END; out.next = G.mainQuest().t; out.nextK = G.mainQuest().k; out.lv = S.level; out.st = S.maxStage;
           out.sk = [11, 12].map(i => [G.skLv(i), G.CLASSES[S.cls].skills[i]]); out.mp = G.mpMax(); out.cape = S.av.cape; out.jobName = G.JOBS[S.cls][4].name;
           out.set = S.skSet.slice(); out.title = [!!S.title.own.east, !!S.title.own.sea1]; out.chs = [...new Set(out.done)];
           return out; }""")
-        check(not s2.get('stuck') and s2['q'] >= s2['n'] and s2['chs'] == [46, 47, 48, 49, 50, 51, 52] and s2['nextK'] == 's5' and '끝없는 신화' in s2['next'],
-              f"46장부터 52장까지 이야기가 끝까지 이어진다(단계 보스·레이드·전직 시험을 실제로 싸움) {s2.get('stuck')} {s2['q']}/{s2['n']} {s2['chs']}")
+        check(not s2.get('stuck') and s2['q'] >= s2['n'] and s2['chs'] == [46, 47, 48, 49, 50, 51, 52] and s2['nextK'] == 'world' and s2['next'] == '남쪽 바다로',
+              f"46장부터 52장까지 이야기가 이어지고 다음은 53장 「남쪽 바다로」(단계 보스·레이드·전직 시험을 실제로 싸움) {s2.get('stuck')} {s2['q']}/{s2['n']} {s2['chs']}")
         check(s2['bosses'].get('10') == '대왕암의 물보라' and s2['bosses'].get('20') == '둔갑한 늙은 여우' and s2['bosses'].get('30') == '용궁 문어 대신' and s2['bosses'].get('36') == '빛을 삼킨 물그림자' and '수문장' in s2['bosses'].get('39', ''),
               f"동해 지역 보스 셋과 이야기 속 보스(36단계 물그림자), 9번째 단계는 수문장 {s2['bosses']}")
         check(all(s2['raid'].get(k, {}).get('start') and s2['raid'][k]['first'] and s2['raid'][k]['said'] >= 1 for k in ('d0', 'd1', 'd2')),
@@ -2005,7 +2005,7 @@ async def main():
         await sp.evaluate("() => { const sc = document.querySelector('#jmScroll'); if (sc) sc.scrollLeft = sc.scrollWidth; }")
         await sp.wait_for_timeout(600)
         await sp.screenshot(path=str(OUT / '29i_여정지도_동해.png'))
-        check(jm['bands'] == 6 and jm['w5'] and not jm['lock4'] and any('동해' in c for c in jm['chips']), f"여정 지도에 동해(4부) 띠가 생기고 곤륜 띠는 더 잠긴 모양이 아니다 {jm}")
+        check(jm['bands'] == 8 and jm['w5'] and not jm['lock4'] and any('동해' in c for c in jm['chips']), f"여정 지도에 동해(4부) 띠가 생기고 곤륜 띠는 더 잠긴 모양이 아니다 {jm}")
         # 4부 전(곤륜)의 용사에게는 5차·동해 것이 보이지 않는다
         s4 = await sp.evaluate(r"""(save) => { const G = window.__game, S = G.S; G.closePage(); const old = JSON.parse(JSON.stringify(save)); old.quest.main = G.PART3_END - 3; Object.assign(S, G.mergeState(old)); G.applyWorld(); G.refreshStats(); G.setStage(S.stage);
           G.buildTab('grow'); const o = {w:S.world, ready:G.crossReady(), sea:G.seaOpen(), job5:G.jobReady(5), sk:[G.skOpen(11), G.skOpen(12)], mp:G.mpMax(), haetae:G.haetaeOpen()}; document.querySelector('#gv-job').click(); o.card5 = !!document.querySelector('#jobCard5'); document.querySelector('#gv-reb').click(); o.cross5 = !!document.querySelector('#crossCard5'); o.btn = !!document.querySelector('#crossBtn5') && !document.querySelector('#crossBtn5').disabled; G.closePage(); return o; }""", late)
@@ -2140,8 +2140,13 @@ async def main():
         await signup(ap, 'awk2test', 'abcd', '깨달음용사')
         a1 = await ap.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '깨달음용사'; G.refreshStats(); G.setStage(S.stage); S.bossAuto = false; S.autoBoss = false;
-          // 지금 게임에는 56장·53장이 없다 → 닫혀 있고 아무것도 안 보인다
+          // 53장(환생의 기억)·56장(초각성기 2)에 닿기 전에는 닫혀 있고 아무것도 안 보인다 → 닿으면 열린다(물의 신화 7단계에서 그 장이 들어옴)
+          S.quest.main = G.PART4A_END - 1;   // 52장 마지막 퀘스트
           out.closed = [G.aw2Has(), G.aw2Open(), G.aw2Quest(), G.memHas(), G.memOpen(), G.notiList().some(N => N.k === 'aw2' || N.k === 'mem'), G.titleShown().some(t => t.k === 'mem3' || t.k === 'memNo')];
+          S.quest.main = G.PART4A_END; out.at53 = [G.memOpen(), G.aw2Open()];
+          S.quest.main = G.MAIN_Q.findIndex(q => q.ch >= 57) - 1; out.at56 = [G.memOpen(), G.aw2Open()];   // 56장 마지막 퀘스트: 아직
+          S.quest.main++; out.after56 = [G.memOpen(), G.aw2Open(), !!G.aw2Quest()];
+          S.quest.main = G.PART4A_END - 1;   // 아래 점검은 닫힌 채로(시험 훅으로 연다)
           out.st0 = [JSON.stringify(S.aw2), JSON.stringify(S.mem)];
           // 예전 저장(칸 없음)·이상한 값도 받아 준다
           const old = JSON.parse(JSON.stringify(save)); delete old.aw2; delete old.mem; const m1 = G.mergeState(old); out.merge = [m1.aw2.q, m1.aw2.got, m1.mem.ch, m1.mem.p.join(''), m1.mem.orbs];
@@ -2154,7 +2159,8 @@ async def main():
           out.hear = G.aw2Hear(); out.cur0 = G.aw2Cur(); const g0 = S.gems; out.claim1 = G.aw2Claim(); out.gem1 = S.gems - g0; out.q1 = G.aw2Quest().i;
           out.noti2 = G.notiList().some(N => N.k === 'aw2');
           return out; }""", sea1)
-        check(a1['closed'] == [False, False, None, False, False, False, False], f"초각성기 2·환생의 기억은 56·53장이 게임에 들어오기 전에는 닫혀 있고 알림·별호도 안 보인다 {a1['closed']}")
+        check(a1['closed'] == [True, False, None, True, False, False, False] and a1['at53'] == [True, False] and a1['at56'] == [True, False] and a1['after56'] == [True, True, True],
+              f"환생의 기억은 53장, 초각성기 2는 56장을 마쳐야 열리고 그 전에는 알림·별호도 안 보인다 {a1['closed']} {a1['at53']} {a1['at56']} {a1['after56']}")
         check(a1['merge'] == [0, False, '', '000', 0] and a1['bad'] == [5, 0, True, '', '400', 40], f"예전 저장·이상한 값을 불러와도 새 칸이 기본값·범위 안으로 채워진다 {a1['merge']} {a1['bad']}")
         check(a1['q0'] == [0, '다섯 스승의 한마디', 1, 0] and a1['noti'] and not a1['claim0'] and a1['hear'] and a1['cur0'] == 1 and a1['claim1'] and a1['gem1'] == 600 and a1['q1'] == 1 and not a1['noti2'],
               f"「두 번째 깨달음」 ①: 스승들의 말을 들어야 보상을 받고 다음 단계로 {a1['q0']} {a1['gem1']} {a1['q1']}")
@@ -2368,6 +2374,143 @@ async def main():
         await ap.screenshot(path=str(OUT / '31f-aw2-portrait.png'))
         await ap.evaluate("() => { const G = window.__game; G.raidEnd(false); }")
         await ctxA.close()
+
+        # 9-15) 물의 신화 7단계: 4부 둘째 바다 「남쪽 바다」(53~59장) · 셋째 바다 「깊은 바다」(60~67장) — 건너기·세계 6·7·지역 여섯·레이드 여섯·53~67장 자동 진행·인당수 연꽃·이야기 판 옮기기
+        sea7 = json.loads((ROOT / 'tools' / 'beta_saves' / '50_musa_sea1_end.json').read_text(encoding='utf-8'))['save']
+        ctxT = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        tp = await ctxT.new_page()
+        watch(tp, errors, '7단계 ')
+        await fresh(tp)
+        await signup(tp, 'sea7test', 'abcd', '깊은물용사')
+        t1 = await tp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          // 이야기 판 옮기기: 첫째 바다까지의 판(6)에서 '끝없는 신화'를 하던 저장 → 53장 첫 퀘스트, 둘째 바다까지의 판(7) → 60장 첫 퀘스트
+          const o6 = JSON.parse(JSON.stringify(save)); o6.quest.sv = 6; o6.quest.main = G.PART4A_END + 5; const m6 = G.mergeState(o6);
+          const o7 = JSON.parse(JSON.stringify(save)); o7.quest.sv = 7; o7.quest.main = G.PART4B_END + 3; o7.world = 6; o7.best.s6 = 45; o7.best.l6 = 533; o7.level = 533; const m7 = G.mergeState(o7);
+          out.mig = [m6.quest.main === G.PART4A_END, m6.quest.sv, G.MAIN_Q[m6.quest.main].t, m7.quest.main === G.PART4B_END, m7.quest.sv, G.MAIN_Q[m7.quest.main].t, m7.world, m7.best.s6, m7.best.l6];
+          Object.assign(S, m6); S.name = '깊은물용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage);
+          out.w0 = S.world; out.ready = G.crossReady(); out.cross = G.doCross(); if (G.inhPending()) G.inhDo(); out.w = S.world; out.cap = G.levelCap(); out.stage = S.stage; out.lv = S.level; out.name = G.WORLD_NAME[S.world];
+          G.refreshStats(); out.cum = G.cumLv(); out.atk = isFinite(G.ST.atk) && G.ST.atk > 0 && isFinite(G.power(G.ST));
+          out.regs = [1, 11, 21, 40].map(s => G.curRegion(s).name); out.raids = [0, 1, 2].map(i => G.seaRaidInfo(6, i).label); out.keys = [0, 1, 2].map(i => G.seaRaidInfo(S.world, i).key);
+          out.caps = G.LV_CAP.slice(5); out.wmax = G.WORLD_MAX; out.ready2 = G.crossReady();
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.world, re.best.s6, re.best.l6, re.quest.sv, re.quest.main === S.quest.main];
+          return out; }""", sea7)
+        check(t1['mig'][:7] == [True, 8, '남쪽 바다로', True, 8, '깊은 바다로', 6] and t1['mig'][7] >= 45 and t1['mig'][8] == 533,
+              f"이야기 판 옮기기: 첫째·둘째 바다 뒤 '끝없는 신화'를 하던 저장은 새로 이어진 53장·60장 첫 퀘스트로 {t1['mig']}")
+        check(t1['w0'] == 5 and t1['ready'] and t1['cross'] and t1['w'] == 6 and t1['cap'] == 533 and t1['stage'] == 1 and t1['lv'] == 516 and t1['name'] == '남쪽 바다' and not t1['ready2'] and t1['re'] == [6, 1, 516, 8, True],
+              f"둘째 바다: 동해 이야기를 마치면 남쪽 바다로 건너가고, 레벨은 그대로 단계만 1부터(상한 533), 다시 불러와도 그대로 {t1['w']} {t1['cap']} {t1['re']}")
+        check(t1['cum'] == 816 and t1['atk'] and t1['regs'] == ['바람 섬', '인당수', '칠산 바다', '칠산 바다'] and t1['raids'] == ['외눈박이 거인', '칠산의 풍랑', '강철이'] and t1['keys'] == ['n0', 'n1', 'n2'] and t1['caps'] == [516, 533, 550] and t1['wmax'] == 7,
+              f"남쪽 바다 지역 셋·레이드 셋, 새 세계에서도 능력치가 멀쩡하다(누적 레벨 표) {t1['regs']} {t1['raids']} {t1['cum']}")
+        RUN_SEA = r"""(w) => { const G = window.__game, S = G.S, out = {done:[], bosses:{}, raid:{}, got:{}}; G.quiet = true; G.powK = 60; G.wipeOff = true; G.refreshStats();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          const cap = G.LV_CAP[w], sk = 's' + w, lk = 'l' + w, end = w === 6 ? G.PART4B_END : G.MAIN_Q.length;
+          for (let guard = 0; guard < 90 && S.quest.main < end; guard++){
+            const q = G.MAIN_Q[S.quest.main];
+            if (q.k === 'world'){ out.ready = G.crossReady(); out.crossed = G.doCross(); if (G.inhPending()) G.inhDo(); G.refreshStats(); }
+            else if (q.k === sk){
+              for (let s = Math.max(S.maxStage, q.n - 2); s < q.n; s++){   // 마지막 한두 단계는 진짜 보스
+                S.level = Math.max(S.level, Math.min(cap, G.stageLvNeed(s + 1))); S.maxStage = Math.max(S.maxStage, s); S.best[sk] = Math.max(S.best[sk] || 0, s); G.setStage(s); G.refreshStats();
+                G.startBoss(); run(3, () => G.bossRef); if (G.bossRef) out.bosses[s] = G.bossRef.name;
+                run(40, () => S.maxStage > s); if (S.maxStage <= s){ out.stuck = `${q.t} · ${s}단계 보스`; break; }
+              }
+            } else if (q.k === lk){ S.level = Math.max(S.level, q.n); S.best[lk] = S.level; G.refreshStats(); }
+            else if (q.k === 'raidK'){ const i = +q.key.slice(1), at = G.SEAS[w].at[i];
+              out.raid[q.key] = {early:G.raidUnlocked() > i && (S.best[sk] || 0) < at};   // 그 단계에 닿기 전에는 잠겨 있어야 한다
+              if ((S.best[sk] || 0) < at){ S.level = Math.max(S.level, Math.min(cap, G.stageLvNeed(at))); S.maxStage = Math.max(S.maxStage, at); S.best[sk] = at; G.setStage(S.maxStage); G.refreshStats(); }
+              S.raid.tk = 3; out.raid[q.key].open = G.raidUnlocked() > i; out.raid[q.key].start = G.startRaid(i); run(3, () => false); out.raid[q.key].said = G.raid ? G.raid.said : -1; run(120, () => !G.raid); out.raid[q.key].first = !!S.raid.first[q.key]; }
+            if (out.stuck) break;
+            const b = S.quest.main; if (q.myth) out.got[q.myth] = [q.t]; G.claimMain(); if (S.quest.main === b){ out.stuck = q.t + ' (조건 안 됨 ' + G.questCur(q) + '/' + q.n + ')'; break; }
+            if (q.myth) out.got[q.myth].push(S.myth[q.myth]); out.done.push(q.ch);
+          }
+          G.powK = 1; G.refreshStats(); if (G.autoClear) G.autoClear();
+          out.q = S.quest.main; out.end = end; out.next = G.mainQuest().t; out.nextK = G.mainQuest().k; out.lv = S.level; out.st = S.maxStage; out.w = S.world; out.cap = G.levelCap();
+          out.chs = [...new Set(out.done)]; out.title = [!!S.title.own.sea2, !!S.title.own.sea3]; out.mem = G.memOpen(); out.aw2 = G.aw2Open(); out.regs = [1, 11, 21].map(s => G.curRegion(s).name);
+          return out; }"""
+        TITLES7 = "() => { const S = window.__game.S; return [!!S.title.own.sea2, !!S.title.own.sea3]; }"
+        t2 = await tp.evaluate(RUN_SEA, 6)
+        await tp.wait_for_timeout(700)
+        t2['title'] = await tp.evaluate(TITLES7)
+        check(not t2.get('stuck') and t2['q'] == t2['end'] and t2['chs'] == [53, 54, 55, 56, 57, 58, 59] and t2['nextK'] == 'world' and t2['next'] == '깊은 바다로' and t2['lv'] == 533,
+              f"53장부터 59장까지 이야기가 이어지고 다음은 60장 「깊은 바다로」(단계 보스·레이드를 실제로 싸움) {t2.get('stuck')} {t2['q']}/{t2['end']} {t2['chs']}")
+        check(t2['bosses'].get('10') == '검은 물에 물든 바위 장군' and t2['bosses'].get('20') == '인당수 소용돌이' and t2['bosses'].get('30') == '이어도의 헛그림자' and t2['bosses'].get('35') == '떨어진 해의 불씨' and '수문장' in t2['bosses'].get('39', ''),
+              f"남쪽 바다 지역 보스와 이야기 속 보스(30단계 헛그림자·35단계 불씨), 9번째 단계는 수문장 {t2['bosses']}")
+        check(all(t2['raid'].get(k, {}).get('start') and t2['raid'][k]['open'] and not t2['raid'][k]['early'] and t2['raid'][k]['first'] and t2['raid'][k]['said'] >= 1 for k in ('n0', 'n1', 'n2')),
+              f"남쪽 바다 레이드 셋(외눈박이 거인·칠산의 풍랑·강철이)이 그 단계(1-6·3-4·4-8)에 닿으면 열리고, 보스가 한마디 한다 {t2['raid']}")
+        check(t2['got'].get('lotus', [0, 0])[1] == 50 and t2['title'][0] and t2['mem'] and t2['aw2'],
+              f"신화 보물 「인당수 연꽃」은 55장 보상으로, 별호 「할머니들의 손주」, 환생의 기억(53장)·초각성기 2(56장)가 열려 있다 {t2['got']} {t2['title']} {t2['mem']} {t2['aw2']}")
+        # 인당수 연꽃: 불사약을 쓴 뒤에도 싸움마다 한 번 더 일어난다(세 번째는 쓰러짐)
+        t3 = await tp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; S.bossAuto = false; S.autoBoss = false; G.setStage(S.maxStage); G.startBoss(); for (let i = 0; i < 20; i++) G.update(0.05);
+          out.el = S.myth.elixir > 0; out.boss = !!G.bossRef; G.heroDie(); out.a = [G.hero.dead, !!G.hero.elixirUsed, !!G.hero.lotusUsed]; G.heroDie(); out.b = [G.hero.dead, !!G.hero.lotusUsed, Math.round(G.hero.hp / G.ST.maxHp * 100)]; G.heroDie(); out.c = G.hero.dead;
+          for (let i = 0; i < 80; i++){ G.update(0.05); G.addTime(50); } S.bossAuto = true; return out; }""")
+        check(t3['boss'] and t3['a'] == [False, t3['el'], not t3['el']] and t3['b'][0] is False and t3['b'][1] is True and t3['c'] is True,
+              f"인당수 연꽃: 싸움마다 불사약과 따로 한 번 더 되살아나고, 그다음에는 쓰러진다 {t3}")
+        for nm, stg in (('40_남쪽바다_바람섬.png', 5), ('40b_남쪽바다_인당수.png', 15), ('40c_남쪽바다_칠산.png', 25)):
+            await tp.evaluate("(s) => { const G = window.__game; G.closePage(); G.hideModal && G.hideModal(); G.setStage(s); for (let i = 0; i < 160; i++) G.update(0.05); }", stg)
+            await tp.wait_for_timeout(500)
+            await tp.screenshot(path=str(OUT / nm))
+        await tp.evaluate("() => { const G = window.__game; G.powK = 1e-4; G.refreshStats(); G.setStage(10); G.startBoss(); for (let i = 0; i < 40; i++) G.update(0.05); }")
+        await tp.wait_for_timeout(400)
+        await tp.screenshot(path=str(OUT / '40d_남쪽바다_바위장군.png'))
+        await tp.evaluate("() => { const G = window.__game; G.powK = 1; G.refreshStats(); G.setStage(30); }")
+        # 셋째 바다
+        t4 = await tp.evaluate(RUN_SEA, 7)
+        await tp.wait_for_timeout(700)
+        t4['title'] = await tp.evaluate(TITLES7)
+        check(not t4.get('stuck') and t4['crossed'] and t4['w'] == 7 and t4['cap'] == 550 and t4['regs'] == ['해녀의 물길', '고래 뱃속', '물 밑 꽃밭'],
+              f"셋째 바다: 남쪽 바다 이야기를 마치면 깊은 바다로 건너간다(상한 550, 지역 셋) {t4.get('stuck')} {t4['w']} {t4['cap']} {t4['regs']}")
+        check(t4['q'] == t4['end'] and t4['chs'] == [60, 61, 62, 63, 64, 65, 66, 67] and t4['nextK'] == 's7' and '끝없는 신화' in t4['next'] and t4['lv'] == 550 and t4['title'] == [True, True],
+              f"60장부터 67장까지 이야기가 끝까지 이어지고(4부 끝) 별호 「물의 신화」를 얻는다 {t4['q']}/{t4['end']} {t4['chs']} {t4['next']} {t4['title']}")
+        check(t4['bosses'].get('10') == '깊은 물 아귀' and t4['bosses'].get('20') == '뱃속의 물귀신' and t4['bosses'].get('26') == '식지 않는 불샘' and t4['bosses'].get('30') == '바꿔치기한 꽃' and '수문장' in t4['bosses'].get('39', ''),
+              f"깊은 바다 지역 보스와 이야기 속 보스(26단계 불샘·30단계 꽃) {t4['bosses']}")
+        check(all(t4['raid'].get(k, {}).get('start') and t4['raid'][k]['open'] and not t4['raid'][k]['early'] and t4['raid'][k]['first'] and t4['raid'][k]['said'] >= 1 for k in ('x0', 'x1', 'x2')),
+              f"깊은 바다 레이드 셋(용들의 무덤·첫 거짓·검은 물의 바다)이 그 단계에 닿으면 열린다 {t4['raid']}")
+        for nm, stg in (('41_깊은바다_물길.png', 5), ('41b_깊은바다_고래뱃속.png', 15), ('41c_깊은바다_꽃밭.png', 25)):
+            await tp.evaluate("(s) => { const G = window.__game; G.closePage(); G.hideModal && G.hideModal(); G.setStage(s); for (let i = 0; i < 160; i++) G.update(0.05); }", stg)
+            await tp.wait_for_timeout(500)
+            await tp.screenshot(path=str(OUT / nm))
+        await tp.evaluate("() => { const G = window.__game; G.powK = 1e-4; G.refreshStats(); G.setStage(30); G.startBoss(); for (let i = 0; i < 40; i++) G.update(0.05); }")
+        await tp.wait_for_timeout(400)
+        await tp.screenshot(path=str(OUT / '41d_깊은바다_바꿔치기한꽃.png'))
+        await tp.evaluate("() => { const G = window.__game; G.powK = 1; G.refreshStats(); G.setStage(30); G.quiet = false; }")
+        # 연출: 새 배경(바람 섬·두 개의 해·고래 뱃속·꽃밭)·노래 장면·4부 맺음
+        cuts = []
+        for nm, ch, a, b2 in (('42_53장_여는연출.png', 53, 3, 5), ('42b_58장_두개의해.png', 58, 2, 3), ('42c_61장_고래뱃속.png', 61, 2, 3), ('42d_64장_꽃피우기내기.png', 64, 2, 4)):
+            await tp.evaluate("([ch, a, b]) => { const G = window.__game; G.playCut(G.CH_OPEN[ch].slice(a, b), {title:G.CHAPTERS[ch]}); }", [ch, a, b2])
+            await tp.wait_for_timeout(1500)
+            cuts.append(await tp.is_visible('#cut'))
+            await tp.screenshot(path=str(OUT / nm))
+            await tp.click('#cutSkip')
+        await tp.evaluate("() => { const G = window.__game, q = G.MAIN_Q.find(x => x.t === '해녀의 노래'); G.playCut(G.qShots(q).slice(0, 1), {title:'57장 · 해녀의 노래'}); }")
+        await tp.wait_for_timeout(1500)
+        song7 = await tp.evaluate("() => ({song: document.querySelector('#cutBox').classList.contains('song'), txt: document.querySelector('#cutText').textContent})")
+        await tp.click('#cutSkip')
+        await tp.evaluate("() => { const G = window.__game, q = G.MAIN_Q[G.MAIN_Q.length - 1]; G.playCut(G.qShots(q).slice(8, 10), {title:'67장 · 물의 신화'}); }")
+        await tp.wait_for_timeout(1500)
+        await tp.screenshot(path=str(OUT / '42e_67장_맺음.png'))
+        last = await tp.evaluate("() => ({n: window.__game.qShots(window.__game.MAIN_Q[window.__game.MAIN_Q.length - 1]).length, opens: [53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67].every(c => (window.__game.CH_OPEN[c] || []).length >= 5 && !!window.__game.CHAPTERS[c])})")
+        await tp.click('#cutSkip')
+        check(all(cuts) and song7['song'] and len(song7['txt']) > 3 and last['n'] >= 10 and last['opens'],
+              f"둘째·셋째 바다 연출: 장마다 여는 연출(5컷 이상), 57장 노래 장면, 67장 맺음은 10컷 {cuts} {song7} {last}")
+        await tp.evaluate("() => { const G = window.__game; G.quiet = true; G.closePage(); }")
+        await tab(tp, 'grow')
+        await tp.wait_for_timeout(250)
+        await tp.click('#gv-reb')
+        await tp.wait_for_timeout(300)
+        rc7 = await tp.evaluate("() => [6, 7].map(w => { const c = document.querySelector('#crossCard' + w); return c ? c.textContent : ''; })")
+        await tp.screenshot(path=str(OUT / '42f_건너기_카드.png'))
+        check(all('건넜어요' in x for x in rc7) and '남쪽 바다' in rc7[0] and '깊은 바다' in rc7[1], f"[수련] → [환생]에 「남쪽 바다로」·「깊은 바다로」 건너기 카드가 보인다 {[x[:24] for x in rc7]}")
+        await tab(tp, 'raid')
+        await tp.wait_for_timeout(500)
+        rl7 = await tp.evaluate("() => ({txt: document.querySelector('#panel').textContent, cards: document.querySelectorAll('#panel .rcard').length})")
+        await tp.screenshot(path=str(OUT / '42g_깊은바다_레이드.png'))
+        check('용들의 무덤' in rl7['txt'] and '첫 거짓' in rl7['txt'] and '검은 물의 바다' in rl7['txt'], f"[레이드]에 깊은 바다 레이드 셋이 보인다 (카드 {rl7['cards']}개)")
+        await tp.evaluate("() => { const G = window.__game; G.closePage(); G.openMap(); }")
+        await tp.wait_for_timeout(900)
+        jm7 = await tp.evaluate("() => ({bands: document.querySelectorAll('.jm-band').length, w6: !!document.querySelector('.jm-band.w6'), w7: !!document.querySelector('.jm-band.w7'), chips: [...document.querySelectorAll('.jm-wchip')].map(e => e.textContent)})")
+        await tp.evaluate("() => { const sc = document.querySelector('#jmScroll'); if (sc) sc.scrollLeft = sc.scrollWidth; }")
+        await tp.wait_for_timeout(600)
+        await tp.screenshot(path=str(OUT / '42h_여정지도_깊은바다.png'))
+        check(jm7['bands'] == 8 and jm7['w6'] and jm7['w7'] and any('남쪽 바다' in c for c in jm7['chips']) and any('깊은 바다' in c for c in jm7['chips']), f"여정 지도에 남쪽 바다·깊은 바다 띠가 있다 {jm7}")
+        await ctxT.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()

@@ -10,6 +10,7 @@
     이승 진: 저승 12단계(jin_*_w1s12) → 저승 100단계(jin_*_w1s100) · 시왕 진: 천계 12단계(jin_*_w2s12) → 천계 84단계(jin_*_w2s84)
     천계 진: 부상에 막 건넌 때(save_*_q113) → 곤륜에 막 들어선 때(save_*_q145) · 부상 진: 곤륜에 막 들어선 때 → 3부 끝(save_*_end)
     곤륜 진: 3부 끝(동해 들머리, save_*_end) → 동해 끝(save_*_sea1 — 5차 전직·새 장비 칸·3차 재련까지 한 용사)
+    동해 진: 동해 끝(남쪽 바다 들머리, save_*_sea1) → 남쪽 바다 끝(save_*_sea2) · 남쪽 바다 진: 남쪽 바다 끝 → 깊은 바다 끝(save_*_sea3, 4부 끝). 깊은 바다 진은 5부에 들어서야 열린다
 - 재는 것(직업마다): D0 = 손컨 패턴 없이(PAT.off) 보스에게 넣는 초당 피해, EHP = 최대 체력 ÷ 받는 피해 배율, PW = 화면의 전투력.
   보스 체력 = D0 × JIN.t0초, 보스 한 방 = EHP × JIN.a0, 권장 전투력 = PW.
 - 표: 직업마다 화면 전투력이 권장 전투력의 r배가 되게 공격력·체력을 함께 곱해(__game.powK) n판씩.
@@ -29,7 +30,8 @@ from playwright.async_api import async_playwright  # noqa: E402
 SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
 CLASSES = ['musa', 'jagaek', 'sulsa', 'doin']
 REF = {0: ('jin_{c}_w1s12.json', 'jin_{c}_w1s100.json', 1.0), 1: ('jin_{c}_w2s12.json', 'jin_{c}_w2s84.json', 1.0),
-       2: ('save_{c}_q113.json', 'save_{c}_q145.json', 1.0), 3: ('save_{c}_q145.json', 'save_{c}_end.json', 1.0), 4: ('save_{c}_end.json', 'save_{c}_sea1.json', 1.0)}   # 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(tools/sim_sea4.py가 남긴 저장, 물의 신화 5단계)
+       2: ('save_{c}_q113.json', 'save_{c}_q145.json', 1.0), 3: ('save_{c}_q145.json', 'save_{c}_end.json', 1.0), 4: ('save_{c}_end.json', 'save_{c}_sea1.json', 1.0),
+       5: ('save_{c}_sea1.json', 'save_{c}_sea2.json', 1.0), 6: ('save_{c}_sea2.json', 'save_{c}_sea3.json', 1.0)}   # 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝 · 남쪽 바다 진: 남쪽 바다 끝 → 깊은 바다 끝(4부 끝) — tools/sim_sea4.py가 남긴 저장(물의 신화 7단계)   # 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(tools/sim_sea4.py가 남긴 저장, 물의 신화 5단계)
 HANDS = {'자동': None, '평범': {'dodge': 0.75, 'counter': 0.6}, '잘함': {'dodge': 1.0, 'counter': 0.95}}
 RS = [0.8, 1.0, 1.3, 2.0]
 
