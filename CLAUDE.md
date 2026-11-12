@@ -243,7 +243,7 @@
   - 대규모 패치 설계, 막힌(다른 모델이 못 푼) 버그 → `game-architect` (Fable)
   - 일반 기능 설계, 밸런스 조정 계획, 일반 버그 원인 분석 → `game-designer` (Opus)
   - 확정된 계획의 구현·수정·테스트 → `game-coder` (Sonnet)
-  - 대사·스토리·패치 노트·아이템/기술 설명문 → `story-writer` (Haiku)
+  - 대사·스토리·패치 노트·아이템/기술 설명문 → `story-writer` (Opus — 중요한 이야기를 Haiku에 맡기지 않기로 주인이 정함)
 - `game-architect`(Fable)를 쓰기 전에는 주인에게 **한 줄로 먼저 알린다**(Fable은 주간 한도가 따로 있어 꼭 필요한 큰 작업에만).
 - 패치가 끝나면 `story-writer`로 패치 노트 초안을 쓴다.
 - 주인은 코딩 초보이므로 계획과 결과는 쉬운 말로 요약한다.
