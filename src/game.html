@@ -1665,8 +1665,17 @@ const CLASSES = {
     order:[7, 10, 12, 9, 8, 1, 2, 4, 3, 11, 0, 6, 5],
     weapon:'부채', armor:'도포', wtype:'fan', base:'#e6e0cc', pants:'#bdb59c', belt:'#b8382f', fx:'#f3d36b', boltFx:'pillar', nukeFx:'pillars', proj:'charm',
     skills:['천벌 부적', '봉인 부적', '회복의 기운', '도력 일격', '팔괘진', '하늘의 심판', '오방신장 소환', '만신 대굿', '신명 굿춤', '오색 보천', '축원 굿', '역신 쫓는 춤', '용신 맞이'], awaken:'사신 강림', awaken4:'삼국 신수 강림'},
+  // 궁사(물의 신화 8-1단계, 부상에서 건너온 바닷가 마을의 명궁): 가장 먼 원거리 · 「조준」(AIM, updateAim) · 마나 절반(mpK). 9-5단계 방향 = 치명 피해 · 공격 속도
+  gungsa:{name:'궁사', desc:'멀리서 자리를 잡고 조준해 한 발 한 발 깊이 꽂아요', tags:'조준 · 먼 원거리', hpMul:0.8, atkMul:1, spdMul:1, critAdd:0.06, regenAdd:0, range:5, skillMul:1,
+    aim:true, mpK:0.5, bossMul:1.05, oneMul:1.1,
+    role:'조준', traits:['「조준」: 제자리에 서서 쏠수록 조준이 차서 치명타 피해가 최대 +60%까지 커져요. 걷거나 구르면 줄어들어요(머리 위 화살표 눈금)', '가장 멀리(5칸) 쏘고 기술에 드는 마나가 절반이에요. 보스에게 주는 피해 +5%, 한 적을 노리는 기술 +10%', '체력이 낮아요(80%). 붉은 칸은 조금만 움직여 피하고 빨리 다시 자리를 잡는 게 좋아요'],
+    weapon:'활', armor:'덧옷', wtype:'bow', base:'#4f7a5a', pants:'#3a3a48', belt:'#c8a04a', fx:'#c8f08a', boltFx:'flash', nukeFx:'rain', proj:'arrow',
+    skills:['부챗살 사격', '꿰뚫는 살', '숨 고르기', '화살 비', '연속 속사', '표적 깃발', '명궁의 한 발', '넋 꿰는 살', '부채 과녁', '해 쏘는 활', '매의 눈', '파도 가르는 살', '바람 읽기'], awaken:'일시천리', awaken4:'사일 구연사'},
 };
+// CLASS_ORDER = 플레이어에게 보이는 직업(타이틀·직업 고르기·직업 바꾸기 창). CLASS_ALL = 게임에 들어 있는 모든 직업(표·전직 망토 아바타처럼 '빠지면 안 되는' 곳).
+// 새 직업은 다 만들 때까지 CLASS_ALL에만 두고(시험은 __game.setClass), 열 때 CLASS_ORDER에 넣는다
 const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin'];
+const CLASS_ALL = Object.keys(CLASSES);
 const W_PRE = ['나무', '무쇠', '청동', '백은', '신령', '용궁', '수미'];
 const A_PRE = ['삼베', '무명', '비단', '금실', '신령', '용궁', '수미'];
 const H_PRE = ['가죽', '무쇠', '청동', '백은', '신령', '용궁', '수미'];   // 투구
@@ -1965,6 +1974,11 @@ const SK_PRE = {
     party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,0,2,3,4,5,7,8,1,6,9], [10,1,2,3,5,7,8,9,4,0,6], [10,1,3,5,7,8,9,11,2,12,4,6,0]],
     mob:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,3,4,5,6,7,8,10,0,9], [1,2,3,4,6,7,8,9,5,10,0], [1,2,4,7,8,9,10,11,3,6,12,0,5]],
     mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,3,4,5,6,7,8,10,0,9], [1,2,3,4,5,7,8,9,6,10,0], [1,2,3,5,7,8,9,11,12,6,4,10,0]]},
+  // 궁사(8-1단계): 아직 재지 않은 임시 순서(자객 것을 바탕으로, 조준을 채우는 숨 고르기(2)·바람 읽기(12)를 앞에) — tools/sim_skpre.py gungsa 로 다시 잴 것
+  gungsa:{boss:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [1,2,4,5,6,7,8,10,3,0,9], [1,2,4,5,6,7,8,9,10,0,3], [1,2,7,8,9,10,11,12,5,6,4,3,0]],
+    party:[[10,0,1,2,3,4,5,6,7,8,9], [10,1,2,3,4,5,6,7,0,8,9], [10,1,2,4,5,6,7,8,3,0,9], [10,1,2,4,5,7,8,9,6,0,3], [10,1,2,7,8,9,11,12,5,6,4,3,0]],
+    mob:[[0,1,2,3,4,5,6,10,7,8,9], [0,2,3,4,5,6,7,10,1,8,9], [0,2,3,5,6,7,8,10,4,1,9], [2,3,5,6,7,8,9,10,0,4,1], [2,5,6,7,9,10,11,12,8,3,0,4,1]],
+    mix:[[0,1,2,3,4,5,6,10,7,8,9], [1,2,3,4,5,6,7,10,0,8,9], [2,3,4,5,6,7,8,10,1,0,9], [2,4,5,6,7,8,9,10,0,3,1], [2,5,6,7,8,9,10,11,4,3,12,1,0]]},
 };
 const FIGHT_KIND_NAME = {boss:'혼자 하는 보스', party:'함께하는 레이드', mob:'몹 떼'};
 let skPreset = null, presetNext;   // presetNext: 다음 싸움에 쓸 조합(undefined = 저절로 추천, null = 지금 칸 그대로)
@@ -2062,7 +2076,7 @@ const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.75;   // (물의 신화) 8칸: 0.6 �
    저절로 마시고, 기술 줄 위 물약 칸을 누르면 바로 마신다. 값은 크게 내림(인삼 10개 = 몹 40마리 엽전, 감로수 10개 = 30마리) */
 const REGEN_K = 0.5, MANA_POT = 40, MANA_AT = 30, MANA_CD = 4;
 const mpMax = () => MP_MAX + (S && S.job >= 5 ? 20 : 0) + (S && S.job >= 6 ? 20 : 0);   // 최대 마나: 5차 120 · 6차 140(물의 신화)
-const skMp = i => Math.max(1, Math.round(skDef(i).cd * MP_K));
+const skMp = i => Math.max(1, Math.round(skDef(i).cd * MP_K * (cls().mpK || 1)));   // 궁사는 마나 절반(mpK)
 const COMBOS = [
   {k:'c1', a:0, b:1, name:'이어 치기', p:10},
   {k:'c2', a:2, b:3, name:'기세 싣기', p:12},
@@ -2095,7 +2109,8 @@ const dChargeMul = l => 2.5 + 0.05 * (l - 1);
 const dBaguaAdd = l => 60 + 4 * (l - 1);
 const dGutAtk = l => 50 + (l - 1);          // 만신 대굿 공격력 +%(예전엔 레벨 효과가 없었음)
 // 후반(3·4차 전직) 직업 맞춤(2026-11 (27)): 같은 장비·능력치에서 무사=1 기준 보스 피해 목표 자객 1.4~1.7·술사 1.2~1.4·도인 1.0~1.3(bench)
-const LATE_K = {clone:0.3, cloneMob:0.6, jagaekD:0.14, sulsaC:1.0, sulsaD:0.38, doinB:130, shinA:120, shinB:4, shinT:20, musaE:0.4, jagaekE:1.1, sulsaE:0.6, doinE:0.2};   // …E: 5차 광역기(무사 3번·자객 한 번·술사 2번·도인 6번의 한 번 몫)
+const LATE_K = {clone:0.3, cloneMob:0.6, jagaekD:0.14, sulsaC:1.0, sulsaD:0.38, doinB:130, shinA:120, shinB:4, shinT:20, musaE:0.4, jagaekE:1.1, sulsaE:0.6, doinE:0.2,
+  gungsaC:1.2, gungsaD:0.22, gungsaE:0.6, gungsaP:1};   // gungsaP: 꿰뚫고 지나간 살이 다른 적에게 주는 몫   // 궁사(8-1단계): 부채 과녁 한 발(5발) · 해 쏘는 활 한 발(9발, 마지막은 모두) · 파도 가르는 살 한 갈래(3갈래)   // …E: 5차 광역기(무사 3번·자객 한 번·술사 2번·도인 6번의 한 번 몫)
 //   // 예전: 분신 0.6·자객 4차 0.08·식신 0.67·우레 0.17·굿춤 20+0.5/레벨 12초. doinB 오색 보천(공격 기술 피해 +%)
 const dBocheonPct = l => LATE_K.doinB + 2 * (l - 1);   // 도인 4차 오색 보천: 15초 동안 공격 기술 피해 +%
 /* 파티 버프(2026-11 (41), 사용자 요청: 캐릭터마다 하나씩): 11번째 기술 칸(Lv.30). 나와 함께 싸우는 동료 모두에게 PB_T초.
@@ -2108,18 +2123,20 @@ const PB = {
   jagaek:{cr:l => 10 + 0.3 * (l - 1), cd:l => 30 + (l - 1), col:'#ff7a9a'},
   sulsa:{sk:l => 15 + 0.6 * (l - 1), col:'#9fe7ff'},
   doin:{atk:l => 8 + 0.4 * (l - 1), spd:l => 10 + 0.5 * (l - 1), col:'#8ff0a0'},
+  gungsa:{cr:l => 8 + 0.2 * (l - 1), rng:() => 1, col:'#c8f08a'},   // 매의 눈: 치명타 확률 + 멀리 쏘는 용사(사거리 2 이상)의 사거리 +1
 };
 const PB_SH = 20, PB_HEAL = 25;   // 술사 보호막·도인 회복(최대 체력 %)
 let pbT = {}, pbL = {};   // 지금 걸려 있는 파티 버프(직업별 남은 초·레벨)
 const pbV = (c, f) => (pbT[c] || 0) > 0 && PB[c][f] ? PB[c][f](pbL[c] || 1) : 0;
 const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 100);
-const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('jagaek', 'cr') / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
+const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + (pbV('jagaek', 'cr') + pbV('gungsa', 'cr')) / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
 const pbLvOf = a => a.npc ? 8 : Math.max(1, Math.min(30, 4 + Math.floor((+a.level || 100) / 6)));   // 동료의 파티 버프 레벨(어림)
 const pbRaidK = (party = []) => { const cs = new Set(party.filter(a => a.npc || (+a.level || 100) >= SKILLS[10].unlock).map(a => a.cls)); if (skOpen(10)) cs.add(S.cls); return 1 + PB_RAID_K * cs.size; };
 function pbDesc(c, l){
   if (c === 'musa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 받는 피해 -${fmt(PB.musa.dr(l))}%·공격력 +${fmt(PB.musa.atk(l))}%`;
   if (c === 'jagaek') return `함께 싸우는 동료 모두 ${PB_T}초 동안 치명타 확률 +${fmt(PB.jagaek.cr(l))}%·치명타 피해 +${fmt(PB.jagaek.cd(l))}%`;
   if (c === 'sulsa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 기술 피해 +${fmt(PB.sulsa.sk(l))}%, 최대 체력 ${PB_SH}% 보호막`;
+  if (c === 'gungsa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 치명타 확률 +${fmt(PB.gungsa.cr(l))}%, 멀리서 싸우는 용사는 사거리 +1칸`;
   return `함께 싸우는 동료 모두 체력 ${PB_HEAL}% 회복, ${PB_T}초 동안 공격력 +${fmt(PB.doin.atk(l))}%·공격 속도 +${fmt(PB.doin.spd(l))}%`;
 }
 function pbGain(l, n){
@@ -2127,6 +2144,7 @@ function pbGain(l, n){
   if (c === 'musa') return {lab:'공격력', a:pp(P.atk(l)), b:pp(P.atk(n)), g:((100 + P.atk(n)) / (100 + P.atk(l)) - 1) * 100, extra:`받는 피해 -${fmt(P.dr(l))}% → -${fmt(P.dr(n))}%`};
   if (c === 'jagaek') return {lab:'치명타 피해', a:pp(P.cd(l)), b:pp(P.cd(n)), g:((100 + P.cd(n)) / (100 + P.cd(l)) - 1) * 100, extra:`치명타 확률 ${pp(P.cr(l))} → ${pp(P.cr(n))}`};
   if (c === 'sulsa') return {lab:'기술 피해', a:pp(P.sk(l)), b:pp(P.sk(n)), g:((100 + P.sk(n)) / (100 + P.sk(l)) - 1) * 100};
+  if (c === 'gungsa') return {lab:'치명타 확률', a:pp(P.cr(l)), b:pp(P.cr(n)), g:((100 + P.cr(n)) / (100 + P.cr(l)) - 1) * 100};
   return {lab:'공격력·속도', a:`${pp(P.atk(l))}·${pp(P.spd(l))}`, b:`${pp(P.atk(n))}·${pp(P.spd(n))}`, g:((100 + P.atk(n)) * (100 + P.spd(n)) / ((100 + P.atk(l)) * (100 + P.spd(l))) - 1) * 100};
 }
 // who = 건 동료(없으면 나)
@@ -2177,26 +2195,31 @@ function skillDesc(i, l){
     if (S.cls === 'jagaek') return `물속으로 사라져(1.4초 동안 맞지 않음) 보이는 적 모두의 뒤에서 한 번씩 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.jagaekE * sm))}%, 모두 치명타`;
     if (S.cls === 'sulsa') return `밀물이 두 번 밀려와 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.sulsaE * sm))}%씩, 떠밀린 적은 1.5초 묶임(레이드 보스 0.6초)`;
     if (S.cls === 'doin') return `탈을 쓰고 춤추며 보이는 적 모두에게 6번, 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.doinE * sm))}%씩 · <b>늘 치명타</b>`;
+    if (S.cls === 'gungsa') return `물살을 가르는 화살이 세 갈래로 꿰뚫어 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.gungsaE * sm))}%씩 3번(보스에게는 가운데 살이 한 번 더)`;
     return `용이 판을 가로질러 보이는 적 모두를 3번, 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.musaE * sm))}%씩`;
   }
   if (d.kind === 'jobF'){
     if (S.cls === 'jagaek') return `10초 동안 치명타 피해 +${fmt(sumbiCd(l))}%, 구르기 재사용 절반`;
     if (S.cls === 'sulsa') return `15초 동안 기술에 드는 마나 절반, 기술 피해 +${fmt(ebbSk(l))}%`;
     if (S.cls === 'doin') return `준비: 15초 동안 나와 동료가 1초마다 체력 ${yongHeal(l).toFixed(1)}% 회복, 도력을 채워 다음 큰 공격 기술 <b>두 번</b>에 실어요`;
+    if (S.cls === 'gungsa') return `15초 동안 사거리 +1칸·공격 속도 +${fmt(windSpd(l))}%, 조준이 3배 빨리 차고 움직여도 줄지 않아요`;
     return `15초 동안 받는 피해 -${fmt(oathDr(l))}%, 맞을 때마다 공격력 +${oathAtk(l).toFixed(1)}%(${OATH_N}번까지)`;
   }
   if (d.kind === 'jobD'){
     if (S.cls === 'jagaek') return `2초 동안 모습을 감추고(맞지 않음) 보이는 적 모두를 12번 연달아 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.jagaekD * sm))}%씩, 모두 치명타`;
     if (S.cls === 'sulsa') return `우레 아홉 줄기가 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.sulsaD * sm))}%씩, 마지막 줄기는 보이는 적 모두`;
+    if (S.cls === 'gungsa') return `화살 아홉 발을 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.gungsaD * sm))}%씩(<b>늘 치명타</b>), 꿰뚫고 지나가며 다른 적도 맞아요. 마지막 발은 보이는 적 모두 치명타`;
     return `하늘과 땅을 가르는 일격: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
   }
   if (d.kind === 'jobC'){
     if (S.cls === 'jagaek') return `깃털 분신 셋이 12초 동안 함께 싸워요(분신 하나가 칠 때마다 공격력의 ${Math.round(LATE_K.cloneMob * 100 * (1 + 0.03 * (l - 1)))}%, 보스에게는 ${Math.round(LATE_K.clone * 100 * (1 + 0.03 * (l - 1)))}%, 치명타 그대로)`;
     if (S.cls === 'sulsa') return `종이 식신 12장이 날아가 하나에 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.sulsaC * sm))}%`;
+    if (S.cls === 'gungsa') return `가장 튼튼한 적에게 화살 다섯 발, 한 발에 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.gungsaC * sm))}%(<b>늘 치명타</b>), 꿰뚫고 지나가며 다른 적도 맞아요 · 조준이 가득 차요`;
     return `바람 칼날이 8번 휘몰아쳐 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobCPct(l) * sm))}%씩`;
   }
   const am = d.atk && C.aoeMul && ['spin', 'meteor', 'jobA', 'jobB'].includes(d.kind) ? C.aoeMul : d.atk && C.oneMul && ['bolt', 'combo'].includes(d.kind) ? C.oneMul : 1;
   if (am !== 1) return skillDescBase(i, l, sm * am);
+  if (i === 2 && C.aim) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%, 조준이 바로 절반 차고 3배 빨리 차요`;
   if (i === 2 && C.shield) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%, 최대 체력의 ${shieldPct(l)}%를 막는 보호막(12초)`;
   return skillDescBase(i, l, sm);
 }
@@ -2236,11 +2259,11 @@ function skillGain(i, l){
     case 'combo': return dmg(x => comboPct(x) * sm * am, '한 대 피해');
     case 'jobA': return dmg(x => jobAPct(x) * sm * am);
     case 'jobB': return dmg(x => jobBPct(x) * sm * am);
-    case 'jobC': return S.cls === 'jagaek' ? dmg(x => LATE_K.clone * 100 * (1 + 0.03 * (x - 1)), '분신 한 대') : dmg(x => jobCPct(x) * sm * (S.cls === 'sulsa' ? LATE_K.sulsaC : 1), S.cls === 'sulsa' ? '식신 하나' : '한 번 피해');
-    case 'jobD': return dmg(x => jobDPct(x) * sm * ({jagaek:LATE_K.jagaekD, sulsa:LATE_K.sulsaD}[S.cls] || 1), {jagaek:'한 번 피해', sulsa:'줄기 하나'}[S.cls] || '피해');
+    case 'jobC': return S.cls === 'jagaek' ? dmg(x => LATE_K.clone * 100 * (1 + 0.03 * (x - 1)), '분신 한 대') : dmg(x => jobCPct(x) * sm * (S.cls === 'sulsa' ? LATE_K.sulsaC : S.cls === 'gungsa' ? LATE_K.gungsaC : 1), S.cls === 'sulsa' ? '식신 하나' : S.cls === 'gungsa' ? '한 발 피해' : '한 번 피해');
+    case 'jobD': return dmg(x => jobDPct(x) * sm * ({jagaek:LATE_K.jagaekD, sulsa:LATE_K.sulsaD, gungsa:LATE_K.gungsaD}[S.cls] || 1), {jagaek:'한 번 피해', sulsa:'줄기 하나', gungsa:'한 발 피해'}[S.cls] || '피해');
     case 'party': return pbGain(l, n);
-    case 'jobE': return dmg(x => jobEPct(x) * sm * ({jagaek:LATE_K.jagaekE, sulsa:LATE_K.sulsaE, doin:LATE_K.doinE}[S.cls] || LATE_K.musaE), '한 번 피해');
-    case 'jobF': return S.cls === 'jagaek' ? amp('치명타 피해', sumbiCd, ST ? ST.critDmg * 100 : 300) : S.cls === 'sulsa' ? amp('기술 피해', ebbSk) : S.cls === 'doin' ? {lab:'초당 회복', a:yongHeal(l).toFixed(1) + '%', b:yongHeal(n).toFixed(1) + '%', g:(yongHeal(n) / yongHeal(l) - 1) * 100} : {lab:'받는 피해', a:'-' + pc(oathDr(l)), b:'-' + pc(oathDr(n)), g:((100 - oathDr(l)) / (100 - oathDr(n)) - 1) * 100, extra:`맞을 때마다 공격력 ${pp(oathAtk(l))} → ${pp(oathAtk(n))}`};
+    case 'jobE': return dmg(x => jobEPct(x) * sm * ({jagaek:LATE_K.jagaekE, sulsa:LATE_K.sulsaE, doin:LATE_K.doinE, gungsa:LATE_K.gungsaE}[S.cls] || LATE_K.musaE), '한 번 피해');
+    case 'jobF': return S.cls === 'gungsa' ? amp('공격 속도', windSpd) : S.cls === 'jagaek' ? amp('치명타 피해', sumbiCd, ST ? ST.critDmg * 100 : 300) : S.cls === 'sulsa' ? amp('기술 피해', ebbSk) : S.cls === 'doin' ? {lab:'초당 회복', a:yongHeal(l).toFixed(1) + '%', b:yongHeal(n).toFixed(1) + '%', g:(yongHeal(n) / yongHeal(l) - 1) * 100} : {lab:'받는 피해', a:'-' + pc(oathDr(l)), b:'-' + pc(oathDr(n)), g:((100 - oathDr(l)) / (100 - oathDr(n)) - 1) * 100, extra:`맞을 때마다 공격력 ${pp(oathAtk(l))} → ${pp(oathAtk(n))}`};
   }
   return dmg(x => meteorPct(x) * sm * am);
 }
@@ -2566,7 +2589,7 @@ const ENGR = {
   a:[{k:'wall', name:'철벽', v:2, d:'받는 피해 감소·체력'}, {k:'swift', name:'신속', v:3, d:'공격 속도'}, {k:'life', name:'생기', v:0.1, d:'초당 체력 회복'}],
   n:[{k:'magic', name:'술력', v:4, d:'기술 피해'}, {k:'cdr', name:'도력', v:2, d:'기술 재사용 시간 감소'}, {k:'pet', name:'공명', v:10, d:'펫 피해'}],
 };
-const ENGR_BEST = {musa:{w:'power', a:'wall', n:'cdr'}, jagaek:{w:'hunt', a:'swift', n:'pet'}, sulsa:{w:'vital', a:'wall', n:'magic'}, doin:{w:'vital', a:'life', n:'cdr'}};
+const ENGR_BEST = {musa:{w:'power', a:'wall', n:'cdr'}, jagaek:{w:'hunt', a:'swift', n:'pet'}, sulsa:{w:'vital', a:'wall', n:'magic'}, doin:{w:'vital', a:'life', n:'cdr'}, gungsa:{w:'vital', a:'swift', n:'magic'}};
 const HARMONY = 15;   // 조화: 공격력·체력 +%
 const craftName = (k, t) => { if (!t) return '없음'; const g = Math.floor((t - 1) / 3), st = '★'.repeat((t - 1) % 3 + 1);
   return (k === 'n' ? NORI[g] : `${CRAFT_PRE[g]} ${k === 'w' ? cls().weapon : cls().armor}`) + ' ' + st; };
@@ -2688,6 +2711,7 @@ const AW2_SK = {
   jagaek:{name:'그믐 만 갈래', fx:'8초 동안 모든 공격이 치명타'},
   sulsa:{name:'한바다 뒤집기', fx:'보스 4초 멈춤'},
   doin:{name:'일만 넋 대굿', fx:'파티 체력 50% 회복 · 쓰러진 동료 일으킴'},
+  gungsa:{name:'한 화살 만 리', fx:'10초 동안 보스의 낙인(받는 피해 증가)이 2배'},
 };
 // 환생의 기억: 갈래 셋 × 퀘스트 넷. orbs = 퀘스트 하나의 윤회 구슬(두 번의 환생으로 얻는 양이 40개라 그만큼 — 8 + 12 + 12 + 마무리 8), cap = 다 마치면 늘어나는 능력 상한
 const MEM = {ch:53, endCh:90, total:40, fin:8, orbs:[2, 3, 3], cap:{spd:5, eye:10}, goldK:40000, gems:[0, 3000, 6000], mat:[150, 250, 350], grudge:[0, 0, 20], tgt:45, time:60, hit:0.04, aoe:0.03, col:'#6ad8ff'};
@@ -2714,7 +2738,7 @@ const NPCS = [
   {name:'솔이', cls:'jagaek', outfit:'#5a5a62', hair:'#5a3a2a'},
   {name:'억쇠', cls:'musa', outfit:'#d8a83a', hair:'#241c26'},
 ];
-const NPC_SHARE = {musa:0.35, doin:0.3, sulsa:0.55, jagaek:0.55};
+const NPC_SHARE = {musa:0.35, doin:0.3, sulsa:0.55, jagaek:0.55, gungsa:0.55};
 const RAID_PARTY_MAX = 5;   // 레이드 파티는 나 + 동료 4명까지(동료가 다 잡아 주지 않게)
 const partyOf = info => Math.min(info.party, RAID_PARTY_MAX);   // 용사 초당 피해 대비 동료 몫
 const RAID_MELEE = [[13, 9], [15, 9], [16, 8], [14, 10], [12, 9], [16, 10]].map(([x, y]) => [x + FOX, y + FOY]);
@@ -4297,7 +4321,7 @@ function statValue(k, st){
   }
 }
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1);
-const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1);
+const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0) + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
@@ -5039,13 +5063,13 @@ let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정
 function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
-  const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
+  const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && (aw2C || Math.random() < ST.crit + sc);
-  const cd = ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0);
+  const cd = (ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0)) * aimMul(mine && kind !== 'pet');
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1;
-  const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const dmg = raw ? base : base * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
@@ -5395,7 +5419,7 @@ function aw2Tick(kind){
   else if (kind === 'brk' && a.q === 2) a.g = Math.min(999, a.g + 1);
   else if (kind === 'clean' && a.q === 3) a.n = Math.min(99, a.n + 1);
 }
-const aw2Teachers = (c = S.cls) => [[`${CLASSES[c].name}의 스승`, `m:m_${c}:${JOBS[c][0].capeC}`], ['강림도령', 'gangrim'], [JOBS[c][2].teacher, JOB_TEACHER3[c]], [JOBS[c][3].teacher, JOB_TEACHER4[c]], [JOBS[c][4].teacher, JOB_TEACHER5[c]]];
+const aw2Teachers = (c = S.cls) => [[teacher1(c), `m:m_${c}:${JOBS[c][0].capeC}`], ['강림도령', 'gangrim'], [JOBS[c][2].teacher, JOB_TEACHER3[c]], [JOBS[c][3].teacher, JOB_TEACHER4[c]], [JOBS[c][4].teacher, JOB_TEACHER5[c]]];
 function aw2HearCut(){
   const T = aw2Teachers();
   return [['daewangam', T.slice(0, 3).map(x => x[1]).join(','), 'sparkle', [['', '아직 한 수가 남았다 — 스승들이 차례로 입을 열어요.'],
@@ -5496,6 +5520,7 @@ function updateAw2(R, B, dt){
   if (A.show > 0) A.show -= dt;
   if (A.critT > 0) A.critT -= dt;
   if (A.weakT > 0) A.weakT -= dt;
+  if (A.markT > 0) A.markT -= dt;
   if (hero.handT > 0) hero.handT -= dt;
   if (A.used){ if (R.info.aw2tut && A.show <= 0) raidEnd(true); return; }
   if (hero.dead || B.dead || B.spawnT > 0) return;
@@ -5518,6 +5543,7 @@ function castAwaken2(manual){
     case 'musa': A.weakT = 8; break;                                // 8초 동안 보스가 주는 피해 -30%(bossHit·bossAoe)
     case 'jagaek': A.critT = 8; break;                              // 8초 동안 모든 공격 치명타(hit)
     case 'sulsa': B.stunT = Math.max(B.stunT || 0, 4); break;       // 보스 4초 멈춤
+    case 'gungsa': A.markT = 10; B.markT = Math.max(B.markT || 0, 10); B.markP = Math.max(B.markP || 0, markPct(Math.max(1, skLv(5)))); break;   // 10초 동안 보스의 낙인 2배(없으면 「표적 깃발」을 꽂음) — hit의 aw2Mark
     case 'doin':                                                    // 파티 체력 50% 회복, 쓰러진 동료 일으킴(타임 보스에서 목숨을 다 쓴 동료는 못 일으킴)
       hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * 0.5); addText('+50%', hero.x, hero.y - 40, '#7dff9a', 13, true);
       for (const a of R.allies){ if (a.down){ if (a.downT === Infinity) continue; a.down = false; a.downT = 0; a.hp = a.maxHp * 0.5; fx.push({type:'poof', t:0, dur:0.4, x:a.x, y:a.y - 8}); } else a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.5); }
@@ -5527,6 +5553,7 @@ function castAwaken2(manual){
   S.rec.aw2 = (S.rec.aw2 || 0) + 1;
   return true;
 }
+const aw2Mark = m => raid && raid.awk2 && raid.awk2.markT > 0 && m === raid.boss ? 2 : 1;   // 궁사 「한 화살 만 리」
 const aw2Weak = B => raid && raid.awk2 && raid.awk2.weakT > 0 && B === raid.boss ? 0.7 : 1;   // 무사 「대왕암 가르기」
 function toggleAw2Auto(){
   S.aw2.man = !S.aw2.man; sfx('click');
@@ -7487,6 +7514,7 @@ function castSkill(i, lv, manual){
   if (i === 2){
     hero.buffT = 8; hero.buffLv = lv;
     fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
+    if (C.aim) hero.aim = Math.max(hero.aim || 0, AIM.roar);   // 궁사 「숨 고르기」: 조준이 바로 절반 차고, 버프 동안 3배 빨리 찬다(updateAim)
     if (C.shield){
       hero.shield = ST.maxHp * shieldPct(lv) / 100 * (raid && raid.info.pvp ? 0.25 : 1); hero.shieldT = 12;   // 결투에서는 보호막을 작게(술사가 같은 세기 상대를 늘 이기지 않게)
       addText('보호막!', hero.x, hero.y - 40, '#9fe7ff', 12, true);
@@ -7603,6 +7631,7 @@ function doinCast(kind, lv, alive, tg, mul){
    술사 밀물 해일(두 번 덮치고 떠밀어 묶음) · 썰물의 숨(15초 마나 절반·기술 피해↑) / 도인 역신 쫓는 춤(둘레에 6번, 늘 치명타) · 용신 맞이(15초 나와 동료 회복 + 도력 두 번) */
 function jobEPct(l){ return 9000 + 450 * (l - 1); }
 const oathDr = l => Math.min(40, 25 + 0.5 * (l - 1)), oathAtk = l => 2 + 0.05 * (l - 1), OATH_N = 10;
+const windSpd = l => 25 + 0.5 * (l - 1);   // 궁사 「바람 읽기」 공격 속도 +%
 const sumbiCd = l => 50 + 1.5 * (l - 1), ebbSk = l => 20 + 0.6 * (l - 1), yongHeal = l => 3 + 0.1 * (l - 1);
 function jobECast(lv, alive, tg, mul){
   const P = jobEPct(lv) / 100, atk = ST.atk * mul, live = () => mobs.filter(m => !m.dead && m.spawnT <= 0);
@@ -7617,6 +7646,11 @@ function jobECast(lv, alive, tg, mul){
     for (let k = 0; k < 2; k++) after(k * 0.5, () => { shake = Math.max(shake, 0.4); for (const m of live()){ hit(m, atk * P * LATE_K.sulsaE, 'skill'); m.stunT = Math.max(m.stunT || 0, m.raid ? 0.6 : 1.5); } });
     return true;
   }
+  if (S.cls === 'gungsa'){   // 파도 가르는 살: 세 갈래가 차례로 모두를 꿰뚫고, 가운데 살은 가장 튼튼한 적(보스)을 한 번 더
+    for (let k = 0; k < 3; k++) after(k * 0.2, () => { shake = Math.max(shake, 0.35); const L = live(); for (const m of L){ fx.push({type:'flash', t:0, dur:0.25, x:m.x, y:m.y - mobHeight(m) * 0.5, seed:Math.random() * 1000}); hit(m, atk * P * LATE_K.gungsaE, 'skill'); }
+      if (k === 1){ const b2 = L.filter(m => m.boss || m.raid).sort((a, c2) => c2.hp - a.hp)[0]; if (b2 && !b2.dead) hit(b2, atk * P * LATE_K.gungsaE, 'skill', true); } });
+    return true;
+  }
   if (S.cls === 'doin'){
     const boc = hero.bocheonT > 0 ? 1 + (hero.bocheonP || 0) / 100 : 1;
     for (let k = 0; k < 6; k++) after(k * 0.22, () => { fx.push({type:'ring', t:0, dur:0.35, x:hero.x, y:hero.y - 6, color:k % 2 ? '#ffd24a' : '#e8503a', r:26 + k * 5}); for (const m of live()) hit(m, atk * boc * P * LATE_K.doinE, 'skill', true); });
@@ -7627,7 +7661,8 @@ function jobECast(lv, alive, tg, mul){
 }
 function jobFCast(lv){
   fx.push({type:'awaken', t:0, dur:1, color:'#8ab0ff', x:hero.x, y:hero.y - 12}); sfx('awaken');
-  if (S.cls === 'jagaek'){ hero.sumbiT = 10; hero.sumbiP = sumbiCd(lv); hero.rollCd = Math.min(hero.rollCd || 0, PAT.rollCd / 2); }
+  if (S.cls === 'gungsa'){ hero.windT = 15; hero.windP = windSpd(lv); hero.aim = Math.max(hero.aim || 0, AIM.roar); }   // 바람 읽기: 사거리 +1(heroRange)·공격 속도(spdBuff)·조준이 줄지 않음(updateAim)
+  else if (S.cls === 'jagaek'){ hero.sumbiT = 10; hero.sumbiP = sumbiCd(lv); hero.rollCd = Math.min(hero.rollCd || 0, PAT.rollCd / 2); }
   else if (S.cls === 'sulsa'){ hero.ebbT = 15; hero.ebbP = ebbSk(lv); }
   else if (S.cls === 'doin'){ hero.yongT = 15; hero.yongP = yongHeal(lv); hero.charge = Math.max(hero.charge || 0, dChargeMul(Math.max(1, skLv(3)))); hero.chargeN = 2; }
   else { hero.oathT = 15; hero.oathLv = lv; hero.oathN = 0; }
@@ -7653,6 +7688,18 @@ function jobDCast(lv, alive, tg, mul){
     });
     return true;
   }
+  if (S.cls === 'gungsa'){   // 해 쏘는 활: 아홉 발(가장 튼튼한 적부터, 모두 치명타), 마지막 발은 보이는 적 모두
+    const order = alive.slice().sort((a, b2) => b2.hp - a.hp);
+    for (let k = 0; k < 9; k++) after(k * 0.11, () => {
+      const live = mobs.filter(m => !m.dead && m.spawnT <= 0); if (!live.length) return;
+      if (k === 8){ shake = Math.max(shake, 0.5); for (const m of live) hit(m, atk * P * LATE_K.gungsaD, 'skill', true); return; }
+      const m = order.find(x => !x.dead) || live[0];
+      fx.push({type:'flash', t:0, dur:0.3, x:m.x, y:m.y - mobHeight(m) * 0.5, seed:Math.random() * 1000});
+      hit(m, atk * P * LATE_K.gungsaD, 'skill', true);
+      for (const o of live) if (o !== m && !o.dead) hit(o, atk * P * LATE_K.gungsaD * LATE_K.gungsaP, 'skill');
+    });
+    return true;
+  }
   for (const m of alive) hit(m, atk * P * (m.boss || m.raid ? 2 : 1), 'skill');
   hero.dr4T = 10;
   return true;
@@ -7668,6 +7715,14 @@ function jobCCast(lv, alive, tg, mul){
       fx.push({type:'ring', t:0, dur:0.3, x:hero.x, y:hero.y - 6, color:'#c8d0ff', r:24 + k * 6});
       for (const m of mobs.filter(m => !m.dead && m.spawnT <= 0)) hit(m, ST.atk * mul * jobCPct(lv) * 0.5 / 100, 'skill');
     });
+    return true;
+  }
+  if (S.cls === 'gungsa'){   // 부채 과녁: 가장 튼튼한 적에게 다섯 발(모두 치명타), 조준이 가득 찬다
+    const t2 = alive.reduce((a, b2) => b2.hp > a.hp ? b2 : a), dmg = ST.atk * mul * jobCPct(lv) * LATE_K.gungsaC / 100;
+    hero.aim = 1;
+    for (let k = 0; k < 5; k++) after(k * 0.1, () => { const m = t2.dead ? mobs.find(x => !x.dead && x.spawnT <= 0) : t2; if (!m) return;
+      projs.push({kind:'arrow', x:hero.x + (k - 2) * 3, y:hero.y - 14 - (k % 2) * 3, tg:m, trail:[], dmg, hk:'skill', sure:true});
+      for (const o of mobs) if (o !== m && !o.dead && o.spawnT <= 0) hit(o, dmg * LATE_K.gungsaP, 'skill'); });   // 꿰뚫고 지나간 살이 다른 적도 스친다
     return true;
   }
   if (S.cls === 'sulsa'){
@@ -7713,8 +7768,21 @@ function nearestMob(){
 }
 
 // 지금 자리에서 바로 칠 수 있는 가장 가까운 적(누른 자리에서 버틸 때)
+/* 궁사 「조준」(물의 신화 8-1단계): 제자리에 서 있으면 hero.aim(0~1)이 차고(4초에 가득), 걷거나 구르면 줄어든다(2초에 바닥).
+   치명타 피해 × (1 + AIM.cd × aim) — hit의 aimMul. 「숨 고르기」(버프 동안)·「바람 읽기」는 3배 빨리, 바람 읽기 동안은 움직여도 줄지 않는다. 쓰러지면 0.
+   시험·시뮬(bench)에서도 같은 규칙(혼자 서서 쏘면 가득 찬 채로 싸운다). 머리 위 눈금은 drawEntityHero */
+const AIM = {up:0.25, down:0.5, cd:0.6, fast:3, roar:0.5};
+const aimMul = on => on && cls().aim ? 1 + AIM.cd * (hero.aim || 0) : 1;
+function updateAim(dt){
+  if (hero.dead){ hero.aim = 0; return; }
+  const move = hero.moving || hero.rollT > 0;
+  if (!move) hero.aim = Math.min(1, (hero.aim || 0) + AIM.up * (hero.buffT > 0 || hero.windT > 0 ? AIM.fast : 1) * dt);
+  else if (!(hero.windT > 0)) hero.aim = Math.max(0, (hero.aim || 0) - AIM.down * dt);
+}
+// 지금 사거리: 궁사 「바람 읽기」 +1, 파티 버프 「매의 눈」은 멀리서 싸우는 용사(사거리 2 이상)에게 +1
+const heroRange = () => { const r = cls().range; return r + (hero.windT > 0 ? 1 : 0) + (r > 1 && pbV('gungsa', 'rng') ? 1 : 0); };
 function mobInReach(){
-  const C = cls(); let best = null, bd = 1e9;
+  const C = {range:heroRange()}; let best = null, bd = 1e9;
   for (const m of mobs){
     if (m.dead || m.spawnT > 0) continue;
     const dx = m.tx - hero.tx, dy = m.ty - hero.ty, d = Math.abs(dx) + Math.abs(dy);
@@ -7801,7 +7869,7 @@ function update(dt){
       if (!tg || tg.dead || tg.spawnT > 0) tg = hero.target = hero.holdT > 0 || hero.dodgeT > 0 ? mobInReach() : nearestMob();
       if (tg){
         hero.idleT = 0;
-        const dx = tg.tx - hero.tx, dy = tg.ty - hero.ty, C = cls(), rg = pvpReach(C.range);
+        const dx = tg.tx - hero.tx, dy = tg.ty - hero.ty, C = cls(), rg = pvpReach(heroRange());
         const inRange = raid && raid.info.pvp ? duelOk(dx, dy, rg) : rg === 1 ? Math.abs(dx) + Math.abs(dy) === 1 : Math.hypot(dx, dy) <= rg + 0.01;
         if (inRange){
           hero.engaged = true;
@@ -7865,7 +7933,7 @@ function update(dt){
     const tx = tg.x, ty = tg.y - (p.toHero ? 14 : mobHeight(tg) * 0.5);
     const d = Math.hypot(tx - p.x, ty - p.y), sp = 190 * dt;
     p.trail.push([p.x, p.y]); if (p.trail.length > 4) p.trail.shift();
-    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic'); }
+    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic', !!p.sure); }
     else { p.x += (tx - p.x) / d * sp; p.y += (ty - p.y) / d * sp; }
   }
   projs = projs.filter(p => !p.done);
@@ -7875,6 +7943,8 @@ function update(dt){
   if (hero.baguaT > 0) hero.baguaT -= dt;
   if (hero.gutT > 0) hero.gutT -= dt;
   if (hero.bocheonT > 0) hero.bocheonT -= dt;
+  if (hero.windT > 0) hero.windT -= dt;
+  if (cls().aim) updateAim(dt);
   if (!hero.dead && (hero.mp ?? mpMax()) < mpMax()) hero.mp = Math.min(mpMax(), (hero.mp ?? mpMax()) + MP_REGEN * dt);
   for (const c in pbT) if (pbT[c] > 0) pbT[c] -= dt;
   if (hero.shinT > 0){ hero.shinT -= dt; if (!hero.dead) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * 0.03 * dt); }
@@ -8018,6 +8088,10 @@ function drawChibi(g, c, view, f, col, look){
   if (FLK.tiger){ const tx = back ? 40 : 21; Pl([[tx, 50], [tx - 9 * (back ? -1 : 1), 44 + sway], [tx - 11 * (back ? -1 : 1), 40 + sway], [tx - 8 * (back ? -1 : 1), 41 + sway], [tx - 6 * (back ? -1 : 1), 47], [tx + 1, 52]], '#f0f0f4');
     E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
   if (back) drawWeapon(true);
+  if (L.aim && !back){   // 궁사: 등 뒤 화살통(왼쪽 어깨 너머로 깃이 보인다)
+    Pl([[16.6, 35 + by], [21.6, 33.4 + by], [27, 48], [23, 49.4]], '#7a5230'); Pl([[16.6, 35 + by], [21.6, 33.4 + by], [22, 35 + by], [17.2, 36.6 + by]], '#c8a04a');
+    for (const [qx, qc] of [[16.4, '#f4f0e6'], [18.6, '#d8433a'], [20.6, '#f4f0e6']]){ RR(qx - 0.3, 29.4 + by, 0.8, 5, 0.3, '#c8a878'); Pl([[qx - 1.4, 28.4 + by], [qx + 1.6, 28.4 + by], [qx + 0.4, 32 + by], [qx - 0.4, 32 + by]], qc); }
+  }
 
   // ── 다리·신
   const lf = f === 1 ? -2 : f === 2 ? 1 : 0, rf = f === 2 ? -2 : f === 1 ? 1 : 0;
@@ -8040,6 +8114,12 @@ function drawChibi(g, c, view, f, col, look){
     Pl([[26, 37 + by], [32, 44.6 + by], [38, 37 + by], [35.5, 37 + by], [32, 41.8 + by], [28.5, 37 + by]], '#efe9da');   // 동정·깃
     if (aG >= 1) Pl([[26, 37 + by], [27.4, 37 + by], [32, 43.4 + by], [32, 44.6 + by]], trim);
     if (aG >= 4){ E(32, 46.1 + by * 0.5, 2.2, 2, '#ffd84a'); E(31.4, 45.4 + by * 0.5, 0.8, 0.7, '#ffffff'); }
+  }
+  if (L.aim){   // 궁사: 짧은 덧옷(허리띠 위까지 오는 가죽 조끼)과 화살통 끈
+    const VC = mix('#6a4a2e', O, 0.25), VD = darken(VC, 0.2);
+    if (!back){ Pl([[23, 37 + by], [27.6, 37 + by], [30, 44.6 + by], [21.6, 44.6 + by]], VC); Pl([[36.4, 37 + by], [41, 37 + by], [42.4, 44.6 + by], [34, 44.6 + by]], VD);
+      Pl([[24, 37 + by], [26, 37 + by], [40.6, 44.6 + by], [38.6, 44.6 + by]], '#c8a04a'); }
+    else { Pl([[23, 37 + by], [41, 37 + by], [42.4, 44.6 + by], [21.6, 44.6 + by]], VC); Pl([[33, 37 + by], [41, 37 + by], [42.4, 44.6 + by], [35, 44.6 + by]], VD); }
   }
   // 옷 아바타 장식
   const dc = col.deco;
@@ -8088,7 +8168,7 @@ function drawChibi(g, c, view, f, col, look){
   }
   if (look.beard && !back){ Pl([[hx - 3, hy + 9], [hx + 9, hy + 8.4], [hx + 6, hy + 16], [hx + 2, hy + 17], [hx - 1, hy + 14]], HR); Pl([[hx + 1, hy + 8.6], [hx + 6, hy + 8.4], [hx + 3.4, hy + 9.6]], darken(HR, 0.3)); }
   // 상투(머리 위 매듭)
-  if (!['jagaek', 'sulsa', 'helmet', 'mcrown'].includes(hat)){ E(hx - 1, hy - 12.4, 3.6, 3.2, HR); E(hx - 2, hy - 13.4, 1.4, 1, HRL); RR(hx - 4, hy - 10.6, 6, 1.6, 0.8, darken(HR, 0.4)); }
+  if (!['jagaek', 'sulsa', 'helmet', 'mcrown', 'gungsa'].includes(hat)){ E(hx - 1, hy - 12.4, 3.6, 3.2, HR); E(hx - 2, hy - 13.4, 1.4, 1, HRL); RR(hx - 4, hy - 10.6, 6, 1.6, 0.8, darken(HR, 0.4)); }
 
   // ── 머리 장식
   if (hat === 'musa'){
@@ -8107,6 +8187,14 @@ function drawChibi(g, c, view, f, col, look){
     RR(hx - 6.6, hy - 20, 13.2, 13, 4, K); RR(hx - 5, hy - 18.6, 3.4, 9, 1.6, KL);
     RR(hx - 6.6, hy - 10.6, 13.2, 2, 1, '#4a3f58');
     if (!back){ for (let i = 0; i < 4; i++) E(hx - 9 + i * 0.8, hy + 2 + i * 3, 0.8, 0.8, '#c98a8a'); }
+  } else if (hat === 'gungsa'){   // 삿갓(대오리로 엮은 넓은 고깔 갓) + 턱끈
+    const K = '#c8a868', KD = '#9a7a44', KL = '#e6d09a';
+    Pl([[hx - 18.4, hy - 3.2], [hx + 18.4, hy - 5.2], [hx + 1.4, hy - 19.6], [hx - 1.4, hy - 19.4]], K);
+    Pl([[hx + 1.4, hy - 19.6], [hx + 18.4, hy - 5.2], [hx + 9, hy - 4.6]], KD);
+    Pl([[hx - 18.4, hy - 3.2], [hx + 18.4, hy - 5.2], [hx + 18, hy - 3.6], [hx - 18, hy - 1.6]], KD);
+    for (const k of [-11, -5, 4]) { g.strokeStyle = KL; g.lineWidth = 0.6; g.beginPath(); g.moveTo(hx, hy - 19); g.lineTo(hx + k, hy - 3.8 - k * 0.05); g.stroke(); }
+    E(hx, hy - 19.4, 1.5, 1.2, KD);
+    if (!back){ g.strokeStyle = '#8a2b2b'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(hx - 9.4, hy - 2.6); g.lineTo(hx - 7, hy + 10.4); g.stroke(); }
   } else if (hat === 'doin'){
     RR(hx - 5, hy - 19, 9, 8, 2.4, '#f2efe6'); RR(hx - 5, hy - 13.4, 9, 2, 0.8, '#b8382f'); E(hx - 1, hy - 19.4, 2, 1.6, '#f2efe6');
   } else if (hat === 'helmet'){
@@ -8151,11 +8239,15 @@ function drawChibi(g, c, view, f, col, look){
     if (!back && atk){ RR(41.6, 39.2 + by, 3.4, 5, 1.2, gc); RR(41.6, 39.2 + by, 0.9, 5, 0.4, gl); }
     else { const gx = back ? 19.3 : 39.3; RR(gx, 41.2 + by, 5.4, 2.8, 1.2, gc); RR(gx, 41.2 + by, 5.4, 0.8, 0.4, gl); } }
 
+  if (L.aim && back){   // 궁사 뒷모습: 등에 멘 화살통
+    Pl([[37.6, 51], [42, 49], [33.6, 36.4 + by], [29.6, 38.4 + by]], '#7a5230'); Pl([[33.6, 36.4 + by], [29.6, 38.4 + by], [30.2, 39.8 + by], [34.4, 37.8 + by]], '#c8a04a');
+    for (const [qx, qy, qc] of [[29.4, 35.4, '#f4f0e6'], [31.4, 34.2, '#d8433a'], [33.2, 33.4, '#f4f0e6']]) Pl([[qx - 1.4, qy - 2.6 + by], [qx + 1.2, qy - 3.4 + by], [qx + 1.4, qy + 1 + by], [qx - 0.2, qy + 1.6 + by]], qc);
+  }
   // 무기: 앞모습은 오른손에, 뒷모습은 몸 뒤 오른쪽에
   function drawWeapon(behind){
-    const t = col.wtype || L.wtype, wc = col.wcol, jb = col.job || 0, hxw = behind ? 43 : atk ? 49 : 42, hyw = (behind ? 46 : atk ? 41.6 : 48) + by;
+    const t = col.wtype || L.wtype, wc = col.wcol, jb = col.job || 0, lbow = t === 'bow' && !!L.aim && !behind, hxw = behind ? 43 : atk ? (lbow ? 51 : 49) : 42, hyw = (behind ? 46 : atk ? 41.6 : lbow ? 46 : 48) + by;   // lbow: 궁사의 장궁(앞모습) — 줌통을 손에 쥔다(서 있을 땐 몸 옆에 세워 들고, 쏠 땐 앞으로)
     if (t === 'none') return;
-    const ang = behind ? -1.15 : atk ? (t === 'staff' ? -0.5 : 0.18) : (t === 'staff' ? -1.45 : -1.1);
+    const ang = behind ? -1.15 : lbow ? (atk ? 0.12 : Math.PI + 0.25) : atk ? (t === 'staff' ? -0.5 : 0.18) : (t === 'staff' ? -1.45 : -1.1);
     g.save(); g.translate(hxw, hyw); g.rotate(ang);
     const glow = wG >= 3 ? mix(wc, '#ffffff', 0.6) : '#ffffff';
     if (t === 'sword'){ Pl([[1, -1.6], [22, -1.6], [25, 0], [22, 1.6], [1, 1.6]], wc); Pl([[3, -1.6], [22, -1.6], [24, -0.4], [3, -0.4]], glow); RR(-1, -4, 2.6, 8, 1, '#e2c26b'); RR(-6, -1.2, 5, 2.4, 1, '#6b4a2b');
@@ -8167,7 +8259,28 @@ function drawChibi(g, c, view, f, col, look){
       if (jb >= 1){ g.save(); g.translate(-2, 4); g.rotate(0.5); Pl([[1, -1.2], [10, -1.2], [12, 0], [10, 1.2], [1, 1.2]], jb >= 2 ? '#c88aff' : wc); RR(-1, -2.4, 2, 4.8, 1, '#e2c26b'); g.restore();
         Pl([[2, -1.4], [11, -1.4], [12.6, 0], [11, -0.2]], jb >= 2 ? '#e8c8ff' : '#ffffff'); } }
     else if (t === 'spear'){ RR(-12, -1, 38, 2, 1, '#6b4a2b'); Pl([[26, -2.4], [34, 0], [26, 2.4]], wc); RR(23, -2.4, 2.4, 4.8, 1, '#d8433a'); }
-    else if (t === 'bow'){ g.strokeStyle = '#7a5230'; g.lineWidth = 2; g.beginPath(); g.arc(6, 0, 13, -1.25, 1.25); g.stroke(); g.strokeStyle = '#e8e0d0'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(6 + 13 * Math.cos(1.25), 13 * Math.sin(1.25)); g.lineTo(6 + 13 * Math.cos(1.25), -13 * Math.sin(1.25)); g.stroke(); RR(17.4, -2, 2.4, 4, 1, wc); }
+    else if (t === 'bow'){   // 활. 궁사(L.aim)의 장궁: 앞모습은 줌통을 쥐고 세워 들고(쏠 때는 시위를 당겨 살을 메김), 뒷모습은 어깨 너머로. 전직하면 활채·활고자 빛이 달라진다
+      const wood = jb >= 4 ? '#b8482a' : jb >= 2 ? '#4a3a6a' : '#7a5230', tipC = jb >= 1 ? '#ffd24a' : '#e8e0d0';
+      g.lineCap = 'round';
+      if (lbow){
+        const R = 20, a0 = 0.85, so = R * (1 - Math.cos(a0)), hl = R * Math.sin(a0);
+        g.strokeStyle = wood; g.lineWidth = 2.4; g.beginPath(); g.arc(-R, 0, R, -a0, a0); g.stroke();
+        if (wG >= 2 || jb >= 1){ g.strokeStyle = jb >= 2 ? '#ffd24a' : wc; g.lineWidth = 0.9; g.beginPath(); g.arc(-R, 0, R - 0.5, -a0 + 0.14, a0 - 0.14); g.stroke(); }
+        for (const s2 of [-1, 1]) E(-so, s2 * hl, 1.4, 1.4, tipC);
+        g.strokeStyle = '#f0e8d8'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(-so, hl); if (atk) g.lineTo(-so - 6, 0); g.lineTo(-so, -hl); g.stroke();
+        RR(-1.6, -2.4, 3, 4.8, 1.2, wc);
+        if (atk){ RR(-so - 6, -0.6, so + 13, 1.2, 0.5, '#e8dcc0'); Pl([[6.4, -2], [11, 0], [6.4, 2]], wG >= 3 ? glow : '#d7dde3'); Pl([[-so - 6, 0], [-so - 3.4, -1.8], [-so - 2.4, 0], [-so - 3.4, 1.8]], '#d8433a'); }
+      } else {
+        const R = 13, a0 = 1.25, sx = 6 + R * Math.cos(a0), sy = R * Math.sin(a0);
+        g.save(); if (L.aim) g.scale(1.25, 1.25);
+        g.strokeStyle = L.aim ? wood : '#7a5230'; g.lineWidth = 2; g.beginPath(); g.arc(6, 0, R, -a0, a0); g.stroke();
+        if (L.aim && (wG >= 2 || jb >= 1)){ g.strokeStyle = jb >= 2 ? '#ffd24a' : wc; g.lineWidth = 0.8; g.beginPath(); g.arc(6, 0, R - 0.4, -a0 + 0.18, a0 - 0.18); g.stroke(); }
+        if (L.aim) for (const s2 of [-1, 1]) E(sx, s2 * sy, 1.2, 1.2, tipC);
+        g.strokeStyle = '#e8e0d0'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx, -sy); g.stroke();
+        RR(17.4, -2, 2.4, 4, 1, wc);
+        g.restore();
+      }
+      g.lineCap = 'butt'; }
     else if (t === 'hammer'){ RR(-8, -1.1, 22, 2.2, 1, '#7a5230'); RR(-8, -1.1, 22, 0.8, 0.4, '#9a7250'); RR(12, -5, 8.4, 10, 1.8, '#7c8290'); RR(12, -5, 8.4, 3, 1.4, '#c4cad6'); RR(11, -1.6, 1.8, 3.2, 0.6, '#565c68'); }
     else if (t === 'rod'){ RR(-14, -1.4, 42, 2.8, 1.4, '#c8382f'); RR(-14, -1.8, 5, 3.6, 1.2, '#ffd24a'); RR(23, -1.8, 5, 3.6, 1.2, '#ffd24a'); }
     else if (t === 'staff'){ RR(-10, -1.2, 36, 2.4, 1.2, '#7a5230'); RR(-10, -1.2, 36, 0.8, 0.4, '#9a7250'); E(28, 0, 4.2, 4.2, wc); E(27, -1.2, 1.6, 1.4, '#ffffff');
@@ -8182,7 +8295,7 @@ function drawChibi(g, c, view, f, col, look){
       if (jb >= 1) for (let k = 0; k < 3; k++) E(12.6 * Math.cos(-0.6 + k * 0.6), 12.6 * Math.sin(-0.6 + k * 0.6), 1.3, 1.3, '#ffd24a');
       if (jb >= 2){ const five = ['#3a6ad8', '#e83a4a', '#ffd24a', '#ffffff', '#2a2a2a']; for (let k = 0; k < 5; k++){ const a = -0.7 + k * 0.35; g.fillStyle = five[k]; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 12, a, a + 0.3); g.closePath(); g.fill(); } }
     }
-    if (jb >= 5 && t !== 'none'){ const tx = {sword:24, dagger:12, staff:28, spear:32, rod:25, bow:19, hammer:16}[t] || 12; g.globalAlpha = 0.5; E(tx, 0, 4.6, 4.6, '#7ae0ff'); g.globalAlpha = 0.95; E(tx - 3.4, -2.6, 1.2, 1.2, '#eaffff'); E(tx + 1.4, 2.8, 1, 1, '#eaffff'); E(tx - 7, 1.6, 0.8, 0.8, '#bff0ff'); g.globalAlpha = 1; }   // 5차 전직(바다): 무기 끝에 물방울 빛
+    if (jb >= 5 && t !== 'none'){ const tx = lbow ? 2 : {sword:24, dagger:12, staff:28, spear:32, rod:25, bow:19, hammer:16}[t] || 12; g.globalAlpha = 0.5; E(tx, 0, 4.6, 4.6, '#7ae0ff'); g.globalAlpha = 0.95; E(tx - 3.4, -2.6, 1.2, 1.2, '#eaffff'); E(tx + 1.4, 2.8, 1, 1, '#eaffff'); E(tx - 7, 1.6, 0.8, 0.8, '#bff0ff'); g.globalAlpha = 1; }   // 5차 전직(바다): 무기 끝에 물방울 빛
     if (SKL.tassel){ const tc = SKL.tassel, hx0 = {sword:-6, dagger:-4.6, spear:-12, rod:-14, staff:-10}[t] != null ? {sword:-6, dagger:-4.6, spear:-12, rod:-14, staff:-10}[t] : -3;
       g.strokeStyle = darken(tc, 0.3); g.lineWidth = 0.7; g.beginPath(); g.moveTo(hx0, 0); g.lineTo(hx0 - 1.4, 2.4 + sway * 0.4); g.stroke();
       E(hx0 - 1.4, 2.8 + sway * 0.4, 1.3, 1.2, mix(tc, '#ffd24a', 0.35));
@@ -8627,7 +8740,12 @@ const JOBS = {
   doin:[{name:'무당', weapon:'방울 부채', cape:'무당 오방포', capeC:'#c8382f'}, {name:'만신', weapon:'오방신 부채', cape:'만신 홍철릭', capeC:'#e0a03a'},
     {name:'신명', weapon:'신명 방울 부채', cape:'해돋이 무복', capeC:'#ff8a4a', teacher:'아메노우즈메', type:'m3_doin', ch:32},
     {name:'천무', weapon:'오색 천선', cape:'오색 날개옷', capeC:'#ff8ad0', teacher:'여와', ch:43},
-    {name:'용신무', weapon:'처용 부채', cape:'처용 오방 소매', capeC:'#d8502f', teacher:'처용', type:'m5_doin', ch:46}],   // 5차(물의 신화 5단계): 4부 바다 Lv.505 + 46장
+    {name:'용신무', weapon:'처용 부채', cape:'처용 오방 소매', capeC:'#d8502f', teacher:'처용', type:'m5_doin', ch:46}],
+  // 궁사(8-1단계): 1차 스승은 새로 지은 인물 「늙은 사냥꾼」(teacher1), 3차 나스노 요이치(옛 군담의 명궁 — 시험하는 스승으로만)·4차 후예·5차 거타지
+  gungsa:[{name:'명궁', weapon:'물푸레 장궁', cape:'사냥꾼 덧옷', capeC:'#5a7a3a', teacher1:'늙은 사냥꾼'}, {name:'귀궁', weapon:'넋살 장궁', cape:'귀궁 흑포', capeC:'#4a3a6a'},
+    {name:'궁마사', weapon:'바닷바람 장궁', cape:'부채 무늬 덧옷', capeC:'#c8503a', teacher:'나스노 요이치', type:'m3_gungsa', ch:30},
+    {name:'사일객', weapon:'해 쏘는 활', cape:'붉은 해 도포', capeC:'#e0782a', teacher:'후예', ch:43},
+    {name:'해궁', weapon:'물살 장궁', cape:'거타지 물빛 덧옷', capeC:'#3a8ab0', teacher:'거타지', type:'m5_gungsa', ch:46}],   // 5차(물의 신화 5단계): 4부 바다 Lv.505 + 46장
 };
 const JOB_BONUS = [{atk:0, hp:0, skill:0}, {atk:30, hp:30, skill:20}, {atk:80, hp:80, skill:50}, {atk:150, hp:150, skill:90}, {atk:250, hp:250, skill:140}, {atk:330, hp:330, skill:180}];
 const JOB_MAX = 5;   // 지금 있는 가장 높은 전직(저장을 불러올 때 이 값까지 받는다 — 새 전직을 더하면 꼭 같이 올린다)
@@ -8638,6 +8756,7 @@ const JOB_LV = 50;
 const jobOf = (c = S.cls, j = S.job) => j > 0 ? JOBS[c][j - 1] : null;
 const jobName = (c = S.cls, j = S.job) => j > 0 ? JOBS[c][j - 1].name : CLASSES[c].name;
 const jobCapeKey = (c, j) => `j_${c}_${j}`;
+const teacher1 = (c = S.cls) => JOBS[c][0].teacher1 || `${CLASSES[c].name}의 스승`;   // 1차 스승 이름(궁사는 「늙은 사냥꾼」)
 function jobReady(tier){
   if (S.job !== tier - 1) return false;
   if (tier === 1) return Math.max(S.level, S.best.l0) >= JOB_LV || S.reb.n > 0;
@@ -8649,7 +8768,7 @@ function jobReady(tier){
 // 전직 시험: 스승(1차)·강림도령(2차)과 동료 둘이 함께 90초 안에 이긴다
 // 4차 「세 스승의 시험」: 1차 스승 → 강림도령 → 3차 스승과 연달아 싸운다(한 판마다 체력 0.7배)
 const JOB5_REF = 2;   // 5차 시험 스승 세기 = 동해 최고 단계 − 이만큼(3차는 −25)
-const TRIAL4 = c => [{name:`${CLASSES[c].name}의 스승`, type:'m_' + c, color:JOBS[c][0].capeC}, {name:'강림도령', type:'gangrim', color:'#b8282a'},
+const TRIAL4 = c => [{name:teacher1(c), type:'m_' + c, color:JOBS[c][0].capeC}, {name:'강림도령', type:'gangrim', color:'#b8282a'},
   {name:JOBS[c][2].teacher, type:JOBS[c][2].type, color:JOBS[c][2].color || JOBS[c][2].capeC}];
 function startJobTrial(tier, step = 0){
   if (raid || (!step && !jobReady(tier))) return false;
@@ -8663,7 +8782,7 @@ function startJobTrial(tier, step = 0){
   }
   const t35 = tier === 3 || tier === 5;   // 3차(부상)·5차(바다): 그 땅의 스승 한 분과
   const ref = tier === 1 ? 44 : tier === 5 ? Math.max(4, S.maxStage - JOB5_REF) : tier === 3 ? Math.max(8, S.maxStage - 25) : Math.max(60, Math.round(S.maxStage * 0.9));
-  const info = {job:tier, label:`${J.name} 전직 시험`, bossName:tier === 1 ? `${CLASSES[c].name}의 스승` : t35 ? J.teacher : '강림도령', type:tier === 1 ? 'm_' + c : t35 ? J.type : 'gangrim',
+  const info = {job:tier, label:`${J.name} 전직 시험`, bossName:tier === 1 ? teacher1(c) : t35 ? J.teacher : '강림도령', type:tier === 1 ? 'm_' + c : t35 ? J.type : 'gangrim',
     color:tier === 1 ? J.capeC : t35 ? (J.color || J.capeC) : '#b8282a', region:regionIndex(S.stage), party:3, ref, g:2};
   const party = raidParty(Object.assign({}, info, {party:3}));
   startFight(info, party, {hp:10 * mHp(ref) / 15 * 1.9 * 40, atk:mAtk(ref) * 2.5, aoe:mAtk(ref) * 1.6, time:RAID_TIME});
@@ -8689,7 +8808,7 @@ function finishJobTrial(R){
 function grantJob(tier){
   const c = S.cls, J = JOBS[c][tier - 1];
   S.job = Math.max(S.job, tier);
-  for (const cc of CLASS_ORDER) giveAvatar(jobCapeKey(cc, tier), true);
+  for (const cc of CLASS_ALL) giveAvatar(jobCapeKey(cc, tier), true);
   S.av.cape = jobCapeKey(c, tier);
   unlockSkills();
   if (tier >= 4) soulFillEmpty();   // 넋 주머니 둘째 칸
@@ -8703,10 +8822,10 @@ function grantJob(tier){
 }
 const JOB_CUT1 = c => ['village', 'hero,kkachi', 'transform', [['까치', `스승님이 인정하셨어요! 이제 ${JOBS[c][0].name}예요!`], ['나', `「${JOBS[c][0].weapon}」… 손에 착 감겨요.`]]];
 const JOB_CUT2 = c => ['court', 'gangrim,hero', 'transform', [['강림도령', `염라대왕도 붙잡아 온 나를 이겼구나. 이제 너는 ${JOBS[c][1].name}다.`], ['나', '이 힘으로 하늘 문까지 지켜 낼게요.']]];
-const JOB_TEACHER3 = {musa:'susanoo', jagaek:'m:tengu:#c83a2a', sulsa:'seimei', doin:'uzume'}, JOB_TEACHER4 = {musa:'pangu', jagaek:'change', sulsa:'jiutian', doin:'nuwa'};
+const JOB_TEACHER3 = {musa:'susanoo', jagaek:'m:tengu:#c83a2a', sulsa:'seimei', doin:'uzume', gungsa:'yoichi'}, JOB_TEACHER4 = {musa:'pangu', jagaek:'change', sulsa:'jiutian', doin:'nuwa', gungsa:'houyi'};
 const JOB_CUT3 = c => ['shore', `${JOB_TEACHER3[c]},hero`, 'transform', [[JOBS[c][2].teacher, `해 뜨는 섬의 바람이 너를 알아보는구나. 이제 너는 ${JOBS[c][2].name}다.`], ['나', `「${JOBS[c][2].weapon}」… 바다 냄새가 나요.`]]];
 const JOB_CUT4 = c => ['kunlunmt', `${JOB_TEACHER4[c]},hero,kkachi`, 'transform', [[JOBS[c][3].teacher, `세 나라의 스승을 모두 넘었구나. 이제 너는 ${JOBS[c][3].name}다.`], ['까치', '{name}님, 넋 주머니가 두 칸이 됐어요!'], ['나', '하늘을 꿰매러 가요.']]];
-const JOB_TEACHER5 = {musa:'munmu', jagaek:'haenyeo', sulsa:'yeongdeung', doin:'cheoyong'};
+const JOB_TEACHER5 = {musa:'munmu', jagaek:'haenyeo', sulsa:'yeongdeung', doin:'cheoyong', gungsa:'geotaji'};
 const JOB_CUT5 = c => ['daewangam', `${JOB_TEACHER5[c]},hero,kkachi`, 'transform', [[JOBS[c][4].teacher, `물은 낮은 데로 흘러 가장 큰 것을 이룬다. 이제 너는 ${JOBS[c][4].name}다.`], ['까치', '{name}님, 새 기술이 둘이나 생겼어요! 마나도 120으로 늘었어요.'], ['나', `「${JOBS[c][4].weapon}」… 물결처럼 가벼워요.`]]];
 function unlockSkills(){
   for (let i = 0; i < SKILLS.length; i++){
@@ -8819,7 +8938,7 @@ const AVATARS = [
   {k:'w_taecho', type:'wing', name:'태초의 날개', wingC:['#e8c860', '#ffe08a', '#fff6d8', '#9ff0e8'], star:true, src:'태초의 신', pt:3},
   {k:'w_fin', type:'wing', name:'지느러미 날개', wingC:['#1f6a8a', '#3aa8c8', '#8fe0f0', '#e8fbff'], star:true, src:'천공의 탑 350층', pt:4},   // 물의 신화 7-2
 ];
-for (const c of CLASS_ORDER) for (const j of [1, 2, 3, 4, 5]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
+for (const c of CLASS_ALL) for (const j of [1, 2, 3, 4, 5]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
 const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기'], ['wing', '날개']];
 const AV_PCT = 2, AV_BOX = 1000, AV_DUP_GEMS = 30, AV_PITY = 40;
@@ -10816,6 +10935,9 @@ Object.assign(MOB_HD, {
   m_jagaek:chibiMob('jagaek', {outfit:'#2c2638', hair:'#241c26', hat:'jagaek', skin:0}),
   m_sulsa:chibiMob('sulsa', {outfit:'#3f5f9a', hair:'#c8c8d0', hat:'sulsa', skin:0, beard:true}),
   m_doin:chibiMob('doin', {outfit:'#e6e0cc', hair:'#c8c8d0', hat:'doin', skin:0, beard:true}),
+  m_gungsa:chibiMob('gungsa', {outfit:'#6a5a3a', hair:'#b8b8c0', hat:'gungsa', skin:1, beard:true}),                                    // 늙은 사냥꾼(궁사 1차 스승, 새로 지은 인물)
+  m3_gungsa:chibiMob('gungsa', {outfit:'#3a5a8a', hair:'#1a1a22', hat:'none', skin:0}, {job:2, capeC:'#c8503a'}),                        // 나스노 요이치(궁사 3차)
+  m5_gungsa:chibiMob('gungsa', {outfit:'#5a7a4a', hair:'#241c26', hat:'musa', skin:1}, {job:3, capeC:'#3a8ab0'}),                        // 거타지(궁사 5차)
   gangrim:chibiMob('jagaek', {outfit:'#b8282a', hair:'#241c26', hat:'sulsa', skin:0}, {job:2}),
   soldier:chibiMob('musa', {outfit:'#d8b84a', hair:'#241c26', hat:'helmet', skin:0}, {wtype:'spear', aG:2, wG:2}),
   jeonwoochi:chibiMob('doin', {outfit:'#4a6aa8', hair:'#241c26', hat:'sulsa', skin:0}, {job:1}),
@@ -12239,6 +12361,7 @@ function drawEntityHero(){
   if (hero.charge > 1){ for (let i = 0; i < 3; i++){ const a = gtime * 4 + i * 2.1; P(x + Math.cos(a) * 9, hy - 26 + Math.sin(a) * 3, 2, 2, '#ffd24a'); } }
   const r = hero.hp / ST.maxHp;
   hero.tagY = hy - 34;
+  if (cls().aim){ const am = hero.aim || 0; hero.tagY = hy - 37; P(x - 8, hy - 36, 16, 3, '#1a1218'); P(x - 7, hy - 35, Math.max(0, Math.round(14 * am)), 1, am >= 1 ? '#ffe08a' : '#a8d86a'); if (am >= 1) P(x + 8, hy - 36, 1, 3, '#ffe08a'); }   // 궁사 「조준」 눈금(체력 막대 위)
   P(x - 8, hy - 33, 16, 3, '#1a1218'); P(x - 7, hy - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
@@ -12318,6 +12441,11 @@ function drawPet(t){
   if (t === 'def' && r.glow > 0){ b.globalAlpha = r.glow / 0.25; parc(hero.x, hero.y - 12, 11, 0, Math.PI * 2, '#9fe7ff', 14); b.globalAlpha = 1; }
 }
 function drawProj(p){
+  if (p.kind === 'arrow'){   // 화살: 날아가는 쪽으로 누운 짧은 살(살촉 밝게·깃 붉게)
+    const L0 = p.trail.length ? p.trail[p.trail.length - 1] : [p.x - 1, p.y], dx = p.x - L0[0], dy = p.y - L0[1], d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+    for (let i = 0; i < 6; i++) P(p.x - ux * i, p.y - uy * i, 1, 1, i === 0 ? '#f4fbff' : i >= 4 ? '#d8433a' : '#c8a878');
+    return;
+  }
   if (p.kind === 'fire'){
     p.trail.forEach(([tx, ty], i) => P(tx, ty, 1 + (i > 1 ? 1 : 0), 1 + (i > 1 ? 1 : 0), i > 2 ? '#ffb04a' : '#c05020'));
     P(p.x - 2, p.y - 1, 4, 2, '#ff7a2a'); P(p.x - 1, p.y - 2, 2, 4, '#ff7a2a'); P(p.x - 1, p.y - 1, 2, 2, '#fff2a0');
@@ -13269,6 +13397,7 @@ const CAST = {
   wukong:{name:'손오공', p:['sulsa', {outfit:'#e0a03a', hair:'#b8743a', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'rod'}},
   emperor:{name:'옥황상제', p:['musa', {outfit:'#e8c84a', hair:'#241c26', hat:'mcrown', skin:0, beard:true}, 4, 4], ex:{deco:'dragon', capeC:'#c8382f', wtype:'none'}},
   susanoo:{name:'스사노오', p:['musa', {outfit:'#2a4a6a', hair:'#1a1a22', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:2, capeC:'#3a4a7a'}},
+  yoichi:{name:'나스노 요이치', p:['gungsa', {outfit:'#3a5a8a', hair:'#1a1a22', hat:'none', skin:0}, 3, 3], ex:{job:2, capeC:'#c8503a'}},
   seimei:{name:'세이메이', p:['sulsa', {outfit:'#f4f4f8', hair:'#1a1a22', hat:'sulsa', skin:0}, 3, 3], ex:{job:2}},
   uzume:{name:'아메노우즈메', p:['doin', {outfit:'#e8506a', hair:'#1a1a22', hat:'flower', skin:0}, 2, 2], ex:{wtype:'none'}},
   houyi:{name:'후예', p:['musa', {outfit:'#8a5a2a', hair:'#1a1a22', hat:'musa', skin:1, beard:true}, 3, 3]},
@@ -15328,7 +15457,7 @@ notiReg({k:'amber', pri:20, flag:'noAmber', who:() => ({name:CARVER.name, img:ca
     `다섯 장비에 호박석을 하나씩 박고 깎아 <b>문양</b>을 새겨요. 성공하면 다음 확률이 내려가고 실패하면 올라가니, 확률이 높을 때 좋은 줄을 깎으세요.`],
   go:{label:'세공 보러 가기', fn:() => { gearSlot = 'amber'; buildTab('gear'); }}});
 // 초각성기 2 퀘스트가 열림(56장 뒤): 직업 1차 스승이 「아직 한 수가 남았다」
-notiReg({k:'aw2', pri:26, flag:'noAw2', who:() => ({name:`${CLASSES[S.cls].name}의 스승`, cast:`m:m_${S.cls}:${JOBS[S.cls][0].capeC}`}), tag:'새 퀘스트 · 초각성기 2', title:'두 번째 깨달음',
+notiReg({k:'aw2', pri:26, flag:'noAw2', who:() => ({name:teacher1(), cast:`m:m_${S.cls}:${JOBS[S.cls][0].capeC}`}), tag:'새 퀘스트 · 초각성기 2', title:'두 번째 깨달음',
   one:() => `${CLASSES[S.cls].name}의 스승: 아직 한 수가 남았다 — 「두 번째 깨달음」`, when:() => aw2Open() && !S.aw2.got && S.aw2.q === 0 && !S.aw2.hear, key:() => '1',
   lines:() => ['오랜만이구나, {name}. 멀리까지 갔더구나. …그런데 <b>아직 한 수가 남았다</b>.',
     `첫 번째 초각성은 때가 되면 저절로 나가는 한 방이지. 두 번째 「<b>${aw2Sk().name}</b>」는 <b>잘 싸워야 차는 한 방</b>이다.`,
@@ -17499,7 +17628,7 @@ async function pushCloud(){
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
@@ -17992,7 +18121,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
-    update, buyStat, upgradeSkill, CLASSES, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
+    update, buyStat, upgradeSkill, CLASSES, CLASS_ORDER, CLASS_ALL, AIM, aimMul, heroRange, teacher1, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,

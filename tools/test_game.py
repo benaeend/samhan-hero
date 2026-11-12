@@ -2694,6 +2694,87 @@ async def main():
         await up.screenshot(path=str(OUT / '43c-pet-part4.png'))
         await ctxU.close()
 
+        # 9-17) 물의 신화 8-1단계: 신규 직업 「궁사」(1~5차) — 아직 직업 고르기 창에는 안 보이고(CLASS_ALL에만), 시험 훅 setClass로 만들어 본다
+        ctxG = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        gp = await ctxG.new_page()
+        watch(gp, errors, '8-1단계 ')
+        await fresh(gp)
+        await signup(gp, 'gungtest', 'abcd', '활잡이')
+        g1 = await gp.evaluate(r"""(arg) => { const [save] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.PAT.off = true; G.wipeOff = true;
+  const run = (sec, f) => { for (let i = 0; i < sec * 20; i++){ G.update(0.05); G.addTime(50); if (f && f(i)) break; } };
+  // 아직 플레이어에게 안 보인다: 직업 고르기·직업 바꾸기 창에는 네 직업만
+  out.order = [G.CLASS_ORDER.includes('gungsa'), G.CLASS_ALL.includes('gungsa'), G.CLASS_ORDER.length];
+  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="gungsa"]').length]; G.hideModal();
+  // 4부 끝 무사 저장에서 직업만 궁사로: 기술 13칸이 모두 나간다(반자동 = 기술은 모두 손으로)
+  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '활잡이'; G.setClass('gungsa'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
+  out.stat = [G.CLASSES.gungsa.range, G.heroRange(), Math.round(G.ST.maxHp / G.ST.atk) > 0, G.skillName ? 1 : 0];
+  const cast = {}, names = [];
+  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12]]){
+    S.skSet = set.slice(); S.skSetMan = true; S.skOff = G.SKILLS.map((_, i) => i).filter(i => !set.includes(i));
+    G.bench(8, false, t => { const k = Math.round(t / 0.05); if (k >= 12 && k % 6 === 0){ const i = set[(k - 12) / 6]; if (i != null && !cast[i]){ G.hero.mp = 999; cast[i] = G.castNow(i); } } });
+  }
+  out.cast = G.SKILLS.map((_, i) => !!cast[i]); out.names = G.CLASSES.gungsa.skills.length;
+  out.desc = G.SKILLS.map((_, i) => { const d = G.skillDesc(i, 5), g = G.skillGain(i, 5); return typeof d === 'string' && d.length > 8 && !/undefined|NaN/.test(d) && g && isFinite(g.g); });
+  out.mp = [G.skMp(3), (S.cls = 'musa', G.skMp(3))]; S.cls = 'gungsa';
+  // 조준: 서 있으면 차고(4초), 구르면 줄고, 다시 서면 찬다. 가득 차면 치명타 피해 ×1.6
+  S.skSet = []; const aim = {};
+  G.bench(14, false, t => { const k = Math.round(t / 0.05); if (k === 20) aim.t1 = G.hero.aim; if (k === 110){ aim.full = G.hero.aim; aim.mul = G.aimMul(true); G.heroRoll(true); } if (k === 116) aim.roll = G.hero.aim; if (k === 270) aim.back = G.hero.aim; });
+  out.aim = [aim.t1 > 0.1 && aim.t1 < 0.5, aim.full === 1, Math.round(aim.mul * 100), aim.roll < 1, aim.back === 1];
+  S.cls = 'musa'; out.aimMusa = G.aimMul(true); S.cls = 'gungsa';
+  // 매의 눈(파티 버프): 치명타 확률 + 사거리 +1, 바람 읽기: 사거리 +1 더
+  S.skSet = [10, 12]; G.bench(1, false, t => { if (Math.round(t / 0.05) === 4){ G.hero.mp = 999; G.castNow(10); } if (Math.round(t / 0.05) === 8){ G.hero.mp = 999; G.castNow(12); } if (Math.round(t / 0.05) === 12) out.rng = [G.heroRange(), G.hero.windT > 0, G.pbDesc('gungsa', 1).includes('사거리')]; });
+  // 전직 1~5차: 스승과 겨뤄 이기면 전직(망토·기술)
+  S.mode = 'auto'; S.job = 0; S.av.cape = ''; for (const k of ['jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobF']) S.skills[k] = 0; G.refreshStats();
+  const jobs = [];
+  for (let tier = 1; tier <= 5; tier++){
+    const ready = tier === 2 ? true : G.jobReady(tier), names = [], types = [];
+    const st = G.startJobTrial(tier, tier === 2 ? 1 : 0);
+    run(60, () => { const R = G.raid; if (R){ if (!names.includes(R.info.bossName)){ names.push(R.info.bossName); types.push(R.info.type); } const B = R.boss; if (B && !B.dead && B.spawnT <= 0 && B.hp > 1) B.hp = 1; } return S.job >= tier && !G.raid; });
+    jobs.push({ready, st, names, types, job:S.job, name:G.jobName(), cape:S.av.cape, own:!!S.av.own['j_gungsa_' + tier], sprite:types.every(t => String(G.bossPortrait(t, '#888888')).startsWith('data:image'))});
+  }
+  out.jobs = jobs; out.jobSk = ['jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobF'].map(k => S.skills[k] >= 1); out.mpMax = G.mpMax ? G.mpMax() : 0;
+  // 초각성기(이름) · 초각성기 2 「한 화살 만 리」: 10초 동안 보스의 낙인 2배
+  G.aw2Force = true; S.aw2 = Object.assign(S.aw2 || {}, {got:true, tut:true, man:false});
+  S.raid.tk = 3; G.startRaid(0); run(1); { const R = G.raid, B = R.boss, A = R.awk2; B.hp = B.maxHp = 1e300;
+    out.awk = [G.CLASSES.gungsa.awaken, G.CLASSES.gungsa.awaken4, !!R.awk]; if (R.awk && !R.awk.used){ G.castAwaken(); out.awkUsed = R.awk.used; }
+    if (A){ A.g = 100; A.hand = 0; B.markT = 0; B.markP = 0; out.aw2 = [G.castAwaken2(true), A.markT > 0, B.markT > 0, B.markP > 0, G.AW2_SK.gungsa.name]; } else out.aw2 = ['no awk2'];
+    G.raidEnd(false); run(2); }
+  G.aw2Force = false;
+  // 저장했다가 다시 불러와도 궁사 그대로
+  const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
+  G.PAT.off = false; G.wipeOff = false; G.hideModal();
+  return out; }""", [sea3])
+        check(g1['order'] == [False, True, 4] and g1['cards'] == [4, 0], f"궁사: 아직 직업 고르기·직업 바꾸기 창에는 안 보인다(모든 직업 목록 CLASS_ALL에만) {g1['order']} {g1['cards']}")
+        check(all(g1['cast']) and all(g1['desc']) and g1['names'] == 13 and g1['stat'][:2] == [5, 5] and g1['mp'][0] * 2 <= g1['mp'][1] + 1,
+              f"궁사: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 5칸 · 마나 절반 {g1['cast']} {g1['desc']} {g1['mp']}")
+        check(g1['aim'] == [True, True, 160, True, True] and g1['aimMusa'] == 1, f"궁사 「조준」: 서 있으면 차고(4초) 구르면 줄고 다시 서면 찬다 · 가득 차면 치명타 피해 ×1.6 · 다른 직업은 그대로 {g1['aim']} {g1['aimMusa']}")
+        check(g1['rng'] == [7, True, True], f"궁사: 매의 눈(파티 버프)·바람 읽기(5차)가 사거리를 한 칸씩 늘린다 {g1['rng']}")
+        gj = g1['jobs']
+        check([j['names'] for j in gj] == [['늙은 사냥꾼'], ['강림도령'], ['나스노 요이치'], ['늙은 사냥꾼', '강림도령', '나스노 요이치'], ['거타지']] and all(j['st'] and j['ready'] and j['own'] and j['sprite'] for j in gj)
+              and [j['job'] for j in gj] == [1, 2, 3, 4, 5] and [j['name'] for j in gj] == ['명궁', '귀궁', '궁마사', '사일객', '해궁'] and gj[4]['cape'] == 'j_gungsa_5' and all(g1['jobSk']) and g1['mpMax'] == 120,
+              f"궁사 전직 1~5차: 스승(늙은 사냥꾼·강림도령·나스노 요이치·세 스승·거타지)과 겨뤄 이기면 전직·망토·기술 {[(j['names'], j['name'], j['cape']) for j in gj]} {g1['jobSk']}")
+        check(g1['awk'] == ['일시천리', '사일 구연사', True] and g1.get('awkUsed') and g1['aw2'] == [True, True, True, True, '한 화살 만 리'], f"궁사: 초각성기(일시천리 → 사일 구연사)·초각성기 2 「한 화살 만 리」(보스 낙인 2배 10초) {g1['awk']} {g1['aw2']}")
+        check(g1['re'] == ['gungsa', 5, 'j_gungsa_5'], f"궁사: 저장했다가 다시 불러와도 직업·전직·망토 그대로 {g1['re']}")
+        gsheet = await gp.evaluate(r"""() => { const G = window.__game, S = G.S, Z = 3, W = 64 * Z;
+  const cv = document.createElement('canvas'); cv.width = W * 6; cv.height = W * 5; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#5a7a5a'; g.fillRect(0, 0, cv.width, cv.height);
+  const look = {outfit:'auto', hair:'#241c26', hat:'class', skin:0};
+  for (let j = 0; j <= 5; j++){
+    const ex = {job:j, capeC:j ? G.JOBS.gungsa[j - 1].capeC : ''}, gr = Math.min(4, j);
+    [['right', 0], ['right', 3], ['up', 0], ['down', 1]].forEach(([d, f], r) => { const sp = G.personSprite('gungsa', look, gr, gr, d, f, false, ex); g.drawImage(sp, j * W, r * W, W, W); });
+  }
+  ['m_gungsa', 'm3_gungsa', 'm5_gungsa'].forEach((t, i) => { for (const f of [0, 1]){ const sp = G.mobSprite(t, '', f, true); g.drawImage(sp, (i * 2 + f) * W, 4 * W, W, W); } });
+  return cv.toDataURL(); }""")
+        (OUT / '44-gungsa-sheet.png').write_bytes(base64.b64decode(gsheet.split(',')[1]))   # 전직 0~5차 × (앞·쏘기·뒤·걷기) + 스승 셋(늙은 사냥꾼·나스노 요이치·거타지)
+        await gp.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); G.closePage && G.closePage(); S.mode = 'auto'; G.resetRuntime(); G.setStage(S.stage); G.startBoss(); }")
+        await gp.wait_for_timeout(4000)
+        await gp.screenshot(path=str(OUT / '44b-gungsa-fight.png'))
+        await gp.evaluate("() => { const G = window.__game; if (G.raid) G.raidEnd(false); G.hideModal(); }")
+        await tab(gp, 'skill')
+        await gp.wait_for_timeout(500)
+        await gp.screenshot(path=str(OUT / '44c-gungsa-skills.png'))
+        await ctxG.close()
+
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
