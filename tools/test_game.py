@@ -2755,6 +2755,14 @@ async def main():
               f"궁사 전직 1~5차: 스승(늙은 사냥꾼·강림도령·나스노 요이치·세 스승·거타지)과 겨뤄 이기면 전직·망토·기술 {[(j['names'], j['name'], j['cape']) for j in gj]} {g1['jobSk']}")
         check(g1['awk'] == ['일시천리', '사일 구연사', True] and g1.get('awkUsed') and g1['aw2'] == [True, True, True, True, '한 화살 만 리'], f"궁사: 초각성기(일시천리 → 사일 구연사)·초각성기 2 「한 화살 만 리」(보스 낙인 2배 10초) {g1['awk']} {g1['aw2']}")
         check(g1['re'] == ['gungsa', 5, 'j_gungsa_5'], f"궁사: 저장했다가 다시 불러와도 직업·전직·망토 그대로 {g1['re']}")
+        g2 = await gp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, skip = () => { const b = document.querySelector('#cutSkip'); if (G.cut && b) b.click(); };
+          const q = G.MAIN_Q.find(q => q.c && q.c[1] === 'jumong,hero' && q.c[2] === 'arrows');
+          const lines = c => { S.cls = c; G.playCut([q.c]); const n = G.cut ? G.cut.lines.length : -1; skip(); return n; };
+          out.jm = [lines('musa'), lines('gungsa')];
+          const shots = c => { S.cls = c; G.playCut(G.CH_OPEN[27]); const n = G.cut ? G.cut.shots.length : 0; skip(); return n; };
+          out.home = [shots('musa'), shots('gungsa')]; S.cls = 'gungsa'; out.end = !G.cut;
+          return out; }""")
+        check(g2['jm'] == [2, 4] and g2['home'] == [1, 2] and g2['end'], f"궁사만 보는 대사·연출: 1부 주몽의 「너도 활을 쏘느냐」 두 줄 · 부상 27장 「고향에 돌아온」 한 컷(다른 직업에게는 안 나옴) {g2}")
         gsheet = await gp.evaluate(r"""() => { const G = window.__game, S = G.S, Z = 3, W = 64 * Z;
   const cv = document.createElement('canvas'); cv.width = W * 6; cv.height = W * 5; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
   g.fillStyle = '#5a7a5a'; g.fillRect(0, 0, cv.width, cv.height);
