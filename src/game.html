@@ -3661,6 +3661,9 @@ const NOTES = [
   ['보스 자동 다시 도전', '같은 단계 보스에게 여러 번 져서 도전 기운이 다 찬 뒤(8번)에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 못 이길 보스에 시간을 쓰는 대신 그동안 사냥해서 더 빨리 커요. [보스] 단추를 누르면 언제든 바로 도전할 수 있어요.'],
   ['치장 「버선」', '치장 다섯 부위 가운데 「신발」의 이름이 「버선」으로 바뀌었어요(효과와 가진 치장은 그대로). 곧 생길 새 장비 칸 「신발」과 헷갈리지 않게요.'],
   ['고침', '4차 전직을 마친 용사가 다시 접속하면 3차로 돌아가던 문제를 고쳤어요(4차 기술을 익힌 기록이 있으면 4차로 되돌려요). 부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 예전 것(무기 +20 재련)으로 되돌아가던 문제도 고쳤어요(되돌아갔던 용사는 건너기 퀘스트까지 되찾아요).'],
+  ['#', '2026-11-12 · 수호신 값'],
+  ['수호신 값이 환생해도 내려가지 않아요', '수호신에게 바치는 엽전은 「지금 단계」가 아니라 「지금까지 가 본 가장 센 단계」를 기준으로 해요. 환생하거나 새 땅에 막 들어선 직후에 값이 크게 싸지던 것을 바로잡았어요(환생 직후에만 몰아서 올리는 것이 유리했어요). 이미 올린 레벨은 그대로예요.'],
+  ['펫 얻는 길 안내', '아직 없는 펫을 누르면 얻는 길을 바르게 알려 줘요. 바쿠·백택은 이야기 보상으로만 얻고 펫 소환에는 나오지 않아요.'],
   ['#', '2026-11-12 · 저장 보호'],
   ['방금 얻은 것이 사라지던 버그', '(한 번 더 고침: 뽑는 도중 화면이 새로 열린 뒤 사라지던 것) 펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
   ['사라진 탑 날개·탈것 되찾기', '천공의 탑을 올라간 기록은 있는데 이정표 보상(50·150·250층 날개, 100·200층 탈것)이 사라진 용사는 접속할 때 자동으로 되찾아요.'],
@@ -7873,6 +7876,13 @@ function petSprite(i, f){
   return sp;
 }
 const petImgCache = new Map();
+// 아직 없는 펫을 눌렀을 때의 얻는 길(2026-11-12 본 게임에 먼저 올린 고침: 이야기로만 얻는 바쿠·백택도 '펫 소환으로 얻을 수 있어요'라고 나오던 것). 4·5부의 이야기 펫도 story:true면 같은 안내
+function petHowText(p){
+  if (p.story){ const q = MAIN_Q.find(x => x.pet === p.draw); return q ? `이야기 보상으로만 얻어요: ${q.ch}장 「${q.t}」. 펫 소환에는 나오지 않아요.` : '이야기 보상으로만 얻어요. 펫 소환에는 나오지 않아요.'; }
+  const part = p.part || 1;
+  if (part > 1 && S.world < part) return `${WORLD_NAME[part]}에 들어간 뒤부터 펫 소환에 나와요.`;
+  return '펫 소환으로 얻을 수 있어요.';
+}
 function petImg(i){ const k = i + ':' + (S.av.pet || ''); let u = petImgCache.get(k); if (!u){ u = petSprite(i, 0).toDataURL(); petImgCache.set(k, u); } return u; }
 
 /* ================= 몬스터·펫 HD 그림 =================
@@ -8886,7 +8896,16 @@ const GUARD_EFF = {hp:'체력', atk:'공격력', gold:'엽전', exp:'경험치',
 const guardLv = k => (S.guard && S.guard.lv[k]) || 0;
 const guardOpen = g => !!g.need();
 function guardEff(type){ let p = 0; if (!S.guard) return 0; for (const g of GUARDS) if (g.eff === type && guardOpen(g)) p += guardLv(g.k) * g.per * (S.guard.on === g.k ? 1 : GUARD_REST); return p; }
-const guardGold = lv => mGold(Math.max(1, S.maxStage)) * GUARD_BASE * Math.pow(GUARD_G, lv);
+/* 값의 기준(2026-11-12 본 게임에 먼저 올린 고침, 플레이어 건의): 예전엔 '지금 세계의 최고 단계'만 봐서 환생·새 땅 직후(1단계)에 값이 바닥으로 떨어졌다
+   (천계 1단계에서 하나를 끝까지 370만, 86단계에서는 7억 7천만 — 환생 직후 1단계에 머물며 몰아 찍는 것이 정답이 됨).
+   이제 지금까지 가 본 모든 땅의 최고 단계 가운데 가장 센 곳을 기준으로 한다(환생해도, 새 바다에 건너가도 값이 내려가지 않는다 — 패치에서는 WORLD_MAX까지) */
+const effStageW = (s, w) => w >= 3 ? HEAVEN_OFF + contE(s, w) : s + (w === 2 ? HEAVEN_OFF : w ? HELL_OFF : 0);
+function guardRefGold(){
+  let m = mGold(Math.max(1, S.maxStage));
+  for (let w = 0; w <= WORLD_MAX; w++){ const b = (S.best && S.best['s' + w]) || 0; if (b > 0 && (w < 3 || CONT[w])) m = Math.max(m, mobGold(effStageW(b, w))); }
+  return m;
+}
+const guardGold = lv => guardRefGold() * GUARD_BASE * Math.pow(GUARD_G, lv);
 function guardUp(k){
   const g = GD[k]; if (!g || !guardOpen(g)) return false;
   const lv = guardLv(k), c = guardGold(lv);
@@ -14850,7 +14869,7 @@ function buildPet(){
         <button class="btn primary" id="petEqBtn" ${own && !eq ? '' : 'disabled'}>${eq ? '데려가는 중' : '데려가기'}</button>
         <button class="buy" id="petUpBtn"><span class="coin"></span><span data-r="g"></span><i class="gem"></i><span data-r="m"></span></button>
       </div>
-      <p class="small">${own ? '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 같은 펫을 또 뽑으면 별이 올라 효과가 20%씩 세져요.' : '펫 소환으로 얻을 수 있어요.'}</p>
+      <p class="small">${own ? (p.story ? '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 이야기로 얻는 펫은 소환에 나오지 않아 별이 오르지 않아요.' : '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 같은 펫을 또 뽑으면 별이 올라 효과가 20%씩 세져요.') : petHowText(p)}</p>
     </div>`;
   }
   panel.innerHTML = `
