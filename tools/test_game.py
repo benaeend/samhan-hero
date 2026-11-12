@@ -2602,6 +2602,84 @@ async def main():
         check(u2['c10'] == [12, 10, 'm3', 1200, True, False, 4, 2] and u2['craft'][:5] == [True, True, True, 12, True] and u2['atkUp'] and u2['comp'] == [True, True] and u2['reT'] == 12,
               f"용궁 조합식: 동해부터 10~12단계(용궁 진주·전설 장비), 몬스터 세기는 그대로 {u2['c10']} {u2['craft']} {u2['comp']}")
         check(u2['set'][0] == 5, f"해녀의 조합: 무기·갑옷·신발·해녀 물옷·곰새기 다섯 조각 {u2['set']}")
+        # 7-2c·d: 수군 야행(밀물·대장)·용궁 보물고(방 셋·상자)·용왕 강림·타임 보스 심해·4부 1일 보스·손컨 패턴 「물살」「숨」
+        u3 = await up.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; G.noFork = true; G.hideModal();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          S.inv.potion = 999; S.inv.elixir = 99; S.inv.mana = 999; G.refreshStats(); G.hero.hp = G.ST.maxHp;
+          // 수군 야행: 밀물 두 번·끝의 대장·덤(고삐 조각·치장·바다의 넋)
+          out.sgOpen = [G.sugunOpen(), G.sugunLeft()]; const p0 = S.mount.piece, r0 = S.rec.suguns || 0; G.sgLuck = 1e9; G.skRelic = 1e9;
+          out.sgStart = G.startSugun(); let tides = 0, wet = 0, bossSeen = false;
+          for (let i = 0; i < 62 * 20 && G.parade; i++){ G.update(0.05); G.addTime(50); const P = G.parade; if (!P) break;
+            if (P.tide && P.tide.on){ tides = Math.max(tides, P.tideN); if (P.tide.side ? G.hero.tx >= 14 : G.hero.tx < 14) wet += 0.05; }
+            if (P.boss){ bossSeen = true; if (!P.boss.dead) P.boss.hp = Math.min(P.boss.hp, 1); } }
+          out.sg = [!G.parade, (S.rec.suguns || 0) - r0, G.seaDay().sugun, G.sugunLeft(), tides, wet < 8, bossSeen, S.mount.piece - p0 >= G.SUGUN.piece, S.sea2.sugunBest >= 10, Object.values(S.skin.eq).concat(S.skin.inv).some(x => x.g === 5)];
+          G.sgLuck = null; G.skRelic = null;
+          out.sg2 = G.startSugun(); if (G.parade){ G.parade.t = 0.01; G.update(0.05); } out.sg3 = [G.sugunLeft(), G.startSugun()];
+          // 용궁 보물고: 방 셋(둘째는 함정 방) → 상자 → 끝까지 가면 야광주(운 고정)
+          const relicN = () => G.ALL_SLOTS.reduce((t, sl) => t + S.gear[sl].count.slice(20, 24).reduce((a, x) => a + x, 0), 0), rl0 = relicN();
+          G.yvBox = 'gear'; G.yvLuck = 1e9; G.vaultLuck = 1e9; out.yvOpen = [G.yvOpen(), G.yvLeft()]; out.yvStart = G.startYv(); const rooms = [];
+          for (let r = 0; r < 3; r++){ if (!G.raid || G.raid.info.room !== r) break; rooms.push([G.raid.info.bossName, !!G.raid.info.trap, !!G.raid.info.yv]); G.raid.boss.hp = 1; run(12, () => !G.raid || G.raid.info.room !== r); }
+          out.yv = [rooms.map(x => x[0]), rooms.map(x => x[1]), !G.yvRun, !G.raid, relicN() - rl0, S.myth.yagwang, S.rec.yvs, G.yvLeft()];
+          out.yv2 = G.startYv(); if (G.raid){ G.raid.time = 0.05; run(12, () => !G.raid); } out.yvLose = [!G.yvRun, G.yvLeft(), G.startYv()];
+          G.yvBox = null; G.yvLuck = null; G.vaultLuck = null;
+          // 용왕 강림: 전멸기 두 번·용왕 아바타(운 고정)·이기면 그날 끝
+          G.grLuck = 1e9; out.ygrOpen = [G.ygrOpen(), G.ygrLeft()]; out.ygrStart = G.startYgr(); out.ygrInfo = G.raid ? [G.raid.info.label, G.raid.info.wipes, G.raid.allies.length, !!G.raid.info.ygr] : null;
+          if (G.raid){ G.raid.info.fit = null; G.raid.boss.hp = 1; } run(40, () => !G.raid);
+          out.ygr = [G.seaDay().ygrWon, G.ygrLeft(), G.AVATARS.filter(a => a.src === '용왕 강림' && S.av.own[a.k]).length, S.rec.ygr, G.startYgr()]; G.grLuck = null;
+          // 손컨 패턴: 깊은 바다 레이드에서 숨 막대·공기 방울·물살
+          S.raid.tk = 3; out.raidStart = G.startRaid(0); const B = G.raid && G.raid.boss; let bub = false, refill = false, flow = null;
+          if (B){ B.hp = B.maxHp = B.maxHp * 1e9; run(3, () => !!(B.pat && B.breath)); out.breath0 = !!B.breath && B.breath.v < 100 && G.breathOn(B) && G.patSea(B);
+            if (B.breath){ B.breath.v = 30; B.breath.bt = 0; }
+            for (let i = 0; i < 25 * 20 && !refill; i++){ G.update(0.05); G.addTime(50); const Q = B.breath; if (Q && Q.bub) bub = true; if (Q && Q.v > 62) refill = true; G.hero.hp = G.ST.maxHp; }
+            // 물살: 버티지 못하면 떠밀리고(자동 손 실패), 버티면 제자리
+            for (let i = 0; i < 400 && B.pat.tel; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; }
+            G.hero.goal = null; G.hero.dodgeT = 0; G.hero.rollT = 0; G.patFlow(B, B.pat); const T = B.pat.tel;
+            if (T && T.flow){ T.auto.ok = false; const x0 = G.hero.tx, y0 = G.hero.ty; let moved = 0; for (let i = 0; i < 60 && B.pat.tel === T; i++){ G.update(0.05); G.hero.goal = null; moved = Math.max(moved, (G.hero.tx - x0) * T.flow[0] + (G.hero.ty - y0) * T.flow[1]); G.hero.hp = G.ST.maxHp; }
+              flow = [T.shape, T.set.size > 30, moved >= 1]; }
+            G.raid.time = 0.05; run(12, () => !G.raid); }
+          out.pat = [bub, refill, flow];
+          // 타임 보스 심해: 동해부터 · 전멸기 두 번 · 호박석
+          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - G.now() + 60000);
+          out.tbWhy = G.tbCan('deep'); out.tbStart = G.startTimeBoss('deep'); out.tbInfo = G.raid ? [G.raid.info.bossName.startsWith('심해 '), G.raid.info.wipes] : null;
+          const amb0 = S.amber.raw.reduce((a, x) => a + x, 0); if (G.raid){ G.raid.info.fit = null; G.raid.boss.hp = 1; } run(60, () => !G.raid);
+          out.tb = [S.tb.deep === G.tbWindow().id, S.amber.raw.reduce((a, x) => a + x, 0) - amb0 >= 1, !!G.tbCan('deep')];
+          // 1일 보스: 4부 용사에게 짝수 날엔 바다 보스
+          const even = new Date(G.now()).getDate() % 2 === 0; out.db = [G.dbSea() === even, G.DBOSS_SEA.length, G.DBOSS_SEA.every(x => !!G.bossPortrait(x.type, x.color)), G.dbBoss().name === (even ? G.DBOSS_SEA : G.DBOSS)[new Date(G.now()).getDay()].name];
+          // 저장해도 그대로, 3부 용사에게는 모두 닫혀 있다
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.sea2.day === S.sea2.day, re.sea2.sugunBest === S.sea2.sugunBest, re.tb.deep === S.tb.deep, re.myth.yagwang];
+          const w0 = S.world, d0 = S.tb.deep; S.world = 4; S.tb.deep = 0; out.shut = [G.sugunOpen(), G.yvOpen(), G.ygrOpen(), G.tbCan('deep'), G.dbSea(), G.patSea(B || {}), G.breathOn(B || {})]; S.world = w0; S.tb.deep = d0;
+          return out; }""")
+        check(u3['sgOpen'] == [True, 2] and u3['sgStart'] and u3['sg'][:4] == [True, 1, 1, 1] and u3['sg'][4] >= 2 and all(u3['sg'][5:]) and u3['sg2'] and u3['sg3'] == [0, False],
+              f"수군 야행: 밀물이 두 번 들어오고(잠긴 쪽에서 걸어 나옴) 끝에 대장, 잡으면 고삐 조각·유물 치장(운 고정), 하루 2번 {u3['sgOpen']} {u3['sg']} {u3['sg3']}")
+        check(u3['yvOpen'] == [True, 2] and u3['yvStart'] and u3['yv'][0] == ['문어 문지기', '가시 덫 복어', '광어 창고지기'] and u3['yv'][1] == [False, True, False] and u3['yv'][2:4] == [True, True] and u3['yv'][4] == 3 and u3['yv'][5] == 60 and u3['yv'][6] == 1 and u3['yv'][7] == 1,
+              f"용궁 보물고: 방 셋(둘째는 함정 방)을 지나며 상자 셋(장비 상자 → 유물 장비), 끝까지 가면 용궁 야광주(운 고정) {u3['yv']}")
+        check(u3['yv2'] and u3['yvLose'] == [True, 0, False], f"용궁 보물고: 지면 거기서 끝, 하루 2번 {u3['yvLose']}")
+        check(u3['ygrOpen'] == [True, 2] and u3['ygrStart'] and u3['ygrInfo'] == ['용왕 강림', [0.7, 0.35], 3, True] and u3['ygr'][:2] == [True, 0] and u3['ygr'][2] == 1 and u3['ygr'][3] == 1 and u3['ygr'][4] is False,
+              f"용왕 강림: 넷이 함께·전멸기 두 번·용왕 아바타(운 고정)·이기면 그날 끝 {u3['ygrInfo']} {u3['ygr']}")
+        check(u3['raidStart'] and u3.get('breath0') and u3['pat'][0] and u3['pat'][1] and u3['pat'][2] == ['flow', True, True],
+              f"손컨 패턴: 깊은 바다에서는 숨이 줄고 공기 방울을 밟아(저절로 걸어가) 채운다 · 물살에 버티지 못하면 떠밀린다 {u3.get('breath0')} {u3['pat']}")
+        check(u3['tbWhy'] == '' and u3['tbStart'] and u3['tbInfo'] == [True, [0.7, 0.35]] and u3['tb'] == [True, True, True], f"타임 보스 심해: 4부 용사가 도전(전멸기 두 번), 이기면 호박석 {u3['tbInfo']} {u3['tb']}")
+        check(u3['db'] == [True, 7, True, True], f"1일 보스: 4부 용사에게 짝수 날엔 바다 보스 일곱(그림 있음) {u3['db']}")
+        check(u3['re'] == [True, True, True, 60] and u3['shut'][:3] == [False, False, False] and '동해' in u3['shut'][3] and u3['shut'][4:] == [False, False, False],
+              f"4부 딸린 콘텐츠: 저장해도 그대로, 3부 용사에게는 모두 닫혀 있다 {u3['re']} {u3['shut']}")
+        for rv, nm in (('parade', '43d-sugun-card'), ('vault', '43e-yvault-card'), ('gr', '43f-yongwang-card'), ('tb', '43g-tb-deep')):
+            await up.evaluate("(rv) => { const G = window.__game; G.hideModal(); G.buildTab('raid'); const b = document.querySelector(`[data-rv=\"${rv}\"]`); if (b) b.click(); }", rv)
+            await up.wait_for_timeout(500)
+            await up.evaluate("() => { const p = document.querySelector('#panel'); if (p) p.scrollTop = p.scrollHeight; }")
+            await up.wait_for_timeout(200)
+            await up.screenshot(path=str(OUT / f'{nm}.png'))
+        await up.evaluate("""() => { const G = window.__game, S = G.S; G.closePage(); G.seaDay().sugun = 0; G.startSugun(); const P = G.parade; P.t = 30; P.tideN = 1; P.tide = {side:1, t:3, on:true, hurt:0}; }""")
+        await up.wait_for_timeout(1500)
+        await up.screenshot(path=str(OUT / '43h-sugun-tide.png'))
+        await up.evaluate("""() => { const G = window.__game, S = G.S; if (G.parade){ G.parade.t = 0.01; } }""")
+        await up.wait_for_timeout(600)
+        await up.evaluate("""() => { const G = window.__game, S = G.S; G.hideModal(); S.raid.tk = 3; G.startRaid(0); const B = G.raid.boss; B.hp = B.maxHp = B.maxHp * 1e9; }""")
+        await up.wait_for_timeout(2500)
+        await up.evaluate("""() => { const G = window.__game, B = G.raid && G.raid.boss; if (B && B.pat){ B.pat.tel = null; G.hero.dodgeT = 0; G.patFlow(B, B.pat); if (B.breath){ B.breath.v = 22; B.breath.bt = 0; } } }""")
+        await up.wait_for_timeout(900)
+        await up.screenshot(path=str(OUT / '43i-flow-breath.png'))
+        await up.evaluate("""() => { const G = window.__game; if (G.raid){ G.raid.time = 0.05; } }""")
+        await up.wait_for_timeout(2500)
         await up.evaluate("() => { const G = window.__game; G.hideModal(); G.gearSlotSet && G.gearSlotSet('skin'); }")
         await up.evaluate("() => { const G = window.__game; G.hideModal(); G.S.tower.best = 300; G.buildTab('tower'); }")
         await up.wait_for_timeout(500)
