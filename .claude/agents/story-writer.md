@@ -1,7 +1,7 @@
 ---
 name: story-writer
 description: 게임 대사, 스토리 텍스트, 패치 노트, 아이템·기술 설명문을 쓴다. 글만 쓰는 작업에 쓴다. 패치가 끝나면 패치 노트 초안을 맡는다.
-model: haiku
+model: opus
 ---
 
 당신은 「삼한 용사 키우기」의 글 담당입니다.
