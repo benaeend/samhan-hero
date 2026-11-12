@@ -1479,8 +1479,11 @@ async def main():
           for (const m of G.mobs) m.dead = true; G.update(0.05);
           const gx = h.tx + 3, gy = h.ty - 2; G.fieldClick(at(gx, gy)); const fg = !!h.goal;
           for (let i = 0; i < 60; i++) G.update(0.05); const arrived = h.tx === gx && h.ty === gy && h.holdT > 2;
-          for (let i = 0; i < 40; i++) G.update(0.2); const m = G.mobs.find(q => !q.dead && q.spawnT <= 0);
-          let picked = false; if (m){ const mm = Object.assign({}, at(m.tx, m.ty)); mm.clientY -= 6 * G.scale; G.fieldClick(mm); picked = h.target === m || !!(h.target && !h.target.dead && Math.abs(h.target.tx - m.tx) + Math.abs(h.target.ty - m.ty) <= 1); }   // 겹친 몬스터를 골라도 됨
+          for (let i = 0; i < 40; i++) G.update(0.2);
+          let picked = false;   // 걷는 중인 몬스터는 칸 자리와 그림 자리가 반 칸쯤 어긋나 빗나갈 수 있다 — 서 있는 몬스터를 먼저 고르고 몇 번 다시 해 본다
+          for (let k = 0; k < 5 && !picked; k++){ const L = G.mobs.filter(q => !q.dead && q.spawnT <= 0), m = L.find(q => Math.abs(q.x - (222 + (q.tx - q.ty) * 9)) < 2) || L[0];
+            if (m){ const mm = Object.assign({}, at(m.tx, m.ty)); mm.clientY -= 6 * G.scale; G.fieldClick(mm); picked = h.target === m || !!(h.target && !h.target.dead && Math.abs(h.target.tx - m.tx) + Math.abs(h.target.ty - m.ty) <= 1); }   // 겹친 몬스터를 골라도 됨
+            if (!picked) for (let i = 0; i < 6; i++) G.update(0.05); }
           S.mode = 'auto'; return {goal, mkMoved, fg, arrived, picked}; }""")
         check(tp['mkMoved'] and tp['fg'] and tp['arrived'] and tp['picked'], f'눌러서 움직이기: 장터에서 걸어가고, 사냥터 땅을 누르면 그 칸으로·몬스터를 누르면 그 몬스터를 {tp}')
         # 6-10) 신화 펫·환수: 1부엔 소환에 안 나오고, 부상에 가면 그 땅의 환수(이야기 환수는 빼고)가 소환에 나온다. 보물 동굴·신화 조각. 함께하는 싸움은 늘 자동 기술
@@ -3106,6 +3109,7 @@ async def main():
           const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.fork.yama, re.myth.jewel, re.myth.pasa, re.world, re.best.s10, re.best.l10, re.quest.sv];
           out.mem = [G.memClosed(), G.MAIN_Q.length, G.MAIN_Q.filter(q => q.ch >= 68).length, G.CHAPTERS.length];
           out.opens = [...Array(23).keys()].map(i => i + 68).filter(c => (G.CH_OPEN[c] || []).length >= 5).length;
+          out.cutBad = G.cutCheck(68); out.cutN = G.MAIN_Q.filter(q => q.ch >= 68).reduce((n, q) => n + (q.cs ? q.cs.length : q.c ? 1 : 0), 0); out.noCut = G.MAIN_Q.filter(q => q.ch >= 68 && !q.c && !q.cs).map(q => q.t);
           if (G.autoClear) G.autoClear(); return out; }""")
         await ip.wait_for_timeout(700)
         i5['title'] = await ip.evaluate(TITLES9)
@@ -3113,8 +3117,10 @@ async def main():
               f"5부 신화 보물 넷: 파사석(재사용)·금강저(공격력)·영약 호리병(회복)이 듣고, 구슬 그물의 구슬은 가진 보물 {i5['n']}개 × 2%만큼 모든 보물 효과를 키운다(×{i5['k']:.2f}) {i5['got4']} {i5['off']}")
         check(i5['pend'] and i5['say0'] and i5['pick'] and i5['say1'] and not i5['again'] and i5['fk'] == 1 and 'f_yamaB' in i5['title'] and 'f_yamaA' not in i5['title'] and i5['re'][:2] == [1, 2] and i5['re'][3:] == [10, i4['st'], 600, 9],
               f"갈림길(84장 야마의 물음): 한 번만 고르고, 고른 답이 연출 대사의 {{yama}} 자리에 들어가고, 별호를 얻고, 저장해도 그대로 {i5['pend']} {i5['pick']} {i5['again']} {i5['title']} {i5['re']}")
-        check(i5['mem'][0] is True and i5['mem'][2] == 83 and i5['mem'][3] == 91 and i5['opens'] in (0, 23),
+        check(i5['mem'][0] is True and i5['mem'][2] == 83 and i5['mem'][3] == 91 and i5['opens'] == 23,
               f"5부 이야기 83개·장 제목 23개가 들어 있고, 90장을 마치면 환생의 기억 「나중에」는 닫힌다(여는 연출 {i5['opens']}/23장) {i5['mem']}")
+        check(not i5['cutBad'] and not i5['noCut'] and i5['cutN'] >= 150,
+              f"5부 연출 {i5['cutN']}컷(퀘스트) + 여는 연출: 배경·인물·말한 사람 열쇠가 모두 게임에 있다 {i5['cutBad'][:6]} {i5['noCut'][:4]}")
         for nm, stg in (('48g_수미산_야마의길.png', 5), ('48h_수미산_사천왕문.png', 15), ('48i_수미산_마라의들.png', 25)):
             await ip.evaluate(SHOT_IND, stg)
             await ip.wait_for_timeout(500)
@@ -3148,6 +3154,22 @@ async def main():
         check(i6['w'] <= 4 and not i6['card'] and not i6['india'] and not i6['ind'] and i6['gen'] <= 2, f"3부 용사에게는 5부 건너기 카드·화면 톤이 보이지 않는다 {i6}")
         await ctxI.close()
 
+        # @@TEST-A (갈래 A의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-A
+        # @@TEST-B (갈래 B의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-B
+        # @@TEST-C (갈래 C의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-C
+        # @@TEST-D (갈래 D의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-D
+        # @@TEST-E (갈래 E의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-E
+        # @@TEST-F (갈래 F의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-F
+        # @@TEST-G (갈래 G의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-G
+        # @@TEST-H (갈래 H의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # @@END-H
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
