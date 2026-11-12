@@ -1193,8 +1193,8 @@ async def main():
         await page.evaluate("() => { const G = window.__game; G.buildTab('raid'); document.querySelector('[data-rv=\"raid\"]').click(); document.querySelector('[data-ptab=\"1\"]').click(); }")
         await page.wait_for_timeout(400); await page.screenshot(path=str(OUT / '6z_부별탭_레이드.png'))
         await page.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); Object.assign(S, JSON.parse(window.__keepPt)); for (const k of ['tab', 'own', 'sort', 'kd']) for (const x of Object.keys(G.PV[k])) delete G.PV[k][x]; G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.quiet = false; }")
-        check(pt['t0'] == ['0', '1*', '2L', '3L'] and pt['v0n'] == 15 and pt['v0max'] == 1 and pt['lockKept'], f'부별 탭: 1부에서는 2부·3부 탭이 잠겨 있고 그 부의 펫은 안 보인다 {pt["t0"]} {pt["v0n"]}')
-        check(pt['t4'] == ['0', '1', '2', '3*'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
+        check(pt['t0'] == ['0', '1*', '2L', '3L', '4L'] and pt['v0n'] == 15 and pt['v0max'] == 1 and pt['lockKept'], f'부별 탭: 1부에서는 2부·3부 탭이 잠겨 있고 그 부의 펫은 안 보인다 {pt["t0"]} {pt["v0n"]}')
+        check(pt['t4'] == ['0', '1', '2', '3*', '4L'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
               f'부별 탭: 처음 열리는 탭은 지금 있는 부, 「전체」·「가진 것만」·종류 거르기가 된다 {pt["t4"]} {pt["vAll"]} {pt["vOwn"]} {pt["vAtk"]}')
         check('1!' in pt['dot'] and '1*' in pt['dot2'] and pt['isNew'], f'부별 탭: 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점, 열어 보면 사라진다 {pt["dot"]} {pt["dot2"]}')
         check(pt['rt'] == ['0', '1', '2', '3*', '4L'] and pt['past'] == 34 and pt['pastVis'] == 0 and pt['r1'] == [1] and pt['curHidden'],
@@ -1424,7 +1424,7 @@ async def main():
           const imgs = newIdx.every(i => typeof G.petImg(i) === 'string' && G.petImg(i).length > 100);
           const out = {n: G.PETS.length, none0: newIdx.every(i => !c0[i]), some4: newIdx.filter(i => c4[i]).length, imgs};
           Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.refreshStats(); return out; }""")
-        check(np_['n'] == 29 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
+        check(np_['n'] == 34 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
         # 6-8m) 퀘스트 창: 오늘의 할 일 보상을 받아도 창이 닫히지 않는다(사용자 요청)
         await page.evaluate("""() => { const G = window.__game, S = G.S; G.dailyCheck(); S.quest.dgot = []; for (const d of G.DAILY) S.quest.dp[d.key] = d.goal; G.quiet = false; G.buildTab('quest'); }""")
         await page.wait_for_timeout(200); await page.click('[data-qv=daily]'); await page.wait_for_timeout(200)
@@ -2511,6 +2511,110 @@ async def main():
         await tp.screenshot(path=str(OUT / '42h_여정지도_깊은바다.png'))
         check(jm7['bands'] == 8 and jm7['w6'] and jm7['w7'] and any('남쪽 바다' in c for c in jm7['chips']) and any('깊은 바다' in c for c in jm7['chips']), f"여정 지도에 남쪽 바다·깊은 바다 띠가 있다 {jm7}")
         await ctxT.close()
+
+        # 9-16) 물의 신화 7-2단계: 4부 딸린 콘텐츠 — 천공의 탑 301~400층(4부부터)·4부 펫 다섯·탈것 셋·넋 구슬 여섯·지느러미 날개
+        sea3 = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        ctxU = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        up = await ctxU.new_page()
+        watch(up, errors, '7-2단계 ')
+        await fresh(up)
+        await signup(up, 'sea72test', 'abcd', '물밑용사')
+        u1 = await up.evaluate(r"""(arg) => { const [save, lateS] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          // 3부 끝 용사: 탑은 300층까지 · 4부 넋은 구슬에 안 나옴 · 큰 거북은 못 삼 · 4부 펫은 소환에 안 나옴
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(lateS)))); S.name = '물밑용사'; G.refreshStats();
+          S.tower.best = 300; S.tower.n = 0; out.cap3 = G.towerCap(); out.start3 = G.startTower();
+          S.mount.piece = 999; out.buy3 = G.buyMount('seaturtle');
+          let sea = 0; for (let i = 0; i < 300; i++){ G.soulLuck = (i % 100) / 100 + 0.001; if (G.SL[G.soulRoll()].pt === 4) sea++; } out.soul3 = sea;
+          let pp = 0; for (let i = 0; i < 400; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 5) pp++; } out.pet3 = pp;
+          out.how3 = [G.petHowText(G.PETS.find(p => p.draw === 'bulgae')), G.petHowText(G.PETS.find(p => p.draw === 'jara'))];
+          // 4부 끝 용사: 지난 이야기의 넋 셋·곰새기·불개를 챙겨 받고, 탑은 400층까지
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '물밑용사'; G.refreshStats(); G.mountCatchUp();
+          out.w = S.world; out.cap = G.towerCap(); out.max = G.TOWER.max;
+          out.catch = [!!S.soul.own.munmu, !!S.soul.own.yeongdeung, !!S.soul.own.simcheong, !!S.mount.own.dolphin, S.pets.lv[G.PETS.findIndex(p => p.draw === 'bulgae')] > 0];
+          sea = 0; const seen = {}; for (let i = 0; i < 600; i++){ G.soulLuck = (i % 100) / 100 + 0.001; const k = G.soulRoll(); if (G.SL[k].pt === 4){ sea++; seen[k] = 1; } } G.soulLuck = null; out.soul4 = [sea > 0, Object.keys(seen).sort()];
+          pp = {}; for (let i = 0; i < 3000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 5) pp[p.draw] = 1; } out.pet4 = Object.keys(pp).sort();
+          out.parts = [G.PETS.filter(p => G.petPart(p) === 4).length, G.MOUNTS.filter(m => G.mountPart(m) === 4).length, G.SOULS.filter(x => G.soulPart(x) === 4).length];
+          S.mount.piece = 999; out.buy = G.buyMount('seaturtle'); out.col = isFinite(G.mountCol()) && G.mountCol() > 0;
+          // 그림: 새 펫 다섯·탈것 셋이 오류 없이 그려진다(두 프레임)
+          out.art = G.PETS.map((p, i) => [p, i]).filter(([p]) => p.part >= 5).map(([p, i]) => G.petSprite(i, 0).width > 0 && G.petSprite(i, 1).width > 0).concat(['dolphin', 'seaturtle', 'yongma'].map(k => G.mountSprite(k, 0, false).width > 0 && G.mountSprite(k, 1, true).width > 0));
+          // 탑: 층 → 세계·단계, 보상 글, 301층 도전
+          out.ws = [300, 301, 330, 331, 365, 366, 400].map(f => G.towerWS(f)); out.boss = [301, 340, 380, 400].map(f => !!G.towerBoss(f).name && !!G.towerBoss(f).type);
+          out.rw = [G.towerRewardText(305).join('|'), G.towerRewardText(310).join('|'), G.towerRewardText(350).join('|'), G.towerRewardText(400).join('|')];
+          S.tower.best = 300; S.tower.n = 0; out.start = G.startTower(); out.info = G.raid ? [G.raid.info.f, G.raid.info.label, isFinite(G.raid.boss.maxHp) && G.raid.boss.maxHp > 0] : null;
+          return out; }""", [sea3, late])
+        check(u1['cap3'] == 300 and u1['start3'] is False and u1['buy3'] is False and u1['soul3'] == 0 and u1['pet3'] == 0 and '58장' in u1['how3'][0] and '동해' in u1['how3'][1],
+              f"4부 전: 탑은 300층까지·4부 넋/펫은 안 나오고 큰 거북도 못 산다 {u1['cap3']} {u1['soul3']} {u1['pet3']} {u1['how3']}")
+        check(u1['w'] == 7 and u1['cap'] == 400 and u1['max'] == 400 and all(u1['catch']) and u1['soul4'][0] and len(u1['soul4'][1]) == 6 and len(u1['pet4']) >= 2 and set(u1['pet4']) <= {'gomsaegi', 'jara', 'kkoetoki', 'mulbeom'} and u1['parts'] == [5, 3, 6] and u1['buy'] and u1['col'],
+              f"4부: 지난 이야기의 넋 셋·곰새기·불개를 챙겨 받고, 바다의 넋 여섯·펫 넷이 구슬·소환에 나온다 {u1['catch']} {u1['soul4']} {u1['pet4']} {u1['parts']}")
+        check(all(u1['art']) and len(u1['art']) == 8, f"4부 펫 다섯·탈것 셋 그림이 오류 없이 그려진다 {u1['art']}")
+        check(u1['ws'] == [[4, 95], [5, 12], [5, 50], [6, 20], [6, 43], [7, 37], [7, 52]] and all(u1['boss']) and '호박석' in u1['rw'][0] and '유물' in u1['rw'][1] and '지느러미 날개' in u1['rw'][2] and '용마' in u1['rw'][3],
+              f"탑 301~400층: 동해 → 남쪽 바다 → 깊은 바다 띠, 유물 장비·호박석·350층 날개·400층 용마 {u1['ws']} {u1['rw']}")
+        check(u1['start'] is True and u1['info'] and u1['info'][0] == 301 and u1['info'][2], f"4부 용사는 301층에 도전할 수 있다 {u1['info']}")
+        tw2 = await up.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = true;
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          const amb0 = G.ambN ? null : null, raw0 = S.amber.raw.slice();
+          G.raid.boss.hp = 1; run(8, () => !G.raid); out.best = S.tower.best;
+          S.tower.best = 304; S.tower.n = 0; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b305 = S.tower.best; out.amb = S.amber.raw.map((x, i) => x - raw0[i]);
+          S.tower.best = 349; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b350 = S.tower.best; out.fin = !!S.av.own.w_fin;
+          S.tower.best = 399; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b400 = S.tower.best; out.yong = !!S.mount.own.yongma; out.more = G.startTower();
+          const cv = document.createElement('canvas'); cv.width = 480; cv.height = 640; G.drawTowerArt(cv, 340); out.artOk = true;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.tower.best, !!re.mount.own.yongma, !!re.av.own.w_fin];
+          // 저장 보호 4의 되찾기: 400층인데 용마·날개가 없으면 다시 준다
+          delete S.mount.own.yongma; delete S.av.own.w_fin; G.mountCatchUp(); out.back = [!!S.mount.own.yongma, !!S.av.own.w_fin];
+          return out; }""")
+        check(tw2['best'] == 301 and tw2['b305'] == 305 and sum(tw2['amb']) == 1 and tw2['b350'] == 350 and tw2['fin'] and tw2['b400'] == 400 and tw2['yong'] and tw2['more'] is False and tw2['artOk'] and tw2['re'] == [400, True, True] and tw2['back'] == [True, True],
+              f"탑: 301·305(호박석)·350(지느러미 날개)·400층(용마)을 오르고 저장·되찾기가 맞다 {tw2}")
+        # 7-2b: 4부 치장 22가지(46~67장)·유물 치장·아바타 여덟·세트 둘·용궁 조합식(10~12단계)
+        u2 = await up.evaluate(r"""(lateS) => { const G = window.__game, S = G.S, out = {}; const keep = JSON.parse(JSON.stringify(S));
+          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || a.w >= 5).length, G.SETS.length];
+          out.parts = ['guard', 'shoe', 'belt', 'tassel', 'foot'].map(p => G.SK_LIST.filter(x => x.c >= 46 && x.p === p).length);
+          // 사냥터 드롭: 4부 끝 용사는 46~67장 치장도 나오고 유물은 안 나온다. 한 줄 값은 4부 것이 1.15배까지
+          let sea = 0, relic = 0, maxOld = 0, maxSea = 0; S.skin = {eq:{}, inv:[], seq:0, found:{}};
+          for (let i = 0; i < 400; i++){ const r = G.skinDrop(null, true); if (!r) continue; const it = r.it; if (it.c >= 46) sea++; if (it.g >= 5) relic++; for (const l of it.l){ if (it.g === 4){ if (it.c >= 46) maxSea = Math.max(maxSea, l[1]); else maxOld = Math.max(maxOld, l[1]); } } }
+          out.drop = [sea > 50, relic, maxOld <= 0.40 + 1e-9, maxSea > 0.40 && maxSea <= 0.46 + 1e-9];
+          // 유물 치장(수군 야행·용궁 보물고·1일 보스): 4부 치장만, 저장·불러오기에서도 그대로
+          G.skRelic = 1e9; const rr = G.skinDrop(null, true, 0, 1, 0.9, 0.05); G.skRelic = null;
+          out.relic = [rr.it.g, rr.it.c >= 46, rr.it.l.length, G.skGr(5).name, rr.it.l.every(l => l[1] <= 0.46 * 1.15 + 0.006 && l[1] >= 0.46 * 1.15 * 0.9 - 0.006)];
+          const cl = G.skClean(JSON.parse(JSON.stringify(S.skin))); const all = Object.values(cl.eq).concat(cl.inv); out.relicKept = all.some(x => x.g === 5);
+          out.relicBad = G.skClean({eq:{}, inv:[{id:1, c:20, g:5, l:[['hp', 0.4]]}], seq:1, found:{}}).inv.length;   // 1~3부 치장은 유물이 될 수 없다
+          const dp = G.skinDropPart('guard', 3, true); out.dpart = [dp.it.c >= 46, G.SKC[dp.it.c].p];
+          // 3부 끝 용사: 46장 첫 퀘스트를 하는 동안에도 바다 치장은 안 나오고, 용궁 조합식은 안 보인다
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(lateS)))); G.refreshStats(); S.skin = {eq:{}, inv:[], seq:0, found:{}};
+          let sea3 = 0; for (let i = 0; i < 300; i++){ const r = G.skinDrop(null, true); if (r && r.it.c >= 46) sea3++; }
+          S.craft.w.t = 9; out.late = [G.skCh(), G.skChCap(), sea3, G.craftCap(), !!G.craftNeed('w').max, G.avBoxPool ? 0 : 0];
+          const cmp3 = G.craftComp(4, 50);
+          // 4부: 용궁 조합식 10~12단계
+          Object.assign(S, G.mergeState(keep)); G.refreshStats();
+          S.craft.w.t = 9; S.craft.w.e = S.craft.w.e || 'power'; const n10 = G.craftNeed('w'); out.c10 = [G.craftCap(), n10.t, n10.mk, n10.mat, n10.open, n10.past, n10.g, n10.n];
+          S.mat.m3 = 99999; S.gems += 100000; S.gear.weapon.count[16] += 20; G.craftLuck = 1e9; const atk0 = G.refreshStats() || G.ST.atk;
+          out.craft = [G.craft('w'), G.craft('w'), G.craft('w'), S.craft.w.t, !!G.craftNeed('w').max, G.craftName ? 1 : 1]; G.craftLuck = null; G.refreshStats();
+          out.atkUp = G.ST.atk > atk0; out.comp = [cmp3 === G.craftComp(4, 50), G.craftComp(5, 10) === G.craftComp(4, 50)];
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.reT = re.craft.w.t;
+          // 세트: 해녀의 조합(신발 칸 포함) 다섯 조각
+          S.equip.weapon = 19; S.gear.weapon.count[19] = Math.max(1, S.gear.weapon.count[19]); S.equip.armor = 19; S.gear.armor.count[19] = Math.max(1, S.gear.armor.count[19]); S.equip.boots = 16; S.gear.boots.count[16] = Math.max(1, S.gear.boots.count[16]);
+          G.giveAvatar('c_haenyeo', true); G.equipAvatar('c_haenyeo'); G.giveMount('dolphin', true); G.rideMount('dolphin'); G.pickSet('haenyeo'); G.refreshStats();
+          out.set = [G.setCount(G.SETS.find(x => x.k === 'haenyeo')), G.setSum().k || (G.setSum().set && G.setSum().set.k) || ''];
+          return out; }""", late)
+        check(u2['n'] == [51, 22, 51, 6, 9, 11] and u2['parts'] == [5, 4, 4, 5, 4], f"4부 치장 22가지(46~67장, 부위 다섯에 고르게)·아바타 아홉(날개 포함)·세트 둘 {u2['n']} {u2['parts']}")
+        check(u2['drop'] == [True, 0, True, True] and u2['relic'][:4] == [5, True, 4, '유물'] and u2['relic'][4] and u2['relicKept'] and u2['relicBad'] == 0 and u2['dpart'] == [True, 'guard'],
+              f"4부 치장: 사냥터에서는 전설까지(한 줄 값 1.15배), 유물은 따로 주는 곳에서만·4부 치장만·저장해도 그대로 {u2['drop']} {u2['relic']} {u2['relicKept']} {u2['relicBad']} {u2['dpart']}")
+        check(u2['late'][:5] == [46, 45, 0, 9, True], f"3부 끝 용사: 46장 첫 퀘스트 중에도 바다 치장은 안 나오고 용궁 조합식은 안 보인다 {u2['late']}")
+        check(u2['c10'] == [12, 10, 'm3', 1200, True, False, 4, 2] and u2['craft'][:5] == [True, True, True, 12, True] and u2['atkUp'] and u2['comp'] == [True, True] and u2['reT'] == 12,
+              f"용궁 조합식: 동해부터 10~12단계(용궁 진주·전설 장비), 몬스터 세기는 그대로 {u2['c10']} {u2['craft']} {u2['comp']}")
+        check(u2['set'][0] == 5, f"해녀의 조합: 무기·갑옷·신발·해녀 물옷·곰새기 다섯 조각 {u2['set']}")
+        await up.evaluate("() => { const G = window.__game; G.hideModal(); G.gearSlotSet && G.gearSlotSet('skin'); }")
+        await up.evaluate("() => { const G = window.__game; G.hideModal(); G.S.tower.best = 300; G.buildTab('tower'); }")
+        await up.wait_for_timeout(500)
+        await up.screenshot(path=str(OUT / '43-tower-sea.png'))
+        await up.evaluate("() => { const G = window.__game; G.S.tower.best = 342; G.buildTab('tower'); }")
+        await up.wait_for_timeout(500)
+        await up.screenshot(path=str(OUT / '43b-tower-sea-342.png'))
+        await tab(up, 'pet')
+        await up.wait_for_timeout(500)
+        await up.evaluate("() => { const b = [...document.querySelectorAll('.pt-tab,[data-pt]')].find(x => /4부/.test(x.textContent)); if (b) b.click(); }")
+        await up.wait_for_timeout(400)
+        await up.screenshot(path=str(OUT / '43c-pet-part4.png'))
+        await ctxU.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
