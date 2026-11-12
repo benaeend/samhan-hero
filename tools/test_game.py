@@ -2102,7 +2102,7 @@ async def main():
         await jp.evaluate("() => { const sh = document.querySelector('.sheet'); sh.scrollTop = sh.scrollHeight; }")
         await jp.wait_for_timeout(150)
         await jp.screenshot(path=str(OUT / '30d_직업바꾸기_경고창_아래.png'))
-        check('2/2' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 4 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
+        check('2/2' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 6 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
               f"[정보]의 단추에 이번 주 남은 횟수가 보이고, 직업 고르기 창이 규칙을 알려 주며 지금 직업 그대로는 넘어가지 않는다 {b0} {m1['left']} {m1b}")
         check('꼭 읽어' in m2['title'] and '2번 → 1번' in m2['left'] and m2['sk'] == m2['nsk'] and m2['nsk'] >= 5 and '계승 +' in m2['rf'] and '계승 +15' in m2['rf'] and m2['spent'] in m2['tb'] and m2['back'] in m2['tb'] and m2['lost'] in m2['tb'] and m2['dust'] in m2['tb']
               and m2['est'] and '되돌릴 수 없어요' in m2['txt'] and m2['btns'] == ['취소', '바꾸기'] and m2['cls'] == 'musa' and m2['fits'],
@@ -2702,9 +2702,11 @@ async def main():
         await signup(gp, 'gungtest', 'abcd', '활잡이')
         g1 = await gp.evaluate(r"""(arg) => { const [save] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.PAT.off = true; G.wipeOff = true;
   const run = (sec, f) => { for (let i = 0; i < sec * 20; i++){ G.update(0.05); G.addTime(50); if (f && f(i)) break; } };
-  // 아직 플레이어에게 안 보인다: 직업 고르기·직업 바꾸기 창에는 네 직업만
+  // 직업 고르기에 보인다(여섯 직업). [직업 바꾸기]에서는 그 직업 캐릭터를 만든 적이 없는 계정이면 잠긴 모양 — 눌러도 골라지지 않고 까닭을 알려 준다
   out.order = [G.CLASS_ORDER.includes('gungsa'), G.CLASS_ALL.includes('gungsa'), G.CLASS_ORDER.length];
-  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="gungsa"]').length]; G.hideModal();
+  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="gungsa"]').length, document.querySelectorAll('.ccard.locked').length, G.clsOpened('gungsa'), G.clsOpened('musa'), G.clsChgDo('gungsa') === null];
+  document.querySelector('.ccard[data-c="gungsa"]').click(); { const h = document.querySelector('#clsHint'); out.lockHint = [h.classList.contains('on'), /만든 뒤/.test(h.textContent), document.querySelector('.ccard[data-c="gungsa"]').getAttribute('aria-pressed'), S.cls]; }
+  G.hideModal(); G.clsOpenAll = true; G.clsChgOpen(); out.cardsOpen = document.querySelectorAll('.ccard.locked').length; G.hideModal(); G.clsOpenAll = null;
   // 4부 끝 무사 저장에서 직업만 궁사로: 기술 13칸이 모두 나간다(반자동 = 기술은 모두 손으로)
   Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '활잡이'; G.setClass('gungsa'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
   out.stat = [G.CLASSES.gungsa.range, G.heroRange(), Math.round(G.ST.maxHp / G.ST.atk) > 0, G.skillName ? 1 : 0];
@@ -2744,7 +2746,8 @@ async def main():
   const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
   G.PAT.off = false; G.wipeOff = false; G.hideModal();
   return out; }""", [sea3])
-        check(g1['order'] == [False, True, 4] and g1['cards'] == [4, 0], f"궁사: 아직 직업 고르기·직업 바꾸기 창에는 안 보인다(모든 직업 목록 CLASS_ALL에만) {g1['order']} {g1['cards']}")
+        check(g1['order'] == [True, True, 6] and g1['cards'] == [6, 1, 2, False, True, True] and g1['lockHint'] == [True, True, 'false', 'musa'] and g1['cardsOpen'] == 0,
+              f"궁사: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {g1['order']} {g1['cards']} {g1['lockHint']} {g1['cardsOpen']}")
         check(all(g1['cast']) and all(g1['desc']) and g1['names'] == 13 and g1['stat'][:2] == [5, 5] and g1['mp'][0] * 2 <= g1['mp'][1] + 1,
               f"궁사: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 5칸 · 마나 절반 {g1['cast']} {g1['desc']} {g1['mp']}")
         check(g1['aim'] == [True, True, 160, True, True] and g1['aimMusa'] == 1, f"궁사 「조준」: 서 있으면 차고(4초) 구르면 줄고 다시 서면 찬다 · 가득 차면 치명타 피해 ×1.6 · 다른 직업은 그대로 {g1['aim']} {g1['aimMusa']}")
@@ -2792,9 +2795,11 @@ async def main():
         sea3c = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']   # 4부 끝 무사(이 대목만 따로 돌려도 되게 여기서 읽는다)
         c1 = await cp.evaluate(r"""(arg) => { const [save] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.PAT.off = true; G.wipeOff = true;
   const run = (sec, f) => { for (let i = 0; i < sec * 20; i++){ G.update(0.05); G.addTime(50); if (f && f(i)) break; } };
-  // 아직 플레이어에게 안 보인다: 직업 고르기·직업 바꾸기 창에는 네 직업만
+  // 직업 고르기에 보인다(여섯 직업). [직업 바꾸기]에서는 그 직업 캐릭터를 만든 적이 없는 계정이면 잠긴 모양 — 눌러도 골라지지 않고 까닭을 알려 준다
   out.order = [G.CLASS_ORDER.includes('changgaek'), G.CLASS_ALL.includes('changgaek'), G.CLASS_ORDER.length];
-  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="changgaek"]').length]; G.hideModal();
+  G.clsChgOpen(); out.cards = [document.querySelectorAll('.ccard').length, document.querySelectorAll('.ccard[data-c="changgaek"]').length, document.querySelectorAll('.ccard.locked').length, G.clsOpened('changgaek'), G.clsOpened('musa'), G.clsChgDo('changgaek') === null];
+  document.querySelector('.ccard[data-c="changgaek"]').click(); { const h = document.querySelector('#clsHint'); out.lockHint = [h.classList.contains('on'), /만든 뒤/.test(h.textContent), document.querySelector('.ccard[data-c="changgaek"]').getAttribute('aria-pressed'), S.cls]; }
+  G.hideModal(); G.clsOpenAll = true; G.clsChgOpen(); out.cardsOpen = document.querySelectorAll('.ccard.locked').length; G.hideModal(); G.clsOpenAll = null;
   // 4부 끝 무사 저장에서 직업만 창객으로: 기술 13칸이 모두 나간다(반자동 = 기술은 모두 손으로)
   Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '창잡이'; G.setClass('changgaek'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
   out.stat = [G.CLASSES.changgaek.range, G.heroRange()];
@@ -2840,7 +2845,8 @@ async def main():
   const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
   G.PAT.off = false; G.wipeOff = false; G.hideModal();
   return out; }""", [sea3c])
-        check(c1['order'] == [False, True, 4] and c1['cards'] == [4, 0], f"창객: 아직 직업 고르기·직업 바꾸기 창에는 안 보인다(모든 직업 목록 CLASS_ALL에만) {c1['order']} {c1['cards']}")
+        check(c1['order'] == [True, True, 6] and c1['cards'] == [6, 1, 2, False, True, True] and c1['lockHint'] == [True, True, 'false', 'musa'] and c1['cardsOpen'] == 0,
+              f"창객: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {c1['order']} {c1['cards']} {c1['lockHint']} {c1['cardsOpen']}")
         check(all(c1['cast']) and all(c1['desc']) and c1['names'] == 13 and c1['stat'] == [2, 2],
               f"창객: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
         check(c1['gap'] == [80, 140, 160, 100, 100, 100], f"창객 「간격」: 붙은 적 -20% · 두 칸 밖 +40% · 「표사의 기합」 동안 +60%·붙어도 안 깎임 · 기본 공격·기술이 아닌 것과 다른 직업은 그대로 {c1['gap']}")
@@ -2880,6 +2886,33 @@ async def main():
         await cp.wait_for_timeout(500)
         await cp.screenshot(path=str(OUT / '45c-changgaek-skills.png'))
         await ctxC.close()
+
+        # 9-19) 물의 신화 8단계: 새 직업으로 처음부터 — 캐릭터 만들기 창(여섯 직업)에서 궁사·창객을 골라 만들고 마을 어귀에서 사냥한다. 만든 계정은 그 직업을 연 것으로 친다
+        for cls9, nm9, uid9 in (('gungsa', '새궁사', 'newgung'), ('changgaek', '새창객', 'newchang')):
+            ctxN = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+            np_ = await ctxN.new_page()
+            watch(np_, errors, f'8단계 새 캐릭터({cls9}) ')
+            await fresh(np_)
+            heroes = await np_.evaluate("() => { const im = [...document.querySelectorAll('#tHeroes img')], W = document.documentElement.clientWidth; return [im.length, im.every(i => { const r = i.getBoundingClientRect(); return r.width > 20 && r.left >= 0 && r.right <= W; })]; }")
+            await np_.click('#lg-tab-signup')
+            await np_.fill('#lg-id', uid9)
+            await np_.fill('#lg-pw', 'abcd')
+            await np_.fill('#lg-pw2', 'abcd')
+            await np_.click('#modal-btn-0')
+            await np_.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            await create_char(np_, nm9, cls9, shot=f'46-{cls9}-create.png')
+            await np_.wait_for_timeout(600)
+            n1 = await np_.evaluate(r"""(c) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+              out.cls = [S.cls, S.name, S.level, G.jobName(), G.CLASSES[c].name];
+              for (let i = 0; i < 60 * 20; i++){ G.update(0.05); G.addTime(50); }
+              out.hunt = [S.rec.kills > 5, S.level > 1 || S.exp > 0, S.rec.kills, S.level];
+              out.open = [G.clsOpened(c), G.clsOpened(c === 'gungsa' ? 'changgaek' : 'gungsa')];
+              const c0 = S.cls; S.cls = 'musa'; out.openAfter = [G.clsOpened(c), G.clsOpened(c === 'gungsa' ? 'changgaek' : 'gungsa')]; S.cls = c0;
+              G.quiet = false; return out; }""", cls9)
+            check(heroes == [6, True] and n1['cls'][0] == cls9 and n1['cls'][1] == nm9 and n1['cls'][3] == n1['cls'][4] and all(n1['hunt'][:2]) and n1['open'] == [True, False] and n1['openAfter'] == [True, False],
+                  f"새 직업 {n1['cls'][4]}: 첫 화면에 여섯 용사 · 캐릭터 만들기 창에서 골라 만들고 마을 어귀에서 사냥한다 · 만든 계정은 그 직업을 연 것으로(다른 새 직업은 아직) {heroes} {n1['cls']} {n1['hunt']} {n1['open']} {n1['openAfter']}")
+            await np_.screenshot(path=str(OUT / f'46b-{cls9}-start.png'))
+            await ctxN.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
