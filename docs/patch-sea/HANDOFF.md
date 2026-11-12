@@ -139,3 +139,12 @@
 - **진짜 원인으로 보이는 것**(온라인 점검으로 재현함): 서버에는 저장됐는데 답을 못 받으면(앱을 잠깐 내림·9초 넘김) `ch.syncT`가 옛 시각으로 남고, 다음 `pushOnlineNow` → `takeRemote`가 서버의 **내 1~2분 전 기록**을 다른 기기 것으로 보고 불러와 그사이 얻은 것(펫 소환 등)이 사라졌다. 고침: `DEV_ID`(화면마다 무작위)를 저장에 `saveDev`로 넣고, `takeRemote`가 불러온 기록의 `saveDev`가 내 것이면 `syncT`만 맞추고 불러오지 않는다.
 - **운영 보상 틀** `GIFTS`·`giveGifts()`·`S.gifts`(`mergeState`가 아는 id만 남김): 서버에 로그인한 그 이름의 캐릭터가 `enterChar`에 들어올 때 한 번. 지금은 가을비 · 보석 15만(`g1112-pet`). `__game.giveGifts` 노출.
 - `tools/test_online.py`에 두 확인 추가(되돌리지 않는다 · 운영 보상 한 번만). `NOTE_VER` `2026-11-12-4`.
+
+### 저장 보호 3 (11-12 12시쯤, `main`에 올림 — `patch-sea`에도 넣을 것)
+
+플레이어 제보 「10뽑을 마구 누르면 중간에 새로 고침 되고 뽑은 펫이 사라짐」(저장 보호 2를 받은 뒤에도). 화면이 왜 새로 열리는지(아이폰에서 화면이 죽는지)는 **확인 못 함** — 아래는 새로 열린 뒤 기록을 잃는 길을 막은 것:
+
+- `enterChar`: 서버 기록을 고를 때 `mineOlder`면 이 기기 기록을 쓴다 — ① 서버 기록의 `saveDev2`가 이 기기(`DEV2_ID`, localStorage `samhan-dev`)이고 이 기기 기록이 더 새것 ② 서버 기록의 `saveBuild`가 이 기기 기록보다 낮음(옛 화면이 덮어씀).
+- `takeRemote`: 서버 기록의 `saveBuild`가 내 것보다 낮으면 불러오지 않고 `syncT`만 맞춤 → 이어서 내 기록을 올림. `pushOnlineNow`의 `S.lastSave = max(now(), ch.syncT + 1)`(서버 시각이 앞서 있어도 올라가게), 성공하면 바로 `saveReg()`.
+- `doPetSummon`: 0.25초 안의 겹친 누름은 흘려보냄. `__game`에 `enterChar`·`saveReg`·`saveLocal` 노출. `tools/test_online.py`에 두 확인. `NOTE_VER` `2026-11-12-5`.
+- **남은 숙제(패치에서 볼 것)**: 소환을 마구 누를 때 화면이 죽는 까닭 — `doPetSummon`이 매번 `buildTab('pet', true)`(펫 그림 전부 다시 넣음)·`playFx`·결과 창을 새로 만든다. 탭 다시 그리기를 결과 창을 닫을 때 한 번으로 미루는 것을 검토.
