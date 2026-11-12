@@ -329,6 +329,18 @@ async def main():
             check('서버로 옮겼어요' in msg and rows == [('local1', '옮길용사')], f'이 기기에만 있던 계정·캐릭터가 서버로 옮겨진다 {rows}')
             await D2.screenshot(path=str(OUT / '32_온라인_계정옮김.png'))
 
+            # 내 저장을 다른 기기 것으로 잘못 보지 않는다(2026-11-12): 서버엔 저장됐는데 답을 못 받아 syncT가 옛 시각으로 남은 상황
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(400)
+            await B.evaluate("() => { const G = window.__game, ch = G.REG.accounts[G.session.acc].chars.find(c => c.cid === G.session.cid); ch.syncT -= 120000; G.S.gold += 5000000; G.S.pets.lv[20] = 7; }")
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(600)
+            keep = await B.evaluate('() => ({gold: Math.floor(window.__game.S.gold), pet: window.__game.S.pets.lv[20]})')
+            srvP = db("select (save::json->'pets'->'lv'->>20) from samhan_chars where name = '온라인용사'")
+            check(keep['gold'] >= 5000000 and keep['pet'] == 7 and srvP == [('7',)], f'서버 답을 못 받은 내 저장을 다른 기기 것으로 보고 되돌리지 않는다 {keep} {srvP}')
+            # 운영 보상(2026-11-12): 정해 둔 이름의 캐릭터가 서버에 로그인해 들어오면 한 번만 받는다
+            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems; S.name = '가을비'; delete S.gifts['g1112-pet']; G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; delete S.gifts['g1112-pet']; return [g1 - g0, g2 - g1]; }""")
+            check(g == [150000, 0], f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다 {g}')
             # 저장 보호(2026-11-12): 옛 화면(저장 판 번호가 낮음)이 새 기록을 덮어쓰지 못한다 · 하루 한 번 기록을 따로 남긴다
             await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
             await B.wait_for_timeout(600)
