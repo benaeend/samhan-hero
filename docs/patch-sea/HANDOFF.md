@@ -123,3 +123,13 @@
 - 주인 말 그대로: 「직업변경을 너무 쉽게 설계해뒀어. 주 2회 한정이고 직업변경시 스킬·재련이 다 초기화되고 사용된 재화는 80프로 환산되어 돌아와서 다시 올려야 하는 거야. 이 내용은 경고문으로 직변 전에 안내」 / 「6캐릭까지 키울 수 있으니 4캐릭을 내가 선택할 수 있게 … 직업조합에 따른 시너지 … 무사가 좀 약한데 시너지를 받으면 많이 세진다거나」.
 - 시너지 표의 수치는 제안값. 시뮬로 맞추고 바꾼 값은 PROGRESS의 「PLAN.md와 다르게 정한 수치」에 적는다. PROGRESS 단계 표에도 5-1·9-2 줄을 더할 것.
 - **(주인 답, 11-12 10:53)** 궁사·창객으로 직업 바꾸기: **그 직업을 한 번이라도 연 계정만 가능**(그 직업 캐릭터를 만든 적이 있는 계정). 아니면 직업 고르기 창에서 잠긴 모양 + 까닭 한 줄. 그래서 새 직업 쪽은 8단계 때 붙인다.
+
+## 본 게임에 먼저 올린 저장 보호 (2026-11-12 11시대, 주인 요청 — 플레이어의 새 펫이 사라짐)
+
+원인(추정, 기록으로 확인은 못 함): 11-10 이전 화면을 켜 둔 기기(옛 `PET_N` 15, `takeRemote` 없음)가 1분마다 같은 캐릭터를 서버에 덮어씀 → 새 화면이 `takeRemote`로 그 잘린 기록을 불러옴. `main`에 올린 것 — **`patch-sea`에도 똑같이 넣고, 합칠 때 `supabase/setup.sql`·`sw.js`·`tools/test_online.py`는 main의 이 변경을 살릴 것**:
+
+1. `SAVE_BUILD`(main은 1)와 `S.saveBuild`: `defaultState`·`mergeState`·`saveLocal`·`pushOnlineNow`. `enterChar`가 `data.saveBuild > SAVE_BUILD`면 `staleStop()`(저장 멈춤 + 「새 버전이 나왔어요 · 새로 고침」). `ON_CODES`에 `old_client`.
+   - **`patch-sea`는 `SAVE_BUILD`를 2로** 둔다(저장에 든 것이 크게 늘었으므로). 앞으로도 저장 칸·목록 길이가 늘어나는 패치마다 1씩 올린다(CLAUDE.md에도 적을 것).
+2. `supabase/setup.sql`: `samhan_save`가 판 번호 낮은 저장을 `old_client`로 거절, `samhan_chars_hist`(하루 한 번 기록, 14일, 잠금). 캐릭터 6칸으로 `too_many` 숫자를 고칠 때 이 함수 본문을 지우지 말 것. **주인이 SQL Editor에서 다시 실행해야 켜진다.**
+3. `sw.js`: 길 찾기 응답을 `./index.html`로 받아 둘 때 본 게임 주소일 때만(`isMain`) — `beta/` 화면이 본 게임 자리에 들어가던 것. `CACHE`는 main `samhan-v2-1`, patch-sea의 `samhan-v3`은 그대로 두면 된다(동작 줄만 합침).
+4. `tools/test_online.py` 끝의 「저장 보호」 네 확인. 업데이트 소식 `NOTE_VER` `2026-11-12-3`.
