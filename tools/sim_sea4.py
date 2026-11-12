@@ -4,6 +4,7 @@
 - 출발점 end = docs/patch-sea/sim/save_<직업>_end.json(3부 끝) → 동해(46~52장)를 돌리고 save_<직업>_sea1.json 을 남긴다.
   sea1 → 남쪽 바다(53~59장) → save_<직업>_sea2.json, sea2 → 깊은 바다(60~67장) → save_<직업>_sea3.json(4부 끝, 5부 시뮬·바다 진 기준의 출발점).
 - 덮어쓰기 예: '{"over":{"SEA2.e0":160,"EXP_K.6":0.03,"gateOff":true}}' — 빌드 없이 수치를 바꿔 본다(tools/test_game.py SIM의 opts). "nosave":true 면 저장을 남기지 않는다.
+  "from":"<저장 파일>" 이면 그 저장에서 시작한다(「4부부터 시작」 캐릭터의 진행을 볼 때 — 저장은 남기지 않음).
 - 빌드된 index.html 을 쓴다(먼저 python3 tools/build.py). 40시간에 실제 2~3분, 코어 하나.
 """
 import asyncio
@@ -24,7 +25,9 @@ W = {'end': 5, 'sea1': 6, 'sea2': 7}[start]          # 이번에 도는 바다(�
 OUT = {5: 'sea1', 6: 'sea2', 7: 'sea3'}[W]
 nosave = bool(over.pop('nosave', False))
 SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
-save = (SIMD / f'save_{cls}_{start}.json').read_text(encoding='utf-8')
+src = over.pop('from', None)   # 다른 저장 파일에서 시작(예: 「4부부터 시작」 캐릭터) — 이때는 저장을 남기지 않는다
+save = Path(src).read_text(encoding='utf-8') if src else (SIMD / f'save_{cls}_{start}.json').read_text(encoding='utf-8')
+nosave = nosave or bool(src)
 ANCHOR = "if (opts.snapQ && !('q' in snaps)"
 SIM = T.SIM.replace(ANCHOR,
     "if (!('sea' in first) && G.S.world >= opts.seaW) first.sea = Math.round(t / 60);\n"

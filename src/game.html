@@ -638,7 +638,7 @@ body.hell .sheet{background:linear-gradient(180deg,#2a161c,#170b0f)}
 .ccard b{font-size:15px;font-weight:800}
 .ccard span{font-size:11px;color:var(--text-soft);line-height:1.4}
 .ccard em{font-style:normal;font-size:11px;font-weight:800;color:var(--gold)}
-.ccard.locked{opacity:.6;cursor:not-allowed}.ccard.locked img{filter:grayscale(.8) drop-shadow(0 3px 4px rgba(0,0,0,.5))}.ccard.locked span{color:#ff9a8a}
+.chip.locked{opacity:.55}.ccard.locked{opacity:.6;cursor:not-allowed}.ccard.locked img{filter:grayscale(.8) drop-shadow(0 3px 4px rgba(0,0,0,.5))}.ccard.locked span{color:#ff9a8a}
 /* 직업 바꾸기 경고 창(물의 신화 5-1단계) */
 .sheet p b.cc-left{display:inline-block;margin-left:4px;padding:2px 10px;border-radius:999px;background:rgba(255,204,77,.14);color:var(--gold);font-size:12px;font-weight:800;white-space:nowrap}
 .sheet p.cc-warn,.sheet p.cc-warn b{color:#ff9a8a;font-weight:700}.sheet p.cc-hint{min-height:1.3em;margin:8px 0 0;color:var(--text-soft)}.sheet p.cc-hint.on{color:#ff9a8a;font-weight:700}
@@ -3666,12 +3666,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-13-11', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-13-12', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '물의 신화 업데이트 · 새 직업 궁사 · 창객'],
   ['새 직업 「궁사」', '부상에서 건너온 바닷가 마을의 명궁. 사람 키보다 긴 활로 가장 멀리(5칸) 쏴요. 제자리에 서 있을수록 「조준」이 차서 치명타 피해가 최대 +60%까지 커지고, 걷거나 구르면 줄어요(머리 위 풀빛 눈금). 기술에 드는 마나는 절반, 체력은 낮아요(80%). 전직은 명궁 → 귀궁 → 궁마사 → 사일객 → 해궁.'],
   ['새 직업 「창객」', '곤륜에서 건너온 표국의 창잡이. 긴 창으로 두 칸 밖에서 찔러요. 「간격」 — 두 칸 넘게 떨어진 적은 피해 +40%, 바로 붙은 적은 -20%(머리 위 마름모가 금빛이면 창끝 거리). 맞은 직후에는 「되찌르기」로 붙은 적을 한 칸 밀어내요. 레이드 보스는 걸어오지 않으니 창끝 거리가 저절로 지켜져요. 전직은 표사 → 풍운객 → 천창 → 화첨객 → 파랑창.'],
+  ['새 캐릭터 「4부부터 시작」', '3부(45장 「세 하늘의 신화」)까지 마친 캐릭터가 계정에 하나라도 있으면, 새 캐릭터를 만들 때 「4부부터 · 바로 건너기」를 고를 수 있어요(한 계정에 2번). 이야기꾼 할머니의 「지난 이야기」와 몸 풀기 싸움 넷(한 판마다 전직이 한 단계씩 열려요), 넋 구슬·수호신·탈것 고르기를 마치면 레벨 500 · 4차 전직으로 동해(46장)에 서요. 기본 한 벌(전설 I 무기·방어구, 재련 +15, 영웅 장신구·「길손」 치장, 펫·탈것·넋 하나씩)과 지난 이야기의 보상을 대신하는 「길손의 가호」를 받아요. 1~3부의 이야기 보상(신화 보물·탈것·넋·아바타)은 받지 않아요.'],
   ['만드는 법 · 직업 바꾸기', '새 캐릭터를 만들 때 여섯 직업 가운데 고를 수 있어요(캐릭터는 한 계정에 6명까지). [정보] → [직업 바꾸기]로 궁사·창객이 되려면 그 계정에서 그 직업 캐릭터를 한 번이라도 만든 적이 있어야 해요. 궁사는 부상(27장), 창객은 곤륜(36장)에 들어서면 「고향에 돌아온」 짧은 연출이 나와요.'],
   ['#', '물의 신화 업데이트 · 4부 바다의 새 놀거리'],
   ['천공의 탑 301~400층', '동해에 들어서면 탑이 물 밑으로 이어져요. 301~330층은 동해, 331~365층은 남쪽 바다, 366~400층은 깊은 바다의 보스. 10층마다 유물 장비(무기·갑옷·투구·어깨·신발을 돌아가며), 5로 끝나는 층마다 호박석, 350층 날개 「지느러미 날개」, 400층 유물 탈것 「용마」.'],
@@ -3998,7 +3999,7 @@ function josa(word, a, b){
 /* ================= 상태 ================= */
 function defaultState(){
   return {
-    v:1, saveBuild:SAVE_BUILD, gifts:{}, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
+    v:1, saveBuild:SAVE_BUILD, gifts:{}, jump:null, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
     up:{atk:0, hp:0, crit:0, critDmg:0, aspd:0, regen:0},
     skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0, party:0, jobE:0, jobF:0},
     gear:Object.fromEntries(ALL_SLOTS.map(k => [k, {count:Array(GEAR_N).fill(0), seen:Array(GEAR_N).fill(false)}])),
@@ -4205,6 +4206,7 @@ function mergeState(d){
       if (l[0][0] === l[1][0]) l[1][0] = O.pool.find(t => t !== l[0][0]);
       out.elix.o[O.k] = {l, t:Math.max(0, Math.min(EL.tries, Math.floor(+v.t) || 0)), n:Math.max(0, Math.min(99, Math.floor(+v.n) || 0))}; }
     const of = e.offer; if (of && typeof of === 'object' && OG[of.o] && out.elix.o[of.o] && Array.isArray(of.c)){ const c = of.c.filter(x => x && hasK(EL_CARD, x.k)).slice(0, 3).map(x => ({k:x.k, i:x.i === 1 ? 1 : 0})); if (c.length) out.elix.offer = {o:of.o, c}; } }
+  out.jump = d.jump && typeof d.jump === 'object' && d.jump.on ? {on:true, kit:!!d.jump.kit, step:Math.max(0, Math.min(JUMP.done, Math.floor(+d.jump.step) || 0))} : null;   // 「4부부터 시작」(8-3단계)
   out.inh = {w:Math.max(0, Math.min(WORLD_MAX, Math.floor(+(d.inh && d.inh.w)) || 0))};   // (5-1단계에 고침) 4까지만 받아서, 동해(세계 5)에서 계승을 마쳐도 다시 접속하면 대장장이가 또 찾아왔다
   { const n = d.noti && typeof d.noti === 'object' ? d.noti : {}, seen = {}, log = [];   // 알림 연출 틀: 본 알림·다시 보기 목록
     if (n.seen && typeof n.seen === 'object') for (const k of Object.keys(n.seen).slice(0, 300)) if (typeof k === 'string' && k.length <= 40) seen[k] = 1;
@@ -4304,9 +4306,9 @@ function computeStats(up = S.up){
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
-      * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk') * seaMul('atk'),
+      * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk') * seaMul('atk') * jumpMul('atk'),
     maxHp: powK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + (S.myth.okdae || 0) / 100) * (1 + (S.myth.lotus || 0) / 100) * (1 + 0.2 * MS.mirror)
-      * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp') * seaMul('hp'),
+      * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp') * seaMul('hp') * jumpMul('hp'),
     regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K,
     crit: Math.min(1, crRaw), critOver: crOver,
     critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + (S.myth.silk || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg'),
@@ -5386,7 +5388,7 @@ function startFight(info, party, o){
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
-    const near = a.cls === 'musa' || a.cls === 'jagaek';
+    const near = a.cls === 'musa' || a.cls === 'jagaek' || a.cls === 'changgaek';
     const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || extraSpot(k);
     const C = CLASSES[a.cls], aspd = C.spdMul;
     const e = Object.assign(a, {tx:spot[0], ty:spot[1], fx:spot[0], fy:spot[1], mt:0, moving:false, x:0, y:0, dir:'right',
@@ -7390,6 +7392,7 @@ function finishRaid(){
   if (currentTab === 'raid') buildTab('raid', true);
   const info = R.info;
   if (info.mem){ finishMem(R); return; }
+  if (info.jump != null){ finishJump(R); return; }
   if (info.aw2tut){ finishAw2Tut(R); return; }
   if (info.aw2t){ finishAw2Trial(R); return; }
   if (info.tb){ finishTimeBoss(R); return; }
@@ -9002,6 +9005,7 @@ function claimHidden(){
 /* ================= 아바타(꾸미기 아이템) =================
    캐릭터 옷·망토·펫 꾸미기. 가진 아바타 하나마다 공격력·체력 +2%(도감 효과). 꾸미기 상자(상점)·이야기·전직에서 얻는다 */
 const AVATARS = [
+  {k:'c_gilson', type:'char', name:'길손 도포', outfit:'#6a8a9a', deco:'sash', src:'4부부터 시작'},   // 「4부부터 시작」에서만(8-3단계)
   {k:'c_seolbim', type:'char', name:'색동 설빔', outfit:'#e85a7a', deco:'saekdong', src:'box'},
   {k:'c_dokkaebi', type:'char', name:'도깨비 털옷', outfit:'#d8433a', deco:'horns', src:'box'},
   {k:'c_snow', type:'char', name:'눈꽃 털옷', outfit:'#e8f0f8', deco:'fur', src:'box'},
@@ -9316,7 +9320,7 @@ function mountCatchUp(){
     if (M.av && AV[M.av] && !S.av.own[M.av] && giveAvatar(M.av, true)) addLog(`천공의 탑 ${f}층 보상을 되찾았어요: 날개 「${AV[M.av].name}」`, 'gain');
     if (M.mount && MT[M.mount] && !S.mount.own[M.mount] && giveMount(M.mount, true)) addLog(`천공의 탑 ${f}층 보상을 되찾았어요: 탈것 「${MT[M.mount].name}」`, 'gain');
   }
-  for (let i = 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); if (q.acc && ACC[q.acc[0]].w && S.acc[q.acc[0]].g < 0) giveAcc(q.acc[0], q.acc[1]); if (q.form && !S.form.own[q.form] && giveForm(q.form, true)) addLog(`지난 이야기 보상: ${FM[q.form].name} 변신`, 'gain'); }
+  for (let i = jumpOn() ? PART3_END : 0; i < Math.min(S.quest.main, MAIN_Q.length); i++){ const q = MAIN_Q[i]; if (q.mount && !S.mount.own[q.mount]) giveMount(q.mount, true); if (q.pet && !S.pets.lv[PETS.findIndex(p => p.draw === q.pet)]) givePet(q.pet); if (q.soul && !S.soul.own[q.soul]) giveSoul(q.soul, true); if (q.av && AV[q.av] && !S.av.own[q.av] && giveAvatar(q.av, true)) addLog(`지난 이야기 보상: 아바타 「${AV[q.av].name}」`, 'gain'); if (q.acc && ACC[q.acc[0]].w && S.acc[q.acc[0]].g < 0) giveAcc(q.acc[0], q.acc[1]); if (q.form && !S.form.own[q.form] && giveForm(q.form, true)) addLog(`지난 이야기 보상: ${FM[q.form].name} 변신`, 'gain'); }
 }
 
 /* 탈것 그림: 64×48 HD, 왼쪽을 본다. 안장 가운데 (33.5, 16)에 용사가 앉는다 */
@@ -10019,7 +10023,7 @@ function updateNoti(){
   const list = notiList();
   notiBtnUpd(list);
   const G = window.__game;
-  if (!list.length || cut || modalOpen || inhOpen || raid || bossActive || market || parade || (G && G.quiet)) return;
+  if (!list.length || cut || modalOpen || inhOpen || raid || bossActive || market || parade || jumpBusy() || (G && G.quiet)) return;
   const fresh = list.filter(N => !notiAuto.has(notiKey(N)) && !(G && G[N.flag || 'noNoti'] !== false));
   if (!fresh.length) return;
   for (const N of fresh) notiAuto.add(notiKey(N));
@@ -10051,8 +10055,182 @@ notiReg({k:'news', pri:60, who:() => ({name:GRANNY.name, img:grannyImg}), tag:'�
   body:() => { const T = notesTop(); return `<div class="inh-h">이번 소식 ${T.items.length}가지</div><div class="pre-row">${T.items.map(([t]) => `<span class="pre-sk"><i>${esc(t)}</i></span>`).join('')}</div>`; },
   go:{label:'자세히', fn:() => showNotes()}});
 // 이야기 연출·싸움이 끝난 뒤 한가할 때 한 번 묻는다(접속마다 한 번)
+/* ================= 「4부부터 시작」(물의 신화 8-3단계, PLAN 「캐릭터 6칸과 4부부터 시작」) =================
+   새 캐릭터를 만들 때 「1부부터 / 4부부터」를 고른다. 4부부터: 계정에 3부까지 마친 캐릭터가 하나 이상 있을 때만(jumpCan), 계정에 JUMP.max(2)번.
+   흐름(S.jump.step, 한가할 때 updateJump가 다음으로 — 도중에 꺼도 이어짐):
+     0 지급 한 벌(jumpKit) → 1 「지난 이야기」 12컷 → 2 몸 풀기 ① 기술(허수아비) → 3 ② 손컨(1차 스승) → 4 넋 고르기 → 5 ③ 넋 부름·변신(강림도령)
+     → 6 ④ 연습 레이드(3차 스승, 4인) → 7 수호신 고르기 → 8 탈것 고르기 → 9 동해로(doCross + 46장 여는 연출) → JUMP.done
+   몸 풀기는 한 판 끝날 때마다(이기든 지든 · 건너뛰어도) 전직이 한 단계씩 열린다(1차 → 4차). 싸움은 내 세기에 맞춘 연습(FIT)이라 지지 않게 약하다.
+   지급: Lv.500 · 기술 레벨 절반 · 무기/방어구 전설 I · 재련 +15(2차 계승 상태) · 비전 장비 6단계 · 영웅 장신구 한 벌 · 영웅 치장 「길손」 다섯 부위(SK_JUMP — 드롭·도감에는 없음)
+     · 옷 「길손 도포」·전직 망토 · 영웅 펫 하나 Lv.20 · 탈것 하나 · 1부 신화 보물 셋 · 넋 구슬 하나 · 변신 청룡 · 물약 100·숫돌 10 · 엽전·보석 조금.
+   「길손의 가호」 jumpMul: 장비만으로는 직접 키운 3부 끝 캐릭터의 3만 분의 1(보스 피해)·천 분의 1(체력)이라(2·3부 신화 보물·영약·넋·탈것·치장이 없어서 — docs/patch-sea/PROGRESS.md),
+     지난 이야기의 보상 대신 공격력·체력에 곱하는 고정 배율(JUMP.boon)을 준다. PLAN 「세기 = 3부 끝 캐릭터의 60~70%」에 맞춰 잰 값. 계속 남는다.
+   지난 이야기의 보상(2·3부 이야기 탈것·넋·아바타·신화 펫)은 받지 않는다(mountCatchUp이 PART3_END 앞은 건너뜀). 지급 장신구·길손 치장은 장터에 못 올린다(mkSources) */
+const JUMP = {max:2, done:10, lv:500, up:{atk:245, hp:245, crit:120, critDmg:140, aspd:100, regen:88}, reb:{atk:17, hp:2},
+  best:{s0:101, l0:100, s1:97, l1:200, s2:91, l2:240, s3:75, l3:400, s4:80, l4:500}, gear:16, refLv:15, craft:6, accG:3, skG:3, pet:3, petLv:20, myth:{sword:120, mirror:150, bell:100}, form:'cheong',
+  souls:['hong', 'seolmun', 'jacheong'], guards:['jowang', 'seongju', 'samsin'], mounts:['baekma', 'donkey', 'ox'], guardLv:10,
+  gems:3000, goldK:30000, dust:3000, mat:300, potion:100, elixir:10, mana:100, whet:10, boon:{atk:11000, hp:2750}, tgt:16, time:45, hit:0.025, aoe:0.015};
+const SK_JUMP = [{c:1, p:'guard', name:'길손 토시', col:'#8a9a6a', d:'먼 길을 걷는 이가 팔에 감던 토시.'}, {c:2, p:'shoe', name:'길손 버선', col:'#e8e0d0', d:'닳도록 걸어도 해지지 않는다는 버선.'},
+  {c:3, p:'belt', name:'길손 허리띠', col:'#7a6a4a', d:'봇짐을 단단히 여미던 띠.'}, {c:4, p:'tassel', name:'길손 무기 술', col:'#6a9ab0', d:'바닷바람에 나부끼는 푸른 술.'}, {c:5, p:'foot', name:'길손 발자취', col:'#cfe0d0', d:'지나온 길이 발밑에 희미하게 빛나요.'}];
+for (const x of SK_JUMP) SKC[x.c] = x;   // 이름·색만 알려 둠(SK_LIST에는 안 넣어 드롭·치장 모음에 안 나옴)
+const jumpOn = () => !!(S && S.jump && S.jump.on);
+const jumpBusy = () => jumpOn() && (S.jump.step || 0) < JUMP.done;
+const jumpMul = t => jumpOn() ? JUMP.boon[t] || 1 : 1;
+const jumpAccP = k => Math.round(ACC[k].base[JUMP.accG] * (1 + (150 + JUMP.best.s4) / (ACC[k].sc || 60)) * 0.5);
+// 조건·남은 횟수: 3부까지 마친 캐릭터가 계정에 하나 이상, 계정에 JUMP.max번(이 기기 기록과 캐릭터 목록 가운데 큰 쪽)
+function jumpCan(){
+  const A = REG && REG.accounts && REG.accounts[curAcc || session && session.acc], F = window.__game && window.__game.jumpForce;
+  if (!A) return {ok:false, left:0, why:'로그인한 뒤에 고를 수 있어요.'};
+  const used = Math.max(A.jumpN || 0, (A.chars || []).filter(ch => ch.jump).length), left = Math.max(0, JUMP.max - used);
+  const done = F || (A.chars || []).some(ch => (ch.q || 0) >= PART3_END || (ch.world || 0) >= 5);
+  if (!done) return {ok:false, left, why:'이 계정에 3부(45장 「세 하늘의 신화」)까지 마친 캐릭터가 있어야 열려요.'};
+  if (left < 1) return {ok:false, left, why:`「4부부터 시작」은 한 계정에 ${JUMP.max}번까지예요. 이미 다 썼어요.`};
+  return {ok:true, left, why:''};
+}
+// 지급 한 벌(S에 바로 입힌다 — 새 캐릭터로 막 들어온 때 한 번)
+function jumpKit(){
+  const c = S.cls, J = JUMP;
+  Object.assign(S, {level:J.lv, exp:0, world:4, stage:J.best.s4, maxStage:J.best.s4, kills:0, job:0, awaken:true, gems:J.gems, dust:J.dust});
+  S.best = Object.assign({}, S.best, J.best);
+  S.reb = {n:2, pts:0, total:40, up:{atk:J.reb.atk, hp:J.reb.hp, spd:0, luck:0, eye:0}};
+  S.up = Object.assign({}, J.up);
+  for (const k of ['weapon', 'armor']){ S.equip[k] = J.gear; S.gear[k].count[J.gear] = Math.max(1, S.gear[k].count[J.gear] || 0); for (let i = 0; i <= J.gear; i++) S.gear[k].seen[i] = true;
+    S.refine[k] = {lv:J.refLv, drops:0, t:2, base:refinePct(REFINE_MAX) + (refinePct(REFINE_MAX) - refinePct(REFINE_INHERIT)) * REFINE_LATE}; }
+  for (const k of ['w', 'a', 'n']) S.craft[k] = {t:J.craft, e:(ENGR_BEST[c] || ENGR_BEST.musa)[k], e2:'', el:0};
+  for (const k of ['ring', 'ear', 'brace']) S.acc[k] = {g:J.accG, p:jumpAccP(k)};
+  for (const x of SK_JUMP) S.skin.eq[x.p] = skMake(x, J.skG, 1);
+  S.pets.lv[J.pet] = J.petLv; S.petEq.atk = J.pet;
+  for (const k in J.myth) S.myth[k] = J.myth[k];
+  S.form.own[J.form] = true; S.form.eq = J.form;
+  S.inv = {potion:J.potion, elixir:J.elixir, whet:J.whet, mana:J.mana};
+  S.mat.m2 = J.mat;   // 곤륜의 재료(하늘 조각) — 동해에 닿으면 대장장이가 용궁 진주로 바꿔 준다
+  Object.assign(S.quest, {main:PART3_END, sv:STORY_SV, tut:-1, tutN:0, trials:[true, true, true, true, true], hid:4, hidBase:0});
+  S.inh = {w:4}; S.seenCut = Object.assign({}, S.seenCut, {patTiles:1, patCounter:1});
+  for (const f of FORKS) if (S.fork[f.k] == null) S.fork[f.k] = 0;   // 지난 이야기의 갈림길은 묻지 않는다
+  S.av.own.c_gilson = true; S.av.char = 'c_gilson';
+  for (const sk of SKILLS) if (!sk.job || sk.job <= 4) S.skills[sk.key] = Math.max(S.skills[sk.key] || 0, Math.round(sk.max / 2));
+  S.skSet = []; S.skOff = []; S.skSetMan = false; S.skNote = false; S.clsNote = false;
+  S.jump = Object.assign(S.jump || {}, {on:true, kit:true});
+  ST = null; refreshStats(); S.gold = mGold(S.maxStage) * J.goldK;
+  S.skKnown = SKILLS.map((_, i) => i).filter(i => skOpen(i));
+  if (session){ mapCache.clear(); applyWorld(); resetRuntime(); } hero.hp = ST.maxHp;
+  unlockSkills(); skSetFix();
+  return true;
+}
+// 전직을 한 단계 연다(몸 풀기 한 판마다): 망토·기술
+function jumpJobUp(to){
+  if (S.job >= to) return false;
+  const c = S.cls;
+  for (let j = S.job + 1; j <= to; j++) for (const cc of CLASS_ALL) S.av.own[jobCapeKey(cc, j)] = true;
+  S.job = to; S.av.cape = jobCapeKey(c, to);
+  ST = null; refreshStats(); unlockSkills(); skSetFix(); hero.hp = ST.maxHp;
+  S.skKnown = SKILLS.map((_, i) => i).filter(i => skOpen(i));
+  addLog(`${to}차 전직 「${jobName()}」 — 기술 「${skillName([6, 7, 8, 9][to - 1])}」${josa(skillName([6, 7, 8, 9][to - 1]), '이', '가')} 열렸어요.`, 'good');
+  return true;
+}
+const JUMP_CUT = () => [
+  ['village', 'granny,hero', '', [['이야기꾼 할머니', '먼 길을 온 길손이로구나. 바다로 가기 전에 지난 이야기부터 들려주마.'], ['나', '부탁드려요, 할머니.']]],
+  ['sky', 'haemosu', 'light', [['', '아주 먼 옛날 하늘 문에 금이 가서, 요괴들이 삼한 땅으로 쏟아져 내려왔단다.']]],
+  ['village', 'kkachi', '', [['', '길잡이 까치가 한 용사를 찾아왔지.'], ['까치', '하늘 문을 다시 닫아 주세요!']]],
+  ['palace', 'jumong,yuhwa', 'sparkle', [['', '용사는 알에서 태어난 주몽을 만나 활 쏘는 마음과 다물의 맹세를 배웠어.']]],
+  ['gate', 'saja,gangrim', 'dark', [['', '하늘 문의 금은 저승의 원한과 이어져 있었지. 용사는 다시 태어나 열 시왕을 차례로 만나고, 갇혀 있던 사신을 구했단다.']]],
+  ['sky', 'emperor,wukong', 'flash', [['', '하늘에서는 신들과 겨루었어. 손오공도, 옥황상제도. 그리고 원한에 물든 천마를 달래 주었지.']]],
+  ['shore', 'susanoo,amaterasu', 'sparkle', [['', '바다 건너 해 뜨는 섬 부상에서는 원한에 흔들리던 신들의 마음을 풀어 주었고.']]],
+  ['burnfield', 'houyi', 'fire', [['', '서쪽 끝 곤륜에서는 해가 열 개나 떴단다. 활 잘 쏘는 후예와 함께 해를 달랬지.']]],
+  ['kunlunmt', 'nuwa,pangu', 'shake', [['', '무너진 하늘 기둥 너머, 빛도 색도 없는 혼돈을 다시 잠재우고 하늘을 꿰맸어.']]],
+  ['sky', 'kkachi', 'light', [['', '그제야 까치가 털어놓았지.'], ['까치', '저는 원래 다리를 놓는 새예요. 하늘과 하늘 사이에요.']]],
+  ['palace', 'xiwangmu,amaterasu,jumong', 'sparkle', [['', '세 나라의 신들이 하늘 문 앞에 모여 용사를 배웅했단다. 세 하늘의 신화가 된 게지.']]],
+  ['daewangam', 'granny,hero,kkachi', '', [['이야기꾼 할머니', '자, 이제 네 차례다. 동쪽 바다에서 검은 물이 밀려온다는구나.'], ['까치', '{name}님, 떠나기 전에 몸부터 풀어요!'], ['나', '지난 이야기는 마음에 담고, 이제 내 이야기를 쓸게요.']]]];
+// 몸 풀기 넷: [제목, 설명, 끝나면 열리는 전직]
+const JUMP_TR = [
+  {t:'기술 쓰기', d:'아래 <b>기술 칸</b>을 눌러 기술을 써 보세요. [자동]이면 용사가 알아서 써요. 허수아비는 때리지 않아요.', tip:'기술 칸을 눌러 보세요. 길게 누르면 그 기술만 수동/자동이 바뀌어요.'},
+  {t:'피하고 되받기', d:'바닥에 <b>붉은 칸</b>이 깔리면 [구르기]로 벗어나고, 스승이 금빛으로 힘을 모으면 [되받기]를 눌러요. 그냥 두어도 용사가 어느 정도 알아서 해요.', tip:'붉은 칸 → [구르기] · 금빛으로 힘을 모으면 → [되받기]'},
+  {t:'넋 부름과 변신', d:'싸우는 동안 <b>넋의 기운</b>이 차면 넋이 나타나 도와요. 보스 앞에서는 <b>변신</b>(청룡)이 한 판에 한 번 켜져요. 둘 다 [자동]이면 저절로 써요.', tip:'[넋 부름] · [변신] 단추를 눌러 보세요(자동이면 저절로).'},
+  {t:'연습 레이드', d:'동료 셋과 함께 스승에게 도전해요. 보스가 <b>전멸기</b>를 쓰면 체력이 1이 되니 곧바로 탕약을 마셔요(자동이면 저절로). <b>초각성기</b>도 한 번 나가요.', tip:'동료와 함께! 전멸기 뒤에는 탕약.'}];
+function jumpTrainAsk(n){
+  const T = JUMP_TR[n];
+  showModal(`몸 풀기 ${n + 1}/4 · ${T.t}`, `<p>${T.d}</p><p class="small">연습이라 져도 괜찮아요. 한 판을 마치면 <b>${n + 1}차 전직</b>과 그 기술이 열려요.</p>`,
+    [{label:'건너뛰기', fn:() => jumpTrainDone(n)}, {label:'시작', primary:true, fn:() => setTimeout(() => startJumpFight(n), 0)}]);
+}
+function startJumpFight(n){
+  if (raid || cut || !jumpBusy()) return false;
+  const c = S.cls, T = JUMP_TR[n], J1 = JOBS[c][0], J3 = JOBS[c][2];
+  const who = n === 0 ? {bossName:'짚 허수아비', type:'scarecrow', color:'#d8b060'} : n === 1 ? {bossName:teacher1(c), type:'m_' + c, color:J1.capeC} : n === 2 ? {bossName:'강림도령', type:'gangrim', color:'#b8282a'} : {bossName:J3.teacher, type:J3.type, color:J3.color || J3.capeC};
+  const info = Object.assign(who, {jump:n, label:`몸 풀기 ${n + 1}/4 · ${T.t}`, region:regionIndex(S.stage), party:n === 3 ? 4 : 1, ref:S.maxStage, g:3});
+  if (n === 0){ info.dummy2 = true; startFight(info, [], {hp:1e300, atk:0, aoe:0, time:15}); if (raid.awk) raid.awk.used = true; }
+  else {
+    info.fit = fitNew(JUMP.tgt, realDps(), 'fitKd'); if (n === 3) info.wipe = true;
+    const party = n === 3 ? raidParty(info) : [];
+    startFight(info, party, {hp:info.fit.rate * JUMP.tgt * (1 + party.length * 0.5), atk:ST.maxHp * JUMP.hit, aoe:ST.maxHp * JUMP.aoe, time:JUMP.time});
+    raid.boss.tbPct = {hit:JUMP.hit, aoe:JUMP.aoe};
+    if (n !== 3 && raid.awk) raid.awk.used = true;   // 초각성기는 연습 레이드에서
+    if (n === 2) soulG = SOUL_FULL;                   // 넋의 기운을 채워 두고 시작
+  }
+  addLog(`몸 풀기 ${n + 1}/4 — ${T.tip}`, 'good');
+  if (!fxOff()) fxBanner('몸 풀기', T.t, '#8fd0ff', '30%', 1.4);
+  return true;
+}
+function finishJump(R){ jumpTrainDone(R.info.jump, R.win); }
+function jumpTrainDone(n, win){
+  if (!jumpOn()) return;
+  jumpJobUp(n + 1);
+  const next = [3, 4, 6, 7][n];   // ① → ② → 넋 고르기 → ③ → ④ → 수호신
+  if ((S.jump.step || 0) < next) S.jump.step = next;
+  saveLocal();
+}
+function jumpPick(kind){
+  const list = kind === 'soul' ? JUMP.souls.map(k => [k, SL[k].name, SL[k].tale]) : kind === 'guard' ? JUMP.guards.map(k => [k, GD[k].name, `${GD[k].d} — ${{hp:'체력', atk:'공격력', gold:'엽전', exp:'경험치', critDmg:'치명타 피해'}[GD[k].eff] || ''} +${fmt(GD[k].per * JUMP.guardLv)}%`]) : JUMP.mounts.map(k => [k, MT[k].name, `${MT[k].d} — 걷는 속도 +${MT[k].spd}%`]);
+  const title = kind === 'soul' ? '갖추기 · 넋 구슬 하나' : kind === 'guard' ? '갖추기 · 모실 수호신' : '갖추기 · 탈것';
+  const lead = kind === 'soul' ? '함께 싸울 넋을 하나 골라요. 싸우는 동안 기운이 차면 나타나 도와요([기술] → [넋 부름]).' : kind === 'guard' ? `모실 수호신을 하나 골라요(Lv.${JUMP.guardLv}). 나머지는 [수련] → [수호신]에서 엽전으로 올릴 수 있어요.` : '타고 다닐 탈것을 골라요. 나머지는 [장비] → [탈것]에서 얻을 수 있어요.';
+  showModal(title, `<p>${lead}</p><ul class="traits">${list.map(([k, n2, d]) => `<li><b>${n2}</b> — ${d}</li>`).join('')}</ul>`,
+    list.map(([k, n2], i) => ({label:n2, primary:i === 0, fn:() => jumpPicked(kind, k)})));
+}
+function jumpPicked(kind, k){
+  if (!jumpOn()) return false;
+  if (kind === 'soul'){ if (!SL[k]) return false; S.soul.own[k] = true; S.soul.eq = [k, '']; S.jump.step = Math.max(S.jump.step, 5); }
+  else if (kind === 'guard'){ if (!GD[k]) return false; S.guard.lv[k] = Math.max(S.guard.lv[k] || 0, JUMP.guardLv); S.guard.on = k; S.jump.step = Math.max(S.jump.step, 8); }
+  else { if (!MT[k]) return false; S.mount.own[k] = true; S.mount.ride = k; S.jump.step = Math.max(S.jump.step, 9); }
+  ST = null; refreshStats(); saveLocal(); sfx('quest');
+  return true;
+}
+function jumpArrive(){
+  if (!jumpOn()) return false;
+  if (S.job < 4) jumpJobUp(4);
+  S.jump.step = JUMP.done;
+  if (S.world < 5 && doCross() && session && !(window.__game && window.__game.quiet)){ if (currentTab) closePage(); seaOpenCut(); }
+  saveLocal();
+  return true;
+}
+function jumpStep(){
+  const J = S.jump, st = J.step || 0;
+  if (!J.kit) jumpKit();
+  if (st <= 1){ J.step = 2; saveLocal(); return playCut(JUMP_CUT(), {title:'지난 이야기'}); }
+  if (st === 2) return jumpTrainAsk(0);
+  if (st === 3) return jumpTrainAsk(1);
+  if (st === 4) return jumpPick('soul');
+  if (st === 5) return jumpTrainAsk(2);
+  if (st === 6) return jumpTrainAsk(3);
+  if (st === 7) return jumpPick('guard');
+  if (st === 8) return jumpPick('mount');
+  return jumpArrive();
+}
+// 시험·시뮬: 화면 없이 끝까지(고르기는 첫째 것)
+function jumpAll(){
+  if (!jumpOn()) return false;
+  if (!S.jump.kit) jumpKit();
+  jumpJobUp(4);
+  if (!S.soul.eq[0]) jumpPicked('soul', JUMP.souls[0]);
+  if (!S.guard.on) jumpPicked('guard', JUMP.guards[0]);
+  if (!S.mount.ride) jumpPicked('mount', JUMP.mounts[0]);
+  return jumpArrive();
+}
+function updateJump(){
+  if (!session || !jumpBusy() || cut || modalOpen || inhOpen || raid || bossActive || market || parade) return;
+  const G = window.__game; if (G && (G.quiet || G.noJump)) return;
+  jumpStep();
+}
 function updateFork(){
-  if (!session || cut || modalOpen || raid || bossActive || market || parade || (window.__game && (window.__game.quiet || window.__game.noFork))) return;
+  if (!session || cut || modalOpen || raid || bossActive || market || parade || jumpBusy() || (window.__game && (window.__game.quiet || window.__game.noFork))) return;
   const f = forkPending().find(x => !forkAsked[x.k]);
   if (f) forkAsk(f);
 }
@@ -10454,8 +10632,8 @@ function bagSell(id){ const i = bagFind(id); if (i < 0) return 0; const v = item
 function bagSellWorse(){ let n = 0, g = 0; for (const it of S.bag.slice()) if (bagWorse(it)){ g += bagSell(it.id); n++; } if (n) saveLocal(); return {n, g}; }
 // 장터에 올릴 수 있는 것: 가방 물건 · 남는 장비 조각 · 재료·쇳가루·고삐 조각
 function mkSources(){
-  const out = S.bag.map(it => ({src:{t:'bag', id:it.id}, it, stack:false}));
-  for (const it of [...S.skin.inv].sort((a, b) => skSE(b) - skSE(a))) out.push({src:{t:'skin', id:it.id}, it:{t:'skin', c:it.c, g:it.g, l:it.l}, stack:false});   // 기본 장비(무기·방어구 조각)는 거래하지 않음
+  const out = S.bag.filter(it => !(jumpOn() && it.t === 'acc' && it.g === JUMP.accG && hasK(ACC, it.k) && it.p === jumpAccP(it.k))).map(it => ({src:{t:'bag', id:it.id}, it, stack:false}));   // 「4부부터 시작」 지급 장신구는 거래 불가
+  for (const it of [...S.skin.inv].filter(x => +x.c >= 17).sort((a, b) => skSE(b) - skSE(a))) out.push({src:{t:'skin', id:it.id}, it:{t:'skin', c:it.c, g:it.g, l:it.l}, stack:false});   // 기본 장비(무기·방어구 조각)는 거래하지 않음
   for (const M of MATS) if ((S.mat[M.k] || 0) >= 1) out.push({src:{t:'mat', k:M.k}, it:{t:'mat', k:M.k, n:Math.floor(S.mat[M.k])}, stack:true, max:Math.floor(S.mat[M.k])});
   if (S.dust >= 1) out.push({src:{t:'dust'}, it:{t:'dust', n:Math.floor(S.dust)}, stack:true, max:Math.floor(S.dust)});
   if (S.mount.piece >= 1) out.push({src:{t:'piece'}, it:{t:'piece', n:S.mount.piece}, stack:true, max:S.mount.piece});
@@ -13533,6 +13711,7 @@ const CAST = {
   emperor:{name:'옥황상제', p:['musa', {outfit:'#e8c84a', hair:'#241c26', hat:'mcrown', skin:0, beard:true}, 4, 4], ex:{deco:'dragon', capeC:'#c8382f', wtype:'none'}},
   susanoo:{name:'스사노오', p:['musa', {outfit:'#2a4a6a', hair:'#1a1a22', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:2, capeC:'#3a4a7a'}},
   yoichi:{name:'나스노 요이치', p:['gungsa', {outfit:'#3a5a8a', hair:'#1a1a22', hat:'none', skin:0}, 3, 3], ex:{job:2, capeC:'#c8503a'}},
+  granny:{name:'이야기꾼 할머니', p:['doin', {outfit:'#7a5a8a', hair:'#dcdce4', hat:'none', skin:1}, 1, -1], ex:{wtype:'none'}},
   benkei:{name:'벤케이', p:['changgaek', {outfit:'#2e2e38', hair:'#1a1a22', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, capeC:'#e8e4d8'}},
   changjang:{name:'용궁의 창 장수', p:['changgaek', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, 3, 3], ex:{job:3, capeC:'#2a7a9a'}},
   seimei:{name:'세이메이', p:['sulsa', {outfit:'#f4f4f8', hair:'#1a1a22', hat:'sulsa', skin:0}, 3, 3], ex:{job:2}},
@@ -17415,10 +17594,14 @@ function confirmDeleteChar(cid){
 }
 function showCharCreate(){
   modalLock = true; setTitle(true);
-  const look = defaultLook(), lg = legacyCandidate();
-  let pick = 'musa';
+  const look = defaultLook(), lg = legacyCandidate(), JC = jumpCan();
+  let pick = 'musa', start = 'p1';
+  const START_TXT = {p1:'프롤로그와 마을 어귀에서 시작해요. 이야기와 보상을 모두 받아요.', jump:'지난 이야기 요약과 몸 풀기 싸움 넷을 마치면 레벨 500 · 4차 전직에 기본 한 벌을 갖추고 4부 바다(46장) 앞에 서요. 1~3부의 이야기 보상은 받지 않아요.'};
   const html = `
     <div class="form"><label>캐릭터 이름<input type="text" id="cc-name" maxlength="8" autocomplete="off" spellcheck="false" placeholder="한글·영문·숫자 2~8자"></label></div>
+    <div class="opt-l">어디서부터</div>
+    <div class="chips" id="cc-start"><button class="chip" data-st="p1" aria-pressed="true">1부부터</button><button class="chip${JC.ok ? '' : ' locked'}" data-st="jump" aria-pressed="false">4부부터 · 바로 건너기${JC.ok ? ` (남은 ${JC.left}번)` : ' 🔒'}</button></div>
+    <p class="small" id="cc-start-hint" style="margin:6px 0 2px">${START_TXT.p1}</p>
     <div class="opt-l">직업</div>
     ${classCardsHTML(pick)}
     <div class="opt-l">꾸미기</div>
@@ -17427,15 +17610,18 @@ function showCharCreate(){
     <p class="err" id="cc-err" role="alert"></p>`;
   showModal('새 캐릭터 만들기', html, [
     {label:'뒤로', keep:() => { showCharSelect(); return true; }},
-    {label:'만들기', primary:true, keep:() => { createChar(pick, look); return true; }},
+    {label:'만들기', primary:true, keep:() => { createChar(pick, look, start); return true; }},
   ], () => {
+    document.querySelectorAll('#cc-start .chip').forEach(b => b.addEventListener('click', () => { const v = b.dataset.st, h = $('#cc-start-hint'), C2 = jumpCan();
+      if (v === 'jump' && !C2.ok){ h.textContent = C2.why; h.style.color = '#ff9a8a'; return; }
+      start = v; document.querySelectorAll('#cc-start .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); h.textContent = START_TXT[v]; h.style.color = ''; }));
     const upd = wireLookEditor(look, () => pick, [-1, -1]);
     wireClassCards(c => { pick = c; upd(); });
     enterSubmits();
   });
 }
 let ccBusy = false;
-async function createChar(c0, look){
+async function createChar(c0, look, start){
   if (ccBusy) return;
   const err = m => setText($('#cc-err'), m);
   const name = ($('#cc-name').value || '').trim();
@@ -17457,9 +17643,11 @@ async function createChar(c0, look){
   const box = $('#cc-legacy');
   if (box && box.checked){ const lg = legacyCandidate(); if (lg){ st = mergeState(lg.data); REG.legacyClaimed = true; imported = true; } }
   st.cls = c0; st.chosen = true; st.name = name; st.look = cleanLook(look); st.lastSave = now();
+  const jump = start === 'jump' && !imported && jumpCan().ok;   // 「4부부터 시작」: 들어가면 updateJump가 지급·지난 이야기·몸 풀기를 차례로
+  if (jump){ st.jump = {on:true, kit:false, step:0}; st.quest.tut = -1; A.jumpN = (A.jumpN || 0) + 1; }
   const cid = 'c' + now().toString(36) + randHex(2);
   (A.clsOpen = A.clsOpen || {})[c0] = true;   // 이 계정이 연 직업([직업 바꾸기]의 새 직업 잠금 — clsOpened)
-  A.chars.push({cid, name, cls:c0, level:st.level, maxStage:st.maxStage, look:st.look, armorG:gradeOf(st.equip.armor), weaponG:gradeOf(st.equip.weapon), t:now()});
+  A.chars.push({cid, name, cls:c0, level:st.level, maxStage:st.maxStage, look:st.look, armorG:gradeOf(st.equip.armor), weaponG:gradeOf(st.equip.weapon), t:now(), jump:jump ? 1 : 0});
   A.t = now(); saveReg();
   try { localStorage.setItem(charKey(curAcc, cid), JSON.stringify(st)); } catch (e) {}
   enterChar(cid, {data:st, fresh:true, imported});
@@ -17509,7 +17697,7 @@ async function enterChar(cid, opts = {}){
   addLog(`${S.name}님, ${stageLabel(S.stage)}에 들어섰습니다.`, 'good');
   if (opts.imported) addLog('예전 모험을 이어받았습니다.', 'good');
   if (kfix){ addLog(`곤륜 기록을 되찾았어요: 곤륜 ${S.maxStage}단계 · Lv.${S.level}(예전에 다시 들어오면 이승으로 바뀌던 문제를 고쳤어요)`, 'good'); saveLocal(); }
-  if (opts.fresh && !opts.imported) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);
+  if (opts.fresh && !opts.imported && !jumpOn()) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);   // 「4부부터 시작」은 updateJump가 「지난 이야기」부터
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
   addChat('sys', '알림', `${S.name}님, 어서 오세요! 채팅창에서 주민들과 이야기할 수 있어요.${room ? (onlineWanted() ? ' 지금 접속한 다른 용사들과도 이야기가 이어져요.' : ' 지금 이 페이지를 보는 사람들과도 이야기가 이어져요.') : ''}`);
   chatUnread = 0;
@@ -17615,7 +17803,7 @@ async function syncChars(acc){
       look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
       ally:sm.ally && typeof sm.ally === 'object' ? {dps:Math.max(1, +sm.ally.dps || 1), maxHp:Math.max(1, +sm.ally.maxHp || 1), rd:Math.max(0, +sm.ally.rd || 0)} : undefined, t:+it.t || 0, srvT:+it.t || 0,
       world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, +sm.level || 1)))};
-    { const P = sumProg(sm); for (const k of ['job', 'reb', 'q', 'tw', 'pv', 'tt']) ent[k] = P[k]; }
+    { const P = sumProg(sm); for (const k of ['job', 'reb', 'q', 'tw', 'pv', 'tt']) ent[k] = P[k]; if (sm.jump) ent.jump = 1; }
     if (!loc) A.chars.push(ent);
     else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
   }
@@ -17729,8 +17917,8 @@ function saveLocal(){
   if (!ch) return;
   const sum = {name:S.name, cls:S.cls, level:S.level, maxStage:S.maxStage, look:S.look, armorG:gradeOf(S.equip.armor), weaponG:gradeOf(S.equip.weapon),
     ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp), rd:Math.round(realDps())}, world:S.world, cum:cumLv(),
-    job:S.job || 0, reb:S.reb.n || 0, q:S.quest.main || 0, tw:S.tower.best || 0, pv:S.pvp.pt || 1000, tt:S.title.eq || ''};   // 진행도(2026-11 (43), 다른 용사가 내 정보 창으로 봄)
-  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum, o.job, o.reb, o.q, o.tw, o.pv, o.tt]);
+    job:S.job || 0, reb:S.reb.n || 0, q:S.quest.main || 0, tw:S.tower.best || 0, pv:S.pvp.pt || 1000, tt:S.title.eq || '', jump:jumpOn() ? 1 : 0};   // 진행도(2026-11 (43), 다른 용사가 내 정보 창으로 봄)
+  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum, o.job, o.reb, o.q, o.tw, o.pv, o.tt, o.jump || 0]);
   if (pick(ch) !== pick(sum)){ Object.assign(ch, sum, {t:now()}); A.t = now(); saveReg(); }
 }
 function bootCloud(){
@@ -18204,7 +18392,7 @@ function start(hotData){
   if (orientMode !== 'auto') setOrient(orientMode, false);   // 고른 방향을 다시(잠글 수 있는 곳은 잠금)
   last = performance.now();
   requestAnimationFrame(loop);
-  setInterval(() => { if (sleepAt){ sleepTick(); return; } refreshPanel(); yvTick(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateFork(); updateNoti(); npcRareNote(); if (session){ skSetFix(); } updateAfk(); }, 200);
+  setInterval(() => { if (sleepAt){ sleepTick(); return; } refreshPanel(); yvTick(); updateGuide(); updateDots(); updateQTrack(); tbAutoJoin(); drawMini(); autoClear(); updateJump(); updateFork(); updateNoti(); npcRareNote(); if (session){ skSetFix(); } updateAfk(); }, 200);
   try { $('#rotTip').hidden = !!localStorage.getItem(KP + 'samhan-rot-tip'); } catch (e) { $('#rotTip').hidden = false; }
   setInterval(saveLocal, 5000);
   setInterval(pushCloud, 60000);
@@ -18283,7 +18471,7 @@ if (location.search.indexOf('simtest') >= 0){
     update, buyStat, upgradeSkill, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
-    startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
+    startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
     addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },

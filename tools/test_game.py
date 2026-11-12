@@ -2914,6 +2914,73 @@ async def main():
             await np_.screenshot(path=str(OUT / f'46b-{cls9}-start.png'))
             await ctxN.close()
 
+        # 9-20) 물의 신화 8-3단계: 「4부부터 시작」 — 조건(3부까지 마친 캐릭터)·횟수(계정 2번) → 지급 한 벌 → 지난 이야기 12컷 → 몸 풀기 넷(한 판마다 전직) → 갖추기 셋 → 동해 도착
+        ctxJ = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        jq = await ctxJ.new_page()
+        watch(jq, errors, '8-3단계 ')
+        await fresh(jq)
+        await jq.click('#lg-tab-signup')
+        await jq.fill('#lg-id', 'jumper')
+        await jq.fill('#lg-pw', 'abcd')
+        await jq.fill('#lg-pw2', 'abcd')
+        await jq.click('#modal-btn-0')
+        await jq.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        await jq.click('#modal-btn-0')      # 새 캐릭터
+        await jq.wait_for_selector('#cc-name')
+        # 3부까지 마친 캐릭터가 없는 계정: 「4부부터」는 잠긴 모양, 눌러도 안 골라지고 까닭을 알려 준다
+        await jq.click('#cc-start [data-st="jump"]')
+        k0 = await jq.evaluate("() => { const G = window.__game, b = document.querySelector('#cc-start [data-st=\"jump\"]'); return [G.jumpCan().ok, b.classList.contains('locked'), b.getAttribute('aria-pressed'), /3부/.test(document.querySelector('#cc-start-hint').textContent)]; }")
+        check(k0 == [False, True, 'false', True], f'4부부터 시작: 3부까지 마친 캐릭터가 없는 계정에서는 잠겨 있고 까닭을 알려 준다 {k0}')
+        # 조건이 맞는 계정(시험 훅): 고르고 만들면 프롤로그 대신 지급 한 벌 + 「지난 이야기」
+        await jq.evaluate("() => { window.__game.jumpForce = true; }")
+        await jq.fill('#cc-name', '길손이')
+        await jq.click('#cc-start [data-st="jump"]')
+        await jq.click('#cc-changgaek')
+        await jq.evaluate("() => document.querySelector('#cc-name').scrollIntoView({block:'start'})")
+        await jq.screenshot(path=str(OUT / '47-jump-create.png'))
+        k1 = await jq.evaluate("() => { const b = document.querySelector('#cc-start [data-st=\"jump\"]'); return [b.getAttribute('aria-pressed'), /레벨 500/.test(document.querySelector('#cc-start-hint').textContent), window.__game.jumpCan().left]; }")
+        await jq.click('#modal-btn-1')      # 만들기
+        await jq.wait_for_function('() => window.__game.session && window.__game.cut && window.__game.S.jump && window.__game.S.jump.kit', timeout=8000)
+        k2 = await jq.evaluate(r"""() => { const G = window.__game, S = G.S;
+          return {cut:[G.cut.opts.title, G.cut.shots.length], lv:S.level, w:S.world, job:S.job, cls:S.cls, eq:[S.equip.weapon, S.equip.armor], ref:[S.refine.weapon.lv, S.refine.weapon.t, S.refine.armor.lv], craft:[S.craft.w.t, S.craft.a.t, S.craft.n.t],
+            acc:['ring', 'ear', 'brace'].map(k => S.acc[k].g), skin:Object.values(S.skin.eq).map(it => [it.c, it.g]).sort().join('|'), pet:S.pets.lv[G.JUMP.pet], myth:['sword', 'mirror', 'bell'].map(k => S.myth[k] > 0), kusa:S.myth.kusa,
+            inv:[S.inv.potion, S.inv.whet], q:S.quest.main === G.PART3_END, av:S.av.char, boon:[G.jumpMul('atk'), G.jumpMul('hp')], left:G.jumpCan().left, step:S.jump.step, skLv:S.skills.spin, reb:S.reb.n, lvCap:S.level === G.JUMP.lv}; }""")
+        check(k1[:2] == ['true', True] and k1[2] == 2 and k2['cut'] == ['지난 이야기', 12] and k2['lv'] == 500 and k2['w'] == 4 and k2['job'] == 0 and k2['cls'] == 'changgaek' and k2['eq'] == [16, 16] and k2['ref'] == [15, 2, 15] and k2['craft'] == [6, 6, 6]
+              and k2['acc'] == [3, 3, 3] and k2['skin'] == '1,3|2,3|3,3|4,3|5,3' and k2['pet'] == 20 and all(k2['myth']) and k2['kusa'] == 0 and k2['inv'] == [100, 10] and k2['q'] and k2['av'] == 'c_gilson' and k2['boon'][0] > 1000 and k2['boon'][1] > 100 and k2['left'] == 1 and k2['skLv'] == 15 and k2['reb'] == 2,
+              f"4부부터 시작: 만들면 프롤로그 대신 「지난 이야기」 12컷 · 지급 한 벌(Lv.500 · 전설 I · 재련 +15(2차 계승) · 비전 6단계 · 영웅 장신구·길손 치장 다섯 · 펫 Lv.20 · 1부 보물 셋 · 물약 100 · 길손의 가호) · 남은 횟수 2 → 1 {k1} {k2}")
+        await jq.click('#cutSkip')
+        await jq.wait_for_selector('#mTitle:has-text("몸 풀기 1/4")', timeout=5000)
+        await jq.screenshot(path=str(OUT / '47b-jump-train.png'))
+        await jq.click('#modal-btn-1')      # 시작
+        await jq.wait_for_function('() => window.__game.raid && window.__game.raid.info.jump === 0', timeout=5000)
+        await jq.wait_for_timeout(1500)
+        await jq.screenshot(path=str(OUT / '47c-jump-fight.png'))
+        k3 = await jq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.noJump = true;
+          const run = (sec) => { for (let i = 0; i < sec * 20 && G.raid; i++){ G.update(0.05); G.addTime(50); } for (let i = 0; i < 60; i++){ G.update(0.05); G.addTime(50); } };
+          out.f0 = [G.raid.info.bossName, G.raid.boss.atk]; run(60); out.a = [S.job, S.jump.step, !!G.raid, G.jobName(), G.skOpen(6)];
+          G.jumpStep(); out.m2 = document.querySelector('#mTitle').textContent; G.hideModal(); G.jumpTrainDone(1); out.b = [S.job, S.jump.step, G.skOpen(7)];   // ② 건너뛰기
+          G.jumpStep(); out.m3 = document.querySelector('#mTitle').textContent; out.soulBtns = document.querySelectorAll('#mBtns button').length; G.hideModal(); G.jumpPicked('soul', G.JUMP.souls[1]); out.c = [S.soul.eq[0], S.jump.step, Object.keys(S.soul.own).length];
+          G.startJumpFight(2); out.f2 = [G.raid.info.bossName, !!G.raid.info.fit, G.raid.allies.length]; run(60); out.d = [S.job, S.jump.step, !!G.raid];
+          G.startJumpFight(3); out.f3 = [G.raid.info.bossName, G.raid.allies.length, !!G.raid.info.wipe]; run(60); out.e = [S.job, S.jump.step, !!G.raid, G.jobName()];
+          G.jumpStep(); out.m4 = document.querySelector('#mTitle').textContent; G.hideModal(); G.jumpPicked('guard', 'seongju'); out.g = [S.guard.on, S.guard.lv.seongju, S.jump.step];
+          G.jumpStep(); out.m5 = document.querySelector('#mTitle').textContent; G.hideModal(); G.jumpPicked('mount', 'ox'); out.h = [S.mount.ride, Object.keys(S.mount.own).length, S.jump.step];
+          G.mountCatchUp(); out.keep = [Object.keys(S.mount.own).length, Object.keys(S.soul.own).length, S.pets.lv.filter(v => v > 0).length];
+          // 지급 장신구·길손 치장은 장터에 못 올린다
+          G.bagAdd({t:'acc', k:'ring', g:S.acc.ring.g, p:S.acc.ring.p}, true); G.bagAdd({t:'acc', k:'ring', g:3, p:S.acc.ring.p + 7}, true); S.skin.inv.push(Object.assign({}, S.skin.eq.belt, {id:999}));
+          { const src = G.mkSources(); out.mk = [src.filter(x => x.src.t === 'bag').length, src.filter(x => x.src.t === 'skin').length]; } S.bag = []; S.skin.inv = [];
+          G.noJump = false; G.jumpStep(); out.i = [S.world, S.jump.step, S.stage, S.level, S.job, G.jumpBusy(), !!G.cut && G.cut.opts.title];
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.jump && re.jump.on, re.jump && re.jump.step, re.world];
+          return out; }""")
+        check(k3['f0'] == ['짚 허수아비', 0] and k3['a'] == [1, 3, False, '표사', True] and '몸 풀기 2/4' in k3['m2'] and k3['b'] == [2, 4, True] and '넋 구슬' in k3['m3'] and k3['soulBtns'] == 3 and k3['c'] == ['seolmun', 5, 1]
+              and k3['f2'] == ['강림도령', True, 0] and k3['d'] == [3, 6, False] and k3['f3'] == ['벤케이', 3, True] and k3['e'] == [4, 7, False, '화첨객'],
+              f"4부부터 시작: 몸 풀기 넷 — 허수아비 → 1차 스승 → (넋 고르기) → 강림도령 → 3차 스승과 4인 연습 레이드, 한 판마다(건너뛰어도) 전직이 한 단계씩 열린다 {k3['f0']} {k3['a']} {k3['b']} {k3['c']} {k3['f2']} {k3['d']} {k3['f3']} {k3['e']}")
+        check('수호신' in k3['m4'] and k3['g'] == ['seongju', 10, 8] and '탈것' in k3['m5'] and k3['h'] == ['ox', 1, 9] and k3['keep'] == [1, 1, 1] and k3['mk'] == [1, 0]
+              and k3['i'][:6] == [5, 10, 1, 500, 4, False] and k3['re'] == [True, 10, 5],
+              f"4부부터 시작: 갖추기(수호신·탈것 고르기) → 동해 도착(46장) · 지난 이야기의 탈것·넋은 받지 않고 · 지급 장신구·길손 치장은 장터에 못 올림 · 저장해도 그대로 {k3['m4']} {k3['g']} {k3['h']} {k3['keep']} {k3['mk']} {k3['i']} {k3['re']}")
+        await jq.wait_for_timeout(800)
+        await jq.screenshot(path=str(OUT / '47d-jump-arrive.png'))
+        await ctxJ.close()
+
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
