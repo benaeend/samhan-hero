@@ -2703,6 +2703,9 @@ const BUFFS = {
   exp:{name:'글공부 두루마리', short:'경험', desc:'얻는 경험치 +50%', mul:1.5, color:'#d8b0ff'},
 };
 const BUFF_ADD = 10 * 60, BUFF_MAX = 60 * 60;
+/* 엽전 꾸러미 값(2026-11-12, 주인 요청): 예전엔 어디서나 보석 90개·횟수 제한 없음 — 보석 수입은 뒤로 갈수록 크게 느는데(주간 4배·마을 부탁 40배)
+   든 엽전은 단계를 따라 커져서 후반엔 엽전이 사실상 공짜였다(수호신 하나를 끝까지 = 꾸러미 94개 = 보석 8,400). 땅마다 값을 올리고 하루 10번 */
+const GOLDBAG_GEM = [90, 150, 250, 600, 1200];
 const SHOP = [
   {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(20, Math.round(mGold(S.maxStage) * 40)), inv:'potion', n:10, max:9999},
   {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
@@ -2720,7 +2723,7 @@ const SHOP = [
   {id:'whet10', cat:'mat', icon:'whet', name:'숫돌 묶음', tag:'10+1', desc:'숫돌 10개 값에 11개! 재련할 때 함께 쓰면 성공 확률이 1.15배가 돼요.', cur:'gems', price:() => 250, inv:'whet', n:11, max:999},
   {id:'matbag', cat:'mat', icon:'crystal', name:'재료 꾸러미', tag:'하루 5번', desc:'지금 있는 땅의 재료 10개(이승 요괴 정수 · 저승 망자의 넋 · 천계부터 하늘 조각). 조합 공방·각인 강화·신화 제작 장비·영약에 써요.', cur:'gold', price:() => Math.max(300, Math.round(mGold(Math.max(1, S.maxStage)) * 500)), daily:5},
   {id:'ticket', cat:'mat', icon:'ticket', name:'토벌패', desc:'레이드에 들어갈 때 쓰는 패. 하루 3개까지 살 수 있어요.', cur:'gems', price:() => 120, daily:3},
-  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요.', cur:'gems', price:() => 90},
+  {id:'goldbag', cat:'pack', icon:'pouch', name:'엽전 꾸러미', tag:'하루 10번', desc:'지금 사냥터 몬스터 300마리를 잡은 만큼의 엽전이 들어 있어요. 값은 땅마다 달라요(이승 90 · 저승 150 · 천계 250 · 부상 600 · 곤륜 1,200).', cur:'gems', price:() => GOLDBAG_GEM[Math.max(0, Math.min(GOLDBAG_GEM.length - 1, S.world))], daily:10},
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
   {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개·감로수 5개.', cur:'free', price:() => 0, daily:1},
 ];
@@ -2846,10 +2849,11 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 1;   // 저장 판 번호. 아래 staleStop 설명 참고
-const NOTE_VER = '2026-11-12-7', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-12-8', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
-  ['#', '2026-11-12 · 수호신 값'],
+  ['#', '2026-11-12 · 수호신 값 · 엽전 꾸러미'],
+  ['엽전 꾸러미 값', '상점의 엽전 꾸러미는 땅마다 값이 달라져요(이승 90 · 저승 150 · 천계 250 · 부상 600 · 곤륜 1,200 보석). 하루 10번까지 살 수 있어요. 뒤로 갈수록 보석은 넉넉한데 꾸러미 값은 그대로라 엽전이 너무 쉽게 모이던 것을 바로잡았어요.'],
   ['수호신 값이 환생해도 내려가지 않아요', '수호신에게 바치는 엽전은 「지금 단계」가 아니라 「지금까지 가 본 가장 센 단계」를 기준으로 해요. 환생하거나 새 땅에 막 들어선 직후에 값이 크게 싸지던 것을 바로잡았어요(환생 직후에만 몰아서 올리는 것이 유리했어요). 이미 올린 레벨은 그대로예요.'],
   ['#', '2026-11-12 · 저장 보호'],
   ['방금 얻은 것이 사라지던 버그', '(한 번 더 고침: 뽑는 도중 화면이 새로 열린 뒤 사라지던 것) 펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
