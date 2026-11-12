@@ -3308,6 +3308,20 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
+/* 운영 보상(주인이 정한 캐릭터에게 한 번): 서버에 로그인한 그 이름의 캐릭터가 들어올 때 한 번 준다(이름은 서버 전체에서 하나) */
+const GIFTS = [
+  {id:'g1112-pet', name:'가을비', gems:150000, why:'펫 소환 기록이 사라진 버그 보상'},
+];
+function giveGifts(){
+  if (!S.gifts) S.gifts = {};
+  for (const g of GIFTS){
+    if (S.gifts[g.id] || S.name !== g.name) continue;
+    S.gifts[g.id] = 1; S.gems += g.gems;
+    addLog(`운영 보상: 보석 ${fmt(g.gems)}개를 받았어요 (${g.why}).`, 'gain');
+    setTimeout(() => { if ($('#modal').hidden) showModal('운영 보상', `<p>${esc(g.why)}으로 <b>보석 ${fmt(g.gems)}개</b>를 드렸어요. 불편을 드려 죄송해요.</p>`, [{label:'확인', primary:true}]); }, 1500);
+  }
+}
+const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
 const NOTE_VER = '2026-11-13-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
@@ -3348,6 +3362,9 @@ const NOTES = [
   ['보스 자동 다시 도전', '같은 단계 보스에게 여러 번 져서 도전 기운이 다 찬 뒤(8번)에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 못 이길 보스에 시간을 쓰는 대신 그동안 사냥해서 더 빨리 커요. [보스] 단추를 누르면 언제든 바로 도전할 수 있어요.'],
   ['치장 「버선」', '치장 다섯 부위 가운데 「신발」의 이름이 「버선」으로 바뀌었어요(효과와 가진 치장은 그대로). 곧 생길 새 장비 칸 「신발」과 헷갈리지 않게요.'],
   ['고침', '4차 전직을 마친 용사가 다시 접속하면 3차로 돌아가던 문제를 고쳤어요(4차 기술을 익힌 기록이 있으면 4차로 되돌려요). 부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 예전 것(무기 +20 재련)으로 되돌아가던 문제도 고쳤어요(되돌아갔던 용사는 건너기 퀘스트까지 되찾아요).'],
+  ['#', '2026-11-12 · 저장 보호'],
+  ['방금 얻은 것이 사라지던 버그', '펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
+  ['얻은 것이 사라지던 버그 막기', '며칠째 켜 둔 예전 화면(다른 기기·다른 창·홈 화면 앱)이 같은 캐릭터를 서버에 덮어써서, 새로 얻은 펫 같은 것이 사라지는 일이 있었어요. 이제 예전 화면은 저장을 멈추고 「새로 고침」을 안내해요. 서버에는 캐릭터마다 하루 한 번씩 기록을 따로 남겨요. 한 캐릭터는 한 번에 한 기기에서만 해 주세요.'],
   ['#', '2026-11-12 · 편의 고침'],
   ['허수아비 수련, 5등급이면 바로 끝', '허수아비 수련에서 5등급 피해를 채우면 남은 시간을 기다리지 않고 바로 끝나요. 보상은 그대로 5등급이에요.'],
   ['세로 화면 단추 자리', '세로 화면 보스 싸움에서 [구르기]·[넋 부름] 단추가 위아래로 쌓여 엽전·보석 줄을 가리던 것을, 아래쪽에 옆으로 나란히 놓았어요. 변신 칸이 [캐릭터 바꾸기]를 가리던 것도 고쳤어요.'],
@@ -3579,7 +3596,7 @@ function josa(word, a, b){
 /* ================= 상태 ================= */
 function defaultState(){
   return {
-    v:1, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
+    v:1, saveBuild:SAVE_BUILD, gifts:{}, cls:'musa', chosen:false, gold:0, gems:500, level:1, exp:0, stage:1, maxStage:1, kills:0, autoBoss:true, deathsHere:0,
     up:{atk:0, hp:0, crit:0, critDmg:0, aspd:0, regen:0},
     skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0, party:0, jobE:0, jobF:0},
     gear:Object.fromEntries(ALL_SLOTS.map(k => [k, {count:Array(GEAR_N).fill(0), seen:Array(GEAR_N).fill(false)}])),
@@ -3631,6 +3648,8 @@ function mergeState(d){
     const r = (d.refine && d.refine[k]) || {};
     out.refine[k] = {lv:Math.min(REFINE_MAX, Math.max(0, Math.floor(+r.lv) || 0)), drops:Math.min(2, Math.max(0, Math.floor(+r.drops) || 0)), t:r.t ? Math.max(1, Math.min(4, Math.floor(+r.t) || 1)) : 0, base:Math.max(0, +r.base || 0)};
   }
+  out.saveBuild = Math.max(0, Math.floor(+d.saveBuild) || 0);
+  out.gifts = {}; if (d.gifts && typeof d.gifts === 'object') for (const g of GIFTS) if (d.gifts[g.id]) out.gifts[g.id] = 1;
   const pd = d.pets || {};
   out.pets = {
     lv:(pd.lv || []).concat(Array(PET_N).fill(0)).slice(0, PET_N).map(x => Math.min(PET_MAX, Math.max(0, Math.floor(+x) || 0))),
@@ -15410,11 +15429,13 @@ async function enterChar(cid, opts = {}){
       } catch (e) { if (e.code === 'bad_token') lostOnline(); }
     }
   }
+  if (data && (+data.saveBuild || 0) > SAVE_BUILD){ staleStop(); return; }   // 더 새 판에서 저장한 기록: 이 화면으로 불러오면 새것이 잘려 나간다
   if (opts.remote) ch.syncT = opts.remote;
   S = data ? mergeState(data) : defaultState();
   const kfix = !!S.kunlunFix; delete S.kunlunFix;
   migrateStory(); mountCatchUp();
   if (!S.name) S.name = ch.name;
+  if (online && online.acc === acc) giveGifts();
   if (!S.chosen){ S.chosen = true; S.cls = CLASSES[ch.cls] ? ch.cls : 'musa'; }
   session = {acc, cid}; A.lastChar = cid; notiAuto = new Set(); notiSayT = 0;
   if (REG.keep) REG.keep = {acc, cid};
@@ -15467,7 +15488,7 @@ function logout(){
    서버에 닿지 않으면 지금처럼 이 기기 저장으로 놀고, 다시 닿으면 1분마다 올린다. */
 const ONLINE = Object.assign({url:'https://gqconcepvhoyqciwwbbf.supabase.co', key:'sb_publishable_iYTPNM7jQlmlA7ibfhHKaw_UyjTU_0B'}, window.__samhanOnline || {});   // key는 '공개용(publishable) 키'라 여기 적어도 된다(비밀 키는 절대 넣지 않는다)
 const ON_KEY = KP + 'samhan-online-v1';
-const ON_CODES = ['id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
+const ON_CODES = ['old_client', 'id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
 let online = null, onlineLib = null, onlineNote = '';
 const onlineWanted = () => !BETA && !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
 // 타이틀 아래 한 줄: 계정이 어디에 저장되는지(온라인 서버 · Claude 저장소 · 이 기기)
@@ -15478,6 +15499,14 @@ async function onlineClient(){
   if (!window.supabase) await loadScript('vendor/supabase.js');
   onlineLib = window.supabase.createClient(ONLINE.url, ONLINE.key, {auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false}});
   return onlineLib;
+}
+/* 저장 판 번호(2026-11-12): 저장에 든 것(펫·장비 칸 등)이 늘어나는 패치마다 1씩 올린다.
+   옛 화면(며칠째 켜 둔 창·홈 화면 앱)은 새로 생긴 것을 몰라서 불러올 때 잘라 내고 그대로 서버에 덮어썼다(새 펫이 사라진 버그).
+   이제 ① 더 새 판의 기록은 불러오지 않고 새로 고침을 권하고 ② 서버(samhan_save)도 판 번호가 낮은 저장을 받지 않는다(old_client) */
+let staleBuild = false;
+function staleStop(){
+  staleBuild = true;
+  showModal('새 버전이 나왔어요', '<p>이 화면은 예전 버전이에요. 예전 버전으로 계속하면 새로 얻은 것이 저장되지 않아서, 저장을 멈췄어요.</p><p><b>새로 고침</b>하면 새 버전으로 이어서 할 수 있어요.</p>', [{label:'새로 고침', primary:true, fn:() => { try { location.reload(); } catch (e) {} }}]);
 }
 // 서버 함수 부르기. 실패하면 e.code: 위 ON_CODES 중 하나 또는 'net'(연결 안 됨·느림)
 async function rpc(fn, args){
@@ -15545,7 +15574,7 @@ async function syncChars(acc){
 let onlineBusy = false, onlineP = Promise.resolve(), manyNoted = false;
 const MANY_NOTE = '서버의 캐릭터 칸이 아직 늘어나지 않아, 이 캐릭터는 지금 이 기기에만 저장 중이에요. 서버 준비가 끝나면 저절로 서버에도 저장돼요.';
 function pushOnline(){
-  if (!online || !session || onlineBusy || session.acc !== online.acc) return onlineP;
+  if (!online || !session || onlineBusy || staleBuild || session.acc !== online.acc) return onlineP;
   onlineP = pushOnlineNow();
   return onlineP;
 }
@@ -15553,6 +15582,11 @@ function pushOnline(){
    휴대폰에서 게임이 켜진 채(뒤로 내려 둔 채) 돌아오면 서버에서 다시 불러오지 않고 옛 기록으로 계속하다가, 1분마다 그 옛 기록을 '지금 시각'으로 올려
    PC의 새 기록을 덮어썼다. 이제 올리기 전·화면이 다시 보일 때 서버의 저장 시각이 이 기기가 마지막으로 맞춘 시각(ch.syncT)보다 새로우면
    (= 다른 기기가 그 뒤에 저장했으면) 올리지 않고 그 기록을 불러온다 */
+/* 내 저장을 '다른 기기의 저장'으로 잘못 보던 것(2026-11-12, 펫을 마구 뽑다가 방금 뽑은 것이 사라진 버그):
+   서버에는 저장됐는데 답을 못 받으면(앱을 잠깐 내렸다 올림·느린 연결로 9초 넘김) ch.syncT가 옛 시각으로 남는다. 그러면 다음 올리기 때
+   서버의 내 1~2분 전 기록을 '다른 기기가 저장한 새 기록'으로 보고 불러와, 그사이 얻은 것이 통째로 사라졌다.
+   이제 저장마다 이 화면의 표(DEV_ID)를 넣고, 서버 기록이 이 화면이 올린 것이면 불러오지 않고 시각만 맞춘다 */
+const DEV_ID = randHex(8);
 let remoteBusy = false;
 async function takeRemote(){
   if (!online || !session || session.acc !== online.acc || remoteBusy) return false;
@@ -15567,6 +15601,7 @@ async function takeRemote(){
     if (!c || typeof c.save !== 'string') return false;
     const d = JSON.parse(c.save);
     if (!d || d.v !== 1) return false;
+    if (d.saveDev && d.saveDev === DEV_ID){ ch.syncT = +c.t || st; return false; }   // 이 화면이 올린 기록: 다른 기기가 아니다
     const cid = session.cid;
     await enterChar(cid, {data:d, remote:+c.t || st});
     addLog('다른 기기에서 이어 한 기록을 불러왔어요.', 'good');
@@ -15580,12 +15615,13 @@ async function pushOnlineNow(){
   onlineBusy = true;
   if (await takeRemote()){ onlineBusy = false; return; }   // 다른 기기가 더 새로 저장했으면 덮어쓰지 않고 그걸 불러옴
   if (!session || REG.accounts[session.acc] !== A) { onlineBusy = false; return; }
-  S.lastSave = now();
+  S.lastSave = now(); S.saveBuild = Math.max(+S.saveBuild || 0, SAVE_BUILD); S.saveDev = DEV_ID;
   try {
     await rpc('samhan_save', {p_token:online.token, p_cid:session.cid, p_name:S.name, p_summary:charSummary(ch), p_save:JSON.stringify(S), p_t:S.lastSave});
     ch.srvT = S.lastSave; ch.syncT = S.lastSave; delete ch.srvErr;
   } catch (e) {
     if (e.code === 'bad_token') lostOnline();
+    else if (e.code === 'old_client') staleStop();
     else if (e.code === 'name_taken' && !ch.srvErr){ ch.srvErr = 'name'; addLog('다른 사람이 서버에서 같은 캐릭터 이름을 쓰고 있어 서버에 저장하지 못했어요. 이 기기에는 저장돼요.', 'warn'); }
     else if (e.code === 'too_many'){ if (ch.srvErr !== 'many' || !manyNoted){ manyNoted = true; addLog(MANY_NOTE, 'warn'); } ch.srvErr = 'many'; }   // 서버가 아직 캐릭터 4칸(setup.sql을 다시 실행하기 전): 게임은 그대로, 이 캐릭터는 이 기기에만
   }
@@ -15621,8 +15657,8 @@ let cloud = null, cloudBusy = false;
 const cdocName = (acc, cid) => `samhan-c-${acc}-${cid}`;
 const cdoc = name => cloud.db.doc('data/users/' + cloud.uid + '/' + KP + name);
 function saveLocal(){
-  if (!session || sleepAt) return;   // 절전 모드에서는 저장하지 않는다(저장 시각을 절전에 든 시각으로 남겨 둠)
-  S.lastSave = now();
+  if (!session || sleepAt || staleBuild) return;   // 절전 모드에서는 저장하지 않는다(저장 시각을 절전에 든 시각으로 남겨 둠). 예전 판 화면(staleBuild)도 저장을 멈춘다
+  S.lastSave = now(); S.saveBuild = Math.max(+S.saveBuild || 0, SAVE_BUILD);
   try { localStorage.setItem(charKey(session.acc, session.cid), JSON.stringify(S)); } catch (e) {}
   // 계정 목록의 캐릭터 요약(레이드에서 다른 캐릭터를 동료로 부를 때도 쓴다)
   const A = REG.accounts[session.acc], ch = A && A.chars.find(c => c.cid === session.cid);
@@ -16190,7 +16226,7 @@ if (location.search.indexOf('simtest') >= 0){
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
-    CURVE, fmt, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
+    CURVE, fmt, giveGifts, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
     // 피해 측정: 안 죽는 보스 하나(또는 몬스터 6마리)를 sec초 동안 때린다. 초당 피해·가장 큰 한 방을 돌려준다
     bench(sec, pack, each){
       resetRuntime(); mobs = []; projs = []; raid = null;
