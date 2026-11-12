@@ -2845,11 +2845,11 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 1;   // 저장 판 번호. 아래 staleStop 설명 참고
-const NOTE_VER = '2026-11-12-4', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-12-5', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '2026-11-12 · 저장 보호'],
-  ['방금 얻은 것이 사라지던 버그', '펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
+  ['방금 얻은 것이 사라지던 버그', '(한 번 더 고침: 뽑는 도중 화면이 새로 열린 뒤 사라지던 것) 펫을 연달아 뽑거나 앱을 잠깐 내렸다 올린 뒤, 방금 얻은 것이 1~2분 전으로 되돌아가던 버그를 고쳤어요. 서버 답이 늦을 때 내 기록을 「다른 기기의 기록」으로 잘못 보고 불러오던 것이 원인이었어요.'],
   ['얻은 것이 사라지던 버그 막기', '며칠째 켜 둔 예전 화면(다른 기기·다른 창·홈 화면 앱)이 같은 캐릭터를 서버에 덮어써서, 새로 얻은 펫 같은 것이 사라지는 일이 있었어요. 이제 예전 화면은 저장을 멈추고 「새로 고침」을 안내해요. 서버에는 캐릭터마다 하루 한 번씩 기록을 따로 남겨요. 한 캐릭터는 한 번에 한 기기에서만 해 주세요.'],
   ['#', '2026-11-12 · 편의 고침'],
   ['허수아비 수련, 5등급이면 바로 끝', '허수아비 수련에서 5등급 피해를 채우면 남은 시간을 기다리지 않고 바로 끝나요. 보상은 그대로 5등급이에요.'],
@@ -12362,7 +12362,9 @@ function buildPet(){
     }
   };
 }
+let petSumAt = 0;
 function doPetSummon(n){
+  const tNow = performance.now(); if (tNow - petSumAt < 250) return; petSumAt = tNow;   // 마구 누를 때 겹친 누름
   const res = petSummon(n);
   if (!res){ addLog('보석이 부족합니다.', 'warn'); return; }
   sfx(res.some(r => PETS[r.i].g >= 3) ? 'rare' : 'summon');
@@ -13785,7 +13787,12 @@ async function enterChar(cid, opts = {}){
         const c = await rpc('samhan_load', {p_token:online.token, p_cid:cid}), st = +(c && c.t) || 0;
         // 서버 기록이 이 기기 기록보다 새것이거나, 이 기기가 마지막으로 서버와 맞춘(syncT) 뒤에 다른 기기가 저장했으면 서버 것으로
         // (2026-11 (43) 버그: PC에서 키운 뒤 휴대폰으로 들어오면 휴대폰 시계가 앞서 있거나 휴대폰에서 잠깐 켜 둔 기록이 '더 새것'으로 보여 옛 기록을 고르던 것)
-        if (c && typeof c.save === 'string' && (st > t + 2000 || (ch.syncT && st > ch.syncT + 1000))){ const d = JSON.parse(c.save); if (d && d.v === 1){ data = d; t = st; } }
+        if (c && typeof c.save === 'string' && (st > t + 2000 || (ch.syncT && st > ch.syncT + 1000))){
+          const d = JSON.parse(c.save);
+          // (2026-11-12) 이 기기에 더 새 기록이 있는데 서버 것을 고르던 두 경우를 막는다: ① 서버 기록이 이 기기가 올린 것(화면이 꺼졌다 다시 열려 syncT가 옛 시각) ② 서버 기록이 옛 화면이 덮어쓴 것(판 번호가 낮음)
+          const mineOlder = data && d && ((st <= t + 2000 && d.saveDev2 && d.saveDev2 === DEV2_ID) || (+d.saveBuild || 0) < (+data.saveBuild || 0));
+          if (d && d.v === 1 && !mineOlder){ data = d; t = st; }
+        }
         if (c) ch.syncT = st;
       } catch (e) { if (e.code === 'bad_token') lostOnline(); }
     }
@@ -13951,6 +13958,8 @@ function pushOnline(){
    서버의 내 1~2분 전 기록을 '다른 기기가 저장한 새 기록'으로 보고 불러와, 그사이 얻은 것이 통째로 사라졌다.
    이제 저장마다 이 화면의 표(DEV_ID)를 넣고, 서버 기록이 이 화면이 올린 것이면 불러오지 않고 시각만 맞춘다 */
 const DEV_ID = randHex(8);
+// 이 기기(브라우저)의 표: 화면을 새로 열어도 같다. 서버 기록이 이 기기가 올린 것인지 들어올 때 가린다
+const DEV2_ID = (() => { try { let v = localStorage.getItem('samhan-dev'); if (!v){ v = randHex(10); localStorage.setItem('samhan-dev', v); } return v; } catch (e){ return randHex(10); } })();
 let remoteBusy = false;
 async function takeRemote(){
   if (!online || !session || session.acc !== online.acc || remoteBusy) return false;
@@ -13965,7 +13974,8 @@ async function takeRemote(){
     if (!c || typeof c.save !== 'string') return false;
     const d = JSON.parse(c.save);
     if (!d || d.v !== 1) return false;
-    if (d.saveDev && d.saveDev === DEV_ID){ ch.syncT = +c.t || st; return false; }   // 이 화면이 올린 기록: 다른 기기가 아니다
+    if (d.saveDev && d.saveDev === DEV_ID){ ch.syncT = +c.t || st; saveReg(); return false; }   // 이 화면이 올린 기록: 다른 기기가 아니다
+    if ((+d.saveBuild || 0) < (+S.saveBuild || 0)){ ch.syncT = +c.t || st; saveReg(); return false; }   // 옛 화면이 덮어쓴 기록(판 번호가 낮음): 불러오지 않고 내 기록을 다시 올린다
     const cid = session.cid;
     await enterChar(cid, {data:d, remote:+c.t || st});
     addLog('다른 기기에서 이어 한 기록을 불러왔어요.', 'good');
@@ -13979,10 +13989,10 @@ async function pushOnlineNow(){
   onlineBusy = true;
   if (await takeRemote()){ onlineBusy = false; return; }   // 다른 기기가 더 새로 저장했으면 덮어쓰지 않고 그걸 불러옴
   if (!session || REG.accounts[session.acc] !== A) { onlineBusy = false; return; }
-  S.lastSave = now(); S.saveBuild = Math.max(+S.saveBuild || 0, SAVE_BUILD); S.saveDev = DEV_ID;
+  S.lastSave = Math.max(now(), (+ch.syncT || 0) + 1); S.saveBuild = Math.max(+S.saveBuild || 0, SAVE_BUILD); S.saveDev = DEV_ID; S.saveDev2 = DEV2_ID;   // 서버 시각이 앞서 있어도(다른 기기 시계) 내 기록이 올라가게
   try {
     await rpc('samhan_save', {p_token:online.token, p_cid:session.cid, p_name:S.name, p_summary:charSummary(ch), p_save:JSON.stringify(S), p_t:S.lastSave});
-    ch.srvT = S.lastSave; ch.syncT = S.lastSave; delete ch.srvErr;
+    ch.srvT = S.lastSave; ch.syncT = S.lastSave; delete ch.srvErr; saveReg();   // 맞춘 시각을 바로 적어 둔다(화면이 갑자기 닫혀도 남게)
   } catch (e) {
     if (e.code === 'bad_token') lostOnline();
     else if (e.code === 'old_client') staleStop();
@@ -14471,7 +14481,7 @@ if (location.search.indexOf('simtest') >= 0){
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
-    CURVE, fmt, giveGifts, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
+    CURVE, fmt, giveGifts, enterChar, saveReg, saveLocal, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
     // 피해 측정: 안 죽는 보스 하나(또는 몬스터 6마리)를 sec초 동안 때린다. 초당 피해·가장 큰 한 방을 돌려준다
     bench(sec, pack, each){
       resetRuntime(); mobs = []; projs = []; raid = null;
