@@ -11628,6 +11628,136 @@ Object.assign(MOB_HD, {
     E(17, 13 + y, 7.6, 7.2, '#f0dca0'); E(17, 14.4 + y, 5, 3.6, '#e0c478');
     if (boss){ angry(13.6, 12 + y, 1); angry(20.6, 12 + y, 1); } else { bigEye(13.6, 12.4 + y, 0.85); bigEye(20.6, 12.4 + y, 0.85); }
     E(17, 17.4 + y, 1.8, 1, '#7a4a3a'); E(25.6, 4 + y, 1.2, 1.6, l); }],
+  // ── 5부 천축(인도 옛이야기: 라마야나·젖의 바다 휘젓기·마라의 군대, 물의 신화 9단계): 옛 글의 묘사만 따라 우리 화풍(통통·큰 눈)으로 새로 그렸다(영화·애니메이션 디자인을 따라 그리지 않음) ──
+  rakshasa:[40, 44, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.35), y = f ? -1 : 0, k = f ? 3 : 0;
+    RR(31, 9 + k, 3.6, 20, 1.8, '#6a4a2a'); blob(32.8, 8 + k, 5, 5.6, '#8a6238'); for (const [dx, dy] of [[-3.4, -0.6], [3.2, 1.4], [0.2, -4.4], [0.6, 3.6]]) E(32.8 + dx, 8 + dy + k, 1.2, 1.2, '#efe4c8');
+    RR(11, 34, 6, 8 - (f ? 1 : 0), 2.4, d); RR(22, 34, 6, 8 - (f ? 0 : 1), 2.4, d);
+    blob(20, 26 + y, 12.5, 11, c); E(19, 28 + y, 7.6, 5, l);
+    Pl([[8, 28 + y], [32, 28 + y], [30, 35 + y], [26, 32 + y], [22, 36 + y], [18, 32 + y], [14, 36 + y], [10, 33 + y]], '#7a5a2a'); RR(8, 27 + y, 24, 2.2, 1, '#c8a03a');
+    RR(3, 20 + y, 6, 11, 3, c); RR(29, 18 + y + (f ? 2 : 0), 6, 11, 3, c);
+    E(19, 6 + y, 8, 4.4, '#2a1c22');
+    blob(19, 13 + y, 11, 9.6, c);
+    Pl([[10, 8 + y], [6, -1 + y], [14, 5 + y]], '#f0e8d0'); Pl([[24, 5 + y], [31, -1 + y], [28, 8.4 + y]], '#f0e8d0');
+    if (boss){ angry(14, 12 + y, 1.15); angry(23.4, 12 + y, 1.15); } else { bigEye(14, 12.4 + y, 1, '#8a2a2a'); bigEye(23.4, 12.4 + y, 1, '#8a2a2a'); }
+    E(18.4, 19.2 + y, 5.4, 1.7, darken(c, 0.6)); Pl([[13.6, 19.8 + y], [14.9, 15.8 + y], [16.2, 19.8 + y]], '#ffffff'); Pl([[20.4, 19.8 + y], [21.7, 15.8 + y], [23, 19.8 + y]], '#ffffff'); }],
+  batrak:[48, 40, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry} = hdKit(g), d = darken(c, 0.4), l = mix(c, '#ffffff', 0.3), y = f ? -1.5 : 0, w = f ? 5 : 0;
+    Pl([[19, 15 + y], [3, 3 + y + w], [0, 17 + y + w], [4.6, 14.6 + y + w], [7, 21 + y + w], [11, 17 + y + w], [14, 25 + y]], d);
+    Pl([[29, 15 + y], [45, 3 + y + w], [48, 17 + y + w], [43.4, 14.6 + y + w], [41, 21 + y + w], [37, 17 + y + w], [34, 25 + y]], d);
+    Pl([[19, 15 + y], [3, 3 + y + w], [5, 4.6 + y + w], [18, 17.6 + y]], l); Pl([[29, 15 + y], [45, 3 + y + w], [43, 4.6 + y + w], [30, 17.6 + y]], l);
+    RR(19, 31 + y, 3.4, 6.4, 1.6, d); RR(25.6, 31 + y, 3.4, 6.4 - (f ? 1 : 0), 1.6, d);
+    blob(24, 25 + y, 8, 8.4, c); E(23, 27 + y, 4.6, 4, l);
+    Pl([[15, 9 + y], [12.6, -1 + y], [20, 5 + y]], c); Pl([[27, 5 + y], [34.4, -1 + y], [32, 9 + y]], c); Pl([[15.6, 7 + y], [14.2, 1.6 + y], [18.4, 5.4 + y]], '#e88a9a'); Pl([[28.6, 5.4 + y], [32.8, 1.6 + y], [31.4, 7 + y]], '#e88a9a');
+    blob(23, 13 + y, 9.4, 8.2, c);
+    if (boss){ angry(18.4, 12 + y, 1.05); angry(27, 12 + y, 1.05); } else { bigEye(18.4, 12.4 + y, 0.95, '#8a2a2a'); bigEye(27, 12.4 + y, 0.95, '#8a2a2a'); }
+    E(22.4, 18 + y, 3.6, 1.4, darken(c, 0.6)); Pl([[19.6, 17.6 + y], [20.6, 21 + y], [21.6, 17.6 + y]], '#ffffff'); Pl([[23.4, 17.6 + y], [24.4, 21 + y], [25.4, 17.6 + y]], '#ffffff');
+    E(24, 38.6, 7, 1.3, 'rgba(20,16,36,.6)'); }],
+  deer:[42, 42, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry, legs} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.55), y = f ? -1 : 0, A = '#fff2b0';
+    legs([13, 18, 27, 32], 28, 11, 2.8, d, f); for (const x of [13, 18, 27, 32]) RR(x - 0.2, 37.6, 3.2, 2.4, 0.8, '#3a2a1a');
+    blob(24, 24 + y, 12, 8, c); E(24, 27.4 + y, 8, 3.4, l);
+    for (const [x, yy] of [[20, 19.4], [26, 18.6], [31, 20.6], [23.6, 22.6], [29, 23.4]]) E(x, yy + y, 1.2, 1, '#fffbe8');
+    E(36.4, 20 + y, 2.4, 2, l);
+    Pl([[10, 12 + y], [17, 12 + y], [20.4, 25 + y], [12.4, 25 + y]], c);
+    g.strokeStyle = A; g.lineWidth = 1.8; g.lineCap = 'round'; g.beginPath();
+    g.moveTo(11.4, 6 + y); g.lineTo(9.4, -0.6 + y); g.moveTo(10.6, 3 + y); g.lineTo(6.4, 0.6 + y); g.moveTo(10, 1.2 + y); g.lineTo(12.6, -1.6 + y);
+    g.moveTo(15, 6 + y); g.lineTo(18, 0 + y); g.moveTo(16.4, 3 + y); g.lineTo(20.6, 1.6 + y); g.moveTo(17.6, 1 + y); g.lineTo(16, -1.8 + y); g.stroke();
+    for (const [x, yy] of [[9.4, -0.6], [6.4, 0.6], [18, 0], [20.6, 1.6]]) E(x, yy + y, 1.3, 1.3, '#ffffff');
+    Pl([[14.6, 8 + y], [20, 4.4 + y], [18, 10 + y]], d);
+    blob(11.4, 11.6 + y, 7, 6, c); E(6.4, 13.6 + y, 3.6, 2.8, l); E(3.6, 13 + y, 1.2, 1, '#3a2a1a');
+    if (boss) angry(10.6, 10.6 + y, 0.95, '#ff5a3a'); else bigEye(10.6, 10.8 + y, 0.95);
+    E(27, 8 + y + (f ? 1.5 : 0), 1.1, 1.5, A); E(36.6, 13 + y - (f ? 1.5 : 0), 0.9, 1.3, A); }],
+  chariot:[50, 44, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry} = hdKit(g), d = darken(c, 0.35), l = mix(c, '#ffffff', 0.45), y = f ? -1 : 0, F1 = '#ff7a2a', F2 = '#ffd24a', k = f ? 1.6 : 0;
+    for (const [x, yy, r] of [[42, 27, 5.4], [46.4, 21, 3.4], [45.6, 33, 3]]){ E(x + k, yy + y, r, r * 0.8, F1); E(x - 1 + k, yy + y, r * 0.5, r * 0.45, F2); }
+    RR(24.2, 7 + y, 1.8, 12, 0.9, d);
+    Pl([[10, 8.6 + y], [25, 1 + y], [40, 8.6 + y], [36, 11 + y], [14, 11 + y]], '#c8382f'); Pl([[10, 8.6 + y], [40, 8.6 + y], [37.6, 11.2 + y], [12.4, 11.2 + y]], F2); E(25, 1.6 + y, 1.8, 1.8, F2);
+    for (const x of [14, 20, 30, 36]) E(x, 12.4 + y + (f ? 0.8 : 0), 1, 1.4, '#ffe9a0');
+    Pl([[7, 18 + y], [42, 18 + y], [39, 30 + y], [11, 30 + y]], c); Pl([[7, 18 + y], [42, 18 + y], [41.2, 21 + y], [7.8, 21 + y]], l); Pl([[11, 30 + y], [39, 30 + y], [39.8, 27 + y], [10.2, 27 + y]], d);
+    for (const x of [22, 28, 34]) E(x, 24 + y, 1.5, 1.5, '#c8382f');
+    blob(9.6, 21.6 + y, 6.6, 6.2, c); Pl([[5, 16.6 + y], [3, 11.4 + y], [8.4, 15.4 + y]], l); Pl([[11, 15.4 + y], [14.6, 11.4 + y], [14.6, 17 + y]], l);
+    if (boss){ angry(6.8, 20.4 + y, 0.85, '#fff0a0'); angry(12, 20.4 + y, 0.85, '#fff0a0'); } else { bigEye(6.8, 20.8 + y, 0.75, '#c8382f'); bigEye(12, 20.8 + y, 0.75, '#c8382f'); }
+    E(9, 25.4 + y, 2.6, 1, darken(c, 0.6));
+    for (const cx of [16, 33]){ for (let i = 0; i < 6; i++){ const a = i / 6 * Math.PI * 2 + (f ? 0.52 : 0); Pl([[cx + Math.cos(a - 0.3) * 6.6, 35.4 + Math.sin(a - 0.3) * 6.6], [cx + Math.cos(a) * 10.4, 35.4 + Math.sin(a) * 10.4], [cx + Math.cos(a + 0.3) * 6.6, 35.4 + Math.sin(a + 0.3) * 6.6]], F1); }
+      E(cx, 35.4, 7.4, 7.4, F1); E(cx, 35.4, 5.8, 5.8, '#3a2418'); for (let i = 0; i < 4; i++){ const a = i / 4 * Math.PI + (f ? 0.4 : 0); g.strokeStyle = F2; g.lineWidth = 1.1; g.beginPath(); g.moveTo(cx - Math.cos(a) * 5.4, 35.4 - Math.sin(a) * 5.4); g.lineTo(cx + Math.cos(a) * 5.4, 35.4 + Math.sin(a) * 5.4); g.stroke(); }
+      E(cx, 35.4, 1.9, 1.9, F2); } }],
+  asura:[46, 46, (g, f, c, boss) => { const {E, Pl, RR, blob, angry} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.3), y = f ? -1 : 0, k = f ? 2 : 0, S1 = '#e4eaf2', S2 = '#aab4c2';
+    Pl([[4.6, 0 + y + k], [8, 2 + y + k], [8.6, 14 + y + k], [5.4, 14 + y + k]], S1); Pl([[6.8, 1 + y + k], [8, 2 + y + k], [8.6, 14 + y + k], [7.2, 14 + y + k]], S2); RR(3.6, 13.4 + y + k, 6.8, 1.8, 0.8, '#ffd24a');
+    Pl([[41.4, 0 + y - k + 2], [38, 2 + y - k + 2], [37.4, 14 + y - k + 2], [40.6, 14 + y - k + 2]], S1); Pl([[39.2, 1 + y - k + 2], [38, 2 + y - k + 2], [37.4, 14 + y - k + 2], [38.8, 14 + y - k + 2]], S2); RR(35.6, 13.4 + y - k + 2, 6.8, 1.8, 0.8, '#ffd24a');
+    RR(14, 36, 6, 8 - (f ? 1 : 0), 2.4, d); RR(25, 36, 6, 8 - (f ? 0 : 1), 2.4, d);
+    RR(4.4, 14 + y + k, 5.6, 11, 2.8, d); RR(36, 14 + y - k + 2, 5.6, 11, 2.8, d);
+    RR(5, 25 + y, 6, 10, 3, c); RR(34.4, 25 + y + (f ? 1 : 0), 6, 10, 3, c);
+    blob(23, 28 + y, 12, 10.4, c); E(22, 27 + y, 6.4, 4, l);
+    Pl([[12, 32 + y], [34, 32 + y], [32, 39 + y], [14, 39 + y]], '#e8c060'); Pl([[23, 32 + y], [34, 32 + y], [32, 39 + y], [23, 39 + y]], '#c8a03a'); RR(11.4, 30.6 + y, 23.2, 2.6, 1.1, '#c8382f');
+    E(23, 21.6 + y, 5, 1.8, '#ffd24a');
+    Pl([[15, 8 + y], [18, 0 + y], [21, 5 + y], [23.6, -1.6 + y], [26, 5 + y], [29, 0 + y], [31, 8 + y]], '#1d1420');
+    blob(22.6, 14 + y, 10, 9, c);
+    angry(17.6, 13 + y, 1.15, '#ffffff'); angry(27, 13 + y, 1.15, '#ffffff');
+    if (boss){ E(22.4, 8.4 + y, 1.5, 2, '#ffd24a'); E(22.4, 8.6 + y, 0.7, 1.1, '#1d1420'); }
+    E(22, 19.6 + y, 4.6, 1.6, darken(c, 0.6)); Pl([[18.4, 20 + y], [19.6, 16.6 + y], [20.8, 20 + y]], '#ffffff'); Pl([[23.6, 20 + y], [24.8, 16.6 + y], [26, 20 + y]], '#ffffff'); }],
+  elephant:[50, 42, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry} = hdKit(g), d = darken(c, 0.22), l = mix(c, '#ffffff', 0.5), y = f ? -1 : 0, Wv = '#8ad0f0';
+    [[15, 0], [22, 1], [33, 0], [40, 1]].forEach(([x, k]) => RR(x, 27, 6.4, 11 - ((k + (f ? 1 : 0)) % 2), 2.8, k ? d : darken(c, 0.1)));
+    RR(45, 17 + y, 1.8, 9, 0.9, d); E(45.9, 26.6 + y, 1.6, 1.8, darken(c, 0.4));
+    blob(31, 21 + y, 15, 11, c);
+    Pl([[23, 10.6 + y], [39, 10.6 + y], [41.4, 22 + y], [21, 22 + y]], '#c8382f'); Pl([[21, 22 + y], [41.4, 22 + y], [41.8, 24.4 + y], [20.6, 24.4 + y]], '#ffd24a'); for (const x of [26, 31, 36]) E(x, 16.4 + y, 1.4, 1.4, '#ffd24a');
+    E(22.6, 15 + y, 5.6, 7.6, d); E(23, 15 + y, 3.9, 5.8, mix(c, '#f0a8b8', 0.5));
+    blob(14.6, 16 + y, 10, 9.6, c);
+    g.lineCap = 'round'; g.strokeStyle = d; g.lineWidth = 6.4; g.beginPath(); g.moveTo(8.4, 20 + y); g.quadraticCurveTo(2.6, 28 + y, 6.4 + (f ? -2 : 0), 33.6 + y); g.stroke();
+    g.strokeStyle = c; g.lineWidth = 4.6; g.beginPath(); g.moveTo(8.4, 20 + y); g.quadraticCurveTo(2.6, 28 + y, 6.4 + (f ? -2 : 0), 33.6 + y); g.stroke();
+    Pl([[10.4, 22 + y], [5, 27.4 + y], [7.4, 28 + y], [12.6, 24 + y]], '#fffbe8');
+    if (boss) angry(12.4, 13.6 + y, 1.05, '#9ae0ff'); else bigEye(12.4, 14 + y, 0.95, '#3a5a8a');
+    E(15, 8 + y, 2.2, 1.7, '#ffd24a'); E(15, 8 + y, 1, 0.8, '#c8382f');
+    for (const [x, w] of [[5, 11], [20, 15], [38, 11]]){ E(x + w / 2 + (f ? 2 : -2), 39.6, w / 2, 1.9, Wv); E(x + w / 2 + (f ? 2 : -2) - 1, 38.9, w / 3, 0.9, '#e8f8ff'); } }],
+  ravana:[60, 56, (g, f, c, boss) => { const {E, Pl, RR, blob} = hdKit(g), d = darken(c, 0.35), l = mix(c, '#ffffff', 0.4), sk = '#d8a878', sd = '#b88458', K = '#1d1420', Au = '#ffd24a', y = f ? -1 : 0;
+    Pl([[13, 28 + y], [47, 28 + y], [53, 53], [7, 53]], '#7a1a2a');
+    RR(21, 46, 7, 9 - (f ? 1 : 0), 2.6, '#3a2418'); RR(32, 46, 7, 9 - (f ? 0 : 1), 2.6, '#3a2418');
+    Pl([[16, 28 + y], [44, 28 + y], [46, 48 + y], [14, 48 + y]], c); Pl([[30, 28 + y], [44, 28 + y], [46, 48 + y], [30, 48 + y]], d); Pl([[16, 28 + y], [30, 28 + y], [30, 31 + y], [15.6, 31 + y]], l);
+    E(30, 35 + y, 5, 3.6, Au); E(30, 35 + y, 2.2, 1.8, '#c8382f'); RR(14.6, 40.6 + y, 30.8, 3, 1.2, Au);
+    RR(8, 29 + y, 7, 14, 3.4, sk); RR(45, 29 + y + (f ? 1 : 0), 7, 14, 3.4, sd);
+    E(12.6, 29.4 + y, 6, 3.6, Au); E(47.4, 29.4 + y, 6, 3.6, '#e0b03c');
+    Pl([[5, 45 + y], [7.6, 45 + y], [5.6, 22 + y + (f ? 1 : 0)], [1, 17 + y + (f ? 1 : 0)], [2.6, 26 + y + (f ? 1 : 0)]], '#e8eef4'); RR(3.4, 43 + y, 7, 2.2, 1, Au);
+    const head = (x, yy, r) => { E(x, yy + y, r, r * 0.95, sd); E(x - r * 0.1, yy + y - r * 0.1, r * 0.86, r * 0.82, sk); E(x - r * 0.36, yy + y, r * 0.2, r * 0.27, K); E(x + r * 0.3, yy + y, r * 0.2, r * 0.27, K);
+      Pl([[x - r * 0.95, yy + y - r * 0.5], [x - r * 0.5, yy + y - r * 1.25], [x, yy + y - r * 0.85], [x, yy + y - r * 1.8], [x + r * 0.5, yy + y - r * 1.25], [x + r * 0.95, yy + y - r * 0.5]], Au); E(x, yy + y + r * 0.52, r * 0.3, r * 0.13, '#7a3a2a'); };
+    for (const [x, yy, r] of [[19.6, 7.4, 3.6], [40.4, 7.4, 3.6], [10.4, 10.6, 3.6], [49.6, 10.6, 3.6], [56, 14.6, 3]]) head(x, yy, r);
+    for (const [x, yy, r] of [[5, 21.6, 4], [55, 22.6, 3.8], [12.6, 17.6, 4.6], [47.4, 17.6, 4.6]]) head(x, yy, r);
+    blob(30, 19.6 + y, 10.6, 10, sk);
+    Pl([[20, 13.6 + y], [22, 4.6 + y], [26, 9.6 + y], [30, 0.4 + y], [34, 9.6 + y], [38, 4.6 + y], [40, 13.6 + y]], Au); RR(20, 12 + y, 20, 3, 1, '#e0b03c'); E(30, 8.6 + y, 1.9, 1.9, '#c8382f'); E(23.6, 9.6 + y, 1, 1, '#ffffff'); E(36.4, 9.6 + y, 1, 1, '#ffffff');
+    for (const ex of [25.6, 34.4]){ E(ex, 19 + y, 2.5, 2.3, '#ffffff'); E(ex - 0.4, 19.2 + y, 1.25, 1.7, boss ? '#8a1a1a' : K); RR(ex - 3.1, 15.4 + y, 6.2, 1.5, 0.6, K); }
+    Pl([[24, 24 + y], [30, 22.6 + y], [36, 24 + y], [37.4, 26.4 + y], [34.6, 25.2 + y], [30, 24.2 + y], [25.4, 25.2 + y], [22.6, 26.4 + y]], K); E(30, 26.8 + y, 2, 0.9, '#7a3a2a');
+    E(19.6, 21.6 + y, 1.4, 1.9, Au); E(40.4, 21.6 + y, 1.4, 1.9, Au); }],
+  kumbha:[56, 54, (g, f, c, boss) => { const {E, Pl, RR, blob} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.3), K = '#1d1420', Au = '#ffd24a', y = f ? -1.5 : 0, q = f ? -0.7 : 0;
+    RR(16, 43, 8.4, 10 - (f ? 1 : 0), 3.6, d); RR(32, 43, 8.4, 10 - (f ? 0 : 1), 3.6, d);
+    RR(3, 25 + y, 8.4, 17, 4.2, c); RR(45, 23 + y + (f ? 2 : 0), 8.4, 17, 4.2, d);
+    blob(28, 33 + q, 18.4, 14, c); E(26, 36 + q, 11, 7.4, l); E(26, 39.6 + q, 1.3, 1.3, d);
+    Pl([[11, 40 + q], [45, 40 + q], [42, 48], [14, 48]], '#c8a03a'); Pl([[28, 40 + q], [45, 40 + q], [42, 48], [28, 48]], '#a8842a'); RR(10.4, 38.6 + q, 35.2, 2.8, 1.2, '#7a1a2a');
+    E(27, 4 + y, 4.4, 3.4, K);
+    blob(27, 15 + y, 12.4, 10.6, c);
+    RR(15.6, 7 + y, 22.8, 2.8, 1.3, Au); E(27, 8.4 + y, 1.7, 1.7, '#c8382f');
+    E(14.2, 16 + y, 2.7, 3.8, d); E(39.8, 16 + y, 2.7, 3.8, d); E(14, 20.6 + y, 1.5, 1.7, Au); E(40, 20.6 + y, 1.5, 1.7, Au);
+    for (const ex of [21.6, 32]){ E(ex, 15 + y, 2.9, 2.3, '#ffffff'); E(ex - 0.3, 15.7 + y, 1.3, 1.4, boss ? '#8a1a1a' : K); RR(ex - 3.3, 12 + y, 6.6, 2.8 + (f ? 0.9 : 0), 1, d); }
+    if (boss){ Pl([[17.6, 10.2 + y], [25, 12 + y], [25, 13.2 + y], [17.6, 11.6 + y]], K); Pl([[36, 10.2 + y], [28.6, 12 + y], [28.6, 13.2 + y], [36, 11.6 + y]], K); }
+    E(27, 22 + y, 3.6, f ? 2.8 : 1.7, '#3a1a22'); Pl([[20.6, 19.6 + y], [27, 18.2 + y], [33.4, 19.6 + y], [34.4, 21.6 + y], [27, 19.8 + y], [19.6, 21.6 + y]], K);
+    E(17.6, 19 + y, f ? 2.8 : 1.7, f ? 2.8 : 1.7, '#cfeaff'); E(17, 18.4 + y, 0.8, 0.8, '#ffffff'); }],
+  rahu:[54, 44, (g, f, c, boss) => { const {E, Pl, blob, angry} = hdKit(g), d = darken(c, 0.4), l = mix(c, '#8a7ad8', 0.5), K = '#0e0a18', y = f ? -1.5 : 0, j = f ? 1.5 : 0;
+    for (const [x, yy, r, far] of [[35, 24, 9.4, 0], [42.6, 28, 6.6, 0], [47.6, 23, 4.6, 1], [51, 30, 2.8, 1], [45.6, 35, 3.2, 1]]) E(x + (far ? j : 0), yy + (far ? -y : y), r, r * 0.8, far ? l : d);
+    Pl([[12, 9 + y], [14, -1 + y], [19, 6 + y], [23, 0 + y], [27, 6 + y], [32, 0.6 + y], [34, 10 + y]], d);
+    blob(22, 21 + y, 17.4, 16, c); E(30, 30 + y, 6, 4, l);
+    Pl([[1.6, 20 + y], [24, 17 + y], [26.4, 30 + y - j], [8, 35 + y - j]], K); E(17, 28 + y - j * 0.5, 5.4, 2.6, '#a82a3a');
+    for (let i = 0; i < 5; i++){ Pl([[4 + i * 4.1, 19.9 - i * 0.55 + y], [5.9 + i * 4.1, 24.6 - i * 0.4 + y], [7.8 + i * 4.1, 19.4 - i * 0.55 + y]], '#f4f0e0');
+      Pl([[9.4 + i * 3.5, 34.4 - i * 0.95 + y - j], [11 + i * 3.5, 29.8 - i * 0.8 + y - j], [12.6 + i * 3.5, 33.6 - i * 0.95 + y - j]], '#f4f0e0'); }
+    angry(15.6, 11.6 + y, 1.45, '#ffe27a'); angry(28, 12.6 + y, 1.2, '#ffe27a');
+    if (boss) E(22, 6.4 + y, 1.6, 1.6, '#ff3b5a');
+    E(4, 11 + y - j, 3.8, 3.8, '#ffb030'); E(3.4, 10.4 + y - j, 1.8, 1.8, '#fff0a0'); for (const [dx, dy] of [[-3, -4.6], [3.6, -4], [5.4, 0.6]]) E(4 + dx, 11 + dy + y - j, 0.8, 0.8, '#ffd24a'); }],
+  mara:[60, 62, (g, f, c, boss) => { const {E, Pl, RR, blob} = hdKit(g), d = darken(c, 0.4), l = mix(c, '#8a5aa8', 0.45), Au = '#ffd24a', Fc = '#e8dcf0', K = '#1d1420', o = f ? 2 : 0, y = f ? -1 : 0;
+    Pl([[9, 22], [2, 4 + o], [16, 16]], '#1a1018'); Pl([[51, 22], [58, 4 - o], [44, 16]], '#1a1018');
+    const pts = [[6, 31], [12, 14], [30, 7], [48, 14], [54, 31], [56, 53]]; for (let i = 0; i < 9; i++) pts.push([56 - i * 6.5, (i + (f ? 1 : 0)) % 2 ? 61 : 55]); pts.push([4, 55]);
+    Pl(pts, c); Pl([[30, 7], [48, 14], [54, 31], [56, 53], [30, 53]], d); E(17, 24, 7, 9, l);
+    Pl([[24, 30 + y], [36, 30 + y], [39.6, 54], [20.4, 54]], l); Pl([[28.6, 30 + y], [31.4, 30 + y], [32.2, 54], [27.8, 54]], Au);
+    E(14, 28 + y, 6.2, 3.5, Au); E(46, 28 + y, 6.2, 3.5, '#e0b03c');
+    E(30, 30.4 + y, 7, 2.4, Au); E(30, 30.6 + y, 2, 1.6, '#b84ad8');
+    blob(30, 20 + y, 9.6, 9.2, Fc);
+    Pl([[21, 14.4 + y], [23, 5 + y], [27, 10.4 + y], [30, 1 + y], [33, 10.4 + y], [37, 5 + y], [39, 14.4 + y]], Au); RR(21, 12.8 + y, 18, 2.7, 1, '#e0b03c'); E(30, 8.6 + y, 1.7, 1.9, '#b84ad8');
+    for (const ex of [26, 34.2]){ RR(ex - 2.7, 19.6 + y, 5.4, 1.7, 0.8, K); if (boss) E(ex - 0.2, 20.8 + y, 1.2, 0.8, '#b84ad8'); }
+    g.strokeStyle = '#7a3a5a'; g.lineWidth = 1.2; g.lineCap = 'round'; g.beginPath(); g.arc(30, 22.6 + y, 3.2, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+    RR(4.4, 39 + y, 6.4, 5.4, 2.6, Fc); RR(7, 31 + y, 1.3, 9, 0.6, '#3a7a4a'); E(5, 30 + y, 2.2, 2.6, '#e86a9a'); E(10.2, 30 + y, 2.2, 2.6, '#e86a9a'); E(7.6, 28.4 + y, 2.6, 3.2, '#f08ab0'); E(7.6, 29.4 + y, 1.2, 1.1, '#ffe27a'); }],
+  king4:chibiMob('musa', {outfit:'#3a6a8a', hair:'#241c26', hat:'helmet', skin:1, beard:true}, {job:3, deco:'dragon', capeC:'#c8382f', wtype:'spear'}),
   // ── 부상(일본 옛 민담 요괴): 그 나라 옛이야기 속 모습을 우리 화풍(통통·큰 눈)으로 새로 그렸다 ──
   kappa:[34, 36, (g, f, c) => { const {E, Pl, RR, blob, bigEye, legs} = hdKit(g), d = darken(c, 0.3), y = f ? -1 : 0;
     legs([10, 20], 29, 6, 5, d, f);
@@ -11768,6 +11898,15 @@ const THEMES = {
   divepath:{ground:['#2a5a7a', '#265472', '#306284'], speck:['#1c3e58', '#6aa8c8', '#3a8a5a']},           // 4부 깊은 바다: 해녀의 물길
   whalebelly:{ground:['#8a4a52', '#82444c', '#925258'], speck:['#5a2a34', '#c88a8a', '#e8e0d0']},         // 고래 뱃속
   deepgarden:{ground:['#2a3a5a', '#263654', '#304262'], speck:['#1a2440', '#8a6aa8', '#c84a8a']},         // 물 밑 꽃밭
+  dandaka:{ground:['#3f7a3e', '#3a7238', '#47843f'], speck:['#2a5a2c', '#8ac86a', '#e8d84a']},            // 5부 란카 길: 단다카 숲
+  kishkindha:{ground:['#c87a4a', '#c07244', '#d08452'], speck:['#8a4a2e', '#e8a878', '#6e3a22']},         // 원숭이 나라(붉은 바위)
+  lanka:{ground:['#e8c868', '#e0c060', '#f0d478'], speck:['#b88a2e', '#fff0b0', '#c8382f']},              // 란카 성(황금빛 돌바닥)
+  dryriver:{ground:['#c8a878', '#c0a070', '#d0b080'], speck:['#8a6a48', '#6e5438', '#e8d0a8']},           // 5부 젖의 바다: 마른 강바닥
+  mandara:{ground:['#8ab07a', '#82a872', '#92b882'], speck:['#5a8a5a', '#eaf2f4', '#c8d8c0']},            // 만다라 산기슭
+  milksea:{ground:['#cfe8d0', '#c4e0c6', '#d8eed8'], speck:['#9ac8a4', '#ffffff', '#f0a8c4']},            // 젖빛 바다(연잎 길)
+  yamaroad:{ground:['#6a6a72', '#64646c', '#72727a'], speck:['#44444c', '#8a8a92', '#a89ab8']},           // 5부 수미산: 야마의 길
+  fourgate:{ground:['#b8b0a0', '#b0a898', '#c0b8a8'], speck:['#8a8478', '#e0d8c8', '#d8a83a']},           // 사천왕 문(돌계단)
+  marafield:{ground:['#6a4a7a', '#644474', '#725282'], speck:['#3e2a4e', '#e87aa8', '#ffd24a']},          // 마라의 들
   village:{ground:['#7cb85a', '#76b155', '#82be60'], speck:['#5f9a45', '#9ad070', '#6aa84e']},
   bamboo:{ground:['#5f9a4a', '#5a9445', '#66a050'], speck:['#4a7a3a', '#7ab060', '#a8b860']},
   rock:{ground:['#b8a07a', '#b09872', '#c0a882'], speck:['#9a8060', '#d0bc98', '#a08868']},
@@ -11968,6 +12107,16 @@ const ISO_THEME = {
   divepath:{top:['#2a5a7a', '#265472'], side:['#1c3e58', '#142e44'], outer:'#0c2444', sky:['#123e6e', '#061a3a'], hills:'#081e40'},
   whalebelly:{top:['#8a4a52', '#82444c'], side:['#5a2a34', '#461e28'], outer:'#2a1018', sky:['#3a1420', '#1a080e'], hills:'#2a0e16'},
   deepgarden:{top:['#2a3a5a', '#263654'], side:['#1a2440', '#121a30'], outer:'#0a1028', sky:['#141e4a', '#060a20'], hills:'#0a1230'},
+  // 5부 천축(물의 신화 9단계): 란카 길 — 단다카 숲 · 원숭이 나라(붉은 바위산) · 란카 성(황금빛 돌바닥) / 젖의 바다 — 마른 강 · 만다라 산 · 젖빛 바다 / 수미산 — 야마의 길 · 사천왕 문 · 마라의 들
+  dandaka:{top:['#3f7a3e', '#3a7238'], side:['#5a4a2e', '#463a22'], outer:'#245a2c', sky:['#7ac8a8', '#e6f6e0'], hills:'#2f6a3e'},
+  kishkindha:{top:['#c87a4a', '#c07244'], side:['#8a4a2e', '#6e3a22'], outer:'#a85a34', sky:['#ffc890', '#fff0d8'], hills:'#b86a44'},
+  lanka:{top:['#e8c868', '#e0c060'], side:['#b88a2e', '#946c22'], outer:'#2a5a8a', sky:['#ff9a5a', '#ffe0a8'], hills:'#8a4a3a'},
+  dryriver:{top:['#c8a878', '#c0a070'], side:['#8a6a48', '#6e5438'], outer:'#b0906a', sky:['#f0d0a0', '#fff4e0'], hills:'#b89068'},
+  mandara:{top:['#8ab07a', '#82a872'], side:['#6a6a5a', '#525246'], outer:'#dfe8e8', sky:['#bfe0f0', '#f8fcff'], hills:'#7a9a8a'},
+  milksea:{top:['#cfe8d0', '#c4e0c6'], side:['#7aa888', '#5e8c6e'], outer:'#eef4f6', sky:['#ffe0c8', '#fffaf0'], hills:'#e8d8e8'},
+  yamaroad:{top:['#6a6a72', '#64646c'], side:['#44444c', '#34343a'], outer:'#3a3a44', sky:['#3a3a5a', '#8a7a8a'], hills:'#2e2e3c'},
+  fourgate:{top:['#b8b0a0', '#b0a898'], side:['#7a7468', '#5e5a50'], outer:'#8aa0b0', sky:['#8ab8e8', '#f0f6fc'], hills:'#a8b8c8'},
+  marafield:{top:['#6a4a7a', '#644474'], side:['#3e2a4e', '#2e1e3c'], outer:'#4a2a5a', sky:['#ff8a5a', '#6a3a7a'], hills:'#3a1e4a'},
   village:{top:['#86c262', '#7db95b'], side:['#a07a4a', '#7c5a36'], outer:'#69a74d', sky:['#9fd4ff', '#e2f4ff'], hills:'#7fb7a0'},
   bamboo:{top:['#6aa852', '#62a04c'], side:['#7a6440', '#5e4c30'], outer:'#4f8a40', sky:['#a8dcc8', '#e6f6ea'], hills:'#5f9a7a'},
   rock:{top:['#c4ad86', '#bba47e'], side:['#8a7262', '#6e5a4c'], outer:'#a89070', sky:['#f0c8a0', '#fbe8d0'], hills:'#a07e66'},
@@ -12097,6 +12246,27 @@ const PROPS = {
   rib(g, x, y, s = 1){ gShadow(g, x, y, 7 * s); for (const d of [-1, 1]) gPoly(g, [[x + d * 7 * s, y], [x + d * 8.4 * s, y - 9 * s], [x + d * 5 * s, y - 17 * s], [x, y - 20 * s], [x, y - 18 * s], [x + d * 3.8 * s, y - 15.4 * s], [x + d * 6.2 * s, y - 9 * s], [x + d * 5 * s, y]], d < 0 ? '#e8e0d0' : '#cfc6b4'); },
   wiltflower(g, x, y, col = '#8a6aa8'){ gPoly(g, [[x - 0.5, y], [x + 0.5, y], [x + 1.6, y - 6], [x + 0.8, y - 6]], '#3a5a4a'); for (const [dx, dy] of [[-1.6, -6], [3.4, -6.4], [1, -8], [1.2, -4.6]]) gEll(g, x + dx, y + dy, 1.6, 1.3, col); gEll(g, x + 1, y - 6.2, 1, 0.9, mix(col, '#ffffff', 0.5)); },
   mushroom(g, x, y, col = '#9a4ad8'){ gPoly(g, [[x - 0.8, y], [x + 0.8, y], [x + 0.6, y - 4], [x - 0.6, y - 4]], '#e8e0d0'); gBlob(g, x, y - 4.5, 3.4, 2, col); gEll(g, x - 1, y - 5, 0.5, 0.4, '#ffffff'); },
+  // 5부 천축(물의 신화 9단계): 반얀 나무 · 등불 · 황금 기둥과 누각 · 돌문 · 돌탑 · 갈라진 땅 · 꽂힌 깃발
+  banyan(g, x, y, s = 1, col = '#2f7a3a'){ gShadow(g, x, y, 11 * s); gPoly(g, [[x - 3 * s, y], [x + 3 * s, y], [x + 2 * s, y - 13 * s], [x - 2 * s, y - 13 * s]], '#6a5238'); gPoly(g, [[x + 0.6 * s, y], [x + 3 * s, y], [x + 2 * s, y - 13 * s], [x + 0.6 * s, y - 13 * s]], '#4e3c28');
+    for (const dx of [-9, -5.6, 5.4, 9.4]) gPoly(g, [[x + (dx - 0.5) * s, y - 1 * s], [x + (dx + 0.5) * s, y - 1 * s], [x + (dx + 0.4) * s, y - 14 * s], [x + (dx - 0.4) * s, y - 14 * s]], '#7a6248');
+    gBlob(g, x - 8 * s, y - 16 * s, 8 * s, 5.4 * s, darken(col, 0.1)); gBlob(g, x + 8 * s, y - 16 * s, 8 * s, 5.4 * s, darken(col, 0.05)); gBlob(g, x, y - 21 * s, 10 * s, 6.4 * s, col); gBlob(g, x - 4 * s, y - 25 * s, 5 * s, 3.4 * s, mix(col, '#ffffff', 0.08)); },
+  oillamp(g, x, y){ gEll(g, x, y - 3, 3.6, 3.6, 'rgba(255,200,110,.3)'); gEll(g, x, y, 2.6, 1.1, '#8a4a2a'); gEll(g, x, y - 0.6, 2.2, 0.8, '#b86a3a'); gPoly(g, [[x - 1, y - 1], [x, y - 5], [x + 1, y - 1]], '#ff9a2a'); gPoly(g, [[x - 0.5, y - 1], [x, y - 3.4], [x + 0.5, y - 1]], '#fff0a0'); },
+  goldpillar(g, x, y, h = 24){ gShadow(g, x, y, 4); gPoly(g, [[x - 2.4, y], [x + 2.4, y], [x + 2.4, y - h], [x - 2.4, y - h]], '#e8c048'); gPoly(g, [[x + 0.8, y], [x + 2.4, y], [x + 2.4, y - h], [x + 0.8, y - h]], '#b88a2e'); gPoly(g, [[x - 2.4, y], [x - 1.4, y], [x - 1.4, y - h], [x - 2.4, y - h]], '#fff0a8');
+    gPoly(g, [[x - 3.8, y - h], [x + 3.8, y - h], [x + 3, y - h - 3], [x - 3, y - h - 3]], '#c8382f'); gPoly(g, [[x - 3.6, y], [x + 3.6, y], [x + 3, y - 2], [x - 3, y - 2]], '#b88a2e'); },
+  golddome(g, x, y){ gShadow(g, x, y + 1, 18); for (const dx of [-12, 0, 12]) PROPS.goldpillar(g, x + dx, y, 20);
+    gPoly(g, [[x - 18, y - 20], [x + 18, y - 20], [x + 16, y - 25], [x - 16, y - 25]], '#b88a2e'); gPoly(g, [[x - 18, y - 20], [x + 18, y - 20], [x + 17.4, y - 21.6], [x - 17.4, y - 21.6]], '#c8382f');
+    for (const dx of [-13, 13]){ gBlob(g, x + dx, y - 27, 4, 3.4, '#d8b040'); gPoly(g, [[x + dx - 1, y - 30], [x + dx + 1, y - 30], [x + dx, y - 34]], '#fff0a8'); }
+    gBlob(g, x, y - 29, 12, 7.4, '#e8c048'); gPoly(g, [[x - 2.4, y - 35], [x + 2.4, y - 35], [x, y - 44]], '#fff0a8'); gEll(g, x, y - 44.4, 1.6, 1.6, '#c8382f'); },
+  stonegate(g, x, y, col = '#a8a090'){ gShadow(g, x, y + 1, 16); for (const dx of [-11, 11]){ gPoly(g, [[x + dx - 2.6, y], [x + dx + 2.6, y], [x + dx + 2.2, y - 24], [x + dx - 2.2, y - 24]], col); gPoly(g, [[x + dx + 0.8, y], [x + dx + 2.6, y], [x + dx + 2.2, y - 24], [x + dx + 0.8, y - 24]], darken(col, 0.25)); }
+    gPoly(g, [[x - 14, y - 19], [x + 14, y - 19], [x + 14, y - 21.4], [x - 14, y - 21.4]], darken(col, 0.12));
+    gPoly(g, [[x - 17, y - 24], [x + 17, y - 24], [x + 19, y - 28], [x - 19, y - 28]], col); gPoly(g, [[x - 17, y - 24], [x + 17, y - 24], [x + 17.4, y - 25.2], [x - 17.4, y - 25.2]], darken(col, 0.3));
+    gPoly(g, [[x - 5, y - 28], [x + 5, y - 28], [x, y - 33]], mix(col, '#ffffff', 0.2)); gEll(g, x, y - 26, 1.6, 1.3, '#d8a83a'); },
+  stupa(g, x, y, s = 1, col = '#d8d0c0'){ gShadow(g, x, y, 7 * s); gPoly(g, [[x - 7 * s, y], [x + 7 * s, y], [x + 6 * s, y - 3 * s], [x - 6 * s, y - 3 * s]], darken(col, 0.2)); gBlob(g, x, y - 6.4 * s, 5.6 * s, 4.6 * s, col);
+    gPoly(g, [[x - 1.6 * s, y - 10 * s], [x + 1.6 * s, y - 10 * s], [x + 1.2 * s, y - 12.4 * s], [x - 1.2 * s, y - 12.4 * s]], darken(col, 0.15)); gPoly(g, [[x - 0.9 * s, y - 12.4 * s], [x + 0.9 * s, y - 12.4 * s], [x, y - 18 * s]], '#d8a83a'); },
+  crack(g, x, y, s = 1, col = '#6e5438'){ g.strokeStyle = col; g.lineWidth = 0.7; g.beginPath(); g.moveTo(x - 7 * s, y - 1 * s); g.lineTo(x - 3 * s, y + 0.6 * s); g.lineTo(x, y - 0.8 * s); g.lineTo(x + 4 * s, y + 1 * s); g.lineTo(x + 8 * s, y);
+    g.moveTo(x - 3 * s, y + 0.6 * s); g.lineTo(x - 4.4 * s, y + 2.6 * s); g.moveTo(x + 4 * s, y + 1 * s); g.lineTo(x + 5 * s, y - 2 * s); g.stroke(); },
+  warbanner(g, x, y, col = '#7a1a4a'){ gShadow(g, x, y, 3); gPoly(g, [[x - 0.5, y], [x + 0.5, y], [x + 0.5, y - 20], [x - 0.5, y - 20]], '#3a2a2a'); gPoly(g, [[x + 0.5, y - 20], [x + 8, y - 18], [x + 6, y - 15], [x + 8, y - 12], [x + 0.5, y - 11]], col);
+    gPoly(g, [[x + 0.5, y - 20], [x + 8, y - 18], [x + 7.4, y - 17], [x + 0.5, y - 18.6]], mix(col, '#ffffff', 0.3)); gPoly(g, [[x - 1, y - 20], [x + 1, y - 20], [x, y - 23]], '#d8a83a'); },
 };
 
 // @@TEMP-ALIAS (5부 천축: ART 갈래의 그림이 합쳐지기 전까지 — 없으면 있는 그림을 빌려 쓴다. 합친 뒤 이 묶음(END까지)을 지운다)
@@ -12288,6 +12458,66 @@ function isoScenery(t, rnd){
     P2(spotBack(4), (g, x, y) => PROPS.lotus(g, x, y, 1, '#ffd0e8'));
     P2(spotBack(3), (g, x, y) => PROPS.crystal(g, x, y, '#6a8ad8'));
     F2(spotFront(9), (g, x, y) => PROPS.wiltflower(g, x, y, rnd() < 0.5 ? '#8a6aa8' : '#a85a8a'));
+  } else if (t === 'dandaka'){    // 5부 란카 길 · 단다카 숲: 반얀 나무 숲과 숲속 오두막
+    for (const [px, py, sc] of [[66, 46, 1.25], [256, 62, 1.15], [164, 36, 0.95]]) back.push([py, g => PROPS.banyan(g, px, py, sc)]);
+    back.push([42, g => PROPS.house(g, 116, 42, 'thatch')]);
+    P2(spotBack(9), (g, x, y) => PROPS.tree(g, x, y, 0.8 + rnd() * 0.4, rnd() < 0.5 ? '#2f7a3a' : '#3f8a42'));
+    P2(spotBack(5), (g, x, y) => PROPS.flowers(g, x, y, rnd));
+    F2(spotFront(2), (g, x, y) => PROPS.banyan(g, x, y, 0.8));
+    F2(spotFront(7), (g, x, y) => rnd() < 0.5 ? PROPS.grass(g, x, y, '#2f6a35') : PROPS.flowers(g, x, y, rnd));
+  } else if (t === 'kishkindha'){ // 원숭이 나라: 붉은 바위산
+    P2(spotBack(11), (g, x, y) => PROPS.rock(g, x, y, 1 + rnd() * 1.3, ['#b86a44', '#a85a38', '#c87a52'][(rnd() * 3) | 0]));
+    P2(spotBack(5), (g, x, y) => PROPS.stalag(g, x, y, 0.8 + rnd() * 0.6, '#9a5234'));
+    P2(spotBack(4), (g, x, y) => PROPS.tree(g, x, y, 0.7, '#6aa84a'));
+    F2(spotFront(4), (g, x, y) => PROPS.rock(g, x, y, 0.6 + rnd() * 0.5, '#a85a38'));
+    F2(spotFront(4), (g, x, y) => PROPS.grass(g, x, y, '#8a9a4a'));
+  } else if (t === 'lanka'){      // 란카 성: 황금 누각·기둥과 등불
+    for (const [px, py] of [[64, 46], [258, 62]]) back.push([py, g => PROPS.golddome(g, px, py)]);
+    for (const [px, py] of [[124, 38], [200, 44], [160, 30]]) back.push([py, g => PROPS.goldpillar(g, px, py)]);
+    P2(spotBack(7), (g, x, y) => PROPS.oillamp(g, x, y));
+    P2(spotBack(3), (g, x, y) => PROPS.tree(g, x, y, 0.7, '#3f8a42'));
+    F2(spotFront(3), (g, x, y) => PROPS.goldpillar(g, x, y, 14));
+    F2(spotFront(6), (g, x, y) => PROPS.oillamp(g, x, y));
+  } else if (t === 'dryriver'){   // 5부 젖의 바다 · 마른 강: 갈라진 강바닥과 말라 죽은 나무
+    P2(spotBack(12), (g, x, y) => PROPS.crack(g, x, y, 0.8 + rnd() * 0.8));
+    P2(spotBack(5), (g, x, y) => PROPS.deadtree(g, x, y, '#6a5238'));
+    P2(spotBack(5), (g, x, y) => PROPS.rock(g, x, y, 0.6 + rnd() * 0.6, '#a88a68'));
+    P2(spotBack(3), (g, x, y) => PROPS.bones(g, x, y));
+    F2(spotFront(7), (g, x, y) => PROPS.crack(g, x, y, 0.9));
+    F2(spotFront(3), (g, x, y) => PROPS.rock(g, x, y, 0.45, '#b89878'));
+  } else if (t === 'mandara'){    // 만다라 산: 젖빛 물가의 산기슭
+    P2(spotBack(7), (g, x, y) => PROPS.rock(g, x, y, 1 + rnd() * 1.2, ['#7a8a7a', '#6a7a6e', '#8a9a88'][(rnd() * 3) | 0]));
+    P2(spotBack(6), (g, x, y) => PROPS.tree(g, x, y, 0.8 + rnd() * 0.3, '#5a9a5a'));
+    P2(spotBack(4), (g, x, y) => PROPS.cloudpuff(g, x, y, 0.7));
+    F2(spotFront(4), (g, x, y) => PROPS.lotus(g, x, y, 1, '#ffffff'));
+    F2(spotFront(4), (g, x, y) => PROPS.cloudpuff(g, x, y, 0.6));
+  } else if (t === 'milksea'){    // 젖빛 바다: 연잎 길과 솟아오른 보물의 빛
+    P2(spotBack(10), (g, x, y) => PROPS.lotus(g, x, y, 1 + rnd() * 0.6, rnd() < 0.5 ? '#f08ab0' : '#ffffff'));
+    P2(spotBack(4), (g, x, y) => PROPS.crystal(g, x, y, '#ffd24a'));
+    P2(spotBack(4), (g, x, y) => PROPS.cloudpuff(g, x, y, 0.6));
+    F2(spotFront(6), (g, x, y) => PROPS.lotus(g, x, y, 1.1, rnd() < 0.5 ? '#f08ab0' : '#ffe9a0'));
+    F2(spotFront(2), (g, x, y) => PROPS.pearllamp(g, x, y));
+  } else if (t === 'yamaroad'){   // 5부 수미산 · 야마의 길: 어스름한 잿빛 길, 돌탑과 돌등
+    back.push([40, g => PROPS.stonegate(g, 150, 40, '#6a6a74')]);
+    P2(spotBack(6), (g, x, y) => PROPS.stupa(g, x, y, 0.7 + rnd() * 0.4, '#8a8a92'));
+    P2(spotBack(5), (g, x, y) => PROPS.deadtree(g, x, y, '#2e2e3a'));
+    P2(spotBack(4), (g, x, y) => PROPS.lantern(g, x, y, 0.9));
+    F2(spotFront(4), (g, x, y) => PROPS.stupa(g, x, y, 0.6, '#7a7a84'));
+    F2(spotFront(4), (g, x, y) => PROPS.bones(g, x, y));
+  } else if (t === 'fourgate'){   // 사천왕 문: 산 중턱 돌문과 소나무, 구름
+    for (const [px, py] of [[70, 46], [150, 36], [250, 60]]) back.push([py, g => PROPS.stonegate(g, px, py)]);
+    P2(spotBack(5), (g, x, y) => PROPS.pine(g, x, y, 0.8 + rnd() * 0.3));
+    P2(spotBack(4), (g, x, y) => PROPS.lantern(g, x, y));
+    P2(spotBack(5), (g, x, y) => PROPS.cloudpuff(g, x, y, 0.7));
+    F2(spotFront(4), (g, x, y) => PROPS.cloudpuff(g, x, y, 0.7));
+    F2(spotFront(3), (g, x, y) => PROPS.rock(g, x, y, 0.5, '#9a9488'));
+  } else if (t === 'marafield'){  // 마라의 들: 해 질 녘 보랏빛 들 — 꽂힌 깃발, 꽃이 된 무기, 멀리 큰 나무
+    back.push([42, g => PROPS.banyan(g, 150, 42, 1.3, '#4a6a4a')]);
+    P2(spotBack(7), (g, x, y) => PROPS.warbanner(g, x, y, rnd() < 0.5 ? '#7a1a4a' : '#4a1a6a'));
+    P2(spotBack(8), (g, x, y) => PROPS.flowers(g, x, y, rnd));
+    P2(spotBack(4), (g, x, y) => PROPS.deadtree(g, x, y, '#2a1a34'));
+    F2(spotFront(3), (g, x, y) => PROPS.warbanner(g, x, y));
+    F2(spotFront(7), (g, x, y) => PROPS.flowers(g, x, y, rnd));
   } else if (t === 'dark'){
     for (const [px, py] of [[70, 40], [250, 60]]) back.push([py, g => PROPS.pillar(g, px, py)]);
     P2(spotBack(5), (g, x, y) => PROPS.bones(g, x, y));
@@ -12317,6 +12547,7 @@ function buildIsoMap(ri, w = S.world){
   if (t === 'sea' || t === 'river2'){ for (let k = 0; k < 70; k++){ const x = rnd() * MW, y = 24 + rnd() * (MH - 24); gEll(g, x, y, 2 + rnd() * 4, 0.5, 'rgba(255,255,255,.45)'); } }
   if (t === 'cloud' || t === 'heaven'){ for (let k = 0; k < 26; k++){ const x = rnd() * MW, y = 26 + rnd() * (MH - 26); gEll(g, x, y, 6 + rnd() * 10, 2 + rnd() * 2, 'rgba(255,255,255,.7)'); } }
   if (t === 'swamp' || t === 'poison'){ for (let k = 0; k < 18; k++){ const x = rnd() * MW, y = 24 + rnd() * (MH - 24); gEll(g, x, y, 3 + rnd() * 6, 1 + rnd() * 1.5, mix(th.outer, '#ffffff', 0.12)); } }
+  if (t === 'milksea' || t === 'mandara' || t === 'lanka'){ for (let k = 0; k < 70; k++){ const x = rnd() * MW, y = 24 + rnd() * (MH - 24); gEll(g, x, y, 2 + rnd() * 5, 0.5, t === 'lanka' ? 'rgba(255,220,160,.4)' : 'rgba(150,190,215,.45)'); } }   // 5부: 젖빛 바다의 잔물결 · 란카 둘레 바다의 노을빛 물결
   const sc = isoScenery(t, rnd);
   sc.back.sort((a, b2) => a[0] - b2[0]).forEach(([, fn]) => fn(g));
   // 판: 앞 두 벽(흙·돌) → 윗면 칸
@@ -13984,6 +14215,22 @@ const CAST = {
   sobyeol:{name:'소별왕', p:['musa', {outfit:'#c8783a', hair:'#241c26', hat:'mcrown', skin:0}, 4, 4], ex:{wtype:'bow', capeC:'#a8482a'}},
   sagong:{name:'뱃사공', p:['musa', {outfit:'#8a7a5a', hair:'#241c26', hat:'musa', skin:2, beard:true}, 1, -1], ex:{wtype:'none'}},
   chonjang:{name:'뱃속 마을 촌장', p:['doin', {outfit:'#9a8a6a', hair:'#e8e8f0', hat:'none', skin:2, beard:true}, 1, -1], ex:{wtype:'none'}},
+  // 5부 천축(물의 신화 9단계): 옛 서사시·옛이야기의 묘사만 따라 우리 화풍으로(영화·드라마의 모습을 따라 그리지 않음). 지금도 섬기는 분들은 동료·스승·시험하는 분으로만 나온다
+  rama:{name:'라마', p:['gungsa', {outfit:'#3a7a5a', hair:'#241c26', hat:'none', skin:1}, 3, 3], ex:{wtype:'bow', capeC:'#d8a83a'}},
+  lakshmana:{name:'락슈마나', p:['gungsa', {outfit:'#c8a03a', hair:'#241c26', hat:'none', skin:1}, 2, 2], ex:{wtype:'bow'}},
+  sita:{name:'시타', p:['doin', {outfit:'#f0b040', hair:'#241c26', hat:'flower', skin:1}, 3, -1], ex:{wtype:'none', capeC:'#e8506a'}},
+  hanuman:{name:'하누만', p:['musa', {outfit:'#e0682a', hair:'#d8b888', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'hammer', capeC:'#c8382f'}},
+  sugriva:{name:'수그리바', p:['musa', {outfit:'#8a6a2a', hair:'#a8743a', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'none', capeC:'#d8a83a'}},
+  indra:{name:'제석천', p:['musa', {outfit:'#f4f0e0', hair:'#241c26', hat:'mcrown', skin:0, beard:true}, 4, 4], ex:{deco:'dragon', capeC:'#3a6ad8', wtype:'rod'}},
+  yama:{name:'야마', p:['sulsa', {outfit:'#1e4a3a', hair:'#241c26', hat:'mcrown', skin:1, beard:true}, 4, 4], ex:{capeC:'#0e2a22', wtype:'rod'}},
+  savitri:{name:'사비트리', p:['doin', {outfit:'#e8e0d0', hair:'#241c26', hat:'flower', skin:1}, 2, -1], ex:{wtype:'none', capeC:'#c8503a'}},
+  nachiketa:{name:'나치케타', p:['doin', {outfit:'#f0d890', hair:'#241c26', hat:'none', skin:1}, -1, -1], ex:{wtype:'none'}},
+  sage:{name:'성자', p:['doin', {outfit:'#e89a3a', hair:'#e8e8f0', hat:'none', skin:2, beard:true}, 1, -1], ex:{wtype:'staff'}},
+  mara:{name:'마라', p:['sulsa', {outfit:'#2a1a3a', hair:'#3a2a4a', hat:'mcrown', skin:0}, 4, 4], ex:{capeC:'#5a2a6a', wtype:'none'}},
+  dau1:{name:'바람', p:['doin', {outfit:'#f0a0c8', hair:'#241c26', hat:'flower', skin:0}, 3, -1], ex:{wtype:'none', capeC:'#ffd0e4'}},
+  dau2:{name:'미움', p:['doin', {outfit:'#5a6ab8', hair:'#241c26', hat:'flower', skin:0}, 3, -1], ex:{wtype:'none', capeC:'#2a3a7a'}},
+  dau3:{name:'욕심', p:['doin', {outfit:'#e8c048', hair:'#241c26', hat:'flower', skin:0}, 3, -1], ex:{wtype:'none', capeC:'#b8862a'}},
+  heo:{name:'허황옥', p:['doin', {outfit:'#c8382f', hair:'#241c26', hat:'flower', skin:1}, 4, -1], ex:{wtype:'none', capeC:'#e8c048'}},
 };
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
 const WHO = {'후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
@@ -14304,6 +14551,154 @@ function cutBg(key){
     const bowl = (x, bloom) => { for (let i = 0; i < 8; i++){ const w2 = 34 - i * 3; R(x - (w2 >> 1), 122 + i, w2, 1, mix('#e8eef4', '#8a9aa8', i / 8)); } R(x - 17, 120, 34, 2, '#ffffff'); R(x - 1, 100, 2, 20, '#3a7a4a');
       if (bloom){ disk(x, 96, 7, '#f08ab0'); disk(x - 5, 100, 4, '#e86a9a'); disk(x + 5, 100, 4, '#e86a9a'); disk(x, 97, 3, '#ffe27a'); } else { disk(x + 2, 100, 3, '#8a7a6a'); R(x + 1, 102, 3, 5, '#6a5a4a'); } };
     bowl(78, true); bowl(162, false);
+  } else if (key === 'tapship'){     // 5부 천축(물의 신화 9단계): 달빛 바다 — 붉은 돛을 단 배의 갑판과 돌탑(허황옥의 뱃길을 거꾸로)
+    for (let y = 0; y < 84; y++) R(0, y, W, 1, mix('#0a1238', '#3a4a8a', y / 84));
+    for (let k = 0; k < 46; k++) R((rnd() * W) | 0, (rnd() * 70) | 0, 1, 1, rnd() < 0.3 ? '#ffe9a0' : '#ffffff');
+    disk(150, 30, 15, '#fff6d0'); disk(150, 30, 12, '#ffe9a0'); disk(145, 26, 3, '#f4dc90');
+    for (let y = 84; y < 118; y++) R(0, y, W, 1, mix('#1e3a7a', '#0a1a44', (y - 84) / 34));
+    for (let i = 0; i < 16; i++){ const w2 = (30 - i * 1.4 + rnd() * 8) | 0; R(150 - (w2 >> 1), 86 + i * 2, w2, 1, 'rgba(255,240,180,.55)'); }
+    for (let k = 0; k < 40; k++){ const x = (rnd() * W) | 0, y = 86 + ((rnd() * 30) | 0); R(x, y, 4 + ((rnd() * 8) | 0), 1, 'rgba(150,180,240,.4)'); }
+    R(0, 100, W, 2, '#7a5a3a'); for (let x = 4; x < W; x += 12) R(x, 100, 2, 16, '#6b4a2b');
+    R(44, 4, 4, 114, '#4a3423'); R(28, 14, 66, 3, '#5a4030');
+    for (let i = 0; i < 70; i++){ const w2 = 44 + Math.round(Math.sin(i / 70 * Math.PI) * 9); R(48, 18 + i, w2, 1, i % 14 === 13 ? '#7a1e1c' : mix('#d8483a', '#9a2a24', i / 70)); }
+    R(28, 88, 66, 3, '#5a4030');
+    R(176, 112, 44, 6, '#6a6458');
+    for (let i = 0; i < 5; i++){ const w2 = 36 - i * 6, x0 = 198 - (w2 >> 1), y0 = 102 - i * 12; R(x0, y0, w2, 10, i % 2 ? '#a8a296' : '#b8b2a6'); R(x0 - 3, y0 - 2, w2 + 6, 3, '#8a8478'); R(x0 + 2, y0 + 2, 3, 2, '#d0cabc'); R(x0 + w2 - 3, y0 + 1, 3, 9, '#8a8478'); }
+    R(196, 42, 4, 10, '#8a8478'); disk(198, 40, 2, '#d8a83a');
+    R(0, 116, W, 44, '#a8845a'); for (let y = 124; y < H; y += 8) R(0, y, W, 1, '#8a6a48'); for (let k = 0; k < 26; k++) R((rnd() * W) | 0, 117 + ((rnd() * 5) | 0) * 8, 1, 7, '#8a6a48');
+  } else if (key === 'dandaka'){     // 5부: 단다카 숲과 풀로 엮은 오두막
+    for (let y = 0; y < 118; y++) R(0, y, W, 1, mix('#bfe8c8', '#3f8a52', y / 118));
+    for (let k = 0; k < 9; k++){ const x = 6 + ((rnd() * 228) | 0), w2 = 5 + ((rnd() * 5) | 0); R(x, 0, w2, 118, k % 2 ? '#3a5a34' : '#2e4a2c'); R(x, 0, 1, 118, '#4a6a40'); }
+    R(22, 20, 16, 100, '#6a5238'); R(34, 20, 4, 100, '#4e3c28'); for (const dx of [-10, -5, 20, 26]) R(22 + dx, 30, 2, 90, '#7a6248');
+    for (let k = 0; k < 18; k++){ const x = (rnd() * W) | 0, y = (rnd() * 36) | 0, r = 12 + ((rnd() * 12) | 0); disk(x, y, r, k % 3 ? '#2f7a3a' : '#3f8a42'); disk(x - 3, y - 3, Math.max(2, r - 7), '#4f9a4a'); }
+    for (let k = 0; k < 5; k++){ const x = 20 + k * 48 + ((rnd() * 14) | 0); for (let i = 0; i < 86; i++) R(x + Math.round(i * 0.25), 30 + i, 3, 1, 'rgba(255,250,200,.16)'); }
+    R(160, 82, 52, 36, '#c8b078'); for (let x = 160; x < 212; x += 5) R(x, 82, 1, 36, '#a89058'); R(178, 94, 14, 24, '#4a3423');
+    for (let i = 0; i < 26; i++){ const w2 = (72 - i * 2.6) | 0; R(186 - (w2 >> 1), 82 - i, w2, 1, i % 4 ? '#b89a50' : '#9a7e3c'); }
+    R(0, 116, W, 44, '#4a8a44'); for (let k = 0; k < 70; k++){ const x = (rnd() * W) | 0, y = 118 + ((rnd() * 40) | 0); R(x, y, 1, 3, '#2f6a35'); if (k % 5 === 0) R(x - 1, y - 1, 3, 2, ['#f0d84a', '#ffffff', '#f08ab0'][k % 3]); }
+  } else if (key === 'kishkindha'){  // 5부: 원숭이 나라 — 붉은 바위산과 동굴 어귀
+    for (let y = 0; y < 90; y++) R(0, y, W, 1, mix('#ffc890', '#fff0d8', y / 90));
+    disk(122, 22, 11, '#fff6d0'); disk(122, 22, 8, '#ffe9a0');
+    const mesa = (x, w, h, c0) => { for (let i = 0; i < h; i++){ const k = i / h, ww = Math.round(w * (0.62 + 0.38 * k) + Math.sin(i * 0.7) * 2); R(x + ((w - ww) >> 1), 118 - h + i, ww, 1, mix(c0, '#5a2a1a', 0.3 * k)); } for (let i = 6; i < h; i += 9) R(x + 6, 118 - h + i, w - 12, 1, mix(c0, '#000000', 0.18)); };
+    mesa(84, 70, 50, '#d08a58'); mesa(-10, 92, 80, '#c87a4a'); mesa(150, 110, 94, '#b86a44');
+    disk(204, 108, 17, '#3a1c14'); disk(204, 110, 13, '#1e0e0a');
+    for (const [x, y] of [[18, 40], [54, 38], [182, 24], [228, 26], [112, 68], [132, 70]]){ disk(x, y, 5, '#5a9a42'); disk(x + 5, y + 1, 4, '#4a8a3a'); }
+    R(0, 116, W, 44, '#c88a58'); for (let k = 0; k < 44; k++) R((rnd() * W) | 0, 118 + ((rnd() * 40) | 0), 3, 1, k % 2 ? '#a86a40' : '#e0a878');
+    for (let k = 0; k < 6; k++){ const x = (rnd() * W) | 0, y = 124 + ((rnd() * 30) | 0); disk(x, y, 3, '#a85a38'); R(x - 2, y - 2, 2, 1, '#d89a70'); }
+  } else if (key === 'setu'){        // 5부: 바다에 놓은 돌다리 — 이름을 새긴 돌이 물에 떠 란카까지 이어졌다
+    for (let y = 0; y < 70; y++) R(0, y, W, 1, mix('#6ab0e8', '#fff0d0', y / 70));
+    for (let k = 0; k < 4; k++){ const x = (rnd() * W) | 0, y = 8 + ((rnd() * 30) | 0); R(x, y, 36, 3, 'rgba(255,255,255,.7)'); R(x + 8, y - 3, 18, 3, 'rgba(255,255,255,.55)'); }
+    for (let x = 150; x < 214; x++){ const h2 = Math.round(10 * Math.exp(-Math.pow((x - 182) / 22, 2)) + 2); R(x, 70 - h2, 1, h2, '#6a5a6a'); }
+    R(176, 56, 3, 6, '#ffd24a'); R(184, 53, 4, 9, '#ffd24a'); R(180, 59, 12, 2, '#e8b83a');
+    for (let y = 68; y < 122; y++) R(0, y, W, 1, mix('#3a8ac8', '#1a4a8a', (y - 68) / 54));
+    for (let k = 0; k < 60; k++){ const x = (rnd() * W) | 0, y = 70 + ((rnd() * 50) | 0); R(x, y, 4 + ((rnd() * 8) | 0), 1, 'rgba(200,235,255,.5)'); }
+    for (let y = 70; y < 122; y++){ const k = (y - 70) / 52, cx = 182 - k * 62, w2 = 3 + k * 70; R(Math.round(cx - w2 / 2), y, Math.round(w2), 1, y % 6 < 1 ? '#7a7468' : mix('#c8c0b0', '#a8a090', k)); R(Math.round(cx - w2 / 2) - 1, y, 1, 1, '#eaf6ff'); R(Math.round(cx + w2 / 2), y, 1, 1, '#eaf6ff'); }
+    for (let y = 78; y < 122; y += 6){ const k = (y - 70) / 52, cx = 182 - k * 62, w2 = 3 + k * 70; for (let j = 1; j < 4; j++) R(Math.round(cx - w2 / 2 + w2 * j / 4 + ((y / 6) % 2 ? w2 / 8 : 0)), y, 1, 6, '#8a8478'); }
+    R(0, 118, W, 42, '#b8b0a0'); for (let y = 118, r = 0; y < H; y += 10, r++){ R(0, y, W, 1, '#8a8478'); for (let x = (r % 2) * 14; x < W; x += 28) R(x, y, 1, 10, '#8a8478'); }
+    for (let k = 0; k < 9; k++){ const x = 8 + ((rnd() * 220) | 0), y = 121 + ((rnd() * 3) | 0) * 10; R(x, y + 2, 9, 1, '#d8a83a'); R(x + 2, y + 4, 5, 1, '#d8a83a'); }
+    for (let x = 0; x < W; x += 3) R(x, 116 + Math.round(Math.sin(x * 0.14) * 1.5), 3, 2, 'rgba(255,255,255,.8)');
+  } else if (key === 'lanka'){       // 5부: 황금 성 란카(노을 아래 금빛 성벽과 둥근 지붕)
+    for (let y = 0; y < 100; y++) R(0, y, W, 1, mix('#c84a3a', '#ffd890', y / 100));
+    disk(40, 50, 15, '#fff0b0'); disk(40, 50, 11, '#ffc850');
+    for (let k = 0; k < 5; k++){ const x = (rnd() * W) | 0, y = 8 + ((rnd() * 40) | 0); R(x, y, 44, 3, 'rgba(120,40,60,.35)'); }
+    const tower = (x, w, h, dome) => { if (dome){ disk(x + (w >> 1), 118 - h - 2, (w >> 1) - 1, '#f0d060'); R(x + (w >> 1) - 1, 118 - h - (w >> 1) - 8, 2, 8, '#fff0a8'); }
+      R(x, 118 - h, w, h, '#e8c048'); R(x + w - 4, 118 - h, 4, h, '#b88a2e'); R(x, 118 - h, 2, h, '#fff0a8'); for (let yy = 118 - h + 8; yy < 112; yy += 12) R(x + (w >> 1) - 2, yy, 4, 6, '#7a4a1e'); R(x - 2, 118 - h - 3, w + 4, 3, '#c8382f'); };
+    R(0, 78, W, 40, '#d8b040'); for (let x = 0; x < W; x += 10) R(x, 72, 6, 6, '#d8b040'); R(0, 78, W, 2, '#fff0a8'); for (let y = 86; y < 118; y += 8) R(0, y, W, 1, '#b88a2e');
+    tower(64, 18, 56, false); tower(158, 18, 56, false); tower(14, 26, 70, true); tower(198, 28, 76, true);
+    disk(120, 58, 22, '#f0d060'); R(119, 26, 2, 12, '#fff0a8'); disk(120, 25, 2, '#c8382f');
+    R(96, 60, 48, 58, '#e8c048'); R(140, 60, 4, 58, '#b88a2e'); R(92, 56, 56, 5, '#c8382f');
+    for (let i = 0; i < 40; i++){ const w2 = i < 14 ? Math.round(Math.sqrt(Math.max(0, 1 - Math.pow((i - 14) / 14, 2))) * 14) : 14; R(120 - w2, 78 + i, w2 * 2, 1, '#3a1e14'); }
+    R(0, 116, W, 44, '#e0c060'); for (let y = 116, r = 0; y < H; y += 9, r++){ R(0, y, W, 1, '#b8922e'); for (let x = (r % 2) * 16; x < W; x += 32) R(x, y, 1, 9, '#b8922e'); }
+  } else if (key === 'diwali'){      // 5부: 집집마다 등불을 켠 밤 — 돌아오는 길을 밝히는 등불
+    for (let y = 0; y < 118; y++) R(0, y, W, 1, mix('#0e0a30', '#5a3260', y / 118));
+    for (let k = 0; k < 40; k++) R((rnd() * W) | 0, (rnd() * 60) | 0, 1, 1, '#ffffff');
+    const house = (x, y, w, h) => { R(x, y, w, h, '#3a2a3a'); R(x - 2, y - 3, w + 4, 3, '#2a1e2c'); R(x + (w >> 1) - 3, y + h - 12, 6, 12, '#ffb84a'); R(x + 3, y + 5, 4, 4, '#ffd88a'); if (w > 26) R(x + w - 8, y + 5, 4, 4, '#ffd88a');
+      for (let lx = x; lx <= x + w; lx += 5){ disk(lx, y - 5, 2, 'rgba(255,190,90,.35)'); R(lx, y - 5, 1, 2, '#ffe9a0'); } };
+    house(8, 70, 30, 48); house(46, 82, 24, 36); house(78, 64, 34, 54); house(122, 86, 22, 32); house(152, 72, 30, 46); house(190, 80, 26, 38); house(218, 66, 26, 52);
+    R(0, 116, W, 44, '#2e2238'); for (let k = 0; k < 30; k++) R((rnd() * W) | 0, 118 + ((rnd() * 40) | 0), 3, 1, '#3e3048');
+    for (let i = 0; i < 12; i++) for (const side of [0, 1]){ const x = side ? 14 + i * 20 : 4 + i * 20, y = side ? 122 : 152; disk(x, y - 1, 4, 'rgba(255,180,80,.3)'); R(x - 2, y, 5, 2, '#b86a3a'); R(x - 1, y - 2, 3, 2, '#ffb84a'); R(x, y - 4, 1, 3, '#fff0a0'); }
+  } else if (key === 'dryriver'){    // 5부: 물을 가둔 뱀 때문에 말라 갈라진 강바닥
+    for (let y = 0; y < 76; y++) R(0, y, W, 1, mix('#f0c890', '#fff4e0', y / 76));
+    disk(60, 26, 13, '#fff8e0'); disk(60, 26, 10, '#ffe9a0');
+    for (let x = 0; x < W; x++){ const h2 = 12 + Math.round(Math.sin(x * 0.03 + 1) * 6 + Math.sin(x * 0.11) * 2); R(x, 76 - h2, 1, h2 + 2, '#c8a070'); }
+    for (const [x, y] of [[30, 70], [190, 66], [224, 72]]){ R(x, y - 16, 2, 18, '#5a4630'); R(x - 5, y - 14, 5, 1, '#5a4630'); R(x + 2, y - 10, 6, 1, '#5a4630'); R(x - 3, y - 18, 3, 1, '#5a4630'); }
+    R(0, 76, W, 84, '#c8a878');
+    for (let y = 80; y < 118; y += 5) R(0, y, W, 1, 'rgba(160,120,80,.3)');
+    for (let i = 0; i < 6; i++){ const w2 = 44 - Math.abs(i - 3) * 8; R(150 - (w2 >> 1), 96 + i, w2, 1, '#b89868'); }
+    for (let k = 0; k < 26; k++){ let x = (rnd() * W) | 0, y = 80 + ((rnd() * 76) | 0); for (let i = 0; i < 14; i++){ R(x, y, 2, 1, '#7a5a3a'); x += rnd() < 0.5 ? 2 : -1; y += rnd() < 0.6 ? 1 : 0; if (rnd() < 0.2) R(x, y - 2, 1, 3, '#7a5a3a'); } }
+    for (let k = 0; k < 20; k++){ const x = (rnd() * W) | 0, y = 82 + ((rnd() * 74) | 0); R(x, y, 5, 1, '#e0c8a0'); }
+  } else if (key === 'mandara'){     // 5부: 젖빛 바다를 휘젓는 만다라 산 — 큰 뱀을 밧줄 삼아 감고, 가라앉는 산을 큰 거북이 받쳤다
+    for (let y = 0; y < 84; y++) R(0, y, W, 1, mix('#bfd8f0', '#fff4e8', y / 84));
+    for (let k = 0; k < 5; k++){ const x = (rnd() * W) | 0, y = 6 + ((rnd() * 26) | 0); R(x, y, 40, 3, 'rgba(255,255,255,.8)'); R(x + 8, y - 3, 22, 3, 'rgba(255,255,255,.6)'); }
+    for (let y = 82; y < 122; y++) R(0, y, W, 1, mix('#f4f6f0', '#d8e4e8', (y - 82) / 40));
+    for (let k = 0; k < 50; k++){ const x = (rnd() * W) | 0, y = 84 + ((rnd() * 36) | 0); R(x, y, 5 + ((rnd() * 9) | 0), 1, 'rgba(160,190,210,.5)'); }
+    for (let i = 0; i < 8; i++){ const w2 = 78 - i * 6; R(120 - (w2 >> 1), 104 - i, w2, 1, i < 2 ? '#3a5a3a' : '#5a7a4a'); } for (let x = 92; x < 150; x += 10) R(x, 98, 1, 6, '#3a5a3a');
+    for (let i = 0; i < 88; i++){ const k = i / 88, w2 = Math.round(8 + k * 46 + Math.sin(i * 0.5) * 2), x0 = (120 - w2 / 2) | 0; R(x0, 8 + i, w2, 1, mix('#7a9a7a', '#4a6a5a', k)); R(x0, 8 + i, Math.max(1, w2 >> 3), 1, '#9ab89a'); }
+    R(116, 4, 8, 6, '#eef4f4');
+    for (const [y0, w2] of [[34, 30], [54, 42], [74, 54]]) for (let x = -(w2 >> 1); x < (w2 >> 1); x++){ const yy = y0 + Math.round(x * 0.22); R(120 + x, yy, 1, 5, Math.floor((x + 60) / 4) % 2 ? '#3a8a7a' : '#2a6a5e'); R(120 + x, yy, 1, 1, '#8ad0b8'); }
+    for (let x = 0; x < 94; x++){ R(x, 42 + Math.round(x * 0.28), 1, 5, (x >> 2) % 2 ? '#3a8a7a' : '#2a6a5e'); R(x, 42 + Math.round(x * 0.28), 1, 1, '#8ad0b8'); }
+    for (let x = 147; x < W; x++){ R(x, 80 - Math.round((x - 147) * 0.3), 1, 5, (x >> 2) % 2 ? '#3a8a7a' : '#2a6a5e'); R(x, 80 - Math.round((x - 147) * 0.3), 1, 1, '#8ad0b8'); }
+    for (let x = 78; x < 164; x += 3) R(x, 104 + Math.round(Math.sin(x * 0.2)), 3, 2, '#ffffff');
+    R(0, 118, W, 42, '#d8d8c8'); for (let k = 0; k < 36; k++) R((rnd() * W) | 0, 120 + ((rnd() * 38) | 0), 3, 1, '#b8b8a8');
+    for (let x = 0; x < W; x += 3) R(x, 116 + Math.round(Math.sin(x * 0.12) * 1.5), 3, 3, 'rgba(255,255,255,.85)');
+  } else if (key === 'milksea'){     // 5부: 보물이 솟아오르는 젖빛 바다(달 · 소원 나무 · 빛나는 연꽃)
+    for (let y = 0; y < 80; y++) R(0, y, W, 1, mix('#ffd8c0', '#fffaf0', y / 80));
+    disk(52, 80, 17, '#fff8e0'); disk(52, 80, 13, '#ffeeb0');
+    R(118, 50, 4, 32, '#a8885a'); for (const [dx, dy, r] of [[0, -6, 11], [-10, 0, 8], [10, 0, 8], [-4, 6, 7], [6, 6, 7]]) disk(120 + dx, 44 + dy, r, '#f0d070'); for (const [dx, dy, r] of [[-2, -8, 7], [-10, -2, 5], [8, -2, 5]]) disk(120 + dx, 44 + dy, r, '#ffe9a0');
+    for (let k = 0; k < 12; k++) R(106 + ((rnd() * 28) | 0), 32 + ((rnd() * 22) | 0), 2, 2, k % 2 ? '#ff9ab0' : '#ffffff');
+    for (let y = 78; y < 122; y++) R(0, y, W, 1, mix('#fbfbf4', '#dce8ec', (y - 78) / 44));
+    for (let i = 0; i < 5; i++) R(40 + i * 2, 82 + i * 3, 24 - i * 4, 1, 'rgba(255,238,170,.7)');
+    for (let k = 0; k < 56; k++){ const x = (rnd() * W) | 0, y = 80 + ((rnd() * 40) | 0); R(x, y, 5 + ((rnd() * 9) | 0), 1, 'rgba(170,200,215,.5)'); }
+    disk(190, 84, 17, 'rgba(255,220,160,.35)');
+    for (const [dx, h2, c0] of [[-12, 8, '#f08ab0'], [12, 8, '#f08ab0'], [-6, 13, '#f8a8c4'], [6, 13, '#f8a8c4'], [0, 16, '#ffc8dc']]) for (let i = 0; i < h2; i++){ const w2 = Math.round(Math.sin((i + 1) / (h2 + 1) * Math.PI) * 5); R(190 + dx - w2, 92 - i, w2 * 2 + 1, 1, c0); }
+    R(173, 92, 35, 3, '#5a9a6a'); disk(190, 80, 3, '#fff6c0');
+    for (const x of [86, 150, 224]) for (let i = 0; i < 40; i++) R(x + Math.round(Math.sin(i * 0.5) * 2), 100 - i * 2, 2, 1, `rgba(255,216,120,${(0.6 * (1 - i / 40)).toFixed(2)})`);
+    for (let k = 0; k < 20; k++){ const x = (rnd() * W) | 0, y = 20 + ((rnd() * 70) | 0); R(x, y - 1, 1, 3, '#ffe9a0'); R(x - 1, y, 3, 1, '#ffe9a0'); }
+    R(0, 118, W, 42, '#e8e4d4'); for (let k = 0; k < 36; k++) R((rnd() * W) | 0, 120 + ((rnd() * 38) | 0), 3, 1, '#c8c4b0');
+    for (let x = 0; x < W; x += 3) R(x, 116 + Math.round(Math.sin(x * 0.12) * 1.5), 3, 3, 'rgba(255,255,255,.9)');
+  } else if (key === 'eclipse'){     // 5부: 라후가 해를 물어 어두워진 낮
+    for (let y = 0; y < 112; y++) R(0, y, W, 1, mix('#1a1438', '#6a4a6a', y / 112));
+    for (let k = 0; k < 30; k++) R((rnd() * W) | 0, (rnd() * 70) | 0, 1, 1, '#d8d0f0');
+    disk(120, 40, 30, 'rgba(255,200,120,.18)'); disk(120, 40, 24, 'rgba(255,220,150,.35)'); disk(120, 40, 18, '#ffe9a0'); disk(120, 40, 15, '#fff8d8');
+    for (let i = 0; i < 26; i++) R(142 + i * 3, 34 + Math.round(Math.sin(i * 0.5) * 4) - i, 5, 4, `rgba(18,14,36,${(0.9 - i * 0.03).toFixed(2)})`);
+    disk(129, 37, 16, '#120e24'); R(135, 27, 3, 3, '#ff5a3a'); for (let i = 0; i < 4; i++) R(113 + i * 3, 43 + i * 2, 2, 3, '#f4f0e0');
+    for (let x = 0; x < W; x++){ const h2 = 14 + Math.round(Math.sin(x * 0.04) * 7 + Math.sin(x * 0.15) * 2); R(x, 112 - h2, 1, h2 + 6, '#2a1e3a'); }
+    R(0, 116, W, 44, '#4a3a52'); for (let k = 0; k < 36; k++) R((rnd() * W) | 0, 118 + ((rnd() * 40) | 0), 3, 1, '#3a2c44');
+  } else if (key === 'yamaroad'){    // 5부: 어스름한 야마의 길과 죽음의 집 앞
+    for (let y = 0; y < 100; y++) R(0, y, W, 1, mix('#2a2a4a', '#9a8a9a', y / 100));
+    for (let k = 0; k < 24; k++) R((rnd() * W) | 0, (rnd() * 50) | 0, 1, 1, '#c8c8e0');
+    disk(196, 28, 9, '#d8d8e8'); disk(200, 26, 8, '#3c3c5a');
+    for (let x = 0; x < W; x++){ const h2 = 10 + Math.round(Math.sin(x * 0.035) * 6 + Math.sin(x * 0.12) * 2); R(x, 100 - h2, 1, h2 + 2, '#3a3a4c'); }
+    R(84, 66, 72, 36, '#4a4a58'); R(76, 60, 88, 7, '#2e2e3c'); R(82, 56, 76, 5, '#3a3a48'); R(108, 76, 24, 26, '#1e1e2a'); R(119, 76, 2, 26, '#4a4a58'); R(96, 72, 6, 6, '#e8c878'); R(138, 72, 6, 6, '#e8c878');
+    R(0, 100, W, 60, '#5a5a64');
+    for (let y = 100; y < H; y++){ const k = (y - 100) / 60, w2 = 24 + k * 110; R(Math.round(120 - w2 / 2), y, Math.round(w2), 1, mix('#7a7a82', '#8a8a92', k)); }
+    for (let k = 0; k < 40; k++) R((rnd() * W) | 0, 102 + ((rnd() * 56) | 0), 3, 1, '#4a4a54');
+    for (const [x, y, s] of [[40, 118, 1], [200, 118, 1], [70, 106, 0.6], [172, 106, 0.6]]) for (let i = 0; i < 4; i++){ const w2 = Math.round((12 - i * 3) * s); R(x - (w2 >> 1), y - Math.round((i + 1) * 5 * s), w2, Math.max(2, Math.round(4 * s)), i % 2 ? '#8a8a92' : '#9a9aa2'); }
+    R(22, 58, 3, 44, '#2a2a34'); R(14, 66, 8, 2, '#2a2a34'); R(25, 62, 10, 2, '#2a2a34'); R(12, 60, 2, 6, '#2a2a34'); R(34, 56, 2, 6, '#2a2a34');
+  } else if (key === 'sumeru'){      // 5부: 수미산 중턱 — 구름 위의 네 문(동·남·서·북)
+    for (let y = 0; y < 112; y++) R(0, y, W, 1, mix('#5a9ae0', '#eaf4fc', y / 112));
+    for (let i = 0; i < 4; i++){ const w2 = 56 + i * 46, x0 = 120 - (w2 >> 1), y0 = 2 + i * 19; R(x0, y0, w2, 20, mix('#e8e0c8', '#b0a894', i / 4)); R(x0, y0, w2, 2, '#fff8e0'); R(x0 + w2 - 6, y0 + 2, 6, 18, mix('#c8c0a8', '#8c8472', i / 4)); for (let x = x0 + 8; x < x0 + w2 - 8; x += 12) R(x, y0 + 8, 4, 8, mix('#a8a08c', '#787060', i / 4)); }
+    for (let k = 0; k < 8; k++){ const x = (rnd() * W) | 0, y = 16 + ((rnd() * 52) | 0), w2 = 30 + ((rnd() * 30) | 0); R(x - (w2 >> 1), y, w2, 4, 'rgba(255,255,255,.85)'); R(x - (w2 >> 2), y - 3, w2 >> 1, 3, 'rgba(255,255,255,.7)'); }
+    [['#3a6aa8', 24], ['#c8382f', 80], ['#e8e8f0', 136], ['#3a8a5a', 192]].forEach(([c0, x]) => { R(x + 4, 90, 16, 26, '#2a2a3a'); R(x, 84, 4, 32, c0); R(x + 20, 84, 4, 32, c0); R(x + 11, 90, 2, 26, c0); R(x - 3, 78, 30, 6, mix(c0, '#000000', 0.25)); R(x - 5, 75, 34, 3, '#d8a83a'); });
+    R(0, 114, W, 46, '#c8c0b0'); for (let y = 114; y < H; y += 6) R(0, y, W, 1, '#a8a090');
+    for (let k = 0; k < 20; k++) R((rnd() * W) | 0, 116 + ((rnd() * 42) | 0), 4, 1, '#e0d8c8');
+  } else if (key === 'indranet'){    // 5부: 제석천 궁전의 구슬 그물 — 구슬마다 다른 모든 구슬이 비친다
+    for (let y = 0; y < 118; y++) R(0, y, W, 1, mix('#1a2a6a', '#6a8ad8', y / 118));
+    for (let k = -8; k < 16; k++) for (let i = 0; i < 118; i++){ R(k * 24 + i, i, 1, 1, 'rgba(255,230,160,.4)'); R(k * 24 + 142 - i, i, 1, 1, 'rgba(255,230,160,.4)'); }
+    for (let r = 0; r < 9; r++){ const y = 11 + r * 12; for (let x = ((71 + 12 * (r - 5)) % 24 + 24) % 24, q = 0; x < W; x += 24, q++){ const cc = ['#ffffff', '#ffe9a0', '#9ae0ff', '#ffb0d0', '#b0ffc8'][(r * 3 + q * 2) % 5]; if ((r + q) % 3 === 0) disk(x, y, 4, 'rgba(255,255,255,.2)'); disk(x, y, 2, cc); R(x - 1, y - 1, 1, 1, '#ffffff'); } }
+    for (const px of [8, 222]){ R(px, 0, 10, 118, '#e8c048'); R(px + 7, 0, 3, 118, '#b88a2e'); R(px, 0, 2, 118, '#fff0a8'); R(px - 3, 108, 16, 10, '#b88a2e'); R(px - 3, 0, 16, 6, '#c8382f'); }
+    R(0, 116, W, 44, '#dfe6f4'); for (let y = 122; y < H; y += 9) R(0, y, W, 1, '#b8c4dc'); for (let x = 0; x < W; x += 30) R(x, 116, 1, 44, '#b8c4dc');
+    for (let k = 0; k < 14; k++){ const x = (rnd() * W) | 0, y = 120 + ((rnd() * 36) | 0); R(x, y, 6, 1, '#ffffff'); }
+  } else if (key === 'bodhi'){       // 5부: 마라의 들 — 큰 나무 아래 빈 자리(깨달은 분은 그리지 않는다: 풀 방석을 깐 돌만)
+    for (let y = 0; y < 110; y++) R(0, y, W, 1, mix('#3a2a6a', '#ffb878', y / 110));
+    for (let k = 0; k < 26; k++) R(70 + ((rnd() * 170) | 0), (rnd() * 46) | 0, 1, 1, '#fff0d0');
+    for (let x = 0; x < W; x++){ const h2 = 8 + Math.round(Math.sin(x * 0.03 + 2) * 5 + Math.sin(x * 0.11) * 2); R(x, 110 - h2, 1, h2 + 4, '#4a2a5a'); }
+    R(24, 46, 16, 70, '#6a5238'); R(35, 46, 5, 70, '#4e3c28'); R(16, 108, 32, 8, '#6a5238'); R(10, 112, 44, 4, '#5a4630'); for (const dx of [-14, 22, 30]) R(24 + dx, 54, 2, 58, '#7a6248');
+    for (const [dx, dy, r] of [[0, -8, 30], [-34, 6, 22], [34, 6, 22], [-18, -22, 20], [22, -20, 22], [58, 16, 16], [78, 26, 10]]) disk(32 + dx, 36 + dy, r, '#2f6a3a');
+    for (const [dx, dy, r] of [[-4, -12, 24], [-36, 2, 16], [30, 2, 16], [-20, -26, 14], [18, -24, 16], [56, 12, 10]]) disk(32 + dx, 36 + dy, r, '#3f8a4a');
+    for (let k = 0; k < 60; k++){ const a = rnd() * Math.PI * 2, rr = rnd() * 50, x = 36 + Math.round(Math.cos(a) * rr * 1.2), y = 34 + Math.round(Math.sin(a) * rr * 0.7); R(x, y, 2, 2, k % 3 ? '#5aa85a' : '#8ad07a'); }
+    for (let i = 0; i < 46; i++) R(18 + Math.round(i * 0.1), 70 + i, 30 - Math.round(i * 0.2), 1, 'rgba(255,240,190,.07)');
+    R(0, 114, W, 46, '#5a4a6a'); for (let k = 0; k < 60; k++){ const x = (rnd() * W) | 0, y = 116 + ((rnd() * 42) | 0); R(x, y, 1, 3, '#4a3a5a'); if (k % 4 === 0) R(x - 1, y - 1, 3, 2, ['#f08ab0', '#ffd24a', '#ffffff'][k % 3]); }
+    for (let i = 0; i < 6; i++){ const w2 = 32 - i * 2; R(32 - (w2 >> 1), 122 - i, w2, 1, i < 2 ? '#8a8478' : '#a8a296'); } R(19, 115, 26, 2, '#8ab86a'); R(21, 114, 22, 1, '#a8d088');
   } else if (key === 'skyrift'){
     for (let y = 0; y < H; y++) R(0, y, W, 1, mix('#000000', '#1a1028', y / H));
     for (let k = 0; k < 40; k++) R((rnd() * W) | 0, (rnd() * H) | 0, 1, 1, rnd() < 0.5 ? '#8a6aaa' : '#ffffff');
