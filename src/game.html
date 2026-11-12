@@ -749,6 +749,7 @@ body.portrait .scene > .btn-boss{bottom:auto;top:calc(var(--cvt) + var(--cvh) - 
 body.hell .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,120,60,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#24121a,#0f070a)}
 body.busang .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,150,90,.16),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1e1a2c,#0e0c18)}
 body.sea .page{background:radial-gradient(60% 50% at 85% 0%,rgba(90,216,255,.16),transparent 70%),repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 2px,transparent 2px 16px),linear-gradient(180deg,#12283c,#08121e)}
+body.india .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,176,74,.18),transparent 70%),repeating-linear-gradient(60deg,rgba(255,255,255,.012) 0 2px,transparent 2px 15px),linear-gradient(180deg,#2c1c3e,#120a1e)}
 body.kunlun .page{background:radial-gradient(60% 50% at 85% 0%,rgba(150,230,200,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 14px),linear-gradient(180deg,#16242a,#0b1216)}
 body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,.14),transparent 70%),repeating-linear-gradient(45deg,rgba(255,255,255,.015) 0 2px,transparent 2px 14px),linear-gradient(180deg,#1c2238,#0e1222)}
 /* 여정 지도: 이승→저승→천계→부상(→곤륜) 땅을 디오라마 그림으로 이어 보여 준다 */
@@ -862,6 +863,9 @@ i.dust{display:inline-block;width:12px;height:12px;border-radius:3px;background:
 .jm-band.w5{background:linear-gradient(180deg,#1e5a86,#0c2440)}
 .jm-band.w6{background:linear-gradient(180deg,#2a6a7a,#0e2a3a)}
 .jm-band.w7{background:linear-gradient(180deg,#1a2a5a,#060a1e)}
+.jm-band.w8{background:linear-gradient(180deg,#7a4a22,#2a1810)}
+.jm-band.w9{background:linear-gradient(180deg,#5a6a8a,#1a2238)}
+.jm-band.w10{background:linear-gradient(180deg,#4a3a7a,#140e2a)}
 .jm-band.s-lock h3,.jm-band.s-lock p{opacity:.55}
 .jm-path{position:absolute;left:0;top:0;pointer-events:none}
 .jm-node{position:absolute;width:124px;padding:0;border:0;background:none;color:var(--text);cursor:pointer;text-align:center;transform:translate(-50%,-37px);-webkit-tap-highlight-color:transparent}
@@ -2782,6 +2786,9 @@ const CHAPTERS = [
   '46장 · 마지막 시련', '47장 · 바다의 노래', '48장 · 활 쏘는 사람', '49장 · 토끼의 간', '50장 · 처용의 춤', '51장 · 해와 달의 바위', '52장 · 용궁의 문',
   '53장 · 바람의 할머니', '54장 · 섬을 만든 할머니', '55장 · 인당수', '56장 · 칠산 바다', '57장 · 이어도', '58장 · 두 개의 해', '59장 · 용이 못 된 것',
   '60장 · 숨비소리', '61장 · 고래의 뱃속', '62장 · 용들의 무덤', '63장 · 물과 불의 뿌리', '64장 · 꽃 피우기 내기', '65장 · 첫 거짓', '66장 · 형의 자리', '67장 · 물의 신화',
+  '68장 · 돌탑을 실은 배', '69장 · 황금 사슴', '70장 · 독수리 왕', '71장 · 원숭이 나라', '72장 · 바다에 놓은 다리', '73장 · 잠자는 거인', '74장 · 열 머리 왕', '75장 · 돌아온 등불',
+  '76장 · 물을 가둔 뱀', '77장 · 시든 꽃목걸이', '78장 · 산을 돌려라', '79장 · 푸른 독', '80장 · 열네 가지 보물', '81장 · 영약', '82장 · 해를 무는 머리',
+  '83장 · 죽음을 따라간 사람', '84장 · 세 가지 소원', '85장 · 네 하늘 문', '86장 · 구슬 그물', '87장 · 세 딸', '88장 · 마라의 군대', '89장 · 땅을 짚다', '90장 · 끝없는 신화',
 ];
 const STORY_GEM_K = 0.6;   // 이야기 보상 보석 배율(보석이 너무 흔하지 않게)
 const MAIN_Q = [
@@ -3470,12 +3477,125 @@ const MAIN_Q = [
       ['daewangam', 'm:chaos:#fff2c8,hero,kkachi', 'dark', [['까치', '그럼 이제 정말 끝난 거죠? 이번엔 정말로요!'], ['태초의 신', '… 아우의 귀에 「대야를 바꾸라」고 속삭인 것이 있다.'], ['태초의 신', '그것은 이 바다에서 난 것이 아니다. 바다 밖에서 왔다.']]],
       ['daewangam', 'hero,kkachi', '', [['나', '바다 밖이라면…'], ['까치', '{name}님, 저기요! 물 위에 뭐가 떠 있어요!']]],
       ['daewangam', 'munmu,hero,kkachi', 'sparkle', [['', '달빛 아래 배 한 척이 떠 있었어요. 붉은 돛, 그리고 갑판에 실린 낯선 돌탑.'], ['문무대왕', '아득한 옛날, 남쪽 가야에 먼 나라 공주가 돌탑을 싣고 건너왔다 하였다. 풍랑을 재우는 탑이었다지.'], ['문무대왕', '저 배는 그 뱃길을 거꾸로 가려는 모양이구나.']]],
-      ['daewangam', 'hero,kkachi', 'light', [['', '물의 신화는 무엇이었나 — 가라앉은 한마디를 건져 올려, 제 이름으로 불러 준 이야기였어요.'], ['', '4부 「물의 신화」 끝. 돌탑을 실은 배가 가는 곳, 천축의 이야기는 다음에 이어져요.']]]]},
+      ['daewangam', 'hero,kkachi', 'light', [['', '물의 신화는 무엇이었나 — 가라앉은 한마디를 건져 올려, 제 이름으로 불러 준 이야기였어요.'], ['', '4부 「물의 신화」 끝. 돌탑을 실은 배가 가는 곳, 5부 「끝없는 신화」가 이어져요.']]]]},
+
+  // @@W8Q-BEGIN (5부 천축 · 세계 8 — 뼈대: 이야기 갈래의 글(연출 c/cs)로 이 사이를 바꿔 끼운다)
+  {ch:68, t:'천축으로', s:'[수련] → [환생]의 「란카 길로 건너기」로 돌탑을 실은 배를 타고 천축 바닷가에 닿아요. 레벨·장비·능력치는 그대로예요.', k:'world', n:8, gems:127000},
+  {ch:68, t:'낯선 바닷가', s:'란카 길 1-3에 닿아요.', k:'s8', n:3, gems:127500},
+  {ch:68, t:'바닷가의 락샤사', s:'란카 길 1-5에 닿아요(1-4의 바닷가의 락샤사를 물리쳐요).', k:'s8', n:5, gems:128500, myth:'pasa'},
+  {ch:68, t:'숲으로 쫓겨난 왕자', s:'레벨 551을 달성해요.', k:'l8', n:551, gems:129000},
+
+  {ch:69, t:'숲의 오두막', s:'란카 길 1-7에 닿아요.', k:'s8', n:7, gems:129500},
+  {ch:69, t:'황금 사슴', s:'란카 길 1-8에 닿으면 열리는 레이드 「황금 사슴」을 넘어요.', k:'raidK', key:'r0', n:1, gems:131000},
+  {ch:69, t:'빈 오두막', s:'레벨 552를 달성해요.', k:'l8', n:552, gems:131500},
+
+  {ch:70, t:'하늘 수레의 그림자', s:'란카 길 1-9에 닿아요.', k:'s8', n:9, gems:132000},
+  {ch:70, t:'독수리 왕', s:'란카 길 2-1에 닿아요(라바나의 하늘 수레를 물리쳐요).', k:'s8', n:11, gems:133000},
+  {ch:70, t:'마지막 숨', s:'레벨 554를 달성해요.', k:'l8', n:554, gems:133500},
+
+  {ch:71, t:'원숭이 나라', s:'란카 길 2-4에 닿아요.', k:'s8', n:14, gems:134000},
+  {ch:71, t:'여섯 번째 이름', s:'레벨 555가 되면 [수련] → [전직]에서 다섯 스승의 시험을 넘어 6차 전직해요.', k:'job', n:6, gems:136000},
+  {ch:71, t:'어디서 본 얼굴', s:'레벨 556을 달성해요.', k:'l8', n:556, gems:136500},
+  {ch:71, t:'잊고 있던 힘', s:'란카 길 2-9에 닿아요(2-8의 원숭이 왕 발리의 시험을 넘어요).', k:'s8', n:19, gems:137500},
+
+  {ch:72, t:'이름을 새긴 돌', s:'레벨 558을 달성해요.', k:'l8', n:558, gems:138000},
+  {ch:72, t:'다람쥐의 모래', s:'란카 길 2-10에 닿아요.', k:'s8', n:20, gems:138500},
+  {ch:72, t:'그림자를 무는 것', s:'란카 길 3-1에 닿아요(바다 괴물 심히카를 물리쳐요).', k:'s8', n:21, gems:139500},
+  {ch:72, t:'다리를 놓는 새', s:'레벨 559를 달성해요.', k:'l8', n:559, gems:140000},
+
+  {ch:73, t:'황금 성 아래', s:'란카 길 3-5에 닿아요.', k:'s8', n:25, gems:140500},
+  {ch:73, t:'여섯 달의 잠', s:'레벨 561을 달성해요.', k:'l8', n:561, gems:141500},
+  {ch:73, t:'잠자는 거인', s:'란카 길 3-10에 닿으면 열리는 레이드 「잠자는 거인」을 넘어요.', k:'raidK', key:'r1', n:1, gems:143000},
+  {ch:73, t:'형의 곁', s:'레벨 562를 달성해요.', k:'l8', n:562, gems:143500},
+
+  {ch:74, t:'란카의 성문', s:'란카 길 4-4에 닿아요.', k:'s8', n:34, gems:144500},
+  {ch:74, t:'열 개의 얼굴', s:'레벨 563을 달성해요.', k:'l8', n:563, gems:145500},
+  {ch:74, t:'열 머리 왕', s:'란카 길 4-7에 닿으면 열리는 레이드 「열 머리 왕」을 넘어요.', k:'raidK', key:'r2', n:1, gems:147500},
+  {ch:74, t:'속삭인 자', s:'레벨 564를 달성해요.', k:'l8', n:564, gems:148000},
+
+  {ch:75, t:'돌아가는 길', s:'란카 길 4-10에 닿아요.', k:'s8', n:40, gems:149000},
+  {ch:75, t:'집집마다 등불', s:'레벨 565를 달성해요.', k:'l8', n:565, gems:150000},
+  {ch:75, t:'돌아온 등불', s:'레벨 566(란카 길 만렙)에 닿아요.', k:'l8', n:566, gems:152000},
+  // @@W8Q-END
+
+  // @@W9Q-BEGIN (5부 천축 · 세계 9 — 뼈대: 이야기 갈래의 글(연출 c/cs)로 이 사이를 바꿔 끼운다)
+  {ch:76, t:'젖의 바다로', s:'[수련] → [환생]의 「젖의 바다로 건너기」로 북쪽으로 달아난 속삭임을 쫓아가요. 레벨·장비·능력치는 그대로예요.', k:'world', n:9, gems:153000},
+  {ch:76, t:'마른 강바닥', s:'젖의 바다 1-3에 닿아요.', k:'s9', n:3, gems:153500},
+  {ch:76, t:'성자의 뼈', s:'레벨 567을 달성해요.', k:'l9', n:567, gems:154500},
+  {ch:76, t:'물을 가둔 뱀', s:'젖의 바다 1-6에 닿으면 열리는 레이드 「물을 가둔 뱀」을 넘어요.', k:'raidK', key:'c0', n:1, gems:156000, myth:'vajra'},
+
+  {ch:77, t:'풀려난 물길', s:'젖의 바다 1-8에 닿아요.', k:'s9', n:8, gems:156500},
+  {ch:77, t:'시든 꽃목걸이', s:'레벨 568을 달성해요.', k:'l9', n:568, gems:157500},
+  {ch:77, t:'기세 오른 아수라', s:'젖의 바다 2-1에 닿아요(기세 오른 아수라 장수를 물리쳐요).', k:'s9', n:11, gems:158500},
+  {ch:77, t:'작은 무례', s:'레벨 570을 달성해요.', k:'l9', n:570, gems:159500},
+
+  {ch:78, t:'만다라 산', s:'젖의 바다 2-4에 닿아요.', k:'s9', n:14, gems:160000},
+  {ch:78, t:'뱀을 밧줄 삼아', s:'레벨 572를 달성해요.', k:'l9', n:572, gems:161000},
+  {ch:78, t:'가라앉는 산', s:'젖의 바다 2-8에 닿아요.', k:'s9', n:18, gems:162000},
+  {ch:78, t:'줄다리기', s:'젖의 바다 3-1에 닿아요(밧줄을 당기는 아수라 대장을 물리쳐요).', k:'s9', n:21, gems:163500},
+
+  {ch:79, t:'먼저 올라온 것', s:'레벨 574를 달성해요.', k:'l9', n:574, gems:164500},
+  {ch:79, t:'푸른 독', s:'젖의 바다 3-7에 닿아요(3-6의 독 할라할라의 방울을 막아요).', k:'s9', n:27, gems:166000},
+  {ch:79, t:'검은 물과 같은 빛', s:'레벨 576을 달성해요.', k:'l9', n:576, gems:167000},
+
+  {ch:80, t:'달과 흰 코끼리', s:'젖의 바다 3-9에 닿아요.', k:'s9', n:29, gems:168000},
+  {ch:80, t:'소원 나무', s:'레벨 577을 달성해요.', k:'l9', n:577, gems:169000},
+  {ch:80, t:'보물을 노리는 손', s:'젖의 바다 4-2에 닿아요(4-1의 보물을 노리는 아수라를 물리쳐요).', k:'s9', n:32, gems:170500},
+  {ch:80, t:'연꽃 위의 빛', s:'레벨 578을 달성해요.', k:'l9', n:578, gems:171500},
+
+  {ch:81, t:'마침내 영약', s:'레벨 579를 달성해요.', k:'l9', n:579, gems:172500},
+  {ch:81, t:'줄에 끼어든 자', s:'젖의 바다 4-4에 닿으면 열리는 레이드 「둔갑한 아수라」를 넘어요.', k:'raidK', key:'c1', n:1, gems:174500, myth:'amrita'},
+  {ch:81, t:'나눠 마신 뒤', s:'레벨 580을 달성해요.', k:'l9', n:580, gems:175500},
+
+  {ch:82, t:'머리만 남은 것', s:'젖의 바다 4-7에 닿아요.', k:'s9', n:37, gems:176500},
+  {ch:82, t:'어두워진 낮', s:'레벨 581을 달성해요.', k:'l9', n:581, gems:177500},
+  {ch:82, t:'해를 무는 머리', s:'젖의 바다 4-8에 닿으면 열리는 레이드 「해를 무는 머리」를 넘어요.', k:'raidK', key:'c2', n:1, gems:179500},
+  {ch:82, t:'다시 뜬 해', s:'젖의 바다 4-10에 닿아요.', k:'s9', n:40, gems:180000},
+  {ch:82, t:'북쪽의 산', s:'레벨 583(젖의 바다 만렙)에 닿아요.', k:'l9', n:583, gems:181000},
+  // @@W9Q-END
+
+  // @@W10Q-BEGIN (5부 천축 · 세계 10 — 뼈대: 이야기 갈래의 글(연출 c/cs)로 이 사이를 바꿔 끼운다)
+  {ch:83, t:'수미산으로', s:'[수련] → [환생]의 「수미산으로 건너기」로 세상 한가운데 산을 올라요. 레벨·장비·능력치는 그대로예요.', k:'world', n:10, gems:182000},
+  {ch:83, t:'야마의 길', s:'수미산 1-4에 닿아요.', k:'s10', n:4, gems:182500},
+  {ch:83, t:'죽음을 따라간 사람', s:'레벨 584를 달성해요.', k:'l10', n:584, gems:183500},
+  {ch:83, t:'야마의 시험', s:'수미산 2-1에 닿아요(길목을 지키는 네 눈 박이 개를 넘어요).', k:'s10', n:11, gems:185000},
+
+  {ch:84, t:'죽음의 집 앞에서', s:'레벨 585를 달성해요.', k:'l10', n:585, gems:186000},
+  {ch:84, t:'사흘의 기다림', s:'레벨 586을 달성해요.', k:'l10', n:586, gems:187000},
+  {ch:84, t:'세 가지 소원', s:'레벨 587을 달성해요.', k:'l10', n:587, gems:188500},
+
+  {ch:85, t:'산 중턱의 문', s:'수미산 2-4에 닿아요.', k:'s10', n:14, gems:189500},
+  {ch:85, t:'절 문에서 보던 얼굴', s:'레벨 588을 달성해요.', k:'l10', n:588, gems:190500},
+  {ch:85, t:'네 하늘 문', s:'수미산 2-6에 닿으면 열리는 레이드 「사천왕의 문」을 넘어요.', k:'raidK', key:'u0', n:1, gems:192500},
+  {ch:85, t:'문 너머', s:'수미산 3-1에 닿아요(문을 지키는 돌 야차를 넘어요).', k:'s10', n:21, gems:193500},
+
+  {ch:86, t:'산꼭대기 궁전', s:'레벨 590을 달성해요.', k:'l10', n:590, gems:194500},
+  {ch:86, t:'구슬 그물', s:'수미산 3-5에 닿아요(3-4의 구슬에 비친 나를 넘어요).', k:'s10', n:25, gems:196000, myth:'jewel'},
+  {ch:86, t:'하늘님의 옛 얼굴', s:'레벨 591을 달성해요.', k:'l10', n:591, gems:197000},
+
+  {ch:87, t:'마라의 들', s:'수미산 3-7에 닿아요.', k:'s10', n:27, gems:198000},
+  {ch:87, t:'세 딸', s:'수미산 3-9에 닿아요(3-8의 세 딸의 환영을 지나요).', k:'s10', n:29, gems:199500},
+  {ch:87, t:'잃은 것들', s:'레벨 593을 달성해요.', k:'l10', n:593, gems:200500},
+
+  {ch:88, t:'쏟아지는 무기', s:'레벨 594를 달성해요.', k:'l10', n:594, gems:201500},
+  {ch:88, t:'마라의 군대', s:'수미산 4-2에 닿으면 열리는 레이드 「마라의 군대」를 넘어요.', k:'raidK', key:'u1', n:1, gems:204000},
+  {ch:88, t:'꽃이 된 화살', s:'레벨 595를 달성해요.', k:'l10', n:595, gems:205000},
+
+  {ch:89, t:'나무 아래 빈 자리', s:'수미산 4-6에 닿아요.', k:'s10', n:36, gems:206500},
+  {ch:89, t:'누가 증명하느냐', s:'레벨 597을 달성해요.', k:'l10', n:597, gems:208000},
+  {ch:89, t:'땅을 짚다', s:'수미산 4-8에 닿으면 열리는 레이드 「마라」를 넘어요.', k:'raidK', key:'u2', n:1, gems:212000},
+  {ch:89, t:'천마의 본모습', s:'수미산 4-10에 닿아요.', k:'s10', n:40, gems:213000},
+
+  {ch:90, t:'내려가는 길', s:'레벨 598을 달성해요.', k:'l10', n:598, gems:214000},
+  {ch:90, t:'마을 어귀', s:'레벨 599를 달성해요.', k:'l10', n:599, gems:216000},
+  {ch:90, t:'끝없는 신화', s:'레벨 600(5부 만렙)에 닿아요.', k:'l10', n:600, gems:230000},
+  // @@W10Q-END
 ];
 const PART1_END = MAIN_Q.findIndex(q => q.ch >= 26);
 const PART2_END = MAIN_Q.findIndex(q => q.ch >= 35), PART3_END = MAIN_Q.findIndex(q => q.ch >= 46), PART4A_END = MAIN_Q.findIndex(q => q.ch >= 53), PART4B_END = MAIN_Q.findIndex(q => q.ch >= 60);
+const PART4_END = MAIN_Q.findIndex(q => q.ch >= 68), PART5A_END = MAIN_Q.findIndex(q => q.ch >= 76), PART5B_END = MAIN_Q.findIndex(q => q.ch >= 83);   // 4부 끝(= 5부 첫 퀘스트 번호) · 란카 길 끝 · 젖의 바다 끝(물의 신화 9단계)
 // 이야기 판(quest.sv): 판마다 그때 들어 있던 이야기 수 — 그 뒤 '끝없는 신화'를 하던 저장은 새로 이어진 첫 퀘스트로 되돌린다. 5 = 3부까지 · 6 = 첫째 바다(52장)까지 · 7 = 둘째 바다(59장)까지 · 8 = 셋째 바다(67장, 4부 끝)까지
-const STORY_SV = 8, SV_END = {5:PART3_END, 6:PART4A_END, 7:PART4B_END};   // PART3_END: 3부까지 이야기 수(182) = 4부 첫 퀘스트 번호
+const STORY_SV = 9, SV_END = {5:PART3_END, 6:PART4A_END, 7:PART4B_END, 8:PART4_END};   // 9 = 5부 천축(90장)까지 — 8판(4부 끝) 뒤 '끝없는 신화'를 하던 저장은 68장 첫 퀘스트로   // PART3_END: 3부까지 이야기 수(182) = 4부 첫 퀘스트 번호
 const qShots = q => q.cs || (q.c ? [q.c] : []);   // 이야기 퀘스트의 연출 컷들(c 한 컷 · cs 여러 컷)
 //   // 2부까지 이야기 수(145)   // 1부 이야기 수(113)
 // 저승 이야기가 끝나는 곳(히든 퀘스트·두 번째 환생 조건)
@@ -3562,11 +3682,20 @@ const MYTHS = [
   {k:'silk', name:'세오녀의 비단', stat:'치명타 피해(경험치도 절반만큼)', icon:'pearl', mul:1, pow:100, story:true, w:5},
   {k:'okdae', name:'용왕의 옥대', stat:'체력(받는 피해 -15%)', icon:'mirror', mul:1, pow:80, story:true, w:5},
   {k:'lotus', name:'인당수 연꽃', stat:'체력(싸움마다 한 번 더 되살아남)', icon:'pearl', mul:1, pow:50, story:true, w:6},
-  {k:'yagwang', name:'용궁 야광주', stat:'엽전·경험치', icon:'pearl', mul:1, pow:60, story:true, vault:true, w:5},   // 물의 신화 7-2: 용궁 보물고 셋째 방에서만(7%)   // 물의 신화 7단계(55장): 불사약을 쓴 뒤에도 한 번 더(체력 40%)
+  {k:'yagwang', name:'용궁 야광주', stat:'엽전·경험치', icon:'pearl', mul:1, pow:60, story:true, vault:true, w:5},
+  // 5부 천축(물의 신화 9단계): 이야기 보상으로만. 파사석 = 기술 재사용 -%(skCdOf) · 금강저 = 공격력 +% + 치명타가 터지면 번개(그 피해의 VAJRA_BOLT) · 영약 호리병 = 저절로 차는 체력 +%·탕약 회복량 +절반% · 구슬 그물의 구슬 = 가진 신화 보물 하나마다 모든 신화 보물의 수치 +pow%(mythK)
+  {k:'pasa', name:'파사석', stat:'기술 재사용 감소', icon:'mirror', mul:1, pow:12, story:true, w:8},
+  {k:'vajra', name:'금강저', stat:'공격력(치명타에 번개 +10%)', icon:'sword', mul:1, pow:120, story:true, w:9},
+  {k:'amrita', name:'영약 호리병', stat:'체력 회복(탕약 회복량도 절반만큼)', icon:'flute', mul:1, pow:50, story:true, w:9},
+  {k:'jewel', name:'구슬 그물의 구슬', stat:'가진 신화 보물 하나마다 모든 보물 효과', icon:'pearl', mul:1, pow:2, story:true, w:10},   // 물의 신화 7-2: 용궁 보물고 셋째 방에서만(7%)   // 물의 신화 7단계(55장): 불사약을 쓴 뒤에도 한 번 더(체력 40%)
 ];
 // 신화 보물을 낄 수 있는 땅(2026-11 (44), 사용자 요청: 어디서든 나와도 그 부에 들어가야 착용 — 레벨 제한처럼). 2부 보물은 부상, 3부 보물은 곤륜부터
 const mythOk = m => S.world >= (m.w || 0);
-const mythReqText = m => (m.w || 0) >= 3 ? `${WORLD_NAME[m.w]}(${m.w - 1}부)` : WORLD_NAME[m.w || 0];
+const mythReqText = m => (m.w || 0) >= 3 ? `${WORLD_NAME[m.w]}(${partOfW(m.w)}부)` : WORLD_NAME[m.w || 0];   // (9단계에 고침) 남쪽 바다 보물이 「5부」로 나오던 것
+// 구슬 그물의 구슬(5부 86장): 가진 신화 보물(이 구슬 포함) 하나마다 모든 신화 보물의 수치 +pow%. 수치로 읽는 곳(공격력·체력·치명타 피해·기술 피해·엽전/경험치·보스 피해·재사용·회복)에 mythK()를 곱한다
+const VAJRA_BOLT = 0.1;
+let mythKc = null;
+const mythK = () => mythKc != null ? mythKc : (mythKc = S.myth.jewel > 0 && mythOk(MYTHS.find(m => m.k === 'jewel')) ? 1 + S.myth.jewel / 100 * MYTHS.filter(m => S.myth[m.k] > 0).length : 1);
 const RAID_MYTH_P = 0.012;   // (물의 신화) 2% → 1.2%
 const MT_BY = Object.fromEntries(MYTHS.map(m => [m.k, m]));   // 레이드를 이기면 이 확률로 아무 신화 보물(이야기·제작 것 빼고 모두 가운데, 아직 못 끼는 것도)
 const mythPower = (m, D) => m.pow || Math.round((10 + D) * m.mul);
@@ -3925,7 +4054,7 @@ const HEAVEN_K = 1.5;   // 천계 몬스터 체력 배율(2차 전직만큼 세�
 const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.02, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
 const mobHp   = s => 20 * Math.pow(CURVE.hp, s - 1) * Math.pow(CURVE.hp2, Math.max(0, s - CURVE.knee));
 const mobGold = s => 3 * Math.pow(CURVE.gold, s - 1);
-const EXP_K = [0.12, 0.4, 0.62, 2.8, 1.25, 0.058, 0.0213, 0.0235];   // [5] 동해(물의 신화 5단계): 레벨 16개(500 → 516)를 약 20시간에 — 4부 진행 시뮬(tools/sim_sea4.py)로 맞춤
+const EXP_K = [0.12, 0.4, 0.62, 2.8, 1.25, 0.058, 0.0213, 0.0235, 0.0101, 0.0112, 0.0089];   // [8~10] 5부 천축(란카 길·젖의 바다·수미산, 물의 신화 9단계): 한 세계 무사 약 23시간 · 자객 약 31시간(가운데 약 27시간, 5부 통틀어 약 80시간) — tools/sim_sea4.py … sea3·ind1·ind2. 물때 몫(sun 10)이 경험치의 90% 넘게라 직업 차이는 경험치 보너스(수호신·영약·별호) 차이에서 난다   // [5] 동해(물의 신화 5단계): 레벨 16개(500 → 516)를 약 20시간에 — 4부 진행 시뮬(tools/sim_sea4.py)로 맞춤
 //   // 부상 3.3 → 2.8(2026-11 (26): 삼신할미·별호·목걸이·각성으로 빨라진 만큼), 천계 0.5 → 0.62(2026-11 (43): 물약 엽전·회복 줄임 뒤 천계 레벨 조건 170·210·240에 오래 막혀서)
 // 몬스터 공격력: 시뮬로 잰 '그 단계에 처음 닿을 때의 용사 체력'(체력 배율 1 기준, log10) 표를 따라간다.
 // 새 단계의 보스는 평범한 용사를 맨몸으로 MOB_TTK초쯤에 쓰러뜨린다 → 체력·방어 펫·보호막·물약이 중요해지고,
@@ -3955,8 +4084,8 @@ const HELL_REGIONS = [
   {name:'흑암지옥', theme:'dark', mobs:[['shade', '#3a2c4a', '어둑 원혼'], ['agwi', '#6a5a7a', '굶주린 아귀']], bossIdx:0, boss:'흑암 대왕', bossColor:'#1a1424'},
 ];
 const HELL_OFF = 30;                         // 저승 1단계 = 이승 31단계만큼 센 몬스터
-const LV_CAP = [100, 200, 300, 400, 500, 516, 533, 550];    // 이승·저승·천계·부상·곤륜·동해(4부 첫째 바다) 레벨 상한(부상부터는 레벨을 이어 간다)
-const WORLD_NAME = ['이승', '저승', '천계', '부상', '곤륜', '동해', '남쪽 바다', '깊은 바다'];   // 6·7: 4부 둘째·셋째 바다(물의 신화 7단계)
+const LV_CAP = [100, 200, 300, 400, 500, 516, 533, 550, 566, 583, 600];    // 이승·저승·천계·부상·곤륜·동해(4부 첫째 바다) 레벨 상한(부상부터는 레벨을 이어 간다)
+const WORLD_NAME = ['이승', '저승', '천계', '부상', '곤륜', '동해', '남쪽 바다', '깊은 바다', '란카 길', '젖의 바다', '수미산'];   // 8~10: 5부 천축(물의 신화 9단계)   // 6·7: 4부 둘째·셋째 바다(물의 신화 7단계)
 const WORLD_MAX = LV_CAP.length - 1;   // 지금 게임에 들어 있는 마지막 세계(새 세계를 더하면 LV_CAP·WORLD_NAME·EXP_K·BOSS_K·GATE_MARGIN·STAGE_LV·regionsOf·spanOf·raidAt·mergeState를 함께 늘린다)
 const levelCap = () => LV_CAP[S.world] || 100;
 const regionsOf = w => w >= 5 ? SEAS[w].regions : w === 4 ? KUNLUN_REGIONS : w === 3 ? BUSANG_REGIONS : w === 2 ? HEAVEN_REGIONS : w ? HELL_REGIONS : REGIONS;
@@ -4074,7 +4203,7 @@ function mergeState(d){
   // (물의 신화 버그 고침) 예전에는 여기서 2·3만 받아 지금 판(5) 저장도 들어올 때마다 1로 바뀌었고, migrateStory가 이야기를 처음부터 다시 훑어
   // '지금은 조건이 안 맞는' 옛 퀘스트에서 멈췄다 — 부상에 건너가 재련이 계승(+15)되면 「붉은 새의 깃털」(무기 +20)으로 이야기가 되돌아감.
   // 그렇게 되돌아간 저장은 세계로 되찾는다: 부상에 있으면 적어도 건너기 퀘스트(CROSS_Q), 곤륜이면 CROSS_Q4까지는 한 것
-  out.quest.sv = q && [2, 3, 4, 5, 6, 7, 8].includes(q.sv) && q.sv <= STORY_SV ? q.sv : 1;
+  out.quest.sv = q && [2, 3, 4, 5, 6, 7, 8, 9].includes(q.sv) && q.sv <= STORY_SV ? q.sv : 1;
   if (out.quest.sv >= 5 && out.quest.sv < STORY_SV){ const e = SV_END[out.quest.sv]; if (Math.floor(+out.quest.main) > e) out.quest.main = e; out.quest.sv = STORY_SV; }   // 5판(3부까지) 저장 → 6판(4부가 이어짐): 3부 뒤 '끝없는 신화'를 하던 사람은 4부 첫 퀘스트(46장)로 — migrateStory와 같은 일을 불러올 때 먼저(시뮬·미리 보기도 같게)
   if (out.quest.sv >= 5){ const m0 = Math.max(0, Math.floor(+out.quest.main) || 0), w = +d.world || 0, need = w >= 3 ? Math.max(0, CROSS_QW[Math.min(WORLD_MAX, Math.floor(w))] || 0) : 0; out.quest.main = Math.max(m0, need); }
   out.quest.hid = Math.max(0, Math.floor(+out.quest.hid) || 0); out.quest.hidBase = Math.max(0, +out.quest.hidBase || 0);
@@ -4305,18 +4434,18 @@ function computeStats(up = S.up){
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100, crOver = Math.max(0, crRaw - 1);
   return {
-    atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword / 100) * (1 + (S.myth.kusa || 0) / 100) * (1 + (S.myth.pangu || 0) / 100) * (1 + 0.2 * MS.sword)
+    atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword * mythK() / 100) * (1 + (S.myth.kusa || 0) * mythK() / 100) * (1 + (S.myth.pangu || 0) * mythK() / 100) * (1 + (S.myth.vajra || 0) * mythK() / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk') * seaMul('atk') * jumpMul('atk'),
-    maxHp: powK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror / 100) * (1 + (S.myth.yata || 0) / 100) * (1 + (S.myth.elixir || 0) / 100) * (1 + (S.myth.okdae || 0) / 100) * (1 + (S.myth.lotus || 0) / 100) * (1 + 0.2 * MS.mirror)
+    maxHp: powK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror * mythK() / 100) * (1 + (S.myth.yata || 0) * mythK() / 100) * (1 + (S.myth.elixir || 0) * mythK() / 100) * (1 + (S.myth.okdae || 0) * mythK() / 100) * (1 + (S.myth.lotus || 0) * mythK() / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp') * seaMul('hp') * jumpMul('hp'),
-    regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K,
+    regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K * (1 + (S.myth.amrita || 0) * mythK() / 100),   // 영약 호리병(5부): 저절로 차는 체력 +%
     crit: Math.min(1, crRaw), critOver: crOver,
-    critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell / 100 + (S.myth.maga || 0) / 100 + (S.myth.sail || 0) / 100 + (S.myth.silk || 0) / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg'),
+    critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell * mythK() / 100 + (S.myth.maga || 0) * mythK() / 100 + (S.myth.sail || 0) * mythK() / 100 + (S.myth.silk || 0) * mythK() / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg'),
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100) * seaMul('spd'),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
-const skillMulX = () => comboMul() * setMul('skill') * (1 + pbV('sulsa', 'sk') / 100) * (1 + S.myth.flute / 100) * (1 + (S.myth.ose || 0) / 100) * fxNow.skill * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100) * elMul('skill') * seaMul('skill') * (hero.ebbT > 0 ? 1 + (hero.ebbP || 20) / 100 : 1);
+const skillMulX = () => comboMul() * setMul('skill') * (1 + pbV('sulsa', 'sk') / 100) * (1 + S.myth.flute * mythK() / 100) * (1 + (S.myth.ose || 0) * mythK() / 100) * fxNow.skill * (1 + accP('ear') / 200) * (1 + JOB_BONUS[S.job].skill / 100) * (1 + craftMain('n') / 100) * (1 + craftEff('magic') / 100) * (1 + rideAb('skill') / 100) * elMul('skill') * seaMul('skill') * (hero.ebbT > 0 ? 1 + (hero.ebbP || 20) / 100 : 1);
 const dpsOf = st => st.atk * st.aspd * (1 + st.crit * (st.critDmg - 1));
 /* 실제 보스 피해(2026-11 (26)): 기본 초당 피해(dpsOf)에는 기술·넋·펫·보스 피해 배율이 빠져 있어 후반엔 실제보다 수십 배 작다.
    보스·레이드 싸움에서 용사 쪽(용사·펫·넋)이 보스에게 넣은 피해 ÷ 싸운 시간을 재어, dpsOf의 몇 배인지(S.rec.rdpsK, 평균)를 기억한다.
@@ -4335,7 +4464,7 @@ function power(st){
   return (dpsOf(st) + petDps) * 10 + st.maxHp / (1 - petDR() / 100);
 }
 function refreshStats(){
-  const old = ST; brCache = null; skCache = null; setCache = null; elCache = null; seaCache = null; fxNow = formFx(formOn());
+  const old = ST; brCache = null; skCache = null; setCache = null; elCache = null; seaCache = null; mythKc = null; fxNow = formFx(formOn());
   ST = computeStats();
   if (old && old.maxHp > 0) hero.hp = Math.min(ST.maxHp, hero.hp / old.maxHp * ST.maxHp);
   if (spriteCache.size > 400) spriteCache.clear();
@@ -4353,7 +4482,7 @@ function statValue(k, st){
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1);
 const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0) + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -4626,7 +4755,7 @@ function rebirthCheck(){
 }
 const rebirthReady = () => rebirthCheck().every(c => c.ok);
 const rebirthPts = () => Math.floor(S.level / 10) + Math.floor(S.maxStage / 20);
-function applyWorld(){ document.body.classList.toggle('hell', S.world === 1); document.body.classList.toggle('heaven', S.world === 2); document.body.classList.toggle('busang', S.world === 3); document.body.classList.toggle('kunlun', S.world === 4); document.body.classList.toggle('sea', S.world >= 5); }
+function applyWorld(){ document.body.classList.toggle('hell', S.world === 1); document.body.classList.toggle('heaven', S.world === 2); document.body.classList.toggle('busang', S.world === 3); document.body.classList.toggle('kunlun', S.world === 4); document.body.classList.toggle('sea', S.world >= 5 && S.world <= 7); document.body.classList.toggle('india', S.world >= 8); }   // india: 5부 천축(해 질 녘 사프란빛)
 function doRebirth(){
   if (!rebirthReady()) return null;
   const pts = rebirthPts(), first = S.world === 0;
@@ -4658,10 +4787,11 @@ function mainQuest(){
   const i = S.quest.main;
   if (i < MAIN_Q.length) return Object.assign({i}, MAIN_Q[i]);
   const k = i - MAIN_Q.length + 1, last = MAIN_Q[MAIN_Q.length - 1];
-  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'물의 신화를 마친 뒤에도 신화는 계속돼요. 깊은 바다에서 더 깊이 나아가요. (돌탑을 실은 배가 가는 곳, 천축은 다음 이야기에서 열려요)', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k};
+  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'마을 어귀로 돌아온 뒤에도 신화는 끝나지 않아요. 수미산에서 더 높이 올라가요.', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k};
 }
 const awakenOk = () => S.reb.n >= 1 && S.best.l1 >= 60 && !!S.raid.first.h2;
 function questCur(q){
+  { const m = /^([sl])(\d+)$/.exec(q.k); if (m && +m[2] >= 8) return m[1] === 's' ? (S.best['s' + m[2]] || 0) : (S.world >= +m[2] ? S.level : 0); }   // 5부 천축(세계 8~10, 두 자리 세계 번호까지)
   switch (q.k){
     case 'kills': return S.rec.kills;
     case 'stage': case 's0': return S.best.s0;
@@ -4701,16 +4831,16 @@ function questCur(q){
 }
 function questProg(q){
   const c = questCur(q);
-  if (q.k === 'world') return [Math.min(c, q.n), q.n, c >= q.n ? '건넜어요' : q.n >= 5 ? `[수련] → [환생]에서 ${WORLD_NAME[q.n]}로 건너기` : '[수련] → [환생]에서 바다 건너기'];
-  if (q.k === 's0' || q.k === 's1' || q.k === 's2' || q.k === 's3' || q.k === 's4' || /^s[5-9]$/.test(q.k) || q.k === 'stage'){
-    const w = /^s[1-9]$/.test(q.k) ? WORLD_NAME[+q.k[1]] + ' ' : '';
+  if (q.k === 'world') return [Math.min(c, q.n), q.n, c >= q.n ? '건넜어요' : q.n >= 5 ? `[수련] → [환생]에서 ${WORLD_NAME[q.n]}${q.n === 10 ? '으' : ''}로 건너기` : '[수련] → [환생]에서 바다 건너기'];
+  if (/^s\d+$/.test(q.k) || q.k === 'stage'){
+    const w = /^s[1-9]\d*$/.test(q.k) ? WORLD_NAME[+q.k.slice(1)] + ' ' : '';
     return [Math.min(c, q.n) - 1, q.n - 1, `${w}${Math.max(0, Math.min(c, q.n) - 1)} / ${q.n - 1}단계 돌파`];
   }
   if (q.k === 'awaken') return [c, 1, `환생 ${S.reb.n >= 1 ? '✓' : '✗'} · 저승 Lv.60 ${S.best.l1 >= 60 ? '✓' : '✗'} · 송제전 ${S.raid.first.h2 ? '✓' : '✗'}`];
   if (q.k === 'raidK') return [c, 1, c ? '토벌 완료' : '아직 토벌하지 않음'];
   if (q.k === 'job') return [c, q.n, `${c}차 / ${q.n}차 전직`];
   const u = {kills:'마리', raids:'번', hraids:'번', pets3:'마리', refineW:'단계', refineA:'단계', myth:'종', acc:'종', reb:'번', forms:'종', trials:'개', avatar:'개'}[q.k] || '';
-  const pre = q.k === 'l1' ? '저승 Lv.' : q.k === 'l2' ? '천계 Lv.' : q.k === 'l0' || q.k === 'level' || q.k === 'l3' || q.k === 'l4' || /^l[5-9]$/.test(q.k) ? 'Lv.' : '';
+  const pre = q.k === 'l1' ? '저승 Lv.' : q.k === 'l2' ? '천계 Lv.' : q.k === 'l0' || q.k === 'level' || /^l([3-9]|\d\d)$/.test(q.k) ? 'Lv.' : '';
   return [Math.min(c, q.n), q.n, `${pre}${fmt(Math.min(c, q.n))} / ${pre}${fmt(q.n)}${u}`];
 }
 const mainReady = () => { const q = mainQuest(); return questCur(q) >= q.n; };
@@ -4733,8 +4863,9 @@ function questDiff(q){
   if (q.k === 'l6') return Math.round((q.n - 516) * 2.5) + 440;
   if (q.k === 's7') return q.n + 480;
   if (q.k === 'l7') return Math.round((q.n - 533) * 2.5) + 480;
-  if (q.k === 'world') return q.n >= 7 ? 480 : q.n >= 6 ? 440 : q.n >= 5 ? 400 : q.n >= 4 ? 300 : 230;
-  if (q.k === 'raidK') return ({g:180, b:240, k:300, d:400, n:440, x:480}[String(q.key)[0]] || 80) + 15 * (+String(q.key).slice(1) || 0);
+  { const m = /^([sl])(\d+)$/.exec(q.k); if (m && +m[2] >= 8){ const w = +m[2], base = 520 + 40 * (w - 8); return m[1] === 's' ? q.n + base : Math.round((q.n - LV_CAP[w - 1]) * 2.5) + base; } }   // 5부 천축(세계 8~10)
+  if (q.k === 'world') return q.n >= 8 ? 520 + 40 * (q.n - 8) : q.n >= 7 ? 480 : q.n >= 6 ? 440 : q.n >= 5 ? 400 : q.n >= 4 ? 300 : 230;
+  if (q.k === 'raidK') return ({g:180, b:240, k:300, d:400, n:440, x:480, r:520, c:560, u:600}[String(q.key)[0]] || 80) + 15 * (+String(q.key).slice(1) || 0);
   return Math.min(250, 10 + q.i * 3);
 }
 const luckRoll = () => window.__game && window.__game.luck != null ? window.__game.luck : Math.random();
@@ -4905,7 +5036,7 @@ function drinkHp(k, manual){
   }
   S.inv[k]--; potCd = manual ? 0.8 : 3; sfx('potion');
   if (raid && raid.wipe && raid.wipe.st === 3) raid.wipe.drank = true;   // 전멸기: 회복약을 마셔야 버팀
-  const amt = ST.maxHp * h * (1 + rideAb('pot') / 100);
+  const amt = ST.maxHp * h * (1 + rideAb('pot') / 100) * (1 + (S.myth.amrita || 0) * mythK() / 200);   // 영약 호리병: 탕약 회복량 +절반%
   hero.hp = Math.min(ST.maxHp, hero.hp + amt);
   addText(k === 'elixir' ? '산삼 탕약!' : '인삼 탕약', hero.x, hero.y - 40, '#8ff0a0', 11, true);
   fx.push({type:'heal', t:0, dur:0.7});
@@ -5060,7 +5191,7 @@ function spawnTile(minDist, maxDist = SPAWN_R){
 const aliveMobs = () => mobs.filter(m => !m.dead);
 const maxField = () => Math.min(FIELD.max, FIELD.base + Math.floor((S.stage - 1) / FIELD.step) + (S.world ? FIELD.world : 0));   // 단계가 오를수록 사냥터에 몹이 더 많이
 // 저승부터 단계 보스는 더 크고 세다(체력·공격 배율 BOSS_K, 그림 2.6배, 세계 빛깔 오라)
-const BOSS_K = {hp:[1, 1.4, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], atk:[1, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]}, BOSS_AURA = ['', '#ff3a2a', '#ffd24a', '#ff7ac8', '#7affd8', '#5ad8ff', '#7ab8ff', '#b08aff'];
+const BOSS_K = {hp:[1, 1.4, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], atk:[1, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]}, BOSS_AURA = ['', '#ff3a2a', '#ffd24a', '#ff7ac8', '#7affd8', '#5ad8ff', '#7ab8ff', '#b08aff', '#ffb04a', '#f0e8ff', '#ffe27a'];
 /* 천계 끝 단계 보스 덜기(2026-11 (43), 사용자 요청: 천계 영소보전 9-8(88단계)이 너무 빡빡함). 천계는 단계마다 몬스터 체력이 ×1.256이라
    76단계부터 단계 보스가 시뮬 네 직업 모두 20~40시간 막혔다(--long 100: 86단계 60~67시간, 88~91에서 100시간까지). 76단계부터 한 단계마다 보스 체력 HEAVEN_EASE.per씩 덜고 min까지.
    잡몹·레이드·탑·부상(천계 곡선을 빌려 씀)은 그대로 — 단계 보스만 */
@@ -5100,7 +5231,8 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = (m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1) * (mine && m.pat && m.pat.grogT > 0 && !fit ? C.grogMul || 1 : 1);   // 창객: 휘청이는 보스에게 +15%(내 세기에 맞춘 싸움 FIT은 빼고)
   const gp = raw ? 1 : gapMul(m, mine && (kind === 'basic' || kind === 'skill')) * aw2Pierce(m);   // 창객 「간격」 · 초각성기 2 「바다 꿰는 창」
-  const dmg = raw ? base : base * gp * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const vz = !raw && mine && S.myth.vajra > 0 && (kind === 'basic' || kind === 'skill') ? (avg ? 1 + Math.min(1, ST.crit + sc) * VAJRA_BOLT : crit ? 1 + VAJRA_BOLT : 1) : 1;   // 금강저(5부): 치명타가 터지면 번개가 그 피해의 10%를 더 넣는다
+  const dmg = raw ? base : base * gp * vz * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
@@ -5302,14 +5434,14 @@ const raidUnlockedBase = () => S.world >= 5 ? seaRaidsOpen(S.world) : S.world ==
 /* ===== 이야기·레벨 문(2026-11 (21), 사용자 요청): 단계 보스와 레이드가 이야기 장과 레벨에 맞춰 열린다 =====
    단계: 지금 이야기 퀘스트와 다음 GATE_LOOK개가 요구하는 그 세계 단계 + GATE_MARGIN까지(그 세계 이야기의 단계 퀘스트를 다 지나면 끝까지),
          그리고 단계마다 최소 레벨 STAGE_LV. 레이드: 그 레이드를 깨라는 이야기 퀘스트(raidK)에 닿아야, 이승 레이드는 그 레벨이 이야기 목표가 되는 장에 닿아야 */
-const GATE_LOOK = 2, GATE_MARGIN = [10, 10, 15, 30, 30, 20, 20, 20];   // 부상·곤륜은 단계가 올라도 경험치가 거의 같아 여유를 넓게(좁으면 쉬운 단계에서 레벨만 빨리 오름)
-const STAGE_LV = [s => Math.floor((s - 1) * 0.5), s => Math.floor((s - 1) * 0.9), s => Math.floor((s - 1) * 1.4), s => 240 + Math.floor((s - 1) * 0.8), s => 390 + Math.floor((s - 1) * 0.8), s => 496 + Math.floor((s - 1) * 0.4), s => 513 + Math.floor((s - 1) * 0.45), s => 530 + Math.floor((s - 1) * 0.45)];   // [6]·[7] 남쪽 바다·깊은 바다: 40단계에 Lv.530·547
+const GATE_LOOK = 2, GATE_MARGIN = [10, 10, 15, 30, 30, 20, 20, 20, 20, 20, 20];   // 부상·곤륜은 단계가 올라도 경험치가 거의 같아 여유를 넓게(좁으면 쉬운 단계에서 레벨만 빨리 오름)
+const STAGE_LV = [s => Math.floor((s - 1) * 0.5), s => Math.floor((s - 1) * 0.9), s => Math.floor((s - 1) * 1.4), s => 240 + Math.floor((s - 1) * 0.8), s => 390 + Math.floor((s - 1) * 0.8), s => 496 + Math.floor((s - 1) * 0.4), s => 513 + Math.floor((s - 1) * 0.45), s => 530 + Math.floor((s - 1) * 0.45), s => 547 + Math.floor((s - 1) * 0.45), s => 563 + Math.floor((s - 1) * 0.45), s => 580 + Math.floor((s - 1) * 0.45)];   // [8]~[10] 5부 천축: 40단계에 Lv.564·580·597   // [6]·[7] 남쪽 바다·깊은 바다: 40단계에 Lv.530·547
 const stageLvNeed = (s, w = S.world) => Math.max(1, STAGE_LV[w](s));
 let gateIdx = null;   // 세계별 단계 퀘스트 [번호, n], 레이드 키 → 퀘스트 번호, 장 → 첫 퀘스트 번호
 function gateTables(){
   if (gateIdx) return gateIdx;
   const st = LV_CAP.map(() => []), rk = {}, chFirst = {};
-  MAIN_Q.forEach((q, i) => { const m = /^s(\d)$/.exec(q.k); if (m) st[+m[1]].push([i, q.n]); if (q.k === 'raidK' && rk[q.key] == null) rk[q.key] = i; if (chFirst[q.ch] == null) chFirst[q.ch] = i; });
+  MAIN_Q.forEach((q, i) => { const m = /^s(\d+)$/.exec(q.k); if (m) st[+m[1]].push([i, q.n]); if (q.k === 'raidK' && rk[q.key] == null) rk[q.key] = i; if (chFirst[q.ch] == null) chFirst[q.ch] = i; });
   // 이승 레이드 i(Lv 10(i+1)): 그 레벨 이상을 처음 요구하는 이승 레벨 퀘스트의 장
   const l0 = MAIN_Q.map((q, i) => [i, q]).filter(([, q]) => q.k === 'l0');
   const r0 = [...Array(10).keys()].map(i => { const f = l0.find(([, q]) => q.n >= 10 * (i + 1)); return f ? chFirst[f[1].ch] : 0; });
@@ -6043,7 +6175,7 @@ function patBreak(B){
      거슬러 걸어야 한다: 땅을 눌러 걷는 동안·구른 뒤 버티는 동안에는 밀리지 않는다. 자동 손은 HAND.dodge 확률로 제자리에서 버틴다(붉은 칸과 같은 규칙).
    숨(깊은 바다의 보스 싸움): 숨 막대가 PAT.breathT초에 걸쳐 줄고, 용사 둘레에 솟는 공기 방울을 밟으면 PAT.bubFill만큼 찬다. 다 떨어지면 1초마다 최대 체력의 PAT.breathDmg(막을 수 없음).
      자동 손: 숨이 PAT.breathAuto 아래이고 방울이 있으면(붉은 칸 예고가 없을 때) 걸어가서 밟는다 → 방치·시뮬도 같은 규칙 */
-const patSea = B => S.world >= 5 && !!B && !(raid && (raid.info.jin || raid.info.trap || raid.info.mem || raid.info.aw2t || raid.info.aw2tut || raid.info.tower && raid.info.f <= TOWER.base)) && !(window.__game && window.__game.noSeaPat);
+const patSea = B => S.world >= 5 && S.world <= 7 && !!B && !(raid && (raid.info.jin || raid.info.trap || raid.info.mem || raid.info.aw2t || raid.info.aw2tut || raid.info.tower && raid.info.f <= TOWER.base)) && !(window.__game && window.__game.noSeaPat);
 function patFlow(B, P){
   if (hero.dead){ patTiles(B, P); return; }
   const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(([dx, dy]) => inMap(hero.tx + dx * 4, hero.ty + dy * 4));
@@ -6304,7 +6436,8 @@ const WIPE_KIND = {
 const WIPE_TYPE = {dokkaebi:'fire', oni:'fire', phoenix:'fire', fox:'fire', bulgasari:'quake', haetae:'storm', totem:'quake', bear:'quake', tiger:'storm', serpent:'tide', frog:'tide', toad:'tide', kappa:'tide',
   shade:'void', judge:'void', ghost:'void', skel:'void', agwi:'void', king:'void', yukionna:'frost', yukiko:'frost', soldier:'storm', tengu:'storm', hawk:'storm', crow:'fire', monkey:'quake', wolf:'fire', izanami:'void', wisp:'frost', yaksha:'storm', oxhead:'void', horsehead:'void'};
 Object.assign(WIPE_TYPE, {cyclops:'quake', rockgen:'quake', blackdrop:'void', wilt:'void'});   // 4부 둘째·셋째 바다의 보스(나머지는 바다 기본 = 밀물)
-const wipeKind = B => WIPE_KIND[WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm', 'tide'][Math.max(0, Math.min(5, S.world))]];
+Object.assign(WIPE_TYPE, {rakshasa:'fire', batrak:'storm', deer:'void', chariot:'fire', asura:'fire', elephant:'tide', ravana:'fire', kumbha:'quake', rahu:'void', mara:'void', king4:'storm'});   // 5부 천축의 보스
+const wipeKind = B => WIPE_KIND[WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm', 'tide', 'tide', 'tide', 'fire', 'tide', 'void'][Math.max(0, Math.min(10, S.world))]];   // 기본 원소: 바다(5~7) 밀물 · 란카 길 불 · 젖의 바다 밀물 · 수미산 어둠
 const wipeOn = R => R && (R.info.wipe || !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp && !R.info.aw2tut && !R.info.aw2t && !(R.info.mem && !R.info.jin)) && !(window.__game && window.__game.wipeOff);   // 탑 문지기(info.wipe)도
 const wipeBusy = R => !!(R && R.wipe && R.wipe.st >= 1 && R.wipe.st <= 3);
 function updateWipe(R, dt){
@@ -7802,7 +7935,7 @@ function jobCCast(lv, alive, tg, mul){
   return true;
 }
 // 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
-const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100);
+const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100);   // 파사석(5부): 기술 재사용 -%
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
@@ -9475,7 +9608,12 @@ const TITLES = [
   {k:'east', name:'동쪽 바다의 용사', need:'동해에 닿기(4부)', prog:() => [S.world >= 5 ? 1 : 0, 1], eff:{exp:6, gold:6}},
   {k:'sea1', name:'용궁의 손님', need:'동해 이야기 끝(52장)', prog:() => [Math.min(S.quest.main, PART4A_END) - PART3_END, PART4A_END - PART3_END], eff:{atk:8, hp:8}},
   {k:'sea2', name:'할머니들의 손주', need:'남쪽 바다 이야기 끝(59장)', prog:() => { const e = PART4B_END > 0 ? PART4B_END : MAIN_Q.length; return [Math.max(0, Math.min(S.quest.main, e) - PART4A_END), e - PART4A_END]; }, eff:{atk:9, hp:9}},
-  {k:'sea3', name:'물의 신화', need:'깊은 바다 이야기 끝(67장, 4부 끝)', prog:() => [Math.max(0, Math.min(S.quest.main, MAIN_Q.length) - PART4B_END), MAIN_Q.length - PART4B_END], eff:{atk:10, hp:10, exp:5}},
+  {k:'sea3', name:'물의 신화', need:'깊은 바다 이야기 끝(67장, 4부 끝)', prog:() => [Math.max(0, Math.min(S.quest.main, PART4_END) - PART4B_END), PART4_END - PART4B_END], eff:{atk:10, hp:10, exp:5}},
+  // 5부 천축(물의 신화 9단계)
+  {k:'india', name:'천축에 닿은 용사', need:'란카 길에 닿기(5부)', prog:() => [S.world >= 8 ? 1 : 0, 1], eff:{exp:6, gold:6}},
+  {k:'ind1', name:'등불을 밝힌 자', need:'란카 길 이야기 끝(75장)', prog:() => [Math.max(0, Math.min(S.quest.main, PART5A_END) - PART4_END), PART5A_END - PART4_END], eff:{atk:10, hp:10}},
+  {k:'ind2', name:'바다를 휘저은 자', need:'젖의 바다 이야기 끝(82장)', prog:() => [Math.max(0, Math.min(S.quest.main, PART5B_END) - PART5A_END), PART5B_END - PART5A_END], eff:{atk:11, hp:11}},
+  {k:'ind3', name:'끝없는 신화', need:'수미산 이야기 끝(90장, 5부 끝)', prog:() => [Math.max(0, Math.min(S.quest.main, MAIN_Q.length) - PART5B_END), MAIN_Q.length - PART5B_END], eff:{atk:12, hp:12, exp:6}},
   {k:'haetae7', name:'해태가 고개 끄덕인', need:'해태 수련 7등급', prog:() => [S.haetae && S.haetae.top || 0, 7], eff:{boss:8, critDmg:10}},
   {k:'mem3', name:'세 번 산 자', need:'환생의 기억 세 갈래를 모두 되찾아요', prog:() => [S.mem && S.mem.fin ? 1 : 0, 1], eff:{atk:8, hp:8, exp:5}, hide:() => !memOpen()},
   {k:'memNo', name:'뒤돌아보지 않는 자', need:'환생의 기억을 떠올리지 않기로 해요', prog:() => [S.mem && S.mem.ch === 'no' ? 1 : 0, 1], eff:{boss:8, critDmg:10}, hide:() => !memOpen()},
@@ -9484,6 +9622,8 @@ const TITLES = [
   {k:'f_snowB', name:'등불을 건 자', need:'갈림길(30장)에서 「등불을 걸어 둔다」', prog:() => [S.fork.snow === 1 ? 1 : 0, 1], eff:{gold:10}, fork:true},
   {k:'f_towerA', name:'인연을 이어 준 자', need:'갈림길(37장)에서 「그 사람에게 보낸다」', prog:() => [S.fork.tower === 0 ? 1 : 0, 1], eff:{exp:8}, fork:true},
   {k:'f_towerB', name:'흰 뱀의 벗', need:'갈림길(37장)에서 「함께 길을 간다」', prog:() => [S.fork.tower === 1 ? 1 : 0, 1], eff:{boss:8}, fork:true},
+  {k:'f_yamaA', name:'이야기를 잇는 자', need:'갈림길(84장) 야마의 물음에 첫째 답', prog:() => [S.fork.yama === 0 ? 1 : 0, 1], eff:{exp:8}, fork:true},
+  {k:'f_yamaB', name:'오늘을 사는 자', need:'갈림길(84장) 야마의 물음에 둘째 답', prog:() => [S.fork.yama === 1 ? 1 : 0, 1], eff:{atk:8}, fork:true},
   // 도감 별호(물의 신화 2단계, 부별 탭): 그 부의 펫·탈것·아바타·치장·넋 구슬을 모두 모으면. 새 부를 넣으면 dex4·dex5를 잇는다
   {k:'dex1', name:'삼계의 수집가', need:'1부 도감을 모두 모아요', prog:() => dexProg(1), eff:{exp:6, gold:6}},
   {k:'dex2', name:'부상의 수집가', need:'2부 도감을 모두 모아요', prog:() => dexProg(2), eff:{atk:6, hp:6}},
@@ -9786,7 +9926,17 @@ const FORKS = [
    q:'탑에서 풀려난 흰 뱀은 은혜를 갚겠다며 따라오려 해요. 하지만 그녀에게는 비 오는 다리에서 만난 그 사람이 있어요.',
    a:[{t:'그 사람에게 보낸다', d:'은혜는 됐어요. 기다리는 사람에게 어서 가라고 등을 밀어 줘요.', title:'f_towerA', lines:[['나', '은혜는 됐어요. 그 사람이 기다려요.'], ['흰 뱀', '…네. 비 오는 다리에서 다시 만날게요. 고마워요.']]},
       {t:'함께 길을 간다', d:'곤륜 가는 길이 험하니 잠시 함께 가며 서로를 지켜요.', title:'f_towerB', lines:[['흰 뱀', '그럼 곤륜 들머리까지만 함께 갈게요. 그다음엔 그 사람에게로.'], ['', '흰 뱀은 길을 막는 요괴의 약한 곳을 하나하나 알려 주었어요.']]}]},
+  // @@FORK-YAMA-BEGIN (5부 84장 「세 가지 소원」 뒤 — 대역 글·배경: 이야기 갈래 S10의 글로 이 사이를 바꿔 끼운다)
+  {k:'yama', at:'세 가지 소원', ch:84, bg:'court', cast:'hero,k:4', fx:'dark',
+   q:'죽음의 집 주인 야마가 환생을 거친 용사에게 되물어요. 「너는 두 번 죽고 두 번 났다. 죽음 뒤에는 무엇이 있더냐.」',
+   a:[{t:'이야기가 이어진다', d:'죽어도 끝나지 않았어요. 누군가 이어 말해 주는 한, 이야기는 계속돼요.', title:'f_yamaA', lines:[['나', '끝이 아니었습니다. 이야기가 이어지고 있었습니다.'], ['야마', '… 그래서 네가 여기까지 걸어온 것이구나.']]},
+      {t:'모르기에 오늘을 산다', d:'건너가 보았어도 다 알지는 못해요. 모르니까 오늘을 아껴 살아요.', title:'f_yamaB', lines:[['나', '다 알지 못합니다. 그래서 오늘을 아껴 삽니다.'], ['야마', '… 모른다고 말할 줄 아는 것이 앎의 처음이다.']]}]},
+  // @@FORK-YAMA-END
 ];
+// 연출 대사의 {yama}: 84장 갈림길에서 고른 답의 짧은 말(87장에서 다시 나옴) — [첫째 답, 둘째 답, 아직 안 고름] (대역 글: S10의 글로 바꾼다)
+const YAMA_SAY = ['이야기는 이어진다', '모르기에 오늘을 산다', '아직 답하지 못한 물음'];
+const yamaSay = () => YAMA_SAY[S.fork && S.fork.yama === 0 ? 0 : S.fork && S.fork.yama === 1 ? 1 : 2];
+const cutVars = t => String(t).replace(/\{name\}/g, S.name || '').replace(/\{yama\}/g, yamaSay());
 const forkIdx = f => MAIN_Q.findIndex(q => q.t === f.at);
 const forkPending = () => FORKS.filter(f => S.fork[f.k] == null && forkIdx(f) >= 0 && S.quest.main > forkIdx(f));
 let forkAsked = {};
@@ -10965,6 +11115,66 @@ const SEA3_RAIDS = [
 ];
 const SEA3_RAID_REF = [6, 14, 18];
 SEAS[7] = {C:SEA3, regions:SEA3_REGIONS, span:SEA3_SPAN, raids:SEA3_RAIDS, ref:SEA3_RAID_REF, at:[22, 32, 36], key:'x', party:10, gems:390, first:2400};
+/* ================= 5부 천축 — 끝없는 신화(인도 옛이야기: 라마야나 · 젖의 바다 휘젓기 · 야마와 사비트리·나치케타 · 마라의 유혹) (물의 신화 9단계) =================
+   깊은 바다 이야기(67장)를 마치면 허황옥의 뱃길을 거꾸로 따라 한 번 더 건너기(레벨·장비 그대로, 단계만 1부터).
+   세계 8 「란카 길」(68~75장, 레벨 상한 566) · 9 「젖의 바다」(76~82장, 583) · 10 「수미산」(83~90장, 600 = 5부 끝).
+   바다처럼 지역은 10단계씩 셋(셋째 지역은 21단계부터 끝까지)이고 표는 SEAS[8~10]에 그대로 잇는다(regionsOf·regionIndex·raidAt·raidUnlockedBase·여정 지도가 함께 씀).
+   라마·시타·하누만·제석천(인드라)·야마는 지금도 섬기는 분들이라 적으로 쓰지 않는다(동료·스승·시험하는 분으로만). 싸우는 상대는 락샤사·아수라·라후·브리트라·마라.
+   라바나는 원전대로 학식 높은 왕으로 품위 있게, 「사천왕의 문」·「발리의 시험」·「구슬에 비친 나」는 시험. 줄거리는 옛 원전만 따른다(최근 영화·드라마·애니메이션의 모습과 대사는 쓰지 않음).
+   세기(CONT[8~10])는 4부 끝 저장으로 문 없이 어디까지 미는지 재서 정함(tools/sim_sea4.py … sea3·ind1·ind2). 막는 것은 레벨(STAGE_LV[8~10]) */
+const IND1 = {e0:167.5, r:0.25, xr:0.1, sun:10, mobK:1};   // 4부 끝 용사가 문 없이 2시간에 미는 한계: 자객 e 178.3 · 무사 e 180 → 이야기 끝(40단계) = e 177.25
+CONT[8] = IND1;
+const IND1_REGIONS = [
+  {name:'단다카 숲', theme:'dandaka', mobs:[['rakshasa', '#5a7a4a', '숲 락샤사'], ['deer', '#e8c860', '둔갑 사슴']], bossIdx:0, boss:'라바나의 하늘 수레', bossType:'chariot', bossColor:'#c8862a',
+    special:{4:{name:'바닷가의 락샤사', type:'rakshasa', color:'#3a6a8a'}}},   // 68장의 보스
+  {name:'원숭이 나라', theme:'kishkindha', mobs:[['batrak', '#6a4a7a', '박쥐 날개 락샤사'], ['bat', '#4a3a5a', '란카의 염탐 박쥐']], bossIdx:0, boss:'바다 괴물 심히카', bossType:'angler', bossColor:'#3a2a4a',
+    special:{18:{name:'원숭이 왕 발리의 시험', type:'monkey', color:'#c89a5a'}}},   // 71장(시험)
+  {name:'란카 성', theme:'lanka', mobs:[['soldier', '#b8862a', '란카 창병'], ['chariot', '#ff7a2a', '불 수레']], bossIdx:0, boss:'란카의 성문 장수', bossType:'rakshasa', bossColor:'#8a2a2a'},
+];
+// 란카 길 레이드 셋(69장 황금 사슴 · 73장 잠자는 거인 · 74장 열 머리 왕): 그 이야기 때의 단계(SEAS[8].at)에 닿으면 열린다
+const IND1_RAIDS = [
+  {name:'황금 사슴', boss:'둔갑한 마리차', type:'deer', color:'#f0c850', region:0},
+  {name:'잠자는 거인', boss:'쿰바카르나', type:'kumbha', color:'#7a6a8a', region:2},
+  {name:'열 머리 왕', boss:'열 머리 왕 라바나', type:'ravana', color:'#b8862a', region:2},
+];
+const IND1_RAID_REF = [2, 12, 16];   // 그 이야기 때 단계(12·34·38쯤)보다 한참 아래로 — 레이드는 처음 몇 초의 몰아치기(초각성·큰 기술)로 갈려서 같은 저장에서도 판마다 4~60초로 들쭉날쭉(운 나쁜 자객이 기준 14·18에서 48·64초). 여섯 직업으로는 9-4·9-5단계에서 다시 잰다
+SEAS[8] = {C:IND1, regions:IND1_REGIONS, span:[10, 20], raids:IND1_RAIDS, ref:IND1_RAID_REF, at:[8, 30, 37], key:'r', party:10, gems:480, first:3600};
+/* ── 5부 둘째 「젖의 바다」(76~82장): 힘을 잃은 신들이 영약을 얻으려 아수라와 함께 바다를 휘젓는 이야기. 지역 셋(마른 강 · 만다라 산 · 젖빛 바다) */
+const IND2 = {e0:170.75, r:0.25, xr:0.1, sun:10, mobK:1};   // 란카 길 끝 용사의 한계: 무사 e 182 · 자객 e 187 → 이야기 끝(40단계) = e 180.5
+CONT[9] = IND2;
+const IND2_REGIONS = [
+  {name:'마른 강', theme:'dryriver', mobs:[['serpent', '#a88a5a', '가뭄 뱀'], ['asura', '#8a3a4a', '아수라 병사']], bossIdx:1, boss:'기세 오른 아수라 장수', bossType:'asura', bossColor:'#c8483a'},
+  {name:'만다라 산', theme:'mandara', mobs:[['asura', '#6a3a6a', '아수라 창잡이'], ['serpent', '#3a8a7a', '바다 뱀']], bossIdx:0, boss:'밧줄을 당기는 아수라 대장', bossType:'asura', bossColor:'#4a2a5a'},
+  {name:'젖빛 바다', theme:'milksea', mobs:[['blackdrop', '#2a6a8a', '독 방울'], ['elephant', '#cfe0f0', '파도 코끼리']], bossIdx:1, boss:'젖빛 바다의 큰 뱀', bossType:'serpent', bossColor:'#e8e0c8',
+    special:{26:{name:'독 할라할라의 방울', type:'blackdrop', color:'#1a4a8a'}, 31:{name:'보물을 노리는 아수라', type:'asura', color:'#b8862a'}}},   // 79장·80장의 보스
+];
+// 젖의 바다 레이드 셋(76장 브리트라 · 81장 둔갑한 아수라 · 82장 라후)
+const IND2_RAIDS = [
+  {name:'물을 가둔 뱀', boss:'브리트라', type:'serpent', color:'#5a4a3a', region:0},
+  {name:'둔갑한 아수라', boss:'신으로 둔갑한 아수라', type:'asura', color:'#e8d8a0', region:2},
+  {name:'해를 무는 머리', boss:'라후', type:'rahu', color:'#2a2a4a', region:2},
+];
+const IND2_RAID_REF = [2, 14, 20];
+SEAS[9] = {C:IND2, regions:IND2_REGIONS, span:[10, 20], raids:IND2_RAIDS, ref:IND2_RAID_REF, at:[6, 34, 38], key:'c', party:10, gems:570, first:4800};
+/* ── 5부 셋째 「수미산」(83~90장, 5부 끝): 세상 한가운데 산을 올라 속삭인 자를 만난다. 지역 셋(야마의 길 · 사천왕 문 · 마라의 들).
+   야마·사천왕·제석천은 적이 아니라 시험하는 분 — 지역 보스는 길목의 개·돌 야차·구슬에 비친 나처럼 '시험의 그림자'로만 */
+const IND3 = {e0:176.75, r:0.25, xr:0.1, sun:10, mobK:1};   // 젖의 바다 끝 용사의 한계: 무사 e 188 · 자객 e 193 → 이야기 끝(40단계) = e 186.5
+CONT[10] = IND3;
+const IND3_REGIONS = [
+  {name:'야마의 길', theme:'yamaroad', mobs:[['wolf', '#4a4a5a', '네 눈 박이 개 그림자'], ['ghost', '#c8d0e0', '길 잃은 넋']], bossIdx:0, boss:'길목을 지키는 네 눈 박이 개', bossType:'wolf', bossColor:'#2a2a3a'},
+  {name:'사천왕 문', theme:'fourgate', mobs:[['yaksha', '#8a8a7a', '돌 야차 문지기'], ['spray', '#e8e0f0', '구름 허깨비']], bossIdx:0, boss:'문을 지키는 돌 야차', bossType:'yaksha', bossColor:'#6a6a5a'},
+  {name:'마라의 들', theme:'marafield', mobs:[['shade', '#e87aa8', '유혹의 환영'], ['soldier', '#3a2a4a', '마라의 병사']], bossIdx:1, boss:'마라의 선봉장', bossType:'soldier', bossColor:'#5a1a3a',
+    special:{24:{name:'구슬에 비친 나', type:'shade', color:'#cfe0ff'}, 28:{name:'세 딸의 환영', type:'shade', color:'#e85a9a'}}},   // 86장·87장의 보스
+];
+// 수미산 레이드 셋(85장 사천왕의 문(시험) · 88장 마라의 군대 · 89장 마라)
+const IND3_RAIDS = [
+  {name:'사천왕의 문', boss:'사천왕', type:'king4', color:'#3a6a8a', region:1},
+  {name:'마라의 군대', boss:'마라의 군대', type:'soldier', color:'#4a1a3a', region:2},
+  {name:'마라', boss:'마라', type:'mara', color:'#2a1a3a', region:2},
+];
+const IND3_RAID_REF = [4, 18, 22];   // 무사는 한계보다 e 8~10 아래의 레이드를 20~35초에 깬다(란카 길·젖의 바다의 첫 도전 기록) — 마지막 「마라」도 첫 도전에 깨게
+SEAS[10] = {C:IND3, regions:IND3_REGIONS, span:[10, 20], raids:IND3_RAIDS, ref:IND3_RAID_REF, at:[16, 32, 38], key:'u', party:10, gems:660, first:6000};
+const indOpen = () => S.world >= 8;   // 5부 천축에 들어섰나
 const seaRaidsOpen = w => { const D = SEAS[w], st = S.best['s' + w] || 0; let n = 0; while (n < D.raids.length && st >= D.at[n]) n++; return n; };
 // 부상 레이드: 부상 8단계마다 하나씩
 const BUSANG_RAIDS = [
@@ -10991,7 +11201,8 @@ const RAID_WORLDS = [
   {w:3, n:BUSANG_RAIDS.length, every:8, info:i => busangRaidInfo(i), key:i => 'b' + i}, {w:4, n:KUNLUN_RAIDS.length, every:8, info:i => kunlunRaidInfo(i), key:i => 'k' + i},
   {w:5, n:SEA1_RAIDS.length, every:10, info:i => sea1RaidInfo(i), key:i => 'd' + i},
   {w:6, n:SEA2_RAIDS.length, at:SEAS[6].at, info:i => seaRaidInfo(6, i), key:i => 'n' + i},
-  {w:7, n:SEA3_RAIDS.length, at:SEAS[7].at, info:i => seaRaidInfo(7, i), key:i => 'x' + i}];   // every: 그 땅 단계 몇 개마다 하나씩 열리나(부상부터)
+  {w:7, n:SEA3_RAIDS.length, at:SEAS[7].at, info:i => seaRaidInfo(7, i), key:i => 'x' + i},
+  ...[8, 9, 10].map(w => ({w, n:SEAS[w].raids.length, at:SEAS[w].at, info:i => seaRaidInfo(w, i), key:i => SEAS[w].key + i}))];   // 8~10: 5부 천축(란카 길 r · 젖의 바다 c · 수미산 u)   // every: 그 땅 단계 몇 개마다 하나씩 열리나(부상부터)
 function raidPartCount(p){ let a = 0, b = 0; for (const R of RAID_WORLDS) if (partOfW(R.w) === p){ b += R.n; for (let i = 0; i < R.n; i++) if (S.raid.first[R.key(i)]) a++; } return b ? [a, b] : null; }
 /* ================= 상위 레이드 「진(眞)」(물의 신화 3단계, PLAN 「상위 레이드와 클리어율」) =================
    지나온 땅의 레이드마다 상위 단계 하나. 그 땅의 다음 세계에 들어서면 열린다(S.world > w, 그 땅에서 일반을 못 깼어도 진으로 도전할 수 있고 이기면 일반 토벌 기록도 채움).
@@ -11017,7 +11228,11 @@ const JIN_W = [
   {c:{musa:{a:[18.100, 15.505, 16.846], b:[21.245, 17.749, 19.401]}, jagaek:{a:[17.409, 15.202, 15.880], b:[21.245, 18.094, 19.025]}, sulsa:{a:[17.649, 14.738, 16.067], b:[21.607, 17.597, 18.861]}, doin:{a:[17.402, 14.839, 15.893], b:[21.501, 17.073, 18.608]}}},   // 부상 진: 곤륜에 막 들어선 때 → 3부 끝
   {c:{musa:{a:[21.337, 17.749, 19.401], b:[22.307, 19.176, 20.059]}, jagaek:{a:[21.240, 18.093, 19.025], b:[22.297, 19.130, 19.767]}, sulsa:{a:[21.604, 17.597, 18.862], b:[22.733, 18.654, 19.667]}, doin:{a:[21.493, 17.073, 18.608], b:[22.636, 18.093, 19.345]}}},   // 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(5차 전직·새 장비 칸·3차 재련까지 한 용사, tools/sim_jin.py measure 4 — 물의 신화 5단계에서 다시 잼. 예전 b는 임시로 a + 0.4)
   {c:{musa:{a:[22.282, 19.176, 20.059], b:[22.727, 19.573, 20.460]}, jagaek:{a:[22.299, 19.130, 19.767], b:[22.625, 19.396, 19.979]}, sulsa:{a:[22.730, 18.654, 19.667], b:[23.038, 18.957, 19.939]}, doin:{a:[22.648, 18.093, 19.345], b:[22.903, 18.409, 19.610]}}},   // 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝(tools/sim_jin.py measure 5 — 물의 신화 7단계)
-  {c:{musa:{a:[22.738, 19.573, 20.460], b:[23.111, 19.889, 20.792]}, jagaek:{a:[22.609, 19.396, 19.979], b:[22.955, 19.730, 20.311]}, sulsa:{a:[23.042, 18.957, 19.939], b:[23.450, 19.230, 20.221]}, doin:{a:[22.918, 18.409, 19.610], b:[23.185, 18.536, 19.829]}}},   // 남쪽 바다 진: 남쪽 바다 끝(깊은 바다 들머리) → 깊은 바다 끝(4부 끝). 깊은 바다 진은 5부에 들어서야 열린다(9단계에서 한 줄 더)
+  {c:{musa:{a:[22.738, 19.573, 20.460], b:[23.111, 19.889, 20.792]}, jagaek:{a:[22.609, 19.396, 19.979], b:[22.955, 19.730, 20.311]}, sulsa:{a:[23.042, 18.957, 19.939], b:[23.450, 19.230, 20.221]}, doin:{a:[22.918, 18.409, 19.610], b:[23.185, 18.536, 19.829]}}},   // 남쪽 바다 진: 남쪽 바다 끝(깊은 바다 들머리) → 깊은 바다 끝(4부 끝)
+  // 5부(물의 신화 9단계): 무사·자객 두 직업만 잼(tools/sim_jin.py measure 7 8 9 — 나머지 직업은 두 직업의 평균). 6차 전직을 넣기 전의 저장으로 잰 값이라, 6차·여섯 직업 저장이 생기면 다시 잰다
+  {c:{musa:{a:[23.101, 19.893, 20.798], b:[24.152, 20.100, 21.213]}, jagaek:{a:[22.983, 19.734, 20.317], b:[23.222, 19.913, 20.496]}}},   // 깊은 바다 진: 4부 끝(란카 길 들머리) → 란카 길 끝
+  {c:{musa:{a:[24.114, 20.100, 21.213], b:[24.792, 20.369, 21.831]}, jagaek:{a:[23.224, 19.913, 20.496], b:[24.741, 20.355, 21.900]}}},   // 란카 길 진: 란카 길 끝(젖의 바다 들머리) → 젖의 바다 끝
+  {c:{musa:{a:[24.826, 20.369, 21.831], b:[25.803, 20.956, 22.507]}, jagaek:{a:[24.745, 20.355, 21.900], b:[25.721, 21.103, 22.625]}}},   // 젖의 바다 진: 젖의 바다 끝(수미산 들머리) → 수미산 끝(5부 끝). 수미산 진은 다음 세계가 없어 열리지 않는다
 ];
 const jinAvg = C => { const L = Object.values(C); if (!L.length) return {a:[0, 0, 0], b:[0, 0, 0]}; const m = f => [0, 1, 2].map(k => L.reduce((t, x) => t + f(x)[k], 0) / L.length); return {a:m(x => x.a), b:m(x => x.b)}; };
 function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (log10 아님, 실제 값)
@@ -11154,7 +11369,7 @@ notiReg({k:'jin', pri:40, flag:'noJin', who:() => { const w = Math.max(0, jinNew
    · 뿔이 빛날 때(HAETAE.horn 구간) 친 피해는 ×hornMul · 눈이 붉을 때(eye 구간) 치면 세지 않고 불을 뿜어 되돌려준다(최대 체력의 burn, 0.4초에 한 번)
    · [구르기] 단추(스페이스) = 물러서기: 눈이 붉은 동안 공격을 멈춘다. 자동 손은 HAND.dodge 확률로 멈춘다
    등급 1~7(HAETAE.T × 그 바다 이야기 끝 단계의 몬스터 체력 — 아래 haetaeTiers). 4등급부터 호박석(6등급부터 반드시), 7등급이면 바로 끝나고 별호 「해태가 고개 끄덕인」 */
-const HAETAE = {tries:3, time:30, cyc:7.5, horn:[1.5, 4.5], eye:[5.5, 7.5], hornMul:2, burn:0.1, T:[5, 12, 25, 50, 100, 180, 300], st:{5:40, 6:40, 7:40}, ch:46, gems:[0, 20, 50, 100, 160, 240, 330, 450], mats:[0, 3, 5, 8, 11, 14, 18, 22]};
+const HAETAE = {tries:3, time:30, cyc:7.5, horn:[1.5, 4.5], eye:[5.5, 7.5], hornMul:2, burn:0.1, T:[5, 12, 25, 50, 100, 180, 300], st:{5:40, 6:40, 7:40, 8:40, 9:40, 10:40}, ch:46, gems:[0, 20, 50, 100, 160, 240, 330, 450], mats:[0, 3, 5, 8, 11, 14, 18, 22]};
 const haetaeHas = () => MAIN_Q.some(q => q.ch >= HAETAE.ch);   // 46장(4부)이 게임에 들어 있나 — 이야기를 다 마친 용사는 skCh()가 99라서 따로 본다
 const haetaeOpen = () => haetaeHas() && skCh() >= HAETAE.ch || !!(window.__game && window.__game.haetaeForce);
 function haetaeLeft(){ if (S.haetae.day !== dummyDay()){ S.haetae.day = dummyDay(); S.haetae.n = 0; } return HAETAE.tries - S.haetae.n; }
@@ -11217,6 +11432,21 @@ const CROSS_Q = MAIN_Q.findIndex(q => q.k === 'world' && q.n === 3), CROSS_Q4 = 
 const CROSS_QW = {}; MAIN_Q.forEach((q, i) => { if (q.k === 'world' && CROSS_QW[q.n] == null) CROSS_QW[q.n] = i; });   // 세계 w로 건너는 퀘스트 번호(3 부상 ~ 7 깊은 바다)
 // 건너기: 천계 → 부상(2부), 부상 → 곤륜(3부). 그 퀘스트가 '지금 이야기'가 되면
 const crossReady = () => S.world >= 2 && S.world < WORLD_MAX && CROSS_QW[S.world + 1] != null && S.quest.main >= CROSS_QW[S.world + 1];   // 곤륜 → 동해(4부, 물의 신화 5단계)
+// 5부 천축으로 건너기(세계 8~10)의 글: 카드 제목·꼬리표·설명·단추·조건 안내·묻는 창·알림 줄
+const IND_CROSS = {
+  8:{t:'란카 길로 — 돌탑을 실은 배', tag:'5부 · 첫째', p:'깊은 바다 이야기(67장)를 마치면 돌탑을 실은 배를 타고 허황옥의 뱃길을 거꾸로 따라 천축 바닷가에 닿아요. 빼앗긴 사람을 되찾으러 가는 「란카 길」이에요.', extra:' 닿으면 대장장이 쇠돌이 다섯 장비 칸 모두에 4차 계승을 해 주고, 6차 전직의 길이 열려요.',
+    btn:'란카 길로 건너기', why:'[퀘스트]에서 깊은 바다 이야기(67장 「물의 신화」, 레벨 550)를 끝까지 마치고 「천축으로」 퀘스트가 되면 건널 수 있어요.',
+    ask:'돌탑을 실은 배를 타고 허황옥의 뱃길을 거꾸로 따라 천축 바닷가 <b>란카 길</b>로 건너가요(5부 천축 · 첫째).', small:'닿으면 대장장이 쇠돌이 다섯 장비 칸 모두에 4차 계승을 해 주고, 레벨 555에 6차 전직의 길이 열려요.',
+    log:'돌탑을 실은 배가 먼 남쪽 바닷가에 닿았어요. 5부 천축, 「란카 길」이에요!', ann:'천축 바닷가 란카 길에 닿았어요!'},
+  9:{t:'젖의 바다로 — 달아난 속삭임을 쫓아', tag:'5부 · 둘째', p:'란카 길 이야기(75장)를 마치면 북쪽으로 달아난 속삭임을 쫓아가요. 힘을 잃은 신들이 영약을 얻으려 휘젓는 「젖의 바다」예요.', extra:'',
+    btn:'젖의 바다로 건너기', why:'[퀘스트]에서 란카 길 이야기(75장 「돌아온 등불」, 레벨 566)를 끝까지 마치고 「젖의 바다로」 퀘스트가 되면 건널 수 있어요.',
+    ask:'북쪽으로 달아난 속삭임을 쫓아, 신들과 아수라가 함께 휘젓는 <b>젖의 바다</b>로 건너가요(5부 천축 · 둘째).',
+    log:'북쪽으로 달아난 속삭임을 쫓아 마른 강을 건넜어요. 「젖의 바다」예요!', ann:'젖의 바다에 닿았어요!'},
+  10:{t:'수미산으로 — 세상 한가운데 산', tag:'5부 · 셋째', p:'젖의 바다 이야기(82장)를 마치면 세상 한가운데 솟은 산을 올라요. 죽음의 길과 네 하늘 문을 지나 속삭인 자를 만나는 「수미산」이에요.', extra:' 5부의 마지막 무대예요.',
+    btn:'수미산으로 건너기', why:'[퀘스트]에서 젖의 바다 이야기(82장 「해를 무는 머리」, 레벨 583)를 끝까지 마치고 「수미산으로」 퀘스트가 되면 건널 수 있어요.',
+    ask:'세상 한가운데 솟은 산, 속삭인 자가 기다리는 <b>수미산</b>을 올라요(5부 천축 · 셋째, 마지막 무대).',
+    log:'북쪽 끝, 구름을 뚫고 솟은 산 아래 섰어요. 세상 한가운데 「수미산」이에요!', ann:'수미산 아래에 닿았어요!'},
+};
 function doCross(){
   if (!crossReady()) return false;
   const w = S.world + 1;
@@ -11224,8 +11454,8 @@ function doCross(){
   S.best['s' + w] = Math.max(S.best['s' + w] || 0, 1); S.best['l' + w] = Math.max(S.best['l' + w] || 0, S.level);
   raid = null; ST = null; refreshStats(); resetRuntime(); mapCache.clear(); applyWorld(); unlockSkills();
   useExpBank();
-  addLog(w === 7 ? '해녀 대상군에게 숨 참는 법을 배워 빛이 닿지 않는 물 밑으로 내려갔어요. 「깊은 바다」예요!' : w === 6 ? '검은 물이 흘러온 쪽으로 뱃머리를 돌렸어요. 할머니 신들의 바다, 「남쪽 바다」예요!' : w === 5 ? '태초의 신의 마지막 시련을 따라 동쪽 바다로 건넜어요. 대왕암 앞바다, 「동해」예요!' : w === 4 ? '열 개의 해를 쫓아 서쪽 하늘 끝으로 건넜어요. 신들의 산 「곤륜」이에요!' : '동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
-  announce(w === 7 ? `${S.name}님이 깊은 바다로 내려갔어요!` : w === 6 ? `${S.name}님이 남쪽 바다에 닿았어요!` : w === 5 ? `${S.name}님이 동해 대왕암 앞바다에 닿았어요!` : w === 4 ? `${S.name}님이 서쪽 끝 곤륜에 닿았어요!` : `${S.name}님이 바다 건너 부상에 닿았어요!`);
+  addLog(IND_CROSS[w] ? IND_CROSS[w].log : w === 7 ? '해녀 대상군에게 숨 참는 법을 배워 빛이 닿지 않는 물 밑으로 내려갔어요. 「깊은 바다」예요!' : w === 6 ? '검은 물이 흘러온 쪽으로 뱃머리를 돌렸어요. 할머니 신들의 바다, 「남쪽 바다」예요!' : w === 5 ? '태초의 신의 마지막 시련을 따라 동쪽 바다로 건넜어요. 대왕암 앞바다, 「동해」예요!' : w === 4 ? '열 개의 해를 쫓아 서쪽 하늘 끝으로 건넜어요. 신들의 산 「곤륜」이에요!' : '동해 용왕의 거북을 타고 바다를 건넜어요. 해 뜨는 섬 「부상」이에요!', 'good');
+  announce(IND_CROSS[w] ? `${S.name}님이 ${IND_CROSS[w].ann}` : w === 7 ? `${S.name}님이 깊은 바다로 내려갔어요!` : w === 6 ? `${S.name}님이 남쪽 바다에 닿았어요!` : w === 5 ? `${S.name}님이 동해 대왕암 앞바다에 닿았어요!` : w === 4 ? `${S.name}님이 서쪽 끝 곤륜에 닿았어요!` : `${S.name}님이 바다 건너 부상에 닿았어요!`);
   sfx('rebirth'); saveLocal();
   return true;
 }
@@ -11868,6 +12098,11 @@ const PROPS = {
   wiltflower(g, x, y, col = '#8a6aa8'){ gPoly(g, [[x - 0.5, y], [x + 0.5, y], [x + 1.6, y - 6], [x + 0.8, y - 6]], '#3a5a4a'); for (const [dx, dy] of [[-1.6, -6], [3.4, -6.4], [1, -8], [1.2, -4.6]]) gEll(g, x + dx, y + dy, 1.6, 1.3, col); gEll(g, x + 1, y - 6.2, 1, 0.9, mix(col, '#ffffff', 0.5)); },
   mushroom(g, x, y, col = '#9a4ad8'){ gPoly(g, [[x - 0.8, y], [x + 0.8, y], [x + 0.6, y - 4], [x - 0.6, y - 4]], '#e8e0d0'); gBlob(g, x, y - 4.5, 3.4, 2, col); gEll(g, x - 1, y - 5, 0.5, 0.4, '#ffffff'); },
 };
+
+// @@TEMP-ALIAS (5부 천축: ART 갈래의 그림이 합쳐지기 전까지 — 없으면 있는 그림을 빌려 쓴다. 합친 뒤 이 묶음(END까지)을 지운다)
+for (const [k, v] of Object.entries({rakshasa:'oni', batrak:'tengu', deer:'tulu', chariot:'wisp', asura:'oni', elephant:'bulgasari', ravana:'oni', kumbha:'cyclops', rahu:'chaos', mara:'cheonma', king4:'admiral'})) if (!MOB_HD[k]) MOB_HD[k] = MOB_HD[v];
+for (const [k, v] of Object.entries({dandaka:'bamboo', kishkindha:'rock', lanka:'heaven', dryriver:'burnfield', mandara:'kunlunmt', milksea:'cloud', yamaroad:'dark', fourgate:'heaven', marafield:'peach'})) if (!ISO_THEME[k]) ISO_THEME[k] = ISO_THEME[v];
+// @@TEMP-ALIAS-END
 
 /* 지역별 풍경: 판 뒤(위쪽)와 앞(아래쪽) 빈터에 소품을 놓는다 */
 function isoScenery(t, rnd){
@@ -13810,7 +14045,7 @@ function nextLine(){
   if (cut.li >= cut.lines.length){ box.classList.remove('done'); cut.lineDur = 0.5; cut.waitShot = true; return; }
   cut.waitShot = false;
   const [who, text] = cut.lines[cut.li];
-  cut.text = text.replace(/\{name\}/g, S.name);
+  cut.text = cutVars(text);
   const song = who === '♪';   // 노래 줄(4부): 가락에 맞춰 한 줄씩
   cut.who = song ? '' : who === '나' ? (S.name || '나') : who;
   cut.speaker = WHO[who] || '';
@@ -13839,7 +14074,7 @@ function updateCut(dt){
 }
 document.getElementById('cut').addEventListener('click', e => { if (e.target.id === 'cutSkip') return; cutTap(); });
 // 긴 연출을 넘기면 한 줄 요약(그 연출의 「… — …」 해설 줄: 이번 장의 물음·그 답)을 알림 줄에 남긴다(물의 신화 5단계)
-function cutSummary(){ if (!cut || cut.shots.length < 3) return ''; let s = ''; for (const sh of cut.shots) for (const [who, tx] of sh[3] || []) if (!who && / — /.test(tx)) s = tx; return s.replace(/\{name\}/g, S.name || ''); }
+function cutSummary(){ if (!cut || cut.shots.length < 3) return ''; let s = ''; for (const sh of cut.shots) for (const [who, tx] of sh[3] || []) if (!who && / — /.test(tx)) s = tx; return cutVars(s); }
 document.getElementById('cutSkip').addEventListener('click', e => { e.stopPropagation(); const sum = cutSummary(); endCut(); if (sum) addLog('넘긴 이야기 한 줄 · ' + sum, 'good'); });
 
 /* 연출 배경 */
@@ -14274,8 +14509,9 @@ const CH_OPEN = {
     ['deepsea', 'hero', 'light', [['', '그리고 아주 작게, 그러나 틀림없이, 까치 우는 소리가 들렸어요.'], ['나', '저쪽이 위다.']]],
     ['daewangam', 'hero,kkachi', 'sparkle', [['', '물 위로 머리를 내밀자 해가 뜨고 있었어요.'], ['', '용사는 길게, 아주 길게 숨을 내쉬었어요. 휘이—.']]],
     ['daewangam', 'hero,kkachi', 'light', [['까치', '그 소리! 해녀 할머니들이 내는 그 소리예요!'], ['', '이번 장의 물음 — 물의 신화는 무엇이었나?']]]],
+  // @@CHOPEN5 (5부 천축 68~90장의 여는 연출 — 이야기 갈래의 글을 이 줄 자리에 끼운다)
 };
-const PART_OF = ch => ch >= 46 ? '제4부 · 바다' : ch >= 35 ? '제3부 · 곤륜' : ch >= 26 ? '제2부 · 부상' : ch >= 17 ? '제1부 · 신과의 전쟁' : ch >= 8 ? '제1부 · 저승' : '제1부 · 이승';
+const PART_OF = ch => ch >= 68 ? '제5부 · 천축' : ch >= 46 ? '제4부 · 바다' : ch >= 35 ? '제3부 · 곤륜' : ch >= 26 ? '제2부 · 부상' : ch >= 17 ? '제1부 · 신과의 전쟁' : ch >= 8 ? '제1부 · 저승' : '제1부 · 이승';
 function showChapterCard(ch){
   const name = CHAPTERS[ch];
   if (!name || (window.__game && window.__game.quiet)) return;
@@ -14765,7 +15001,10 @@ function buildGrow(){
 /* --- 환생 --- */
 function askCross(){
   if (!crossReady()) return;
-  showModal(S.world >= 5 ? `${WORLD_NAME[S.world + 1]}로 건널까요?` : S.world === 4 ? '동해로 건널까요?' : S.world === 3 ? '서쪽 하늘로 건널까요?' : '바다를 건널까요?', S.world >= 5
+  const IC = IND_CROSS[S.world + 1];
+  showModal(S.world >= 5 ? `${WORLD_NAME[S.world + 1]}${S.world + 1 === 10 ? '으' : ''}로 건널까요?` : S.world === 4 ? '동해로 건널까요?' : S.world === 3 ? '서쪽 하늘로 건널까요?' : '바다를 건널까요?', IC
+    ? `<p>${IC.ask} 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 레벨 상한은 ${LV_CAP[S.world + 1]}.</p>${IC.small ? `<p class="small">${IC.small}</p>` : ''}`
+    : S.world >= 5
     ? `<p>${S.world === 5 ? '검은 물이 흘러온 쪽, 할머니 신들이 지키는 <b>남쪽 바다</b>로 건너가요(4부 바다 · 둘째 바다).' : '해녀 대상군에게 숨 참는 법을 배워 빛이 닿지 않는 <b>깊은 바다</b>로 내려가요(4부 바다 · 셋째 바다).'} 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 레벨 상한은 ${LV_CAP[S.world + 1]}.</p>`
     : S.world === 4
     ? `<p>태초의 신의 마지막 시련을 따라 대왕암 앞바다 <b>동해</b>로 건너가요(4부 바다 · 첫째 바다). 레벨·장비·능력치·엽전·펫은 그대로, 사냥 단계만 1부터예요. 레벨 상한은 ${LV_CAP[5]}.</p><p class="small">닿으면 대장장이 쇠돌이 3차 계승을 해 주고, 장비에 투구·어깨·신발 칸과 호박석 세공이 열려요.</p>`
@@ -14775,7 +15014,7 @@ function askCross(){
     [{label:'아직'}, {label:'건너기', primary:true, fn:() => { if (doCross()) { growView = 'reb'; buildTab('grow'); seaOpenCut(); } }}]);
 }
 // 4부 여는 연출(46장): 45장을 마칠 때 보지 못한 용사(이미 3부를 끝내고 '끝없는 신화'를 하던 용사)는 동해에 건너올 때 본다
-const SEA_CH0 = {5:46, 6:53, 7:60};   // 바다마다 첫 장(그 장의 여는 연출을 건너올 때 못 봤으면 보여 준다)
+const SEA_CH0 = {5:46, 6:53, 7:60, 8:68, 9:76, 10:83};   // 바다마다 첫 장(그 장의 여는 연출을 건너올 때 못 봤으면 보여 준다)
 function seaOpenCut(){ const ch = SEA_CH0[S.world]; if (!ch || !CH_OPEN[ch] || S.seenCut['ch' + ch] || (window.__game && window.__game.quiet)) return; S.seenCut['ch' + ch] = 1; playCut(CH_OPEN[ch], {title:CHAPTERS[ch], card:{ch, at:0}}); }
 function buildReb(){
   panel.innerHTML = `${growSegHTML()}
@@ -14794,6 +15033,9 @@ function buildReb(){
     ${S.world >= 6 && WORLD_MAX >= 7 ? `<div class="card ${crossReady() ? 'ready' : ''}" id="crossCard7"><div class="ct">깊은 바다로 — 빛이 닿지 않는 곳<span class="tag">${S.world >= 7 ? '건넜어요' : '4부 · 셋째 바다'}</span></div>
       <p class="story">남쪽 바다 이야기(59장)를 마치면 해녀 대상군에게 숨 참는 법을 배워 물 밑으로 내려가요. 세상이 처음 나뉘던 날의 일이 가라앉아 있는 「깊은 바다」예요. <b>레벨·장비·능력치·엽전이 그대로</b>이고 사냥 단계만 1부터. 레벨 상한은 ${LV_CAP[7] || 550}이에요.</p>
       ${S.world >= 7 ? '' : `<p class="small" id="crossWhy7"></p><button class="btn primary" id="crossBtn7">깊은 바다로 건너기</button>`}</div>` : ''}
+    ${[8, 9, 10].map(w => { const C = IND_CROSS[w]; return S.world >= w - 1 && WORLD_MAX >= w && C ? `<div class="card ${crossReady() ? 'ready' : ''}" id="crossCard${w}"><div class="ct">${C.t}<span class="tag">${S.world >= w ? '건넜어요' : C.tag}</span></div>
+      <p class="story">${C.p} <b>레벨·장비·능력치·엽전이 그대로</b>이고 사냥 단계만 1부터. 레벨 상한은 ${LV_CAP[w]}이에요.${C.extra}</p>
+      ${S.world >= w ? '' : `<p class="small" id="crossWhy${w}"></p><button class="btn primary" id="crossBtn${w}">${C.btn}</button>`}</div>` : ''; }).join('')}
     <div class="card ${rebirthReady() ? 'ready' : ''}" id="rebCard">
       <div class="ct">${S.world === 2 ? '환생 — 끝' : S.world ? '환생 — 하늘로(마지막)' : '환생 — 저승으로'}<span class="tag">윤회 구슬 <b id="rebGain"></b>개 받음</span></div>
       <p class="story">${S.world === 2 ? '환생과 윤회 구슬은 두 번까지예요. 이제 하늘에서 신화를 써 내려가요.' : S.world
@@ -14824,8 +15066,9 @@ function buildReb(){
   if ($('#crossBtn')) $('#crossBtn').addEventListener('click', askCross);
   if ($('#crossBtn4')) $('#crossBtn4').addEventListener('click', askCross);
   if ($('#crossBtn5')) $('#crossBtn5').addEventListener('click', askCross);
-  for (const w of [6, 7]) if ($('#crossBtn' + w)) $('#crossBtn' + w).addEventListener('click', askCross);
+  for (const w of [6, 7, 8, 9, 10]) if ($('#crossBtn' + w)) $('#crossBtn' + w).addEventListener('click', askCross);
   return () => {
+    for (const w of [8, 9, 10]) if ($('#crossBtn' + w)){ $('#crossBtn' + w).disabled = !crossReady(); setText($('#crossWhy' + w), crossReady() ? '준비됐어요!' : IND_CROSS[w].why); }
     if ($('#crossBtn6')){ $('#crossBtn6').disabled = !crossReady(); setText($('#crossWhy6'), crossReady() ? '준비됐어요!' : '[퀘스트]에서 동해 이야기(52장 「용궁의 문」, 레벨 516)를 끝까지 마치고 「남쪽 바다로」 퀘스트가 되면 건널 수 있어요.'); }
     if ($('#crossBtn7')){ $('#crossBtn7').disabled = !crossReady(); setText($('#crossWhy7'), crossReady() ? '준비됐어요!' : '[퀘스트]에서 남쪽 바다 이야기(59장 「용이 못 된 것」, 레벨 533)를 끝까지 마치고 「깊은 바다로」 퀘스트가 되면 건널 수 있어요.'); }
     if ($('#crossBtn5')){ $('#crossBtn5').disabled = !crossReady(); setText($('#crossWhy5'), crossReady() ? '준비됐어요!' : '[퀘스트]에서 곤륜 이야기(45장 「세 하늘의 신화」, 레벨 500)를 끝까지 마치고 「마지막 시련」 퀘스트가 되면 건널 수 있어요.'); }
@@ -16348,7 +16591,7 @@ function buildRaid(){
             <div class="rtop"><b>${info.label}</b><span class="rstate ${wk ? 'new' : 'done'}">${wk ? '주간 첫 승리 보상!' : '이번 주 토벌함 ✓'}</span></div>
             <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티${n ? ` · 진 토벌 ${n}번` : ''}${S.raid.first[b0.key] ? '' : ' · 일반은 못 깼던 곳(이기면 첫 토벌 보상도)'}${pity ? ` · 보스 체력 −${pity}%` : ''}</div>
             <div class="rpow jin" data-jp="${R.w}:${i}"></div>
-            <div class="rchips"><span class="rchip rc-gem">보석 ${fmt(jinGems(info))}${wk ? ` +${fmt(jinWeekGems(info))}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[Math.floor(jinGearIt(R.w) / 4)].name} 장비</span><span class="rchip rc-myth">신화 조각${wk ? ` ${1 + SHARD_SRC.raidFirst}` : ''}</span>${soulOpen() ? '<span class="rchip rc-av">넋 구슬 2배</span>' : ''}<span class="rchip rc-av">진 아바타</span></div>
+            <div class="rchips"><span class="rchip rc-gem">보석 ${fmt(jinGems(info))}${wk ? ` +${fmt(jinWeekGems(info))}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[itemG(jinGearIt(R.w))].name} 장비</span><span class="rchip rc-myth">신화 조각${wk ? ` ${1 + SHARD_SRC.raidFirst}` : ''}</span>${soulOpen() ? '<span class="rchip rc-av">넋 구슬 2배</span>' : ''}<span class="rchip rc-av">진 아바타</span></div>
           </div>
           <button class="btn rgo" data-jin="${R.w}:${i}"></button>
         </div>`; }).join('')}</div></div>`; }).join('');
@@ -16763,6 +17006,9 @@ const JM_WORLD = [
   {name:'동해', part:'4부', sub:'물의 신화 · 첫째 바다', gate:'마지막 시련'},
   {name:'남쪽 바다', part:'4부', sub:'물의 신화 · 둘째 바다', gate:'남쪽 바다로'},
   {name:'깊은 바다', part:'4부', sub:'물의 신화 · 셋째 바다', gate:'깊은 바다로'},
+  {name:'란카 길', part:'5부', sub:'끝없는 신화 · 첫째', gate:'천축으로'},
+  {name:'젖의 바다', part:'5부', sub:'끝없는 신화 · 둘째', gate:'젖의 바다로'},
+  {name:'수미산', part:'5부', sub:'끝없는 신화 · 셋째', gate:'수미산으로'},
 ];
 const JM_DX = 138, JM_Y = [104, 62];   // 지그재그(아래·위). 띠 높이 180
 const jmSpan = w => w >= 5 ? SEAS[w].span : [null, HELL_SPAN, HEAVEN_SPAN, BUSANG_SPAN, KUNLUN_SPAN][w];
@@ -16784,7 +17030,7 @@ function jmChapters(){
     const qs = []; MAIN_Q.forEach((q, i) => { if (q.ch === ch) qs.push([q, i]); });
     if (!qs.length) continue;
     let w = -1;
-    for (const [q] of qs){ const m = /^[sl](\d)$/.exec(q.k); if (m) w = Math.max(w, +m[1]); if (q.k === 'world') w = Math.max(w, q.n); }
+    for (const [q] of qs){ const m = /^[sl](\d+)$/.exec(q.k); if (m) w = Math.max(w, +m[1]); if (q.k === 'world') w = Math.max(w, q.n); }
     if (w < 0) w = curW;
     let st = null;
     for (const [q] of qs) if (q.k === 's' + w){ st = Math.max(1, q.n - 1); break; }
@@ -18511,7 +18757,7 @@ if (location.search.indexOf('simtest') >= 0){
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     patSea, patFlow, breathOn, updateBreath, noSeaPat:false,
     YONGWANG, YGR, startYgr, finishYgr, ygrOpen, ygrLeft, ygrAvatar,
-    SUGUN, startSugun, finishSugun, sugunOpen, sugunLeft, seaDay, seaSoulRoll, sgLuck:null, YV, YV_ROOMS, startYv, yvPick, yvOpen, yvLeft, get yvRun(){ return yvRun; }, yvBox:null, yvLuck:null, DBOSS_SEA, dbSea, PART4A_END, PART4B_END,
+    SUGUN, startSugun, finishSugun, sugunOpen, sugunLeft, seaDay, seaSoulRoll, sgLuck:null, YV, YV_ROOMS, startYv, yvPick, yvOpen, yvLeft, get yvRun(){ return yvRun; }, yvBox:null, yvLuck:null, DBOSS_SEA, dbSea, PART4A_END, PART4B_END, PART4_END, PART5A_END, PART5B_END, MYTHS, skCdOf, mythReqText, questProg, IND1, IND2, IND3, IND_CROSS, indOpen, SEAS, mythK, VAJRA_BOLT, YAMA_SAY, yamaSay, cutVars, STORY_SV, SV_END, HAETAE,
     towerCap, towerRewardText, towerGearIt, towerGearSlot, drawTowerArt, petSprite, craftCap, craftNeed, CRAFT_BASE, craftComp, skChCap, skGr, skinDropPart, skClean, skRelic:null, soulRoll, SL, MT, AV, soulPart, mountPart, petPart, petHowText, mountImg, MOUNT_G,   // 물의 신화 7-2
     startJobTrial, grantJob, jobReady, giveAvatar, equipAvatar, soulK, ownedPct, petImg, mergeState, dpsOf, now, tbOthers, realDps, bossFail, LATE_K, DAILY, dailyCheck, mythSets, classAtk, craftMain, avCount, titleCol, accP, JOB_BONUS, petHpPct, skillMulX, avColPct, lateCol, ascend, ascNeed, ascLv, ascMul, gearG, gearPct, craftEff, gainMul, engrUp, engrLv, engrLvCost, accOpen, ACC, GUARDS, guardUp, guardSet, guardEff, guardGold, guardLv, guardOpen, FORKS, forkPick, forkPending, gainGrudge, bondUp, soulBond, SOUL_BOND, openAvatarBox, avBoxPool, claimHidden, hiddenQuest, AVATARS, JOBS, godRaidInfo, get HELL_END_Q(){ return HELL_END_Q; }, get camX(){ return camX; }, get camY(){ return camY; }, get scale(){ return scale; }, fieldClick,
   };

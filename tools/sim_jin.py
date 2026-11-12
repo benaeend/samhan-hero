@@ -31,7 +31,9 @@ SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
 CLASSES = ['musa', 'jagaek', 'sulsa', 'doin']
 REF = {0: ('jin_{c}_w1s12.json', 'jin_{c}_w1s100.json', 1.0), 1: ('jin_{c}_w2s12.json', 'jin_{c}_w2s84.json', 1.0),
        2: ('save_{c}_q113.json', 'save_{c}_q145.json', 1.0), 3: ('save_{c}_q145.json', 'save_{c}_end.json', 1.0), 4: ('save_{c}_end.json', 'save_{c}_sea1.json', 1.0),
-       5: ('save_{c}_sea1.json', 'save_{c}_sea2.json', 1.0), 6: ('save_{c}_sea2.json', 'save_{c}_sea3.json', 1.0)}   # 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝 · 남쪽 바다 진: 남쪽 바다 끝 → 깊은 바다 끝(4부 끝) — tools/sim_sea4.py가 남긴 저장(물의 신화 7단계)   # 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(tools/sim_sea4.py가 남긴 저장, 물의 신화 5단계)
+       5: ('save_{c}_sea1.json', 'save_{c}_sea2.json', 1.0), 6: ('save_{c}_sea2.json', 'save_{c}_sea3.json', 1.0),
+       7: ('save_{c}_sea3.json', 'save_{c}_ind1.json', 1.0), 8: ('save_{c}_ind1.json', 'save_{c}_ind2.json', 1.0), 9: ('save_{c}_ind2.json', 'save_{c}_ind3.json', 1.0)}   # 5부(물의 신화 9단계): 깊은 바다 진 = 4부 끝 → 란카 길 끝 · 란카 길 진 · 젖의 바다 진 (저장이 있는 직업만 잰다 — 표에 없는 직업은 게임이 평균을 씀)
+HAS = lambda w, c: all((SIMD / n.format(c=c)).exists() for n in REF[w][:2] if n)   # 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝 · 남쪽 바다 진: 남쪽 바다 끝 → 깊은 바다 끝(4부 끝) — tools/sim_sea4.py가 남긴 저장(물의 신화 7단계)   # 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(tools/sim_sea4.py가 남긴 저장, 물의 신화 5단계)
 HANDS = {'자동': None, '평범': {'dodge': 0.75, 'counter': 0.6}, '잘함': {'dodge': 1.0, 'counter': 0.95}}
 RS = [0.8, 1.0, 1.3, 2.0]
 
@@ -160,6 +162,8 @@ async def main():
             for w in worlds:
                 rows = []
                 for c in CLASSES:
+                    if not HAS(w, c):
+                        continue
                     va, vb, _, _ = await anchors(b, w, c, None)
                     rows.append(f"{c}:{{a:[{', '.join(f'{x:.3f}' for x in va)}], b:[{', '.join(f'{x:.3f}' for x in vb)}]}}")
                 print('  {c:{' + ', '.join(rows) + '}},', flush=True)
