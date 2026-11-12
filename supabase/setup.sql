@@ -94,14 +94,39 @@ begin
   return jsonb_build_object('save', r.save, 't', r.save_t);
 end $$;
 
+-- 하루 한 번 남기는 기록(2026-11-12): 그날 처음 저장이 들어올 때, 그 전까지의 기록을 따로 둔다(14일 치).
+-- 잘못 덮어쓴 기록을 되돌릴 때 주인이 SQL Editor에서 꺼내 쓴다. 게임에서는 읽지 못한다(잠금).
+create table if not exists public.samhan_chars_hist (
+  acc text not null references public.samhan_accounts(id) on delete cascade,
+  cid text not null,
+  day date not null,
+  name text,
+  save text,
+  save_t bigint not null default 0,
+  kept_at timestamptz not null default now(),
+  primary key (acc, cid, day)
+);
+alter table public.samhan_chars_hist enable row level security;
+revoke all on public.samhan_chars_hist from public, anon, authenticated;
+
 -- 저장(더 새 기록만 덮어쓴다). 이름이 다른 계정과 겹치면 name_taken
+-- 저장 판 번호("saveBuild")가 서버 것보다 낮으면 old_client: 옛 화면이 새 기록을 잘라 덮어쓰지 못하게 한다
 create or replace function public.samhan_save(p_token uuid, p_cid text, p_name text, p_summary jsonb, p_save text, p_t bigint) returns bigint
 language plpgsql security definer set search_path = public, extensions as $$
-declare a text := samhan_acc(p_token); n int;
+declare a text := samhan_acc(p_token); n int; o record; ob int := 0; nb int := 0; d date := (now() at time zone 'Asia/Seoul')::date;
 begin
   if p_save is not null and char_length(p_save) > 400000 then raise exception 'too_big'; end if;
   select count(*) into n from samhan_chars where acc = a and cid <> p_cid;
   if n >= 4 then raise exception 'too_many'; end if;
+  select name, save, save_t into o from samhan_chars where acc = a and cid = p_cid;
+  if found and o.save is not null and p_save is not null then
+    ob := coalesce(substring(o.save from '"saveBuild":([0-9]{1,9})')::int, 0);
+    nb := coalesce(substring(p_save from '"saveBuild":([0-9]{1,9})')::int, 0);
+    if nb < ob then raise exception 'old_client'; end if;
+    insert into samhan_chars_hist (acc, cid, day, name, save, save_t) values (a, p_cid, d, o.name, o.save, o.save_t)
+      on conflict (acc, cid, day) do nothing;
+    delete from samhan_chars_hist where acc = a and cid = p_cid and day < d - 14;
+  end if;
   begin
     insert into samhan_chars as c (acc, cid, name, summary, save, save_t, updated_at)
       values (a, p_cid, p_name, coalesce(p_summary, '{}'::jsonb), p_save, coalesce(p_t, 0), now())

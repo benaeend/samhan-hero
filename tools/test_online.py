@@ -328,6 +328,40 @@ async def main():
             rows = db("select acc, name from samhan_chars where acc = 'local1'")
             check('서버로 옮겼어요' in msg and rows == [('local1', '옮길용사')], f'이 기기에만 있던 계정·캐릭터가 서버로 옮겨진다 {rows}')
             await D2.screenshot(path=str(OUT / '32_온라인_계정옮김.png'))
+
+            # 저장 보호(2026-11-12): 옛 화면(저장 판 번호가 낮음)이 새 기록을 덮어쓰지 못한다 · 하루 한 번 기록을 따로 남긴다
+            await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
+            await B.wait_for_timeout(600)
+            sb = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = '온라인용사'")
+            tok = db("select token::text from samhan_sessions where acc = 'online1' order by expires_at desc limit 1")[0][0]
+            err = ''
+            try:
+                db("select samhan_save(%s::uuid, (select cid from samhan_chars where name = '온라인용사'), '온라인용사', '{}'::jsonb, %s, 9999999999999)", tok, '{"v":1,"level":1,"pets":{"lv":[1]}}')
+            except Exception as e:  # noqa: BLE001
+                err = str(e)
+            after = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
+            check(sb and sb[0][0] == '1' and 'old_client' in err and after == [(sb[0][1],)], f'저장 판 번호가 없는 옛 화면의 저장은 서버가 받지 않는다 {sb} {err[:40]} {after}')
+            hist = db("select count(*), min(char_length(save)) from samhan_chars_hist where acc = 'online1'")
+            check(hist[0][0] >= 1 and hist[0][1] > 100, f'서버에 그날의 기록이 따로 남는다 {hist}')
+            locked = ''
+            try:
+                with pg.conn() as c, c.cursor() as cur:
+                    cur.execute('set role anon'); cur.execute('select count(*) from samhan_chars_hist')
+            except Exception as e:  # noqa: BLE001
+                locked = str(e)
+            check('permission denied' in locked, f'따로 남긴 기록은 바깥에서 읽지 못한다 {locked[:50]}')
+            # 서버 기록이 더 새 판이면(다른 기기가 새 버전) 이 화면은 불러오지 않고 저장을 멈춘 뒤 새로 고침을 안내한다
+            with pg.conn() as c, c.cursor() as cur:
+                cur.execute("update samhan_chars set save = replace(save, '\"saveBuild\":1', '\"saveBuild\":2'), save_t = save_t + 600000 where name = '온라인용사'")
+            await A.evaluate("() => { window.__game.S.level = 5; }")
+            await A.evaluate('() => window.__game.pushOnline()')
+            await A.wait_for_timeout(1500)
+            ttl = await A.inner_text('#mTitle')
+            await A.evaluate('async () => { window.__game.saveLocal && window.__game.saveLocal(); await window.__game.pushOnline(); }')
+            await A.wait_for_timeout(600)
+            srv2 = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = '온라인용사'")
+            check('새 버전' in ttl and srv2 == [('2', sb[0][1])], f'더 새 판의 기록을 만나면 덮어쓰지 않고 새로 고침을 안내한다 {ttl} {srv2}')
+            await A.screenshot(path=str(OUT / '33_온라인_새버전안내.png'))
             await browser.close()
         web.shutdown(); rpc_srv.shutdown()
     finally:
