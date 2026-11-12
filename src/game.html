@@ -1186,7 +1186,8 @@ body:not(.portrait) .tab{flex-basis:70px}
 body.in-market .ctrl{display:none}
 /* 넋 구슬·구르기/되받기(2026-11 (19)): 기술 칸 왼쪽 */
 .act{position:absolute;z-index:3;right:calc(8px + 254px + 12px);bottom:30px;display:flex;flex-direction:column;gap:8px;align-items:center}
-body.portrait .act{right:12px;top:auto;bottom:calc(var(--ctrlH, 118px) + 14px);flex-direction:column-reverse;gap:10px}
+body.portrait .act{right:12px;top:auto;bottom:calc(var(--ctrlH, 118px) + 14px);flex-direction:row-reverse;gap:10px}   /* (2026-11-12) 세로 화면: [구르기] 위로 쌓던 [넋 부름]을 왼쪽 빈자리로 — 위로 쌓으면 엽전·보석·[캐릭터 바꾸기] 줄을 가렸다 */
+body.portrait:has(#soulBtn:not([hidden])) .log{right:156px}   /* 단추가 둘이면 알림 글 줄이 그 아래로 들어가지 않게 */
 body.portrait .act button{width:60px;height:60px}
 body.in-market .act{display:none}
 .act button{position:relative;width:56px;height:56px;border-radius:50%;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;font-family:inherit;padding:0}
@@ -2830,9 +2831,12 @@ const BAD_WORDS = ['시발', '씨발', 'ㅅㅂ', '병신', 'ㅂㅅ', '개새끼'
 
 /* ================= 업데이트 소식 =================
    새 버전을 올릴 때 NOTE_VER를 바꾸고 NOTES를 고친다. 이미 하던 캐릭터로 들어올 때 기기마다 한 번 보여 준다. */
-const NOTE_VER = '2026-11-12-1', NOTE_KEY = 'samhan-note-seen';
+const NOTE_VER = '2026-11-12-2', NOTE_KEY = 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '2026-11-12 · 편의 고침'],
+  ['허수아비 수련, 5등급이면 바로 끝', '허수아비 수련에서 5등급 피해를 채우면 남은 시간을 기다리지 않고 바로 끝나요. 보상은 그대로 5등급이에요.'],
+  ['세로 화면 단추 자리', '세로 화면 보스 싸움에서 [구르기]·[넋 부름] 단추가 위아래로 쌓여 엽전·보석 줄을 가리던 것을, 아래쪽에 옆으로 나란히 놓았어요. 변신 칸이 [캐릭터 바꾸기]를 가리던 것도 고쳤어요.'],
   ['#', '2026-11-12 · 버그 고침'],
   ['4차 전직이 3차로 돌아가던 것', '4차 전직을 한 용사가 다시 접속하면 3차로 내려가던 버그를 고쳤어요. 4차 기술을 익힌 기록이 있으면 접속할 때 4차로 되돌려요.'],
   ['이야기 퀘스트가 되돌아가던 것', '부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 옛 퀘스트(무기 재련)로 되돌아가던 버그를 고쳤어요. 되돌아간 용사는 접속할 때 그 땅에 건너온 대목으로 되찾아요.'],
@@ -4945,6 +4949,7 @@ function updateRaid(dt){
   if (R.ending){ R.endT -= dt; if (R.endT <= 0) finishRaid(); return; }
   R.time -= dt;
   if (R.time <= 0){ raidEnd(false); return; }
+  if (R.info.dummy && dmgMeter >= dummyTiers()[4]){ R.early = DUMMY_TIME - R.time; raidEnd(true); return; }   // 5등급을 채우면 남은 시간을 기다리지 않고 바로 끝
   if (R.info.fit) fitTick(R, dt);   // 타임 보스·1일 보스 체력 맞추기(FIT)
   if (R.info.tb && (R.deaths || 0) >= TB_LIVES && hero.dead && R.allies.every(a => a.down)){ raidEnd(false); return; }
   if (R.awk){
@@ -5056,7 +5061,8 @@ function startDummy(){
   addLog(`허수아비 수련! ${DUMMY_TIME}초 동안 있는 힘껏 쳐요.`, 'warn');
   return true;
 }
-function finishDummy(){
+function finishDummy(R){
+  const early = R && R.early > 0 ? R.early : 0;
   const dmg = dmgMeter, tier = dummyTier(dmg), w = Math.min(4, S.world + 1);
   if (tier) recWin(false, true);
   const gold = tier ? Math.round(mGold(Math.max(1, S.maxStage)) * 150 * gainMul('gold', true)) : 0, gems = Math.round([0, 15, 45, 90, 150, 225][tier] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()), mats = MAT_SRC.dummy[tier];   // (44) ×1.5·세계 배율·1등급도
@@ -5066,7 +5072,7 @@ function finishDummy(){
   if (tier >= 4){ const k = tier >= 5 ? (Math.random() < 0.5 ? 'ear' : 'brace') : 'ring', gg = Math.min(4, tier >= 5 ? w : w - 1); const r = giveAcc(k, Math.max(0, gg)); acc = ACC[k].names[Math.max(0, gg)] + (r ? '' : ' (이미 더 좋은 것)'); }
   if (dmg > (S.dummy.best || 0)) S.dummy.best = dmg;
   addLog(`허수아비 수련 끝! 피해 ${fmt(dmg)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
-  if (!(window.__game && window.__game.quiet)) showModal('허수아비 수련', `<p>${DUMMY_TIME}초 동안 넣은 피해 <b>${fmt(dmg)}</b></p>
+  if (!(window.__game && window.__game.quiet)) showModal('허수아비 수련', `<p>${early ? `<b>${early.toFixed(1)}초</b> 만에 5등급 달성! 넣은 피해` : `${DUMMY_TIME}초 동안 넣은 피해`} <b>${fmt(dmg)}</b></p>
     <div class="dtier">${[1, 2, 3, 4, 5].map(t => `<span class="${t <= tier ? 'on' : ''}">${t}</span>`).join('')}</div>
     <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${gems}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${acc ? `<span class="rchip rc-acc">${acc}</span>` : ''}${piece ? `<span class="rchip rc-mount">고삐 조각 ${piece}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`,
     [{label:'확인', primary:true}]);
@@ -12693,7 +12699,7 @@ function buildRaid(){
     panel.innerHTML = top + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('scarecrow', '#d8b060')}" alt=""></div>
         <div><div class="ct">허수아비 수련<span class="tag" id="dLeft"></span></div>
-        <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번).</p></div></div>
+        <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번). 5등급을 채우면 바로 끝나요.</p></div></div>
       <div class="card"><div class="ct">등급 보상<span class="small" id="dBest"></span></div>
         <ul class="list dtiers">${[1, 2, 3, 4, 5].map(t => `<li class="qrow" id="dt-${t}"><div><div class="qn"><span><b>${t}등급</b> <span class="small" data-dt="${t}"></span></span>
           <span class="rchips"><span class="rchip rc-gold">엽전</span><span class="rchip rc-gem">보석 ${fmt(Math.round([0, 15, 45, 90, 150, 225][t] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()))}</span><span class="rchip rc-mat">재료 ${MAT_SRC.dummy[t]}</span>${t === 4 ? '<span class="rchip rc-acc">반지</span>' : t === 5 ? '<span class="rchip rc-acc">귀걸이·팔찌</span>' : ''}</span></div></div></li>`).join('')}</ul></div>
