@@ -13840,6 +13840,7 @@ async function enterChar(cid, opts = {}){
   if (!ch){ showCharSelect(); return; }
   let data = opts.data || null, t = data ? data.lastSave || 0 : 0;
   if (!data){
+    if (!session) setTitle(true);   // (2026-11-13) 껐다 켜서 바로 이어 들어올 때, 기록을 불러오는 동안 빈 용사(Lv.1 무사) 화면이 잠깐 비치던 것 — 타이틀을 깔아 둔다
     try { const d = JSON.parse(localStorage.getItem(charKey(acc, cid)) || 'null'); if (d && d.v === 1){ data = d; t = d.lastSave || 0; } } catch (e) {}
     if (cloud){
       showModal('불러오는 중…', '<p>모험 기록을 불러오고 있어요.</p>', []);
@@ -14291,7 +14292,7 @@ window.addEventListener('pagehide', saveLocal);
 
 async function boot(){
   if (window.claude && typeof window.claude.use === 'function'){
-    modalLock = true;
+    modalLock = true; setTitle(true);
     showModal('불러오는 중…', '<p>모험 기록을 불러오고 있어요.</p>', []);
     cloud = await bootCloud();
     if (cloud){
