@@ -148,3 +148,5 @@
 - `takeRemote`: 서버 기록의 `saveBuild`가 내 것보다 낮으면 불러오지 않고 `syncT`만 맞춤 → 이어서 내 기록을 올림. `pushOnlineNow`의 `S.lastSave = max(now(), ch.syncT + 1)`(서버 시각이 앞서 있어도 올라가게), 성공하면 바로 `saveReg()`.
 - `doPetSummon`: 0.25초 안의 겹친 누름은 흘려보냄. `__game`에 `enterChar`·`saveReg`·`saveLocal` 노출. `tools/test_online.py`에 두 확인. `NOTE_VER` `2026-11-12-5`.
 - **남은 숙제(패치에서 볼 것)**: 소환을 마구 누를 때 화면이 죽는 까닭 — `doPetSummon`이 매번 `buildTab('pet', true)`(펫 그림 전부 다시 넣음)·`playFx`·결과 창을 새로 만든다. 탭 다시 그리기를 결과 창을 닫을 때 한 번으로 미루는 것을 검토.
+
+- **(11-12 12:1x 넣음 — 저장 보호 1·2는 `patch-sea` `a79ff8e`, 저장 보호 3은 `7d89095`)** 위 세 묶음을 모두 `patch-sea`에 넣었다. `SAVE_BUILD`는 2, 「이 기기 표」 저장 키는 다른 키처럼 `KP +`(베타에서는 `beta-samhan-dev`), `supabase/setup.sql`은 캐릭터 6칸(`n >= 6`) + 저장 보호(판 번호 거절·하루 기록)를 함께 담았고, `sw.js`는 `samhan-v3` 그대로에 `isMain` 줄을 합쳤다. 업데이트 소식의 「2026-11-12 · 저장 보호」 묶음도 패치 묶음 아래에 있다. 온라인 점검은 판 번호를 게임에서 읽게 고쳤다(29개 통과). **배포 때 `main`과 충돌하면 이 파일들도 `patch-sea` 쪽을 고르면 된다.** 본 게임에 그 뒤로 또 올라간 고침이 있으면(이 줄보다 아래에 새 묶음이 적혀 있으면) 그것만 더 옮긴다. 남은 숙제(소환을 마구 누를 때 화면이 죽는 까닭)는 아직 안 봤다.
