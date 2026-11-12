@@ -2547,7 +2547,7 @@ async def main():
         check(u1['w'] == 7 and u1['cap'] == 400 and u1['max'] == 400 and all(u1['catch']) and u1['soul4'][0] and len(u1['soul4'][1]) == 6 and len(u1['pet4']) >= 2 and set(u1['pet4']) <= {'gomsaegi', 'jara', 'kkoetoki', 'mulbeom'} and u1['parts'] == [5, 3, 6] and u1['buy'] and u1['col'],
               f"4부: 지난 이야기의 넋 셋·곰새기·불개를 챙겨 받고, 바다의 넋 여섯·펫 넷이 구슬·소환에 나온다 {u1['catch']} {u1['soul4']} {u1['pet4']} {u1['parts']}")
         check(all(u1['art']) and len(u1['art']) == 8, f"4부 펫 다섯·탈것 셋 그림이 오류 없이 그려진다 {u1['art']}")
-        check(u1['ws'] == [[4, 95], [5, 12], [5, 50], [6, 20], [6, 43], [7, 37], [7, 52]] and all(u1['boss']) and '호박석' in u1['rw'][0] and '유물' in u1['rw'][1] and '지느러미 날개' in u1['rw'][2] and '용마' in u1['rw'][3],
+        check(u1['ws'] == [[4, 95], [5, 21], [5, 62], [6, 35], [6, 55], [7, 50], [7, 83]] and all(u1['boss']) and '호박석' in u1['rw'][0] and '유물' in u1['rw'][1] and '지느러미 날개' in u1['rw'][2] and '용마' in u1['rw'][3],
               f"탑 301~400층: 동해 → 남쪽 바다 → 깊은 바다 띠, 유물 장비·호박석·350층 날개·400층 용마 {u1['ws']} {u1['rw']}")
         check(u1['start'] is True and u1['info'] and u1['info'][0] == 301 and u1['info'][2], f"4부 용사는 301층에 도전할 수 있다 {u1['info']}")
         tw2 = await up.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = true;
