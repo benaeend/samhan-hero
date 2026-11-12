@@ -133,3 +133,9 @@
 2. `supabase/setup.sql`: `samhan_save`가 판 번호 낮은 저장을 `old_client`로 거절, `samhan_chars_hist`(하루 한 번 기록, 14일, 잠금). 캐릭터 6칸으로 `too_many` 숫자를 고칠 때 이 함수 본문을 지우지 말 것. **주인이 SQL Editor에서 다시 실행해야 켜진다.**
 3. `sw.js`: 길 찾기 응답을 `./index.html`로 받아 둘 때 본 게임 주소일 때만(`isMain`) — `beta/` 화면이 본 게임 자리에 들어가던 것. `CACHE`는 main `samhan-v2-1`, patch-sea의 `samhan-v3`은 그대로 두면 된다(동작 줄만 합침).
 4. `tools/test_online.py` 끝의 「저장 보호」 네 확인. 업데이트 소식 `NOTE_VER` `2026-11-12-3`.
+
+### 저장 보호 2 (11-12 정오쯤, `main`에 올림 — `patch-sea`에도 넣을 것)
+
+- **진짜 원인으로 보이는 것**(온라인 점검으로 재현함): 서버에는 저장됐는데 답을 못 받으면(앱을 잠깐 내림·9초 넘김) `ch.syncT`가 옛 시각으로 남고, 다음 `pushOnlineNow` → `takeRemote`가 서버의 **내 1~2분 전 기록**을 다른 기기 것으로 보고 불러와 그사이 얻은 것(펫 소환 등)이 사라졌다. 고침: `DEV_ID`(화면마다 무작위)를 저장에 `saveDev`로 넣고, `takeRemote`가 불러온 기록의 `saveDev`가 내 것이면 `syncT`만 맞추고 불러오지 않는다.
+- **운영 보상 틀** `GIFTS`·`giveGifts()`·`S.gifts`(`mergeState`가 아는 id만 남김): 서버에 로그인한 그 이름의 캐릭터가 `enterChar`에 들어올 때 한 번. 지금은 가을비 · 보석 15만(`g1112-pet`). `__game.giveGifts` 노출.
+- `tools/test_online.py`에 두 확인 추가(되돌리지 않는다 · 운영 보상 한 번만). `NOTE_VER` `2026-11-12-4`.
