@@ -2860,6 +2860,7 @@ const NOTES = [
   ['사라진 탑 날개·탈것 되찾기', '천공의 탑을 올라간 기록은 있는데 이정표 보상(50·150·250층 날개, 100·200층 탈것)이 사라진 용사는 접속할 때 자동으로 되찾아요.'],
   ['얻은 것이 사라지던 버그 막기', '며칠째 켜 둔 예전 화면(다른 기기·다른 창·홈 화면 앱)이 같은 캐릭터를 서버에 덮어써서, 새로 얻은 펫 같은 것이 사라지는 일이 있었어요. 이제 예전 화면은 저장을 멈추고 「새로 고침」을 안내해요. 서버에는 캐릭터마다 하루 한 번씩 기록을 따로 남겨요. 한 캐릭터는 한 번에 한 기기에서만 해 주세요.'],
   ['#', '2026-11-12 · 편의 고침'],
+  ['레이드 탭 단추가 비던 버그', '토벌패를 상점에서 사서 3개를 넘게 가지고 있으면 레이드 탭의 [입장] 단추 글자·토벌패 수·권장 전투력이 비어 보이던 버그를 고쳤어요.'],
   ['펫 얻는 길 안내', '아직 없는 펫을 누르면 얻는 길을 바르게 알려 줘요. 바쿠·백택은 이야기 보상으로만 얻고 펫 소환에는 나오지 않아요.'],
   ['허수아비 수련, 5등급이면 바로 끝', '허수아비 수련에서 5등급 피해를 채우면 남은 시간을 기다리지 않고 바로 끝나요. 보상은 그대로 5등급이에요.'],
   ['세로 화면 단추 자리', '세로 화면 보스 싸움에서 [구르기]·[넋 부름] 단추가 위아래로 쌓여 엽전·보석 줄을 가리던 것을, 아래쪽에 옆으로 나란히 놓았어요. 변신 칸이 [캐릭터 바꾸기]를 가리던 것도 고쳤어요.'],
@@ -11557,11 +11558,11 @@ function buildSoul(){
     for (const s of SOULS){
       const c = $('#so-' + s.k), own = !!S.soul.own[s.k], st = S.soul.star[s.k] || 0, on = S.soul.eq.slice(0, soulSlots()).includes(s.k);
       c.querySelector('img').style.filter = own ? '' : 'brightness(0) opacity(.4)';
-      setText(c.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(SOUL_STAR_MAX - st) : '');
+      setText(c.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(Math.max(0, SOUL_STAR_MAX - st)) : '');
       setText(c.querySelector('[data-r=val]'), soulValText(s, own ? soulK(s.k) : 1));
       const bt = c.querySelector('[data-k]'); setText(bt, on ? '내리기' : own ? '모시기' : '아직 못 만남'); bt.disabled = !own; bt.classList.toggle('primary', own && !on);
       const bd = soulBond(s.k), bb = c.querySelector('[data-bond]'), full = bd >= BOND_MAX;
-      setText(c.querySelector('[data-r=bond]'), own ? `결 ${'●'.repeat(bd)}${'○'.repeat(BOND_MAX - bd)}` : '');
+      setText(c.querySelector('[data-r=bond]'), own ? `결 ${'●'.repeat(bd)}${'○'.repeat(Math.max(0, BOND_MAX - bd))}` : '');
       bb.hidden = !own || full; if (own && !full){ setText(bb, `결이야기 ${BOND_COST[bd]}`); bb.title = `원한 조각 ${BOND_COST[bd]}개로 결이야기 듣기`; bb.disabled = (S.grudge || 0) < BOND_COST[bd]; }
       c.classList.toggle('on', on);
     }
@@ -11924,7 +11925,7 @@ function buildMount(){
     for (const m of MOUNTS){
       const card = $('#mt-' + m.k), own = !!S.mount.own[m.k], on = S.mount.ride === m.k, st = S.mount.star[m.k] || 0, c = mountBuyCost(m);
       card.querySelector('img').style.filter = own ? '' : 'brightness(0) opacity(.4)';
-      setText(card.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(MOUNT_STAR_MAX - st) : '');
+      setText(card.querySelector('[data-r=star]'), own ? '★'.repeat(st) + '☆'.repeat(Math.max(0, MOUNT_STAR_MAX - st)) : '');
       setText(card.querySelector('[data-r=ab]'), mountAbText(m, own ? mountK(m.k) : 1));
       const cost = c ? (c.cur === 'gold' ? `엽전 ${fmt(c.n)}` : c.cur === 'gems' ? `보석 ${fmt(c.n)}` : `고삐 조각 ${c.n}`) : '';
       setText(card.querySelector('[data-r=from]'), own ? (on ? '타는 중' : '') : c ? (m.src === 'piece' ? `고삐 조각 ${c.n}개로 길들이기` : `마구간: ${cost}`) : `얻는 곳: ${m.from}`);
@@ -12821,7 +12822,7 @@ function buildRaid(){
         <div class="party">${rows.join('')}</div></div>`);
     } else setHTML(live, '');
     const tk = raidTickets(), left = ticketLeft(), pw = power(ST);
-    setText($('#tkInfo'), `토벌패 ${'■'.repeat(tk)}${'□'.repeat(TICKET_MAX - tk)} ${tk}/${TICKET_MAX}${left ? ` · ${fmtTime(left / 1000)}` : ''}`);
+    setText($('#tkInfo'), `토벌패 ${'■'.repeat(Math.max(0, Math.min(12, tk)))}${'□'.repeat(Math.max(0, TICKET_MAX - tk))} ${tk}/${TICKET_MAX}${left ? ` · ${fmtTime(left / 1000)}` : ''}`);
     panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => {
       const i = +bt.dataset.i, info = raidAt(i);
       let t, dis = true;
