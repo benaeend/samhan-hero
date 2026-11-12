@@ -49,7 +49,7 @@ SIM = r"""
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
-  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0;
+  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0};
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
@@ -90,12 +90,33 @@ SIM = r"""
         for (let z = 0; z < 10 && !G.elDone(st); z++) { if (G.elCost(st).gold > G.S.gold || !G.elBrew(O.k)) break; G.elPick(G.elBestCard()); }
         if (G.elDone(st) && st.l[0][1] + st.l[1][1] < 8 && st.n < 3) { const rc = G.elResetCost(st); if (G.S.gems > rc.gems * 3 && (G.S.grudge || 0) >= rc.grudge * 2) G.elReset(O.k); }   // 약하게 굳은 장은 다시 달임
         if (!G.elDone(st) && !elRes) elRes = Math.min(G.S.gold * (opts.elsave ?? 0.6), G.elCost(st).gold); }
+      // 물의 신화 6단계 — 환생의 기억(53장부터, opts.nomem으로 끔): 「떠올린다」를 고르고, 값을 따로 모아(엽전은 가진 것의 30%씩, 보석은 300개만 남기고 — 능력치·소환이 먼저 써 버리지 않게) 치른 뒤 싸운다.
+      // 이승(엽전)과 저승·천계(보석)는 쓰는 재화가 달라 함께 모은다
+      if (G.memOpen() && !G.memClosed() && !opts.nomem) {
+        if (!G.S.mem.ch) G.memPick('yes');
+        if (G.S.mem.ch === 'yes') {
+          const todo = [0, [1, 2].find(x => G.S.mem.p[x] < 4)].filter(x => x != null && G.S.mem.p[x] < 4);
+          for (const b of todo) if (!G.S.mem.paid[b]) { const c = G.memCost(b);
+            if (b === 0) { const take = Math.max(0, Math.min(G.S.gold * 0.3, c.gold - memBank.g)); G.S.gold -= take; memBank.g += take; if (memBank.g >= c.gold) { G.S.gold += memBank.g; memBank.g = 0; G.memPay(0); } }
+            else { const take = Math.max(0, Math.min(G.S.gems - 300, c.gems - memBank.e)); G.S.gems -= take; memBank.e += take; if (memBank.e >= c.gems && (G.S.grudge || 0) >= c.grudge) { G.S.gems += memBank.e; memBank.e = 0; G.memPay(b); } } }
+          const rdy = todo.find(b => G.S.mem.paid[b]);
+          if (rdy != null && !G.raid && !G.bossActive && t >= memHold) { if (G.startMem(rdy)) memPend = [rdy, G.S.mem.p[rdy]]; }
+        }
+      }
+      if (memPend && !G.raid) { if (G.S.mem.p[memPend[0]] === memPend[1]) { memHold = t + 600; first.MF = (first.MF || 0) + 1; } memPend = null; }   // 지면 10분 뒤에 다시
+      if (G.S.mem.orbs > 0) for (let z = 0; z < 50; z++) if (!G.rebUp('atk')) break;   // 기억으로 얻은 윤회 구슬은 무력에(값이 모일 때까지 기다렸다가)
+      // 초각성기 2 퀘스트 「두 번째 깨달음」(56장 뒤): 듣기 → 횟수 채우면 받기 → 스승과 다시 겨루기.
+      // ②(레이드에서 되받기 30번)는 타임 보스·1일 보스·강림처럼 오래 가는 싸움에서 채우는데 시뮬은 그런 싸움을 안 하므로, 열린 지 opts.aw2h(기본 6)시간 뒤 채운 것으로 친다
+      if (G.aw2Open() && !G.S.aw2.got) { const q = G.aw2Quest(); if (aw2T0 == null) aw2T0 = t;
+        if (q) { if (q.i === 0) G.aw2Hear(); if (q.i === 1 && t - aw2T0 >= (opts.aw2h ?? 6) * 3600) G.S.aw2.c = Math.max(G.S.aw2.c, q.n);
+          G.aw2Claim(); if (q.i === 4 && !G.raid && !G.bossActive && t >= aw2Hold) { if (G.aw2Trial()) aw2Hold = t + 1200; } } }
       G.S.gold -= elRes;
       { const fb = G.formBest(); if (fb && G.S.form.eq !== fb) G.S.form.eq = fb; }   // 변신: 가장 센 것을 착용(보스·레이드에서 자동으로 한 번)
       for (const sl of ['weapon', 'armor']) G.ascend(sl);   // 신화·태초 각성(되면 바로)
       { const keepG = ['weapon', 'armor'].reduce((a, sl) => { const N = G.ascNeed(sl); return a + (!N.max && N.world ? N.A.grudge : 0); }, 0);   // 결이야기: 각성에 쓸 원한 조각은 남기고 낮은 마디부터
         const so = G.SOULS.filter(x => G.S.soul.own[x.k] && G.soulBond(x.k) < 3).sort((a, b) => G.soulBond(a.k) - G.soulBond(b.k) || b.g - a.g);
-        for (const x of so) { if (G.S.grudge - [10, 30, 60][G.soulBond(x.k)] < keepG || !G.bondUp(x.k)) break; } }
+        const memGr = G.memOpen() && !opts.nomem && G.S.mem.ch !== 'no' ? G.MEM.grudge[2] * (4 - G.S.mem.p[2]) : 0;   // 환생의 기억(천계 갈래)에 쓸 몫도 남긴다
+        for (const x of so) { if (G.S.grudge - [10, 30, 60][G.soulBond(x.k)] < keepG + memGr || !G.bondUp(x.k)) break; } }
       for (let g = 0; g < 400; g++) {
         let best = null, bs = Infinity;
         for (const k of Object.keys(Wt)) { const b = G.buyInfo(k); if (!b.n) continue; const sc = b.cost * Wt[k]; if (sc < bs) { bs = sc; best = k; } }
@@ -148,6 +169,7 @@ SIM = r"""
     // 보스 다시 도전은 게임의 [보스 자동]에 맡긴다(예전엔 여기서 60초마다 억지로 도전시켰음 — 물의 신화: 도전 기운이 다 찬 뒤엔 간격이 벌어짐)
     mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
+    if (G.S.aw2.q) mark('A' + G.S.aw2.q, t); { const mn = G.S.mem.p[0] + G.S.mem.p[1] + G.S.mem.p[2]; if (mn) mark('M' + mn, t); }
     if (opts.snaps && G.S.world === 3 && !('cross' in snaps)) snaps.cross = JSON.stringify(G.S);
     if (opts.snapQ && !('q' in snaps) && G.S.quest.main >= opts.snapQ && !G.raid) snaps.q = JSON.stringify(G.S);   // 이야기 n번째에 닿은 저장(다음 부 시뮬 출발점)
     if (opts.snaps) { const mm = Math.round(t / 60); if (opts.snaps.includes(mm) && !(mm in snaps) && !G.raid) snaps[mm] = JSON.stringify(G.S); }
@@ -2108,6 +2130,244 @@ async def main():
         await jp.screenshot(path=str(OUT / '30f_직업바꾸기_경고창_세로.png'))
         check('꼭 읽어' in j5['title'] and j5['in'] and j5['nox'] and '2번 → 1번' in j5['left'], f"세로 화면에서도 경고 창이 옆으로 넘치지 않는다(한 주 뒤 다시 2번) {j5}")
         await ctxJ.close()
+
+        # 9-14) 물의 신화 6단계: 초각성기 2(퀘스트 「두 번째 깨달음」·기운·손컨 보너스·직업 효과·넘길 수 없는 설명 연출·연습) · 환생의 기억(고르기·세 갈래·윤회 구슬·상한·오라·별호) — 56·53장이 없는 지금은 아무에게도 안 보임
+        sea1 = json.loads((ROOT / 'tools' / 'beta_saves' / '50_musa_sea1_end.json').read_text(encoding='utf-8'))['save']
+        ctxA = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        ap = await ctxA.new_page()
+        watch(ap, errors, '6단계 ')
+        await fresh(ap)
+        await signup(ap, 'awk2test', 'abcd', '깨달음용사')
+        a1 = await ap.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '깨달음용사'; G.refreshStats(); G.setStage(S.stage); S.bossAuto = false; S.autoBoss = false;
+          // 지금 게임에는 56장·53장이 없다 → 닫혀 있고 아무것도 안 보인다
+          out.closed = [G.aw2Has(), G.aw2Open(), G.aw2Quest(), G.memHas(), G.memOpen(), G.notiList().some(N => N.k === 'aw2' || N.k === 'mem'), G.titleShown().some(t => t.k === 'mem3' || t.k === 'memNo')];
+          out.st0 = [JSON.stringify(S.aw2), JSON.stringify(S.mem)];
+          // 예전 저장(칸 없음)·이상한 값도 받아 준다
+          const old = JSON.parse(JSON.stringify(save)); delete old.aw2; delete old.mem; const m1 = G.mergeState(old); out.merge = [m1.aw2.q, m1.aw2.got, m1.mem.ch, m1.mem.p.join(''), m1.mem.orbs];
+          const bad = G.mergeState(Object.assign(JSON.parse(JSON.stringify(save)), {aw2:{q:99, c:-5, got:'x'}, mem:{ch:'zzz', p:[9, -1, 'a'], orbs:999}})); out.bad = [bad.aw2.q, bad.aw2.c, bad.aw2.got, bad.mem.ch, bad.mem.p.join(''), bad.mem.orbs];
+          // 열기(시험 훅)
+          G.aw2Force = true;
+          const q0 = G.aw2Quest(); out.q0 = [q0.i, q0.t, q0.n, G.aw2Cur()];
+          out.noti = G.notiList().some(N => N.k === 'aw2');
+          out.claim0 = G.aw2Claim();           // 아직 안 들었으니 못 받음
+          out.hear = G.aw2Hear(); out.cur0 = G.aw2Cur(); const g0 = S.gems; out.claim1 = G.aw2Claim(); out.gem1 = S.gems - g0; out.q1 = G.aw2Quest().i;
+          out.noti2 = G.notiList().some(N => N.k === 'aw2');
+          return out; }""", sea1)
+        check(a1['closed'] == [False, False, None, False, False, False, False], f"초각성기 2·환생의 기억은 56·53장이 게임에 들어오기 전에는 닫혀 있고 알림·별호도 안 보인다 {a1['closed']}")
+        check(a1['merge'] == [0, False, '', '000', 0] and a1['bad'] == [5, 0, True, '', '400', 40], f"예전 저장·이상한 값을 불러와도 새 칸이 기본값·범위 안으로 채워진다 {a1['merge']} {a1['bad']}")
+        check(a1['q0'] == [0, '다섯 스승의 한마디', 1, 0] and a1['noti'] and not a1['claim0'] and a1['hear'] and a1['cur0'] == 1 and a1['claim1'] and a1['gem1'] == 600 and a1['q1'] == 1 and not a1['noti2'],
+              f"「두 번째 깨달음」 ①: 스승들의 말을 들어야 보상을 받고 다음 단계로 {a1['q0']} {a1['gem1']} {a1['q1']}")
+        # ②~④: 레이드에서 되받기 · 버팀 깨기 · 맞지 않고 이기기
+        a2 = await ap.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.hand = {dodge:0, counter:0}; G.wipeOff = true;
+          const run = (sec, f) => { for (let i = 0; i < sec * 10; i++){ G.update(0.1); G.addTime(100); if (f) f(i); } };
+          // ② 되받기: 단계 보스에서는 안 세고 레이드에서만(저절로 한 것도)
+          S.inv.potion = 500; S.inv.elixir = 50;
+          (G.S.raid.tk = 3, G.startRaid(0)); run(1); const B = G.raid.boss; B.hp = B.maxHp = 1e300;
+          B.pat = B.pat || {stg:100, cd:99, tel:null, grogT:0, n:0, wipes:[]}; B.pat.wipes = []; B.pat.cd = 99;
+          for (let k = 0; k < 30; k++){ B.pat.tel = {kind:'counter', t:0, T:1.1, auto:{ok:false, at:9, done:false}}; G.counterOk(B, k % 2 === 0); B.pat.grogT = 0; B.pat.stg = 100; }
+          out.c = S.aw2.c; out.ok2 = G.aw2Cur() >= G.aw2Quest().n; out.claim2 = G.aw2Claim(); out.q2 = G.aw2Quest().i;
+          // ③ 버팀 깨기
+          for (let k = 0; k < 20; k++){ B.pat.stg = 100; B.pat.grogT = 0; G.patBreak(B); }
+          out.g = S.aw2.g; out.claim3 = G.aw2Claim(); out.q3 = G.aw2Quest().i;
+          G.raidEnd(false); run(2);
+          // ④ 맞지 않고 이기기: 붉은 칸에 맞은 판은 안 세고, 안 맞은 판만
+          const fight = hitMe => { (G.S.raid.tk = 3, G.startRaid(0)); run(1); const b = G.raid.boss; if (hitMe){ b.pat = {stg:100, cd:99, tel:null, grogT:0, n:0, wipes:[]}; const [x, y] = [G.hero.tx, G.hero.ty], set = new Set(); for (let dx = -6; dx <= 6; dx++) for (let dy = -6; dy <= 6; dy++) set.add((x + dx) + ',' + (y + dy)); G.hero.rollT = 0; b.hp = b.maxHp = 1e300; b.pat.tel = {kind:'tiles', shape:'ring', t:1.5, T:1.6, set, tiles:[...set].map(s => s.split(',').map(Number)), auto:{ok:false, at:9, done:false}}; run(0.5); }
+            b.hp = 1; run(8); return G.raid ? 'still' : 'done'; };
+          const p0 = G.patHurt; out.f1 = fight(true); out.hurt = G.patHurt - p0; out.n1 = S.aw2.n;
+          out.f2 = [fight(false), fight(false), fight(false)]; out.n2 = S.aw2.n; out.claim4 = G.aw2Claim(); out.q4 = G.aw2Quest().i; out.btn = G.aw2Quest().btn;
+          G.hand = null;
+          return out; }""")
+        check(a2['c'] == 30 and a2['ok2'] and a2['claim2'] and a2['q2'] == 2 and a2['g'] == 20 and a2['claim3'] and a2['q3'] == 3, f"「두 번째 깨달음」 ②③: 레이드에서 되받기 30번 · 버팀 깨기 20번을 세고 보상을 받는다 {a2['c']} {a2['g']} {a2['q3']}")
+        check(a2['f1'] == 'done' and a2['hurt'] >= 1 and a2['n1'] == 0 and a2['n2'] == 3 and a2['claim4'] and a2['q4'] == 4 and a2['btn'] == '겨루러 가기',
+              f"「두 번째 깨달음」 ④: 붉은 칸에 맞은 판은 안 세고, 한 번도 안 맞고 이긴 판만 3번 센다 {a2['hurt']} {a2['n1']} {a2['n2']} {a2['q4']}")
+        # ⑤ 스승과 다시 겨루기 → 익힘(시험 모드에서는 연출·연습을 건너뜀) → 싸움에서 기운이 차고 터진다
+        a3 = await ap.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
+          const run = (sec, f) => { for (let i = 0; i < sec * 10; i++){ G.update(0.1); G.addTime(100); if (f) f(i); } };
+          out.job = S.job; out.trial = G.aw2Trial(); out.info = G.raid ? [G.raid.info.aw2t, G.raid.info.bossName, !!G.raid.awk2] : null;
+          G.raid.boss.hp = 1; run(6); out.got = [S.aw2.got, S.aw2.q, S.aw2.tut, G.aw2Quest()]; out.name = G.AW2_SK[S.cls].name;
+          // 자동만: 초당 2 → 50초쯤에 4초 몫
+          G.hand = {dodge:0, counter:0}; G.wipeOff = true; G.PAT.off = true;
+          G.startDummy = G.startDummy; S.dummy.n = 0;
+          const tut = () => { G.startAw2Tut(); const A = G.raid.awk2; A.tut = null; delete A.tut; A.g = 0; A.hand = 0; G.raid.time = G.raid.limit = 200; return A; };   // 연습 허수아비를 빈 기운·제한 200초로 바꿔 시험장으로 쓴다
+          let A = tut(); run(1); const B = G.raid.boss; const g1 = A.g; run(10); out.rate = Math.round((A.g - g1) / 10 * 10) / 10;
+          let t = 11; while (!A.used && t < 80){ run(1); t++; } out.autoT = t; out.autoSec = A.sec; out.rec = S.rec.aw2;
+          run(3); out.oneShot = [A.used, G.castAwaken2(true)]; G.raidEnd(false); run(2);
+          // 손컨: 직접 되받기 +30 · 손으로 싸우는 동안 버팀 깨기 +30 · 붉은 칸에서 직접 구르기 +10 → 7초 몫, 저절로 한 되받기는 기운을 안 준다
+          A = tut(); run(1); const B2 = G.raid.boss; B2.pat = {stg:100, cd:99, tel:null, grogT:0, n:0, wipes:[]};
+          const gA = A.g; B2.pat.tel = {kind:'counter', t:0, T:1.1, auto:{ok:false, at:9, done:false}}; G.counterOk(B2, false); out.autoCtr = Math.round(A.g - gA);
+          B2.pat.grogT = 0; B2.pat.stg = 100; B2.stunT = 0;
+          const gB = A.g; B2.pat.tel = {kind:'counter', t:0, T:1.1, auto:{ok:false, at:9, done:false}}; G.counterOk(B2, true); out.manCtr = Math.round(A.g - gB); out.handT = G.hero.handT > 0;
+          B2.pat.grogT = 0; B2.pat.stg = 100; const gC = A.g; G.patBreak(B2); out.brk = Math.round(A.g - gC);
+          B2.pat.grogT = 0; B2.pat.stg = 100; G.hero.handT = 0; const gD = A.g; G.patBreak(B2); out.brkAuto = Math.round(A.g - gD);
+          B2.pat.grogT = 0; B2.pat.stg = 100; G.hero.rollCd = 0; G.hero.stunT = 0;
+          { const [x, y] = [G.hero.tx, G.hero.ty], set = new Set([x + ',' + y, G.hero.fx + ',' + G.hero.fy]); B2.pat.tel = {kind:'tiles', shape:'rain', t:0, T:3, set, tiles:[[x, y]], auto:{ok:false, at:9, done:false}};
+            const gE = A.g; out.roll = G.heroRoll(true); out.dodge = Math.round(A.g - gE); G.hero.rollCd = 0; const gF = A.g; G.heroRoll(true); out.dodge2 = Math.round(A.g - gF); B2.pat.tel = null; }
+          out.hand = A.hand; A.g = 100; S.aw2.man = true; run(1); out.manHold = !A.used;   // 수동: 가득 차도 누를 때까지 아껴 둔다
+          const dm0 = G.dmgMeterNow ? G.dmgMeterNow() : 0; out.cast = G.castAwaken2(true); out.sec = A.sec; S.aw2.man = false; out.weak = A.weakT > 0;
+          G.raidEnd(false); run(2); G.PAT.off = false; G.hand = null;
+          return out; }""")
+        check(a3['job'] >= 5 and a3['trial'] and a3['info'] and a3['info'][0] and a3['info'][1] == '문무대왕' and not a3['info'][2] and a3['got'] == [True, 5, True, None] and a3['name'] == '대왕암 가르기',
+              f"「두 번째 깨달음」 ⑤: 5차 스승과 다시 겨뤄 이기면 초각성기 2를 익힌다 {a3['info']} {a3['got']} {a3['name']}")
+        check(a3['rate'] == 2 and 48 <= a3['autoT'] <= 54 and a3['autoSec'] == 4 and a3['rec'] >= 1 and a3['oneShot'] == [True, False],
+              f"초각성기 2: 기운은 초당 2 — 저절로만 채우면 약 50초에 4초 몫, 한 판에 한 번 {a3['rate']} {a3['autoT']}초 {a3['autoSec']} {a3['oneShot']}")
+        check(a3['autoCtr'] == 0 and a3['manCtr'] == 30 and a3['handT'] and a3['brk'] == 30 and a3['brkAuto'] == 0 and a3['roll'] and a3['dodge'] == 10 and a3['dodge2'] == 0,
+              f"초각성기 2 손컨 보너스: 직접 되받기 +30 · 손으로 싸우는 동안 버팀 깨기 +30 · 붉은 칸에서 직접 구르기 +10(예고 하나에 한 번), 저절로 한 것은 0 {a3['autoCtr']} {a3['manCtr']} {a3['brk']} {a3['brkAuto']} {a3['dodge']} {a3['dodge2']}")
+        check(a3['hand'] == 60 and a3['manHold'] and a3['cast'] and a3['sec'] == 7 and a3['weak'], f"초각성기 2: 손으로 60을 채우면 7초 몫, 수동이면 누를 때까지 아껴 두고, 무사는 보스가 주는 피해 -30% {a3['hand']} {a3['sec']} {a3['weak']}")
+        # 직업 효과 넷 + 피해가 초 몫만큼
+        a4 = await ap.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.PAT.off = true; G.wipeOff = true;
+          const run = (sec) => { for (let i = 0; i < sec * 10; i++){ G.update(0.1); G.addTime(100); } };
+          const c0 = S.cls;
+          for (const c of ['musa', 'jagaek', 'sulsa', 'doin']){
+            G.setClass(c); G.refreshStats(); (G.S.raid.tk = 3, G.startRaid(0)); run(1); const R = G.raid, B = R.boss, A = R.awk2; B.hp = B.maxHp = 1e300; if (R.awk) R.awk.used = true;
+            const hit0 = G.bossHit(B, G.hero); A.g = 100; A.hand = 0; G.hero.hp = G.ST.maxHp * 0.3; for (const a of R.allies){ a.down = true; a.downT = 6; a.hp = 0; }
+            const hp0 = B.hp; G.castAwaken2(true);
+            out[c] = {name:G.AW2_SK[c].name, weak:Math.round(G.bossHit(B, G.hero) / hit0 * 100), crit:A.critT > 0, stun:Math.round((B.stunT || 0) * 10) / 10, hp:Math.round(G.hero.hp / G.ST.maxHp * 100), up:R.allies.filter(a => !a.down).length, n:R.allies.length};
+            G.raidEnd(false); run(2);
+          }
+          G.setClass(c0); G.refreshStats(); G.PAT.off = false;
+          return out; }""")
+        check(a4['musa']['weak'] == 70 and not a4['musa']['crit'] and a4['jagaek']['crit'] and a4['jagaek']['weak'] == 100 and a4['sulsa']['stun'] >= 4 and a4['doin']['hp'] >= 78 and a4['doin']['up'] == a4['doin']['n'] and a4['doin']['n'] > 0 and a4['musa']['up'] == 0,
+              f"초각성기 2 직업 효과: 무사 보스 피해 -30% · 자객 모든 공격 치명타 · 술사 보스 4초 멈춤 · 도인 체력 50% 회복과 동료 일으킴 {a4}")
+        # 화면: 퀘스트 카드 · 기술 화면 카드 · 넘길 수 없는 설명 연출 · 연습 허수아비 · 단추(가로·세로)
+        await ap.evaluate("() => { const G = window.__game, S = G.S; G.quiet = false; S.aw2 = {q:3, c:30, g:20, n:1, hear:true, got:false, tut:false, man:false}; G.hideModal(); }")
+        await tab(ap, 'quest')
+        await ap.wait_for_timeout(400)
+        a5 = await ap.evaluate("() => { const c = document.querySelector('#aw2Card'); return [!c.hidden, document.querySelector('#a2Title').textContent, document.querySelector('#a2Prog').textContent, document.querySelector('#a2Claim').disabled]; }")
+        check(a5[0] and '두 번째 깨달음 4/5' in a5[1] and a5[2] == '1 / 3' and a5[3], f"[퀘스트]에 「두 번째 깨달음」 카드가 단계·진행과 함께 보인다 {a5}")
+        await ap.evaluate("() => document.querySelector('#aw2Card').scrollIntoView({block:'center'})")
+        await ap.wait_for_timeout(200)
+        await ap.screenshot(path=str(OUT / '31-aw2-quest.png'))
+        await ap.evaluate("() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }")
+        await ap.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); S.aw2.q = 4; S.aw2.n = 3; G.aw2Trial(); G.raid.boss.hp = 1; }")
+        await ap.wait_for_timeout(3500)
+        a6 = await ap.evaluate("() => { const G = window.__game; return [G.S.aw2.got, !!G.cut, G.cut && G.cut.opts.noSkip, getComputedStyle(document.querySelector('#cutSkip')).display, G.cut ? G.cut.shots.length : 0]; }")
+        check(a6[0] and a6[1] and a6[2] and a6[3] == 'none' and a6[4] == 2, f"초각성기 2를 익히는 순간 설명 연출이 시작되고 [건너뛰기] 단추가 없다 {a6}")
+        await ap.wait_for_timeout(900)
+        await ap.screenshot(path=str(OUT / '31b-aw2-tutorial.png'))
+        for _ in range(16):
+            if not await ap.evaluate('() => !!window.__game.cut'):
+                break
+            await ap.click('#cut', position={'x': 300, 'y': 200})
+            await ap.wait_for_timeout(160)
+        await ap.wait_for_timeout(1500)
+        a7 = await ap.evaluate("() => { const G = window.__game, b = document.querySelector('#aw2Btn'), R = G.raid; return [!G.cut, !!(R && R.info.aw2tut), R && R.awk2 ? R.awk2.g : -1, !b.hidden, b.classList.contains('full'), document.querySelector('#aw2Txt').textContent, getComputedStyle(document.querySelector('#cutSkip')).display]; }")
+        check(a7[0] and a7[1] and a7[2] == 100 and a7[3] and a7[4] and a7[5] == '누르기!', f"설명 연출이 끝나면 연습 허수아비가 나오고, 기운이 가득 찬 초각성 2 단추가 「누르기!」로 반짝인다 {a7}")
+        await ap.screenshot(path=str(OUT / '31c-aw2-practice.png'))
+        box = await ap.evaluate("() => { const r = e => { const x = document.querySelector(e); if (!x || x.hidden) return null; const b = x.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; }; return {a:r('#aw2Btn'), s:r('#soulBtn'), h:r('#handBtn'), mini:r('#mapBtn'), form:r('#formBtn'), sk:r('.ctrl')}; }")
+        hitn = lambda p, q: bool(p and q and p[0] < q[2] and q[0] < p[2] and p[1] < q[3] and q[1] < p[3])
+        check(box['a'] and not hitn(box['a'], box['s']) and not hitn(box['a'], box['h']) and not hitn(box['a'], box['mini']) and not hitn(box['a'], box['form']), f"가로 화면: 초각성 2 단추가 넋 부름·구르기·미니맵·변신 칸과 겹치지 않는다 {box}")
+        await ap.click('#aw2Btn')
+        await ap.wait_for_timeout(700)
+        a8 = await ap.evaluate("() => { const G = window.__game, R = G.raid; return [!!(R && R.awk2 && R.awk2.used), document.querySelector('#aw2Txt').textContent]; }")
+        await ap.screenshot(path=str(OUT / '31d-aw2-cast.png'))
+        await ap.wait_for_timeout(4500)
+        a9 = await ap.evaluate("() => { const G = window.__game; return [!G.raid, G.S.aw2.tut, !document.querySelector('#modal').hidden, document.querySelector('#mTitle').textContent]; }")
+        check(a8[0] and a8[1] == '씀' and a9[0] and a9[1] and a9[2] and '대왕암 가르기' in a9[3], f"단추를 누르면 초각성기 2가 터지고, 연습이 끝나면 간추린 설명 창이 뜬다 {a8} {a9}")
+        await ap.evaluate("() => window.__game.hideModal()")
+        await tab(ap, 'skill')
+        await ap.wait_for_timeout(300)
+        a10 = await ap.evaluate("() => { const c = document.querySelector('#aw2Info'); return [!!c, c ? c.textContent.includes('대왕암 가르기') : false, !!document.querySelector('#aw2Mode'), !!document.querySelector('#aw2Again')]; }")
+        check(a10 == [True, True, True, True], f"[기술]에 초각성기 2 카드(자동/수동 바꾸기 · 설명 다시 보기)가 보인다 {a10}")
+        await ap.evaluate("() => { const c = document.querySelector('#aw2Info'); if (c) c.scrollIntoView({block:'center'}); }")
+        await ap.wait_for_timeout(200)
+        await ap.screenshot(path=str(OUT / '31e-aw2-skill.png'))
+        await ap.evaluate("() => window.__game.closePage()")
+
+        # 환생의 기억
+        m1 = await ap.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.memForce = true; G.hideModal();
+          out.open = [G.memOpen(), G.memClosed(), G.notiList().some(N => N.k === 'mem'), G.titleShown().some(t => t.k === 'mem3')];
+          out.reb0 = [S.reb.pts, S.reb.total, G.rebMax(G.REB_STATS[2]), G.rebMax(G.REB_STATS[4])];
+          out.pay0 = G.memPay(0);                       // 아직 고르지 않았으면 못 함
+          out.later = G.memPick('later'); out.ch1 = S.mem.ch; out.noti1 = G.notiList().some(N => N.k === 'mem');   // 「나중에」면 알림은 더 안 오고 [수련] → [환생]에서 다시
+          out.yes = G.memPick('yes'); out.ch2 = S.mem.ch; out.again = G.memPick('no');   // 한 번 정하면 못 바꿈
+          const c0 = G.memCost(0), c1 = G.memCost(1), c2 = G.memCost(2);
+          out.cost = [c0.gold > 0 && c0.gems === 0, c1.gems, c2.gems, c0.mat, c1.mat, c2.mat, c2.grudge, c0.mk];
+          S.gold = 0; out.poor = [G.memCostOk(0), G.memPay(0)];
+          S.gold = c0.gold * 5; S.gems = 100000; S.mat.m3 = 5000; S.grudge = 200; S.inv.potion = 500; S.inv.elixir = 50;
+          return out; }""")
+        check(m1['open'] == [True, False, True, True] and not m1['pay0'] and m1['later'] and m1['ch1'] == 'later' and not m1['noti1'] and m1['yes'] and m1['ch2'] == 'yes' and not m1['again'],
+              f"환생의 기억: 강림도령 알림 → 「나중에」는 다시 열 수 있고, 「떠올린다」를 고르면 바꿀 수 없다 {m1['open']} {m1['ch1']} {m1['ch2']}")
+        check(m1['cost'][0] and m1['cost'][1:] == [3000, 6000, 150, 250, 350, 20, 'm3'] and m1['poor'] == [False, False], f"환생의 기억 값: 이승 = 엽전·저승/천계 = 보석 + 지금 땅 재료(+천계는 원한 조각), 모자라면 못 치른다 {m1['cost']} {m1['poor']}")
+        m2 = await ap.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = true; G.hand = {dodge:1, counter:1};
+          const run = (sec) => { for (let i = 0; i < sec * 10; i++){ G.update(0.1); G.addTime(100); } };
+          const g0 = S.gold, e0 = S.gems, m0 = S.mat.m3, r0 = S.reb.pts, t0 = S.reb.total, c0 = G.memCost(0);
+          out.start0 = G.startMem(0);                    // 값을 안 치르면 못 싸움
+          out.pay = G.memPay(0); out.paid = [Math.round(g0 - S.gold) === c0.gold, m0 - S.mat.m3]; out.pay2 = G.memPay(0);   // 두 번 내지 않음
+          out.start = G.startMem(0); const I = G.raid.info; out.info = [I.mem.join(','), I.bossName, I.mw, I.region, !!I.fit, G.raid.allies.length, G.raid.limit];
+          // 지면 값을 다시 내지 않고 다시 싸운다
+          G.raidEnd(false); run(2); out.lose = [S.mem.p[0], S.mem.paid[0], S.reb.pts - r0];
+          const jin0 = S.jin.n;
+          const win = b => { if (!S.mem.paid[b] && !G.memPay(b)) return 'nopay'; if (!G.startMem(b)) return 'nostart'; if (G.raid.info.fit) G.raid.info.fit.tgt = 1; run(1.5); if (G.raid) G.raid.boss.hp = 1; run(6); return G.raid ? 'still' : 'ok'; };   // 내 세기에 맞춘 싸움(FIT)은 시간표보다 앞서 못 깎으니 시험에서는 시간표를 1초로 줄인다
+          out.w0 = [win(0), win(0), win(0)]; out.p0 = [S.mem.p[0], S.reb.pts - r0, S.mem.orbs];
+          out.w0d = win(0); out.p0d = [S.mem.p[0], S.reb.pts - r0]; out.over = G.memPay(0);   // 다 한 갈래는 더 못 함
+          const names = [];
+          for (let k = 0; k < 4; k++){ G.memPay(1); G.startMem(1); names.push(G.raid.info.bossName + '/' + (G.raid.info.jin ? 'jin' : 'x') + '/' + G.raid.allies.length); run(0.8); G.raid.boss.hp = 1; run(6); }
+          out.hell = names; out.p1 = [S.mem.p[1], S.reb.pts - r0, S.jin.n - jin0];
+          const n2 = [];
+          for (let k = 0; k < 4; k++){ G.memPay(2); G.startMem(2); n2.push(G.raid.info.bossName); G.raid.info.fit.tgt = 1; run(1.5); if (G.raid) G.raid.boss.hp = 1; run(6); }
+          out.sky = n2; out.p2 = [S.mem.p[2], S.reb.pts - r0, S.reb.total - t0, S.mem.orbs, S.mem.fin];
+          out.title = [!!S.title.own.mem3, !!S.title.own.memNo]; out.cap = [G.rebMax(G.REB_STATS[2]), G.rebMax(G.REB_STATS[4]), G.rebMax(G.REB_STATS[0])];
+          out.spent = [e0 - S.gems, m0 - S.mat.m3, 200 - S.grudge];
+          // 구슬을 쓰고 상한 너머까지: 신속 10 → 15
+          S.reb.pts = 500; let n = 0; while (G.rebUp('spd') && n < 99) n++; out.spd = S.reb.up.spd; const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.reb.up.spd, re.mem.ch, re.mem.p.join(''), re.mem.fin, re.mem.orbs];
+          G.hand = null; G.quiet = false;
+          return out; }""")
+        check(not m2['start0'] and m2['pay'] and m2['paid'] == [True, 150] and not m2['pay2'] and m2['start'] and m2['info'] == ['0,0', '멧돼지 대왕', 0, 0, True, 0, 60],
+              f"환생의 기억 · 이승: 값을 치르면 내 세기에 맞춘 옛 보스(혼자·옛 땅)와 싸운다 {m2['paid']} {m2['info']}")
+        check(m2['lose'] == [0, True, 0] and m2['w0'] == ['ok', 'ok', 'ok'] and m2['p0'] == [3, 6, 6] and m2['w0d'] == 'ok' and m2['p0d'] == [4, 8] and not m2['over'],
+              f"환생의 기억: 지면 값을 다시 내지 않고, 이기면 윤회 구슬(이승 2개씩) — 다 한 갈래는 닫힌다 {m2['lose']} {m2['p0']} {m2['p0d']}")
+        check(m2['hell'][0].startswith('진 진광대왕/jin/') and m2['hell'][3].startswith('진 오도전륜대왕/jin/') and m2['p1'] == [4, 20, 0] and m2['sky'] == ['전우치', '홍길동', '을지문덕', '이순신 장군의 넋'],
+              f"환생의 기억 · 저승은 시왕 진 넷(오늘의 진 횟수는 그대로), 천계는 네 스승의 넋 {m2['hell']} {m2['p1']} {m2['sky']}")
+        check(m2['p2'] == [4, 40, 40, 40, True] and m2['title'] == [True, False] and m2['cap'] == [15, 25, 0] and 35800 <= m2['spent'][0] <= 36000 and 2950 <= m2['spent'][1] <= 3000 and 70 <= m2['spent'][2] <= 80 and m2['spd'] == 15 and m2['re'] == [15, 'yes', '444', True, 40],
+              f"환생의 기억을 모두 마치면 윤회 구슬 40개(마무리 8 포함) · 별호 「세 번 산 자」 · 신속 15·영안 25까지, 다시 불러와도 그대로 {m2['p2']} {m2['cap']} {m2['spent']} {m2['re']}")
+        # 화면: [수련] → [환생]의 카드(고르기 전 · 길을 걷는 중) · 고르기 창 · 세 번째 오라
+        await ap.evaluate("() => { const G = window.__game, S = G.S; S.mem = {ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0}; G.growViewSet && G.growViewSet('reb'); G.hideModal(); G.memAsk(); }")
+        await ap.wait_for_timeout(400)
+        m3 = await ap.evaluate("() => [!document.querySelector('#modal').hidden, document.querySelector('#mTitle').textContent, [...document.querySelectorAll('#mBtns button')].map(b => b.textContent)]")
+        check(m3[0] and m3[1] == '환생의 기억' and m3[2] == ['떠올린다', '나중에', '떠올리지 않는다'], f"강림도령의 물음: 떠올린다 · 나중에 · 떠올리지 않는다 {m3}")
+        await ap.screenshot(path=str(OUT / '32-mem-ask.png'))
+        await ap.click('#mBtns button:nth-child(3)')
+        await ap.wait_for_timeout(400)
+        m4 = await ap.evaluate("() => [document.querySelector('#mTitle').textContent, [...document.querySelectorAll('#mBtns button')].map(b => b.textContent), window.__game.S.mem.ch]")
+        check(m4[0] == '정말 떠올리지 않을까요?' and m4[1] == ['돌아가기', '떠올리지 않는다'] and m4[2] == '', f"「떠올리지 않는다」는 한 번 더 확인한다 {m4}")
+        await ap.click('#mBtns button:nth-child(2)')
+        await ap.wait_for_timeout(300)
+        m5 = await ap.evaluate("() => { const G = window.__game, S = G.S; const r = [S.mem.ch, !!S.title.own.memNo, G.memStart(), G.memPick('yes')]; return r; }")
+        check(m5 == ['no', True, False, False], f"떠올리지 않기로 하면 닫히고 별호 「뒤돌아보지 않는 자」를 얻는다 {m5}")
+        await ap.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); S.mem = {ch:'yes', p:[4, 1, 0], paid:[false, true, false], fin:false, orbs:11}; S.gems = 100000; S.mat.m3 = 5000; S.grudge = 200; }")
+        await tab(ap, 'grow')
+        await ap.evaluate("() => { const b = document.querySelector('#gv-reb'); if (b) b.click(); }")
+        await ap.wait_for_timeout(500)
+        m6 = await ap.evaluate("() => { const c = document.querySelector('#memCard'); if (!c) return null; c.scrollIntoView({block:'center'}); return [...document.querySelectorAll('#memList .btn')].map(b => b.textContent + (b.disabled ? '(x)' : '')).concat([document.querySelector('#memCard .tag').textContent]); }")
+        check(m6 == ['완료(x)', '싸우러 가기', '떠올리기', '윤회 구슬 11/40'], f"[수련] → [환생]의 「환생의 기억」 카드에 세 갈래의 진행·값·단추가 보인다 {m6}")
+        await ap.wait_for_timeout(300)
+        await ap.screenshot(path=str(OUT / '32b-mem-card.png'))
+        await ap.click('#memList [data-mb="2"]')
+        await ap.wait_for_timeout(300)
+        m7 = await ap.evaluate("() => [document.querySelector('#mTitle').textContent, /보석 .+ · .+ 350 · 원한 조각 20/.test(document.querySelector('#mBody').textContent), [...document.querySelectorAll('#mBtns button')].map(b => b.textContent)]")
+        check(m7[0] == '천계의 기억 1/4' and m7[1] and m7[2] == ['아직', '값을 치르고 떠올리기'], f"갈래의 [떠올리기]는 값을 보여 주고 한 번 더 묻는다 {m7}")
+        await ap.click('#mBtns button:nth-child(2)')
+        await ap.wait_for_timeout(1800)
+        m8 = await ap.evaluate("() => { const G = window.__game, R = G.raid; return [!!R, R && R.info.bossName, R && R.info.mem.join(','), G.S.mem.paid[2], 100000 - G.S.gems]; }")
+        check(m8[:4] == [True, '전우치', '2,0', True] and 5980 <= m8[4] <= 6000, f"값을 치르면 바로 기억 속 싸움이 시작된다 {m8}")
+        await ap.screenshot(path=str(OUT / '32c-mem-fight.png'))
+        await ap.evaluate("() => { const G = window.__game, S = G.S; G.raidEnd(false); window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }")
+        await ap.wait_for_timeout(1500)
+        await ap.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); S.mem.fin = true; }")
+        await ap.wait_for_timeout(600)
+        await ap.screenshot(path=str(OUT / '32d-mem-aura.png'))
+        # 세로 화면: 싸움 단추 셋이 한 줄에 나란히 — 서로·위쪽 재화 줄·알림 줄과 겹치지 않는다
+        await ap.set_viewport_size({'width': 396, 'height': 800})
+        await ap.wait_for_timeout(500)
+        await ap.evaluate("() => { const G = window.__game; G.hideModal(); G.closePage(); G.quiet = true; G.PAT.off = false; (G.S.raid.tk = 3, G.startRaid(0)); for (let i = 0; i < 12; i++){ G.update(0.1); G.addTime(100); } G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.quiet = false; }")
+        await ap.wait_for_timeout(900)
+        pb = await ap.evaluate("() => { const r = e => { const x = document.querySelector(e); if (!x || x.hidden || getComputedStyle(x).display === 'none') return null; const b = x.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; }; return {a:r('#aw2Btn'), s:r('#soulBtn'), h:r('#handBtn'), top:r('.topr'), log:r('.log'), form:r('#formBtn'), ch:r('#charBtn'), port:document.body.classList.contains('portrait')}; }")
+        check(pb['port'] and pb['a'] and pb['s'] and pb['h'] and not hitn(pb['a'], pb['s']) and not hitn(pb['a'], pb['h']) and not hitn(pb['s'], pb['h']) and not hitn(pb['a'], pb['top']) and not hitn(pb['a'], pb['log']) and not hitn(pb['s'], pb['log']) and not hitn(pb['a'], pb['form']) and not hitn(pb['a'], pb['ch']) and pb['a'][0] >= 0,
+              f"세로 화면: 초각성 2·넋 부름·구르기 단추가 한 줄에 나란히, 재화 줄·알림 줄·변신 칸·[캐릭터 바꾸기]와 겹치지 않는다 {pb}")
+        await ap.screenshot(path=str(OUT / '31f-aw2-portrait.png'))
+        await ap.evaluate("() => { const G = window.__game; G.raidEnd(false); }")
+        await ctxA.close()
 
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
