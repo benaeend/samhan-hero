@@ -2325,7 +2325,7 @@ const APT_TAG = {   // b 기본 공격 · c 되받기 · s 기술 칸 0~14. 공�
   changgaek:{b:'atk', c:'boss', s:['atk','atk','atk','atk','atk','boss','atk','boss','atk','boss','atk','atk','atk','boss','boss']},
 };
 const APT_W = {musa:{atk:0.8, hp:0.2}, jagaek:{cr:0.35, cd:0.65}, sulsa:{sk:0.65, cdr:0.35}, doin:{spd:1, hp:0}, gungsa:{cd:0.5, spd:0.5}, changgaek:{atk:0.6, boss:0.4}};   // 직업 피해 가운데 꼬리표 몫(어림 — 화면·전투력용. 밸런스 담당이 aptForce로 재서 고침)
-const APT = {up:0.35, dn:0.30, dz:0.15, grace:14, base:1, half:0.5, spdK:1, aimK:1, lineK:0.3,
+const APT = {up:0.35, dn:0.40, dz:0.15, grace:14, base:1, half:0.85, kp:0.35, kn:1, spdK:1, aimK:1, lineK:0.3, upA:{atk:0.15, hp:0.20, spd:0.25},   // upA 능력마다 따로 둔 up(없으면 up — 공격력·체력은 옵션 값 자체가 크고 예전 용사가 이미 많이 가져서(베타 무사가 패치 날 1.2배를 넘지 않게), 공격 속도는 '공격 속도의 길'이 따로 붙어서 낮게) · kp/kn 고를 곳이 좁은 능력의 분모 바닥. 2026-11-13 밸런스: sim_apt 여섯 직업 × 3·4·5부 끝
   W:{craft:3, elix:2, skin:2, amb:2, spirit:2, mount:1, guard:1, acc:1},     // 출처 무게
   P:{craft:3, elix:5, skin:1, amb:10, spirit:1, mount:0.5, guard:3, acc:2}};  // 앞몫(옵션이 적을 때 몫을 기대 쪽에 붙여 둠)
 const APT_CAT = {   // 옵션 범주 → 능력(없으면 'x' = 어느 직업의 맞는 능력도 아님). {능력: 몫}은 둘로 나뉘는 것
@@ -2341,47 +2341,54 @@ const APT_CAT = {   // 옵션 범주 → 능력(없으면 'x' = 어느 직업의
 const APT_OLD_BEST = {jagaek:{w:'hunt'}, doin:{a:'life'}};   // 9-5 전 ENGR_BEST — 이 각인을 낀 예전 저장은 그 칸 한 번 무료 바꾸기
 const APT_STAT = {atk:'atk', hp:'hp', crit:'cr', critDmg:'cd', aspd:'spd'};   // [수련] 능력치 → 능력(★ 표시만)
 const aptOne = (map, k) => { const v = map[k]; return v == null ? {x:1} : typeof v === 'string' ? {[v]:1} : v; };
+const aptTop = (map, keys, k = 1) => { const o = {}; for (const key of keys) for (const [a, v] of Object.entries(aptOne(map, key))) o[a] = Math.max(o[a] || 0, v * k); return o; };   // 그 칸에서 한 능력에 줄 수 있는 가장 큰 몫
 const aptEven = (map, keys) => { const o = {}; for (const k of keys) for (const [a, v] of Object.entries(aptOne(map, k))) o[a] = (o[a] || 0) + v / keys.length; return o; };
 function aptSrc(){   // 출처마다 {k, pts:{능력:점수}, e:{능력:기대 몫}, tot}
   const out = [], N = window.__game && window.__game.aptNeutral;
-  const src = (k, units) => { const pts = {}, e = {}; let tot = 0;
+  const src = (k, units) => { const pts = {}, e = {}, mx = {}; let tot = 0;
     for (const u of units){ if (!(u.p > 0)) continue; tot += u.p;
       for (const [a, v] of Object.entries(u.c)) pts[a] = (pts[a] || 0) + u.p * v;
-      for (const [a, v] of Object.entries(u.e)) e[a] = (e[a] || 0) + u.p * v; }
+      for (const [a, v] of Object.entries(u.e)) e[a] = (e[a] || 0) + u.p * v;
+      for (const [a, v] of Object.entries(u.m || u.e)) mx[a] = (mx[a] || 0) + u.p * v; }
     if (!(tot > 0)) return;
     for (const a in e) e[a] /= tot;
-    out.push({k, pts:N && N[k] ? Object.fromEntries(Object.entries(e).map(([a, v]) => [a, v * tot])) : pts, e, tot}); };   // 시험: 셈에서 뺀 출처는 실제 몫 = 기대 몫
-  src('craft', CRAFT_SLOTS.map(cs => { const it = S.craft[cs.k]; return it && it.t && it.e ? {p:it.t * engrLvMul(cs.k), c:aptOne(APT_CAT.craft, it.e), e:aptEven(APT_CAT.craft, ENGR[cs.k].map(x => x.k))} : {p:0}; }));
-  if (elOpenW() && S.elix) src('elix', ORGANS.filter(elOrganOpen).flatMap(O => { const st = S.elix.o[O.k]; return st ? st.l.map(([t, lv]) => ({p:lv, c:aptOne(APT_CAT.elix, t), e:aptEven(APT_CAT.elix, O.pool)})) : []; }));
-  src('skin', SK_PARTS.flatMap(P => { const it = S.skin && S.skin.eq[P.k]; return it ? it.l.map(([t, v]) => ({p:v, c:aptOne(APT_CAT.skin, t), e:aptEven(APT_CAT.skin, Object.keys(SK_STATS))})) : []; }));
-  if (seaOpen() && S.amber){ const A = ambSum(), ks = AMB_GOOD.map(x => x.k); src('amb', ks.map(k => ({p:A.L[k] || 0, c:aptOne(APT_CAT.amb, k), e:aptEven(APT_CAT.amb, ks)}))); }
-  { const ks = SPIRITS.map(x => x.k); src('spirit', ALL_SLOTS.map(sl => { const b = spBeast(sl); return b >= 0 ? {p:1, c:aptOne(APT_CAT.spirit, ks[b]), e:aptEven(APT_CAT.spirit, ks)} : {p:0}; })); }
+    for (const a in mx) mx[a] /= tot;
+    out.push({k, pts:N && N[k] ? Object.fromEntries(Object.entries(e).map(([a, v]) => [a, v * tot])) : pts, e, mx, tot}); };   // mx: 이 출처에서 그 능력에 몰 수 있는 가장 큰 몫(줄 둘 가운데 하나·문양 둘 가운데 하나…)   // 시험: 셈에서 뺀 출처는 실제 몫 = 기대 몫
+  src('craft', CRAFT_SLOTS.map(cs => { const it = S.craft[cs.k]; return it && it.t && it.e ? {p:it.t * engrLvMul(cs.k), c:aptOne(APT_CAT.craft, it.e), e:aptEven(APT_CAT.craft, ENGR[cs.k].map(x => x.k)), m:aptTop(APT_CAT.craft, ENGR[cs.k].map(x => x.k))} : {p:0}; }));
+  if (elOpenW() && S.elix) src('elix', ORGANS.filter(elOrganOpen).flatMap(O => { const st = S.elix.o[O.k]; return st ? st.l.map(([t, lv]) => ({p:lv, c:aptOne(APT_CAT.elix, t), e:aptEven(APT_CAT.elix, O.pool), m:aptTop(APT_CAT.elix, O.pool, 0.5)})) : []; }));
+  src('skin', SK_PARTS.flatMap(P => { const it = S.skin && S.skin.eq[P.k]; if (!it) return []; const rest = Object.keys(SK_STATS).filter(t => t !== it.l[0][0]);   // 첫 줄은 부위가 정해 둔 능력(고를 수 없음), 나머지 줄은 남은 넷 가운데
+    return it.l.map(([t, v], j) => { const c = aptOne(APT_CAT.skin, t); return j ? {p:v, c, e:aptEven(APT_CAT.skin, rest), m:aptTop(APT_CAT.skin, rest, 1 / Math.max(1, it.l.length - 1))} : {p:v, c, e:c, m:c}; }); }));
+  if (seaOpen() && S.amber){ const A = ambSum(), ks = AMB_GOOD.map(x => x.k); src('amb', ks.map(k => ({p:A.L[k] || 0, c:aptOne(APT_CAT.amb, k), e:aptEven(APT_CAT.amb, ks), m:aptTop(APT_CAT.amb, ks, 0.5)}))); }
+  { const ks = SPIRITS.map(x => x.k); src('spirit', ALL_SLOTS.map(sl => { const b = spBeast(sl); return b >= 0 ? {p:1, c:aptOne(APT_CAT.spirit, ks[b]), e:aptEven(APT_CAT.spirit, ks), m:aptTop(APT_CAT.spirit, ks)} : {p:0}; })); }
   { const own = MOUNTS.filter(m => S.mount && S.mount.own[m.k]), m = rideM();
     if (m && own.length >= 2){ const ab = mm => aptEven(APT_CAT.mount, Object.keys(mm.ab)), ex = {}; for (const o of own) for (const [a, v] of Object.entries(ab(o))) ex[a] = (ex[a] || 0) + v / own.length;
-      src('mount', [{p:1, c:ab(m), e:ex}]); } }
+      const top = {}; for (const o of own) for (const [a, v] of Object.entries(ab(o))) top[a] = Math.max(top[a] || 0, v);
+      src('mount', [{p:1, c:ab(m), e:ex, m:top}]); } }
   { const op = GUARDS.filter(g => guardShown(g) && guardOpen(g)), on = S.guard && GD[S.guard.on];
-    if (on && guardOpen(on) && op.length >= 2) src('guard', [{p:guardLv(on.k), c:aptOne(APT_CAT.guard, on.eff), e:aptEven(APT_CAT.guard, op.map(g => g.eff))}]); }
+    if (on && guardOpen(on) && op.length >= 2) src('guard', [{p:guardLv(on.k), c:aptOne(APT_CAT.guard, on.eff), e:aptEven(APT_CAT.guard, op.map(g => g.eff)), m:aptTop(APT_CAT.guard, op.map(g => g.eff))}]); }
   { const ks = ACC_ORDER.filter(accOpen); src('acc', ks.map(k => ({p:S.acc[k].g + 1, c:aptOne(APT_CAT.acc, k), e:aptEven(APT_CAT.acc, ks)}))); }
   return out;
 }
 let aptC = null;   // refreshStats에서 지움
 const aptGrace = () => { if (!S.apt) return false; if (!S.apt.t0) S.apt.t0 = now(); const G = window.__game; return G && G.aptGraceForce != null ? !!G.aptGraceForce : now() - S.apt.t0 < APT.grace * 864e5; };
-function aptM(a){
-  if (a >= 0) return APT.base * (1 + APT.up * a);
+function aptM(a, ab){
+  if (a >= 0) return APT.base * (1 + (APT.upA[ab] ?? APT.up) * a);
   return APT.base * (1 - APT.dn * Math.max(0, (-a - APT.dz) / (1 - APT.dz)) * (aptGrace() ? 0.5 : 1));
 }
 function aptCalc(){   // {a:{능력:−1~1}, m:{능력:배율}, spd:spdOpt %} — 직업과 상관없음(직업은 어느 능력을 보느냐만 다름)
   if (aptC) return aptC;
-  const L = aptSrc(), a = {}, m = {};
+  const L = aptSrc(), a = {}, m = {}, raw = {}, N = window.__game && window.__game.aptNeutral;
   for (const ab of Object.keys(APT_ABIL)){
     let num = 0, dp = 0, dn = 0;
     for (const s of L){ const e = s.e[ab] || 0; if (!(e > 0)) continue;   // 이 능력을 고를 수 없는 출처는 빼고
-      const W = APT.W[s.k], P = APT.P[s.k], sh = ((s.pts[ab] || 0) + P * e) / (s.tot + P), H = e + APT.half * (1 - e);
+      const W = APT.W[s.k], P = APT.P[s.k], sh = ((s.pts[ab] || 0) + P * e) / (s.tot + P), H = e + APT.half * (Math.max(e, s.mx[ab] || 0) - e);   // 다 찬 것으로 치는 몫 = 기대 몫 + (몰 수 있는 가장 큰 몫 − 기대 몫) × half
       num += W * (sh - e); dp += W * (H - e); dn += W * e; }
-    a[ab] = num >= 0 ? (dp > 0 ? Math.min(1, num / dp) : 0) : (dn > 0 ? Math.max(-1, num / dn) : 0);
-    m[ab] = aptM(a[ab]);
+    raw[ab] = num >= 0 ? Math.min(1, num / Math.max(dp, APT.kp)) : Math.max(-1, num / Math.max(dn, APT.kn));   // 고를 곳이 좁은 능력(치명 확률·재사용 등)은 분모 바닥(kp·kn) — 줄 하나의 운으로 크게 흔들리지 않게
   }
-  return (aptC = {a, m, spd:spdOptRaw()});
+  if (S.apt && S.apt.old && !N){ const b = {}; for (const ab in raw) if (raw[ab] < 0) b[ab] = Math.round(-raw[ab] * 1000) / 1000; S.apt.b = b; delete S.apt.old; }   // 9-5 전 저장: 패치 날의 쏠림은 손해로 치지 않음(그 뒤 더 엇나간 만큼만)
+  const B = (S.apt && S.apt.b) || {};
+  for (const ab in raw){ a[ab] = raw[ab] < 0 ? Math.min(0, raw[ab] + (B[ab] || 0)) : raw[ab]; m[ab] = aptM(a[ab], ab); }
+  return (aptC = {a, m, raw, spd:spdOptRaw()});
 }
 function spdOptRaw(){   // 고르는 옵션에서 온 공격 속도 %(호박석 돛 · 영약 · 영물 원숭이) — 신속 각인·팔찌·신발·능력치·버프는 안 넣음(2-5)
   let p = 0;
@@ -2422,11 +2429,13 @@ function aptSpiritPick(sl){ if (!(S.equip[sl] >= 24)) return -1; const P = spSt(
 function aptRebuild(mode){
   const G = window.__game, main = aptMain(), has = (map, k) => Object.keys(aptOne(map, k)).some(a => main.includes(a));
   const isDmg = (map, k) => { const ab = Object.keys(aptOne(map, k))[0]; return ab !== 'x' && ab !== 'def' && (ab !== 'hp' || main.includes('hp')); };
-  const list = (map, keys) => { const all = keys.filter(k => isDmg(map, k)); return mode === 'match' ? all.filter(k => has(map, k)) : mode === 'miss' ? all.filter(k => !has(map, k)) : all; };
-  let ci = 0; const pick = L => L[ci++ % L.length];
+  const Wm = APT_W[S.cls] || {}, wOf = (map, k) => Math.max(...Object.keys(aptOne(map, k)).map(a => main.includes(a) ? 1 + (Wm[a] || 0) : 0));   // match: 피해 몫이 큰 맞는 능력부터(둘 다 들어가는 곳은 둘 다)
+  const list = (map, keys) => { const all = keys.filter(k => isDmg(map, k)); return mode === 'match' ? all.filter(k => has(map, k)).sort((x, y) => wOf(map, y) - wOf(map, x)) : mode === 'miss' ? all.filter(k => !has(map, k)) : all; };
+  let ci = 0; const pick = L => mode === 'match' ? L[0] : L[ci++ % L.length];
   if (mode !== 'asis'){
+    if (S.apt){ delete S.apt.b; delete S.apt.old; }   // 새로 고른 용사로 봄(패치 날 봐주기 없음)
     for (const k of ['w', 'a', 'n']){ const it = S.craft[k]; if (!it || !it.t || !isDmg(APT_CAT.craft, it.e)) continue; const Lc = list(APT_CAT.craft, ENGR[k].map(x => x.k)); if (!Lc.length) continue;   // 피해 능력 쪽 줄만 바꿈(받는 피해·경험치·펫 줄은 그대로)
-      const bk = (ENGR_BEST[S.cls] || {})[k]; it.e = mode === 'match' && Lc.includes(bk) ? bk : pick(Lc); it.e2 = ''; }
+      const bk = (ENGR_BEST[S.cls] || {})[k]; it.e = mode === 'match' && Lc.includes(bk) && wOf(APT_CAT.craft, bk) >= wOf(APT_CAT.craft, Lc[0]) ? bk : pick(Lc); it.e2 = ''; }
     if (elOpenW() && S.elix) for (const O of ORGANS){ const st = S.elix.o[O.k]; if (!st || !elOrganOpen(O)) continue;
       for (const j of [0, 1]){ if (!isDmg(APT_CAT.elix, st.l[j][0])) continue; const Le = list(APT_CAT.elix, O.pool.filter(t => EL_K[t] && t !== st.l[1 - j][0])); if (Le.length) st.l[j][0] = pick(Le); } }
     for (const P of SK_PARTS){ const it = S.skin && S.skin.eq[P.k]; if (!it) continue;
@@ -5274,8 +5283,11 @@ function mergeState(d){
   // @@MERGE-J (갈래 J(9-5 직업 적성)가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   { const a = d.apt && typeof d.apt === 'object' ? d.apt : null, ew = a && a.esw && typeof a.esw === 'object' ? a.esw : {};   // 물의 신화 9-5: 직업 적성
     out.apt = {v:1, t0:a && +a.t0 > 0 ? Math.min(+a.t0, 9e15) : 0, esw:{}, note:a ? (a.note ? 1 : 0) : (out.chosen ? 1 : 0)};   // note: 9-5 전 저장이면 까치가 한 번 알린다
-    if (a){ for (const k of ['w', 'a', 'n']) if (ew[k]) out.apt.esw[k] = 1; }
-    else { const old = APT_OLD_BEST[out.cls] || {}; for (const k of Object.keys(old)) if (out.craft && out.craft[k] && out.craft[k].t && out.craft[k].e === old[k]) out.apt.esw[k] = 1; } }   // 9-5 전 저장: 추천이 바뀐 각인을 낀 칸은 한 번 무료
+    if (a){ for (const k of ['w', 'a', 'n']) if (ew[k]) out.apt.esw[k] = 1;
+      if (a.old) out.apt.old = 1;
+      if (a.b && typeof a.b === 'object'){ const b = {}; for (const k of Object.keys(APT_ABIL)) if (+a.b[k] > 0) b[k] = Math.min(1, +a.b[k]); if (Object.keys(b).length) out.apt.b = b; } }
+    else { if (out.chosen) out.apt.old = 1;   // 9-5 전 저장: 처음 적성을 셈할 때 그때의 쏠림을 apt.b에 적어 둠(aptCalc) — 패치 날 손해 없음
+      const old = APT_OLD_BEST[out.cls] || {}; for (const k of Object.keys(old)) if (out.craft && out.craft[k] && out.craft[k].t && out.craft[k].e === old[k]) out.apt.esw[k] = 1; } }   // 9-5 전 저장: 추천이 바뀐 각인을 낀 칸은 한 번 무료
   // @@END-J
   return out;
 }
@@ -17318,7 +17330,7 @@ function buildGuard(){
 // 물의 신화 9-5: 직업 적성 화면 도우미
 const APT_STAT_VALS = Object.values(APT_STAT);
 const aptTagText = i => { const d = skDef(i), t = aptTagOf(i); return d.atk ? `${aptName(t)} ${aptX(aptHitMul(i))}` : `${aptName(t)} · 버프`; };
-const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} — 기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(APT.up * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%). 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
+const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} — 기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(Math.max(...aptMain().map(a => APT.upA[a] ?? APT.up)) * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%). 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
 function aptWhereList(){
   const M = aptMain(), mine = (map, k) => Object.keys(aptOne(map, k)).some(a => M.includes(a)), R = [];
   R.push(['각인', CRAFT_SLOTS.map(c => { const it = S.craft[c.k], E = it.t && it.e ? engrOf(c.k, it.e) : null; return `${c.name.replace('비전 ', '')} ${E ? E.name + (mine(APT_CAT.craft, E.k) ? '★' : '') : '없음'}`; }).join(' · '), 'craft']);
