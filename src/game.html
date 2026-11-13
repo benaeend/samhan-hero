@@ -241,6 +241,7 @@ body.cmp #page .partbar{margin:5px 0 5px;padding:3px}body.cmp #page .ptab{paddin
 .seg.four{grid-template-columns:repeat(4,1fr)}
 .seg.six{grid-template-columns:repeat(5,1fr)}
 .card.hidq{border-color:rgba(169,139,255,.55);box-shadow:0 0 0 1px rgba(169,139,255,.25),0 0 22px rgba(169,139,255,.18)}
+.card.sp{margin-top:10px;border-color:rgba(241,214,166,.45);box-shadow:0 0 0 1px rgba(241,214,166,.14),0 0 18px -8px rgba(190,170,255,.55)}.card.sp .small{line-height:1.6}.spbtns{display:flex;flex-wrap:wrap;gap:6px}.spbtns .chip[disabled]{opacity:.4}
 .card.asc{margin-top:10px;border-color:rgba(255,90,138,.45);box-shadow:0 0 0 1px rgba(255,90,138,.18),0 0 18px -6px rgba(122,240,232,.5)}.card.asc .small{line-height:1.6}
 .guards{display:grid;gap:8px}.card.guard{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px}
 .card.guard.on{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc),0 0 16px -6px var(--gc)}.card.guard.lock{opacity:.55}
@@ -1788,6 +1789,97 @@ function seaGearDrop(kind){
   let it = Math.random() < D.relic ? 20 + (Math.random() < 0.25 ? 1 : 0) : D.base + ((Math.random() * D.up) | 0);
   return {slot, it, isNew:giveItem(slot, it)};
 }
+/* ================= 물의 신화 9-25: 영물 등급(5부 천축 최종 등급) · 깃든 짐승 =================
+   영물 장비(장비 번호 24~27 = 영물 I~IV): 소환·합성으로는 안 나오고 5부(세계 8 이상) 수문장·레이드 보상 spiritGearDrop(src)에서만(유물에서 합성은 막혀 있음).
+   영물 장비는 얻을 때 깃든 짐승(코끼리·공작·뱀·원숭이·소) 하나가 정해진다. 칸마다 가진 영물 수를 짐승별로 세어 두고(S.spirit.pool[칸][짐승]) 낀 칸의 짐승은
+   S.spirit.eq[칸](없거나 0이면 가장 많은 것). 같은 짐승을 여러 칸에 맞추면(다섯 칸 가운데 2·3·5칸) 짐승별 추가 효과 SP_FX가 켜지고, 합성하면 짐승이 이어진다(같은 짐승끼리 먼저).
+   수치는 출발점 — 밸런스 담당이 다시 볼 것(5부 끝 무사 bench로 다섯 칸을 한 짐승으로 맞추면 보스 피해 ×1.2~1.3쯤: 처음 값 소 10·공작 26%는 ×1.4를 넘어 낮춤) */
+const SPIRITS = [
+  {k:'elephant', name:'코끼리', color:'#b9c6e0', d:'체력 · 받는 피해 감소'},
+  {k:'peacock', name:'공작', color:'#35d6b8', d:'기술 피해'},
+  {k:'serpent', name:'뱀', color:'#86d65a', d:'치명타 피해'},
+  {k:'monkey', name:'원숭이', color:'#f0a64a', d:'공격 속도 · 이동 속도'},
+  {k:'ox', name:'소', color:'#efe0b0', d:'공격력 · 보스 피해'},
+];
+const SP_AT = [2, 3, 5];   // 같은 짐승이 낀 칸 수 문턱
+// 문턱별 효과(%, 문턱마다 따로 더해짐). def는 받는 피해 감소 %
+const SP_FX = {
+  elephant:[{hp:8}, {def:5}, {hp:12, def:5}],
+  peacock:[{skill:4}, {skill:6}, {skill:8}],
+  serpent:[{cdmg:5}, {cdmg:6}, {cdmg:9}],
+  monkey:[{spd:5}, {spd:4, move:10}, {spd:6, move:15}],
+  ox:[{atk:4}, {boss:4}, {atk:6, boss:5}],
+};
+const SP_STAT = {atk:'공격력', hp:'체력', skill:'기술 피해', boss:'보스 피해', cdmg:'치명타 피해', spd:'공격 속도', move:'이동 속도', def:'받는 피해 감소'};
+const spFxText = fx => Object.entries(fx).map(([t, v]) => `${SP_STAT[t]} ${t === 'def' ? '−' : '+'}${v}%`).join(' · ');
+const SPIRIT_GEAR = {gate:{base:20, up:2, spirit:0.06}, raid:{base:20, up:2, spirit:0.15}};   // 5부 수문장·레이드 드롭(4부 유물과 같은 결: 평소 유물 I~II, 가끔 영물 I(25%는 II)). 천공의 탑 401층~·곳간은 다른 갈래가 같은 함수를 부른다
+const spiritOpen = () => S.world >= 8 || !!(window.__game && window.__game.spiritForce);
+function spSt(){
+  if (!S.spirit || typeof S.spirit !== 'object') S.spirit = {pool:{}, eq:{}};
+  if (!S.spirit.pool || typeof S.spirit.pool !== 'object') S.spirit.pool = {};
+  if (!S.spirit.eq || typeof S.spirit.eq !== 'object') S.spirit.eq = {};
+  for (const k of ALL_SLOTS){
+    const P = S.spirit.pool[k];
+    if (!Array.isArray(P)) S.spirit.pool[k] = [0, 0, 0, 0, 0]; else for (let b = 0; b < 5; b++) P[b] = Math.max(0, Math.floor(+P[b]) || 0);
+    const e = S.spirit.eq[k]; S.spirit.eq[k] = Number.isInteger(e) && e >= -1 && e < 5 ? e : -1;
+  }
+  return S.spirit;
+}
+const spOwned = slot => { const c = S.gear[slot].count; return Math.max(0, c[24]) + Math.max(0, c[25]) + Math.max(0, c[26]) + Math.max(0, c[27]); };
+// 가진 영물 수와 짐승 목록을 맞춘다(모자라면 저절로 하나 정해 주고, 남으면 낀 짐승이 아닌 것·많은 것부터 뺀다). refreshStats가 부른다
+function spFixAll(){
+  let any = false; for (const k of ALL_SLOTS) if (spOwned(k) > 0 || (S.spirit && S.spirit.pool && S.spirit.pool[k] && S.spirit.pool[k].some(x => x > 0))) any = true;
+  if (!any) return;
+  const st = spSt();
+  ALL_SLOTS.forEach((slot, si) => {
+    const P = st.pool[slot], total = spOwned(slot); let sum = P.reduce((a, b) => a + b, 0), n = 0;
+    while (sum < total){ P[(si * 2 + sum * 3 + 1 + n) % 5]++; sum++; n++; }
+    while (sum > total){ let bi = -1; for (let b = 0; b < 5; b++) if (P[b] > 0 && (bi < 0 || (b !== st.eq[slot] && (bi === st.eq[slot] || P[b] > P[bi])))) bi = b; P[bi]--; sum--; }
+  });
+}
+// 낀 칸의 짐승(영물이 아니면 -1)
+function spBeast(slot){
+  if (!(S.equip[slot] >= 24)) return -1;
+  const st = spSt(), P = st.pool[slot], e = st.eq[slot];
+  if (e >= 0 && P[e] > 0) return e;
+  let bi = -1; for (let b = 0; b < 5; b++) if (P[b] > 0 && (bi < 0 || P[b] > P[bi])) bi = b;
+  return bi < 0 ? 0 : bi;
+}
+// 지금 짐승별 칸 수와 켜진 효과
+function spiritSum(){
+  const n = [0, 0, 0, 0, 0]; for (const k of ALL_SLOTS){ const b = spBeast(k); if (b >= 0) n[b]++; }
+  const on = [], fx = {};
+  n.forEach((c, b) => { SP_AT.forEach((at, i) => { if (c >= at) for (const [t, v] of Object.entries(SP_FX[SPIRITS[b].k][i])){ fx[t] = (fx[t] || 0) + v; if (!on.includes(b)) on.push(b); } }); });
+  return {n, on, fx};
+}
+// 영물 장비를 얻는다(깃든 짐승은 무작위, 시험은 __game.spBeastForce). 돌려주는 값 {isNew, beast}
+function spGive(slot, it, beast){
+  const st = spSt(), pre = S.equip[slot];
+  if (beast == null) beast = window.__game && window.__game.spBeastForce != null ? window.__game.spBeastForce : (Math.random() * 5) | 0;
+  st.pool[slot][beast]++;
+  const isNew = giveItem(slot, it);
+  if (S.equip[slot] === it && pre !== it) st.eq[slot] = beast;   // 새로 낀 영물은 그 짐승으로
+  return {isNew, beast};
+}
+// 합성(영물끼리)은 짐승이 이어진다: 낀 짐승·많은 짐승부터 재료로 쓰고, 새 장비는 맨 처음 쓰인 짐승
+function spMerge(slot, removeN, addN){
+  const st = spSt(), P = st.pool[slot], pref = st.eq[slot];
+  const order = [0, 1, 2, 3, 4].sort((a, b) => ((b === pref) - (a === pref)) || P[b] - P[a]);
+  let left = removeN, first = -1;
+  for (const b of order){ const t = Math.min(P[b], left); if (t > 0){ P[b] -= t; left -= t; if (first < 0) first = b; } if (!left) break; }
+  if (first >= 0) P[first] += addN;
+}
+// 5부 수문장 gate · 레이드 raid(·다른 갈래가 붙이는 tower · vault)에서 부른다. 돌려주는 값 {slot, it, isNew, beast(영물이면 0~4)}
+function spiritGearDrop(src){
+  const D = SPIRIT_GEAR[src] || SPIRIT_GEAR.raid; if (!spiritOpen()) return null;
+  const slot = ALL_SLOTS[(Math.random() * ALL_SLOTS.length) | 0], luck = window.__game && window.__game.spiritLuck || 1;
+  if (Math.random() < D.spirit * luck){
+    const it = 24 + (Math.random() < 0.25 ? 1 : 0), r = spGive(slot, it);
+    return {slot, it, isNew:r.isNew, beast:r.beast};
+  }
+  const it = D.base + ((Math.random() * D.up) | 0);
+  return {slot, it, isNew:giveItem(slot, it)};
+}
 /* --- 호박석 세공 --- */
 const AMB = {p0:75, step:10, lo:25, hi:75, bad:5, badK:1.5, goldK:[60, 100, 150], tier:[10, 20, 30]};
 const AMB_G = [{name:'희귀', n:6, g:2}, {name:'영웅', n:8, g:3}, {name:'전설', n:10, g:4}];   // 호박석 등급: 줄마다 칸 수, g = GRADES 번호(색)
@@ -1873,6 +1965,8 @@ function seaSum(){
     for (const G of AMB_GOOD){ const t = A.tier[G.k]; if (!t) continue; const v = G.t[t - 1];
       if (G.stat === 'cdr') o.cdr += v; else if (G.stat === 'gain'){ o.exp += v; o.gold += v; } else if (G.stat === 'def') o.def *= 1 - v / 100; else o[G.stat] *= 1 + v / 100; }
     for (const [k, pen] of Object.entries(A.bad)) o[AG[k].stat] *= Math.max(0.5, 1 - pen / 100);
+    const SPS = spiritSum().fx;   // 영물 짐승 효과(5부)
+    for (const [t, v] of Object.entries(SPS)){ if (t === 'def') o.def *= 1 - v / 100; else o[t] *= 1 + v / 100; }
   }
   return seaCache = o;
 }
@@ -2606,10 +2700,11 @@ const MATS = [
   {k:'m1', name:'망자의 넋', color:'#ff8a7a'},
   {k:'m2', name:'하늘 조각', color:'#9fe7ff'},
   {k:'m3', name:'용궁 진주', color:'#e6f4ff'},   // 4부 바다(물의 신화 4단계: 곤륜까지의 재료는 대장장이가 1:1로 바꿔 준다)
+  {k:'m4', name:'천축 향목', color:'#d9a05b'},   // 5부 천축(물의 신화 9-25: 바다까지의 재료는 대장장이가 1:1로 바꿔 준다)
 ];
-// 지금 땅의 재료 번호: 이승 0·저승 1·천계~곤륜 2·바다 3(·천축 4는 5부에서). matShown: 화면에 보일 재료(아직 못 간 땅 것은 숨김)
-const matW = (w = S.world) => w >= 5 || (w === S.world && seaOpen()) ? 3 : Math.min(2, w);
-const matShown = () => MATS.filter((m, i) => i <= 2 || seaOpen() || (S.mat[m.k] || 0) > 0);
+// 지금 땅의 재료 번호: 이승 0·저승 1·천계~곤륜 2·바다 3·천축 4. matShown: 화면에 보일 재료(아직 못 간 땅 것은 숨김)
+const matW = (w = S.world) => w >= 8 ? 4 : w >= 5 || (w === S.world && seaOpen()) ? 3 : Math.min(2, w);
+const matShown = () => MATS.filter((m, i) => i <= 2 || (i === 3 && seaOpen()) || (i === 4 && S.world >= 8) || (S.mat[m.k] || 0) > 0);
 const MAT_DROP = {boss:2, gate:4, raid:6, raidFirst:10, tb:10, mob:0.008};   // (48) 사용자 요청 '수급처가 너무 빡빡': 예전 1·3·4·6·8·0.5% → 2·6·8·15·1.2% → (물의 신화, 새 등급 전에 한 번 조임) 2·4·6·10·0.8%. 처음 한 번 받는 것(raidFirst)은 그대로
 // (48) 새 수급처: 허수아비 등급별·백귀야행 n마리마다·1일 보스(참가/승리)·강림·보물 동굴·오늘의 할 일 모두·급보·탑 층마다
 const MAT_SRC = {dummy:[0, 2, 4, 6, 9, 12], paradePer:8, dbJoin:5, dbWin:10, gr:12, vault:6, dall:10, evt:3, tower:1, shop:10};
@@ -2630,17 +2725,21 @@ const CRAFT_T = [   // w 세계, need 열리는 단계(그 세계 최고 단계)
   {w:3, bw:5, need:1, mat:1200, gear:[4, 2], gems:8000, sea:true},
   {w:3, bw:6, need:1, mat:2000, gear:[4, 3], gems:12000, sea:true},
   {w:3, bw:7, need:1, mat:3000, gear:[4, 4], gems:16000, sea:true},
+  // 5부 천축(물의 신화 9-25): 13~15단계 「천축」 — 재료는 천축 향목(w 4), 열림은 그 땅(bw)에 들어서면, 장비는 영물(gear 첫 칸 6 = 장비 번호 24~27). 4부 것의 1.5배쯤 — 출발점이라 밸런스 담당이 다시 볼 것. craftComp(몬스터 체력)에는 4부처럼 넣지 않았다
+  {w:4, bw:8, need:1, mat:1800, gear:[6, 1], gems:24000, ind:true},
+  {w:4, bw:9, need:1, mat:3000, gear:[6, 1], gems:36000, ind:true},
+  {w:4, bw:10, need:1, mat:4500, gear:[6, 2], gems:48000, ind:true},
 ];
 const CRAFT_MAX = CRAFT_T.length, CRAFT_BASE = 9;   // CRAFT_BASE: 1~3부의 조합식 수(몬스터 체력이 가정하는 단계의 끝)
-const craftCap = () => S.world >= 5 ? CRAFT_MAX : CRAFT_BASE;   // 지금 만들 수 있는 끝 단계
-const CRAFT_RATE = [100, 90, 80, 70, 60, 55, 50, 45, 40, 35, 30, 25];   // 단계별 조합 성공 %(실패하면 재료 절반만 사라짐)
-const CRAFT_PITY = [0, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6];             // 이만큼 실패하면 다음은 확정(천장)
+const craftCap = () => S.world >= 8 ? CRAFT_MAX : S.world >= 5 ? CRAFT_BASE + 3 : CRAFT_BASE;   // 지금 만들 수 있는 끝 단계
+const CRAFT_RATE = [100, 90, 80, 70, 60, 55, 50, 45, 40, 35, 30, 25, 22, 20, 18];   // 단계별 조합 성공 %(실패하면 재료 절반만 사라짐)
+const CRAFT_PITY = [0, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8];             // 이만큼 실패하면 다음은 확정(천장)
 const CRAFT_SLOTS = [
   {k:'w', name:'비전 무기', main:'공격력', per:10, gear:'weapon', icon:'sword'},
   {k:'a', name:'비전 갑옷', main:'체력', per:15, gear:'armor', icon:'armor'},
   {k:'n', name:'노리개', main:'기술 피해', per:8, gear:null, icon:'flute'},
 ];
-const CRAFT_PRE = ['도깨비불', '명부', '천상', '용궁'], NORI = ['호랑이 발톱 노리개', '저승꽃 노리개', '구름 매듭 노리개', '진주 매듭 노리개'];
+const CRAFT_PRE = ['도깨비불', '명부', '천상', '용궁', '천축'], NORI = ['호랑이 발톱 노리개', '저승꽃 노리개', '구름 매듭 노리개', '진주 매듭 노리개', '보리수 매듭 노리개'];
 const ENGR = {
   w:[{k:'power', name:'파쇄', v:4, d:'공격력'}, {k:'hunt', name:'사냥', v:5, d:'보스 피해'}, {k:'vital', name:'급소', v:8, d:'치명타 피해'}],
   a:[{k:'wall', name:'철벽', v:2, d:'받는 피해 감소·체력'}, {k:'swift', name:'신속', v:3, d:'공격 속도'}, {k:'life', name:'생기', v:0.1, d:'초당 체력 회복'}],
@@ -2682,7 +2781,7 @@ const craftOpen = t => { const T = CRAFT_T[t - 1]; return !!T && (S.best['s' + (
 const gradeHave = (slot, g) => { const G = S.gear[slot]; let n = 0; for (let i = g * 4; i < g * 4 + 4; i++) n += Math.max(0, G.count[i] - (S.equip[slot] === i ? 1 : 0)); return n; };
 function craftNeed(k){
   const it = S.craft[k], t = it.t + 1, T = CRAFT_T[t - 1];
-  if (!T || T.sea && S.world < 5) return {max:true};   // 용궁 조합식은 4부 동해에 들어선 뒤
+  if (!T || T.sea && S.world < 5 || T.ind && S.world < 8) return {max:true};   // 용궁 조합식은 4부 동해에, 천축 조합식은 5부에 들어선 뒤
   const sl = CRAFT_SLOTS.find(c => c.k === k), mk = craftMat(t);
   const past = T.w < matW();   // (48) 계승: 지난 땅의 밀린 조합식은 대장장이가 도와 재료 절반·장비 조건 없음·확정 성공
   const o = {t, T, mk, mat:past ? Math.ceil(T.mat / 2) : T.mat, haveMat:S.mat[mk] || 0, open:craftOpen(t), past};
@@ -4578,6 +4677,11 @@ function mergeState(d){
   // @@MERGE-D (갈래 D가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-D
   // @@MERGE-E (갈래 E가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  // 물의 신화 9-25: 영물 짐승(칸마다 짐승별 가진 수·낀 짐승 — 영물이 있는데 짐승 정보가 없으면 refreshStats의 spFixAll이 저절로 정해 줌) · 천축 향목 칸
+  { const sp = d.spirit && typeof d.spirit === 'object' ? d.spirit : {}; out.spirit = {pool:{}, eq:{}};
+    for (const k of ALL_SLOTS){ const P = sp.pool && typeof sp.pool === 'object' && Array.isArray(sp.pool[k]) ? sp.pool[k] : [], e = sp.eq && typeof sp.eq === 'object' ? Math.floor(+sp.eq[k]) : -1;
+      out.spirit.pool[k] = [0, 1, 2, 3, 4].map(b2 => Math.max(0, Math.min(999, Math.floor(+P[b2]) || 0))); out.spirit.eq[k] = Number.isInteger(e) && e >= 0 && e < 5 ? e : -1; }
+    out.mat.m4 = Math.max(0, +out.mat.m4 || 0); }
   // @@END-E
   // @@MERGE-F (갈래 F가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-F
@@ -4701,6 +4805,7 @@ function power(st){
 }
 function refreshStats(){
   const old = ST; brCache = null; skCache = null; setCache = null; elCache = null; seaCache = null; mythKc = null; fxNow = formFx(formOn());
+  spFixAll();
   ST = computeStats();
   if (old && old.maxHp > 0) hero.hp = Math.min(ST.maxHp, hero.hp / old.maxHp * ST.maxHp);
   if (spriteCache.size > 400) spriteCache.clear();
@@ -5289,7 +5394,7 @@ function mergeableSets(slot, i){
 // 조합 공방 재료 지키기(2026-11 (20), 사용자 요청): 다음 비전 무기·갑옷 조합식에 드는 등급 장비는 그 개수만큼 일괄 합성·갈기에서 남긴다
 function craftKeep(slot){
   const c = CRAFT_SLOTS.find(x => x.gear === slot); if (!c) return null;
-  const T = CRAFT_T[S.craft[c.k].t]; if (!T || T.w < matW() || T.sea && S.world < 5) return null;   // 지난 땅의 밀린 조합식(계승 조합)은 장비가 안 듦 · 용궁 조합식은 4부부터
+  const T = CRAFT_T[S.craft[c.k].t]; if (!T || T.w < matW() || T.sea && S.world < 5 || T.ind && S.world < 8) return null;   // 지난 땅의 밀린 조합식(계승 조합)은 장비가 안 듦 · 용궁 조합식은 4부부터
   return {g:T.gear[0], n:T.gear[1]};
 }
 function mergeOne(slot, i, keepFor){
@@ -5301,6 +5406,7 @@ function mergeOne(slot, i, keepFor){
   if (!sets) return 0;
   const G = S.gear[slot];
   G.count[i] -= sets * 4; G.count[i + 1] += sets; G.seen[i + 1] = true;
+  if (i >= 24) spMerge(slot, sets * 4, sets);   // 영물끼리 합성하면 깃든 짐승이 이어진다
   return sets;
 }
 function mergeAll(slot){
@@ -5616,8 +5722,8 @@ function bossWin(){
   S.gems += gems; S.rec.bosses++; recWin(true, false);
   if (wasGate && patHurt === aw2Pat0) aw2Tick('clean');
   if (wasGate) rollAcc(true);
-  if (wasGate && S.world >= 5){ const sg = seaGearDrop('gate'), am = amberDrop('gate');   // 바다 수문장: 새 칸 장비(가끔 유물)·호박석
-    if (sg) addLog(`${gearName(sg.slot, sg.it)}${josa(gearName(sg.slot, sg.it), '을', '를')} 얻었어요(${GRADES[itemG(sg.it)].name} ${GEAR[sg.slot].label}${sg.isNew ? ' · 새 장비' : ''}).`, 'gain');
+  if (wasGate && S.world >= 5){ const sg = S.world >= 8 ? spiritGearDrop('gate') : seaGearDrop('gate'), am = amberDrop('gate');   // 바다 수문장: 새 칸 장비(가끔 유물)·호박석 / 5부 수문장: 유물(가끔 영물)
+    if (sg) addLog(`${gearName(sg.slot, sg.it)}${josa(gearName(sg.slot, sg.it), '을', '를')} 얻었어요(${GRADES[itemG(sg.it)].name} ${GEAR[sg.slot].label}${sg.beast != null ? ` · 깃든 짐승 ${SPIRITS[sg.beast].name}` : ''}${sg.isNew ? ' · 새 장비' : ''}).`, 'gain');
     if (am) addLog(`${am.name || '호박석'}${josa(am.name || '호박석', '을', '를')} 건졌어요. [장비] → [세공]에서 깎아요.`, 'gain'); }
   gainGrudge(wasGate ? GRUDGE.gate : GRUDGE.boss, true);
   bossGearDrop();
@@ -6843,7 +6949,7 @@ function raidReward(info){
   items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:info.g * 4 + roll()});
   if (first) items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:Math.min(info.hell || info.god || info.busang || info.kunlun || info.sea ? 4 : 3, info.g + 1) * 4 + roll()});
   for (const r of items) r.isNew = giveItem(r.slot, r.it);
-  if (info.sea){ const sg = seaGearDrop('raid'); if (sg) items.push(sg); if (first){ const s2 = seaGearDrop('raid'); if (s2) items.push(s2); } }   // 바다 레이드: 새 칸 장비·유물(물의 신화 5단계)
+  if (info.sea){ const gd = S.world >= 8 ? spiritGearDrop : seaGearDrop; const sg = gd('raid'); if (sg) items.push(sg); if (first){ const s2 = gd('raid'); if (s2) items.push(s2); } }   // 5부는 영물 드롭   // 바다 레이드: 새 칸 장비·유물(물의 신화 5단계)
   const amber = info.sea ? amberDrop('raid', first) : null;   // 호박석(첫 토벌은 반드시)
   S.gems += gems; S.gold += gold;
   const mat = gainMat(first ? MAT_DROP.raid + MAT_DROP.raidFirst : MAT_DROP.raid, true);
@@ -7796,7 +7902,7 @@ function finishRaid(){
         ${(rw.accs || []).map(a => `<li style="color:${GRADES[a.g].color}">${ACC[a.k].names[a.g]}<span>${ACC[a.k].name} · ${ACC[a.k].stat} +${a.p}%${a.better ? '' : ' (가방으로)'}</span></li>`).join('')}
         ${rw.soul ? `<li style="color:${GRADES[SL[rw.soul.k].g].color}">${SL[rw.soul.k].name}<span>${soulDropText(rw.soul)}</span></li>` : ''}
         ${rw.amber ? `<li style="color:#ffc35a">${rw.amber.name || '호박석'}<span>호박석 · [장비] → [세공]</span></li>` : ''}
-        ${rw.items.map(r => `<li style="color:${GRADES[itemG(r.it)].color}">${gearName(r.slot, r.it)}<span>${GRADES[itemG(r.it)].name} ${GEAR[r.slot].label}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
+        ${rw.items.map(r => `<li style="color:${GRADES[itemG(r.it)].color}">${gearName(r.slot, r.it)}<span>${GRADES[itemG(r.it)].name} ${GEAR[r.slot].label}${r.beast != null ? ` · 깃든 짐승 ${SPIRITS[r.beast].name}` : ''}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
       </ul>
       <p class="small" style="margin-top:8px">토벌패 1개를 썼어요(남은 토벌패 ${raidTickets()}/${TICKET_MAX}). 토벌패는 ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요.</p>`,
       [{label:'확인', primary:true}]);
@@ -10133,7 +10239,13 @@ const SETS = [
     fx:{2:{hp:0.5}, 3:{skill:1.2}, 4:{atk:1.1, hp:1.1}, 5:{boss:1.3, crit:8}}},
   {k:'yonggung', name:'용궁의 조합', d:'동해 용왕을 모시는 용궁 벼슬아치의 차림', p:[{t:'weapon', g:7}, {t:'armor', g:7}, {t:'helm', g:4}, {t:'av', k:'c_yonggung'}, {t:'mount', k:'seaturtle'}],
     fx:{2:{atk:0.55, hp:0.55}, 3:{boss:1.3}, 4:{atk:1.3, hp:1.3}, 5:{skill:1.3, crit:10}}},
+  // 5부 천축(물의 신화 9-25): 영물 무기·갑옷이 중심이고, 천축의 아바타·탈것·넋이 조각. 효과는 4부 세트의 한 계단 위(w = 세계 8부터 보임)
+  {k:'lanka', w:8, name:'란카의 조합', d:'황금 성 란카의 주인을 겨누는 이의 갑주', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_lanka'}, {t:'mount', k:'camel'}, {t:'soul', k:'jatayu'}],
+    fx:{2:{atk:0.65, hp:0.65}, 3:{boss:1.5}, 4:{atk:1.5, hp:1.5}, 5:{skill:1.5, crit:12}}},
+  {k:'sumeru', w:8, name:'수미의 조합', d:'세계의 한가운데 수미산을 오른 이의 하늘옷', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_sumeru'}, {t:'mount', k:'welephant'}, {t:'soul', k:'savitri'}],
+    fx:{2:{atk:0.7, hp:0.7}, 3:{skill:1.6}, 4:{atk:1.6, hp:1.6}, 5:{boss:1.7, crit:12}}},
 ];
+const setShown = T => !T.w || S.world >= T.w;
 const SET_STAT = {atk:'공격력', hp:'체력', boss:'보스 피해', skill:'기술 피해', crit:'치명타 확률'};
 function setPieceOk(P){
   if (hasK(GEAR, P.t)) return (!GEAR[P.t].sea || seaOpen()) && S.equip[P.t] >= 0 && gearG(P.t) >= P.g;
@@ -10142,6 +10254,7 @@ function setPieceOk(P){
   if (P.t === 'acc') return S.acc[P.k].g >= P.g;
   if (P.t === 'form') return S.form.eq === P.k && !!S.form.own[P.k];
   if (P.t === 'tower') return (S.tower && S.tower.best || 0) >= P.f;
+  if (P.t === 'soul') return !!S.soul.own[P.k] && S.soul.eq.includes(P.k);
   return false;
 }
 function setPieceName(P){
@@ -10151,6 +10264,7 @@ function setPieceName(P){
   if (P.t === 'acc') return `${GRADES[P.g].name} 이상 ${ACC[P.k].name}`;
   if (P.t === 'form') return `변신 ${FM[P.k] ? FM[P.k].name : P.k}`;
   if (P.t === 'tower') return `천공의 탑 ${P.f}층`;
+  if (P.t === 'soul') return `넋 ${SL[P.k] ? SL[P.k].name : P.k}`;
   return '';
 }
 const setCount = T => setPieceOk(T.p[0]) && setPieceOk(T.p[1]) ? T.p.filter(setPieceOk).length : 0;   // 무기·갑옷이 맞아야 센다
@@ -10176,6 +10290,7 @@ function pickSet(k){
     if (P.t === 'av' && S.av.own[P.k] && AV[P.k]){ S.av[AV[P.k].type] = P.k; done.push(AV[P.k].name); }
     else if (P.t === 'mount' && S.mount.own[P.k]){ S.mount.ride = P.k; done.push(MT[P.k] ? MT[P.k].name : P.k); }
     else if (P.t === 'form' && S.form.own[P.k]){ S.form.eq = P.k; done.push(FM[P.k] ? FM[P.k].name : P.k); }
+    else if (P.t === 'soul' && S.soul.own[P.k]){ const at = S.soul.eq.findIndex((x, i) => !x && i < soulSlots()), sl = at >= 0 ? at : 0; if (equipSoul(P.k, sl)) done.push(SL[P.k] ? SL[P.k].name : P.k); }
   }
   setCache = null; petCache.clear(); petImgCache.clear(); prevCache.clear(); refreshStats();
   return done.join(' · ');
@@ -10419,7 +10534,7 @@ function inhList(){
   if (seaOpen() && !(S.sea && S.sea.kit)) rows.push({kind:'kit', icon:'helm', c:GRADES[2].color, name:'새 장비 칸 · 투구 · 어깨 · 신발', from:'빈 칸', to:`용궁 병사의 한 벌(${GRADES[2].name} I) · 희귀 호박석 3개`});
   // 안내(늘 켜져 있는 것): 밀린 조합식 · 방어구 재련 한도
   const past = CRAFT_SLOTS.filter(c => { const T = CRAFT_T[S.craft[c.k].t]; return T && T.w < cur; });
-  if (past.length) rows.push({kind:'info', icon:'flute', c:'#ffb347', name:`밀린 비전 장비 조합식 (${past.map(c => c.name).join(' · ')})`, from:`${(T => T.bw != null ? '바다' : WORLD_NAME[T.w])(CRAFT_T[S.craft[past[0].k].t])} 단계`, to:'재료 절반 · 장비 조건 없음 · 확정 성공'});
+  if (past.length) rows.push({kind:'info', icon:'flute', c:'#ffb347', name:`밀린 비전 장비 조합식 (${past.map(c => c.name).join(' · ')})`, from:`${(T => T.ind ? '천축' : T.bw != null ? '바다' : WORLD_NAME[T.w])(CRAFT_T[S.craft[past[0].k].t])} 단계`, to:'재료 절반 · 장비 조건 없음 · 확정 성공'});
   if (S.world === 1 || S.world === 2) rows.push({kind:'info', icon:'armor', c:'#9fe7ff', name:`${cls().armor} 재련 한도`, from:`+${REFINE_CAP_A[S.world - 1]}`, to:`+${REFINE_CAP_A[S.world]}까지 열림`});
   return rows;
 }
@@ -13487,6 +13602,18 @@ function mwAura(){
     if (!best || (M.slot === 'weapon') > (best.M.slot === 'weapon') || (M.slot === 'weapon') === (best.M.slot === 'weapon') && lv > best.lv) best = {M, lv}; }
   return best && {col:best.M.color, lv:best.lv};
 }
+// 영물 장비의 깃든 짐승 기운(5부): 영물을 낀 칸마다 짐승 빛깔 불티 하나가 몸을 감돌고, 두 칸 이상 맞추면 발밑에 아주 옅은 고리가 선다. 아주 가볍게
+function drawSpiritAura(x, y){
+  const bs = []; for (const k of ALL_SLOTS){ const bt = spBeast(k); if (bt >= 0) bs.push(bt); }
+  if (!bs.length) return;
+  const mv = !reduceMotion, cnt = [0, 0, 0, 0, 0]; bs.forEach(bt => cnt[bt]++);
+  b.save();
+  const top = cnt.reduce((a, c, i) => c > cnt[a] ? i : a, 0);
+  if (cnt[top] >= 2){ b.strokeStyle = hexA(SPIRITS[top].color, 0.32); b.lineWidth = 0.8; const pu = 0.5 + 0.5 * Math.sin(gtime * 2.2); b.beginPath(); b.ellipse(x, y, 11 + pu * 0.6, 4.4 + pu * 0.3, 0, 0, Math.PI * 2); b.stroke(); }
+  bs.forEach((bt, i) => { const a = (mv ? gtime * 1.2 : 0) + i * (Math.PI * 2 / bs.length), rr = 10 + (i % 2) * 2;
+    b.fillStyle = hexA(SPIRITS[bt].color, 0.8); b.fillRect(Math.round(x + Math.cos(a) * rr) - 0.5, Math.round(y - 14 + Math.sin(a * 1.3) * 8) - 0.5, 1.1, 1.1); });
+  b.restore();
+}
 function drawMwAura(x, y, A){
   const c = A.col, lv = A.lv, pu = 0.5 + 0.5 * Math.sin(gtime * 2.8), mv = !reduceMotion;
   b.save(); b.globalCompositeOperation = 'lighter';
@@ -13567,6 +13694,7 @@ function drawEntityHero(){
   }
   const MA = mwAura();
   if (MA && !hero.dead) drawMwAura(x, y, MA);
+  if (S.world >= 8 && !hero.dead) drawSpiritAura(x, y);
   if ((F || wg >= 4) && !hero.dead){
     const col = F ? F.color : '#ffd84a';
     for (let i = 0; i < 4; i++){ const a = gtime * 1.7 + i * 1.57, rr = 11; P(x + Math.cos(a) * rr, y - 12 + Math.sin(a * 1.3) * 7, 1, 1, i % 2 ? col : '#ffffff'); }
@@ -16242,7 +16370,7 @@ function buildSet(){
     addLog(k ? `${SETS.find(T => T.k === k).name}${josa(SETS.find(T => T.k === k).name, '을', '를')} 골랐어요.${w ? ' 가진 조각을 바로 맞췄어요: ' + w : ''}` : '세트를 자동(가장 많이 맞춘 것)으로 돌렸어요.', 'gain'); refreshPanel(); });
   return () => {
     setText($('#resTag'), `공명 ×${gearRes().toFixed(2)}`);
-    setHTML($('#setList'), `<div class="card"><div class="ct">켤 세트<span class="tag">${S.setPick ? '내가 고름' : '자동'}</span></div><p class="small" style="margin:0 0 6px">세트는 하나만 켜져요. 아래 [이 세트로]를 누르면 그 세트를 켜고 가진 아바타·탈것·변신을 바로 맞춰 줘요(무기·갑옷·장신구는 등급이라 직접). 고른 세트가 2조각이 안 되면 가장 많이 맞춘 세트가 켜져요.</p><button class="chip" data-setpick="" aria-pressed="${!S.setPick}">자동(가장 많이 맞춘 것)</button></div>` + SETS.map(T => { const n = setCount(T), core = setPieceOk(T.p[0]) && setPieceOk(T.p[1]);
+    setHTML($('#setList'), `<div class="card"><div class="ct">켤 세트<span class="tag">${S.setPick ? '내가 고름' : '자동'}</span></div><p class="small" style="margin:0 0 6px">세트는 하나만 켜져요. 아래 [이 세트로]를 누르면 그 세트를 켜고 가진 아바타·탈것·변신을 바로 맞춰 줘요(무기·갑옷·장신구는 등급이라 직접). 고른 세트가 2조각이 안 되면 가장 많이 맞춘 세트가 켜져요.</p><button class="chip" data-setpick="" aria-pressed="${!S.setPick}">자동(가장 많이 맞춘 것)</button></div>` + SETS.filter(setShown).map(T => { const n = setCount(T), core = setPieceOk(T.p[0]) && setPieceOk(T.p[1]);
       const fx = [2, 3, 4, 5].map(k => `<li class="${n >= k ? 'on' : ''}"><b>${k}세트</b> ${Object.entries(T.fx[k] || {}).map(([t, v]) => t === 'crit' ? `${SET_STAT[t]} +${v}%` : `${SET_STAT[t]} +${v}단계`).join(' · ')}</li>`).join('');
       const act = setSum().on.some(([k]) => k === T.k);
       return `<div class="card setc ${act ? 'ready' : ''}"><div class="ct">${T.name}<span class="tag">${act ? `${n}세트 켜짐` : n >= 2 ? `${n}세트(다른 세트가 켜짐)` : core ? '1조각 더' : '무기·갑옷부터'}</span><button class="chip" data-setpick="${T.k}" aria-pressed="${S.setPick === T.k}" style="margin-left:auto">${S.setPick === T.k ? '고른 세트' : '이 세트로'}</button></div>
@@ -16271,6 +16399,30 @@ function gearSegHTML(){
 function wireGearSeg(){
   for (const k of ['weapon', 'armor', 'helm', 'shoulder', 'boots', 'refine', 'amber', 'myth', 'acc', 'form', 'av', 'mount', 'craft', 'skin', 'set']){ const el = $('#seg-' + k); if (el) el.addEventListener('click', () => { gearSlot = k; gearSel = -1; buildTab('gear', true); }); }
 }
+// 영물 칸의 깃든 짐승 고르기(가진 짐승 가운데 하나) · 지금 맞춘 짐승 수와 다음 문턱 효과 한 줄
+function spPick(slot, b){
+  const st = spSt(); if (!(b >= 0 && b < 5) || !(st.pool[slot][b] > 0)) return false;
+  st.eq[slot] = b; setCache = null; refreshStats(); sfx('click');
+  if (S.equip[slot] >= 24) addLog(`${slotName(slot)}에 깃든 짐승을 ${SPIRITS[b].name}${josa(SPIRITS[b].name, '으로', '로')} 바꿨어요.`, 'good');
+  return true;
+}
+function spiritLine(){
+  const R = spiritSum(), best = R.n.reduce((a, c, b) => c > R.n[a] ? b : a, 0), parts = [];
+  R.n.forEach((c, b) => { if (c > 0) parts.push(`<b style="color:${SPIRITS[b].color}">${SPIRITS[b].name} ${c}칸</b>`); });
+  if (!parts.length) return '영물 장비를 끼면 깃든 짐승이 나타나요. 같은 짐승을 여러 칸에 맞추면 효과가 더해져요.';
+  const nx = []; R.n.forEach((c, b) => { const at = SP_AT.find(a => a > c); if (c > 0 && at) nx.push([b, c, at]); });
+  nx.sort((a, b) => (a[2] - a[1]) - (b[2] - b[1]));
+  const t = nx[0];
+  return `지금 맞춘 짐승: ${parts.join(' · ')}${Object.keys(R.fx).length ? ` — 켜진 효과 ${spFxText(R.fx)}` : ''}${t ? `<br>다음 문턱: <b style="color:${SPIRITS[t[0]].color}">${SPIRITS[t[0]].name} ${t[2]}칸</b> → ${spFxText(SP_FX[SPIRITS[t[0]].k][SP_AT.indexOf(t[2])])}` : ''}`;
+}
+function spiritCardHTML(slot){
+  if (!spiritOpen() && !spOwned(slot)) return '';
+  const st = spSt(), cur = spBeast(slot), P = st.pool[slot];
+  return `<div class="card sp" id="spCard"><div class="ct">깃든 짐승<span class="tag">영물 · 5부</span></div>
+    <p class="small" id="spLine" style="margin:0 0 6px">${spiritLine()}</p>
+    <div class="spbtns" role="group" aria-label="깃든 짐승 고르기">${SPIRITS.map((B, b) => `<button class="chip" data-spb="${b}" aria-pressed="${cur === b}" ${P[b] > 0 ? '' : 'disabled'} style="--sc:${B.color}"><span style="color:${B.color}">●</span> ${B.name} ${P[b]}</button>`).join('')}</div>
+    <p class="small" style="margin:6px 0 0">짐승마다 같은 짐승을 <b>2·3·5칸</b>에 맞추면 추가 효과가 켜져요(코끼리 ${spFxText(SP_FX.elephant[2])} · 공작 ${spFxText(SP_FX.peacock[2])} · 뱀 ${spFxText(SP_FX.serpent[2])} · 원숭이 ${spFxText(SP_FX.monkey[2])} · 소 ${spFxText(SP_FX.ox[2])} — 5칸 때). 영물끼리 합성하면 짐승이 이어져요.</p></div>`;
+}
 function buildGear(){
   if (gearSlot === 'refine') return buildRefine();
   if (gearSlot === 'myth') return buildMyth();
@@ -16285,7 +16437,7 @@ function buildGear(){
   if (gearSlot === 'amber') return buildAmber();
   const slot = gearSlot, Gd = S.gear[slot], eq = S.equip[slot], def = GEAR[slot];
   let grid = '';
-  const rowsN = seaOpen() || Gd.seen.slice(20, 24).some(Boolean) ? 6 : 5;   // 유물 줄은 4부부터(영물 줄은 5부에서)
+  const rowsN = spiritOpen() || Gd.seen.slice(24, 28).some(Boolean) ? 7 : seaOpen() || Gd.seen.slice(20, 24).some(Boolean) ? 6 : 5;   // 유물 줄은 4부부터, 영물 줄은 5부부터
   for (let gr = 0; gr < rowsN; gr++){
     const GR = GRADES[itemG(gr * 4)];
     grid += `<div class="gl" style="--gc:${GR.color}">${GR.name}</div>`;
@@ -16306,7 +16458,7 @@ function buildGear(){
         <button class="btn primary" id="eqBtn" ${c > 0 && eq !== i ? '' : 'disabled'}>${eq === i ? '장착 중' : '장착하기'}</button>
         <button class="btn" id="mgBtn" ${m > 0 ? '' : 'disabled'}>${topTier(i) ? '최고 단계' : m > 0 ? `4개 합성 ×${m}` : '4개 모이면 합성'}</button>
       </div>
-      ${Gd.seen[i] ? '' : i >= 20 ? '<p class="small">유물 장비는 바다의 수문장·레이드·상위 레이드 「진」에서만 나와요(소환·전설 합성으로는 안 나와요). 유물끼리는 4개를 합성할 수 있어요.</p>' : '<p class="small">아직 얻지 못했어요. 소환하거나 바로 아래 단계 장비 4개를 합성하면 얻어요.</p>'}
+      ${Gd.seen[i] ? '' : i >= 24 ? '<p class="small">영물 장비는 5부 천축의 수문장·레이드에서만 나와요(소환·합성으로는 안 나와요). 영물끼리는 4개를 합성할 수 있고, 얻을 때 <b>깃든 짐승</b>이 하나 정해져요.</p>' : i >= 20 ? '<p class="small">유물 장비는 바다의 수문장·레이드·상위 레이드 「진」에서만 나와요(소환·전설 합성으로는 안 나와요). 유물끼리는 4개를 합성할 수 있어요.</p>' : '<p class="small">아직 얻지 못했어요. 소환하거나 바로 아래 단계 장비 4개를 합성하면 얻어요.</p>'}
     </div>`;
   }
   const eqP = eq >= 0 ? gearEquipPct(eq) * ascMul(slot) : 0;
@@ -16317,22 +16469,24 @@ function buildGear(){
       <button class="gbtn" id="sum10"><span>${def.label} 10회 소환</span><span class="price"><i class="gem"></i>450</span></button>
     </div>
     <p class="odds">전설 0.2% · 영웅 1.3% · 희귀 8.5% · 고급 26% · 일반 64%</p>
-    <div class="effects">${ascOn(slot) ? `<div>각성<b style="color:${GRADES[gearG(slot)].color}">${GRADES[gearG(slot)].name} ×${ascMul(slot)}</b></div>` : ''}
+    <div class="effects">${ascOn(slot) ? `<div>각성<b style="color:${GRADES[ASC[ascLv(slot)].g].color}">${GRADES[ASC[ascLv(slot)].g].name} ×${ascMul(slot)}</b></div>` : ''}
       <div>장착 효과<b>${def.stat} +${fmt(eqP)}%</b></div>
       <div>보유 효과 합계<b>${def.stat} +${fmt(ownedPct(slot))}%</b></div>${def.sea ? `
       <div>지금 효과<b id="slotFx">${slotFxText(slot)}</b></div>` : ''}
     </div>${def.sea ? `
     <p class="hint">${def.label}의 「장비 힘」은 무기·방어구와 같은 숫자지만 <b>${def.fx}</b>로 완만하게 바뀌어 들어가요. [재련]에서 벼리면 더 올라요.</p>${slot === 'helm' ? `
     <label class="whet card"><input type="checkbox" id="helmHideChk" ${S.helmHide ? 'checked' : ''}><span>투구 대신 머리 장식(꾸미기)을 보이기 — 효과는 그대로예요</span></label>` : ''}` : ''}
+    ${spiritCardHTML(slot)}
     <div class="grid">${grid}</div>
     ${detail}
     <div class="card asc" id="ascCard" hidden><div class="ct"><span>신화 · 태초 각성</span><span class="tag" id="ascTag"></span></div><p class="small" id="ascTxt"></p><button class="btn primary" id="ascBtn"></button></div>
     <div class="bulk"><button class="btn" id="mergeAll">일괄 합성</button><button class="btn" id="equipBest">가장 좋은 것 장착</button></div>
-    ${(kf => kf ? `<p class="small" style="margin:6px 2px 0">일괄 합성·갈기는 조합 공방 ${CRAFT_SLOTS.find(c => c.gear === slot).name} 다음 단계에 드는 <b style="color:${GRADES[kf.g].color}">${GRADES[kf.g].name} ${slot === 'weapon' ? cls().weapon : cls().armor} ${kf.n}개</b>는 남겨요(지금 ${gradeHave(slot, kf.g)}개).</p>` : '')(craftKeep(slot))}`;
+    ${(kf => kf ? `<p class="small" style="margin:6px 2px 0">일괄 합성·갈기는 조합 공방 ${CRAFT_SLOTS.find(c => c.gear === slot).name} 다음 단계에 드는 <b style="color:${GRADES[itemG(kf.g * 4)].color}">${GRADES[itemG(kf.g * 4)].name} ${slot === 'weapon' ? cls().weapon : cls().armor} ${kf.n}개</b>는 남겨요(지금 ${gradeHave(slot, kf.g)}개).</p>` : '')(craftKeep(slot))}`;
   wireGearSeg();
   if ($('#helmHideChk')) $('#helmHideChk').addEventListener('change', e => { S.helmHide = e.target.checked; spriteCache.clear(); refreshStats(); });
   $('#sum1').addEventListener('click', () => doSummon(slot, 1));
   $('#sum10').addEventListener('click', () => doSummon(slot, 10));
+  panel.querySelectorAll('[data-spb]').forEach(bt => bt.addEventListener('click', () => { if (spPick(slot, +bt.dataset.spb)) buildTab('gear', true); }));
   panel.querySelectorAll('.cell').forEach(bt => bt.addEventListener('click', () => { const i = +bt.dataset.i; gearSel = gearSel === i ? -1 : i; buildTab('gear', true); }));
   if ($('#eqBtn')) $('#eqBtn').addEventListener('click', () => { S.equip[slot] = gearSel; refreshStats(); buildTab('gear', true); addLog(`${gearName(slot, gearSel)}${josa(gearName(slot, gearSel), '을', '를')} 장착했습니다.`); });
   if ($('#mgBtn')) $('#mgBtn').addEventListener('click', () => { const n = mergeOne(slot, gearSel); refreshStats(); if (n) addLog(`${gearName(slot, gearSel + 1)} ${n}개를 만들었습니다.`, 'gain'); buildTab('gear', true); });
@@ -16342,6 +16496,7 @@ function buildGear(){
   return () => {
     $('#sum1').disabled = S.gems < 50; $('#sum10').disabled = S.gems < 450;
     if ($('#slotFx')) setText($('#slotFx'), slotFxText(slot));
+    if ($('#spLine')) setHTML($('#spLine'), spiritLine());
     if (def.sea){ $('#ascCard').hidden = true; return; }   // 신화·태초 각성은 무기·방어구만
     const N = ascNeed(slot), card = $('#ascCard'), show = S.world >= 3 || ascLv(slot) > 0;
     card.hidden = !show; if (!show) return;
@@ -16443,11 +16598,11 @@ function buildCraft(){
         const parts = [];
         if (it.t) parts.push(craftName(c.k, it.t));
         parts.push(`${mtip(n.mk, MATS[+n.mk[1]].name)} ${have(n.haveMat, n.mat)}`);
-        if (n.gearSlot) parts.push(`${GRADES[n.g].name} ${n.gearSlot === 'weapon' ? cls().weapon : cls().armor} ${have(n.haveGear, n.n)}개`);
+        if (n.gearSlot) parts.push(`${GRADES[itemG(n.g * 4)].name} ${n.gearSlot === 'weapon' ? cls().weapon : cls().armor} ${have(n.haveGear, n.n)}개`);
         else if (n.gems) parts.push(`보석 ${have(S.gems, n.gems)}`);
         setHTML(card.querySelector('[data-r=rec]'), n.open
           ? `<b>${n.t}단계 조합식</b>: ${parts.join(' + ')}${sel ? '' : ' · <span style="color:#ff8a7a">각인을 골라요</span>'}<br><span class="small">${n.past ? '<b style="color:var(--gold)">계승 조합</b> · 지난 땅의 밀린 조합식이라 대장장이가 도와줘요(재료 절반 · 장비 조건 없음) · ' : ''}성공 확률 <b>${n.rate}%</b>${n.past ? ' (확정)' : n.sure ? ' (천장 확정)' : ` · 실패하면 재료 절반만 사라지고, ${CRAFT_PITY[n.t - 1] - n.fails}번 더 실패하면 다음은 확정`}</span>`
-          : `<b>${n.t}단계</b>는 ${WORLD_NAME[n.T.w]} ${n.T.need}단계(${stageLabelW(n.T.w, n.T.need)})에 닿으면 열려요.`);
+          : `<b>${n.t}단계</b>는 ${WORLD_NAME[n.T.bw != null ? n.T.bw : n.T.w]} ${n.T.need}단계(${stageLabelW(n.T.bw != null ? n.T.bw : n.T.w, n.T.need)})에 닿으면 열려요.`);
         btn.disabled = !n.ok; setText(btn, `${n.t}단계 만들기 (${n.rate}%)`);
       }
       const eb = card.querySelector('[data-el]'), ec = engrLvCost(c.k), ecap = engrLvCap(c.k);
@@ -16658,7 +16813,8 @@ const BAG_STACK = [
   {k:'m0', n:'요괴 정수', icon:'crystal', c:'#7fdc6a', get:() => S.mat.m0 || 0, use:'이승 재료. [장비] → [조합](비전 무기·갑옷·노리개 만들기·각인 강화)에 써요. 저승에 가면 대장장이가 망자의 넋으로 <b>계승</b>해 줘요.', get2:'이승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m1', n:'망자의 넋', icon:'crystal', c:'#ff8a7a', get:() => S.mat.m1 || 0, use:'저승 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비(금척)에 써요. 천계에 가면 하늘 조각으로 <b>계승</b>돼요.', get2:'저승의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m2', n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계·부상·곤륜 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷) · [수련] → [영약]에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 천공의 탑 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
-  {k:'m3', n:'용궁 진주', icon:'crystal', c:'#e6f4ff', hide:() => !seaOpen() && !(S.mat.m3 > 0), get:() => S.mat.m3 || 0, use:'바다 재료. [장비] → [조합](비전 장비·각인 강화) · 신화 제작 장비 · 장비 각성 · [수련] → [영약]에 써요.', get2:'바다의 단계 보스·수문장·레이드·타임 보스·몹(가끔). 곤륜까지 모은 재료는 바다에 들어설 때 대장장이가 용궁 진주로 바꿔 줘요.'},
+  {k:'m3', n:'용궁 진주', icon:'crystal', c:'#e6f4ff', hide:() => !seaOpen() && !(S.mat.m3 > 0), get:() => S.mat.m3 || 0, use:'바다 재료. [장비] → [조합](비전 장비·각인 강화) · 신화 제작 장비 · 장비 각성 · [수련] → [영약]에 써요. 5부 천축에 가면 대장장이가 천축 향목으로 <b>계승</b>해 줘요.', get2:'바다의 단계 보스·수문장·레이드·타임 보스·몹(가끔). 곤륜까지 모은 재료는 바다에 들어설 때 대장장이가 용궁 진주로 바꿔 줘요.'},
+  {k:'m4', n:'천축 향목', icon:'crystal', c:'#d9a05b', hide:() => S.world < 8 && !(S.mat.m4 > 0), get:() => S.mat.m4 || 0, use:'천축 재료. [장비] → [조합](비전 장비 13~15단계·각인 강화) · 신화 제작 장비 · 장비 각성 · [수련] → [영약]에 써요.', get2:'천축의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미. 바다까지 모은 재료는 천축에 들어설 때 대장장이가 천축 향목으로 바꿔 줘요.'},
   {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw[0] + S.amber.raw[1] + S.amber.raw[2] : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설 — 줄마다 6·8·10칸).', get2:'바다의 수문장·레이드, 상위 레이드 「진」.'},
   {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
@@ -19813,6 +19969,7 @@ if (location.search.indexOf('simtest') >= 0){
   // @@HOOK-D (갈래 D의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-D
   // @@HOOK-E (갈래 E의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {refreshPanel, topTier, bossWin, raidReward, seaMul, setPieceName, SPIRITS, SP_AT, SP_FX, SPIRIT_GEAR, spiritOpen, spSt, spBeast, spiritSum, spGive, spMerge, spPick, spFixAll, spiritGearDrop, spiritLine, spOwned, setShown, SETS, MATS, CRAFT_T, CRAFT_RATE, CRAFT_PITY, craftName, matShown, gradeHave, mergeOne, mergeAll, equipBest, spiritForce:false, spiritLuck:null, spBeastForce:null, drawSpiritAura});
   // @@END-E
   // @@HOOK-F (갈래 F의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-F

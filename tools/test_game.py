@@ -2577,7 +2577,7 @@ async def main():
               f"탑: 301·305(호박석)·350(지느러미 날개)·400층(용마)을 오르고 저장·되찾기가 맞다 {tw2}")
         # 7-2b: 4부 치장 22가지(46~67장)·유물 치장·아바타 여덟·세트 둘·용궁 조합식(10~12단계)
         u2 = await up.evaluate(r"""(lateS) => { const G = window.__game, S = G.S, out = {}; const keep = JSON.parse(JSON.stringify(S));
-          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || (a.w >= 5 && a.w <= 7)).length, G.SETS.length];
+          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || (a.w >= 5 && a.w <= 7)).length, G.SETS.filter(t => !t.w).length];
           out.parts = ['guard', 'shoe', 'belt', 'tassel', 'foot'].map(p => G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67 && x.p === p).length);
           // 사냥터 드롭: 4부 끝 용사는 46~67장 치장도 나오고 유물은 안 나온다. 한 줄 값은 4부 것이 1.15배까지
           let sea = 0, relic = 0, maxOld = 0, maxSea = 0; S.skin = {eq:{}, inv:[], seq:0, found:{}};
@@ -3497,6 +3497,205 @@ async def main():
         # @@TEST-D (갈래 D의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-D
         # @@TEST-E (갈래 E의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-25) 물의 신화 9-25단계: 영물 등급(5부 장비 24~27)·깃든 짐승 2·3·5칸·천축 향목(m4)·조합식 13~15단계·세트 「란카」「수미」 — 4부 용사에게는 안 보임
+        sea25 = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        ind25 = json.loads((ROOT / 'tools' / 'beta_saves' / '80_musa_ind1_end.json').read_text(encoding='utf-8'))['save']
+        ind25b = json.loads((ROOT / 'tools' / 'beta_saves' / '90_musa_ind3_end.json').read_text(encoding='utf-8'))['save']
+        ctxS = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        sp = await ctxS.new_page()
+        watch(sp, errors, '9-25 ')
+        await fresh(sp)
+        await signup(sp, 'sptest', 'abcd', '영물용사')
+        LOAD25 = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '영물용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); }"""
+        # --- 4부 끝 용사: 영물·향목·13단계·새 세트가 안 보이고, 영물은 안 떨어진다
+        await sp.evaluate(LOAD25, sea25)
+        s0 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.spiritLuck = 1e6; G.spiritForce = false;
+          out.open = [G.spiritOpen(), G.matW(), S.world]; out.mats = G.matShown().map(m => m.k).join(','); out.cap = G.craftCap();
+          S.craft.w.t = 12; S.craft.w.e = 'power'; out.max = !!G.craftNeed('w').max;
+          out.drop = G.spiritGearDrop('gate'); out.sets = G.SETS.filter(G.setShown).map(t => t.k).filter(k => k === 'lanka' || k === 'sumeru');
+          S.stage = 9; S.autoBoss = false; const own0 = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0); G.bossWin(); out.gate = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0) - own0;
+          const info = G.seaRaidInfo(S.world, 0); S.raid.tk = 3; const rw = G.raidReward(info); out.raid = rw.items.filter(r => r.it >= 24).length;
+          out.fx = Object.keys(G.spiritSum().fx).length; G.spiritLuck = null; return out; }""")
+        check(s0['open'] == [False, 3, 7] and 'm4' not in s0['mats'] and s0['cap'] == 12 and s0['max'] and s0['drop'] is None and not s0['sets'] and s0['gate'] == 0 and s0['raid'] == 0 and s0['fx'] == 0,
+              f"4부 끝 용사에게는 영물·천축 향목·13단계·란카/수미 세트가 안 보이고 영물이 안 떨어진다 {s0}")
+        await tab(sp, 'gear')
+        await sp.click('#seg-weapon')
+        await sp.wait_for_timeout(400)
+        s0b = await sp.evaluate("() => ({sp: !!document.querySelector('#spCard'), cells: document.querySelectorAll('#page .cell').length, gl: [...document.querySelectorAll('#page .gl')].map(e => e.textContent).join(',')})")
+        check(not s0b['sp'] and s0b['cells'] == 24, f"4부 끝 [장비] 화면에는 깃든 짐승 칸이 없고 줄은 유물까지 여섯이다 {s0b}")
+        await sp.click('#seg-set')
+        await sp.wait_for_timeout(400)
+        s0c = await sp.evaluate("() => document.querySelector('#setList').textContent")
+        check('란카의 조합' not in s0c and '수미의 조합' not in s0c and '용궁의 조합' in s0c, "4부 끝 [세트] 화면에는 란카·수미 세트가 안 보인다")
+        await sp.evaluate("() => { window.__game.closePage(); }")
+        # --- 5부 용사(란카 길 끝): 향목·계승·드롭
+        await sp.evaluate(LOAD25, ind25)
+        s1 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          out.w = [S.world, G.matW(), G.spiritOpen(), G.MATS[G.matW()].name]; out.m3 = S.mat.m3;
+          const rows = G.inhList().filter(r => r.kind === 'mat'); out.row = rows.map(r => [r.j, r.n, r.to]).join('|');
+          G.inhDo(); out.after = [S.mat.m3, S.mat.m4]; out.shown = G.matShown().map(m => m.k).join(',');
+          const m40 = S.mat.m4; G.gainMat(10, true); out.gain = S.mat.m4 - m40;
+          out.keys = Object.keys(G.mergeState(JSON.parse(JSON.stringify(S))).mat).join(',');
+          // 드롭 통계(평소 유물 I~II, 영물은 드물게)
+          G.spiritLuck = null; G.spBeastForce = null; let sp = 0, bad = 0; const N = 800;
+          for (let i = 0; i < N; i++){ const r = G.spiritGearDrop('raid'); if (r.it >= 24) sp++; if (!(r.it >= 24 && r.it <= 25 || r.it >= 20 && r.it <= 21)) bad++; if (r.it >= 24 && !(r.beast >= 0 && r.beast < 5)) bad++; }
+          out.rate = sp / N; out.bad = bad;
+          out.owned = G.ALL_SLOTS.map(k => G.spOwned(k)).reduce((a, b) => a + b, 0) === sp; G.refreshStats(); out.sync = G.ALL_SLOTS.every(k => G.spSt().pool[k].reduce((a, b) => a + b, 0) === G.spOwned(k));
+          return out; }""")
+        check(s1['w'] == [9, 4, True, '천축 향목'] and s1['row'].startswith('3,608,') and s1['after'] == [0, 608] and 'm4' in s1['shown'] and s1['gain'] == 10 and 'm4' in s1['keys'],
+              f"5부: 지금 땅 재료는 천축 향목이고 대장장이가 용궁 진주를 1:1로 계승해 주며 향목이 모인다 {s1['w']} {s1['row']} {s1['after']} {s1['shown']} {s1['gain']}")
+        check(0.04 < s1['rate'] < 0.30 and s1['bad'] == 0 and s1['owned'] and s1['sync'], f"5부 레이드 드롭: 평소 유물 I~II, 영물은 드물게(약 15%) {s1['rate']} · 짐승 정보가 가진 영물 수와 맞다 {s1['bad']} {s1['owned']} {s1['sync']}")
+        s2 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          for (const k of G.ALL_SLOTS){ S.gear[k].count.fill(0, 24); S.gear[k].seen.fill(false, 24); S.spirit = null; } G.spSt(); S.equip = {weapon:21, armor:21, helm:21, shoulder:21, boots:21}; G.refreshStats();
+          // 고정 운: 반드시 영물, 짐승 2(뱀)
+          G.spiritLuck = 1e6; G.spBeastForce = 2; const r = G.spiritGearDrop('gate'); out.drop = [r.it >= 24, r.beast, S.gear[r.slot].count[r.it], G.spSt().pool[r.slot][2], S.equip[r.slot] === r.it, G.spBeast(r.slot)];
+          // 5부 수문장 승리·레이드 보상에 붙었다
+          const own0 = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0); S.stage = 9; S.autoBoss = false; G.bossWin(); out.gate = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0) - own0;
+          const info = G.seaRaidInfo(S.world, 0); S.raid.tk = 3; const rw = G.raidReward(info); out.raid = rw.items.filter(x => x.it >= 24).length; out.raidBeast = rw.items.filter(x => x.it >= 24).every(x => x.beast >= 0 && x.beast < 5);
+          G.spiritLuck = null; G.spBeastForce = null; return out; }""")
+        check(s2['drop'] == [True, 2, 1, 1, True, 2] and s2['gate'] == 1 and s2['raid'] >= 1 and s2['raidBeast'], f"영물이 들어오면 깃든 짐승이 정해져 저장되고 5부 수문장 승리·레이드 보상에서 들어온다 {s2}")
+        # --- 짐승 2·3·5칸 효과 · 켜고 끄기 · 유물보다 센 영물
+        s3 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; const K = G.ALL_SLOTS;
+          const put = (its, beasts) => { K.forEach((k, i) => { S.gear[k].count.fill(0, 20); S.gear[k].seen.fill(false, 20); S.gear[k].count[its[i]] = 1; S.gear[k].seen[its[i]] = true; S.equip[k] = its[i];
+            S.spirit = S.spirit || {pool:{}, eq:{}}; S.spirit.pool[k] = [0, 0, 0, 0, 0]; if (its[i] >= 24){ S.spirit.pool[k][beasts[i]] = 1; S.spirit.eq[k] = beasts[i]; } else S.spirit.eq[k] = -1; }); G.refreshStats(); };
+          const snap = () => ({fx:G.spiritSum().fx, n:G.spiritSum().n.join(''), hp:G.ST.maxHp, atk:G.ST.atk, def:G.seaMul('def'), skill:G.seaMul('skill'), cdmg:G.seaMul('cdmg'), spd:G.seaMul('spd'), move:G.seaMul('move'), boss:G.seaMul('boss')});
+          put([23, 23, 23, 23, 23], []); out.relic = snap();
+          put([24, 24, 24, 24, 24], [0, 1, 2, 3, 4]); out.diff = snap();                       // 다섯 짐승이 다 달라 효과 없음
+          put([24, 24, 24, 24, 24], [0, 0, 1, 2, 3]); out.e2 = snap();                          // 코끼리 2칸
+          put([24, 24, 24, 24, 24], [0, 0, 0, 1, 2]); out.e3 = snap();                          // 코끼리 3칸
+          put([24, 24, 24, 24, 24], [0, 0, 0, 0, 0]); out.e5 = snap();                          // 코끼리 5칸
+          put([24, 24, 24, 24, 21], [0, 0, 0, 0, 0]); out.e4 = snap();                          // 코끼리 4칸(다섯째는 유물)
+          put([24, 24, 24, 24, 24], [1, 1, 1, 1, 1]); out.p5 = snap(); put([24, 24, 24, 24, 24], [2, 2, 2, 2, 2]); out.s5 = snap();
+          put([24, 24, 24, 24, 24], [3, 3, 3, 3, 3]); out.m5 = snap(); put([24, 24, 24, 24, 24], [4, 4, 4, 4, 4]); out.o5 = snap();
+          put([24, 24, 24, 21, 21], [1, 1, 1, 0, 0]); out.p3 = snap();
+          // 같은 칸에서 짐승 바꿔 끼우기(가진 것 가운데에서만)
+          put([24, 24, 24, 24, 24], [0, 1, 2, 3, 4]); S.spirit.pool.weapon[1] = 1; out.pick = [G.spPick('weapon', 1), G.spBeast('weapon'), G.spPick('weapon', 4), G.spBeast('weapon'), G.spiritSum().n.join('')];
+          out.line = G.spiritLine().replace(/<[^>]+>/g, '');
+          return out; }""")
+        near = lambda a, b, t=0.006: abs(a - b) <= t
+        r0 = s3['diff']; e5 = s3['e5']
+        check(s3['diff']['fx'] == {} and s3['e2']['fx'] == {'hp': 8} and s3['e3']['fx'] == {'hp': 8, 'def': 5} and s3['e5']['fx'] == {'hp': 20, 'def': 10} and s3['e4']['fx'] == {'hp': 8, 'def': 5},
+              f"깃든 짐승 2·3·5칸 효과가 켜지고(코끼리 체력 +8 · 받는 피해 −5 · 5칸 합쳐 체력 +20·받는 피해 −10) 한 칸이 모자라면 꺼진다 {s3['e2']['fx']} {s3['e3']['fx']} {s3['e4']['fx']} {s3['e5']['fx']}")
+        check(near(s3['e2']['hp'] / r0['hp'], 1.08) and near(s3['e5']['hp'] / r0['hp'], 1.20) and near(s3['e5']['def'] / r0['def'], 0.90, 0.0005) and near(s3['e3']['def'] / r0['def'], 0.95, 0.0005),
+              f"체력 공격력 비: 코끼리 2칸 ×1.08 · 5칸 ×1.20 · 받는 피해 ×0.90 {s3['e2']['hp'] / r0['hp']:.4f} {s3['e5']['hp'] / r0['hp']:.4f} {s3['e5']['def'] / r0['def']:.4f}")
+        check(near(s3['p5']['skill'] / r0['skill'], 1.18, 0.001) and near(s3['s5']['cdmg'] / r0['cdmg'], 1.20, 0.001) and near(s3['m5']['spd'] / r0['spd'], 1.15, 0.001) and near(s3['m5']['move'] / r0['move'], 1.25, 0.001)
+              and near(s3['o5']['atk'] / r0['atk'], 1.10, 0.01) and near(s3['o5']['boss'] / r0['boss'], 1.09, 0.001) and s3['p3']['n'] == '03000' and s3['p3']['fx'] == {'skill': 10},
+              f"짐승마다 결이 다르다: 공작 기술 피해 · 뱀 치명타 피해 · 원숭이 공격·이동 속도 · 소 공격력·보스 피해 {s3['p5']['skill'] / r0['skill']:.3f} {s3['s5']['cdmg'] / r0['cdmg']:.3f} {s3['m5']['spd'] / r0['spd']:.3f} {s3['o5']['atk'] / r0['atk']:.3f}")
+        check(s3['diff']['atk'] > s3['relic']['atk'] * 1.1 and s3['diff']['hp'] > s3['relic']['hp'] * 1.1,
+              f"영물 다섯 칸을 낀 용사(짐승이 달라도)는 유물 IV 다섯 칸 때보다 공격력·체력이 오른다 공격력 ×{s3['diff']['atk'] / s3['relic']['atk']:.3f} 체력 ×{s3['diff']['hp'] / s3['relic']['hp']:.3f}")
+        check(s3['pick'][:4] == [True, 1, False, 1] and s3['pick'][4] == '02111', f"같은 칸에서 가진 짐승으로 바꿔 끼운다(없는 짐승은 안 된다) {s3['pick']}")
+        # --- 합성: 짐승 이어짐 · 합성 끝 · 일괄 합성·예전 저장 · 저장/불러오기
+        s4 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; const k = 'weapon';
+          S.gear[k].count.fill(0, 20); S.equip[k] = 21; S.spirit.pool[k] = [1, 0, 3, 0, 0]; S.spirit.eq[k] = -1; S.gear[k].count[24] = 4; S.gear[k].seen[24] = true;
+          out.m1 = G.mergeOne(k, 24); out.cnt = [S.gear[k].count[24], S.gear[k].count[25]]; out.pool = S.spirit.pool[k].join(''); out.sync = S.spirit.pool[k].reduce((a, b) => a + b, 0) === G.spOwned(k);
+          S.gear[k].count[27] = 4; out.top = [G.mergeOne(k, 27), G.topTier(27), G.topTier(23), G.topTier(26)];
+          S.gear[k].count[23] = 4; out.relicTop = G.mergeOne(k, 23);                              // 유물 IV → 영물은 합성이 아님
+          S.gear[k].count[27] = 0; S.gear[k].count[25] = 0;
+          // 예전 저장(짐승 정보 없음): 영물이 있어도 저절로 정해진다
+          const old = JSON.parse(JSON.stringify(S)); delete old.spirit; old.gear.helm.count[25] = 2; old.gear.helm.seen[25] = true; old.equip.helm = 25; const m = G.mergeState(old);
+          out.oldPool = G.ALL_SLOTS.map(x => m.spirit.pool[x].reduce((a, b) => a + b, 0)).join(','); Object.assign(S, m); G.refreshStats(); out.oldFix = [G.spOwned('helm'), S.spirit.pool.helm.reduce((a, b) => a + b, 0), G.spBeast('helm') >= 0];
+          // 아주 오래된 저장(4부 전): 새 칸이 모두 없음
+          const o3 = G.mergeState({v:1, cls:'musa', level:1}); out.old3 = [JSON.stringify(o3.spirit.eq), o3.mat.m4];
+          // 저장 → 불러오기
+          S.gear.armor.count.fill(0, 20); S.gear.armor.count[26] = 1; S.gear.armor.seen[26] = true; S.equip.armor = 26; S.spirit.pool.armor = [0, 0, 0, 1, 0]; S.spirit.eq.armor = 3; G.refreshStats();
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [JSON.stringify(re.spirit.pool.armor), re.spirit.eq.armor, re.gear.armor.count[26], re.mat.m4];
+          // 깨진 값
+          const bad = G.mergeState({spirit:{pool:{weapon:'x', armor:[-5, 1e9, 'a', null]}, eq:{weapon:9, armor:'q'}}}); out.bad = [bad.spirit.pool.weapon.join(''), bad.spirit.pool.armor.join(','), bad.spirit.eq.weapon, bad.spirit.eq.armor];
+          return out; }""")
+        check(s4['m1'] == 1 and s4['cnt'] == [0, 1] and s4['pool'] == '00100' and s4['sync'] and s4['top'] == [0, True, True, False] and s4['relicTop'] == 0,
+              f"영물끼리 합성하면 짐승이 이어지고(많은 짐승부터 재료) 영물 IV·유물 IV는 합성 끝이다 {s4['cnt']} {s4['pool']} {s4['top']} {s4['relicTop']}")
+        check(s4['oldPool'] == '0,0,0,0,0' and s4['oldFix'] == [3, 3, True] and s4['old3'] == ['{"weapon":-1,"armor":-1,"helm":-1,"shoulder":-1,"boots":-1}', 0],
+              f"예전 저장(짐승 정보 없음)은 영물이 있으면 저절로 짐승이 정해지고 아주 옛 저장도 깨지지 않는다 {s4['oldPool']} {s4['oldFix']} {s4['old3']}")
+        check(s4['re'] == ['[0,0,0,1,0]', 3, 1, s4['re'][3]] and s4['bad'] == ['00000', '0,999,0,0,0', -1, -1], f"저장했다 불러오면 짐승 정보가 그대로 돌아오고 깨진 값은 걸러진다 {s4['re']} {s4['bad']}")
+        # --- 조합식 13~15단계
+        s5 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.craftLuck = 1e6;
+          out.t = G.CRAFT_T.slice(12).map(T => [T.w, T.bw, T.mat, T.gear.join(':'), T.gems]); out.rate = [G.CRAFT_RATE.length, G.CRAFT_PITY.length, G.CRAFT_T.length];
+          S.world = 7; out.cap = G.craftCap(); S.world = 9; out.cap9 = G.craftCap();
+          S.craft.w.t = 12; S.craft.w.e = 'power'; S.craft.a.t = 12; S.craft.a.e = 'wall'; S.craft.n.t = 12; S.craft.n.e = 'cdr'; S.best.s9 = Math.max(S.best.s9 || 0, 1); S.best.s8 = Math.max(S.best.s8 || 0, 1);
+          S.mat.m4 = 5000; S.gems = 1e6; const wk = 'weapon'; S.gear[wk].count.fill(0, 20); S.equip[wk] = 21; S.gear[wk].count[21] = 1; G.refreshStats();
+          const n0 = G.craftNeed('w'); out.need0 = [n0.t, n0.mk, n0.g, n0.n, n0.haveGear, n0.ok, n0.rate];
+          S.gear[wk].count[24] = 2; S.gear[wk].seen[24] = true; G.refreshStats(); const n1 = G.craftNeed('w'); out.need1 = [n1.haveGear, n1.ok];
+          out.res = G.craft('w'); out.after = [S.craft.w.t, S.mat.m4, S.gear[wk].count[24], G.spOwned(wk)]; G.refreshStats(); out.sync = S.spirit.pool[wk].reduce((a, b) => a + b, 0) === G.spOwned(wk);
+          out.name = G.craftName('w', 13) + '|' + G.craftName('a', 14) + '|' + G.craftName('n', 15);
+          const na = G.craftNeed('a'); S.gear.armor.count[24] = 1; S.gear.armor.seen[24] = true; S.equip.armor = 21; G.refreshStats(); out.a = [na.t, G.craftNeed('a').haveGear];
+          const nn = G.craftNeed('n'); out.nori = [nn.t, nn.gems, nn.mk]; out.nres = G.craft('n'); out.nT = S.craft.n.t;
+          S.craft.w.t = 15; out.max = !!G.craftNeed('w').max; S.craft.w.t = 13; S.world = 7; out.sea = !!G.craftNeed('w').max; S.world = 9;   // 4부로 돌아가면(시험) 천축 조합식은 닫힘
+          out.keep = G.craftNeed('w').mk; G.craftLuck = null;
+          return out; }""")
+        check(s5['t'] == [[4, 8, 1800, '6:1', 24000], [4, 9, 3000, '6:1', 36000], [4, 10, 4500, '6:2', 48000]] and s5['rate'] == [15, 15, 15] and s5['cap'] == 12 and s5['cap9'] == 15,
+              f"조합식 13~15단계(재료 천축 향목·장비 영물·열림은 5부 세계마다)가 표에 있고 4부 용사는 12단계까지 {s5['t']} {s5['rate']} {s5['cap']} {s5['cap9']}")
+        check(s5['need0'][:4] == [13, 'm4', 6, 1] and s5['need0'][5] is False and s5['need1'] == [2, True] and s5['res'] is True and s5['after'][0] == 13 and s5['after'][1] == 3200 and s5['after'][2] == 1 and s5['sync']
+              and '천축' in s5['name'] and '보리수' in s5['name'] and s5['a'][0] == 13 and s5['nori'][0] == 13 and s5['nori'][2] == 'm4' and s5['nres'] is True and s5['nT'] == 13 and s5['max'] and s5['sea'],
+              f"13단계 조합: 영물이 없으면 못 하고(영물 1개 필요) 있으면 향목 1800개와 영물 1개로 성공 · 이름·노리개(보석)·마지막 단계 · 4부로 돌아가면 닫힘 {s5['need0']} {s5['need1']} {s5['after']} {s5['name']} {s5['nori']} {s5['nT']}")
+        # --- 세트 「란카」「수미」
+        s6 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; S.world = 9; const K = G.ALL_SLOTS;
+          out.shown = G.SETS.filter(G.setShown).map(t => t.k).filter(k => k === 'lanka' || k === 'sumeru').join(',');
+          for (const k of ['weapon', 'armor']){ S.gear[k].count[24] = 1; S.gear[k].seen[24] = true; S.equip[k] = 24; } G.refreshStats();
+          const T = G.SETS.find(t => t.k === 'lanka'), U = G.SETS.find(t => t.k === 'sumeru');
+          out.core = [G.setCount(T), G.setCount(U)];
+          S.av.own.c_lanka = 1; S.av.own.c_sumeru = 1; S.av.char = 'c_lanka'; S.mount.own.camel = 1; S.mount.own.welephant = 1; S.mount.ride = 'camel'; S.soul.own.jatayu = 1; S.soul.own.savitri = 1; S.soul.eq = ['jatayu', '']; G.refreshStats();
+          out.lanka = [G.setCount(T), G.setCount(U)]; S.setPick = 'lanka'; G.refreshStats(); const s = G.setSum(); out.sum = [s.on.join(':'), s.atk, s.hp, s.boss, s.skill, s.crit];
+          out.names = T.p.map(G.setPieceName).join(' / ');
+          // 수미로 갈아타기(가진 아바타·탈것·넋을 바로 맞춤)
+          const w = G.pickSet('sumeru'); out.pick = [w, S.av.char, S.mount.ride, S.soul.eq.join(',')]; G.refreshStats(); const s2 = G.setSum(); out.sum2 = [s2.on.join(':'), s2.atk, s2.boss, s2.skill, s2.crit];
+          // 무기가 영물이 아니면 세트가 꺼진다
+          S.equip.weapon = 21; G.refreshStats(); out.off = [G.setCount(U), G.setSum().on.some(([k]) => k === 'sumeru')];
+          S.equip.weapon = 24; G.refreshStats(); S.setPick = ''; G.refreshStats(); return out; }""")
+        check(s6['shown'] == 'lanka,sumeru' and s6['core'] == [2, 2] and s6['lanka'] == [5, 2] and s6['sum'] == ['lanka,5', 0.65 + 1.5, 0.65 + 1.5, 1.5, 1.5, 12],
+              f"세트 「란카」: 영물 무기·갑옷 + 란카 갑옷·방울 낙타·자타유 넋 5조각이 맞으면 5세트 효과가 켜진다 {s6['core']} {s6['lanka']} {s6['sum']} {s6['names']}")
+        check(s6['pick'][1] == 'c_sumeru' and s6['pick'][2] == 'welephant' and 'savitri' in s6['pick'][3] and s6['sum2'][0] == 'sumeru,5' and s6['sum2'][4] == 12 and s6['off'][0] == 0 and not s6['off'][1],
+              f"세트 「수미」: [이 세트로]가 가진 아바타·탈것·넋을 바로 맞추고, 영물이 아니면 꺼진다 {s6['pick']} {s6['sum2']} {s6['off']}")
+        # --- 화면: [장비] 영물 칸·깃든 짐승 줄 / 용사 그림 / 조합 공방 13단계 / 세트 카드
+        await sp.evaluate(LOAD25, ind25b)
+        await sp.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = false; G.noInh = true; G.inhDo(); S.world = 10; G.spBeastForce = null;
+          const sl = G.ALL_SLOTS, its = [25, 24, 24, 24, 24], bs = [0, 0, 0, 3, 3]; sl.forEach((k, i) => { S.gear[k].count[its[i]] = 1; S.gear[k].seen[its[i]] = true; S.equip[k] = its[i]; });
+          S.spirit = {pool:{}, eq:{}}; sl.forEach((k, i) => { S.spirit.pool[k] = [0, 0, 0, 0, 0]; S.spirit.pool[k][bs[i]] = 1; S.spirit.eq[k] = bs[i]; });
+          S.gear.weapon.count[26] = 2; S.gear.weapon.seen[26] = true; S.spirit.pool.weapon[1] = 2; G.refreshStats(); }""")
+        await tab(sp, 'gear')
+        await sp.click('#seg-weapon')
+        await sp.wait_for_timeout(500)
+        u0 = await sp.evaluate("() => ({card: !!document.querySelector('#spCard'), line: document.querySelector('#spLine').textContent, btns: [...document.querySelectorAll('[data-spb]')].map(b => b.textContent.trim() + (b.disabled ? '(끔)' : '')), cells: document.querySelectorAll('#page .cell').length, gl: [...document.querySelectorAll('#page .gl')].map(e => e.textContent).slice(-2)})")
+        await sp.evaluate("() => { document.querySelector('#spCard').scrollIntoView({block:'start'}); }")
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25a_장비_영물칸_깃든짐승.png'))
+        check(u0['card'] and '코끼리 3칸' in u0['line'] and '원숭이 2칸' in u0['line'] and '체력 +8%' in u0['line'] and '원숭이 3칸' in u0['line'] and u0['cells'] == 28 and u0['gl'] == ['유물', '영물'] and len(u0['btns']) == 5,
+              f"[장비] 화면: 영물 줄이 생기고 지금 맞춘 짐승 수(코끼리 3·원숭이 2)와 켜진 효과·다음 문턱(원숭이 3칸)이 한 줄로 보인다 {u0}")
+        await sp.click('[data-spb="1"]')
+        await sp.wait_for_timeout(300)
+        u1 = await sp.evaluate("() => ({line: document.querySelector('#spLine').textContent, on: [...document.querySelectorAll('[data-spb][aria-pressed=true]')].map(b => b.dataset.spb).join(',')})")
+        check(u1['on'] == '1' and '공작 1칸' in u1['line'] and '코끼리 2칸' in u1['line'], f"[장비]에서 같은 칸에 가진 다른 짐승(공작)을 눌러 바꿔 끼운다 {u1}")
+        await sp.click('#seg-set')
+        await sp.wait_for_timeout(300)
+        await sp.evaluate("() => { const G = window.__game, S = G.S; S.av.own.c_lanka = 1; S.av.char = 'c_lanka'; S.mount.own.camel = 1; S.mount.ride = 'camel'; S.soul.own.jatayu = 1; S.soul.eq = ['jatayu', '']; S.spirit.eq.weapon = 0; S.setPick = 'lanka'; G.refreshStats(); G.refreshPanel(); }")
+        await sp.wait_for_timeout(500)
+        await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('란카의 조합')); if (c) c.scrollIntoView({block:'start'}); }")
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25b_세트_란카.png'))
+        u2 = await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('란카의 조합')); return c ? {txt: c.textContent, ok: c.querySelectorAll('.setp .ok').length} : null; }")
+        check(u2 and u2['ok'] == 5 and '5세트' in u2['txt'] and '켜짐' in u2['txt'], f"[세트] 화면에 란카의 조합 카드가 5조각 모두 켜진 채 보인다 {u2 and u2['ok']}")
+        await sp.click('#seg-craft')
+        await sp.evaluate("() => { const G = window.__game, S = G.S; S.craft.w.t = 12; S.craft.w.e = 'power'; S.craft.a.t = 12; S.craft.a.e = 'wall'; S.craft.n.t = 12; S.craft.n.e = 'cdr'; S.mat.m4 = 2600; S.best.s8 = 5; S.best.s9 = 5; S.best.s10 = 5; S.gear.weapon.count[25] = 1; G.refreshStats(); G.refreshPanel(); }")
+        await sp.wait_for_timeout(600)
+        u3 = await sp.evaluate("() => ({txt: document.querySelector('#cf-w').textContent, mats: [...document.querySelectorAll('.matrow .mat')].map(e => e.textContent.trim()).join('|'), tier: document.querySelector('#cf-w [data-r=tier]').textContent})")
+        await sp.evaluate("() => { const c = document.querySelector('#cf-w'); c.scrollIntoView({block:'start'}); const r = c.querySelector('[data-r=rec]'); if (r) r.scrollIntoView({block:'center'}); }")
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25c_조합공방_13단계.png'))
+        check('13단계 조합식' in u3['txt'] and '천축 향목' in u3['txt'] and '영물' in u3['txt'] and '천축 향목' in u3['mats'] and '12단계 / 15' in u3['tier'].replace('단계 /', '단계 /'),
+              f"[조합 공방]에 13단계 조합식(천축 향목 + 영물 장비)과 재료 줄의 천축 향목이 보인다 {u3['tier']} {u3['txt'][:90]}")
+        await sp.evaluate("() => { const G = window.__game; G.closePage(); G.quiet = false; G.hero.goal = null; G.mobs.length = 0; for (let i = 0; i < 12; i++) G.update(0.05); }")
+        await sp.wait_for_timeout(900)
+        await sp.evaluate(r"""() => { const G = window.__game, S = G.S; G.mobs.length = 0; document.querySelectorAll('.sheet9').forEach(e => e.remove());
+          const el = document.createElement('div'); el.className = 'sheet9'; el.style.cssText = 'position:fixed;inset:0;z-index:99;background:#3a3a5a;display:flex;flex-wrap:wrap;gap:14px;padding:14px;align-content:flex-start;color:#fff;font:12px sans-serif';
+          const add = (cv, label) => { const d = document.createElement('div'); d.style.cssText = 'text-align:center;width:150px'; const im = document.createElement('img'); im.src = (cv.base || cv).toDataURL(); im.style.cssText = 'image-rendering:pixelated;width:150px;height:auto;background:#2a2a44'; d.appendChild(im); d.append(label); el.appendChild(d); };
+          for (const [g, nm] of [[4, '전설'], [7, '유물'], [8, '영물']]) for (const dir of ['right', 'up']) add(G.personSprite('musa', S.look, g, g, dir, 0, false, {job:5, gx:{h:g, s:g, b:g}}), nm + (dir === 'up' ? ' (뒤)' : ' (앞)'));
+          document.body.appendChild(el); }""")
+        await sp.wait_for_timeout(400)
+        await sp.screenshot(path=str(OUT / '9-25d_용사_영물다섯칸.png'))
+        await sp.evaluate("() => { document.querySelectorAll('.sheet9').forEach(e => e.remove()); }")
+        ra = await sp.evaluate("() => { const G = window.__game; G.quiet = true; return {err: 0, atk: G.ST.atk > 0, w: G.S.world}; }")
+        check(ra['atk'], "영물 다섯 칸을 낀 용사가 그려지고 싸워도(오라 포함) 오류가 없다")
+        await ctxS.close()
+
         # @@END-E
         # @@TEST-F (갈래 F의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-F
