@@ -4173,8 +4173,8 @@ async def main():
           G.setWorld(5); return out; }""")
         check(c['open5'] == [True, False] and c['shown5'].endswith('chilseong,yongsin'), f"동해에서는 용왕신만 열리고 업신은 카드도 없다 {c['open5']} {c['shown5']}")
         check(c['max'] == 10 and c['cost0'] and c['old'], f"용왕신 최대 Lv.10·첫 값 = 기준 엽전 × 150 × 50, 옛 수호신 값은 그대로 {c['max']} {c['cost0']} {c['old']}")
-        check(c['up'] is False and c['lv'] == 10 and c['mul10'] == 10 and abs(c['mul3'] - 3) < 1e-9, f"Lv.10에서는 더 못 올리고, 모시면 +10%·다른 것을 모시면 +3% {c['up']} {c['mul10']} {c['mul3']}")
-        check(c['open8'] == [True, True] and c['shown8'] == 7 and c['offOn'] == 20 and c['offNo'] == 3 and abs(c['offRest'] - 6) < 1e-9, f"란카 길에서 업신이 열려 카드 일곱 장 · 자리 비운 동안에만 +20%(안 모시면 +6%) {c['open8']} {c['shown8']} {c['offOn']} {c['offNo']} {c['offRest']}")
+        check(c['up'] is False and c['lv'] == 10 and abs(c['mul10'] - 8) < 1e-9 and abs(c['mul3'] - 2.4) < 1e-9, f"Lv.10에서는 더 못 올리고, 모시면 +8%·다른 것을 모시면 +2.4% {c['up']} {c['mul10']} {c['mul3']}")
+        check(c['open8'] == [True, True] and c['shown8'] == 7 and abs(c['offOn'] - 20) < 1e-9 and abs(c['offNo'] - 2.4) < 1e-9 and abs(c['offRest'] - 6) < 1e-9, f"란카 길에서 업신이 열려 카드 일곱 장 · 자리 비운 동안에만 +20%(안 모시면 +6%) {c['open8']} {c['shown8']} {c['offOn']} {c['offNo']} {c['offRest']}")
         # --- d. 2배 상한
         d = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
           const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5; S.exp = 0; G.refreshStats();
@@ -4187,7 +4187,7 @@ async def main():
           const lv0 = S.level, ex0 = S.exp; G.gainExp(100, {raw:true}); out.raw = Math.abs((S.exp - ex0) - 100) < 1e-6 && S.level === lv0;
           const q0 = JSON.stringify(S.lg.st); out.rawSame = q0 === JSON.stringify(S.lg.st);
           S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n; out.off = G.lgExtra(100); return out; }""")
-        check(d['pct'] == 27 and d['exact'] and d['pendDown'], f"모두 최대(용왕신 10·향 켬·기억 셋 다·수련 기운 2)면 더하는 몫이 정확히 기본의 100%(= 2배)이고 수련 기운이 줄어든다 {d['pct']} {d['exact']} {d['pendDown']}")
+        check(d['pct'] == 9 and d['exact'] and d['pendDown'], f"모두 최대(용왕신 10·향 켬·기억 셋 다·수련 기운 2)면 더하는 몫이 정확히 기본의 100%(= 2배)이고 수련 기운이 줄어든다 {d['pct']} {d['exact']} {d['pendDown']}")
         check(d['maxR'] <= 2 + 1e-9 and d['ratio'] <= 2 + 1e-9, f"경험치가 들어올 때마다 2배를 넘지 않는다 {d['maxR']} {d['ratio']}")
         check(d['raw'] and d['off'] == 0, f"만렙 모음({{raw:true}})과 레벨 문이 아닐 때는 더하지 않는다 {d['raw']} {d['off']}")
         # --- e. 수련 의뢰
@@ -4214,13 +4214,13 @@ async def main():
           S.level = G.MAIN_Q[lqi].n - 5; S.lg.req = null; S.lg.day = ''; S.lg.free = 0; S.lg.seq = 3; out.rk = G.lgReqNext(3); out.rkOk = G.lgRaidOk();
           return out; }""")
         check(e['take'] and e['paid'] and e['k1'] == 'kill', f"의뢰 받기: 엽전·지금 땅 재료가 값만큼 빠지고 첫 차례는 사냥 {e['take']} {e['paid']} {e['k1']}")
-        check(e['again'] != '' and e['done'] and abs(e['pend1'] - 0.12) < 1e-9 and e['req1'] is None, f"몬스터 500마리를 세면 저절로 마치고 수련 기운 +0.12 {e['pend1']} {e['req1']}")
+        check(e['again'] != '' and e['done'] and abs(e['pend1'] - 0.10) < 1e-9 and e['req1'] is None, f"몬스터 500마리를 세면 저절로 마치고 수련 기운 +0.10 {e['pend1']} {e['req1']}")
         check(e['seq'].startswith('kill,cast,enh,') and (e['seq'].split(',')[3] in ('raid', 'kill')), f"차례가 사냥 → 기술 → 손질 → 겨루기로 돈다(겨루기는 할 싸움이 없으면 건너뜀) {e['seq']} raidOk={e['rkOk']}")
         check(e['sixth'] != '' and '5번' in e['sixth'], f"엽전 의뢰 5번 뒤 6번째는 거절 {e['sixth']}")
         check(e['g1'] and e['ratio'] == 2 and e['g1paid'] and e['g2'] and e['g3'] == '오늘 더 받기를 다 썼어요', f"보석 의뢰: 두 번째 값이 첫째의 2배(1+더 받은 수)·3번째 거절 {e['ratio']} {e['g3']}")
         check(e['nextDay'] == [0, 0], f"하루가 지나면 횟수가 처음으로 {e['nextDay']}")
         check(e['sw0'] and e['sw1'] and e['swk'] and e['sw2'] is False, f"바꾸기는 의뢰마다 한 번만 {e['sw1']} {e['sw2']}")
-        check(e['full'] is False and e['fullKeep'], f"수련 기운 1.95에서 0.12짜리는 마치지 않고 남는다 {e['full']} {e['fullKeep']}")
+        check(e['full'] is False and e['fullKeep'], f"수련 기운 1.95에서 0.10짜리는 마치지 않고 남는다 {e['full']} {e['fullKeep']}")
         check(e['auto'] and e['notOn'] == '레벨 문 앞에서만 받아요', f"저절로 이어 받기가 켜지면 다음 엽전 의뢰를 받고, 레벨 문이 아니면 받기 거절 {e['auto']} {e['notOn']}")
         # --- 기술 한 번이 기술 수련으로 센다(tryCast)
         e2 = await lq.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5;
@@ -4245,9 +4245,9 @@ async def main():
           S.amber.raw = [8, 0, 0]; S.amber.st = {}; out.nsl = G.slotsNow().length; out.spare = G.lgAmbSpare(0); const sl = G.slotsNow()[0]; S.amber.st[sl] = {g:0, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare2 = G.lgAmbSpare(0); S.amber.st[sl] = {g:2, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare3 = G.lgAmbSpare(0);
           S.amber.st = {}; return out; }""")
         check(f['gem1'] and f['gemPaid'] and f['gemSec'] == 7200 and f['c2'] == 1.5 and f['gem2'] and '2번' in f['gem3'], f"보석 향: 값 지불·2시간·두 번째는 1.5배·하루 2번까지 {f['gemSec']} {f['c2']} {f['gem3']}")
-        check(f['amb'] == [[1, 3600], [1, 10800], [1, 28800]], f"호박석 향: 하나씩 쓰고 1·3·8시간 {f['amb']}")
+        check(f['amb'] == [[1, 1800], [1, 7200], [1, 21600]], f"호박석 향: 하나씩 쓰고 30분·2·6시간 {f['amb']}")
         check('12시간' in f['over'], f"12시간을 넘게는 못 피운다 {f['over']}")
-        check(f['pc'] == '15,18,21,24,27' and f['pcNo'] == 15, f"향 세기: 기억 0~3갈래·다 되찾으면 15/18/21/24/27% (떠올리지 않기는 15%) {f['pc']} {f['pcNo']}")
+        check(f['pc'] == '5,6,7,8,9' and f['pcNo'] == 5, f"향 세기: 기억 0~3갈래·다 되찾으면 5/6/7/8/9% (떠올리지 않기는 5%) {f['pc']} {f['pcNo']}")
         check(abs(f['burn'] - 60) < 1.5 and f['still'], f"레벨 문에서는 향이 타고(60초 → 60초 줄어듦), 아니면 그대로 {f['burn']} {f['still']}")
         check(abs(f['fr'][0] - 0.5) < 1e-9 and f['fr'][1] == 0 and f['offMore'], f"자리를 비운 동안에도 탄다: 향 1800초가 1시간의 절반 → 몫이 붙는다 {f['fr']} {f['offMore']}")
         check(f['spare'] == 8 - f['nsl'] and f['spare2'] == 8 - f['nsl'] + 1 and f['spare3'] == f['spare2'], f"남는 호박석 = 가진 수 − 낮은 돌/빈 칸 수 {f['spare']} {f['spare2']} {f['spare3']}")

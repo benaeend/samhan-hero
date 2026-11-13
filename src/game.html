@@ -10898,7 +10898,7 @@ const GUARDS = [
   {k:'samsin', name:'삼신할미', ch:'삼', c:'#ff9ac0', eff:'exp', per:2, need:() => S.reb.n >= 2 || S.world >= 3, needTxt:'두 번째 환생',   // (2026-11-12, 주인 요청) 부상에 닿기 → 두 번째 환생: 레벨이 막는 구간이 지루하지 않게 일찍
     d:'아이를 점지하고 자라도록 돌본다는 할미 신'},
   {k:'chilseong', name:'칠성신', ch:'칠', c:'#9ac8ff', eff:'critDmg', per:4, need:() => S.world >= 4, needTxt:'곤륜에 닿기', d:'북두칠성에 깃들어 목숨을 지켜 준다는 신'},
-  {k:'yongsin', name:'용왕신', ch:'용', c:'#3fb8d0', eff:'lgx', per:1, max:10, gk:50, gg:1.3, w:5, need:() => S.world >= 5, needTxt:'동해에 닿기',
+  {k:'yongsin', name:'용왕신', ch:'용', c:'#3fb8d0', eff:'lgx', per:0.8, max:10, gk:50, gg:1.3, w:5, need:() => S.world >= 5, needTxt:'동해에 닿기',
     d:'바다를 다스리며 뱃사람과 해녀의 물길을 지켜 준다는 신'},
   {k:'eopsin', name:'업신', ch:'업', c:'#b89a5a', eff:'lgoff', per:2, max:10, gk:50, gg:1.3, w:8, need:() => S.world >= 8, needTxt:'란카 길에 닿기',
     d:'집 안 곳간에 깃들어, 사람이 집을 비운 사이에도 살림을 지켜 준다는 지킴이 신'},
@@ -10936,11 +10936,14 @@ const guardNew = () => GUARDS.some(g => guardOpen(g) && !guardLv(g.k));
    운에 걸린 것이 없다. 1~3부(세계 5 아래)에는 아무것도 안 보인다. DOM id 머리는 lq(로그인 창이 lg-를 씀) */
 const LG = {w0:5, cap:2, pendMax:2,
   reqFree:5, reqExtra:2, reqGold:4000, reqMat:10, reqGem:25000,
-  req:{kill:{n:500, lv:0.12, name:'사냥 수련'}, cast:{n:150, lv:0.10, name:'기술 수련'}, enh:{n:20, lv:0.10, name:'손질 수련'}, raid:{n:1, lv:0.15, name:'겨루기 수련'}},
+  req:{kill:{n:500, lv:0.10, name:'사냥 수련'}, cast:{n:150, lv:0.08, name:'기술 수련'}, enh:{n:20, lv:0.08, name:'손질 수련'}, raid:{n:1, lv:0.12, name:'겨루기 수련'}},   // 11-13 잼: 보상 ×0.8(0.12·0.10·0.10·0.15에서) — 의뢰는 달력 하루 기준이라 천천히 하는 용사일수록 몫이 커져서
   order:['kill', 'cast', 'enh', 'raid'],
-  inPct:15, inMem:3, inFin:3,
+  inPct:5, inMem:1, inFin:1,   // 11-13 잼: 15·3·3(최대 27%) → 5·1·1(최대 9%). 남는 희귀 호박석만으로 향이 내내 타서(시뮬 4·5부 100%) 설계 예상(+4~5%)의 3~5배가 들어왔다
   inMax:43200, inGemSec:7200, inGem:50000, inGemG:0.5, inDay:2,
-  inAmb:[3600, 10800, 28800]};
+  inAmb:[1800, 7200, 21600]};   // 11-13 잼: 희귀 30분 · 영웅 2시간 · 전설 6시간(1·3·8시간에서) — 희귀가 시간당 1.2개쯤 남아 1시간씩이면 보석 향을 쓸 일이 없었다
+/* 11-13 잼(무사·자객, 4부 → 5부 이어 돌림, 같은 코드에서 끔(nolg)과 비교 — scratchpad bal93):
+   설계 첫 값은 배율 4부 1.21~1.33 · 5부 1.36~1.44, 시간은 끔의 77~86%(4부) · 68~80%(5부)로 목표(배율 1.10~1.25 · 80% 이상) 밖.
+   위 값으로 고친 뒤의 표는 docs/patch-sea/PROGRESS.md 「다르게 정한 수치」 9-3 줄. 용왕신은 레벨마다 1% → 0.8%(5부에서 Lv.8~10이라 5부 몫을 덜려고), 값(gk·gg)과 업신은 그대로 */
 const lgGK = () => 1 + 0.25 * Math.max(0, S.world - LG.w0);   // 보석 값 땅 배율
 let lgC = {k:'', v:null};
 function lgGate(){   // 지금 이야기가 레벨 때문에 멈춰 있나 → {need, why:'quest'|'boss'|'job'} 또는 null
