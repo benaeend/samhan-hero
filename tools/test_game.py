@@ -4062,13 +4062,13 @@ async def main():
         check(y1['mine'] == 'true,true,false,false' and y1['two'] == '1,4,N,N', f"레이드에 고른 캐릭터가 동료로 나오고 남는 자리는 그림자 동료가 채운다(그림자는 내 파티가 아님) {y1['two']} {y1['mine']}")
         check(y1['def'].startswith('동료4,동료3,동료2,동료1'), f"고르지 않으면 레이드 동료도 센 순서 {y1['def']}")
         check(y1['none'] == '' and '앞뒤 진' in y1['front'] and '선봉' in y1['front'] and y1['van'] == '선봉' and y1['pair'] == '창칼 진' and y1['shadow'] == '그림자 살' and y1['thunder'] == '벼락과 부적', f"시너지 켜짐/꺼짐: 앞뒤 진·선봉·창칼 진·그림자 살·벼락과 부적 {y1}")
-        check('다섯 갈래' in y1['five4'] and '+8%' in y1['five5'] and y1['one'] == '한 길', f"다섯 갈래(4종 +4%·5종 +8%)·한 길(같은 직업 3명) {y1['five4']} {y1['five5']} {y1['one']}")
+        check('다섯 갈래' in y1['five4'] and '+4%' in y1['five5'] and y1['one'] == '한 길', f"다섯 갈래(4종 +2%·5종 +4%)·한 길(같은 직업 3명) {y1['five4']} {y1['five5']} {y1['one']}")
         check('선봉:sulsa' in y1['hint'] and '창칼 진:changgaek' in y1['hint'], f"한 명만 더 있으면 켜지는 시너지를 알려 준다 {y1['hint']}")
         check(y1['hint5'] == 0, '다섯이 다 차면 한 명 더 힌트는 없다')
         y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S; S.myParty = ['q1', 'q4']; const t = G.tbOthers(); const r = {head:t.slice(0, 2).map(o => o.name).join(), mine:t.slice(0, 2).every(o => o.mine && o.syn), n:t.length};
           S.myParty = []; return r; }""")
         check(y1b['head'] == '동료1,동료4' and y1b['mine'] and y1b['n'] <= 10, f"타임 보스에도 고른 내 캐릭터가 먼저 동료로 나온다 {y1b}")
-        # --- 싸움: 시너지는 레이드·진·타임 보스에서만, 상한(무사 45·나머지 35), 그림자는 안 센다, 싸우는 중엔 못 바꿈
+        # --- 싸움: 시너지는 레이드·진·타임 보스에서만, 상한(무사 65·나머지 25), 그림자는 안 센다, 싸우는 중엔 못 바꿈
         y2 = await pty.evaluate(r"""() => { try { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; S.quest.main = 112; S.raid.tk = 3; S.level = 100; S.maxStage = 60; S.best.s0 = 60; S.best.l0 = 100; S.cls = 'musa'; G.refreshStats(); out.open = G.raidUnlocked();
           S.myParty = ['q1', 'q2', 'q3', 'q4']; out.start = G.startRaid(2); const R = G.raid;
           const st = G.synState(); out.names = st ? st.list.map(x => x.name).join('|') : null; out.musa = G.synDmg('musa', false); out.musaSk = G.synDmg('musa', true);
@@ -4077,7 +4077,7 @@ async def main():
           R.time = 0.05; for (let i = 0; i < 60 && G.raid; i++) G.update(0.05); G.hideModal();
           return out; } catch (e) { return {err: e.stack}; } }""")
         check(y2['start'] and y2['names'] and '앞뒤 진' in y2['names'] and '선봉' in y2['names'] and y2['fail'] is False, f"레이드에서는 내 파티(나+고른 넷)의 시너지가 켜지고, 싸우는 중에는 파티를 못 바꾼다 {y2['names']} {y2['fail']}")
-        check(y2['musa'] <= 45 and y2['musa'] >= 30 and y2['off'] == [None, 0], f"무사가 받는 피해 합이 상한 45%를 넘지 않고, noSyn으로 끌 수 있다 {y2['musa']} {y2['off']}")
+        check(y2['musa'] <= 65 and y2['musa'] >= 40 and y2['off'] == [None, 0], f"무사가 받는 피해 합이 상한 65%를 넘지 않고, noSyn으로 끌 수 있다 {y2['musa']} {y2['off']}")
         y3 = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
           out.hunt = G.synState(); S.cls = 'jagaek'; G.refreshStats();
           S.myParty = ['q1', 'q2', 'q3', 'q4']; S.raid.tk = 3; G.startRaid(2); const st = G.synState(); out.jag = [st ? st.list.length : -1, G.synDmg('jagaek', false), G.synDmg('jagaek', true)];
@@ -4087,7 +4087,7 @@ async def main():
           S.dummy.day = ''; try { G.startDummy(); out.dum = G.synState(); G.raid && (G.raid.time = 0.05); for (let i = 0; i < 40 && G.raid; i++) G.update(0.05); G.hideModal(); } catch (e) { out.dum = 'err'; }
           return out; }""")
         check(y3['hunt'] is None and y3['dum'] is None, f"사냥·허수아비 같은 혼자 싸움에는 시너지가 없다 {y3['hunt']} {y3['dum']}")
-        check(y3['jag'][0] >= 3 and y3['jag'][1] <= 35 and y3['jag'][2] <= 35, f"무사가 아닌 직업은 받는 피해 합 상한이 35% {y3['jag']}")
+        check(y3['jag'][0] >= 3 and y3['jag'][1] <= 25 and y3['jag'][2] <= 25, f"무사가 아닌 직업은 받는 피해 합 상한이 25% {y3['jag']}")
         check(y3['npc'] == '{"musa":1,"sulsa":1}', f"그림자 동료·직업 없는 옛 요약은 시너지에서 세지 않는다 {y3['npc']}")
         # --- 캡처: 「내 파티」 칸 · 레이드 싸움 화면
         await pty.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; S.myParty = ['q1', 'q2', 'q4']; S.raid.tk = 3; G.refreshStats(); }""")

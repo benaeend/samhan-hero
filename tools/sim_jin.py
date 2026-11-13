@@ -1,9 +1,10 @@
 """상위 레이드 「진」 세기 재기와 클리어율 표(물의 신화 3단계).
 
 사용:
-  python3 tools/sim_jin.py measure            기준 저장(네 직업)으로 세계별·직업별 기준값을 재서 src/game.html 의 JIN_W 표를 찍는다
+  python3 tools/sim_jin.py measure            기준 저장(저장이 있는 직업 — 세계 0·1은 네 직업, 2부터 궁사·창객까지 여섯)으로 세계별·직업별 기준값을 재서 src/game.html 의 JIN_W 표를 찍는다
   python3 tools/sim_jin.py table [세계…] [n=판 수] [T0=…] [A0=…] [JIN.키=값…] [b]
-      전투력 4단계(80·100·130·200%) × 손 모델 3가지(자동·평범·잘함) 클리어율 표. 'b'를 붙이면 그 땅 마지막 레이드(위 기준점)로
+      전투력 4단계(80·100·130·200%) × 손 모델 3가지(자동·평범·잘함) 클리어율 표. 'b'를 붙이면 그 땅 마지막 레이드(위 기준점)로,
+      'syn'을 붙이면 파티 시너지를 켠 표(직업마다 가장 좋은 '내 파티' 조합 SYN_BEST — 권장 전투력·보스 세기는 시너지 없는 기준 그대로)
   python3 tools/sim_jin.py check [세계…]      게임에 적힌 JIN_W 그대로(덮어쓰지 않고) 첫 레이드를 권장 전투력 100%에서 몇 판
 
 - 기준 저장(docs/patch-sea/sim): 진 레이드가 기준으로 삼는 용사 = '다음 세계를 지나는 용사'. 그 땅 첫 레이드는 a(막 들어선 때), 마지막 레이드는 b(거의 다 지난 때).
@@ -28,7 +29,11 @@ import test_game as T  # noqa: E402
 from playwright.async_api import async_playwright  # noqa: E402
 
 SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
-CLASSES = ['musa', 'jagaek', 'sulsa', 'doin']
+CLASSES = ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek']   # 궁사·창객 저장은 save_*_q113부터 있다(세계 0·1의 jin_* 저장은 네 직업뿐 — HAS가 거른다)
+KO = {'musa': '무사', 'jagaek': '자객', 'sulsa': '술사', 'doin': '도인', 'gungsa': '궁사', 'changgaek': '창객'}
+# 직업마다 가장 좋은 '내 파티'(나 포함 다섯, 물의 신화 9-2 — bench로 고름): 표의 'syn'이 이 조합의 시너지를 켠다(__game.synForce)
+SYN_BEST = {'musa': dict(musa=1, changgaek=1, sulsa=1, doin=1, gungsa=1), 'jagaek': dict(jagaek=1, gungsa=1, musa=1, sulsa=1, doin=1), 'sulsa': dict(sulsa=1, doin=1, musa=1, jagaek=1, gungsa=1),
+            'doin': dict(doin=1, sulsa=1, musa=1, jagaek=1, gungsa=1), 'gungsa': dict(gungsa=3, jagaek=1, musa=1), 'changgaek': dict(changgaek=1, musa=1, sulsa=1, doin=1, gungsa=1)}
 REF = {0: ('jin_{c}_w1s12.json', 'jin_{c}_w1s100.json', 1.0), 1: ('jin_{c}_w2s12.json', 'jin_{c}_w2s84.json', 1.0),
        2: ('save_{c}_q113.json', 'save_{c}_q145.json', 1.0), 3: ('save_{c}_q145.json', 'save_{c}_end.json', 1.0), 4: ('save_{c}_end.json', 'save_{c}_sea1.json', 1.0),
        5: ('save_{c}_sea1.json', 'save_{c}_sea2.json', 1.0), 6: ('save_{c}_sea2.json', 'save_{c}_sea3.json', 1.0),
@@ -152,7 +157,7 @@ async def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'table'
     opt = kv(sys.argv[2:])
     worlds = [int(a) for a in sys.argv[2:] if a.isdigit()] or [0, 1, 2, 3, 4]
-    top = 'b' in sys.argv[2:]
+    top = 'b' in sys.argv[2:]; syn = 'syn' in sys.argv[2:]
     n = int(opt.pop('n', 20)); t0 = opt.pop('T0', None); a0 = opt.pop('A0', None)
     jin_ov = {k[4:]: v for k, v in opt.items() if k.startswith('JIN.')} or None
     async with async_playwright() as p:
@@ -172,6 +177,8 @@ async def main():
             for w in worlds:
                 out = []
                 for c in CLASSES:
+                    if not HAS(w, c):
+                        continue
                     page, info = await load(b, REF[w][0], c, jin_ov)
                     r = await page.evaluate(JS_CHECK, [w, n])
                     out.append(f"{c}: 권장 10^{r['rec']:.2f} 내 10^{r['pw']:.2f}({r['tier']}) 자동 {r['자동'] * 100:.0f}% 평범 {r['평범'] * 100:.0f}% 잘함 {r['잘함'] * 100:.0f}%")
@@ -182,6 +189,8 @@ async def main():
                 res = {}
                 g = None
                 for c in CLASSES:
+                    if not HAS(w, c):
+                        continue
                     page, _ = await load(b, REF[w][1] if top and REF[w][1] else REF[w][0], c, jin_ov)
                     V = await page.evaluate('([w, c]) => window.__game.JIN_W[w].c[c] || null', [w, c])
                     if V:
@@ -192,12 +201,14 @@ async def main():
                     if g is None:
                         g = await page.evaluate('() => [window.__game.JIN.t0, window.__game.JIN.a0]')
                     v = vb if top else va
+                    if syn:   # 기준(보스 체력·한 방·권장 전투력)은 시너지 없이 잰 값 그대로, 싸움에서만 시너지를 켠다
+                        await page.evaluate('(cnt) => { const G = window.__game; G.synForce = G.synCalc(cnt); }', SYN_BEST[c])
                     ov = [10 ** v[0] * (t0 or g[0]), 10 ** v[1] * (a0 or g[1]), 10 ** v[2]]
                     res[c] = await page.evaluate(JS_RUN, [w, [[k, h] for k, h in HANDS.items()], RS, n, ov])
                     if 'err' in res[c]:
                         raise SystemExit(f'table {w} {c}: {res[c]}')
                     await page.close()
-                print(f"## 세계 {w} 진 {'마지막' if top else '첫'} 레이드 — T0={t0 or g[0]} A0={a0 or g[1]} {jin_ov or ''} · 직업마다 {n}판, 괄호는 무사/자객/술사/도인")
+                print(f"## 세계 {w} 진 {'마지막' if top else '첫'} 레이드 — T0={t0 or g[0]} A0={a0 or g[1]} {jin_ov or ''} · 직업마다 {n}판{', 파티 시너지 켬(직업마다 최적 조합)' if syn else ''}, 괄호는 {'/'.join(KO[c] for c in res)}")
                 print('  전투력   ' + '   '.join(f'{h:^22s}' for h in HANDS))
                 for r in RS:
                     cells = []

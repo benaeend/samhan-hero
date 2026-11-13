@@ -2253,9 +2253,12 @@ const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 1
 const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (1 + (pbV('jagaek', 'cr') + pbV('gungsa', 'cr')) / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
 /* ===== 파티 시너지 · 내 파티 (물의 신화 9-2) =====
    '내 파티' = 나 + 같은 계정의 내 캐릭터(그림자 동료는 안 셈). 직업 조합 일곱 가지가 레이드·진·타임 보스·강림에서만 켜진다(사냥·결투·탑·허수아비에는 없음).
-   수치는 모두 제안값 — 시뮬로 맞출 것(SYN) */
+   수치(11-13 잼: 같은 무사 저장에서 직업만 바꿔 서 있는 레이드 보스 bench 150초, 함께하는 싸움 추천 조합, 1부 끝·3부 끝·4부 끝·5부 끝):
+   시너지 없이 무사 = 1일 때 가장 센 직업은 1.16 · 1.82(도인) · 1.60(술사) · 1.57(술사). 가장 좋은 조합(무사+창객+술사+도인+궁사)의 무사는 1.65,
+   그때 가장 센 직업(자기 최적 조합)은 1.46(궁사) · 2.04(도인)/1.76(술사) · 1.78(술사) · 1.78(술사·궁사) → 무사 ÷ 가장 센 직업 = 1부 끝 1.13 · 3부 끝 0.80(술사와는 0.93) · 4부 끝 0.93 · 5부 끝 0.93.
+   모두가 받는 몫(앞뒤 진·다섯 갈래)은 작게, 무사 몫(선봉·창칼 진)은 크게. 9-5단계에서 직업 세기를 다시 맞추면 capMusa·van·pair도 다시 잰다 */
 const SYN_MELEE = ['musa', 'jagaek', 'changgaek'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
-const SYN = {cap:35, capMusa:45, front:6, van:8, vanMax:24, vanDr:10, pair:10, pairGrog:1, shadow:15, thunder:8, five4:4, five5:8, one:10, myMax:4};   // 제안값 — 시뮬로 맞출 것
+const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
 const synCn = c => (CLASSES[c] || {}).name || '직업 미상';
 function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}], mod:{직업:{dmg, skill, dr, cdr, cd, hp}}, grog}
   const mod = {}, list = []; let grog = 0;
@@ -2267,7 +2270,7 @@ function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}]
     list.push({k:'van', lv:1, name:'선봉', txt:`무사 피해 +${v}% · 원거리 받는 피해 -${SYN.vanDr}%`}); }
   if (n('musa') >= 1 && n('changgaek') >= 1){ mod.musa.dmg += SYN.pair; mod.changgaek.dmg += SYN.pair; grog += SYN.pairGrog; list.push({k:'pair', lv:1, name:'창칼 진', txt:`무사·창객 피해 +${SYN.pair}% · 휘청 시간 +${SYN.pairGrog}초`}); }
   if (n('jagaek') >= 1 && n('gungsa') >= 1){ mod.jagaek.cd += SYN.shadow; mod.gungsa.cd += SYN.shadow; list.push({k:'shadow', lv:1, name:'그림자 살', txt:`자객·궁사 치명타 피해 +${SYN.shadow}%`}); }
-  if (n('sulsa') >= 1 && n('doin') >= 1){ mod.sulsa.cdr += SYN.thunder; mod.doin.cdr += SYN.thunder; list.push({k:'thunder', lv:1, name:'벼락과 부적', txt:`술사·도인 기술 재사용 -${SYN.thunder}%`}); }
+  if (n('sulsa') >= 1 && n('doin') >= 1){ mod.sulsa.skill += SYN.thunder; mod.doin.skill += SYN.thunder; list.push({k:'thunder', lv:1, name:'벼락과 부적', txt:`술사·도인 기술 피해 +${SYN.thunder}%`}); }
   if (kinds >= 4){ const v = kinds >= 5 ? SYN.five5 : SYN.five4; all(m => { m.dmg += v; m.hp += v; }); list.push({k:'five', lv:kinds >= 5 ? 2 : 1, name:'다섯 갈래', txt:`파티 모두 피해·체력 +${v}% (${kinds}종)`}); }
   for (const c of Object.keys(CLASSES)) if (n(c) >= 3){ mod[c].skill += SYN.one; list.push({k:'one:' + c, lv:1, name:'한 길', txt:`${synCn(c)} 기술 피해 +${SYN.one}%`}); }
   return {list, mod, grog};
@@ -2276,14 +2279,15 @@ const synCap = c => c === 'musa' ? SYN.capMusa : SYN.cap;
 const synCnt = party => { const cnt = {[S.cls]:1}; for (const a of party || []) if (a && a.mine && a.syn && hasK(CLASSES, a.cls)) cnt[a.cls] = (cnt[a.cls] || 0) + 1; return cnt; };
 const synFight = R => !!R && !!R.allies && !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp && !R.info.aw2tut && !R.info.aw2t && !(R.info.mem && !R.info.jin) && !R.info.parade;
 function synState(){   // 지금 싸움의 시너지(없으면 null). 싸움 시작 때 한 번 계산해 둔다
+  if (window.__game && window.__game.synForce) return window.__game.synForce;   // 시험(bench)용: 싸움 없이 시너지를 켬
   if (!raid || (window.__game && window.__game.noSyn)) return null;
   if (raid.syn === undefined) raid.syn = synFight(raid) ? synCalc(synCnt(raid.allies)) : null;
   return raid.syn;
 }
 const synV = (c, f) => { const s = synState(); return s && s.mod[c] ? s.mod[c][f] || 0 : 0; };
-const synDmg = (c, skill) => { const s = synState(); if (!s || !s.mod[c]) return 0; return Math.min(synCap(c), s.mod[c].dmg + (skill ? s.mod[c].skill : 0)); };   // 한 캐릭터가 받는 피해 합 상한(무사 45·나머지 35)
+const synDmg = (c, skill) => { const s = synState(); if (!s || !s.mod[c]) return 0; return Math.min(synCap(c), s.mod[c].dmg + (skill ? s.mod[c].skill : 0)); };   // 한 캐릭터가 받는 피해 합 상한(SYN.capMusa·SYN.cap)
 const synMine = kind => 1 + synDmg(S.cls, kind === 'skill' || kind === 'soul') / 100;
-const synAlly = (c, skill) => { const s = synState(); return s ? (1 + synDmg(c, skill) / 100) * (1 + synV(c, 'cd') / 100 * 0.3) : 1; };
+const synAlly = (c, skill) => { const s = synState(); return s ? (1 + synDmg(c, skill) / 100) * (1 + synV(c, 'cd') / 100 * 0.7) : 1; };
 const synTaken = c => { const s = synState(); return s ? (1 - synV(c, 'dr') / 100) / (1 + synV(c, 'hp') / 100) : 1; };
 const synGrog = () => { const s = synState(); return s ? s.grog : 0; };
 const synChip = () => { const s = synState(); return s && s.list.length ? ' · ' + s.list.map(x => x.name).join('·') : ''; };
@@ -5685,7 +5689,7 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && (aw2C || Math.random() < ST.crit + sc);
-  const cd = (ST.critDmg + synV(S.cls, 'cd') / 100 + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0)) * (mine && hero.incT > 0 && kind === 'skill' ? 1 + (hero.incP || 0) / 100 : 1) * aimMul(mine && kind !== 'pet');   // 간다르바의 향(6차): 기술 치명타 피해에 곱함(더하기로는 후반 치명타 피해에 묻혀 효과가 없었음)
+  const cd = (ST.critDmg * (1 + synV(S.cls, 'cd') / 100) + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0)) * (mine && hero.incT > 0 && kind === 'skill' ? 1 + (hero.incP || 0) / 100 : 1) * aimMul(mine && kind !== 'pet');   // 간다르바의 향(6차): 기술 치명타 피해에 곱함(더하기로는 후반 치명타 피해에 묻혀 효과가 없었음)
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = (m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1) * (mine && m.pat && m.pat.grogT > 0 && !fit ? C.grogMul || 1 : 1);   // 창객: 휘청이는 보스에게 +15%(내 세기에 맞춘 싸움 FIT은 빼고)
   const gp = raw ? 1 : gapMul(m, mine && (kind === 'basic' || kind === 'skill')) * aw2Pierce(m);   // 창객 「간격」 · 초각성기 2 「바다 꿰는 창」
@@ -12365,15 +12369,15 @@ const JIN = {t0:85, a0:0.26, tries:3, time:90, lives:3, pots:10, auto:0.5, cdA:2
 const JIN_W = [
   {c:{musa:{a:[6.671, 6.566, 7.096], b:[11.770, 10.826, 11.361]}, jagaek:{a:[7.093, 6.181, 7.080], b:[11.737, 10.530, 11.409]}, sulsa:{a:[7.119, 6.517, 7.332], b:[11.710, 10.266, 11.220]}, doin:{a:[6.671, 6.174, 6.894], b:[11.833, 10.648, 11.272]}}},   // 이승 진: 저승 12단계 → 저승 100단계
   {c:{musa:{a:[9.683, 8.686, 9.050], b:[13.300, 11.695, 12.379]}, jagaek:{a:[9.727, 8.638, 9.249], b:[13.321, 11.902, 12.740]}, sulsa:{a:[9.738, 8.407, 9.193], b:[13.373, 11.290, 12.504]}, doin:{a:[9.657, 8.500, 8.953], b:[13.383, 11.668, 12.450]}}},   // 시왕 진: 천계 12단계 → 천계 84단계
-  {c:{musa:{a:[13.997, 12.253, 13.310], b:[18.106, 15.505, 16.846]}, jagaek:{a:[13.880, 12.542, 13.121], b:[17.405, 15.202, 15.881]}, sulsa:{a:[13.755, 11.979, 12.965], b:[17.648, 14.738, 16.067]}, doin:{a:[13.986, 12.117, 13.052], b:[17.412, 14.838, 15.893]}}},   // 천계 진: 부상에 막 건넌 때 → 곤륜에 막 들어선 때
-  {c:{musa:{a:[18.100, 15.505, 16.846], b:[21.245, 17.749, 19.401]}, jagaek:{a:[17.409, 15.202, 15.880], b:[21.245, 18.094, 19.025]}, sulsa:{a:[17.649, 14.738, 16.067], b:[21.607, 17.597, 18.861]}, doin:{a:[17.402, 14.839, 15.893], b:[21.501, 17.073, 18.608]}}},   // 부상 진: 곤륜에 막 들어선 때 → 3부 끝
-  {c:{musa:{a:[21.337, 17.749, 19.401], b:[22.307, 19.176, 20.059]}, jagaek:{a:[21.240, 18.093, 19.025], b:[22.297, 19.130, 19.767]}, sulsa:{a:[21.604, 17.597, 18.862], b:[22.733, 18.654, 19.667]}, doin:{a:[21.493, 17.073, 18.608], b:[22.636, 18.093, 19.345]}}},   // 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(5차 전직·새 장비 칸·3차 재련까지 한 용사, tools/sim_jin.py measure 4 — 물의 신화 5단계에서 다시 잼. 예전 b는 임시로 a + 0.4)
-  {c:{musa:{a:[22.282, 19.176, 20.059], b:[22.727, 19.573, 20.460]}, jagaek:{a:[22.299, 19.130, 19.767], b:[22.625, 19.396, 19.979]}, sulsa:{a:[22.730, 18.654, 19.667], b:[23.038, 18.957, 19.939]}, doin:{a:[22.648, 18.093, 19.345], b:[22.903, 18.409, 19.610]}}},   // 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝(tools/sim_jin.py measure 5 — 물의 신화 7단계)
-  {c:{musa:{a:[22.738, 19.573, 20.460], b:[23.111, 19.889, 20.792]}, jagaek:{a:[22.609, 19.396, 19.979], b:[22.955, 19.730, 20.311]}, sulsa:{a:[23.042, 18.957, 19.939], b:[23.450, 19.230, 20.221]}, doin:{a:[22.918, 18.409, 19.610], b:[23.185, 18.536, 19.829]}}},   // 남쪽 바다 진: 남쪽 바다 끝(깊은 바다 들머리) → 깊은 바다 끝(4부 끝)
-  // 5부(물의 신화 9단계): 무사·자객 두 직업만 잼(tools/sim_jin.py measure 7 8 9 — 나머지 직업은 두 직업의 평균). 6차 전직을 넣기 전의 저장으로 잰 값이라, 6차·여섯 직업 저장이 생기면 다시 잰다
-  {c:{musa:{a:[23.101, 19.893, 20.798], b:[24.152, 20.100, 21.213]}, jagaek:{a:[22.983, 19.734, 20.317], b:[23.222, 19.913, 20.496]}}},   // 깊은 바다 진: 4부 끝(란카 길 들머리) → 란카 길 끝
-  {c:{musa:{a:[24.114, 20.100, 21.213], b:[24.792, 20.369, 21.831]}, jagaek:{a:[23.224, 19.913, 20.496], b:[24.741, 20.355, 21.900]}}},   // 란카 길 진: 란카 길 끝(젖의 바다 들머리) → 젖의 바다 끝
-  {c:{musa:{a:[24.826, 20.369, 21.831], b:[25.803, 20.956, 22.507]}, jagaek:{a:[24.745, 20.355, 21.900], b:[25.721, 21.103, 22.625]}}},   // 젖의 바다 진: 젖의 바다 끝(수미산 들머리) → 수미산 끝(5부 끝). 수미산 진은 다음 세계가 없어 열리지 않는다
+  {c:{musa:{a:[13.997, 12.253, 13.310], b:[18.106, 15.505, 16.846]}, jagaek:{a:[13.880, 12.542, 13.121], b:[17.405, 15.202, 15.881]}, sulsa:{a:[13.755, 11.979, 12.965], b:[17.648, 14.738, 16.067]}, doin:{a:[13.986, 12.117, 13.052], b:[17.412, 14.838, 15.893]}, gungsa:{a:[13.770, 11.989, 13.015], b:[17.580, 14.620, 16.204]}, changgaek:{a:[14.162, 12.218, 13.360], b:[17.951, 15.124, 16.668]}}},   // 천계 진: 부상에 막 건넌 때 → 곤륜에 막 들어선 때
+  {c:{musa:{a:[18.100, 15.505, 16.846], b:[21.245, 17.749, 19.401]}, jagaek:{a:[17.409, 15.202, 15.880], b:[21.245, 18.094, 19.025]}, sulsa:{a:[17.649, 14.738, 16.067], b:[21.607, 17.597, 18.861]}, doin:{a:[17.402, 14.839, 15.893], b:[21.501, 17.073, 18.608]}, gungsa:{a:[17.565, 14.620, 16.204], b:[21.334, 17.758, 19.096]}, changgaek:{a:[17.947, 15.124, 16.668], b:[21.590, 17.419, 19.372]}}},   // 부상 진: 곤륜에 막 들어선 때 → 3부 끝
+  {c:{musa:{a:[21.337, 17.749, 19.401], b:[22.307, 19.176, 20.059]}, jagaek:{a:[21.240, 18.093, 19.025], b:[22.297, 19.130, 19.767]}, sulsa:{a:[21.604, 17.597, 18.862], b:[22.733, 18.654, 19.667]}, doin:{a:[21.493, 17.073, 18.608], b:[22.636, 18.093, 19.345]}, gungsa:{a:[21.327, 17.758, 19.096], b:[22.392, 18.793, 19.813]}, changgaek:{a:[21.600, 17.419, 19.372], b:[22.903, 18.576, 20.229]}}},   // 곤륜 진: 3부 끝(동해 들머리) → 동해 끝(5차 전직·새 장비 칸·3차 재련까지 한 용사, tools/sim_jin.py measure 4 — 물의 신화 5단계에서 다시 잼. 예전 b는 임시로 a + 0.4)
+  {c:{musa:{a:[22.282, 19.176, 20.059], b:[22.727, 19.573, 20.460]}, jagaek:{a:[22.299, 19.130, 19.767], b:[22.625, 19.396, 19.979]}, sulsa:{a:[22.730, 18.654, 19.667], b:[23.038, 18.957, 19.939]}, doin:{a:[22.648, 18.093, 19.345], b:[22.903, 18.409, 19.610]}, gungsa:{a:[22.373, 18.793, 19.813], b:[22.863, 19.204, 20.224]}, changgaek:{a:[22.906, 18.576, 20.229], b:[23.333, 18.990, 20.647]}}},   // 동해 진: 동해 끝(남쪽 바다 들머리) → 남쪽 바다 끝(tools/sim_jin.py measure 5 — 물의 신화 7단계)
+  {c:{musa:{a:[22.738, 19.573, 20.460], b:[23.111, 19.889, 20.792]}, jagaek:{a:[22.609, 19.396, 19.979], b:[22.955, 19.730, 20.311]}, sulsa:{a:[23.042, 18.957, 19.939], b:[23.450, 19.230, 20.221]}, doin:{a:[22.918, 18.409, 19.610], b:[23.185, 18.536, 19.829]}, gungsa:{a:[22.854, 19.204, 20.224], b:[23.233, 19.527, 20.559]}, changgaek:{a:[23.323, 18.990, 20.647], b:[24.068, 19.188, 20.868]}}},   // 남쪽 바다 진: 남쪽 바다 끝(깊은 바다 들머리) → 깊은 바다 끝(4부 끝)
+  // 5부(물의 신화 9단계): 여섯 직업 모두 잼(11-13, tools/sim_jin.py measure 7 8 9 — 6차 전직을 고친 판으로 새로 뜬 저장 ind1~3). 세계 2~6의 궁사·창객 값도 같은 날 더함(measure 2 3 4 5 6, 네 직업 값은 그대로)
+  {c:{musa:{a:[23.075, 19.893, 20.798], b:[24.110, 20.625, 21.460]}, jagaek:{a:[22.965, 19.734, 20.317], b:[24.453, 20.537, 21.110]}, sulsa:{a:[23.446, 19.234, 20.226], b:[24.980, 19.902, 21.489]}, doin:{a:[23.068, 18.540, 19.835], b:[23.981, 19.374, 20.728]}, gungsa:{a:[23.233, 19.527, 20.559], b:[24.669, 20.198, 21.286]}, changgaek:{a:[24.056, 19.188, 20.868], b:[25.090, 19.940, 21.679]}}},   // 깊은 바다 진: 4부 끝(란카 길 들머리) → 란카 길 끝
+  {c:{musa:{a:[24.098, 20.625, 21.460], b:[24.795, 21.106, 22.189]}, jagaek:{a:[24.466, 20.537, 21.110], b:[25.282, 20.853, 21.843]}, sulsa:{a:[24.964, 19.902, 21.489], b:[25.596, 20.271, 22.105]}, doin:{a:[23.966, 19.374, 20.728], b:[24.827, 19.634, 21.384]}, gungsa:{a:[24.679, 20.198, 21.286], b:[25.985, 20.482, 22.494]}, changgaek:{a:[25.071, 19.940, 21.679], b:[25.807, 20.206, 22.316]}}},   // 란카 길 진: 란카 길 끝(젖의 바다 들머리) → 젖의 바다 끝
+  {c:{musa:{a:[24.799, 21.106, 22.189], b:[26.261, 21.716, 22.848]}, jagaek:{a:[25.295, 20.853, 21.843], b:[26.159, 21.511, 22.411]}, sulsa:{a:[25.596, 20.271, 22.105], b:[26.831, 21.131, 23.015]}, doin:{a:[24.831, 19.634, 21.384], b:[25.911, 20.221, 22.053]}, gungsa:{a:[25.983, 20.482, 22.494], b:[27.149, 21.213, 23.298]}, changgaek:{a:[25.802, 20.206, 22.316], b:[26.740, 20.835, 23.037]}}},   // 젖의 바다 진: 젖의 바다 끝(수미산 들머리) → 수미산 끝(5부 끝). 수미산 진은 다음 세계가 없어 열리지 않는다
 ];
 const jinAvg = C => { const L = Object.values(C); if (!L.length) return {a:[0, 0, 0], b:[0, 0, 0]}; const m = f => [0, 1, 2].map(k => L.reduce((t, x) => t + f(x)[k], 0) / L.length); return {a:m(x => x.a), b:m(x => x.b)}; };
 function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (log10 아님, 실제 값)
@@ -20603,7 +20607,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {ASURA, startAsura, finishAsura, asuraOpen, asuraLeft, asuraTier, indSoulRoll, asLuck:null, KUB, startKub, finishKub, kubOpen, kubLeft, kubTier, kubLuck:null, IND_PAT, patInd, patHeads, headOff, headsLeft, patFlower, flowerNear, flowerOk, patTiles, updatePat, heroTile, noIndPat:false, DBOSS_IND, dbInd, DB_SPIRIT_P, skinDropPart});   // 물의 신화 9-26
   // @@END-F
   // @@HOOK-G (갈래 G의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
-  Object.assign(window.__game, {SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, raidParty, raidAt});
+  Object.assign(window.__game, {SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, synForce:null, raidParty, raidAt});
   // @@END-G
   // @@HOOK-H (갈래 H의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-H
