@@ -4675,6 +4675,8 @@ function mergeState(d){
   // @@MERGE-C (갈래 C가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-C
   // @@MERGE-D (갈래 D가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  { const t = d.tower && typeof d.tower === 'object' ? d.tower : {}, nn = v => Math.max(0, Math.floor(+v) || 0);   // 태초의 신 · 참모습(9-24): 이긴 횟수·오늘 도전·주간 상자
+    out.tower.trueWin = nn(t.trueWin); out.tower.tn = nn(t.tn); out.tower.tday = typeof t.tday === 'string' ? t.tday : ''; out.tower.tweek = typeof t.tweek === 'string' ? t.tweek : ''; }
   // @@END-D
   // @@MERGE-E (갈래 E가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // 물의 신화 9-25: 영물 짐승(칸마다 짐승별 가진 수·낀 짐승 — 영물이 있는데 짐승 정보가 없으면 refreshStats의 spFixAll이 저절로 정해 줌) · 천축 향목 칸
@@ -6561,7 +6563,10 @@ function patTiles(B, P){
   const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
   if (!tg) return;
   const set = new Set(), add = (x, y) => { if (inMap(x, y)) set.add(x + ',' + y); };
-  const shape = ['ring', 'line', 'rain', 'cross'][(P.n + (Math.random() * 4 | 0)) % 4];
+  const water = !!(B.raid && raid && raid.info.tru && raid.info.tf === 'water');   // 참모습 물 모습: 붉은 칸이 판 한 줄을 통째로 쓴다
+  const shape = water && Math.random() < 0.6 ? 'sweep' : ['ring', 'line', 'rain', 'cross'][(P.n + (Math.random() * 4 | 0)) % 4];
+  if (shape === 'sweep'){ const ax = Math.random() < 0.5; for (let k = -1; k <= 1; k++) for (let m = 0; m < 40; m++) ax ? add(m, tg.ty + k) : add(tg.tx + k, m); }
+  else
   if (shape === 'ring') for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++){ if (dx || dy) add(B.tx + dx, B.ty + dy); }
   else if (shape === 'line'){
     const sx = Math.sign(tg.tx - B.tx), sy = Math.sign(tg.ty - B.ty), ax = Math.abs(tg.tx - B.tx) >= Math.abs(tg.ty - B.ty);
@@ -6780,7 +6785,7 @@ const WIPE_TYPE = {dokkaebi:'fire', oni:'fire', phoenix:'fire', fox:'fire', bulg
   shade:'void', judge:'void', ghost:'void', skel:'void', agwi:'void', king:'void', yukionna:'frost', yukiko:'frost', soldier:'storm', tengu:'storm', hawk:'storm', crow:'fire', monkey:'quake', wolf:'fire', izanami:'void', wisp:'frost', yaksha:'storm', oxhead:'void', horsehead:'void'};
 Object.assign(WIPE_TYPE, {cyclops:'quake', rockgen:'quake', blackdrop:'void', wilt:'void'});   // 4부 둘째·셋째 바다의 보스(나머지는 바다 기본 = 밀물)
 Object.assign(WIPE_TYPE, {rakshasa:'fire', batrak:'storm', deer:'void', chariot:'fire', asura:'fire', elephant:'tide', ravana:'fire', kumbha:'quake', rahu:'void', mara:'void', king4:'storm'});   // 5부 천축의 보스
-const wipeKind = B => WIPE_KIND[WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm', 'tide', 'tide', 'tide', 'fire', 'tide', 'void'][Math.max(0, Math.min(10, S.world))]];   // 기본 원소: 바다(5~7) 밀물 · 란카 길 불 · 젖의 바다 밀물 · 수미산 어둠
+const wipeKind = B => WIPE_KIND[B.wipeKey || WIPE_TYPE[B.type] || ['quake', 'void', 'storm', 'tide', 'storm', 'tide', 'tide', 'tide', 'fire', 'tide', 'void'][Math.max(0, Math.min(10, S.world))]];   // 기본 원소: 바다(5~7) 밀물 · 란카 길 불 · 젖의 바다 밀물 · 수미산 어둠
 const wipeOn = R => R && (R.info.wipe || !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp && !R.info.aw2tut && !R.info.aw2t && !(R.info.mem && !R.info.jin)) && !(window.__game && window.__game.wipeOff);   // 탑 문지기(info.wipe)도
 const wipeBusy = R => !!(R && R.wipe && R.wipe.st >= 1 && R.wipe.st <= 3);
 function updateWipe(R, dt){
@@ -7486,42 +7491,46 @@ function finishGangrim(R){
    10층마다 문지기(더 단단하고 전멸기). 기술 조합·장비는 저절로 바꾸지 않는다 — 들어가기 전 '정비' 창에서 직접(저장한 조합 3칸을 불러올 수 있음).
    지면 하루 도전 횟수(TOWER.tries)를 하나 쓰고, 이기면 그대로 다음 층. 처음 오른 층마다 보상: 보석·쇳가루, 5층마다 신화 조각, 10층마다 높은 등급 무기·갑옷,
    50·150·250층 날개, 100·200층 탈것, 300층 별호와 태초의 신 */
-const TOWER = {max:400, base:300, tries:5, time:60, hp:20, atk:2, lv:30};   // max: 물의 신화 7-2 — 301~400층은 4부 바다(동해에 들어선 뒤). base: 태초의 신이 깨어나는 층
-const towerCap = () => S.world >= 5 ? TOWER.max : TOWER.base;   // 지금 오를 수 있는 끝 층
+const TOWER = {max:500, sea:400, base:300, tries:5, time:60, hp:20, atk:2, lv:30};   // max: 물의 신화 9-24 — 401~500층은 5부 천축(란카 길에 들어선 뒤). sea: 4부 바다 끝 층(301~400층). base: 태초의 신이 깨어나는 층
+const towerMaxOf = tw => tw > TOWER.sea || S.world >= 8 ? TOWER.max : tw > TOWER.base || S.world >= 5 ? TOWER.sea : TOWER.base;   // 남의 정보 창에서 보여 줄 끝 층
+const towerCap = () => S.world >= 8 ? TOWER.max : S.world >= 5 ? TOWER.sea : TOWER.base;   // 지금 오를 수 있는 끝 층
 const towerOpen = () => S.level >= TOWER.lv || S.world >= 1 || S.reb.n > 0;
 // 층 → [세계, 단계](2026-11 (43), 사용자 요청: 층별 난이도가 너무 쉬움). 예전엔 층마다 그 세계 이야기 단계와 거의 같아서 지금 단계까지는 그냥 올랐다.
 // 이제 띠마다 [세계, 첫 층, 끝 층, 첫 단계, 끝 단계] — 띠의 끝은 그 세계 이야기 끝보다 20~40단계 위라, 한 세계를 끝낸 용사도 그 띠 끝 몇 층은 막힌다(다음 세계에서 세져서 넘음).
 // 300층은 곤륜 95단계(이야기 끝 76단계보다 위) — 끝까지 키운 용사의 목표
 // 301~400층(물의 신화 7-2): 동해 21~62단계(e 156 → 168.3) · 남쪽 바다 35~55단계(e 168.5 → 173.5) · 깊은 바다 50~83단계(e 173.75 → 182) — 세기(e)가 끊기지 않게 이었다.
+// 401~500층(물의 신화 9-24): 5부 끝 저장(란카 길 끝 ind1 · 젖의 바다 끝 ind2 · 5부 끝 ind3, 6차 전직을 조용히 준 뒤)을 층 하나짜리 띠로 바꿔 가며 3판 2승 이분 탐색(scratchpad twcap5.py).
+//   버티는 세기 e(무사/자객): ind1 189/180.3 · ind2 195.5/195.3 · ind3 199.3/198.3, 문지기 층은 약 2 낮음(ind1 187.3/178.3 · ind2 193.3/193.5 · ind3 196.8/196.5).
+//   층 세기 e: 401층 178.2 → 430층 182.6 → 460층 193.7 → 488층 196.9 → 500층 200(띠 끝은 어떤 저장도 못 버팀). 처음 닿는 층(실측 twreach5.py)은 아래 시험 글
 // 탑에서 버티는 힘을 재서 맞춤(scratchpad twcap.py: 층 세기를 e로 고르게 펴고 3판 2승 이분 탐색) — 동해 끝 용사 e 167.1~167.5 · 남쪽 바다 끝 171.9~172.2 · 4부 끝 자객 175.2 · 무사 176.1 · 술사 180.3.
 // 그래서 동해 끝 328층쯤 · 남쪽 바다 끝 355층쯤 · 4부 끝 372~393층, 400층(깊은 바다 83단계만큼)은 5부에서. 처음 값(12~50 · 20~43 · 37~52)은 4부 끝 무사가 400층을 다 올랐다(탑은 60초·물약이 있어 단계 보스보다 e 3쯤 더 버팀)
-const TOWER_BANDS = [[0, 1, 40, 5, 130], [1, 41, 100, 10, 125], [2, 101, 160, 10, 120], [3, 161, 230, 10, 150], [4, 231, 300, 12, 95], [5, 301, 330, 21, 62], [6, 331, 365, 35, 55], [7, 366, 400, 50, 83]];
+const TOWER_BANDS = [[0, 1, 40, 5, 130], [1, 41, 100, 10, 125], [2, 101, 160, 10, 120], [3, 161, 230, 10, 150], [4, 231, 300, 12, 95], [5, 301, 330, 21, 62], [6, 331, 365, 35, 55], [7, 366, 400, 50, 83], [8, 401, 430, 44, 61], [9, 431, 460, 50, 93], [10, 461, 488, 69, 82], [10, 489, 500, 83, 94]];   // 401~500층(물의 신화 9-24): 란카 길 → 젖의 바다 → 수미산(수미산은 두 띠)
 function towerWS(f){
   const [w, f0, f1, s0, s1] = TOWER_BANDS.find(b => f <= b[2]) || TOWER_BANDS[TOWER_BANDS.length - 1];
   return [w, Math.max(1, Math.round(s0 + (Math.min(f, f1) - f0) * (s1 - s0) / (f1 - f0)))];
 }
 const withWorld = (w, fn) => { const o = S.world; S.world = w; try { return fn(); } finally { S.world = o; } };
 const TOWER_LIST = () => [RAID_DEFS.map((r, i) => raidInfo(i)), KINGS.map((r, i) => hellRaidInfo(i)), GOD_RAIDS.map((r, i) => godRaidInfo(i)), BUSANG_RAIDS.map((r, i) => busangRaidInfo(i)), KUNLUN_RAIDS.map((r, i) => kunlunRaidInfo(i)),
-  ...[5, 6, 7].map(w => SEAS[w] ? SEAS[w].raids.map((r, i) => seaRaidInfo(w, i)).concat(SEAS[w].regions.map(R => ({bossName:R.boss, type:R.bossType || R.mobs[R.bossIdx || 0][0], color:R.bossColor || R.mobs[R.bossIdx || 0][1]}))) : [])];   // 바다 층은 그 바다의 레이드 보스·지역 보스가 번갈아
+  ...[5, 6, 7, 8, 9, 10].map(w => SEAS[w] ? SEAS[w].raids.map((r, i) => seaRaidInfo(w, i)).concat(SEAS[w].regions.map(R => ({bossName:R.boss, type:R.bossType || R.mobs[R.bossIdx || 0][0], color:R.bossColor || R.mobs[R.bossIdx || 0][1]}))) : [])];   // 바다·천축 층은 그 땅의 레이드 보스·지역 보스가 번갈아
 let towerBossCache = null;
 function towerBoss(f){
   if (!towerBossCache) towerBossCache = TOWER_LIST();
-  const [w] = towerWS(f), L = towerBossCache[w], I = L[(f * 3) % L.length];
+  const [w] = towerWS(f), L = towerBossCache[w], I = L[(f * (w >= 8 ? 5 : 3)) % L.length];   // 5부는 걸음 5(층 수가 12·13이라 3이면 몇 가지만 돌아감)
   return {name:I.bossName, type:I.type, color:I.color};
 }
 function towerCheck(){ if (S.tower.day !== dummyDay()){ S.tower.day = dummyDay(); S.tower.n = 0; } }
 const towerLeft = () => { towerCheck(); return TOWER.tries - S.tower.n; };
-const TOWER_MILE = {50:{av:'w_cloud'}, 100:{mount:'unryong'}, 150:{av:'w_phoenix'}, 200:{mount:'cheonma'}, 250:{av:'w_galaxy'}, 300:{title:'tower'}, 350:{av:'w_fin'}, 400:{mount:'yongma'}};   // 350·400층은 4부 바다(저장 보호 4의 되찾기가 이 표를 따라온다)
+const TOWER_MILE = {50:{av:'w_cloud'}, 100:{mount:'unryong'}, 150:{av:'w_phoenix'}, 200:{mount:'cheonma'}, 250:{av:'w_galaxy'}, 300:{title:'tower'}, 350:{av:'w_fin'}, 400:{mount:'yongma'}, 450:{av:'w_eagle'}, 500:{mount:'skyhorse', title:'sumeru'}};   // 350·400층은 4부 바다 · 450·500층은 5부 천축(저장 보호 4의 되찾기가 이 표를 따라온다. title은 TITLES 열쇠 — 별호는 autoClear가 저절로 줌)
 function towerRewardText(f){
   const o = [`보석 ${20 + f}`, `쇳가루 ${5 + Math.floor(f / 5)}`];
   if (f % 5 === 0) o.push('신화 조각 2');
-  if (f % 10 === 0){ const it = towerGearIt(f), sl = towerGearSlot(f); o.push(`${GRADES[itemG(it)].name} ${SLOT_NAME_T[sl]} ${ROMAN[it % 4]}`); }
+  if (f % 10 === 0){ const it = towerGearIt(f), sl = towerGearSlot(f); o.push(`${GRADES[itemG(it)].name} ${SLOT_NAME_T[sl]} ${ROMAN[it % 4]}${it >= 24 ? '(깃든 짐승 무작위)' : ''}`); }
   if (f > TOWER.base && f % 10 === 5) o.push('호박석 1');
   const M = TOWER_MILE[f];
-  if (M){ if (M.av) o.push(`날개 「${AV[M.av].name}」`); if (M.mount) o.push(`탈것 「${MT[M.mount].name}」`); if (M.title) o.push('별호 「천공을 오른 자」 · 태초의 신'); }
+  if (M){ if (M.av) o.push(`날개 「${AV[M.av].name}」`); if (M.mount) o.push(`탈것 「${MT[M.mount].name}」`); if (M.title) o.push(M.title === 'tower' ? '별호 「천공을 오른 자」 · 태초의 신' : `별호 「${TT[M.title].name}」${M.title === 'sumeru' ? ' · 태초의 신 참모습' : ''}`); }
   return o;
 }
-const towerGearIt = f => f > TOWER.base ? 20 + Math.min(3, Math.floor((f - TOWER.base - 1) / 25)) : f <= 60 ? 12 + Math.min(3, Math.floor(f / 20)) : f <= 180 ? 16 + (f > 120 ? 1 : 0) : f <= 260 ? 18 : 19;   // 영웅 I~IV → 전설 I~IV → (301층부터) 유물 I~IV
+const towerGearIt = f => f > TOWER.sea ? 24 + Math.min(3, Math.floor((f - TOWER.sea - 1) / 25)) : f > TOWER.base ? 20 + Math.min(3, Math.floor((f - TOWER.base - 1) / 25)) : f <= 60 ? 12 + Math.min(3, Math.floor(f / 20)) : f <= 180 ? 16 + (f > 120 ? 1 : 0) : f <= 260 ? 18 : 19;   // 영웅 I~IV → 전설 I~IV → (301층부터) 유물 I~IV → (401층부터) 영물 I~IV
 const SLOT_NAME_T = {weapon:'무기', armor:'갑옷', helm:'투구', shoulder:'어깨', boots:'신발'};
 const towerGearSlot = f => f > TOWER.base ? ALL_SLOTS[(f / 10) % ALL_SLOTS.length] : f % 20 === 10 ? 'weapon' : 'armor';   // 바다 층은 다섯 칸을 돌아가며
 function startTower(){
@@ -7550,13 +7559,18 @@ function finishTower(R){
     const dust = 5 + Math.floor(f / 5); S.dust += dust; out.push(`쇳가루 ${dust}`);
     { const m = gainMat(MAT_SRC.tower, true); if (m) out.push(`${MATS[matW()].name} ${m}`); }
     if (f % 5 === 0){ S.mythShard += 3; out.push('신화 조각 3'); }
-    if (f % 10 === 0){ const it = towerGearIt(f), sl = towerGearSlot(f), nw = giveItem(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`); }
+    if (f % 10 === 0){
+      const it = towerGearIt(f), sl = towerGearSlot(f);
+      if (it >= 24){ const r = spGive(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)} · 깃든 짐승 ${SPIRITS[r.beast].name}${r.isNew ? ' (새 장비)' : ''}`); }   // 401층부터는 영물(깃든 짐승은 무작위)
+      else { const nw = giveItem(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`); }
+    }
     if (f > TOWER.base && f % 10 === 5){ const g = f % 50 === 45 ? 2 : f % 20 === 5 ? 1 : 0; gainAmber(g, 1); out.push(`${AMB_G[g].name} 호박석 1`); }   // 바다 층: 5로 끝나는 층마다 호박석(희귀·영웅 번갈아, 345·395층은 전설)
     const M = TOWER_MILE[f];
     if (M){
       if (M.av && giveAvatar(M.av, true)) out.push(`날개 「${AV[M.av].name}」`);
       if (M.mount && giveMount(M.mount, true)) out.push(`탈것 「${MT[M.mount].name}」`);
-      if (M.title){ out.push('별호 「천공을 오른 자」 · 태초의 신이 깨어났어요'); announce(`${S.name}님이 천공의 탑 300층을 올랐어요! 태초의 신이 깨어났어요.`); }
+      if (M.title === 'tower'){ out.push('별호 「천공을 오른 자」 · 태초의 신이 깨어났어요'); announce(`${S.name}님이 천공의 탑 300층을 올랐어요! 태초의 신이 깨어났어요.`); }
+      if (M.title === 'sumeru'){ out.push('별호 「수미를 오른 자」 · 태초의 신의 참모습이 보여요'); announce(`${S.name}님이 천공의 탑 500층, 수미산 꼭대기에 올랐어요!`); }
     }
     if (f % 50 === 0 && !(M && M.title)) announce(`${S.name}님이 천공의 탑 ${f}층을 올랐어요!`);
     ev('raid');
@@ -7618,9 +7632,13 @@ function startTaecho(){
 // 창세의 빛: 16초마다 하늘에서 빛기둥 — 모두 최대 체력의 genPct(방어 무시)
 function updateTaecho(R, dt){
   if (!R.info.taecho || R.boss.dead || R.boss.spawnT > 0 || wipeBusy(R)) return;
+  if (R.info.tru){   // 참모습: 물과 불 두 모습을 TRUEF.formT초마다 오간다
+    R.formT -= dt;
+    if (R.formT <= 0){ R.formT = TRUEF.formT; R.info.tf = R.info.tf === 'water' ? 'fire' : 'water'; trueForm(R, true); }
+  }
   R.genT -= dt;
   if (R.genT > 0) return;
-  R.genT = TAECHO.gen;
+  R.genT = R.info.tru && R.info.tf === 'fire' ? TRUEF.genFire : TAECHO.gen;
   shake = Math.max(shake, 0.5); sfx('nuke');
   if (!fxOff()){
     skCut = {name:'창세의 빛', col:'#fff2c8', t:0, dur:1.2};
@@ -7644,6 +7662,7 @@ function endBox(){
   const it = 19, nw = giveItem(sl, it); return `전설 ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`;
 }
 function finishTaecho(R){
+  if (R.info.tru) return finishTrue(R);
   if (!R.win){
     addLog(`태초의 신을 쓰러뜨리지 못했어요… 오늘 ${taechoLeft()}번 더 도전할 수 있어요.`, 'warn'); sfx('fail');
     if (!(window.__game && window.__game.quiet)) showModal('태초의 신 · 실패', `<p>${TAECHO.time}초 안에 <b>태초의 신</b>을 쓰러뜨리지 못했어요. 오늘 ${taechoLeft()}번 더 도전할 수 있어요.</p><p class="small">전멸기 세 번을 버티려면 회복약이 꼭 있어야 해요.</p>`, [{label:'확인', primary:true}]);
@@ -7664,6 +7683,77 @@ function finishTaecho(R){
   addLog(`태초의 신 토벌! ${out.join(' · ')}`, 'gain');
   if (window.__game && window.__game.quiet) return {win:true, out};
   showModal('태초의 신 토벌', `<p><b>태초의 신</b>을 ${R.info.party}명이 함께 넘었어요!</p><ul class="rewards">${out.map(x => `<li style="color:var(--myth)">${x}</li>`).join('')}</ul>`, [{label:'확인', primary:true}]);
+  return {win:true, out};
+}
+/* ===== 태초의 신 · 참모습(물의 신화 9-24, 천공의 탑 500층 뒤) =====
+   태초의 신이 숨겨 둔 참모습. 나 + 다른 용사 3명, 240초, 전멸기 네 번(체력 80·60·40·20%).
+   TRUEF.formT초마다 물 모습과 불 모습을 오간다 — 물 모습: 붉은 칸이 판 한 줄을 통째로 쓸고(patTiles의 'sweep') 되받기도 잦다 /
+   불 모습: 창세의 빛이 TRUEF.genFire초마다(물은 TAECHO.gen 16초). 보스 색·오라·이름 「태초의 신 · 물」「· 불」과 전멸기 원소(물 해일 · 불 업화)도 모습을 따라 바뀐다.
+   처음 이기면 날개 「물불의 날개」·별호 「참모습을 본 자」, 주마다 처음 이기면 상위 엔드 상자(영물 장비 + 영물 치장 또는 전설 장신구)
+   세기: 5부 끝 무사(save_musa_ind3, 6차 전직 뒤) + NPC 셋으로 이긴 시간(scratchpad truef5.py, 판마다 3~4번) — 수미산 118단계 기준 hp 32배: 168~181초 · 자객은 91~100초(보스 특화).
+   예전 값: st 100이면 32~57초, 108 83~92초, 114 126~171초, 120 197~205초, 126부터는 240초 안에 못 깸(단계 6마다 1.6배쯤 가팔라서 118로 정함) */
+const TRUEF = {name:'태초의 신 · 참모습', time:240, st:118, hp:32, atk:3.5, tries:2, gen:16, genFire:9, genPct:0.3, formT:40, wipes:[0.8, 0.6, 0.4, 0.2],
+  F:{water:{n:'물', c:'#6ad8ff', c2:'#bff0ff', wk:'tide'}, fire:{n:'불', c:'#ff8a3a', c2:'#ffd08a', wk:'fire'}}};
+const trueOpen = () => S.world >= 8 && S.tower.best >= TOWER.max || !!(window.__game && window.__game.trueForce);
+function trueCheck(){ if (S.tower.tday !== dummyDay()){ S.tower.tday = dummyDay(); S.tower.tn = 0; } }
+const trueLeft = () => { trueCheck(); return TRUEF.tries - (S.tower.tn || 0); };
+function startTrue(){
+  trueCheck();
+  if (raid || parade || market || !trueOpen() || trueLeft() <= 0 || !session && !window.__game) return false;
+  S.tower.tn = (S.tower.tn || 0) + 1;
+  const party = grParty(), eff = 1 + 0.45 * party.length;
+  const hp = withWorld(10, () => mHp(TRUEF.st)) * TRUEF.hp * BOSS_K.hp[10] * eff * pbRaidK(party), atk = withWorld(10, () => mAtk(TRUEF.st)) * TRUEF.atk * BOSS_K.atk[10];
+  const info = {taecho:true, tru:true, tf:'water', label:'최종 레이드', bossName:TRUEF.name, type:'chaos', color:TRUEF.F.water.c, region:0, party:party.length + 1, ref:TRUEF.st, g:4, wipes:TRUEF.wipes, sc:3.6};
+  startFight(info, party, {hp, atk, aoe:atk * 0.7, time:TRUEF.time});
+  raid.genT = 8; raid.formT = TRUEF.formT;
+  trueForm(raid, false);
+  addLog('태초의 신이 참모습을 드러냈어요! 240초 안에 쓰러뜨려요. 물과 불 두 모습을 오가고, 전멸기가 네 번 와요 — 회복약을 넉넉히 챙기세요.', 'warn');
+  if (!fxOff()){ fxBanner('태초의 신 · 참모습', '물과 불의 두 얼굴', '#bff0ff', '30%', 2); vadd({type:'flash', col:'#e8fbff', a:0.25, dur:0.6}); }
+  return true;
+}
+// 모습 적용: 보스 이름·색·오라·전멸기 원소를 모습에 맞춘다. swap이면 바뀌는 연출
+function trueForm(R, swap){
+  const B = R.boss, F = TRUEF.F[R.info.tf];
+  B.name = `태초의 신 · ${F.n}`; R.info.bossName = B.name; B.color = F.c; B.auraC = F.c; B.wipeKey = F.wk;
+  if (!swap) return;
+  if (R.info.tf === 'fire') R.genT = Math.min(R.genT, TRUEF.genFire);
+  else if (B.pat) B.pat.cd = Math.min(B.pat.cd, 2);   // 물 모습: 곧 붉은 칸이 판을 쓴다
+  addLog(`태초의 신이 ${F.n} 모습으로 바뀌었어요! ${R.info.tf === 'fire' ? '창세의 빛이 더 자주 내려와요.' : '붉은 칸이 판 한 줄을 통째로 쓸어요.'}`, 'warn');
+  sfx('boss'); shake = Math.max(shake, 0.4);
+  if (!fxOff()){
+    fxBanner(B.name, R.info.tf === 'fire' ? '타오르는 처음' : '일렁이는 처음', F.c2, '30%', 1.4);
+    vadd({type:'flash', col:F.c2, a:0.22, dur:0.45}); vadd({type:'nova', x:B.x, y:B.y - mobHeight(B) * 0.5, col:F.c, dur:0.9}); vadd({type:'shock', x:B.x, y:B.y, r0:8, r1:160, w:6, col:F.c, dur:0.8, ground:true});
+  }
+}
+// 상위 엔드 상자: 영물 장비 하나(깃든 짐승 무작위) + 영물 치장 또는 전설 장신구 하나
+function endBox2(){
+  const out = [], sl = ALL_SLOTS[(Math.random() * ALL_SLOTS.length) | 0], it = 24 + (Math.random() < 0.4 ? 1 : 0), r = spGive(sl, it);
+  out.push(`영물 ${gearName(sl, it)} · 깃든 짐승 ${SPIRITS[r.beast].name}${r.isNew ? ' (새 장비)' : ''}`);
+  const sk = Math.random() < 0.5 ? skinDrop(99, true, 4, 1, 0.95, 0, 1) : null;
+  if (sk) out.push(`영물 치장 ${skName(sk.it)}`);
+  else { const ks = ACC_ORDER.filter(k => accOpen(k)), k = ks[(Math.random() * ks.length) | 0], a = giveAcc(k, 4); out.push(`전설 ${ACC[k].names[a.g]} (+${a.p}%)`); }
+  return out.join(' · ');
+}
+function finishTrue(R){
+  if (!R.win){
+    addLog(`참모습을 쓰러뜨리지 못했어요… 오늘 ${trueLeft()}번 더 도전할 수 있어요.`, 'warn'); sfx('fail');
+    if (!(window.__game && window.__game.quiet)) showModal('태초의 신 · 참모습 · 실패', `<p>${TRUEF.time}초 안에 <b>태초의 신 · 참모습</b>을 쓰러뜨리지 못했어요. 오늘 ${trueLeft()}번 더 도전할 수 있어요.</p><p class="small">물 모습에서는 붉은 칸을 피하고, 불 모습에서는 창세의 빛에 대비해 체력을 채워 두세요. 전멸기 네 번을 버티려면 회복약이 꼭 있어야 해요.</p>`, [{label:'확인', primary:true}]);
+    return {win:false};
+  }
+  const out = [], first = !S.tower.trueWin, wk = weekKey();
+  recWin(true, true); ev('raid');
+  S.tower.trueWin = (S.tower.trueWin || 0) + 1;
+  if (first){
+    if (giveAvatar('w_waterfire', true)) out.push('날개 「물불의 날개」');
+    out.push('별호 「참모습을 본 자」');
+    announce(`${S.name}님이 태초의 신의 참모습을 보았어요! 물과 불, 두 얼굴이었어요.`);
+  }
+  if (S.tower.tweek !== wk){ S.tower.tweek = wk; out.push('상위 엔드 상자: ' + endBox2()); }
+  else { const g = Math.round(800 * gemMul()); S.gems += g; out.push(`보석 ${fmt(g)} (상위 엔드 상자는 주에 한 번)`); }
+  refreshStats(); saveLocal(); sfx('win');
+  addLog(`참모습 토벌! ${out.join(' · ')}`, 'gain');
+  if (window.__game && window.__game.quiet) return {win:true, out};
+  showModal('태초의 신 · 참모습 토벌', `<p><b>태초의 신의 참모습</b>을 ${R.info.party}명이 함께 넘었어요!</p><ul class="rewards">${out.map(x => `<li style="color:var(--myth)">${x}</li>`).join('')}</ul>`, [{label:'확인', primary:true}]);
   return {win:true, out};
 }
 const seedMul = t => S.tower && S.tower.seed ? Math.pow(SK_GW[Math.max(0, Math.min(4, S.world))][t === 'hp' ? 1 : 0], 2) : 1;   // 태초의 씨앗: 공격력·체력 +2단계
@@ -9706,6 +9796,9 @@ const AVATARS = [
   {k:'w_galaxy', type:'wing', name:'은하수 날개', wingC:['#23265a', '#3a3a9a', '#7a6aff', '#d8d0ff'], star:true, src:'천공의 탑 250층', pt:3},
   {k:'w_taecho', type:'wing', name:'태초의 날개', wingC:['#e8c860', '#ffe08a', '#fff6d8', '#9ff0e8'], star:true, src:'태초의 신', pt:3},
   {k:'w_fin', type:'wing', name:'지느러미 날개', wingC:['#1f6a8a', '#3aa8c8', '#8fe0f0', '#e8fbff'], star:true, src:'천공의 탑 350층', pt:4},   // 물의 신화 7-2
+  // 5부 천축(물의 신화 9-24): 날개는 바깥 겹이 첫 색(깃 끝) · 안쪽이 마지막 색
+  {k:'w_eagle', type:'wing', name:'독수리 왕의 날개', wingC:['#f8f2e4', '#c9a070', '#8a5e38', '#5a3a22'], star:true, src:'천공의 탑 450층', pt:5},
+  {k:'w_waterfire', type:'wing', name:'물불의 날개', wingC:['#1f78d8', '#5ad8ff', '#ff8a3a', '#ffd08a'], star:true, src:'태초의 신 · 참모습', pt:5},
 ];
 for (const c of CLASS_ALL) for (const j of [1, 2, 3, 4, 5, 6]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
@@ -9897,7 +9990,7 @@ function skClean(d){   // 저장에서 온 치장 다듬기
 /* ================= 탈것(2부 부상부터) =================
    타면 걷는 속도가 빨라지고 고유 능력이 켜진다(하나만 탈 수 있음). 가진 탈것마다 공격력·체력 +(등급별 모음 효과).
    별(고삐 조각으로 올림, 최대 5)마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상·곤륜 레이드·타임 보스·허수아비에서 */
-const MOUNT_G = [{name:'일반', pct:1.5, color:'#c8c0b0'}, {name:'고급', pct:3, color:'#7fdc7f'}, {name:'희귀', pct:4.5, color:'#6ab8ff'}, {name:'전설', pct:7.5, color:'#c08bff'}, {name:'신화', pct:12, color:'#ffb347'}, {name:'유물', pct:16, color:'#3fbf9a'}];   // (5번 유물: 4부 용마) 모음 효과 %(2026-11 (42) 검토: 곤륜 저장에서 공격력 몫이 0.9%뿐이라 1.5배로. 예전 1·2·3·5·8)
+const MOUNT_G = [{name:'일반', pct:1.5, color:'#c8c0b0'}, {name:'고급', pct:3, color:'#7fdc7f'}, {name:'희귀', pct:4.5, color:'#6ab8ff'}, {name:'전설', pct:7.5, color:'#c08bff'}, {name:'신화', pct:12, color:'#ffb347'}, {name:'유물', pct:16, color:'#3fbf9a'}, {name:'영물', pct:20, color:'#f1d6a6'}];   // (5번 유물: 4부 용마) 모음 효과 %(2026-11 (42) 검토: 곤륜 저장에서 공격력 몫이 0.9%뿐이라 1.5배로. 예전 1·2·3·5·8)
 const MOUNTS = [
   {k:'donkey', name:'당나귀', g:0, spd:10, ab:{gold:10}, src:'stable', d:'고집은 세도 짐은 잘 날라요.'},
   {k:'ox', name:'누렁소', g:0, spd:10, ab:{hp:10}, src:'stable', d:'느긋하지만 든든한 밭갈이 소.'},
@@ -9915,6 +10008,7 @@ const MOUNTS = [
   {k:'dolphin', name:'곰새기', g:3, spd:45, ab:{exp:12, heal:2}, src:'story', from:'57장 이야기', pt:4, d:'해녀들이 곰새기라 부르는 돌고래. 물길을 먼저 알아요.'},
   {k:'seaturtle', name:'큰 거북', g:4, spd:45, ab:{dr:18, hp:15}, src:'piece', cost:150, pt:4, d:'등에 작은 섬 하나를 얹고도 끄떡없다는 용궁의 큰 거북.'},
   {k:'yongma', name:'용마', g:5, spd:65, ab:{skill:15, boss:12, cdr:8}, src:'tower', from:'천공의 탑 400층', pt:4, d:'못에서 솟아올랐다는 비늘 돋친 말. 물 위도 땅처럼 달려요.'},
+  {k:'skyhorse', name:'하늘 말', g:6, spd:70, ab:{skill:18, boss:15, cdr:10}, src:'tower', from:'천공의 탑 500층', pt:5, d:'바다를 휘저을 때 솟아오른 일곱 머리의 흰 말.', fly:true},
   // 5부 천축(물의 신화 9단계): 방울 낙타 = 고삐 조각 · 젖빛 흰 코끼리 = 80장 이야기
   {k:'camel', name:'방울 낙타', g:4, spd:50, ab:{off:20, gold:14}, src:'piece', cost:220, pt:5, d:'목방울 소리로 모래바람 속에서도 길을 잃지 않는 사막의 낙타.'},
   {k:'welephant', name:'젖빛 흰 코끼리', g:4, spd:50, ab:{hp:18, heal:3, dr:12}, src:'story', from:'80장 이야기', pt:5, d:'젖의 바다에서 큰 흰 코끼리를 따라 함께 솟은 어린 흰 코끼리, 제 발로 용사 곁에 와 섰어요.'},
@@ -10039,6 +10133,12 @@ function mountQuad(g, f, o){
     // 말·사슴·기린: 긴 목
     Pl([[23.5, 22], [16.5, 8.5], [9, 10], [13.5, 30]], c);
     if (o.mane){ for (let i = 0; i < 6; i++) E(17.6 + i * 1.25 + (run ? 0.4 : 0), 8.6 + i * 2.4, o.flameMane ? 3.2 : 2.7, 2.3, i % 2 && o.flameMane ? '#ffd24a' : mn); if (o.flameMane) Pl([[16, 8], [19, 1.5], [21, 7]], mn); }
+    if (o.heads6){   // 일곱 머리 말(5부): 목을 따라 작은 머리 여섯이 부채처럼 — 큰 머리가 맨 앞
+      for (const [hx, hy, k] of [[15.4, 2.6, 0], [20.6, 5.2, 1], [24.4, 10.4, 0], [24.6, 16.6, 1], [19.6, 19.6, 0], [13.6, 23.4, 1]]){
+        const bob = run ? (k ? 0.7 : -0.7) : 0, hc = k ? mix(c, '#cfe9ff', 0.6) : c;
+        Pl([[hx + 0.2, hy - 2], [hx + 1.4, hy - 5.4 + bob], [hx + 2.8, hy - 1.6]], hc); blob(hx, hy + bob, 3.9, 3.1, hc); E(hx - 3.1, hy + 1 + bob, 2, 1.5, '#f2e6e0'); E(hx - 4.2, hy + 0.7 + bob, 0.4, 0.35, '#1d1420'); E(hx - 0.9, hy - 0.5 + bob, 0.8, 0.8, '#1d1420');
+      }
+    }
     blob(10, 12, 7, 6, c);
     E(4.4, 15.4, 4, 3.3, o.muzzle || mix(c, '#2a2026', 0.25)); E(2.3, 15, 0.7, 0.6, '#1d1420');
     if (o.ears === 'long'){ Pl([[12, 8], [16, -0.5], [18, 1], [14.6, 9]], c); E(16, 3, 0.8, 2.4, mix(c, '#ffb0b8', 0.55)); }
@@ -10089,6 +10189,7 @@ const MOUNT_HD = {
   seaturtle:(g, f) => mountTurtle(g, f, {c:'#4a7a5a', skin:'#a8b878', moss:'#7ac86a'}),
   camel:(g, f) => mountQuad(g, f, {c:'#d4ac72', belly:'#f0dcb0', mane:'#8a6a44', muzzle:'#ecd8ac', head:'camel', humps:true, tail:'tuft', saddle:'#1f8fa0', trim:'#e0b03c', hoof:'#6a4a2a'}),
   welephant:(g, f) => mountQuad(g, f, {c:'#f2efe6', belly:'#fffaf0', ear:'#f4c8c8', head:'elephant', legW:6.6, tail:'tuft', mane:'#cfc8b8', saddle:'#7ab8d8', trim:'#ffe08a', hoof:'#d8cfbc'}),
+  skyhorse:(g, f) => mountQuad(g, f, {c:'#fbfaf6', belly:'#ffffff', mane:'#bfe8ff', muzzle:'#e8e2da', tail:'horse', saddle:'#3a6ad0', trim:'#ffe08a', glow:'#e8f6ff', hoof:'#ffe08a', heads6:true}),
   yongma:(g, f) => mountQuad(g, f, {c:'#2f8f8a', belly:'#c8f0e0', mane:'#8ff0ff', scales:'#1f6a6a', horn:'#ffe08a', tail:'horse', saddle:'#e0b03c', trim:'#ffffff', glow:'#8ff0ff', hoof:'#1f5a6a'}),
 };
 // 4부 탈것 그림(물의 신화 7-2): 곰새기(돌고래)·큰 거북 — 64×48, 왼쪽을 봄
@@ -10136,6 +10237,9 @@ const petN = () => S.pets.lv.filter(l => l > 0).length;
 const TITLES = [
   {k:'tower', name:'천공을 오른 자', need:'천공의 탑 300층', prog:() => [S.tower.best, 300], eff:{atk:6, hp:6}},
   {k:'taecho', name:'태초를 넘은 자', need:'태초의 신을 쓰러뜨려요', prog:() => [S.tower.godWin || 0, 1], eff:{atk:10, boss:10}},
+  // 5부 천축(물의 신화 9-24): 천공의 탑 500층·태초의 신 참모습 — 세계 8에 들어서기 전엔 목록에 안 보인다
+  {k:'sumeru', name:'수미를 오른 자', need:'천공의 탑 500층(수미산 꼭대기)', prog:() => [S.tower.best, 500], eff:{atk:8, hp:8, boss:6}, hide:() => S.world < 8},
+  {k:'trueform', name:'참모습을 본 자', need:'태초의 신 · 참모습을 쓰러뜨려요', prog:() => [S.tower.trueWin || 0, 1], eff:{atk:12, boss:12}, hide:() => S.world < 8},
   {k:'pvp1', name:'명인', need:'결투 점수 1,400', prog:() => [S.pvp.best || 1000, 1400], eff:{critDmg:15}},
   {k:'pvp2', name:'천하제일', need:'결투 점수 1,600', prog:() => [S.pvp.best || 1000, 1600], eff:{atk:5, critDmg:20}},
   {k:'step', name:'첫걸음', need:'이야기 1장을 마쳐요', prog:() => [S.quest.main, 5], eff:{exp:3}},
@@ -13750,7 +13854,7 @@ function drawMob(m){
   if (m.spawnT > 0) b.globalAlpha = Math.max(0, 1 - m.spawnT / 0.35);
   if (m.dead){ b.globalAlpha = Math.floor(m.deathT * 20) % 2 ? 0.2 : Math.max(0, m.deathT / 0.4); }
   drawShadow(x, y, Math.min(m.raid ? 46 : 20, w * 0.7));
-  if (m.raid && !m.dead){ b.globalAlpha = 0.18 + 0.08 * Math.sin(gtime * 4); pdisk(x, y - h * 0.45, Math.round(w * 0.42), '#ff5a3a'); b.globalAlpha = m.spawnT > 0 ? Math.max(0, 1 - m.spawnT / 0.35) : 1; }
+  if (m.raid && !m.dead){ b.globalAlpha = 0.18 + 0.08 * Math.sin(gtime * 4); pdisk(x, y - h * 0.45, Math.round(w * 0.42), m.auraC || '#ff5a3a'); b.globalAlpha = m.spawnT > 0 ? Math.max(0, 1 - m.spawnT / 0.35) : 1; }
   if (m.boss && !m.raid && !m.dead && S.world >= 1){   // 보스 오라: 발밑 고리 + 몸을 감싼 빛 + 피어오르는 불티
     const ac = BOSS_AURA[S.world], pu = 0.5 + 0.5 * Math.sin(gtime * 3);
     b.save(); b.globalCompositeOperation = 'lighter';
@@ -17946,6 +18050,7 @@ function drawTowerArt(cv, best){
   for (let i = 0; i < 70; i++){ const x = rnd() * W, y = rnd() * H * 0.7, r = rnd() < 0.15 ? 1.1 : 0.6; g.fillStyle = `rgba(255,255,255,${0.35 + rnd() * 0.6})`; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
   const mg = g.createRadialGradient(188, 40, 4, 188, 40, 40); mg.addColorStop(0, 'rgba(255,246,210,.9)'); mg.addColorStop(0.35, 'rgba(255,236,170,.35)'); mg.addColorStop(1, 'rgba(255,236,170,0)');
   g.fillStyle = mg; g.fillRect(140, 0, 100, 90); g.fillStyle = '#fff6d8'; g.beginPath(); g.arc(188, 40, 11, 0, 7); g.fill();
+  if (towerCap() > TOWER.sea){ drawSumeruArt(g, W, H, best, rnd); return; }   // 5부: 401층부터는 수미산을 오르는 그림
   const cloud = (y, a, sp) => { g.fillStyle = `rgba(230,236,255,${a})`; for (let i = 0; i < 9; i++){ const x = ((i * 37 + sp) % 280) - 20; g.beginPath(); g.ellipse(x, y + Math.sin(i * 1.7) * 3, 26 + (i % 3) * 8, 7 + (i % 2) * 3, 0, 0, 7); g.fill(); } };
   cloud(H * 0.86, 0.5, 10); cloud(H * 0.62, 0.18, 60);
   // 탑: 아래에서 위로 9층, 층마다 몸통·창·기와 처마(금테)
@@ -17986,6 +18091,49 @@ function drawTowerArt(cv, best){
   g.fillStyle = 'rgba(255,210,90,.18)'; g.fillRect(0, py - 3, W, 6); g.strokeStyle = '#ffd24a'; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(8, py); g.lineTo(W - 8, py); g.stroke(); g.setLineDash([]);
   g.font = '800 10px SamhanSans, sans-serif'; g.fillStyle = '#ffe08a'; g.textAlign = 'right'; g.fillText(`${best}층`, W - 10, py - 5); g.textAlign = 'left';
 }
+// 수미산 그림(401~500층, 물의 신화 9-24): 구름 위로 솟은 다섯 단 산, 굽이굽이 산길(층마다 점, 10층마다 큰 점), 오른 만큼 금빛으로 밝아지고 꼭대기에 금빛 구슬
+function drawSumeruArt(g, W, H, best, rnd){
+  const cx = 120, y0 = H * 0.9, yp = 48, n = 5, dh = (y0 - yp) / n, hw = i => 104 - i * 17.5;
+  const glow = g.createRadialGradient(cx, yp, 2, cx, yp, 120); glow.addColorStop(0, 'rgba(255,224,130,.55)'); glow.addColorStop(0.4, 'rgba(255,190,110,.16)'); glow.addColorStop(1, 'rgba(255,190,110,0)');
+  g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  const cloud = (y, a, sp, sc = 1) => { g.fillStyle = `rgba(236,232,255,${a})`; for (let i = 0; i < 9; i++){ const x = ((i * 41 + sp) % 290) - 25; g.beginPath(); g.ellipse(x, y + Math.sin(i * 1.9) * 3, (28 + (i % 3) * 9) * sc, (7 + (i % 2) * 3) * sc, 0, 0, 7); g.fill(); } };
+  // 먼 산자락
+  g.fillStyle = '#2a2058'; g.beginPath(); g.moveTo(0, y0); g.lineTo(0, y0 - 46); g.lineTo(34, y0 - 74); g.lineTo(70, y0 - 40); g.lineTo(0 + 120, y0); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(W, y0); g.lineTo(W, y0 - 54); g.lineTo(W - 38, y0 - 84); g.lineTo(W - 76, y0 - 44); g.lineTo(W - 120, y0); g.closePath(); g.fill();
+  // 다섯 단: 아래에서 위로 갈수록 좁고 밝다
+  for (let i = 0; i < n; i++){
+    const yb = y0 - i * dh, yt = yb - dh, wb = hw(i), wt = hw(i) - 11, t = i / (n - 1);
+    const gr = g.createLinearGradient(cx - wb, 0, cx + wb, 0); gr.addColorStop(0, `hsl(${252 - t * 14},38%,${15 + t * 8}%)`); gr.addColorStop(0.62, `hsl(${252 - t * 14},40%,${27 + t * 12}%)`); gr.addColorStop(1, `hsl(${262 - t * 20},34%,${17 + t * 8}%)`);
+    g.fillStyle = gr; g.beginPath(); g.moveTo(cx - wb, yb); g.lineTo(cx - wt, yt); g.lineTo(cx + wt, yt); g.lineTo(cx + wb, yb); g.closePath(); g.fill();
+    g.strokeStyle = `rgba(255,214,120,${0.35 + t * 0.4})`; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx - wt - 3, yt); g.lineTo(cx + wt + 3, yt); g.stroke();   // 단 위 금빛 처마
+    for (let k = 0; k < 7; k++){ const x = cx - wb * 0.8 + rnd() * wb * 1.6, y = yt + 6 + rnd() * (dh - 10); g.fillStyle = 'rgba(255,255,255,.06)'; g.beginPath(); g.ellipse(x, y, 5 + rnd() * 6, 1.6, 0, 0, 7); g.fill(); }   // 바위결
+    cloud(yb + 2, 0.22 + t * 0.1, i * 53, 0.8);
+  }
+  // 산길: 단마다 비스듬히 가로질러 굽이굽이(왼쪽 아래 → 오른쪽 → 왼쪽 … → 꼭대기)
+  const pts = [[cx - hw(0) * 0.82, y0 - 1]];
+  for (let i = 0; i < n; i++){ const side = i % 2 ? -1 : 1, yt = y0 - (i + 1) * dh; pts.push([cx + side * (hw(i) - 11 - 7), yt]); }
+  pts[pts.length - 1] = [cx, yp + 2];
+  const len = [0]; for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const at = t => { const d = Math.max(0, Math.min(1, t)) * len[len.length - 1]; let i = 1; while (i < len.length - 1 && len[i] < d) i++; const u = (d - len[i - 1]) / ((len[i] - len[i - 1]) || 1); return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u]; };
+  const prog = Math.max(0, Math.min(1, (best - TOWER.sea) / (TOWER.max - TOWER.sea)));
+  const stroke = (a, b, col, w, dash) => { g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.lineCap = 'round'; g.beginPath(); for (let k = 0; k <= 60; k++){ const p = at(a + (b - a) * k / 60); k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); } g.stroke(); g.setLineDash([]); };
+  stroke(0, 1, 'rgba(20,12,40,.6)', 4.2); stroke(0, 1, 'rgba(170,150,210,.7)', 2.2, [3, 3]);
+  if (prog > 0){ stroke(0, prog, 'rgba(255,224,130,.35)', 5); stroke(0, prog, '#ffe08a', 2); }
+  for (let f = 410; f <= 500; f += 10){   // 10층마다 문지기 쉼터(큰 점), 5로 끝나는 층(호박석)은 작은 점
+    const t = (f - TOWER.sea) / (TOWER.max - TOWER.sea), p = at(t), on = best >= f;
+    g.fillStyle = on ? '#ffe08a' : '#4a3f78'; g.strokeStyle = on ? '#fff6d0' : '#8a7ab8'; g.lineWidth = 1; g.beginPath(); g.arc(p[0], p[1], 3.2, 0, 7); g.fill(); g.stroke();
+    if (f - 5 > TOWER.sea){ const q = at(t - 0.05); g.fillStyle = best >= f - 5 ? '#ffb347' : '#3a3260'; g.beginPath(); g.arc(q[0], q[1], 1.5, 0, 7); g.fill(); }
+  }
+  // 꼭대기: 금빛 구슬과 빛살
+  const og = g.createRadialGradient(cx, yp - 4, 2, cx, yp - 4, 34); og.addColorStop(0, 'rgba(255,255,240,1)'); og.addColorStop(0.3, 'rgba(255,224,130,.7)'); og.addColorStop(1, 'rgba(255,200,100,0)');
+  g.fillStyle = og; g.fillRect(cx - 36, yp - 40, 72, 72);
+  g.strokeStyle = 'rgba(255,236,170,.55)'; g.lineWidth = 1; for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4 + 0.2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 9, yp - 4 + Math.sin(a) * 9); g.lineTo(cx + Math.cos(a) * 26, yp - 4 + Math.sin(a) * 26); g.stroke(); }
+  g.fillStyle = '#fffbe8'; g.beginPath(); g.arc(cx, yp - 4, 5, 0, 7); g.fill(); g.fillStyle = '#e0b03c'; g.beginPath(); g.moveTo(cx - 6, yp + 6); g.lineTo(cx, yp - 1); g.lineTo(cx + 6, yp + 6); g.closePath(); g.fill();
+  cloud(H * 0.94, 0.7, 20, 1.1); cloud(H * 0.3, 0.1, 80, 1.3);
+  // 지금 오른 자리: 금빛 표시와 층
+  const me = at(prog); g.fillStyle = 'rgba(255,210,90,.25)'; g.beginPath(); g.arc(me[0], me[1], 9, 0, 7); g.fill(); g.fillStyle = '#ffd24a'; g.strokeStyle = '#ffffff'; g.lineWidth = 1.4; g.beginPath(); g.arc(me[0], me[1], 4.4, 0, 7); g.fill(); g.stroke();
+  g.font = '800 10px SamhanSans, sans-serif'; g.fillStyle = '#ffe08a'; g.textAlign = me[0] > cx ? 'left' : 'right'; g.fillText(`${Math.max(best, TOWER.sea)}층`, me[0] + (me[0] > cx ? 9 : -9), me[1] + 3); g.textAlign = 'left';
+}
 let towerArtKey = '';
 function buildTower(){
   towerArtKey = '';
@@ -17993,12 +18141,13 @@ function buildTower(){
   $('#twSide').addEventListener('click', e => {
     if (e.target.closest('[data-tw-go]')) towerAsk();
     if (e.target.closest('[data-tc-go]') && !raid && taechoOpen() && taechoLeft() > 0) presetAsk('party', '태초의 신', () => { if (startTaecho()){ closePage(); return true; } });
+    if (e.target.closest('[data-tr-go]') && !raid && trueOpen() && trueLeft() > 0) presetAsk('party', '태초의 신 · 참모습', () => { if (startTrue()){ closePage(); return true; } });
     const sv = e.target.closest('[data-sv]'), ld = e.target.closest('[data-ld]');
     if (sv){ skSavePut(+sv.dataset.sv); sfx('click'); addLog(`지금 사냥 칸을 조합 ${+sv.dataset.sv + 1}에 저장했어요.`, 'good'); }
     if (ld && skSaveLoad(+ld.dataset.ld)){ sfx('click'); addLog(`조합 ${+ld.dataset.ld + 1}을 불러왔어요.`, 'good'); }
   });
   return () => {
-    towerCheck(); taechoCheck();
+    towerCheck(); taechoCheck(); trueCheck();
     const best = S.tower.best, k = best + ':' + S.world;
     if (k !== towerArtKey){ towerArtKey = k; drawTowerArt($('#twArt'), best); }
     const cap = towerCap(), open = towerOpen(), left = towerLeft(), done = best >= cap, ok = open && !done && left > 0 && !raid;
@@ -18007,13 +18156,17 @@ function buildTower(){
     setHTML($('#twSide'), `<div class="card ${ok ? 'ready' : ''}"><div class="ct">천공의 탑<span class="tag">${best} / ${cap}층</span></div>
         <p class="small" style="margin:0">층마다 세기가 정해진 수호자와 혼자 ${TOWER.time}초. 10층마다 문지기(전멸기). <b>기술 조합·장비는 저절로 바뀌지 않아요</b> — 들어가기 전 정비 창에서 직접 골라요. 지면 하루 도전 횟수를 하나 써요(이기면 안 써요).</p>
         <div class="dl"><span>오늘 남은 도전</span><b>${open ? `${left} / ${TOWER.tries}` : `Lv.${TOWER.lv}부터`}</b></div>
-        <button class="btn ${ok ? 'primary' : ''}" data-tw-go ${ok ? '' : 'disabled'}>${!open ? `Lv.${TOWER.lv}에 열려요` : done ? (cap < TOWER.max ? '300층을 모두 올랐어요' : `${cap}층을 모두 올랐어요`) : raid ? '다른 싸움 중' : left <= 0 ? '오늘은 다 했어요(내일 다시)' : `${best + 1}층 정비하고 도전`}</button></div>
-      <div class="card"><div class="ct">다음 층</div><ul class="tw-next">${next || `<li>모두 올랐어요${cap < TOWER.max && MAIN_Q.some(q => q.ch >= 46) ? '<br><span class="small">301층부터는 4부 동해에 들어서면 — 탑이 물 밑으로 이어져요</span>' : ''}</li>`}</ul></div>
+        <button class="btn ${ok ? 'primary' : ''}" data-tw-go ${ok ? '' : 'disabled'}>${!open ? `Lv.${TOWER.lv}에 열려요` : done ? (cap < TOWER.max ? `${cap}층을 모두 올랐어요` : `${cap}층을 모두 올랐어요`) : raid ? '다른 싸움 중' : left <= 0 ? '오늘은 다 했어요(내일 다시)' : `${best + 1}층 정비하고 도전`}</button></div>
+      <div class="card"><div class="ct">다음 층</div><ul class="tw-next">${next || `<li>모두 올랐어요${cap < TOWER.max && MAIN_Q.some(q => q.ch >= 46) ? `<br><span class="small">${cap < TOWER.sea ? '301층부터는 4부 동해에 들어서면 — 탑이 물 밑으로 이어져요' : '401층부터는 5부 란카 길에 들어서면 — 탑이 수미산 산길로 이어져요'}</span>` : ''}</li>`}</ul></div>
       <div class="card"><div class="ct">이정표 보상</div><div class="setp">${mile}</div></div>
       <div class="card ${taechoOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신<span class="tag">${taechoOpen() ? `오늘 ${taechoLeft()} / ${TAECHO.tries}번` : '300층을 오르면'}</span></div>
         <p class="small" style="margin:0">나 + 다른 용사 3명(같은 직업 2명까지). ${TAECHO.time}초, 전멸기 세 번·창세의 빛. 처음 이기면 엔드 아이템 「태초의 씨앗」(공격력·체력 +2단계)·날개 「태초의 날개」·별호 「태초를 넘은 자」, 그리고 주마다 처음 이기면 <b>엔드 상자</b>(전설 장신구 최고 수치·전설 치장·장비 각성 가운데 하나는 꼭).</p>
         ${S.tower.godWin ? `<div class="dl"><span>쓰러뜨린 횟수</span><b>${S.tower.godWin}번${S.tower.seed ? ' · 태초의 씨앗 ✓' : ''}</b></div>` : ''}
         <button class="btn ${taechoOpen() && taechoLeft() > 0 && !raid ? 'primary' : ''}" data-tc-go ${taechoOpen() && taechoLeft() > 0 && !raid ? '' : 'disabled'}>${taechoOpen() ? (taechoLeft() > 0 ? '태초의 신에게 도전' : '오늘은 다 했어요') : '잠김'}</button></div>
+      ${S.world >= 8 ? `<div class="card ${trueOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신 · 참모습<span class="tag">${trueOpen() ? `오늘 ${trueLeft()} / ${TRUEF.tries}번` : '500층을 오르면'}</span></div>
+        <p class="small" style="margin:0">나 + 다른 용사 3명. ${TRUEF.time}초, 전멸기 네 번. 물 모습(붉은 칸이 판 한 줄을 쓸어요)과 불 모습(창세의 빛이 자주 내려와요)을 ${TRUEF.formT}초쯤마다 오가요. 처음 이기면 날개 「물불의 날개」·별호 「참모습을 본 자」, 주마다 처음 이기면 <b>상위 엔드 상자</b>(영물 장비 + 영물 치장 또는 전설 장신구).</p>
+        ${S.tower.trueWin ? `<div class="dl"><span>쓰러뜨린 횟수</span><b>${S.tower.trueWin}번</b></div>` : ''}
+        <button class="btn ${trueOpen() && trueLeft() > 0 && !raid ? 'primary' : ''}" data-tr-go ${trueOpen() && trueLeft() > 0 && !raid ? '' : 'disabled'}>${trueOpen() ? (trueLeft() > 0 ? '참모습에게 도전' : '오늘은 다 했어요') : '잠김'}</button></div>` : ''}
       <div class="card"><div class="ct">기술 조합 저장</div><p class="small" style="margin:0">지금 사냥 칸(6칸)을 저장해 두고 탑 정비 창·여기서 불러와요.</p>
         <div class="tw-saves">${[0, 1, 2].map(k => { const v = skSaveGet(k); return `<div><b>조합 ${k + 1}</b><span class="small">${v ? v.map(i => esc(skillName(i))).join(' · ') : '비어 있음'}</span><span><button class="chip" data-sv="${k}">저장</button><button class="chip" data-ld="${k}" ${v ? '' : 'disabled'}>불러오기</button></span></div>`; }).join('')}</div></div>`);
   };
@@ -18043,7 +18196,7 @@ function showUserInfo(o, basic){
         <div class="small">${o.npc ? '그림자 결투자 · 연습 상대' : WORLD_NAME[w] + (full ? ` · 최고 ${stageLabelW(w, o.maxStage)}` : '')}</div></div></div>
     ${full ? `<div class="ui-sec">이야기 진행 <b>${fmt(q)} / ${MAIN_Q.length}</b>${ch ? ` · ${esc(ch)}` : ''}</div>${bar(q, MAIN_Q.length, 'linear-gradient(90deg,#ffd24a,#ff9a3a)')}
     <div class="ui-sec">세계 <b>${w + 1} / ${WORLD_NAME.length}</b> · ${WORLD_NAME.map((n, i) => `<span style="color:${i <= w ? 'var(--gold)' : 'var(--muted)'}">${n}</span>`).join(' → ')}</div>
-    <div class="ui-sec">천공의 탑 <b>${fmt(o.tw || 0)} / ${(o.tw || 0) > TOWER.base || S.world >= 5 ? TOWER.max : TOWER.base}층</b></div>${bar(o.tw || 0, (o.tw || 0) > TOWER.base || S.world >= 5 ? TOWER.max : TOWER.base, 'linear-gradient(90deg,#9fe7ff,#7a9aff)')}
+    <div class="ui-sec">천공의 탑 <b>${fmt(o.tw || 0)} / ${towerMaxOf(o.tw || 0)}층</b></div>${bar(o.tw || 0, towerMaxOf(o.tw || 0), 'linear-gradient(90deg,#9fe7ff,#7a9aff)')}
     ${row('결투 점수', `${fmt(o.pv || 1000)}점 · ${pvpTier(o.pv || 1000)}`)}${row('전직', o.job ? `${o.job}차 · ${esc(jobName(o.cls, o.job))}` : '아직')}` :
     `<p class="small">${o.npc ? '다른 용사가 없을 때 나오는 연습 상대예요. 세기는 나와 비슷하게 맞춰져요.' : '이 용사는 아직 자세한 진행도를 올리지 않았어요(그 용사가 새 판으로 한 번 저장하면 보여요).'}</p>`}
     ${o.rd ? row('보스에 넣는 피해', fmt(o.rd) + '/초') : ''}${o.maxHp && o.maxHp > 1 ? row('최대 체력', fmt(o.maxHp)) : ''}
@@ -19967,6 +20120,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip});   // 물의 신화 9단계(5부 물건)
   // @@END-C
   // @@HOOK-D (갈래 D의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {TOWER, TOWER_BANDS, TOWER_MILE, towerWS, towerBoss, TRUEF, trueOpen, trueLeft, startTrue, finishTrue, endBox2, trueForm, patTiles, drawSumeruArt, startTower, finishTower, MOUNT_G});
   // @@END-D
   // @@HOOK-E (갈래 E의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {refreshPanel, topTier, bossWin, raidReward, seaMul, setPieceName, SPIRITS, SP_AT, SP_FX, SPIRIT_GEAR, spiritOpen, spSt, spBeast, spiritSum, spGive, spMerge, spPick, spFixAll, spiritGearDrop, spiritLine, spOwned, setShown, SETS, MATS, CRAFT_T, CRAFT_RATE, CRAFT_PITY, craftName, matShown, gradeHave, mergeOne, mergeAll, equipBest, spiritForce:false, spiritLuck:null, spBeastForce:null, drawSpiritAura});

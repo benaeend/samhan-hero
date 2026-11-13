@@ -2555,7 +2555,7 @@ async def main():
           return out; }""", [sea3, late])
         check(u1['cap3'] == 300 and u1['start3'] is False and u1['buy3'] is False and u1['soul3'] == 0 and u1['pet3'] == 0 and '58장' in u1['how3'][0] and '동해' in u1['how3'][1],
               f"4부 전: 탑은 300층까지·4부 넋/펫은 안 나오고 큰 거북도 못 산다 {u1['cap3']} {u1['soul3']} {u1['pet3']} {u1['how3']}")
-        check(u1['w'] == 7 and u1['cap'] == 400 and u1['max'] == 400 and all(u1['catch']) and u1['soul4'][0] and len(u1['soul4'][1]) == 6 and len(u1['pet4']) >= 2 and set(u1['pet4']) <= {'gomsaegi', 'jara', 'kkoetoki', 'mulbeom'} and u1['parts'] == [5, 3, 6] and u1['buy'] and u1['col'],
+        check(u1['w'] == 7 and u1['cap'] == 400 and u1['max'] == 500 and all(u1['catch']) and u1['soul4'][0] and len(u1['soul4'][1]) == 6 and len(u1['pet4']) >= 2 and set(u1['pet4']) <= {'gomsaegi', 'jara', 'kkoetoki', 'mulbeom'} and u1['parts'] == [5, 3, 6] and u1['buy'] and u1['col'],
               f"4부: 지난 이야기의 넋 셋·곰새기·불개를 챙겨 받고, 바다의 넋 여섯·펫 넷이 구슬·소환에 나온다 {u1['catch']} {u1['soul4']} {u1['pet4']} {u1['parts']}")
         check(all(u1['art']) and len(u1['art']) == 8, f"4부 펫 다섯·탈것 셋 그림이 오류 없이 그려진다 {u1['art']}")
         check(u1['ws'] == [[4, 95], [5, 21], [5, 62], [6, 35], [6, 55], [7, 50], [7, 83]] and all(u1['boss']) and '호박석' in u1['rw'][0] and '유물' in u1['rw'][1] and '지느러미 날개' in u1['rw'][2] and '용마' in u1['rw'][3],
@@ -3408,8 +3408,8 @@ async def main():
               f"영물 치장 틀: 5부 치장만 그 등급이 될 수 있고(60장에서는 안 됨), 저장해도 그대로, 1~4부 치장은 영물이 될 수 없다 {k3['spirit']} {k3['spirit2']} {k3['kept']} {k3['bad']}")
         check(k3['avk'][0] == k3['avk'][1] and k3['avk'][2] == '물결 무늬 망토' and k3['avk'][3] == 3 and k3['avk'][4] == '물결 망토' and k3['avk'][5] == 5 and all(k3['avt']),
               f"아바타: 키 p_wave가 더 겹치지 않고(3부 물결 무늬 망토 · 4부 물결 망토는 p_seawave), 5부 아바타 넷의 종류·세계 {k3['avk']} {k3['avt']}")
-        check(k3['dex'][0] and k3['dex'][1][0] == 5 and k3['dex'][1][1] == 2 and k3['dex'][1][3] == 23 and k3['dex'][1][4] == 5 and k3['dex'][1][2] >= 4 and k3['dex'][3] == '천축의 수집가',
-              f"도감 5부 줄: 펫 5·탈것 2·아바타·치장 23·넋 5, 별호 「천축의 수집가」 {k3['dex']} {k3['parts']}")
+        check(k3['dex'][0] and k3['dex'][1][0] == 5 and k3['dex'][1][1] == 3 and k3['dex'][1][3] == 23 and k3['dex'][1][4] == 5 and k3['dex'][1][2] >= 4 and k3['dex'][3] == '천축의 수집가',
+              f"도감 5부 줄: 펫 5·탈것 3(방울 낙타·흰 코끼리·하늘 말)·아바타·치장 23·넋 5, 별호 「천축의 수집가」 {k3['dex']} {k3['parts']}")
         # 4) 저장했다 다시 불러와도 그대로, 새 그림이 모두 그려진다
         k4 = await kp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
           for (const k of ['eaglet']) { const i = G.PETS.findIndex(p => p.draw === k); S.pets.lv[i] = Math.max(1, S.pets.lv[i] || 0); }
@@ -3495,6 +3495,144 @@ async def main():
 
         # @@END-C
         # @@TEST-D (갈래 D의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-24) 물의 신화 9-24단계: 천공의 탑 401~500층(수미산)·영물 장비·하늘 말·독수리 왕의 날개·수미를 오른 자 + 태초의 신 · 참모습(물/불 두 모습·전멸기 넷)
+        t4 = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        t5a = json.loads((ROOT / 'tools' / 'beta_saves' / '80_musa_ind1_end.json').read_text(encoding='utf-8'))['save']
+        t5b = json.loads((ROOT / 'tools' / 'beta_saves' / '90_musa_ind3_end.json').read_text(encoding='utf-8'))['save']
+        ctxW = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        wp = await ctxW.new_page()
+        watch(wp, errors, '9-24 ')
+        await fresh(wp)
+        await signup(wp, 'tw24test', 'abcd', '수미용사')
+        LOADW = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal && G.hideModal(); if (G.raid) G.raidEnd(false);
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '수미용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); }"""
+        # 1) 4부 끝 용사: 탑은 400층에서 멈추고 참모습·5부 이정표는 안 보인다
+        await wp.evaluate("(a) => { const [save, L] = a; eval('(' + L + ')')(save); }", [t4, LOADW])
+        w1 = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = true;
+          out.w = S.world; out.cap = G.towerCap(); S.tower.best = 400; S.tower.n = 0; out.start = G.startTower(); out.trueOpen = G.trueOpen();
+          out.mile = [G.TOWER_MILE[400].mount, G.TOWER_MILE[450].av, G.TOWER_MILE[500].mount, G.TOWER_MILE[500].title];
+          out.titles = G.TITLES.filter(t => t.k === 'sumeru' || t.k === 'trueform').map(t => !!(t.hide && t.hide()));
+          delete S.mount.own.yongma; G.mountCatchUp(); out.back = [!!S.mount.own.yongma, !!S.mount.own.skyhorse, !!S.av.own.w_eagle];
+          out.mg = G.MOUNT_G.length; return out; }""")
+        check(w1['w'] == 7 and w1['cap'] == 400 and w1['start'] is False and w1['trueOpen'] is False and w1['mile'] == ['yongma', 'w_eagle', 'skyhorse', 'sumeru'] and w1['titles'] == [True, True] and w1['back'] == [True, False, False] and w1['mg'] == 7,
+              f"4부 끝 용사: 탑은 400층에서 멈추고(401층 못 감) 참모습·5부 별호는 안 보이며, 400층 이정표만 되찾는다 {w1}")
+        await wp.evaluate("() => window.__game.buildTab('tower')")
+        w1b = await wp.evaluate("() => ({tr: !!document.querySelector('[data-tr-go]'), tc: !!document.querySelector('[data-tc-go]'), cards: [...document.querySelectorAll('#twSide .ct')].map(e => e.textContent)})")
+        check(not w1b['tr'] and w1b['tc'], f"4부 끝 [천공의 탑] 화면에는 참모습 칸이 없다 {w1b['cards']}")
+        await wp.evaluate("() => window.__game.closePage()")
+        # 2) 5부 용사(란카 길 끝): 401층부터 — 보스는 5부 몬스터·10층마다 영물·5층마다 호박석·이정표
+        await wp.evaluate("(a) => { const [save, L] = a; eval('(' + L + ')')(save); }", [t5a, LOADW])
+        w2 = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = true;
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          out.w = S.world; out.cap = G.towerCap(); out.max = G.TOWER.max;
+          out.ws = [400, 401, 430, 431, 460, 461, 488, 489, 500].map(f => G.towerWS(f));
+          const types = {}; for (let f = 401; f <= 500; f++){ const B = G.towerBoss(f); types[B.type] = 1; if (!B.name) out.noName = f; } out.types = Object.keys(types).sort();
+          out.rw = [405, 410, 450, 480, 500].map(f => G.towerRewardText(f).join('|'));
+          S.tower.best = 400; S.tower.n = 0; out.start = G.startTower(); out.info = G.raid ? [G.raid.info.f, G.raid.info.label, G.raid.info.ref, isFinite(G.raid.boss.maxHp) && G.raid.boss.maxHp > 0] : null;
+          G.raid.boss.hp = 1; run(8, () => !G.raid); out.b401 = S.tower.best;
+          const sp0 = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0), raw0 = S.amber.raw.slice();
+          S.tower.best = 404; S.tower.n = 0; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b405 = S.tower.best; out.amb = S.amber.raw.map((x, i) => x - raw0[i]);
+          S.tower.best = 409; G.startTower(); out.gate = [G.raid.info.gate, G.raid.info.wipe]; G.raid.boss.hp = 1; run(8, () => !G.raid); out.b410 = S.tower.best; out.sp = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0) - sp0;
+          S.tower.best = 419; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b420 = S.tower.best; out.sp2 = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0) - sp0;
+          S.tower.best = 449; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b450 = S.tower.best; out.eagle = !!S.av.own.w_eagle;
+          S.tower.best = 499; G.startTower(); G.raid.boss.hp = 1; run(8, () => !G.raid); out.b500 = S.tower.best; out.horse = !!S.mount.own.skyhorse; G.titleCheck(); out.title = !!S.title.own.sumeru; out.more = G.startTower();
+          out.trueOpen = G.trueOpen();
+          const cv = document.createElement('canvas'); cv.width = 480; cv.height = 640; G.drawTowerArt(cv, 450); G.drawTowerArt(cv, 500); G.drawTowerArt(cv, 400); out.artOk = true;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.tower.best, !!re.mount.own.skyhorse, !!re.av.own.w_eagle, !!re.title.own.sumeru];
+          delete S.mount.own.skyhorse; delete S.av.own.w_eagle; G.mountCatchUp(); out.back = [!!S.mount.own.skyhorse, !!S.av.own.w_eagle];
+          return out; }""")
+        check(w2['w'] == 9 and w2['cap'] == 500 and w2['max'] == 500 and w2['ws'][0] == [7, 83] and w2['ws'][1] == [8, 44] and w2['ws'][3][0] == 9 and w2['ws'][5][0] == 10 and w2['ws'][8] == [10, 94] and 'noName' not in w2,
+              f"5부 용사: 탑이 500층까지(401층 = 란카 길 → 젖의 바다 → 수미산 띠) {w2['cap']} {w2['ws']}")
+        check({'ravana', 'kumbha', 'rahu', 'mara', 'asura', 'king4'} <= set(w2['types']) and not ({'tiger', 'oni', 'dokkaebi'} & set(w2['types'])), f"401~500층 보스는 5부 몬스터가 돌아가며 나온다 {w2['types']}")
+        check(w2['start'] is True and w2['info'] and w2['info'][0] == 401 and w2['info'][1] == '천공의 탑 401층' and w2['info'][3] and w2['b401'] == 401, f"5부 용사는 401층에 도전하고 이긴다 {w2['info']} {w2['b401']}")
+        check(w2['b405'] == 405 and sum(w2['amb']) == 1 and w2['gate'] == [True, True] and w2['b410'] == 410 and w2['sp'] == 1 and w2['sp2'] == 2 and '호박석' in w2['rw'][0] and '영물' in w2['rw'][1] and '영물' in w2['rw'][3],
+              f"5로 끝나는 층은 호박석, 10층마다 문지기(전멸기)와 영물 장비 하나(깃든 짐승 무작위) {w2['amb']} {w2['sp']} {w2['sp2']} {w2['b420']} {w2['rw'][:2]}")
+        check(w2['b450'] == 450 and w2['eagle'] and w2['b500'] == 500 and w2['horse'] and w2['title'] and w2['more'] is False and w2['artOk'] and w2['re'] == [500, True, True, True] and w2['back'] == [True, True]
+              and '독수리 왕의 날개' in w2['rw'][2] and '하늘 말' in w2['rw'][4] and '수미를 오른 자' in w2['rw'][4],
+              f"450층 독수리 왕의 날개 · 500층 하늘 말·별호 「수미를 오른 자」, 저장·불러오기·되찾기가 맞다 {w2['rw'][2]} {w2['rw'][4]} {w2['re']} {w2['back']}")
+        check(w2['trueOpen'] is True, "500층을 올라야 참모습이 열린다(이정표 층에서 올린 뒤 열림)")
+        # 2b) 캡처: 탑 화면(401층대 그림)
+        await wp.evaluate("() => { const G = window.__game, S = G.S; S.tower.best = 432; S.tower.n = 0; G.closePage(); }")
+        await wp.evaluate("() => window.__game.buildTab('tower')")
+        await wp.wait_for_timeout(500)
+        w2b = await wp.evaluate("() => ({cards: [...document.querySelectorAll('#twSide .ct')].map(e => e.textContent), tr: !!document.querySelector('[data-tr-go]'), dis: !!(document.querySelector('[data-tr-go]') || {}).disabled})")
+        check(w2b['tr'] and w2b['dis'] and any('참모습' in c for c in w2b['cards']), f"5부 [천공의 탑] 화면에 참모습 칸이 있고 500층 전엔 잠겨 있다 {w2b['cards']}")
+        await wp.screenshot(path=str(OUT / '9-24a_탑_수미산_432층.png'))
+        await wp.evaluate("() => { const G = window.__game; G.S.tower.best = 478; G.closePage(); }")
+        await wp.evaluate("() => window.__game.buildTab('tower')")
+        await wp.wait_for_timeout(500)
+        await wp.screenshot(path=str(OUT / '9-24b_탑_수미산_478층.png'))
+        await wp.evaluate("() => window.__game.closePage()")
+        # 2c) 캡처: 하늘 말을 탄 용사 · 독수리 왕의 날개
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; S.tower.best = 500; G.mountCatchUp(); S.mount.ride = 'skyhorse'; S.av.wing = ''; G.refreshStats(); G.closePage(); }""")
+        await wp.wait_for_timeout(700)
+        await wp.screenshot(path=str(OUT / '9-24c_하늘말_탄_용사.png'))
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; S.mount.ride = ''; S.av.wing = 'w_eagle'; G.refreshStats(); }""")
+        await wp.wait_for_timeout(700)
+        await wp.screenshot(path=str(OUT / '9-24d_독수리왕의날개.png'))
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; S.av.wing = 'w_waterfire'; S.mount.ride = 'skyhorse'; G.refreshStats(); }""")
+        await wp.wait_for_timeout(700)
+        await wp.screenshot(path=str(OUT / '9-24e_물불의날개_하늘말.png'))
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; S.mount.ride = ''; S.av.wing = ''; G.refreshStats(); }""")
+        # 2d) 캡처(확대): 하늘 말(일곱 머리) · 독수리 왕의 날개 · 물불의 날개 — 그림이 작아서 확대 판을 따로
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; G.closePage();
+          const box = document.createElement('div'); box.id = 'zoomBox'; box.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1c2038;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px';
+          const add = (src, w, h, cap) => { const d = document.createElement('div'); d.style.cssText = 'text-align:center;color:#fff;font:700 12px sans-serif'; const im = document.createElement('img'); im.src = src; im.style.cssText = `width:${w}px;height:${h}px;image-rendering:pixelated;background:#3a4a78;border-radius:8px`; d.append(im, document.createElement('br'), cap); box.append(d); };
+          add(G.mountImg('skyhorse'), 256, 192, '하늘 말(일곱 머리 말)');
+          const ls = (dir, wing) => { const sp = G.personSprite(S.cls, S.look, 4, 4, dir, 0, false, {wing}); const c = document.createElement('canvas'); c.width = sp.width; c.height = sp.height; c.getContext('2d').drawImage(sp, 0, 0); return c.toDataURL(); };
+          add(ls('right', 'w_eagle'), 150, 150, '독수리 왕의 날개(앞)'); add(ls('up', 'w_eagle'), 150, 150, '독수리 왕의 날개(뒤)'); add(ls('up', 'w_waterfire'), 150, 150, '물불의 날개(뒤)');
+          document.body.appendChild(box); }""")
+        await wp.wait_for_timeout(500)
+        await wp.screenshot(path=str(OUT / '9-24h_하늘말_날개_확대.png'))
+        await wp.evaluate("() => document.getElementById('zoomBox').remove()")
+        # 3) 참모습: 5부 끝 용사 — 500층을 올라야 열리고, 물/불 두 모습·전멸기 넷·이기면 날개·별호·주간 상자(한 번)
+        await wp.evaluate("(a) => { const [save, L] = a; eval('(' + L + ')')(save); }", [t5b, LOADW])
+        w3 = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.wipeOff = false; G.trueForce = false; S.inv.potion = 999; S.inv.elixir = 99;
+          out.w = S.world; S.tower.best = 499; out.closed = [G.trueOpen(), G.startTrue()]; S.tower.best = 500; S.tower.tn = 0; S.tower.tday = ''; S.tower.trueWin = 0; S.tower.tweek = '';
+          out.open = G.trueOpen(); out.left0 = G.trueLeft(); out.start = G.startTrue(); const R = G.raid, B = R && R.boss;
+          out.info = R ? [R.info.taecho, R.info.tru, R.info.wipes.length, R.limit, R.info.tf, B.name, B.color, B.wipeKey] : null; out.left1 = G.trueLeft();
+          // 물 모습: 붉은 칸이 판 한 줄을 쓴다(sweep)
+          const P = {n:0}; B.pat = B.pat || {stg:100, cd:99, tel:null, grogT:0, n:0, wipes:[]}; let sweep = 0;
+          for (let i = 0; i < 40; i++){ B.pat.tel = null; B.pat.n = i; G.patTiles && G.patTiles(B, B.pat); const t = B.pat.tel; if (t && t.shape === 'sweep' && t.set.size >= 24) sweep++; } out.sweep = sweep; B.pat.tel = null;
+          // 두 모습: formT를 줄여 바꿔 본다
+          for (let i = 0; i < 20; i++) G.update(0.05);   // 등장(0.6초)이 끝나야 모습이 바뀐다
+          const seen = [R.info.tf]; const names = [B.name];
+          for (let k = 0; k < 3; k++){ R.formT = 0.05; for (let i = 0; i < 8; i++) G.update(0.05); seen.push(R.info.tf); names.push(B.name); }
+          out.seen = seen; out.names = names; out.fireGen = [];
+          R.info.tf = 'fire'; G.trueForm(R, true); out.fireGen.push(R.genT <= G.TRUEF.genFire + 1e-9, B.wipeKey, B.color);
+          R.info.tf = 'water'; G.trueForm(R, true); out.waterWipe = B.wipeKey; out.waterName = B.name;
+          // 전멸기 네 번(체력 80·60·40·20%)
+          let n = 0; R.formT = 99; R.boss.hp = R.boss.maxHp;
+          for (const th of [0.79, 0.59, 0.39, 0.19]){ R.boss.hp = R.boss.maxHp * th; let ok = false; for (let i = 0; i < 400 && G.raid; i++){ G.update(0.05); if (R.wipe && R.wipe.st === 1 && (R.wipe.i || 0) === n) ok = true; if (R.wipe && R.wipe.st >= 4) break; } if (ok) n++; }
+          out.wipes = n;
+          R.boss.hp = 0.0001; if (R.wipe) R.wipe = {st:4, i:9}; for (let i = 0; i < 200 && G.raid; i++) G.update(0.05);
+          out.win = S.tower.trueWin; out.wing = !!S.av.own.w_waterfire; G.titleCheck(); out.title = !!S.title.own.trueform; out.week = S.tower.tweek !== '';
+          out.sp = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0);
+          // 두 번째 이김: 날개·별호는 한 번, 주간 상자도 한 번(그다음은 보석)
+          const g0 = S.gems; S.tower.tn = 0; G.startTrue(); G.raid.boss.hp = 0.0001; G.raid.wipe = {st:4, i:9}; for (let i = 0; i < 200 && G.raid; i++) G.update(0.05);
+          out.win2 = S.tower.trueWin; out.gems2 = S.gems > g0; out.sp2 = G.ALL_SLOTS.reduce((a, k) => a + G.spOwned(k), 0);
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.tower.trueWin, re.tower.tweek === S.tower.tweek, re.tower.tn, !!re.av.own.w_waterfire];
+          return out; }""")
+        check(w3['w'] == 10 and w3['closed'] == [False, False] and w3['open'] is True and w3['left0'] == 2 and w3['start'] is True and w3['left1'] == 1 and w3['info'] and w3['info'][:5] == [True, True, 4, 240, 'water'] and w3['info'][5] == '태초의 신 · 물' and w3['info'][7] == 'tide',
+              f"참모습: 500층 전엔 못 하고, 열리면 4인 240초·전멸기 네 번·물 모습으로 시작하고 하루 두 번이다 {w3['info']} {w3['closed']}")
+        check(w3['seen'] == ['water', 'fire', 'water', 'fire'] and w3['names'][1] == '태초의 신 · 불' and w3['names'][2] == '태초의 신 · 물' and w3['fireGen'][0] and w3['fireGen'][1] == 'fire' and w3['waterWipe'] == 'tide' and w3['waterName'] == '태초의 신 · 물' and w3['sweep'] >= 12,
+              f"물과 불 두 모습을 오가고(이름·색·전멸기 원소·불은 창세의 빛이 잦음), 물 모습엔 붉은 칸이 판 한 줄을 쓴다 {w3['seen']} {w3['names']} {w3['fireGen']} 쓸기 {w3['sweep']}/40")
+        check(w3['wipes'] == 4, f"전멸기가 체력 80·60·40·20%에서 네 번 온다 {w3['wipes']}")
+        check(w3['win'] == 1 and w3['wing'] and w3['title'] and w3['week'] and w3['sp'] >= 1 and w3['win2'] == 2 and w3['gems2'] and w3['sp2'] == w3['sp'] and w3['re'][0] == 2 and w3['re'][1] and w3['re'][3],
+              f"이기면 날개 「물불의 날개」·별호·상위 엔드 상자(영물 장비 포함)는 처음 한 번, 두 번째는 보석뿐이고 저장에 남는다 {w3['win']} {w3['sp']} {w3['sp2']} {w3['re']}")
+        # 3b) 상위 엔드 상자 내용: 영물 장비 + 영물 치장 또는 전설 장신구
+        w3b = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {sp:0, skin:0, acc:0, bad:0}; G.skSpirit = 1e6; const it0 = Object.values(S.skin.eq).concat(S.skin.inv).filter(x => x.g === 6).length;
+          for (let i = 0; i < 60; i++){ const t = G.endBox2(); if (!t.includes('영물 ')) out.bad++; if (t.includes('영물 치장')) out.skin++; else if (t.includes('전설 ')) out.acc++; else out.bad++; }
+          G.skSpirit = null; out.items = Object.values(S.skin.eq).concat(S.skin.inv).filter(x => x.g === 6).length - it0; return out; }""")
+        check(w3b['bad'] == 0 and w3b['skin'] > 5 and w3b['acc'] > 5 and w3b['items'] == w3b['skin'], f"상위 엔드 상자: 영물 장비 + (영물 치장 | 전설 장신구) {w3b}")
+        # 3c) 캡처: 참모습 싸움 — 물 모습 · 불 모습
+        await wp.evaluate(r"""() => { const G = window.__game, S = G.S; G.wipeOff = true; G.quiet = true; S.tower.tn = 0; S.inv.potion = 999; G.startTrue(); G.raid.boss.hp = G.raid.boss.maxHp = 1e30; G.raid.formT = 99; }""")
+        await wp.wait_for_timeout(2800)
+        await wp.screenshot(path=str(OUT / '9-24f_참모습_물.png'))
+        await wp.evaluate(r"""() => { const G = window.__game; G.raid.info.tf = 'fire'; G.trueForm(G.raid, true); G.raid.genT = 0.3; }""")
+        await wp.wait_for_timeout(1300)
+        await wp.screenshot(path=str(OUT / '9-24g_참모습_불.png'))
+        await wp.evaluate("() => { const G = window.__game; if (G.raid) G.raidEnd(false); }")
         # @@END-D
         # @@TEST-E (갈래 E의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # 9-25) 물의 신화 9-25단계: 영물 등급(5부 장비 24~27)·깃든 짐승 2·3·5칸·천축 향목(m4)·조합식 13~15단계·세트 「란카」「수미」 — 4부 용사에게는 안 보임
