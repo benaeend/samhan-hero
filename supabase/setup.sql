@@ -117,7 +117,7 @@ declare a text := samhan_acc(p_token); n int; o record; ob int := 0; nb int := 0
 begin
   if p_save is not null and char_length(p_save) > 400000 then raise exception 'too_big'; end if;
   select count(*) into n from samhan_chars where acc = a and cid <> p_cid;
-  if n >= 4 then raise exception 'too_many'; end if;
+  if n >= 6 then raise exception 'too_many'; end if;   -- 한 계정 캐릭터 6명까지(2026-11 물의 신화: 4 → 6)
   select name, save, save_t into o from samhan_chars where acc = a and cid = p_cid;
   if found and o.save is not null and p_save is not null then
     ob := coalesce(substring(o.save from '"saveBuild":([0-9]{1,9})')::int, 0);

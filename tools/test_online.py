@@ -273,10 +273,10 @@ async def main():
               return {n: (L.rows || []).length, seller: row && row.name, b, again, gems: G.S.gems, bag: G.S.bag.map(x => x.k + x.g + ':' + x.p)}; }""")
             check(post['r'].get('id') and post['left'] == 0 and lst['seller'] == '온라인용사' and lst['b'] == {'ok': True} and (lst['again'] or {}).get('err') == 'gone'
                   and lst['gems'] == 880 and lst['bag'] == ['ring2:50'], f'장터: 올린 물건을 다른 계정이 보석으로 사고, 두 번은 못 산다 {post} {lst}')
-            mine = await A.evaluate("""async () => { const G = window.__game, S = G.S; const m = await G.mkMine(); const g0 = S.gems; const c = await G.mkClaim();
+            mine = await A.evaluate("""async () => { const G = window.__game, S = G.S; const m = await G.mkMine(); const g0 = S.gems; const c = await G.mkClaim(); const g1 = S.gems;   // 받은 직후에 바로 잼(그 뒤 올리고 내리는 동안 사냥으로 번 보석이 섞이지 않게)
               S.dust = Math.max(S.dust, 100); const d0 = S.dust; const p = await G.mkPost({t:'dust'}, 50, 10); const d1 = S.dust;
               const m2 = await G.mkMine(); const row = (m2.rows || []).find(r => r.it.t === 'dust'); const x = row ? await G.mkCancel(row.id) : null;
-              return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: S.gems - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
+              return {sold: (m.rows || []).filter(r => r.sold).length, claim: c.gems, gemsUp: g1 - g0, post: p, dustOut: d0 - d1, dustBack: S.dust - d1, cancel: x}; }""")
             check(mine['sold'] == 1 and mine['claim'] == 114 and mine['gemsUp'] == 114 and mine['dustOut'] == 50 and mine['dustBack'] == 50 and mine['cancel'] == {'ok': True},
                   f'장터: 판 값(수수료 5%)을 받고, 안 팔린 물건은 내려서 돌려받는다 {mine}')
             # 장터: 치장·신화 조각도 다른 용사와 보석으로 거래, 기본 장비는 못 올린다
@@ -305,6 +305,46 @@ async def main():
             check('장터손님' in on['names'] and '온라인용사' in on['me'] and on['shown'] and '장터손님' in on['text'], f'채팅창: 지금 접속 중인 용사(이름·직업·레벨)가 보인다 {on}')
             await A.screenshot(path=str(OUT / '34_온라인_접속중.png'))
             await A.evaluate("() => window.__game.setChat(false)")
+
+            # 캐릭터 6칸(물의 신화 2단계): 서버는 한 계정 6명까지 받고 7번째는 거절한다
+            tok = await A.evaluate('() => window.__game.online.token')
+
+            def dbx(sql):
+                with pg.conn() as c, c.cursor() as cur:
+                    cur.execute(sql)
+
+            def srv_save(cid, name):
+                try:
+                    db("select samhan_save(%s::uuid, %s, %s, '{}'::jsonb, %s, 1)", tok, cid, name, '{"v":1}')
+                    return 'ok'
+                except Exception as e:
+                    return 'too_many' if 'too_many' in str(e) else str(e)[:80]
+            r6 = [srv_save(f'cxsix{i}', f'여섯칸{i}') for i in range(1, 7)]   # 이미 1명 + 5명 = 6명, 그다음은 7번째
+            n6 = db("select count(*) from samhan_chars where acc = 'online1'")[0][0]
+            check(r6 == ['ok'] * 5 + ['too_many'] and n6 == 6, f'캐릭터 6칸: 서버가 한 계정 6명까지 저장하고 7번째는 막는다 {r6} {n6}')
+            # 서버가 아직 4칸이면(주인이 setup.sql을 다시 실행하기 전): 5번째 캐릭터는 이 기기에만 저장하고 게임은 그대로, 서버가 6칸이 되면 저절로 올라간다
+            setup = (ROOT / 'supabase' / 'setup.sql').read_text(encoding='utf-8')
+            f0 = setup.index('create or replace function public.samhan_save'); fn6 = setup[f0:setup.index('end $$;', f0) + len('end $$;')]
+            assert 'n >= 6' in fn6
+            dbx("delete from samhan_chars where acc = 'online1' and cid in ('cxsix4', 'cxsix5')")   # 서버에 4명(예전 한도)
+            dbx(fn6.replace('n >= 6', 'n >= 4'))
+            await A.evaluate('() => window.__game.switchChar()')
+            await A.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            await tg.create_char(A, '다섯째', 'musa')
+            await A.evaluate('() => window.__game.pushOnline()'); await A.wait_for_timeout(700)
+            if await A.is_hidden('#moreMenu'): await A.click('#tab-more')
+            await A.click('#tab-rec'); await A.wait_for_timeout(400)
+            m1 = await A.evaluate("""() => { const G = window.__game, ch = G.REG.accounts.online1.chars.find(c => c.name === '다섯째');
+              return {err: ch && ch.srvErr, inGame: !!G.session && G.S.name === '다섯째', note: document.querySelector('#r-save').textContent}; }""")
+            srv1 = db("select count(*) from samhan_chars where acc = 'online1' and name = '다섯째'")[0][0]
+            await A.screenshot(path=str(OUT / '35_온라인_서버4칸.png'))
+            dbx(fn6)                                                                           # 서버가 6칸이 됨(setup.sql 다시 실행)
+            await A.evaluate('() => window.__game.pushOnline()'); await A.wait_for_timeout(700)
+            m2 = await A.evaluate("""() => { const G = window.__game, ch = G.REG.accounts.online1.chars.find(c => c.name === '다섯째'); return {err: (ch && ch.srvErr) || '', note: document.querySelector('#r-save').textContent}; }""")
+            srv2 = db("select count(*) from samhan_chars where acc = 'online1' and name = '다섯째'")[0][0]
+            check(m1['err'] == 'many' and m1['inGame'] and '이 기기에만 저장 중' in m1['note'] and srv1 == 0 and m2['err'] == '' and '서버에 자동 저장' in m2['note'] and srv2 == 1,
+                  f'서버가 아직 4칸이어도 5번째 캐릭터로 게임이 되고(이 기기에만 저장 중이라고 알림), 서버가 6칸이 되면 저절로 서버에 올라간다 {m1} {srv1} {m2} {srv2}')
+            await A.evaluate("() => window.__game.closePage()")
 
             # 서버가 생기기 전(또는 연결이 안 될 때) 만든 계정은 다음 로그인 때 서버로 옮겨진다
             ctxD, D = await device('http://127.0.0.1:9')
@@ -347,8 +387,8 @@ async def main():
             await B.evaluate("async () => { const G = window.__game; await G.enterChar(G.session.cid); }")
             await B.wait_for_timeout(800)
             await B.evaluate("() => { const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } }")
-            re = await B.evaluate('() => ({pet: window.__game.S.pets.lv[21], same: window.__game.S.gems >= window.__g - 1})')
-            check(re == {'pet': 9, 'same': True}, f'다시 들어올 때 이 기기의 더 새 기록을 서버의 내 옛 기록으로 되돌리지 않는다 {re}')
+            back3 = await B.evaluate('() => ({pet: window.__game.S.pets.lv[21], same: window.__game.S.gems >= window.__g - 1})')   # (이름 주의: re는 정규식 모듈이라 변수 이름으로 쓰지 않는다)
+            check(back3 == {'pet': 9, 'same': True}, f'다시 들어올 때 이 기기의 더 새 기록을 서버의 내 옛 기록으로 되돌리지 않는다 {back3}')
             # 옛 화면이 서버에 덮어쓴 기록(판 번호 없음·시각은 더 새것)을 켜 둔 새 화면이 불러오지 않고 다시 올린다
             await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
             await B.wait_for_timeout(400)
@@ -358,7 +398,8 @@ async def main():
             await B.wait_for_timeout(1500)
             lvB = await B.evaluate('() => window.__game.S.level')
             srvL = db("select save::json->>'level', save::json->>'saveBuild' from samhan_chars where name = '온라인용사'")
-            check(lvB == 33 and srvL == [('33', '1')], f'옛 화면이 덮어쓴 기록은 불러오지 않고 내 기록을 다시 올린다 {lvB} {srvL}')
+            SB = int(re.search(r'const SAVE_BUILD = (\d+)', (ROOT / 'src' / 'game.html').read_text(encoding='utf-8')).group(1))   # 게임의 저장 판 번호(패치마다 오른다)
+            check(lvB == 33 and srvL == [('33', str(SB))], f'옛 화면이 덮어쓴 기록은 불러오지 않고 내 기록을 다시 올린다 {lvB} {srvL}')
             # 사라진 탑 이정표 보상 되찾기(2026-11-12)
             await B.evaluate("async () => { const G = window.__game, S = G.S; S.tower.best = 160; delete S.av.own.w_phoenix; delete S.av.own.w_cloud; delete S.mount.own.unryong; G.saveLocal(); await G.pushOnline(); await G.enterChar(G.session.cid); }")
             await B.wait_for_timeout(800)
@@ -366,8 +407,12 @@ async def main():
             tw = await B.evaluate("() => { const S = window.__game.S; const r = [!!S.av.own.w_phoenix, !!S.av.own.w_cloud, !!S.mount.own.unryong, !!S.av.own.w_galaxy]; S.tower.best = 0; return r; }")
             check(tw == [True, True, True, False], f'올라간 층까지의 탑 날개·탈것이 빠져 있으면 들어올 때 되찾는다 {tw}')
             # 운영 보상(2026-11-12): 정해 둔 이름의 캐릭터가 서버에 로그인해 들어오면 한 번만 받는다
-            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems; S.name = '가을비'; S.gifts = {}; G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; S.gifts = {}; return [g1 - g0, g2 - g1]; }""")
-            check(g == [240000, 0], f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다 {g}')
+            g = await B.evaluate("""async () => { const G = window.__game, S = G.S; const n0 = S.name, g0 = S.gems, f0 = S.gifts; S.name = '가을비'; S.gifts = {};
+              G.giveGifts(); const g1 = S.gems; G.giveGifts(); const g2 = S.gems; S.name = n0; S.gems = g0; S.gifts = f0;
+              return [g1 - g0, g2 - g1, G.GIFTS.filter(x => x.name === '가을비').reduce((a, x) => a + x.gems, 0)]; }""")
+            await B.wait_for_timeout(1800)
+            await B.evaluate("() => { const G = window.__game; if (!document.querySelector('#modal').hidden) G.hideModal(); }")   # 운영 보상 창(1.5초 뒤에 뜸)을 닫아 둔다
+            check(g[0] == g[2] and g[0] >= 150000 and g[1] == 0, f'운영 보상은 그 이름의 캐릭터가 한 번만 받는다(그 이름에 걸린 보상 모두) {g}')
             # 저장 보호(2026-11-12): 옛 화면(저장 판 번호가 낮음)이 새 기록을 덮어쓰지 못한다 · 하루 한 번 기록을 따로 남긴다
             await B.evaluate('async () => { const G = window.__game; await G.pushOnline(); await G.pushOnline(); }')
             await B.wait_for_timeout(600)
@@ -379,7 +424,7 @@ async def main():
             except Exception as e:  # noqa: BLE001
                 err = str(e)
             after = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
-            check(sb and sb[0][0] == '1' and 'old_client' in err and after == [(sb[0][1],)], f'저장 판 번호가 없는 옛 화면의 저장은 서버가 받지 않는다 {sb} {err[:40]} {after}')
+            check(sb and sb[0][0] == str(SB) and 'old_client' in err and after == [(sb[0][1],)], f'저장 판 번호가 없는 옛 화면의 저장은 서버가 받지 않는다 {sb} {err[:40]} {after}')
             hist = db("select count(*), min(char_length(save)) from samhan_chars_hist where acc = 'online1'")
             check(hist[0][0] >= 1 and hist[0][1] > 100, f'서버에 그날의 기록이 따로 남는다 {hist}')
             locked = ''
@@ -390,16 +435,21 @@ async def main():
                 locked = str(e)
             check('permission denied' in locked, f'따로 남긴 기록은 바깥에서 읽지 못한다 {locked[:50]}')
             # 서버 기록이 더 새 판이면(다른 기기가 새 버전) 이 화면은 불러오지 않고 저장을 멈춘 뒤 새로 고침을 안내한다
+            # (A는 위 「캐릭터 6칸」 확인에서 다른 캐릭터로 바꿔 들어와 있으므로, A가 지금 하는 캐릭터의 서버 기록을 새 판으로 바꾼다)
+            await A.evaluate('async () => { const G = window.__game; G.hideModal(); await G.pushOnline(); await G.pushOnline(); }')
+            await A.wait_for_timeout(600)
+            nameA = await A.evaluate('() => window.__game.S.name')
+            sbA = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = %s", nameA)
             with pg.conn() as c, c.cursor() as cur:
-                cur.execute("update samhan_chars set save = replace(save, '\"saveBuild\":1', '\"saveBuild\":2'), save_t = save_t + 600000 where name = '온라인용사'")
+                cur.execute("update samhan_chars set save = replace(save, %s, %s), save_t = save_t + 600000 where name = %s", (f'"saveBuild":{SB}', f'"saveBuild":{SB + 1}', nameA))
             await A.evaluate("() => { window.__game.S.level = 5; }")
             await A.evaluate('() => window.__game.pushOnline()')
             await A.wait_for_timeout(1500)
-            ttl = await A.inner_text('#mTitle')
+            ttl = await A.inner_text('#mTitle') if await A.is_visible('#modal') else ''
             await A.evaluate('async () => { window.__game.saveLocal && window.__game.saveLocal(); await window.__game.pushOnline(); }')
             await A.wait_for_timeout(600)
-            srv2 = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = '온라인용사'")
-            check('새 버전' in ttl and srv2 == [('2', sb[0][1])], f'더 새 판의 기록을 만나면 덮어쓰지 않고 새로 고침을 안내한다 {ttl} {srv2}')
+            srv2 = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = %s", nameA)
+            check(sbA and sbA[0][0] == str(SB) and '새 버전' in ttl and srv2 == [(str(SB + 1), sbA[0][1])], f'더 새 판의 기록을 만나면 덮어쓰지 않고 새로 고침을 안내한다 {nameA} {sbA} {ttl} {srv2}')
             await A.screenshot(path=str(OUT / '33_온라인_새버전안내.png'))
 
             # 한 계정은 한 화면에서만(2026-11-13): 새 기기가 접속하면 켜져 있던 기기는 저장하지 않고 멈춘다
