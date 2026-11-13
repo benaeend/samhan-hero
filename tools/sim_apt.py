@@ -7,6 +7,8 @@
   빌드마다 적성 켬/끔(G.noApt)으로 bench: 보스 150초(혼자, skPresetFor('boss') 조합) · 몹 떼 20초(skPresetFor('mob')). 감로수·탕약은 넉넉히.
 - 한 줄: 직업 저장 | a(맞는 능력 둘) asis/even/match/miss | 보스: asis÷끔 · (적응 기간)asis÷끔 · B÷B끔 · M÷B · X÷B · (끔)M÷B끔 | 몹 떼: 같은 여섯.
   목표(4-2): B÷B끔 0.97~1.03 · M÷B 2부 이후 1.25~1.40(1부 끝 1.10~1.30) · X÷B 0.65~0.78 · asis÷끔 ≥ 0.92(적응 기간이면 ≥ 0.96).
+- 패치 날 봐주기(S.apt.b): 9-5 전 저장은 처음 셈할 때의 음수 적성을 S.apt.b 에 적어 두고 그보다 더 엇나간 만큼만 손해를 본다. 그래서 asis÷끔 은 봐주기가 든 값이고,
+  even·match·miss 는 aptRebuild 가 봐주기를 지워(새로 고른 용사) 잰다. 흔들림(±5~15%)이 싫으면 bench 비 대신 배율 G.aptMul(능력)을 본다.
 - JSON 덮어쓰기 예: '{"APT.up":0.4, "APT.W.craft":2, "AMB_GOOD.8.t":[8,16,28], "base":"musa"}' (게임 훅 __game 아래 경로, 빌드 없이)
 - 빌드된 index.html 을 쓴다(먼저 python3 tools/build.py). 한 판 5~10초 — 무거우니 코어가 둘뿐이면 flock /tmp/samhan-test.lock nice 로.
 """
