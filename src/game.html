@@ -18931,6 +18931,7 @@ async function enterChar(cid, opts = {}){
     } else if (online && online.acc === acc){
       showModal('불러오는 중…', '<p>서버에서 모험 기록을 불러오고 있어요.</p>', []);
       try {
+        await claimActive(true);   // 이 화면이 지금 접속 중인 화면(다른 기기는 곧 멈춘다)
         const c = await rpc('samhan_load', {p_token:online.token, p_cid:cid}), st = +(c && c.t) || 0;
         // 서버 기록이 이 기기 기록보다 새것이거나, 이 기기가 마지막으로 서버와 맞춘(syncT) 뒤에 다른 기기가 저장했으면 서버 것으로
         // (2026-11 (43) 버그: PC에서 키운 뒤 휴대폰으로 들어오면 휴대폰 시계가 앞서 있거나 휴대폰에서 잠깐 켜 둔 기록이 '더 새것'으로 보여 옛 기록을 고르던 것)
@@ -19023,6 +19024,24 @@ function staleStop(){
   staleBuild = true;
   showModal('새 버전이 나왔어요', '<p>이 화면은 예전 버전이에요. 예전 버전으로 계속하면 새로 얻은 것이 저장되지 않아서, 저장을 멈췄어요.</p><p><b>새로 고침</b>하면 새 버전으로 이어서 할 수 있어요.</p>', [{label:'새로 고침', primary:true, fn:() => { try { location.reload(); } catch (e) {} }}]);
 }
+/* 한 계정은 한 화면에서만(2026-11-13): 들어올 때 서버에 이 화면의 표(DEV_ID)를 적고, 접속 중인 화면은 주기적으로 물어 다른 화면이 적었으면 멈춘다.
+   서버에 아직 samhan_claim이 없으면(setup.sql을 다시 실행하기 전) 그냥 지나간다 */
+async function claimActive(take){
+  if (!online || window.__samhanNoKick) return null;   // __samhanNoKick: 시험에서 기기 둘이 함께 돌 때만
+  try { const r = await rpc('samhan_claim', {p_token:online.token, p_dev:DEV_ID, p_take:!!take}); return typeof r === 'string' ? r : null; }
+  catch (e) { if (e.code === 'bad_token') lostOnline(); return null; }
+}
+async function checkKick(){
+  if (!online || !session || staleBuild || session.acc !== online.acc) return false;
+  const cur = await claimActive(false);
+  if (cur && cur !== DEV_ID){ kickStop(); return true; }
+  return false;
+}
+function kickStop(){
+  staleBuild = true;   // 저장을 멈춘다(새 화면의 기록을 덮어쓰지 않게)
+  showModal('다른 기기에서 접속했어요', '<p>같은 계정으로 다른 기기(또는 다른 창)에서 접속해서 이 화면의 게임을 멈췄어요. 이어서 하려면 <b>다시 접속하기</b>를 누르세요(지금 하던 다른 기기는 멈춰요).</p>', [{label:'다시 접속하기', primary:true, fn:() => { try { location.reload(); } catch (e) {} }}]);
+}
+setInterval(() => { if (online && session && !staleBuild && !document.hidden) checkKick(); }, 20000);
 // 서버 함수 부르기. 실패하면 e.code: 위 ON_CODES 중 하나 또는 'net'(연결 안 됨·느림)
 async function rpc(fn, args){
   let r;
@@ -19131,6 +19150,7 @@ async function pushOnlineNow(){
   const A = REG.accounts[session.acc], ch = A && A.chars.find(c => c.cid === session.cid);
   if (!ch) return;
   onlineBusy = true;
+  if (await checkKick()){ onlineBusy = false; return; }   // 다른 기기가 접속했으면 저장하지 않고 멈춘다
   if (await takeRemote()){ onlineBusy = false; return; }   // 다른 기기가 더 새로 저장했으면 덮어쓰지 않고 그걸 불러옴
   if (!session || REG.accounts[session.acc] !== A) { onlineBusy = false; return; }
   S.lastSave = Math.max(now(), (+ch.syncT || 0) + 1); S.saveBuild = Math.max(+S.saveBuild || 0, SAVE_BUILD); S.saveDev = DEV_ID; S.saveDev2 = DEV2_ID;   // 서버 시각이 앞서 있어도(다른 기기 시계) 내 기록이 올라가게
@@ -19368,7 +19388,7 @@ document.addEventListener('visibilitychange', () => {
     const away = hiddenAt ? (now() - hiddenAt) / 1000 : 0;
     hiddenAt = 0; last = performance.now();
     const go = () => { if (away >= 60 && S.chosen && session && !modalLock) offlineReward(away); };
-    if (online && session) takeRemote().then(took => { if (!took) go(); }); else go();   // 그사이 다른 기기에서 이어 했으면 그 기록을 먼저 불러옴
+    if (online && session) checkKick().then(k => { if (k) return; return takeRemote().then(took => { if (!took) go(); }); }); else go();   // 그사이 다른 기기에서 이어 했으면 그 기록을 먼저 불러옴
   }
 });
 window.addEventListener('pagehide', saveLocal);
@@ -19730,7 +19750,7 @@ if (BETA){
 
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
-    get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
+    claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
     power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
