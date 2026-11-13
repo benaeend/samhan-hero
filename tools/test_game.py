@@ -4403,6 +4403,7 @@ async def main():
           // tankK: 체력만 곱함(버티는 힘 ×)
           G.tankK = 1; G.refreshStats(); const p1 = G.tankPow(); G.tankK = 0.5; G.refreshStats(); const p2 = G.tankPow(); G.tankK = 1; G.refreshStats(); out.tankK = p2 / p1;
           out.idx0 = G.tankIdx(); out.hasRef = G.tkHas(0); out.on = G.tkOnAt(1, 30);
+          out.refN = G.TANK_REF.filter(x => x && x.length >= 2).length; out.onExp = !!G.TANK.on && !G.tankOff && G.tkHas(1);
           out.bands = [G.tkBand(0.69).k, G.tkBand(0.9).k, G.tkBand(1.1).k, G.tkBand(1.4).k];
           return out; }""")
         check(b29['regen'] > 0 and b29['level'] > 0 and b29['pet'] > 0 and (not b29['soulK'] or b29['soul'] > 0), f"회복 한곳으로: 저절로·레벨 업·지원 펫·넋 치유가 TM.heal 의 제 열쇠로 더해진다 {b29['regen'] > 0, b29['level'] > 0, b29['pet'] > 0, b29['soul']}")
@@ -4411,8 +4412,8 @@ async def main():
         check(b29['same'][0] == b29['same'][1] == 400, f"I-1 은 동작이 그대로: tankOff 든 아니든 같은 체력으로 찬다 {b29['same']}")
         check(b29['mild']['hp'] == 50 and b29['mild']['atk'] and b29['mild']['arm'] == 7 and b29['mild']['i'] and b29['mild']['a'], f"tkLean('mild'): 체력 −10·재련 −5·공격력 레벨 상승·버티는 힘 하락 {b29['mild']}")
         check(b29['hard']['hp'] == 25 and b29['hard']['reg'] == 30 and b29['hard']['i'] and b29['hard']['def'] == -1 and b29['bad'] is None, f"tkLean('hard'): 체력 −25·체력 회복 30까지·방어 펫 빼기·버티는 힘 하락 {b29['hard']}")
-        check(abs(b29['tankK'] - 0.5) < 0.02 and (b29['idx0'] is None or b29['idx0'] != b29['idx0']) and b29['hasRef'] is False and b29['on'] is False and b29['bands'] == ['danger', 'low', 'ok', 'ease'],
-              f"버티는 힘: tankK 0.5 면 절반 · 기준표가 비면 지수 NaN·예전 방식(tkOnAt 거짓) · tkBand 띠 {b29['tankK']:.3f} {b29['bands']}")
+        check(abs(b29['tankK'] - 0.5) < 0.02 and ((b29['refN'] == 0 and (b29['idx0'] is None or b29['idx0'] != b29['idx0']) and b29['hasRef'] is False) or (b29['refN'] > 0 and b29['hasRef'] is True)) and b29['on'] == b29['onExp'] and b29['bands'] == ['danger', 'low', 'ok', 'ease'],
+              f"버티는 힘: tankK 0.5 면 절반 · 기준표가 비면 지수 NaN·차면 숫자 · tkOnAt 은 TANK.on·표를 따름 · tkBand 띠 {b29['tankK']:.3f} {b29['bands']}")
         # 짧은 시뮬(무사 20분): 오류 없이 돌고 tanklog·tmlog·쓰러짐 줄
         r29 = await t29.evaluate(SIM, [20, 'musa', {'dt': 0.2, 'marks': [20], 'tanklog': True, 'tmlog': True, 'snapW': [[0, 5]]}])
         check(len(r29['tank']) > 3 and r29['tm'] and any(k.endswith(':field') for k in r29['tm']) and '쓰러짐' in r29['log'][-1] and 'w0s5' in r29['snaps'],
@@ -4421,7 +4422,7 @@ async def main():
         t29b = await ctx29.new_page()
         watch(t29b, errors, '9-29b ')
         await fresh(t29b)
-        c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
+        c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp;
           const fillT = k => { const L = Math.log10(G.tankPow() / k); G.TANK_REF[0] = [[1, L], [900, L]]; };
           const clrT = () => { G.TANK_REF.length = 0; };
