@@ -4019,6 +4019,84 @@ async def main():
 
         # @@END-F
         # @@TEST-G (갈래 G의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-27) 물의 신화 9-2단계: 내 파티 고르기(내 캐릭터 4명까지)·파티 시너지(직업 조합, 레이드·진·타임 보스에서만)
+        ctx27 = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        pty = await ctx27.new_page()
+        watch(pty, errors, '9-27 ')
+        await fresh(pty)
+        await signup(pty, 'partytest', 'abcd', '파티장')
+        y0 = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal();
+          const A = G.REG.accounts[G.session.acc], cl = ['jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek'];
+          out.alone = G.myPartyPool().length; G.S.world = 0;
+          cl.forEach((c, i) => A.chars.push({cid:'q' + i, name:'동료' + i, cls:c, level:60 + i, look:{}, armorG:2, weaponG:2, ally:{dps:100 * (i + 1), maxHp:900, rd:800}}));
+          A.chars.push({cid:'qold', name:'옛요약', level:50, look:{}, armorG:1, weaponG:1, ally:{dps:50, maxHp:500, rd:400}});   // 직업 없는 옛 요약
+          out.pool = G.myPartyPool().length; out.def = G.myPartyPick().map(c => c.cid).join();
+          out.t1 = G.myPartyToggle('q4'); out.t2 = G.myPartyToggle('q0'); out.sel = (S.myParty || []).join();
+          S.myParty = ['q0', 'q1', 'q2', 'q3']; out.full = G.myPartyToggle('q4'); out.sel4 = S.myParty.join();
+          S.myParty = ['q1', 'q4', 'zzz']; out.pick = G.myPartyPick().map(c => c.cid).join();
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = (re.myParty || []).join();
+          const old = JSON.parse(JSON.stringify(S)); delete old.myParty; out.old = JSON.stringify(G.mergeState(old).myParty);
+          return out; }""")
+        check(y0['alone'] == 0 and y0['pool'] == 6, f"내 파티: 다른 캐릭터가 없으면 비어 있고, 있으면 요약이 있는 캐릭터가 후보로 나온다 {y0['alone']}/{y0['pool']}")
+        check(y0['def'] == 'q4,q3,q2,q1', f"고르지 않으면 센 순서 4명이 함께한다 {y0['def']}")
+        check(y0['t1'] is True and y0['t2'] is True and y0['sel'] == 'q3,q2,q1,q0' and y0['sel4'] == 'q0,q1,q2,q3' and y0['full'] == 'full', f"4명까지만 고를 수 있고 5번째는 못 고른다 {y0['t1']} {y0['sel']} {y0['full']} {y0['sel4']}")
+        check(y0['pick'] == 'q1,q4' and y0['re'] == 'q1,q4,zzz' and y0['old'] == '[]', f"고른 파티는 저장·불러오기에 남고 없어진 캐릭터는 빠지며, 이 칸이 없는 예전 저장은 빈 칸으로 채운다 {y0['pick']} {y0['re']} {y0['old']}")
+        y1 = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; const info = Object.assign({}, G.raidAt(0), {party:5});
+          S.myParty = ['q1', 'q4']; let p = G.raidParty(info); out.two = p.map(a => (a.npc ? 'N' : a.name.slice(-1))).join(); out.mine = p.map(a => !!a.mine).join();
+          S.myParty = []; p = G.raidParty(info); out.def = p.map(a => a.name).join();
+          const syn = (o) => G.synCalc(o).list.map(x => x.name).join('|');
+          out.none = syn({musa:1}); out.front = syn({musa:1, jagaek:1, sulsa:1, doin:1}); out.van = syn({musa:1, sulsa:2});
+          out.pair = syn({musa:1, changgaek:1}); out.shadow = syn({jagaek:1, gungsa:1}); out.thunder = syn({sulsa:1, doin:1});
+          out.five4 = syn({musa:1, jagaek:1, sulsa:1, doin:1, gungsa:0}); out.five5 = G.synCalc({musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1}).list.filter(x => x.k === 'five')[0].txt;
+          out.one = syn({sulsa:3}); out.hint = G.synHints({musa:1}).map(h => h.name + ':' + h.cls.join('')).join('/');
+          out.hint5 = G.synHints({musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1}).length;
+          return out; }""")
+        check(y1['mine'] == 'true,true,false,false' and y1['two'] == '1,4,N,N', f"레이드에 고른 캐릭터가 동료로 나오고 남는 자리는 그림자 동료가 채운다(그림자는 내 파티가 아님) {y1['two']} {y1['mine']}")
+        check(y1['def'].startswith('동료4,동료3,동료2,동료1'), f"고르지 않으면 레이드 동료도 센 순서 {y1['def']}")
+        check(y1['none'] == '' and '앞뒤 진' in y1['front'] and '선봉' in y1['front'] and y1['van'] == '선봉' and y1['pair'] == '창칼 진' and y1['shadow'] == '그림자 살' and y1['thunder'] == '벼락과 부적', f"시너지 켜짐/꺼짐: 앞뒤 진·선봉·창칼 진·그림자 살·벼락과 부적 {y1}")
+        check('다섯 갈래' in y1['five4'] and '+8%' in y1['five5'] and y1['one'] == '한 길', f"다섯 갈래(4종 +4%·5종 +8%)·한 길(같은 직업 3명) {y1['five4']} {y1['five5']} {y1['one']}")
+        check('선봉:sulsa' in y1['hint'] and '창칼 진:changgaek' in y1['hint'], f"한 명만 더 있으면 켜지는 시너지를 알려 준다 {y1['hint']}")
+        check(y1['hint5'] == 0, '다섯이 다 차면 한 명 더 힌트는 없다')
+        y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S; S.myParty = ['q1', 'q4']; const t = G.tbOthers(); const r = {head:t.slice(0, 2).map(o => o.name).join(), mine:t.slice(0, 2).every(o => o.mine && o.syn), n:t.length};
+          S.myParty = []; return r; }""")
+        check(y1b['head'] == '동료1,동료4' and y1b['mine'] and y1b['n'] <= 10, f"타임 보스에도 고른 내 캐릭터가 먼저 동료로 나온다 {y1b}")
+        # --- 싸움: 시너지는 레이드·진·타임 보스에서만, 상한(무사 45·나머지 35), 그림자는 안 센다, 싸우는 중엔 못 바꿈
+        y2 = await pty.evaluate(r"""() => { try { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; S.quest.main = 112; S.raid.tk = 3; S.level = 100; S.maxStage = 60; S.best.s0 = 60; S.best.l0 = 100; S.cls = 'musa'; G.refreshStats(); out.open = G.raidUnlocked();
+          S.myParty = ['q1', 'q2', 'q3', 'q4']; out.start = G.startRaid(2); const R = G.raid;
+          const st = G.synState(); out.names = st ? st.list.map(x => x.name).join('|') : null; out.musa = G.synDmg('musa', false); out.musaSk = G.synDmg('musa', true);
+          out.fail = G.myPartyToggle('q4'); out.raidAllies = R ? R.allies.map(a => a.cls + (a.npc ? 'N' : '')).join() : null;
+          G.noSyn = true; delete R.syn; out.off = [G.synState(), G.synDmg('musa', false)]; G.noSyn = false; delete R.syn;
+          R.time = 0.05; for (let i = 0; i < 60 && G.raid; i++) G.update(0.05); G.hideModal();
+          return out; } catch (e) { return {err: e.stack}; } }""")
+        check(y2['start'] and y2['names'] and '앞뒤 진' in y2['names'] and '선봉' in y2['names'] and y2['fail'] is False, f"레이드에서는 내 파티(나+고른 넷)의 시너지가 켜지고, 싸우는 중에는 파티를 못 바꾼다 {y2['names']} {y2['fail']}")
+        check(y2['musa'] <= 45 and y2['musa'] >= 30 and y2['off'] == [None, 0], f"무사가 받는 피해 합이 상한 45%를 넘지 않고, noSyn으로 끌 수 있다 {y2['musa']} {y2['off']}")
+        y3 = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          out.hunt = G.synState(); S.cls = 'jagaek'; G.refreshStats();
+          S.myParty = ['q1', 'q2', 'q3', 'q4']; S.raid.tk = 3; G.startRaid(2); const st = G.synState(); out.jag = [st ? st.list.length : -1, G.synDmg('jagaek', false), G.synDmg('jagaek', true)];
+          G.raid.time = 0.05; for (let i = 0; i < 60 && G.raid; i++) G.update(0.05); G.hideModal();
+          S.cls = 'musa'; G.refreshStats(); S.myParty = [];
+          const npcOnly = G.synCnt([{cls:'doin', npc:true}, {cls:'sulsa', mine:true, syn:true}, {cls:'gungsa', mine:true, syn:false}]); out.npc = JSON.stringify(npcOnly);
+          S.dummy.day = ''; try { G.startDummy(); out.dum = G.synState(); G.raid && (G.raid.time = 0.05); for (let i = 0; i < 40 && G.raid; i++) G.update(0.05); G.hideModal(); } catch (e) { out.dum = 'err'; }
+          return out; }""")
+        check(y3['hunt'] is None and y3['dum'] is None, f"사냥·허수아비 같은 혼자 싸움에는 시너지가 없다 {y3['hunt']} {y3['dum']}")
+        check(y3['jag'][0] >= 3 and y3['jag'][1] <= 35 and y3['jag'][2] <= 35, f"무사가 아닌 직업은 받는 피해 합 상한이 35% {y3['jag']}")
+        check(y3['npc'] == '{"musa":1,"sulsa":1}', f"그림자 동료·직업 없는 옛 요약은 시너지에서 세지 않는다 {y3['npc']}")
+        # --- 캡처: 「내 파티」 칸 · 레이드 싸움 화면
+        await pty.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; S.myParty = ['q1', 'q2', 'q4']; S.raid.tk = 3; G.refreshStats(); }""")
+        await tab(pty, 'raid')
+        await pty.wait_for_timeout(500)
+        mpTxt = await pty.evaluate("() => (document.querySelector('#myParty') || {}).innerText || ''")
+        check('켜진 시너지' in mpTxt and '한 명만 더' in mpTxt and '내 파티' in mpTxt, f"[레이드] 맨 위 「내 파티」 칸에 켜진 시너지와 한 명만 더 있으면 켜지는 것이 보인다 {mpTxt!r}")
+        await pty.screenshot(path=str(OUT / '9-27a_내파티_칸.png'))
+        await pty.click('#myParty [data-mp="q3"]')
+        mp2 = await pty.evaluate("() => (window.__game.S.myParty || []).join()")
+        check(mp2 == 'q1,q2,q4,q3', f"칩을 누르면 파티에 들어가고 저장 칸에 기억된다 {mp2}")
+        await pty.evaluate(r"""() => { const G = window.__game, S = G.S; G.closePage(); G.hideModal(); S.myParty = ['q0', 'q1', 'q2', 'q3']; S.raid.tk = 3; G.startRaid(2); for (let i = 0; i < 80; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; } }""")
+        await pty.wait_for_timeout(500)
+        await pty.screenshot(path=str(OUT / '9-27b_레이드_시너지.png'))
+        await pty.evaluate("() => { const G = window.__game; if (G.raid){ G.raid.time = 0.05; for (let i = 0; i < 60 && G.raid; i++) G.update(0.05); } G.hideModal(); }")
+        await ctx27.close()
+
         # @@END-G
         # @@TEST-H (갈래 H의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-H

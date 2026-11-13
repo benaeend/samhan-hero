@@ -2249,6 +2249,100 @@ let pbT = {}, pbL = {};   // 지금 걸려 있는 파티 버프(직업별 남은
 const pbV = (c, f) => (pbT[c] || 0) > 0 && PB[c][f] ? PB[c][f](pbL[c] || 1) : 0;
 const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 100);
 const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (1 + (pbV('jagaek', 'cr') + pbV('gungsa', 'cr')) / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
+/* ===== 파티 시너지 · 내 파티 (물의 신화 9-2) =====
+   '내 파티' = 나 + 같은 계정의 내 캐릭터(그림자 동료는 안 셈). 직업 조합 일곱 가지가 레이드·진·타임 보스·강림에서만 켜진다(사냥·결투·탑·허수아비에는 없음).
+   수치는 모두 제안값 — 시뮬로 맞출 것(SYN) */
+const SYN_MELEE = ['musa', 'jagaek', 'changgaek'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
+const SYN = {cap:35, capMusa:45, front:6, van:8, vanMax:24, vanDr:10, pair:10, pairGrog:1, shadow:15, thunder:8, five4:4, five5:8, one:10, myMax:4};   // 제안값 — 시뮬로 맞출 것
+const synCn = c => (CLASSES[c] || {}).name || '직업 미상';
+function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}], mod:{직업:{dmg, skill, dr, cdr, cd, hp}}, grog}
+  const mod = {}, list = []; let grog = 0;
+  for (const c of Object.keys(CLASSES)) mod[c] = {dmg:0, skill:0, dr:0, cdr:0, cd:0, hp:0};
+  const n = c => cnt[c] || 0, melee = SYN_MELEE.reduce((t, c) => t + n(c), 0), ranged = SYN_RANGED.reduce((t, c) => t + n(c), 0), kinds = Object.keys(cnt).filter(c => cnt[c] > 0 && CLASSES[c]).length;
+  const all = f => { for (const c of Object.keys(mod)) f(mod[c]); };
+  if (melee >= 2 && ranged >= 2){ all(m => m.dmg += SYN.front); list.push({k:'front', lv:1, name:'앞뒤 진', txt:`파티 모두 피해 +${SYN.front}%`}); }
+  if (n('musa') >= 1 && ranged >= 1){ const v = Math.min(SYN.vanMax, SYN.van * ranged); mod.musa.dmg += v; for (const c of SYN_RANGED) mod[c].dr += SYN.vanDr;
+    list.push({k:'van', lv:1, name:'선봉', txt:`무사 피해 +${v}% · 원거리 받는 피해 -${SYN.vanDr}%`}); }
+  if (n('musa') >= 1 && n('changgaek') >= 1){ mod.musa.dmg += SYN.pair; mod.changgaek.dmg += SYN.pair; grog += SYN.pairGrog; list.push({k:'pair', lv:1, name:'창칼 진', txt:`무사·창객 피해 +${SYN.pair}% · 휘청 시간 +${SYN.pairGrog}초`}); }
+  if (n('jagaek') >= 1 && n('gungsa') >= 1){ mod.jagaek.cd += SYN.shadow; mod.gungsa.cd += SYN.shadow; list.push({k:'shadow', lv:1, name:'그림자 살', txt:`자객·궁사 치명타 피해 +${SYN.shadow}%`}); }
+  if (n('sulsa') >= 1 && n('doin') >= 1){ mod.sulsa.cdr += SYN.thunder; mod.doin.cdr += SYN.thunder; list.push({k:'thunder', lv:1, name:'벼락과 부적', txt:`술사·도인 기술 재사용 -${SYN.thunder}%`}); }
+  if (kinds >= 4){ const v = kinds >= 5 ? SYN.five5 : SYN.five4; all(m => { m.dmg += v; m.hp += v; }); list.push({k:'five', lv:kinds >= 5 ? 2 : 1, name:'다섯 갈래', txt:`파티 모두 피해·체력 +${v}% (${kinds}종)`}); }
+  for (const c of Object.keys(CLASSES)) if (n(c) >= 3){ mod[c].skill += SYN.one; list.push({k:'one:' + c, lv:1, name:'한 길', txt:`${synCn(c)} 기술 피해 +${SYN.one}%`}); }
+  return {list, mod, grog};
+}
+const synCap = c => c === 'musa' ? SYN.capMusa : SYN.cap;
+const synCnt = party => { const cnt = {[S.cls]:1}; for (const a of party || []) if (a && a.mine && a.syn && hasK(CLASSES, a.cls)) cnt[a.cls] = (cnt[a.cls] || 0) + 1; return cnt; };
+const synFight = R => !!R && !!R.allies && !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp && !R.info.aw2tut && !R.info.aw2t && !(R.info.mem && !R.info.jin) && !R.info.parade;
+function synState(){   // 지금 싸움의 시너지(없으면 null). 싸움 시작 때 한 번 계산해 둔다
+  if (!raid || (window.__game && window.__game.noSyn)) return null;
+  if (raid.syn === undefined) raid.syn = synFight(raid) ? synCalc(synCnt(raid.allies)) : null;
+  return raid.syn;
+}
+const synV = (c, f) => { const s = synState(); return s && s.mod[c] ? s.mod[c][f] || 0 : 0; };
+const synDmg = (c, skill) => { const s = synState(); if (!s || !s.mod[c]) return 0; return Math.min(synCap(c), s.mod[c].dmg + (skill ? s.mod[c].skill : 0)); };   // 한 캐릭터가 받는 피해 합 상한(무사 45·나머지 35)
+const synMine = kind => 1 + synDmg(S.cls, kind === 'skill' || kind === 'soul') / 100;
+const synAlly = (c, skill) => { const s = synState(); return s ? (1 + synDmg(c, skill) / 100) * (1 + synV(c, 'cd') / 100 * 0.3) : 1; };
+const synTaken = c => { const s = synState(); return s ? (1 - synV(c, 'dr') / 100) / (1 + synV(c, 'hp') / 100) : 1; };
+const synGrog = () => { const s = synState(); return s ? s.grog : 0; };
+const synChip = () => { const s = synState(); return s && s.list.length ? ' · ' + s.list.map(x => x.name).join('·') : ''; };
+// 한 명만 더 있으면 켜지는 것: [{cls:[직업…], name, txt}]
+function synHints(cnt){
+  const total = Object.values(cnt).reduce((t, v) => t + v, 0); if (total >= 1 + SYN.myMax) return [];
+  const have = new Set(synCalc(cnt).list.map(x => x.k + ':' + x.lv)), out = {};
+  for (const c of Object.keys(CLASSES)){
+    const c2 = Object.assign({}, cnt, {[c]:(cnt[c] || 0) + 1});
+    for (const x of synCalc(c2).list) if (!have.has(x.k + ':' + x.lv)){ const key = x.k + ':' + x.lv; (out[key] = out[key] || {cls:[], name:x.name, txt:x.txt}).cls.push(c); }
+  }
+  return Object.values(out);
+}
+// 내 파티 고르기: S.myParty = 캐릭터 id(없으면 센 순서 4명)
+function myPartyPool(){ const A = session && REG && REG.accounts && REG.accounts[session.acc]; return A ? (A.chars || []).filter(c => c.cid !== session.cid && c.ally).map(c => Object.assign({acc:session.acc}, c)) : []; }
+function myPartyPick(){
+  const pool = myPartyPool(), ids = (S.myParty || []).filter(id => pool.some(c => c.cid === id)).slice(0, SYN.myMax);
+  if (ids.length) return ids.map(id => pool.find(c => c.cid === id));
+  return pool.sort((a, b) => b.ally.dps - a.ally.dps).slice(0, SYN.myMax);
+}
+function myPartyToggle(cid){
+  if (raid || !session) return false;
+  const pool = myPartyPool(); if (!pool.some(c => c.cid === cid)) return false;
+  let ids = (S.myParty || []).filter(id => pool.some(c => c.cid === id));
+  if (!ids.length) ids = myPartyPick().map(c => c.cid);
+  if (ids.includes(cid)) ids = ids.filter(id => id !== cid);
+  else if (ids.length >= SYN.myMax) return 'full';
+  else ids.push(cid);
+  S.myParty = ids; return true;
+}
+function withMyParty(base, max){   // 타임 보스·강림: 내 파티에서 고른 캐릭터를 먼저, 나머지는 서버·이 기기의 다른 용사로(안 골랐으면 예전 그대로)
+  if (!session || !(S.myParty || []).length) return base;
+  const mp = myPartyPick().map(c => tbFromSummary(c.name, c, true)).filter(Boolean).slice(0, max), names = new Set(mp.map(o => o.name)), n = {[S.cls]:1};
+  for (const o of mp) n[o.cls] = (n[o.cls] || 0) + 1;
+  const out = mp.slice();
+  for (const o of base){ if (out.length >= max) break; if (names.has(o.name) || o.mine || (n[o.cls] || 0) >= TB_CLS_CAP) continue; n[o.cls] = (n[o.cls] || 0) + 1; out.push(o); }
+  return out;
+}
+function synNoteHTML(party){   // 싸움 시작 전 창: 이번 파티에서 켜질 시너지
+  const cnt = synCnt(party), L = synCalc(cnt).list;
+  return `<p class="small" id="synNote" style="margin-top:8px"><b>파티 시너지</b> ${L.length ? L.map(x => `<span class="chip on">${x.name}</span> ${x.txt}`).join(' · ') : '아직 없어요(내 캐릭터의 직업이 어울리면 켜져요)'}</p>`;
+}
+function myPartyHTML(){
+  if (!session) return '';
+  const pool = myPartyPool(), pick = myPartyPick(), ids = new Set(pick.map(c => c.cid));
+  if (!pool.length) return `<div class="card" id="myParty"><div class="ct">내 파티</div><p class="small">다른 캐릭터를 만들면 데려갈 수 있어요</p></div>`;
+  const cnt = {[S.cls]:1}; for (const c of pick) if (hasK(CLASSES, c.cls)) cnt[c.cls] = (cnt[c.cls] || 0) + 1;
+  const L = synCalc(cnt).list, H = synHints(cnt), dis = raid ? ' disabled' : '';
+  return `<div class="card" id="myParty"><div class="ct">내 파티<span class="tag">나 + ${SYN.myMax}명까지 · ${ids.size}명</span></div>
+    <div class="chips"><span class="chip on">${esc(S.name)} (나·${cls().name})</span>${pool.map(c => `<button type="button" class="chip${ids.has(c.cid) ? ' on' : ''}" data-mp="${esc(c.cid)}"${dis}>${esc(c.name)} · ${esc(synCn(c.cls))} Lv.${c.level | 0}</button>`).join('')}</div>
+    <p class="small" id="mpHelp" style="margin-top:6px">${(S.myParty || []).length ? '고른 캐릭터가 레이드·진·타임 보스에 함께해요.' : '고르지 않으면 센 순서로 데려가요. 눌러서 고르면 기억해요.'}${raid ? ' (싸우는 중에는 못 바꿔요)' : ''}</p>
+    <p class="small" id="mpSyn"><b>켜진 시너지</b> ${L.length ? L.map(x => `<span class="chip on">${x.name}</span> ${x.txt}`).join(' · ') : '없어요'}</p>
+    ${H.length ? `<p class="small" id="mpHint"><b>한 명만 더 있으면</b> ${H.map(h => `${h.cls.map(synCn).join('·')} 한 명 → ${h.name}`).join(' / ')}</p>` : ''}</div>`;
+}
+let myPartySig = '';
+function myPartyRender(force){
+  const box = $('#myPartyBox'); if (!box) return;
+  const sig = myPartyHTML(); if (!force && sig === myPartySig && box.firstChild) return;
+  myPartySig = sig; box.innerHTML = sig;
+  box.querySelectorAll('[data-mp]').forEach(b => b.addEventListener('click', () => { const r = myPartyToggle(b.dataset.mp); if (r === 'full') addLog(`내 파티는 나 말고 ${SYN.myMax}명까지예요. 한 명을 먼저 빼 주세요.`, 'warn'); else if (r) saveLocal(); myPartyRender(true); }));
+}
 const pbLvOf = a => a.npc ? 8 : Math.max(1, Math.min(30, 4 + Math.floor((+a.level || 100) / 6)));   // 동료의 파티 버프 레벨(어림)
 const pbRaidK = (party = []) => { const cs = new Set(party.filter(a => a.npc || (+a.level || 100) >= SKILLS[10].unlock).map(a => a.cls)); if (skOpen(10)) cs.add(S.cls); return 1 + PB_RAID_K * cs.size; };
 function pbDesc(c, l){
@@ -4690,6 +4784,7 @@ function mergeState(d){
   { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2.asura = n0(x.asura); out.sea2.kub = n0(x.kub); out.sea2.asuraBest = n0(x.asuraBest); out.sea2.kubBest = n0(x.kubBest); }   // 물의 신화 9-26: 아수라 야행·쿠베라의 곳간 하루 횟수·최고 기록
   // @@END-F
   // @@MERGE-G (갈래 G가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  out.myParty = Array.isArray(d.myParty) ? d.myParty.filter(v => typeof v === 'string').slice(0, 4) : [];   // 9-2 내 파티(캐릭터 id)
   // @@END-G
   // @@MERGE-H (갈래 H가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-H
@@ -5574,12 +5669,12 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && (aw2C || Math.random() < ST.crit + sc);
-  const cd = (ST.critDmg + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0) + (hero.incT > 0 && kind === 'skill' ? (hero.incP || 40) / 100 : 0)) * aimMul(mine && kind !== 'pet');
+  const cd = (ST.critDmg + synV(S.cls, 'cd') / 100 + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0) + (hero.incT > 0 && kind === 'skill' ? (hero.incP || 40) / 100 : 0)) * aimMul(mine && kind !== 'pet');
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = (m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1) * (mine && m.pat && m.pat.grogT > 0 && !fit ? C.grogMul || 1 : 1);   // 창객: 휘청이는 보스에게 +15%(내 세기에 맞춘 싸움 FIT은 빼고)
   const gp = raw ? 1 : gapMul(m, mine && (kind === 'basic' || kind === 'skill')) * aw2Pierce(m);   // 창객 「간격」 · 초각성기 2 「바다 꿰는 창」
   const vz = !raw && mine && S.myth.vajra > 0 && (kind === 'basic' || kind === 'skill') ? (avg ? 1 + Math.min(1, ST.crit + sc) * VAJRA_BOLT : crit ? 1 + VAJRA_BOLT : 1) : 1;   // 금강저(5부): 치명타가 터지면 번개가 그 피해의 10%를 더 넣는다
-  const dmg = raw ? base : base * gp * vz * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const dmg = raw ? base : base * gp * vz * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (mine ? synMine(kind) : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
@@ -5631,7 +5726,7 @@ function damageHero(d){
   if (hero.invisT > 0) return;   // 무영 월광살: 모습을 감춘 동안
   if (cls().evade && Math.random() < cls().evade){ addText('회피', hero.x + Math.random() * 8 - 4, hero.y - 30, '#d8d0ff', 10, true); return; }
   const dr = petDR();
-  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (hero.oathT > 0 ? 1 - oathDr(hero.oathLv || 1) / 100 : 1) * (hero.vowT > 0 ? 1 - (hero.vowP || 20) / 100 : 1) * (S.myth.okdae > 0 ? 0.85 : 1) * (1 - rideAb('dr') / 100) * skMul('def') * elMul('def') * seaMul('def') * (0.9 + Math.random() * 0.2);
+  let dmg = d * (1 - dr / 100) * (S.buff.def > 0 ? BUFFS.def.mul : 1) * fxNow.def * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (hero.dr4T > 0 ? 0.7 : 1) * (hero.oathT > 0 ? 1 - oathDr(hero.oathLv || 1) / 100 : 1) * (hero.vowT > 0 ? 1 - (hero.vowP || 20) / 100 : 1) * (S.myth.okdae > 0 ? 0.85 : 1) * (1 - rideAb('dr') / 100) * skMul('def') * elMul('def') * seaMul('def') * synTaken(S.cls) * (0.9 + Math.random() * 0.2);
   if (hero.oathT > 0 && (hero.oathN || 0) < OATH_N) hero.oathN = (hero.oathN || 0) + 1;   // 대왕의 맹세: 맞을 때마다 공격력↑
   if (dr > 0) petRt.def.glow = 0.25;
   if (hero.shield > 0){
@@ -5832,13 +5927,15 @@ function raidTickets(){
 const ticketLeft = () => raidTickets() >= TICKET_MAX ? 0 : Math.max(0, S.raid.tkT + TICKET_REGEN - now());
 const raidReady = i => i >= 0 && i < raidUnlocked() && raidTickets() > 0;
 function firstReadyRaid(){ for (let i = raidUnlocked() - 1; i >= 0; i--) if (raidReady(i)) return i; return -1; }
-// 파티: 나 + 이 기기의 다른 캐릭터(강한 순) + 빈자리는 NPC 동료
+// 파티: 나 + 「내 파티」에서 고른 내 캐릭터(안 골랐으면 센 순서) + 빈자리는 NPC 동료 (9-2: 내 파티 고르기)
 function raidParty(info){
-  const heroDps = dpsOf(ST), out = [];
-  const others = allChars().filter(c => !(session && c.acc === session.acc && c.cid === session.cid) && c.ally)
-    .sort((a, b) => b.ally.dps - a.ally.dps).slice(0, partyOf(info) - 1);
-  for (const o of others) out.push({name:o.name, cls:o.cls, look:cleanLook(o.look), armorG:o.armorG, weaponG:o.weaponG, dps:o.ally.dps, maxHp:o.ally.maxHp, own:true, level:+o.level || 1});
-  for (let k = 0; out.length < partyOf(info) - 1; k++){
+  const heroDps = dpsOf(ST), out = [], want = partyOf(info) - 1;
+  let others;
+  if (session && S.myParty && S.myParty.length) others = myPartyPick().slice(0, want);
+  else others = allChars().filter(c => !(session && c.acc === session.acc && c.cid === session.cid) && c.ally)
+    .sort((a, b) => ((session && b.acc === session.acc) - (session && a.acc === session.acc)) || b.ally.dps - a.ally.dps).slice(0, want);
+  for (const o of others) out.push({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:o.armorG, weaponG:o.weaponG, dps:o.ally.dps, maxHp:o.ally.maxHp, own:true, level:+o.level || 1, mine:!!(session && o.acc === session.acc), syn:hasK(CLASSES, o.cls)});
+  for (let k = 0; out.length < want; k++){
     const n = NPCS[k % NPCS.length], gr = Math.min(4, Math.max(0, info.g - 1));
     out.push({name:n.name, cls:n.cls, look:{outfit:n.outfit, hair:n.hair, hat:'class', skin:k % 3}, armorG:gr, weaponG:gr,
       dps:heroDps * NPC_SHARE[n.cls], maxHp:ST.maxHp * (n.cls === 'musa' ? 1.3 : 0.85), npc:true});
@@ -6305,7 +6402,7 @@ const tbNum = v => Math.min(1e300, Math.max(0, +v || 0));
 function tbFromSummary(name, sm, mine){
   if (typeof name !== 'string' || !sm || typeof sm !== 'object' || !sm.ally || typeof sm.ally !== 'object') return null;
   return Object.assign({name:name.slice(0, 8), cls:hasK(CLASSES, sm.cls) ? sm.cls : 'musa', look:cleanLook(sm.look), armorG:gradeIdx(sm.armorG), weaponG:gradeIdx(sm.weaponG),
-    level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine}, sumProg(sm));
+    level:Math.max(1, Math.floor(+sm.level) || 1), dps:Math.max(1, tbNum(sm.ally.dps)), maxHp:Math.max(1, tbNum(sm.ally.maxHp)), rd:tbNum(sm.ally.rd), mine:!!mine, syn:hasK(CLASSES, sm.cls)}, sumProg(sm));
 }
 // 같은 직업은 나까지 TB_CLS_CAP명, 모두 TB_PICK명
 function tbCapPick(pool, rnd, max = TB_PICK, cap = TB_CLS_CAP){
@@ -6342,10 +6439,11 @@ async function tbFetchPick(force){
   })();
   try { return await tbPickP; } finally { tbPickP = null; }
 }
-function tbOthers(){
+function tbOthersBase(){
   const key = tbKey();
   return tbPick.key === key && tbPick.list ? tbPick.list : tbPickLocal();
 }
+function tbOthers(){ return withMyParty(tbOthersBase(), TB_PICK); }
 const tbUsers = () => 1 + tbOthers().length;
 const tbDone = diff => (S.tb && S.tb[diff]) === tbWindow().id;
 function tbCan(diff){
@@ -6370,7 +6468,7 @@ function startTimeBoss(diff){
   const w = tbWindow(), D = TB_DIFF[diff], others = tbOthers();
   // 함께 싸우는 캐릭터는 실제 보스 피해(기술·넋 포함)로 싸운다(휘두를 때 피해 = 실제 피해 ÷ TB_ALLY_SK, 나머지는 동료 기술로)
   const party = others.map(o => ({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG),
-    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true}));
+    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true, mine:!!o.mine, syn:!!o.syn}));
   const partyDps = realDps() * TB_SELF_K + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);   // 동료가 10명이 안 돼도(0명이어도) 그만큼으로 맞춘다
   const info = {tb:true, diff, w:w.id, label:`타임 보스 · ${D.name}`, bossName:(diff === 'hell' ? '지옥 ' : diff === 'deep' ? '심해 ' : '') + w.boss.name, type:w.boss.type,
     color:diff === 'hell' ? mix(w.boss.color, '#ff2a2a', 0.45) : diff === 'deep' ? mix(w.boss.color, '#1a3aff', 0.5) : w.boss.color, region:regionIndex(S.stage), party:party.length + 1, ref:D.ref};
@@ -6439,7 +6537,7 @@ function pickRaidTarget(){
   return null;
 }
 function damageAlly(a, d){
-  let dmg = d * (0.9 + Math.random() * 0.2) * (1 - pbV('musa', 'dr') / 100) * (hero.vowT > 0 ? 1 - (hero.vowP || 20) / 100 : 1);   // 위태의 서원: 동료도 받는 피해↓
+  let dmg = d * (0.9 + Math.random() * 0.2) * (1 - pbV('musa', 'dr') / 100) * (hero.vowT > 0 ? 1 - (hero.vowP || 20) / 100 : 1) * synTaken(a.cls);   // 위태의 서원: 동료도 받는 피해↓
   if (a.shield > 0){ const ab = Math.min(a.shield, dmg); a.shield -= ab; dmg -= ab; }   // 술사 파티 버프 보호막
   a.hp -= dmg; a.hurt = 0.12;
   addText('-' + fmt(dmg), a.x, a.y - 30, '#ff8a7a', 9);
@@ -6449,7 +6547,7 @@ function damageAlly(a, d){
 // 함께하는 동료의 기술·초각성기(2026-11 (17)): 다른 용사의 캐릭터가 기본 공격만 하던 문제를 고침. NPC 동료는 작은 기술만
 function allySkill(a, B){
   const C = CLASSES[a.cls], nm = (C.skills || [])[(Math.random() * 6) | 0] || '기술', hy = B.y - mobHeight(B) * 0.5;
-  const dmg = a.hit * pbAllyMul() * (a.npc ? 2.5 : 4.5) * (0.85 + Math.random() * 0.3);
+  const dmg = a.hit * pbAllyMul() * synAlly(a.cls, true) * (a.npc ? 2.5 : 4.5) * (0.85 + Math.random() * 0.3);
   a.swing = 0.3;
   if (!fxOff()){ vadd({type:'glow', x:B.x, y:hy, r:14, col:C.fx || '#ffffff', dur:0.4}); vSparks(B.x, hy, 6, C.fx || '#ffffff', 60, 18); }
   addText(nm, a.x, a.y - 34, C.fx || '#ffe08a', 10, true);
@@ -6457,7 +6555,7 @@ function allySkill(a, B){
 }
 function allyAwaken(a, B){
   a.awk = true;
-  const C = CLASSES[a.cls], dmg = a.hit * pbAllyMul() * a.aspd * AWAKEN_SEC;   // 동료 초각성도 그 동료 피해 AWAKEN_SEC초 몫(예전 60번 휘두른 만큼)
+  const C = CLASSES[a.cls], dmg = a.hit * pbAllyMul() * synAlly(a.cls, true) * a.aspd * AWAKEN_SEC;   // 동료 초각성도 그 동료 피해 AWAKEN_SEC초 몫(예전 60번 휘두른 만큼)
   fx.push({type:'awaken', t:0, dur:1.1, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5}); shake = Math.max(shake, 0.35);
   addText(`${a.name} · ${C.awaken}!`, a.x, a.y - 40, '#ffd24a', 12, true);
   for (let k = 0; k < 4; k++) after(k * 0.15, () => { if (raid && !B.dead) hit(B, dmg / 4, 'ally'); });
@@ -6465,7 +6563,7 @@ function allyAwaken(a, B){
 function allyAttack(a, B){
   a.swing = 0.2;
   const C = CLASSES[a.cls];
-  const d = a.hit * pbAllyMul();
+  const d = a.hit * pbAllyMul() * synAlly(a.cls, false);
   if (!C.proj){ fx.push({type:'slash', t:0, dur:0.16, x:a.x, y:a.y - 8, dir:a.dir, color:C.fx}); hit(B, d, 'ally'); }
   else projs.push({kind:C.proj, x:a.x, y:a.y - 12, tg:B, trail:[], dmg:d, hk:'ally'});
 }
@@ -6510,7 +6608,7 @@ function patStg(B, n){
 }
 function patBreak(B){
   const P = B.pat, wipe = P.tel && P.tel.kind === 'wipe';
-  P.stg = 0; P.tel = null; P.grogT = wipe ? PAT.grog + 1 : PAT.grog; S.rec.grogs = (S.rec.grogs || 0) + 1;
+  P.stg = 0; P.tel = null; P.grogT = (wipe ? PAT.grog + 1 : PAT.grog) + synGrog(); S.rec.grogs = (S.rec.grogs || 0) + 1;
   aw2Tick('brk'); if (hero.handT > 0) aw2Add(AW2.brk);   // 초각성기 2: 손으로 싸우는 동안 깬 버팀
   addText(wipe ? '큰 살을 끊었다!' : '휘청!', B.x, B.y - mobHeight(B) - 12, '#ffe08a', 14, true);
   if (wipe) addLog(`${B.name}의 큰 살을 끊었어요! 휘청이는 동안 몰아쳐요.`, 'gain');
@@ -7015,7 +7113,7 @@ function updateRaid(dt){
     a.atkT -= dt * a.aspd;
     if (a.atkT <= 0){ a.atkT = 1; allyAttack(a, B); }
     a.skT = (a.skT == null ? 2 + Math.random() * 4 : a.skT) - dt;   // 동료도 기술을 쓴다
-    if (a.skT <= 0){ a.skT = 6 + Math.random() * 3; allySkill(a, B); }
+    if (a.skT <= 0){ a.skT = (6 + Math.random() * 3) * (1 - synV(a.cls, 'cdr') / 100); allySkill(a, B); }
     if (a.shieldT > 0){ a.shieldT -= dt; if (a.shieldT <= 0) a.shield = 0; }
     if (a.npc || (+a.level || 100) >= SKILLS[10].unlock){   // 동료도 자기 직업의 파티 버프를 건다
       a.pbT = (a.pbT == null ? 1.5 + (a.seed || 0) * 0.8 + Math.random() * 2 : a.pbT) - dt;
@@ -7755,7 +7853,8 @@ async function grFetchPick(){
       grPick = {key, list:tbCapPick(pool, rng(strHash('gr:' + key)), GR.pick, GR.cap)}; }
   } catch (e){ if (e.code === 'bad_token') lostOnline(); }
 }
-function grOthers(){
+function grOthers(){ return withMyParty(grOthersBase(), GR.pick); }
+function grOthersBase(){
   const key = grKey();
   if (grPick.key === key && grPick.list) return grPick.list;
   if (!session) return [];
@@ -7765,7 +7864,7 @@ function grOthers(){
 }
 function grParty(){
   const party = grOthers().map(o => ({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG),
-    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true, level:o.level}));
+    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true, level:o.level, mine:!!o.mine, syn:!!o.syn}));
   const n = {[S.cls]:1}; for (const a of party) n[a.cls] = (n[a.cls] || 0) + 1;
   for (let k = 0; party.length < GR.pick && k < NPCS.length * 2; k++){   // 모자라면 NPC 동료(같은 직업 2명까지)
     const N = NPCS[k % NPCS.length]; if ((n[N.cls] || 0) >= GR.cap) continue; n[N.cls] = (n[N.cls] || 0) + 1;
@@ -8760,7 +8859,7 @@ function jobCCast(lv, alive, tg, mul){
   return true;
 }
 // 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
-const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100);   // 파사석(5부): 기술 재사용 -%
+const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100) * (1 - synV(S.cls, 'cdr') / 100);   // 파사석(5부): 기술 재사용 -%
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
@@ -12360,7 +12459,7 @@ function confirmJin(w, i){
     <p><b>${info.bossName}</b> — 세기가 정해져 있는 상위 레이드예요. 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
     <div class="rpow jin">${jinPowHTML(w, i)}</div>
     <ul class="jrules"><li>전멸기 · 큰 살 두 번 · 새 패턴 <b>「쫓는 살」</b>(발밑이 세 번 연달아)</li><li><b>자동 피하기가 절반만</b> 통해요 · 붉은 칸·강타에 맞으면 <b>잠깐 기절</b> · 금빛 「!」를 되받으면 보스가 <b>바로 휘청</b></li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지 — 싸움 화면에 <b>「탕약 ${JIN.pots}/${JIN.pots}」</b>로 남은 수가 보여요</li>${pity ? `<li>지난 도전의 기운: 보스 체력 <b>−${pity}%</b></li>` : ''}</ul>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">들어가면 오늘 횟수 1번을 써요(지금 ${jinLeft()} / ${JIN.tries}번, 이기든 지든). 레이드 리셋권으로는 되돌아오지 않아요.</p>
     ${ask ? presetHTML('party') : potNoteHTML()}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startJin(w, i)) closePage(); presetNext = undefined; }}],
@@ -14802,7 +14901,7 @@ function drawOverlay(){
     if (raid){
       ctx.font = '700 11px SamhanSans, sans-serif';
       const alive = raid.allies.filter(a => !a.down).length + (hero.dead ? 0 : 1), tot = raid.allies.length + 1;
-      const pl = tot > 1 || raid.info.tb ? `파티 ${alive}/${tot}${raid.info.tb ? ` · 목숨 ${Math.max(0, TB_LIVES - (raid.deaths || 0))}/${TB_LIVES}` : raid.info.jin ? ` · 목숨 ${Math.max(0, JIN.lives - (raid.falls || 0))}/${JIN.lives} · 탕약 ${Math.max(0, JIN.pots - (raid.pots || 0))}/${JIN.pots}` : ''}` : '', pw = pl ? Math.ceil(ctx.measureText(pl).width) : -14, al = raid.awk && !raid.awk.used ? '초각성 준비' : '', aw = al ? Math.ceil(ctx.measureText(al).width) + 24 : 0;
+      const pl = tot > 1 || raid.info.tb ? `파티 ${alive}/${tot}${synChip()}${raid.info.tb ? ` · 목숨 ${Math.max(0, TB_LIVES - (raid.deaths || 0))}/${TB_LIVES}` : raid.info.jin ? ` · 목숨 ${Math.max(0, JIN.lives - (raid.falls || 0))}/${JIN.lives} · 탕약 ${Math.max(0, JIN.pots - (raid.pots || 0))}/${JIN.pots}` : ''}` : '', pw = pl ? Math.ceil(ctx.measureText(pl).width) : -14, al = raid.awk && !raid.awk.used ? '초각성 준비' : '', aw = al ? Math.ceil(ctx.measureText(al).width) + 24 : 0;
       const px = cx - (pw + 14 + aw) / 2;
       ovBot = pl || al ? ry + 18 : ry - 4;
       if (pl){ box(px, ry, pw + 14, 18); ctx.fillStyle = '#c8f0c8'; ctx.fillText(pl, px + 7, ry + 9.5); }
@@ -18009,8 +18108,8 @@ function raidRecPower(info){
 function buildRaid(){
   const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비']].concat(haetaeOpen() ? [['haetae', '해태 수련']] : [], [['vault', '보물 동굴'], ['parade', '백귀야행']]);   // 해태 수련은 46장부터(그 전에는 칸이 안 보임)
   if (raidView === 'haetae' && !haetaeOpen()) raidView = 'raid';
-  const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>`;
-  const wireSeg = () => panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); }));
+  const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>` + (['raid', 'gr', 'tb'].includes(raidView) ? '<div id="myPartyBox"></div>' : '');
+  const wireSeg = () => { panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); })); myPartyRender(true); };
   if (raidView === 'gr'){
     panel.innerHTML = top + `<div id="grBox"></div><div id="ygrBox" style="margin-top:12px"></div><div id="raidLive2"></div>`;
     wireSeg(); grFetchPick();
@@ -18284,7 +18383,7 @@ function confirmRaid(i){
   const own = party.filter(m => m.own).length;
   showModal(`${info.label} 토벌`, `
     <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 기다려요. ${partyOf(info)}인 파티로 자동 전투를 해요.</p>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">${own ? `이 기기의 다른 캐릭터 ${own}명이 함께해요. ` : ''}NPC 동료의 힘은 내 용사에 맞춰져요. 무사는 보스의 공격을 받아 주고, 도인은 파티를 치유해요. 동료도 저마다 파티 버프를 걸어 줘요. 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개).</p>
     ${S.presetMode === 'ask' || !S.presetMode ? presetHTML('party') : ''}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (S.presetMode === 'ask' || !S.presetMode) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startRaid(i)) buildTab('raid'); presetNext = undefined; }}],
@@ -19000,7 +19099,7 @@ function closePage(){
   $('#page').hidden = true; currentTab = null; refresher = null; partCtx = null;
   document.querySelectorAll('.tab').forEach(bt => bt.setAttribute('aria-selected', 'false'));
 }
-function refreshPanel(){ if (refresher && currentTab){ refresher(); partApply(); foldHints(panel); } }
+function refreshPanel(){ if (refresher && currentTab){ if (currentTab === 'raid') myPartyRender(); refresher(); partApply(); foldHints(panel); } }
 panel.addEventListener('click', partClick);   // 부별 탭·거르기 단추
 document.querySelectorAll('.tab').forEach(bt => bt.addEventListener('click', () => {
   if (!session && !window.__game || !bt.dataset.tab) return;
@@ -20486,6 +20585,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {ASURA, startAsura, finishAsura, asuraOpen, asuraLeft, asuraTier, indSoulRoll, asLuck:null, KUB, startKub, finishKub, kubOpen, kubLeft, kubTier, kubLuck:null, IND_PAT, patInd, patHeads, headOff, headsLeft, patFlower, flowerNear, flowerOk, patTiles, updatePat, heroTile, noIndPat:false, DBOSS_IND, dbInd, DB_SPIRIT_P, skinDropPart});   // 물의 신화 9-26
   // @@END-F
   // @@HOOK-G (갈래 G의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, raidParty, raidAt});
   // @@END-G
   // @@HOOK-H (갈래 H의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-H
