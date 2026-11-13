@@ -1,0 +1,75 @@
+name: 설치 파일 만들기 (안드로이드 APK · 윈도우 설치 파일)
+
+# 사용법: GitHub → Actions → 「설치 파일 만들기」 → Run workflow
+# 끝나면 Releases(또는 실행 결과 맨 아래 Artifacts)에서 내려받는다.
+on:
+  workflow_dispatch:
+    inputs:
+      make_release:
+        description: 'Releases에 올리기 (true면 올림)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: 서명 키 꺼내기 (비밀값이 있을 때만)
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/samhan.keystore"
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/samhan.keystore" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=$KS_PASS" >> "$GITHUB_ENV"
+          else
+            echo "::warning::서명 키 비밀값이 없어 시험용 키로 서명해요. 다음에 만든 APK는 덮어 설치가 안 될 수 있어요."
+          fi
+      - name: APK 빌드
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: gradle -p android assembleRelease --no-daemon
+      - run: cp android/app/build/outputs/apk/release/app-release.apk SamhanHero.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: android-apk, path: SamhanHero.apk }
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: 윈도우 설치 파일 빌드
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm install
+          npx electron-builder --win --publish never
+      - uses: actions/upload-artifact@v4
+        with: { name: windows-installer, path: desktop/dist/SamhanHero-Setup-*.exe }
+
+  release:
+    if: ${{ inputs.make_release }}
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out }
+      - name: Releases에 올리기
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "app-${{ github.run_number }}" out/*/* \
+            --repo "${{ github.repository }}" \
+            --title "설치 파일 ${{ github.run_number }}" \
+            --notes "안드로이드는 SamhanHero.apk, 윈도우는 SamhanHero-Setup-*.exe 를 받아 설치하세요. 게임 내용은 주소(benaeend.github.io/samhan-hero)를 그대로 열기 때문에 게임이 고쳐져도 다시 받을 필요가 없어요."

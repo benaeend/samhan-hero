@@ -1,0 +1,19 @@
+{
+  "name": "samhan-hero-desktop",
+  "version": "1.0.0",
+  "description": "삼한 용사 키우기 (컴퓨터용)",
+  "main": "main.js",
+  "author": "benaeend",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": { "start": "electron ." },
+  "devDependencies": { "electron": "^33.2.0", "electron-builder": "^25.1.8" },
+  "build": {
+    "appId": "kr.samhan.hero",
+    "productName": "삼한 용사 키우기",
+    "files": ["main.js", "package.json"],
+    "directories": { "output": "dist" },
+    "win": { "target": "nsis", "icon": "icon.png" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "artifactName": "SamhanHero-Setup-${version}.${ext}" }
+  }
+}
