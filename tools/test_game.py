@@ -1907,8 +1907,8 @@ async def main():
         check(eu['segs'] == [True, True, True, True] and '투구' in eu['sum'] and eu['cells'] == 24 and eu['rows'][-1] == '유물' and '체력' in eu['fx'] and eu['hide'] and eu['asc'],
               f'[장비]에 투구·어깨·신발·세공 칸: 소환·등급 칸(유물 줄까지)·지금 효과·머리 장식 보이기, 각성 카드는 무기·방어구만 {eu}')
         check(all(er['cards']) and '신발' in er['nm'] and '투구의 힘' in er['eff'], f'[재련]에 다섯 칸이 모두 보인다 {er}')
-        check(ea['cards'] == 5 and ea['sums'] == 8 and '빈 자리' in ea['empty'] and ea['set'] and ea['v'] == 1 and '성공' in ea['msg'] and ea['dots'] == 1 and '65' in ea['prob'] and ea['rec'] == 1,
-              f'[세공] 화면: 다섯 칸·문양 합계 여덟, 호박석을 박고 깎으면 빛이 들어오고 다음 확률이 내려가며 추천 줄이 보인다 {ea}')
+        check(ea['cards'] == 5 and ea['sums'] == 10 and '빈 자리' in ea['empty'] and ea['set'] and ea['v'] == 1 and '성공' in ea['msg'] and ea['dots'] == 1 and '65' in ea['prob'] and ea['rec'] == 1,
+              f'[세공] 화면: 다섯 칸·문양 합계 열, 호박석을 박고 깎으면 빛이 들어오고 다음 확률이 내려가며 추천 줄이 보인다 {ea}')
         await ep.evaluate("""() => { const G = window.__game; G.closePage(); }""")
         await ep.wait_for_timeout(600)
         await ep.screenshot(path=str(OUT / '28d_용사_새장비.png'))
@@ -4570,6 +4570,67 @@ async def main():
         sm = await apg.evaluate(SIM, [5, 'jagaek', {'dt': 0.2, 'load': json.dumps(apt_jag)}])
         t10 = await apg.evaluate("() => { const S = window.__game.S; return {e:S.craft.w.e, g:S.guard.on, n:S.craft.w.t}; }")
         check(len(sm['log']) >= 0 and t10['e'] == 'vital' and t10['g'] in ('chilseong', 'jowang', 'seongju'), f"짧은 시뮬(자객 3부 끝)이 오류 없이 돌고 무기 각인은 급소·수호신은 맞는 쪽이다 {t10}")
+        # j) 새 옵션 줄(9-5 나): 호박석 돛·물수리, 영약 공격 속도·치명 확률
+        await apg.evaluate(APT_LOAD, apt_gun)
+        tj = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; const sl = G.ALL_SLOTS[0];
+          S.amber.raw = [999, 999, 999]; const seen = {}; for (let z = 0; z < 200; z++){ G.ambSet(sl, 2); const st = G.S.amber.st[sl]; for (const k of st.a) seen[k] = (seen[k] || 0) + 1; }
+          out.seen = [seen.mast || 0, seen.osprey || 0, Object.keys(seen).length];
+          S.amber.st = {}; S.elix = {o:{}, offer:null, qi:0}; G.refreshStats(); G.aptReset();
+          const base = {spd:G.seaSum().spd, crit:G.seaSum().crit, opt:G.spdOpt(), aspd:G.ST.aspd, cr:G.ST.crit + G.ST.critOver};
+          const put = (a, v) => { S.amber.st = {}; S.amber.st[sl] = {g:2, a:a, b:'b_move', v:v, u:[10, 10, 0], p:50}; G.refreshStats(); G.aptReset(); };
+          put(['mast', 'osprey'], [30, 30, 0]);
+          out.spd = G.seaSum().spd / base.spd; out.opt = G.spdOpt() - base.opt; out.aspd = G.ST.aspd / base.aspd; out.crit = G.seaSum().crit - base.crit; out.cr = G.ST.crit + G.ST.critOver - base.cr;
+          S.amber.st = {}; G.refreshStats(); G.aptReset();
+          const [Gk] = G.skGW();
+          S.elix.o.bi = {l:[['spd', 5], ['hp', 0]], t:7, n:0}; S.elix.o.pye = {l:[['crit', 5], ['atk', 0]], t:7, n:0}; G.refreshStats(); G.aptReset();
+          out.easpd = G.ST.aspd / base.aspd; out.eexp = Math.pow(Gk, 1.25); out.eopt = G.spdOpt() - base.opt; out.ecr = G.ST.crit + G.ST.critOver - base.cr;
+          const re = G.mergeState(JSON.parse(JSON.stringify(Object.assign({}, S, {amber:{raw:[0, 0, 0], st:{[sl]:{g:2, a:['mast', 'osprey'], b:'b_move', v:[5, 6, 0], u:[10, 10, 0], p:50}}}}))));
+          out.rt = [re.amber.st[sl].a.join(), re.elix.o.bi.l[0][0], re.elix.o.pye.l[0][0]];
+          return out; }""")
+        check(tj['seen'][0] >= 15 and tj['seen'][1] >= 15 and tj['seen'][2] == 10, f"호박석을 200번 박으면 열 가지 문양이 모두 나오고 돛·물수리도 나온다 {tj['seen']}")
+        check(abs(tj['spd'] - 1.25) < 1e-6 and abs(tj['opt'] - 25) < 1e-6 and abs(tj['aspd'] - 1.25) < 1e-6, f"돛 3단이면 공격 속도 ×1.25 · 고르는 옵션의 공격 속도 +25% {tj['spd']} {tj['opt']} {tj['aspd']}")
+        check(abs(tj['crit'] - 10) < 1e-6 and abs(tj['cr'] - 0.10) < 1e-6, f"물수리 3단이면 치명타 확률 +10%p {tj['crit']} {tj['cr']}")
+        check(abs(tj['easpd'] - tj['eexp']) < 1e-6 and abs(tj['ecr'] - 0.10) < 1e-6 and tj['eopt'] > 0, f"영약 공격 속도 5단은 단계 값 1.25제곱만큼 공격 속도를, 치명타 확률 5단은 +10%p를 더한다 {tj['easpd']:.4f} {tj['eexp']:.4f} {tj['ecr']}")
+        check(tj['rt'] == ['mast,osprey', 'spd', 'crit'], f"새 문양·새 영약 효능은 저장·불러오기에서 그대로 남는다 {tj['rt']}")
+        # 캡처: 세공(돛·물수리 문양)·영약(공격 속도·치명타 확률 효능)
+        await apg.evaluate(r"""() => { const G = window.__game, S = G.S; G.hideModal && G.hideModal(); G.closePage(); S.amber.raw = [9, 9, 9]; G.ambSet(G.ALL_SLOTS[0], 2); const st = S.amber.st[G.ALL_SLOTS[0]]; st.a = ['mast', 'osprey']; st.v = [4, 3, 0]; st.u = [5, 4, 0]; G.refreshStats(); }""")
+        await tab(apg, 'gear'); await apg.click('#seg-amber'); await apg.wait_for_timeout(400)
+        await apg.evaluate("() => { const e = document.querySelector('.amb-sums'); if (e) e.scrollIntoView({block:'start'}); }"); await apg.wait_for_timeout(250)
+        await apg.screenshot(path=str(OUT / '95n_amber.png'))
+        await apg.evaluate("() => { const G = window.__game; G.closePage(); }")
+        await tab(apg, 'grow'); await apg.click('#gv-elix'); await apg.wait_for_timeout(400)
+        await apg.evaluate("() => { const e = document.querySelector('#el-bi'); if (e) e.scrollIntoView({block:'start'}); }"); await apg.wait_for_timeout(250)
+        await apg.screenshot(path=str(OUT / '95n_elix.png'))
+        await apg.evaluate("() => { const G = window.__game; G.closePage(); G.S.amber.st = {}; G.refreshStats(); }")
+        # k) 공격 속도의 길: 도인·궁사의 공격 속도 꼬리표 기술은 돛만큼 더 세다 · 무사는 그대로 · 궁사 조준은 빨리 찬다
+        SETMAST = r"""(on) => { const G = window.__game, S = G.S, sl = G.ALL_SLOTS[0]; S.amber.st = on ? {[sl]:{g:2, a:['mast', 'reef'], b:'b_move', v:[30, 0, 0], u:[10, 10, 0], p:50}} : {}; G.refreshStats(); G.aptReset(); }"""
+        await apg.evaluate(APT_LOAD, json.loads((SIMD / 'save_doin_ind1.json').read_text(encoding='utf-8')))
+        tk = await apg.evaluate(r"""(SET) => { const G = window.__game, S = G.S, out = {}; const set = eval('(' + SET + ')'); S.inv.mana = 9999; S.inv.potion = 9999; S.elix = {o:{}, offer:null, qi:0};
+          const pin = {atk:1, hp:1, cr:1, cd:1, sk:1, spd:1, cdr:1, boss:1}; G.aptForce = pin;
+          const ids = [0, 3, 4, 5, 6].filter(i => G.skDef(i).atk), sp = () => ids.map(i => G.aptHitMul(i));
+          set(false); const a0 = sp(), sk = r => r.dps * (r.by.skill || 0); set(true); G.aptForce = pin; G.aptReset(); const a1 = sp(), d1 = sk(G.bench(30, false));
+          G.noApt = true; G.aptReset(); const d2 = sk(G.bench(30, false)); G.noApt = false; G.aptForce = null; set(false);
+          out.cls = S.cls; out.ratio = a1.map((x, i) => x / a0[i]); out.n = ids.length; out.bench = d1 / d2; out.opt = G.spdOpt(); return out; }""", SETMAST)
+        check(tk['cls'] == 'doin' and tk['n'] >= 3 and all(abs(x - 1.25) < 0.01 for x in tk['ratio']), f"도인: 돛 3단이면 공격 속도 꼬리표 공격 기술 피해가 ×1.25다 {tk['ratio']}")
+        check(1.15 <= tk['bench'] <= 1.60, f"도인: 돛 3단(적성 배율 1로 고정)이면 기술로 넣는 보스 피해가 적성 끔의 1.15~1.60배다(기술 ×1.25 + 연계·넋 흔들림, bench 의 기술 몫만 비교) {tk['bench']:.3f}")
+        await apg.evaluate(APT_LOAD, json.loads((SIMD / 'save_musa_ind1.json').read_text(encoding='utf-8')))
+        tk2 = await apg.evaluate(r"""(SET) => { const G = window.__game, S = G.S, out = {}; const set = eval('(' + SET + ')'); S.elix = {o:{}, offer:null, qi:0}; const pin = {atk:1, hp:1, cr:1, cd:1, sk:1, spd:1, cdr:1, boss:1};
+          G.aptForce = pin; set(false); const sp = () => [0, 1, 3, 4].filter(i => G.skDef(i).atk).map(i => G.aptHitMul(i)); const a0 = sp(); set(true); G.aptForce = pin; const a1 = sp(); G.aptForce = null; set(false);
+          out.same = a0.every((x, i) => Math.abs(x - a1[i]) < 1e-9) && a0.length >= 2; return out; }""", SETMAST)
+        check(tk2['same'], "무사: 돛을 올려도 공격력 꼬리표 기술 피해는 그대로다(기본 공격만 빨라진다)")
+        await apg.evaluate(APT_LOAD, apt_gun)
+        tk3 = await apg.evaluate(r"""(SET) => { const G = window.__game, S = G.S, hero = G.hero, out = {}; const set = eval('(' + SET + ')'); S.elix = {o:{}, offer:null, qi:0};
+          const aim = () => { hero.aim = 0; hero.dead = false; hero.moving = false; hero.rollT = 0; hero.buffT = 0; hero.windT = 0; G.updateAim(1); return hero.aim; };
+          set(false); const t0 = aim(); set(true); const t1 = aim(); set(false); out.t = [t0, t1, t1 / t0]; out.cls = S.cls; return out; }""", SETMAST)
+        check(tk3['cls'] == 'gungsa' and abs(tk3['t'][2] - 1.25) < 0.01, f"궁사: 돛 3단이면 조준이 1.25배 빨리 찬다 {tk3['t']}")
+        await apg.evaluate("() => { const G = window.__game; G.aptForce = null; G.noApt = false; G.aptReset(); }")
+        # l) sim_apt 한 줄은 점검 안에서 돌리지 않는다(구현 보고에 출력을 붙임) — 도구 파일이 있고 파이썬 문법이 맞는지만 본다
+        import py_compile
+        try:
+            py_compile.compile(str(ROOT / 'tools' / 'sim_apt.py'), doraise=True); sim_ok = True
+        except Exception as ex:
+            sim_ok = str(ex)
+        check(sim_ok is True, f"tools/sim_apt.py 가 있고 문법이 맞는다 {sim_ok}")
         await ctx30.close()
         # @@END-J
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다

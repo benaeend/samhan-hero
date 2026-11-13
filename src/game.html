@@ -1899,6 +1899,8 @@ const AMB_GOOD = [
   {k:'beacon', name:'등대', stat:'cdmg', t:[5, 11, 19], d:'치명타 피해'},
   {k:'wind', name:'순풍', stat:'gain', t:[5, 12, 20], d:'경험치·엽전'},
   {k:'anchor', name:'닻', stat:'def', t:[4, 9, 15], d:'받는 피해 감소'},
+  {k:'mast', name:'돛', stat:'spd', t:[6, 14, 25], d:'공격 속도'},   // 9-5: 공격 속도를 고를 곳(열쇠 sail은 신화 보물 사일궁이 씀)
+  {k:'osprey', name:'물수리', stat:'crit', t:[3, 6, 10], d:'치명타 확률'},   // 9-5: 치명 확률을 고를 곳(%p로 더함)
 ];
 const AMB_BAD = [
   {k:'b_atk', name:'녹', stat:'atk', d:'공격력 감소', bad:true},
@@ -1963,14 +1965,14 @@ function ambSum(){
 let seaCache = null;
 function seaSum(){
   if (seaCache) return seaCache;
-  const o = {atk:1, hp:1, skill:1, boss:1, cdmg:1, def:1, spd:1, move:1, cdr:0, exp:0, gold:0};
+  const o = {atk:1, hp:1, skill:1, boss:1, cdmg:1, def:1, spd:1, move:1, cdr:0, crit:0, exp:0, gold:0};
   if (seaOpen()){
     const h = slotMain('helm') - 1, sh = slotMain('shoulder') - 1, b = slotMain('boots') - 1;
     o.hp *= 1 + h; o.skill *= 1 + h * SLOT.sub; o.atk *= 1 + sh; o.boss *= 1 + sh * SLOT.sub;
     o.spd *= 1 + b * SLOT.spd; o.move *= 1 + b * SLOT.spd; o.def /= 1 + b * SLOT.def;
     const A = ambSum();
     for (const G of AMB_GOOD){ const t = A.tier[G.k]; if (!t) continue; const v = G.t[t - 1];
-      if (G.stat === 'cdr') o.cdr += v; else if (G.stat === 'gain'){ o.exp += v; o.gold += v; } else if (G.stat === 'def') o.def *= 1 - v / 100; else o[G.stat] *= 1 + v / 100; }
+      if (G.stat === 'cdr' || G.stat === 'crit') o[G.stat] += v; else if (G.stat === 'gain'){ o.exp += v; o.gold += v; } else if (G.stat === 'def') o.def *= 1 - v / 100; else o[G.stat] *= 1 + v / 100; }
     for (const [k, pen] of Object.entries(A.bad)) o[AG[k].stat] *= Math.max(0.5, 1 - pen / 100);
     const SPS = spiritSum().fx;   // 영물 짐승 효과(5부)
     for (const [t, v] of Object.entries(SPS)){ if (t === 'def') o.def *= 1 - v / 100; else o[t] *= 1 + v / 100; }
@@ -1991,7 +1993,9 @@ function seaGrow(opt){
     if (lv >= refineCap(sl) || c.g > S.gold * goldK || c.du > S.dust || !refineTry(sl)) break; n++; }
   for (const sl of ALL_SLOTS){ if (hardLean && (sl === 'helm' || sl === 'boots' || sl === 'armor')) continue; let st = ambSt(sl);
     const top = [2, 1, 0].find(x => S.amber.raw[x] > 0);   // 빈 칸이면 가진 것 가운데 가장 좋은 돌, 다 깎은 돌은 더 좋은 등급이 생기면 바꾼다
-    if (top != null && (!st || (ambDone(st) && top > st.g))){ ambSet(sl, top); st = ambSt(sl); }
+    if (top != null && (!st || (ambDone(st) && top > st.g))){ ambSet(sl, top); st = ambSt(sl);
+      const G0 = window.__game, mine = k => Object.keys(aptOne(APT_CAT.amb, k)).some(a => aptMain().includes(a));   // 9-5: 두 문양이 모두 맞는 능력이 아니고 같은 등급 돌이 남았으면 한 번 다시 박음
+      if (!(G0 && G0.noApt) && st && !st.u.some(x => x) && !mine(st.a[0]) && !mine(st.a[1]) && S.amber.raw[st.g] >= 3 + ALL_SLOTS.filter(x => x !== sl && !ambSt(x)).length){ ambSet(sl, st.g); st = ambSt(sl); } }   // 빈 칸이 아직 남았으면 그 몫의 돌은 아껴 둔다
     for (let z = 0; z < 30 && st && !ambDone(st); z++){ if (ambGold(st) > S.gold * goldK) break; const ln = ambBest(st); if (ln < 0 || !ambCarve(sl, ln)) break; n++; } }
   return n;
 }
@@ -2432,7 +2436,7 @@ function aptRebuild(mode){
       const own = MOUNTS.filter(m => S.mount.own[m.k]), sc = m => Object.keys(m.ab).filter(k => APT_CAT.mount[k] && main.includes(APT_CAT.mount[k])).length;
       const mm = own.slice().sort((x, y) => sc(x) - sc(y))[0]; if (mm && S.mount.ride !== mm.k) rideMount(mm.k); }
   }
-  if (G) G.aptNeutral = mode === 'even' ? {craft:1, guard:1, mount:1, acc:1} : null;
+  if (G) G.aptNeutral = mode === 'even' ? {craft:1, guard:1, mount:1, acc:1, elix:1} : null;   // 영약도 셈에서 뺌(9-5 나: 치명 확률·공격 속도 효능이 폐·비 장에만 있어 두 줄로는 고르게 나눌 수 없음)
   skCache = elCache = seaCache = setCache = null; aptC = null; refreshStats();
 }
 // 한 명만 더 있으면 켜지는 것: [{cls:[직업…], name, txt}]
@@ -4410,7 +4414,7 @@ const NOTES = [
   ['투구 · 어깨 · 신발', '4부 바다에 들어서면 장비에 세 칸이 더 생겨요. 투구는 체력과 기술 피해, 어깨는 공격력과 보스 피해, 신발은 공격·이동 속도와 받는 피해 감소. 무기·방어구처럼 소환하고 합성하고 재련할 수 있고, 용사 모습에도 등급 색으로 그려져요(투구 대신 머리 장식을 보이게 고를 수 있어요).'],
   ['3차 계승', '바다에 들어서면 대장장이 쇠돌이 찾아와요. 무기·방어구 재련은 효과를 그대로 굳히고 +15부터 다시, 곤륜까지 모은 재료는 바다 재료 「용궁 진주」로 1:1, 그리고 새 세 칸에 낄 용궁 병사의 한 벌과 호박석 3개를 줘요.'],
   ['호박석 세공', '장비 다섯 칸에 호박석을 하나씩 박고 깎아 문양을 새겨요([장비] → [세공]). 줄 셋(좋은 문양 둘 · 나쁜 문양 하나)에서 한 번에 한 칸씩. 성공 확률은 75%에서 시작해 성공하면 −10%, 실패하면 +10%(25~75%) — 확률이 높을 때 좋은 줄, 낮을 때 나쁜 줄을 깎는 눈치 싸움이에요. 깎는 데는 엽전만 들어요.'],
-  ['문양 여덟 가지', '파도(공격력) · 암초(체력) · 해일(기술 피해) · 작살(보스 피해) · 물때(기술 재사용) · 등대(치명타 피해) · 순풍(경험치·엽전) · 닻(받는 피해 감소). 다섯 호박석의 같은 문양 빛을 합쳐 10 · 20 · 30개에 1 · 2 · 3단 효과가 나와요. 나쁜 문양은 빛 5개부터 효과가 나오니 4개 아래로 막으면 무해해요.'],
+  ['문양 열 가지', '파도(공격력) · 암초(체력) · 해일(기술 피해) · 작살(보스 피해) · 물때(기술 재사용) · 등대(치명타 피해) · 순풍(경험치·엽전) · 닻(받는 피해 감소) · 돛(공격 속도) · 물수리(치명타 확률). 다섯 호박석의 같은 문양 빛을 합쳐 10 · 20 · 30개에 1 · 2 · 3단 효과가 나와요. 나쁜 문양은 빛 5개부터 효과가 나오니 4개 아래로 막으면 무해해요.'],
   ['새 등급 유물', '전설 위에 4부의 등급 「유물」(청록빛)이 생겼어요. 소환이나 전설 합성으로는 나오지 않고 바다의 수문장·레이드와 상위 레이드 「진」에서만 나와요. 4부부터는 진에서 호박석도 나와요.'],
   ['#', '물의 신화 업데이트 · 상위 레이드 「진(眞)」'],
   ['상위 레이드 「진」', '지나온 땅의 레이드마다 상위 단계 「진」이 생겼어요(이승·시왕·천계·부상 34곳, 다음 땅에 들어서면 그 땅의 진이 열려요). [레이드] 목록에서 부별 탭을 누르면 지나온 땅의 레이드 아래에 나와요.'],
@@ -5173,7 +5177,7 @@ function computeStats(up = S.up){
   const powK = window.__game && window.__game.powK || 1;   // 시뮬에서만: 공격력·체력을 함께 곱해 전투력을 그 배로(상위 레이드 클리어율 표)
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = fxNow, RB = S.reb.up;
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
-  const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100, crOver = Math.max(0, crRaw - 1);
+  const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100 + seaPct('crit') / 100 + elPct('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
     atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword * mythK() / 100) * (1 + (S.myth.kusa || 0) * mythK() / 100) * (1 + (S.myth.pangu || 0) * mythK() / 100) * (1 + (S.myth.vajra || 0) * mythK() / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk') * seaMul('atk') * jumpMul('atk'),
@@ -5182,7 +5186,7 @@ function computeStats(up = S.up){
     regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K * (1 + (S.myth.amrita || 0) * mythK() / 100),   // 영약 호리병(5부): 저절로 차는 체력 +%
     crit: Math.min(1, crRaw), critOver: crOver,
     critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell * mythK() / 100 + (S.myth.maga || 0) * mythK() / 100 + (S.myth.sail || 0) * mythK() / 100 + (S.myth.silk || 0) * mythK() / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg'),
-    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100) * seaMul('spd'),
+    aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100) * seaMul('spd') * elMul('spd'),
   };
 }
 // 기술 피해 배율(만파식적·청룡 변신·귀걸이)
@@ -9210,7 +9214,7 @@ const aimMul = on => on && cls().aim ? 1 + AIM.cd * (hero.aim || 0) : 1;
 function updateAim(dt){
   if (hero.dead){ hero.aim = 0; return; }
   const move = hero.moving || hero.rollT > 0;
-  if (!move) hero.aim = Math.min(1, (hero.aim || 0) + AIM.up * (hero.buffT > 0 || hero.windT > 0 ? AIM.fast : 1) * dt);
+  if (!move) hero.aim = Math.min(1, (hero.aim || 0) + AIM.up * (hero.buffT > 0 || hero.windT > 0 ? AIM.fast : 1) * (1 + APT.aimK * spdOpt() / 100) * dt);   // 9-5: 공격 속도 옵션이 높을수록 조준도 빨리 참
   else if (!(hero.windT > 0)) hero.aim = Math.max(0, (hero.aim || 0) - AIM.down * dt);
 }
 /* 창객 「간격」·「되찌르기」(물의 신화 8-2단계)
@@ -11338,13 +11342,14 @@ const EL = {tries:7, max:5, goldK:2000, goldG:0.15, mat:8, resetGems:300, resetG
 const ORGANS = [
   {k:'gan', n:'간', el:'목', w:3, c:'#5aff8a', pool:['atk', 'hp', 'exp', 'def'], d:'나무의 기운. 피를 갈무리해 몸을 튼튼하게'},
   {k:'sim', n:'심', el:'화', w:3, c:'#ff6a5a', pool:['atk', 'cdmg', 'boss', 'skill'], d:'불의 기운. 피를 돌려 힘을 끓어오르게'},
-  {k:'bi', n:'비', el:'토', w:3, c:'#ffd24a', pool:['hp', 'gold', 'exp', 'def'], d:'흙의 기운. 먹은 것을 기운으로 바꿔'},
-  {k:'pye', n:'폐', el:'금', w:4, c:'#e8eef8', pool:['boss', 'cdmg', 'skill', 'atk'], d:'쇠의 기운. 숨을 고르게 해 날카롭게'},
+  {k:'bi', n:'비', el:'토', w:3, c:'#ffd24a', pool:['hp', 'gold', 'exp', 'def', 'spd'], d:'흙의 기운. 먹은 것을 기운으로 바꿔'},
+  {k:'pye', n:'폐', el:'금', w:4, c:'#e8eef8', pool:['boss', 'cdmg', 'skill', 'atk', 'crit'], d:'쇠의 기운. 숨을 고르게 해 날카롭게'},
   {k:'sin', n:'신', el:'수', w:4, c:'#5ab0ff', pool:['hp', 'def', 'exp', 'skill'], d:'물의 기운. 타고난 정기를 깊이 간직해'},
 ];
 const OG = Object.fromEntries(ORGANS.map(o => [o.k, o]));
 const EL_K = {atk:{n:'공격력', se:0.25}, hp:{n:'체력', se:0.3}, boss:{n:'보스 피해', se:0.25}, cdmg:{n:'치명타 피해', se:0.25}, skill:{n:'기술 피해', se:0.2},
-  def:{n:'받는 피해', se:0.25}, exp:{n:'경험치', pct:5}, gold:{n:'엽전', pct:6}};
+  def:{n:'받는 피해', se:0.25}, exp:{n:'경험치', pct:5}, gold:{n:'엽전', pct:6},
+  spd:{n:'공격 속도', se:0.25}, crit:{n:'치명타 확률', pct:2}};   // 9-5: 새 효능(비·폐 장)
 const EL_SET = [{n:15, se:1, exp:5}, {n:25, se:2, exp:10}, {n:35, se:3, exp:15}, {n:45, se:4, exp:20}, {n:50, se:5, exp:25}];   // 오장 조화 1~5단(합계)
 const EL_CARD = {
   a:{w:30, d:'첫째 효능을 한 단계'},
@@ -11374,7 +11379,7 @@ const elResetCost = st => ({gems:EL.resetGems * (1 + Math.min(4, st.n)), grudge:
 let elCache = null;
 function elSum(){
   if (elCache) return elCache;
-  const o = {atk:0, hp:0, boss:0, cdmg:0, skill:0, def:0, exp:0, gold:0, tot:0, set:-1};
+  const o = {atk:0, hp:0, boss:0, cdmg:0, skill:0, def:0, spd:0, crit:0, exp:0, gold:0, tot:0, set:-1};
   if (S.elix && elOpenW()) for (const O of ORGANS){ const st = S.elix.o[O.k]; if (!st || !elOrganOpen(O)) continue;
     for (const [t, lv] of st.l){ const K = EL_K[t]; if (!K) continue; o.tot += lv; o[t] += K.se ? K.se * lv : K.pct * lv; } }
   EL_SET.forEach((x, i) => { if (o.tot >= x.n) o.set = i; });
@@ -11439,7 +11444,7 @@ function elReset(k){
   elCache = null; refreshStats(); saveLocal(); return true;
 }
 // 시뮬·[알아서 고르기]: 공격력·경험치 쪽을 먼저(쓸모 점수)
-const EL_PREF = {atk:5, exp:5, boss:4, cdmg:4, skill:3, hp:2, def:2, gold:1};
+const EL_PREF = {atk:5, exp:5, boss:4, cdmg:4, skill:3, hp:2, def:2, spd:2, crit:2, gold:1};
 const elPref = t => window.__game && window.__game.noApt ? EL_PREF[t] : aptMain().includes(Object.keys(aptOne(APT_CAT.elix, t))[0]) ? 6 : EL_PREF[t] || 0;   // 9-5: 맞는 능력 효능을 먼저
 function elBestCard(){
   const of = S.elix && S.elix.offer; if (!of) return -1;
@@ -21188,6 +21193,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {APT, APT_ABIL, APT_MAIN, APT_TAG, APT_W, APT_CAT, APT_OLD_BEST, APT_STAT, aptSrc, aptCalc, aptM, aptMul, aptHitMul, aptTagOf, aptTags, aptPow, aptLineW, aptGrace, spdOpt, spdRoute, aptGuardPick, aptMountPick, aptSpiritPick, aptRebuild, aptReset:() => { aptC = null; }, skVal, elPref, castSkill,
     ENGR, ENGR_BEST, engrSwapCost, pickEngr, rideMount, guardSet, AMB_GOOD, AG, EL_K, EL_PREF, elSt, spSt, spBeast, spiritSum, spiritOpen, ALL_SLOTS,
     noApt:false, aptForce:null, aptNeutral:null, aptGraceForce:null, noAptNote:true});   // 이미 있는 이름은 덮어써도 같은 것
+  Object.assign(window.__game, {skGW, seaSum, seaPct, spdOptRaw, updateAim});   // 9-5 나: 새 옵션 줄·공격 속도 길 점검용
   // @@END-J
 }
 
