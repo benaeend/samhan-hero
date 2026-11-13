@@ -4814,6 +4814,10 @@ function mergeState(d){
       seq:ni(L.seq, LG.order.length - 1), req:r ? {k:r.k, n:LG.req[r.k].n, c:ni(r.c, LG.req[r.k].n), sw:r.sw ? 1 : 0} : null, auto:L.auto === true, inc:nn(L.inc, LG.inMax),
       st:{t:nn(st.t, 1e10), b:nn(st.b, 1e7), e:nn(st.e, 1e7), q:ni(st.q, 1e7), i:nn(st.i, 1e10)}}; }
   // @@END-H
+  // @@MERGE-I (갈래 I(9-4 버티는 힘)가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  // @@END-I
+  // @@MERGE-J (갈래 J(9-5 직업 적성)가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  // @@END-J
   return out;
 }
 
@@ -20826,6 +20830,10 @@ if (location.search.indexOf('simtest') >= 0){
   // @@HOOK-H (갈래 H의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
   // @@END-H
+  // @@HOOK-I (갈래 I의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
+  // @@END-I
+  // @@HOOK-J (갈래 J의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
+  // @@END-J
 }
 
 const hot = window.claude && window.claude.hot;

@@ -4323,6 +4323,10 @@ async def main():
             check(st28b['e'] == 0 and st28b['q'] == 0, f"같은 저장을 nolg로 돌리면 더해진 몫·의뢰가 0 {st28b}")
             await ctx28b.close()
         # @@END-H
+        # @@TEST-I (갈래 I(9-4)의 자동 점검 대목은 이 줄 바로 아래에)
+        # @@END-I
+        # @@TEST-J (갈래 J(9-5)의 자동 점검 대목은 이 줄 바로 아래에)
+        # @@END-J
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
         ctxP = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
