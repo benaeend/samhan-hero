@@ -4417,6 +4417,61 @@ async def main():
         r29 = await t29.evaluate(SIM, [20, 'musa', {'dt': 0.2, 'marks': [20], 'tanklog': True, 'tmlog': True, 'snapW': [[0, 5]]}])
         check(len(r29['tank']) > 3 and r29['tm'] and any(k.endswith(':field') for k in r29['tm']) and '쓰러짐' in r29['log'][-1] and 'w0s5' in r29['snaps'],
               f"짧은 시뮬: tanklog 기록·tm 에 사냥터·로그 줄에 쓰러짐·세계 가운데 저장 {len(r29['tank'])} {list((r29['tm'] or {}).keys())[:4]}")
+        # 9-29b) 버티는 힘 — I-2(장치): 표가 비면 예전과 같게 · 깊은 상처 · 일반 레이드 목숨·광폭 · 큰 살 · 덤벼들기 · 무엇을 올릴까
+        t29b = await ctx29.new_page()
+        watch(t29b, errors, '9-29b ')
+        await fresh(t29b)
+        c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
+          const out = {}, mx = () => G.ST.maxHp;
+          const fillT = k => { const L = Math.log10(G.tankPow() / k); G.TANK_REF[0] = [[1, L], [900, L]]; };
+          const clrT = () => { G.TANK_REF.length = 0; };
+          // c. 표가 비어 있으면 예전 방식
+          clrT(); G.tankOff = false; G.setStage(20); S.maxStage = 20;
+          G.startRaid(5); const R0 = G.raid; out.norm = !!(R0 && R0.norm);
+          out.ally0 = R0 && R0.allies ? R0.allies.filter(a => a.npc).map(a => Math.round(a.maxHp / mx() * 100) / 100) : [];
+          G.resetRuntime();
+          // d. 표를 지수 1로 채우고 비교
+          G.setStage(20); fillT(1); G.refreshStats();
+          out.on11 = [G.tkOnAt(0, 10), G.tkOnAt(0, 11)]; out.idx = G.tankIdx(20);
+          const m1 = G.makeMob(true, 5, 5), m2 = G.makeMob(false, 5, 5), m3 = G.makeMob(false, 5, 5, true);
+          out.mob = {hit1b:m1.hit1, hit1m:m2.hit1, oldHit1:m3.hit1, ratio:m2.atk / m3.atk};
+          // 덤벼들기
+          G.resetRuntime(); G.setStage(20); G.hero.hp = mx(); G.hero.dead = false;
+          const mm = G.makeMob(false, G.hero.tx + 1, G.hero.ty); mm.spawnT = 0; mm.hp = mm.maxHp = 1e18; G.mobs.push(mm); G.hero.hp = G.ST.maxHp;
+          const hp0 = G.hero.hp; G.update(0.05); out.lunge = {first: G.hero.hp < hp0, h1: mm.hit1};
+          // f. 깊은 상처
+          G.resetRuntime(); G.hero.hp = mx(); G.hero.dead = false; G.hero.wound = 0;
+          G.setStage(20); G.startBoss(); const B = G.bossRef; B.hp = B.maxHp = 1e18; B.atk = 0;
+          G.patHitHero(mx() * 0.6, true);
+          out.wound = G.hero.wound / mx();
+          G.hero.hp = mx() * 0.1; const real = G.heroHeal(mx(), 'pot'); out.cap = [real / mx(), G.hero.hp / mx()];
+          G.tankOff = true; G.hero.wound = 0; G.hero.hp = mx() * 0.1; G.patHitHero(mx() * 0.3, true); out.offWound = G.hero.wound; G.tankOff = false;
+          G.resetRuntime(); out.wound0 = G.hero.wound;
+          // h. 큰 살
+          G.setStage(20); G.startBoss(); const BB = G.bossRef; out.big = G.tkBig(BB) / (mx() * 0.55) * Math.min(4, Math.max(0.25, G.tankIdx()));
+          G.resetRuntime();
+          // i. 일반 레이드: 목숨 3번
+          fillT(1); G.refreshStats(); G.startRaid(5); const R = G.raid; out.norm2 = !!(R && R.norm);
+          for (let i = 0; i < 3 && G.raid === R; i++){ G.hero.hp = 0; G.hero.dead = false; G.heroDie(); }
+          out.lives = {why: R && R.failWhy, falls: R && R.falls};
+          G.resetRuntime();
+          G.startRaid(5); const R2 = G.raid; if (R2){ R2.time = R2.limit - 70; out.enr = G.tkEnrage(R2); R2.time = R2.limit - 30; out.enr2 = G.tkEnrage(R2); R2.time = R2.limit - 90; out.enr3 = G.tkEnrage(R2); }
+          G.resetRuntime(); clrT();
+          return out; }""")
+        check(c29['norm'], f"일반 레이드: raid.norm 표시 {c29['norm'], c29['ally0']}")
+        check(c29['on11'] == [False, True] and abs(c29['idx'] - 1) < 0.01, f"표가 있으면 이승 11단계부터 켜지고 지수는 표대로 {c29['on11'], c29['idx']}")
+        check(c29['mob']['hit1m'] is False and c29['mob']['hit1b'] is True and c29['mob']['oldHit1'] is True, f"몹 공격: 표가 있으면 잡몹은 덤벼들기(hit1 거짓)·보스는 처음부터·old 는 예전 방식 {c29['mob']}")
+        check(c29['lunge']['first'] and c29['lunge']['h1'], f"덤벼들기: 처음 닿을 때 한 번 아프다 {c29['lunge']}")
+        check(abs(c29['wound'] - 0.3) < 0.02 and abs(c29['cap'][1] - 0.7) < 0.03 and c29['offWound'] == 0 and c29['wound0'] == 0, f"깊은 상처: 받은 피해의 절반이 회복 천장을 내림·tankOff 면 없음·새 싸움 0 {c29['wound'], c29['cap'], c29['offWound']}")
+        check(abs(c29['big'] - 1) < 0.02, f"큰 살: 55% ÷ 지수(0.25~4) {c29['big']}")
+        check(c29['norm2'] and c29['lives']['why'] == 'lives' and c29['lives']['falls'] >= 3, f"일반 레이드: 용사가 세 번 쓰러지면 목숨이 다해 진다 {c29['lives']}")
+        check(abs(c29['enr'] - 1.5) < 0.01 and c29['enr2'] == 1 and abs(c29['enr3'] - 2.5) < 0.01, f"광폭: 60초 뒤 1초마다 +5%, 90초에 ×2.5 {c29['enr'], c29['enr2'], c29['enr3']}")
+        d29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; G.refreshStats();
+          const L = Math.log10(G.tankPow()); G.TANK_REF[0] = [[1, L], [900, L]];
+          G.tkLean('hard'); const A = G.tkAdvice(); const out = {adv: A ? {k:A.k} : null};
+          G.TANK_REF.length = 0; return out; }""")
+        check(d29['adv'] is not None, f"무엇을 올리면 버틸까: 공격 쪽만 올린 용사는 조언이 나온다 {d29}")
+        await t29b.close()
         await ctx29.close()
         # @@END-I
         # @@TEST-J (갈래 J(9-5)의 자동 점검 대목은 이 줄 바로 아래에)
