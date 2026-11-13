@@ -1559,7 +1559,8 @@ async def main():
           // 버팀: 깎이면 휘청
           B.stunT = 0; B.pat.tel = null; B.pat.stg = 5; G.hero.hp = G.ST.maxHp; B.pat.cd = 99; G.patStg(B, 10);
           const grog = B.pat.grogT > 0; for (let i = 0; i < 100; i++) G.update(0.05); const back = B.pat.grogT <= 0 && B.pat.stg === 100;
-          // 큰 살: 못 끊으면 최대 체력의 절반 넘게 깎인다
+          // 큰 살: 못 끊으면 최대 체력의 절반 넘게 깎인다 — 9-4부터 단계 보스·수문장은 「그 단계 평균 버티는 힘의 55%」(= 내 체력의 55% ÷ 버티는 힘 지수 0.25~4)라, 이 시험 용사처럼 그 단계보다 훨씬 단단하면 덜 깎인다
+          const tkI = G.tkOn() ? Math.min(4, Math.max(0.25, G.tankIdx())) / G.TANK.bigK : 1;
           B.pat.grogT = 0; B.pat.stg = 100; B.stunT = 0; B.gate = true; B.pat.wipes = [1.01]; B.pat.cd = 99; G.hero.hp = G.ST.maxHp; G.hero.shield = 0;
           for (let i = 0; i < 3; i++) G.update(0.05); const wiping = !!(B.pat.tel && B.pat.tel.kind === 'wipe'); B.pat.stg = 1e9;
           let low = 1; for (let i = 0; i < 140 && B.pat.tel; i++){ G.update(0.05); low = Math.min(low, G.hero.hp / G.ST.maxHp); G.hero.hp = Math.max(G.hero.hp, 1); }
@@ -1568,12 +1569,12 @@ async def main():
           B.pat.cd = 99; S.mode = 'auto'; G.soulG = 100; const hp0 = B.hp; let app = false; for (let i = 0; i < 30; i++){ G.update(0.05); if (G.soulApp.length) app = true; }
           const casted = app && G.soulG < 100 && (S.rec.souls || 0) > 0;
           Object.assign(G.HAND, H); Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats();
-          return {g1: +g1.toFixed(1), gMax, d0, k1: !!k1, star: d2 && d2.star, col, eq, lv, tA, tB, ctr, stun, counters, grog, back, wiping, low: +low.toFixed(2), casted}; }""")
+          return {g1: +g1.toFixed(1), gMax, d0, k1: !!k1, star: d2 && d2.star, col, eq, lv, tA, tB, ctr, stun, counters, grog, back, wiping, low: +low.toFixed(2), tkI: +tkI.toFixed(3), casted}; }""")
         check(so['g1'] == 10 and so['gMax'], f'기술 미리보기: 레벨을 올리면 몇 % 세지는지 모든 칸에서 보인다(회오리 Lv1→2 +10%) {so}')
         check(so['d0'] is None and so['k1'] and so['star'] == 1 and so['col'] and so['eq'], f'넋 부름: 1부엔 넋 구슬이 안 나오고, 2부에선 50번 천장·같은 넋은 별·주머니에 저절로 모심 {so}')
         check(so['lv'] == 2 and so['tA']['seen'] and not so['tA']['hit'] and so['tB']['hit'] and so['ctr'] == 'counter' and so['stun'] and so['grog'] and so['back'],
               f'보스 손컨: 붉은 칸(피하면 안 맞고 못 피하면 맞음)·되받기 단추·버팀을 깨면 휘청 {so}')
-        check(so['wiping'] and so['low'] <= 0.5 and so['casted'], f'큰 살을 못 끊으면 체력이 크게 깎이고, 넋의 기운이 차면 넋이 나타나 돕는다 {so}')
+        check(so['wiping'] and so['low'] <= 1 - 0.55 / so['tkI'] + 0.05 and so['casted'], f'큰 살을 못 끊으면 체력이 크게 깎이고, 넋의 기운이 차면 넋이 나타나 돕는다 {so}')
         await page.evaluate("() => { const G = window.__game; G.quiet = false; G.enterMarket(); }")
         await page.wait_for_timeout(1200)
         await page.screenshot(path=str(OUT / '34_장터마을.png'))
@@ -4424,7 +4425,7 @@ async def main():
         await fresh(t29b)
         c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp;
-          const fillT = k => { const L = Math.log10(G.tankPow() / k) - (G.TANK_CLS[G.S.cls] || 0); G.TANK_REF[0] = [[1, L], [900, L]]; };
+          const fillT = k => { const L = Math.log10(G.tankPow() / k) - G.tkCls(G.S.cls, 0); G.TANK_REF[0] = [[1, L], [900, L]]; };
           const clrT = () => { G.TANK_REF.length = 0; };
           // c. 표가 비어 있으면 예전 방식
           clrT(); G.tankOff = false; G.setStage(20); S.maxStage = 20;
@@ -4456,7 +4457,7 @@ async def main():
           for (let i = 0; i < 3 && G.raid === R; i++){ G.hero.hp = 0; G.hero.dead = false; G.heroDie(); }
           out.lives = {why: R && R.failWhy, falls: R && R.falls};
           G.resetRuntime();
-          G.startRaid(5); const R2 = G.raid; if (R2){ R2.time = R2.limit - 70; out.enr = G.tkEnrage(R2); R2.time = R2.limit - 30; out.enr2 = G.tkEnrage(R2); R2.time = R2.limit - 90; out.enr3 = G.tkEnrage(R2); }
+          G.startRaid(5); const R2 = G.raid; if (R2){ R2.time = R2.limit - 70; out.enr = G.tkEnrage(R2); R2.time = R2.limit - 30; out.enr2 = G.tkEnrage(R2); R2.time = R2.limit - 90; out.enr3 = G.tkEnrage(R2); } out.enrT = G.TANK.enrageT; out.enrK = G.TANK.enrageK;
           G.resetRuntime(); clrT();
           return out; }""")
         check(c29['norm'], f"일반 레이드: raid.norm 표시 {c29['norm'], c29['ally0']}")
@@ -4466,9 +4467,11 @@ async def main():
         check(abs(c29['wound'] - 0.3) < 0.02 and abs(c29['cap'][1] - 0.7) < 0.03 and c29['offWound'] == 0 and c29['wound0'] == 0, f"깊은 상처: 받은 피해의 절반이 회복 천장을 내림·tankOff 면 없음·새 싸움 0 {c29['wound'], c29['cap'], c29['offWound']}")
         check(abs(c29['big'] - 1) < 0.02, f"큰 살: 55% ÷ 지수(0.25~4) {c29['big']}")
         check(c29['norm2'] and c29['lives']['why'] == 'lives' and c29['lives']['falls'] >= 3, f"일반 레이드: 용사가 세 번 쓰러지면 목숨이 다해 진다 {c29['lives']}")
-        check(abs(c29['enr'] - 1.5) < 0.01 and c29['enr2'] == 1 and abs(c29['enr3'] - 2.5) < 0.01, f"광폭: 60초 뒤 1초마다 +5%, 90초에 ×2.5 {c29['enr'], c29['enr2'], c29['enr3']}")
+        eT, eK = c29['enrT'], c29['enrK']   # 광폭 시작 초·초당 늘어나는 몫은 밸런스 손잡이(TANK.enrageT·enrageK)라 그 값으로 견줌
+        check(30 < eT < 70 and abs(c29['enr'] - (1 + eK * (70 - eT))) < 0.01 and c29['enr2'] == 1 and abs(c29['enr3'] - (1 + eK * (90 - eT))) < 0.01,
+              f"광폭: {eT}초 뒤 1초마다 +{eK * 100:.0f}% — 30초엔 1배·70초·90초엔 그만큼 {c29['enr'], c29['enr2'], c29['enr3']}")
         d29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; G.refreshStats();
-          const L = Math.log10(G.tankPow()) - (G.TANK_CLS[G.S.cls] || 0); G.TANK_REF[0] = [[1, L], [900, L]];
+          const L = Math.log10(G.tankPow()) - G.tkCls(G.S.cls, 0); G.TANK_REF[0] = [[1, L], [900, L]];
           G.tkLean('hard'); const A = G.tkAdvice(); const out = {adv: A ? {k:A.k} : null};
           G.TANK_REF.length = 0; return out; }""")
         check(d29['adv'] is not None, f"무엇을 올리면 버틸까: 공격 쪽만 올린 용사는 조언이 나온다 {d29}")
