@@ -2577,7 +2577,7 @@ async def main():
               f"탑: 301·305(호박석)·350(지느러미 날개)·400층(용마)을 오르고 저장·되찾기가 맞다 {tw2}")
         # 7-2b: 4부 치장 22가지(46~67장)·유물 치장·아바타 여덟·세트 둘·용궁 조합식(10~12단계)
         u2 = await up.evaluate(r"""(lateS) => { const G = window.__game, S = G.S, out = {}; const keep = JSON.parse(JSON.stringify(S));
-          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || (a.w >= 5 && a.w <= 7)).length, G.SETS.filter(t => !t.w).length];
+          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || (a.w >= 5 && a.w <= 7)).length, G.SETS.filter(t => !t.w || t.w <= 7).length];   // 4부 세트(해녀·용궁)는 w:5(바다부터 켜짐)
           out.parts = ['guard', 'shoe', 'belt', 'tassel', 'foot'].map(p => G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67 && x.p === p).length);
           // 사냥터 드롭: 4부 끝 용사는 46~67장 치장도 나오고 유물은 안 나온다. 한 줄 값은 4부 것이 1.15배까지
           let sea = 0, relic = 0, maxOld = 0, maxSea = 0; S.skin = {eq:{}, inv:[], seq:0, found:{}};
@@ -2607,6 +2607,14 @@ async def main():
           out.set = [G.setCount(G.SETS.find(x => x.k === 'haenyeo')), G.setSum().k || (G.setSum().set && G.setSum().set.k) || ''];
           return out; }""", late)
         check(u2['n'] == [74, 22, 74, 7, 9, 11] and u2['parts'] == [5, 4, 4, 5, 4], f"4부 치장 22가지(46~67장, 부위 다섯에 고르게)·아바타 아홉(날개 포함)·세트 둘 {u2['n']} {u2['parts']}")
+        u2v = await up.evaluate(r"""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), out = {};
+          const on = () => { G.refreshStats(); const o = G.setSum(); return (o.on && o.on[0] && o.on[0][0]) || ''; };
+          S.equip.weapon = 19; S.gear.weapon.count[19] = Math.max(1, S.gear.weapon.count[19]); S.equip.armor = 19; S.gear.armor.count[19] = Math.max(1, S.gear.armor.count[19]); S.setPick = 'haenyeo';
+          const w0 = S.world, sf = G.seaForce; G.seaForce = false; S.world = 4; out.k3 = on(); out.shown3 = G.SETS.filter(G.setShown).some(t => t.k === 'haenyeo');
+          S.world = Math.max(5, w0); out.k4 = on(); S.world = 7; out.lanka4 = G.SETS.filter(G.setShown).some(t => t.k === 'lanka');
+          G.seaForce = sf; Object.assign(S, G.mergeState(JSON.parse(keep))); G.refreshStats(); return out; }""")
+        check(u2v['k3'] != 'haenyeo' and u2v['shown3'] is False and u2v['k4'] == 'haenyeo' and u2v['lanka4'] is False,
+              f"세트는 그 부에 들어서야 켜진다: 3부 용사는 전설 무기·갑옷을 껴도 해녀 세트가 안 켜지고, 4부 용사에게 천축 세트(란카)는 안 보인다 {u2v}")
         check(u2['drop'] == [True, 0, True, True] and u2['relic'][:4] == [5, True, 4, '유물'] and u2['relic'][4] and u2['relicKept'] and u2['relicBad'] == 0 and u2['dpart'] == [True, 'guard'],
               f"4부 치장: 사냥터에서는 전설까지(한 줄 값 1.15배), 유물은 따로 주는 곳에서만·4부 치장만·저장해도 그대로 {u2['drop']} {u2['relic']} {u2['relicKept']} {u2['relicBad']} {u2['dpart']}")
         check(u2['late'][:5] == [46, 45, 0, 9, True], f"3부 끝 용사: 46장 첫 퀘스트 중에도 바다 치장은 안 나오고 용궁 조합식은 안 보인다 {u2['late']}")
