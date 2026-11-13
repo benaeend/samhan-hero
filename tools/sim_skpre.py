@@ -23,6 +23,7 @@ JS = r"""
   const G = window.__game; G.quiet = true; G.benchAvg = true;
   Object.assign(G.S, G.mergeState(JSON.parse(save)));
   const S = G.S; S.cls = cls; if (G.TIER6) S.job = Math.max(S.job, 6); S.skV = 2; S.skSetMan = true; S.skManual = {}; S.mode = 'auto';
+  if (G.aptRebuild && !G.noApt) G.aptRebuild('match');   // 물의 신화 9-5: 직업에 맞는 능력 쪽으로 올린 용사로 잰다(적성이 높을수록 맞는 꼬리표 기술이 세져 추천이 달라질 수 있음)
   for (const k in S.skills) S.skills[k] = Math.max(S.skills[k] || 0, 1);
   G.refreshStats(); G.setStage(S.stage);
   const learned = G.SKILLS.map((_, i) => i).filter(i => G.skLv(i) > 0);

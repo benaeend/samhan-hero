@@ -42,6 +42,7 @@ SIM = r"""
   if (opts.expk5) G.EXP_K[5] = opts.expk5;
   if (opts.over) for (const [k, v] of Object.entries(opts.over)) { const p = k.split('.'); let o = G; for (let z = 0; z < p.length - 1; z++) o = o[p[z]]; o[p[p.length - 1]] = v; }   // 아무 값이나 덮어쓰기(예: {'LATE_K.musaE': 0.5})
   if (opts.late) Object.assign(G.LATE_K, opts.late);
+  if (opts.noapt) G.noApt = true;   // 물의 신화 9-5: 직업 적성을 끈다(그리고 아래 직업에 맞게 올리는 규칙도 예전대로)
   if (opts.sea) G.seaForce = true;   // 물의 신화 4단계: 4부의 새 성장(투구·어깨·신발·호박석)을 미리 열어 놓고 돌린다(tools/sim_sea.py)
   if (opts.load) { Object.assign(G.S, G.mergeState(JSON.parse(opts.load)));   // 예전 저장도 새 칸을 채워서
     G.S.cls = cls; if (G.S.lg) G.S.lg.st = {t:0, b:0, e:0, q:0, i:0}; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
@@ -84,6 +85,11 @@ SIM = r"""
       }
       for (const gd of G.GUARDS) if (G.guardOpen(gd) && !gd.w) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k), gd.k) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지(바다의 새 둘은 아래 lg 블록에서)
       { const want = !opts.nolg && G.lgOn() && G.guardLv('yongsin') > 0 ? 'yongsin' : 'jowang'; if (G.guardOpen(G.GD[want]) && G.S.guard.on !== want) G.guardSet(want); }   // 레벨 문 앞에서는 용왕신을 모심
+      if (!opts.noapt) {   // 물의 신화 9-5: 직업에 맞는 능력 쪽으로(수호신 모심 · 탈것 · 영물 짐승). 9-3의 '레벨 문 앞 용왕신'이 먼저
+        if (!(!opts.nolg && G.lgOn() && G.guardLv('yongsin') > 0)) { const gk = G.aptGuardPick(); if (gk && G.S.guard.on !== gk) G.guardSet(gk); }
+        { const mk = G.aptMountPick(); if (mk && G.S.mount.ride !== mk) G.rideMount(mk); }
+        { let ch = false; for (const sl of G.ALL_SLOTS) { const b = G.aptSpiritPick(sl); if (b >= 0 && G.spSt().eq[sl] !== b) { G.spSt().eq[sl] = b; ch = true; } } if (ch) G.refreshStats(); }
+      }
       let elRes = 0;   // 오장 영약(2026-11 (46)): 달일 것이 남았으면 엽전을 모아 두었다가(능력치에는 모은 몫을 빼고 씀) 값이 되면 달이고 추천 처방을 고름
       if (!opts.noelix && G.S.world >= 3) for (const O of G.ORGANS) {
         if (G.S.world < O.w) continue; const st = G.elSt(O.k);
@@ -157,6 +163,7 @@ SIM = r"""
         if (big.price() < G.S.gold * 0.05) G.buyShop(k + '100'); else if (sm.price() < G.S.gold * 0.15) G.buyShop(k); }
       if (!opts.nocraft) for (const k of ['w', 'n', 'a']) {   // 조합 공방: 최적 각인으로, 노리개 보석은 지갑의 60%까지만
         if (!G.S.craft[k].e && !G.S.craft[k].e2) G.pickEngr(k, G.ENGR_BEST[cls][k]);
+        { const it = G.S.craft[k], best = G.ENGR_BEST[cls][k]; if (!opts.noapt && it.t && it.e && it.e !== best && (G.S.apt.esw[k] || G.S.gems > 20 * G.engrSwapCost(k))) G.pickEngr(k, best, true); }   // 9-5: 예전 각인이면 바꿈
         const n = G.craftNeed(k);
         if (n.ok && (!n.gems || n.gems <= G.S.gems * 0.6)) G.craft(k);
         for (let z = 0; z < 2; z++) { const ec = G.engrLvCost(k), n2 = G.craftNeed(k);   // 각인 강화: 다음 조합에 쓸 재료는 남기고
@@ -773,7 +780,7 @@ async def main():
           G.craftLuck = null; S.craft.w.f = 5; const ok = G.craft('w') === true;
           G.pickEngr('a', G.ENGR_BEST.jagaek.a); G.pickEngr('n', G.ENGR_BEST.jagaek.n); G.craft('a'); G.craft('n');
           G.refreshStats(); const out = {t1, f, fails, mat1, ok, t: S.craft.w.t, best, up: G.ST.atk / a0, harm: G.harmonyOn()}; S.world = w0; G.refreshStats(); return out; }""")
-        check(cf['t1'] and cf['f'] == 'fail' and cf['fails'] == 1 and cf['mat1'] == 150 and cf['ok'] and cf['t'] == 2 and cf['up'] > 1.2 and cf['harm'] and cf['best'] == 'hunt',
+        check(cf['t1'] and cf['f'] == 'fail' and cf['fails'] == 1 and cf['mat1'] == 150 and cf['ok'] and cf['t'] == 2 and cf['up'] > 1.2 and cf['harm'] and cf['best'] == 'vital',   # 9-5: 자객 최적 무기 각인 사냥 → 급소
               f'조합 공방: 실패하면 재료 절반만 잃고, 천장이면 확정 성공, 자객 최적 각인 셋이면 조화가 켜진다 {cf}')
         await page.click('#tab-gear'); await page.wait_for_timeout(200); await page.click('#seg-craft'); await page.wait_for_timeout(400)
         await page.screenshot(path=str(OUT / '30_조합공방.png'))
@@ -829,7 +836,7 @@ async def main():
           for (let i = 0; i < 300; i++){ const it = G.skinDrop(null, true).it; chs.add(it.c);
             if (it.c > 20 || it.g > 1 || it.l.length !== G.SK_GRADES[it.g].n || new Set(it.l.map(l => l[0])).size !== it.l.length || it.l[0][0] !== G.SK_PARTS.find(P => P.k === G.SKC[it.c].p).stat) bad++; }
           out.bad = bad; out.maxCh = Math.max(...chs); out.eq = Object.keys(S.skin.eq).length; out.hpUp = G.ST.maxHp > a0;
-          out.better = Object.values(S.skin.eq).every(e => S.skin.inv.filter(x => G.SKC[x.c].p === G.SKC[e.c].p).every(x => G.skSE(x) <= G.skSE(e) + 1e-9));
+          out.better = Object.values(S.skin.eq).every(e => S.skin.inv.filter(x => G.SKC[x.c].p === G.SKC[e.c].p).every(x => G.skVal(x) <= G.skVal(e) + 1e-9));   // 9-5: 견주는 값이 skSE → skVal(맞는 능력 줄을 더 침)
           const fill = g => { for (const P of G.SK_PARTS){ const sk = G.SK_LIST.find(x => x.p === P.k); S.skin.eq[P.k] = {id:900, c:sk.c, g, l:G.skMake(sk, g).l.map(([t]) => [t, G.SK_GRADES[g].se])}; } G.refreshStats(); return +G.skinSum().se.toFixed(2); };
           out.low = fill(1); out.top = fill(4);
           const gc = ch => { S.quest.main = qi(ch); const n = [0, 0, 0, 0, 0]; for (let i = 0; i < 1500; i++) n[G.skinDrop(null, true).it.g]++; return n; };
@@ -4326,6 +4333,157 @@ async def main():
         # @@TEST-I (갈래 I(9-4)의 자동 점검 대목은 이 줄 바로 아래에)
         # @@END-I
         # @@TEST-J (갈래 J(9-5)의 자동 점검 대목은 이 줄 바로 아래에)
+        # 9-30) 물의 신화 9-5단계 가: 직업 적성(맞는 능력) — 표·고르게=1·맞춤/엇나감·피해에 걸림·버프 그대로·각인 한 번 무료·저장·화면·알림
+        SIMD = ROOT / 'docs' / 'patch-sea' / 'sim'
+        apt_jag = json.loads((SIMD / 'save_jagaek_end.json').read_text(encoding='utf-8'))
+        apt_gun = json.loads((SIMD / 'save_gungsa_sea3.json').read_text(encoding='utf-8'))
+        apt_mu = json.loads((SIMD / 'save_musa_end.json').read_text(encoding='utf-8'))
+        apt_p1 = json.loads((ROOT / 'tools' / 'beta_saves' / '10_musa_part2_start.json').read_text(encoding='utf-8'))['save']
+        apt_p3 = json.loads((ROOT / 'tools' / 'beta_saves' / '30_musa_part3_end.json').read_text(encoding='utf-8'))['save']
+        ctx30 = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        apg = await ctx30.new_page()
+        watch(apg, errors, '9-30 ')
+        await fresh(apg)
+        await signup(apg, 'apttest', 'abcd', '적성용사')
+        APT_LOAD = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal && G.hideModal(); if (G.raid) G.raidEnd(false);
+          G.noApt = false; G.aptForce = null; G.aptNeutral = null; G.aptGraceForce = null; G.benchAvg = true;
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '적성용사'; S.bossAuto = false; S.autoBoss = false; G.migrateStory(); G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.refreshStats(); return {cls:S.cls, w:S.world}; }"""
+        # a) 표
+        t1 = await apg.evaluate(r"""() => { const G = window.__game, out = {bad:[]};
+          for (const c of G.CLASS_ALL){ const M = G.APT_MAIN[c], T = G.APT_TAG[c];
+            if (!M || M.length !== 2) out.bad.push(c + ' main'); if (T.s.length !== 15) out.bad.push(c + ' 길이');
+            for (const t of [...T.s, T.b, T.c]) if (!M.includes(t)) out.bad.push(c + ' 꼬리표 ' + t);
+            for (const a of M) if (!G.APT_ABIL[a]) out.bad.push(c + ' 능력 ' + a); }
+          for (const [m, map] of Object.entries(G.APT_CAT)) for (const [k, v] of Object.entries(map)) for (const a of (typeof v === 'string' ? [v] : Object.keys(v))) if (a !== 'x' && !G.APT_ABIL[a]) out.bad.push(m + '.' + k + ' ' + a);
+          out.best = [G.ENGR_BEST.jagaek.w, G.ENGR_BEST.doin.a, G.ENGR_BEST.musa.w, G.ENGR_BEST.gungsa.w];
+          out.n = G.CLASS_ALL.length; return out; }""")
+        check(t1['n'] == 6 and not t1['bad'], f"여섯 직업 모두 맞는 능력 둘 · 기술 꼬리표 15칸이 모두 그 안에 있고 옵션 범주도 능력 열쇠 안이다 {t1['bad']}")
+        check(t1['best'] == ['vital', 'swift', 'power', 'vital'], f"추천 각인: 자객 무기 급소 · 도인 갑옷 신속(나머지는 그대로) {t1['best']}")
+        # b) 고르게 = 1
+        await apg.evaluate(APT_LOAD, apt_jag)
+        t2 = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.aptGraceForce = false; G.aptRebuild('even'); const A = G.aptCalc();
+          out.a = [A.a.cr, A.a.cd]; out.m = [G.aptMul('cr'), G.aptMul('cd')]; out.cls = S.cls;
+          S.inv.mana = 9999; S.inv.potion = 9999; const run = v => { G.noApt = v; G.aptReset(); return G.bench(30, false).dps; }; const o1 = run(true), n1 = run(false), o2 = run(true), n2 = run(false); G.noApt = false; G.aptReset();   // 번갈아 두 번씩(시작 상태 흔들림을 줄임)
+          out.ratio = (n1 + n2) / (o1 + o2); G.aptRebuild('asis'); return out; }""")
+        check(t2['cls'] == 'jagaek' and all(abs(x) < 0.1 for x in t2['a']) and all(0.97 <= x <= 1.03 for x in t2['m']) and 0.93 <= t2['ratio'] <= 1.07,
+              f"옵션을 고르게 뿌린 3부 끝 자객은 적성 0 · 배율 1 · 보스 피해가 적성 끔과 같다(배율 0.97~1.03, 측정 흔들림 감안해 피해 비 0.93~1.07) {t2}")
+        # c) 맞춤 · 엇나감(9-5 가에서 고를 수 있는 능력이 둘 다 있는 무사로 — 자객 치명 확률·도인 공격 속도 등은 나의 새 옵션 줄이 생겨야 닿는다)
+        await apg.evaluate(APT_LOAD, apt_mu)
+        t3 = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.aptGraceForce = false; out.cls = S.cls; const M = G.APT_MAIN[S.cls];
+          G.aptRebuild('match'); let A = G.aptCalc(); out.match = M.map(a => A.a[a]).concat(M.map(a => G.aptMul(a)));
+          G.aptRebuild('miss'); A = G.aptCalc(); out.miss = M.map(a => A.a[a]).concat(M.map(a => G.aptMul(a)));
+          G.aptGraceForce = true; G.aptReset(); out.grace = M.map(a => G.aptMul(a)); G.aptGraceForce = false; G.aptReset();
+          out.up = G.APT.up; out.dn = G.APT.dn; G.aptRebuild('asis'); return out; }""")
+        check(t3['cls'] == 'musa' and all(x >= 0.2 for x in t3['match'][:2]) and all(x >= 1.05 for x in t3['match'][2:]), f"맞는 능력 쪽으로 모으면 적성이 오르고 배율이 1보다 크다 {t3['match']}")
+        check(all(x <= -0.35 for x in t3['miss'][:2]) and all(x <= 0.95 for x in t3['miss'][2:]), f"엉뚱한 쪽으로 몰면 적성이 내려가고 배율이 1보다 작다 {t3['miss']}")
+        check(all(g > m for g, m in zip(t3['grace'], t3['miss'][2:])) and all(g < 1 for g in t3['grace']), f"적응 기간이면 손해가 줄어든다 {t3['grace']} (끈 때 {t3['miss'][2:]})")
+        # d) 피해에 걸림
+        await apg.evaluate(APT_LOAD, apt_jag)
+        t4 = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; S.inv.mana = 9999; S.inv.potion = 9999; const run = (f, sk) => { G.aptForce = f; G.aptReset(); const k = S.skSet; if (sk) S.skSet = sk; const d = G.bench(30, false).dps; S.skSet = k; return d; };
+          const F = o => Object.assign({atk:1, hp:1, cr:1, cd:1, sk:1, spd:1, cdr:1, boss:1}, o);
+          const base = run(F({})); out.cd = run(F({cd:2})) / base; out.cr = run(F({cr:2})) / base; out.atk = run(F({atk:2})) / base;
+          out.clone = run(F({cr:2}), [8]) / run(F({}), [8]); G.aptForce = null; G.aptReset(); return out; }""")
+        check(t4['cd'] > 1.1 and t4['cr'] > 1.1 and abs(t4['atk'] - 1) < 0.08 and t4['clone'] > 1.3,
+              f"자객: 치명 피해·치명 확률 적성은 피해를 키우고 공격력 적성은 상관없다(분신 기술도) {t4}")
+        await apg.evaluate(APT_LOAD, apt_mu)
+        t4b = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; S.inv.mana = 9999; S.inv.potion = 9999; const run = (f, sk) => { G.aptForce = f; G.aptReset(); const k = S.skSet; S.skSet = sk; const d = G.bench(20, false).dps; S.skSet = k; return d; };
+          out.skill = run({atk:2, hp:1}, S.skSet) / run({atk:1, hp:1}, S.skSet); out.basic = run({atk:2, hp:1}, []) / run({atk:1, hp:1}, []);   // (무사의 꼬리표는 공격력·체력뿐이라 이 둘만 주면 된다)
+          // 되받기: 레이드 보스에게 한 번 — 체력 꼬리표 배율에 비례
+          G.aptForce = null; G.aptReset(); G.S.raid.tk = 3; const st = G.startRaid(0); const B = G.raid && G.raid.boss; out.st = !!st;
+          if (B){ B.pat = B.pat || {stg:100, cd:5, tel:null, grogT:0, wipes:[]}; B.maxHp = B.hp = 1e300; const ctr = f => { G.aptForce = f; B.hp = B.maxHp; B.pat.tel = null; B.stunT = 0; const m0 = G.dmgMeter; G.counterOk(B, false); return G.dmgMeter - m0; };
+            const x1 = ctr({hp:1, atk:1}), x2 = ctr({hp:2, atk:1}), x3 = ctr({hp:1, atk:2}); out.ctr = [x2 / x1, x3 / x1]; }
+          G.aptForce = null; G.raid && G.raidEnd(false); return out; }""")
+        check(t4b['skill'] > 1.3 and t4b['basic'] > 1.5, f"무사: 공격력 적성이 기술 피해와 기본 공격(기술 없이)을 키운다 {t4b['skill']} {t4b['basic']}")
+        check(t4b.get('ctr') and abs(t4b['ctr'][0] - 2) < 0.05 and abs(t4b['ctr'][1] - 1) < 0.05, f"되받기 피해는 무사의 체력 꼬리표 배율에 비례하고 공격력 꼬리표와는 상관없다 {t4b.get('ctr')}")
+        # e) 버프 수치 그대로
+        t5 = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, hero = G.hero, out = {}; G.quiet = true;
+          const buf = (f, i) => { G.aptForce = f; G.aptReset(); hero.buffT = 0; hero.sumbiT = 0; hero.sumbiP = 0; G.castSkill(i, 5, true); return [hero.buffT, hero.buffLv, hero.sumbiT || 0, hero.sumbiP || 0]; };
+          const a = buf({atk:1, hp:1}, 2), b = buf({atk:2, hp:0.5}, 2); out.musa = JSON.stringify(a) === JSON.stringify(b) && a[0] > 0;
+          S.cls = 'jagaek'; G.refreshStats(); G.aptReset(); const c = buf({cr:1, cd:1}, 12), d = buf({cr:2, cd:2}, 12); out.jag = JSON.stringify(c) === JSON.stringify(d); out.jv = c;
+          S.cls = 'musa'; G.refreshStats(); G.aptForce = null; G.aptReset(); return out; }""")
+        check(t5['musa'] and t5['jag'], f"버프 기술(무사 투혼·자객 숨비 호흡)은 적성이 달라도 수치가 같다 {t5}")
+        # f) 각인 한 번 무료
+        t6 = await apg.evaluate(r"""(a) => { const [jag, mu] = a, G = window.__game, out = {}; const old = JSON.parse(JSON.stringify(jag)); delete old.apt; old.craft.w = {t:3, e:'hunt', e2:'', f:0, el:0}; old.craft.a = {t:3, e:'swift', e2:'', f:0, el:0};
+          const m = G.mergeState(old); out.old = JSON.stringify(m.apt.esw);
+          const j2 = JSON.parse(JSON.stringify(jag)); j2.apt = {v:1, t0:0, esw:{}}; const m2 = G.mergeState(j2); out.has = JSON.stringify(m2.apt.esw);
+          const o2 = JSON.parse(JSON.stringify(jag)); o2.apt = {v:1, t0:0, esw:{}}; o2.craft.w = {t:3, e:'hunt', e2:'', f:0, el:0}; out.withApt = JSON.stringify(G.mergeState(o2).apt.esw);
+          const mm = JSON.parse(JSON.stringify(mu)); delete mm.apt; out.musa = JSON.stringify(G.mergeState(mm).apt.esw);
+          const S = G.S; Object.assign(S, m); S.cls = 'jagaek'; S.gems = 1000; G.refreshStats(); const g0 = S.gems; out.ok = G.pickEngr('w', 'vital', true); out.gems1 = S.gems - g0; out.esw = JSON.stringify(S.apt.esw);
+          out.ok2 = G.pickEngr('w', 'hunt', true); out.gems2 = S.gems - g0; return out; }""", [apt_jag, apt_mu])
+        check(t6['old'] == '{"w":1}' and t6['has'] == '{}' and t6['withApt'] == '{}' and t6['musa'] == '{}', f"적성 칸이 없는 예전 자객 저장(무기 사냥)만 무기 각인 한 번 무료 표시가 생기고, 적성 칸이 있거나 무사면 안 생긴다 {t6['old']}/{t6['has']}/{t6['withApt']}/{t6['musa']}")
+        check(t6['ok'] is True and t6['gems1'] == 0 and t6['esw'] == '{}' and t6['ok2'] is True and t6['gems2'] < 0, f"무료 바꾸기는 보석이 안 들고 한 번뿐이며 두 번째는 보석이 든다 {t6['gems1']} {t6['esw']} {t6['gems2']}")
+        # g) 저장
+        t7 = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; S.apt = {v:1, t0:1.7e12, esw:{w:1}, note:1};
+          const r = G.mergeState(JSON.parse(JSON.stringify(S))); out.rt = JSON.stringify(r.apt) === JSON.stringify({v:1, t0:1.7e12, esw:{w:1}, note:1});
+          const bad = JSON.parse(JSON.stringify(S)); bad.apt = {v:1, t0:-5, esw:{w:'x', z:1, a:0}}; const b = G.mergeState(bad).apt; out.bad = [b.t0, JSON.stringify(b.esw)];
+          const n = JSON.parse(JSON.stringify(S)); n.apt = 7; n.craft.w.e = 'vital'; out.num = JSON.stringify(G.mergeState(n).apt.esw); return out; }""")
+        check(t7['rt'] and t7['bad'][0] == 0 and t7['bad'][1] == '{"w":1}' and t7['num'] == '{}', f"적성 저장 칸이 왕복하고 망가진 값(t0 음수·esw 낯선 키)은 걸러진다 {t7}")
+        # h) 화면(궁사 4부 끝)
+        await apg.evaluate(APT_LOAD, apt_gun)
+        await apg.evaluate("() => { window.__game.aptGraceForce = false; window.__game.aptReset(); }")
+        await tab(apg, 'skill'); await apg.wait_for_timeout(500)
+        h1 = await apg.evaluate(r"""() => { const t = [...document.querySelectorAll('.apt-t')].map(e => e.textContent); return {n:t.length, atk:t.filter(x => x.includes('×')).length, bf:t.filter(x => x.includes('버프')).length, trait:(document.querySelector('#aptTrait') || {}).textContent || ''}; }""")
+        check(h1['n'] == 15 and h1['atk'] >= 8 and h1['bf'] >= 3 and '치명 피해' in h1['trait'] and '공격 속도' in h1['trait'], f"[기술] 기술 15칸에 꼬리표가 붙고(공격 기술은 ×배율, 버프는 버프) 특성 카드에 맞는 능력이 있다 {h1}")
+        await apg.evaluate("() => { const r = document.querySelector('#sk-bolt'); if (r) r.scrollIntoView({block:'center'}); }")
+        await apg.wait_for_timeout(200)
+        await apg.screenshot(path=str(OUT / '95_9-30a_skill.png'))
+        await tab(apg, 'grow'); await apg.wait_for_timeout(500)
+        h2 = await apg.evaluate(r"""() => { const c = document.querySelector('#aptCard'); window.__ac = c; return {bars:document.querySelectorAll('#aptCard .apt-row').length, stars:[...document.querySelectorAll('.apt-star:not([hidden])')].map(e => e.closest('.nm').textContent.slice(0, 8)),
+          head:c ? c.querySelector('.ct').textContent : '', v:[...document.querySelectorAll('#aptCard .apt-v')].map(e => e.textContent)}; }""")
+        check(h2['bars'] == 2 and len(h2['stars']) == 2 and any('치명타 피해' in x for x in h2['stars']) and any('공격 속도' in x for x in h2['stars']) and '궁사' in h2['head'], f"[수련] 직업 적성 카드의 막대 둘 · 능력치 줄 ★는 치명타 피해·공격 속도 {h2}")
+        await apg.evaluate("() => { document.querySelector('#aptCard details').open = true; window.__game.refreshPanel(); window.__game.refreshPanel(); }")
+        h2b = await apg.evaluate("() => ({same:document.querySelector('#aptCard') === window.__ac, where:document.querySelectorAll('#aptWhere .aw').length})")
+        check(h2b['same'] and h2b['where'] >= 6, f"갱신해도 적성 카드는 다시 만들어지지 않고 글자만 바뀌며 「어디서 올리나요」가 나온다 {h2b}")
+        await apg.evaluate("() => { const r = document.querySelector('#aptWhere'); if (r) r.scrollIntoView({block:'center'}); }")
+        await apg.wait_for_timeout(200)
+        await apg.screenshot(path=str(OUT / '95_9-30b_grow.png'))
+        await apg.evaluate("() => { const G = window.__game; G.closePage(); G.buildTab('gear'); const b = document.querySelector('#seg-craft'); if (b) b.click(); }")
+        await apg.wait_for_timeout(300)
+        h3 = await apg.evaluate(r"""() => { const w = document.querySelector('#cf-w'); return {has:!!w, star:w ? !!w.querySelector('[data-e=vital] .apt-ok') : false, none:w ? !w.querySelector('[data-e=hunt] .apt-ok') : false, leg:document.body.textContent.includes('잘 맞는 옵션')}; }""")
+        if not h3['has']:
+            await apg.evaluate("() => { const G = window.__game; G.closePage(); }")
+        check(h3['has'] and h3['star'] and h3['none'] and h3['leg'], f"[장비] 조합 공방: 궁사에게 맞는 「급소」에만 ★ · 범례 한 줄 {h3}")
+        await apg.screenshot(path=str(OUT / '95_9-30c_craft.png'))
+        h4 = await apg.evaluate(r"""() => { const G = window.__game; G.closePage(); G.hideModal && G.hideModal(); G.clsChgAsk('jagaek'); const e = document.querySelector('#ccApt'); const txt = e ? e.textContent : ''; return {has:!!e, txt:txt}; }""")
+        if not h4['has']:
+            h4 = await apg.evaluate(r"""() => { const G = window.__game; return {has:false, txt:G.aptCcHTML ? '' : 'noaptcc'}; }""")
+        check(h4['has'] and '자객' in h4['txt'] and '치명 확률 · 치명 피해' in h4['txt'] and '치명 피해' in h4['txt'] and '공격 속도' in h4['txt'], f"직업 바꾸기 경고 창에 「자객은 맞는 능력…(지금 궁사: …)」 한 줄이 나온다 {h4['txt'][:150]}")
+        await apg.evaluate("() => { const r = document.querySelector('#ccApt'); if (r) r.scrollIntoView({block:'center'}); }")
+        await apg.wait_for_timeout(200)
+        await apg.screenshot(path=str(OUT / '95_9-30d_change.png'))
+        await apg.evaluate("() => { const G = window.__game; G.hideModal && G.hideModal(); }")
+        ctx30p = await browser.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2)
+        app = await ctx30p.new_page()
+        watch(app, errors, '9-30p ')
+        await fresh(app)
+        await signup(app, 'aptport', 'abcd', '적성세로')
+        await app.evaluate(APT_LOAD, apt_gun)
+        await app.evaluate("() => { window.__game.aptGraceForce = false; window.__game.aptReset(); }")
+        await tab(app, 'grow'); await app.wait_for_timeout(500)
+        hp = await app.evaluate("() => { const c = document.querySelector('#aptCard'); const r = c ? c.getBoundingClientRect() : null; return {has:!!c, over:document.documentElement.scrollWidth > window.innerWidth + 2, w:r ? r.width : 0, cw:window.innerWidth}; }")
+        check(hp['has'] and not hp['over'] and hp['w'] <= hp['cw'], f"세로 화면에서도 적성 카드가 화면 안에 들어온다 {hp}")
+        await app.screenshot(path=str(OUT / '95_9-30e_portrait.png'))
+        await ctx30p.close()
+        # i) 알림 · 1부 · 짧은 시뮬
+        await apg.evaluate(APT_LOAD, apt_jag)
+        t8 = await apg.evaluate(r"""(jag) => { const G = window.__game, S = G.S, out = {}; const old = JSON.parse(JSON.stringify(jag)); delete old.apt; old.craft.w = {t:3, e:'hunt', e2:'', f:0, el:0};
+          Object.assign(S, G.mergeState(old)); G.refreshStats(); out.k = G.notiList().map(N => N.k).includes('apt');
+          const N = G.NOTI.find(x => x.k === 'apt'); const L = N.lines(); out.lines = L.length; out.l1 = L[0]; out.l3 = L[2];
+          G.quiet = false; G.noAptNote = false; G.noNoti = false; G.updateNoti(); const el = document.querySelector('#inh'); out.shown = !!(el && !el.hidden && el.textContent.includes('맞는 능력'));
+          G.noAptNote = true; G.noNoti = true; G.quiet = true; return out; }""", apt_jag)
+        check(t8['k'] and t8['lines'] == 3 and '맞는 능력 둘' in t8['l1'] and '한 번 무료' in t8['l3'] and '급소' in t8['l3'], f"패치 날 까치 알림: 맞는 능력 세 줄(추천 각인이 바뀐 자객은 한 번 무료 줄 포함) {t8['k']} {t8['l3'][:60]}")
+        await apg.evaluate("() => { const G = window.__game; G.hideModal && G.hideModal(); const e = document.querySelector('#inh'); if (e) e.hidden = true; }")
+        t9 = await apg.evaluate(r"""(a) => { const [p1, p3] = a, G = window.__game, S = G.S, out = {}; G.quiet = true; G.benchAvg = true;
+          const r = sv => { Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(sv)))); S.name = '적성용사'; G.migrateStory(); G.applyWorld(); G.refreshStats(); G.setStage(S.stage); S.inv.mana = 9999; S.inv.potion = 9999; G.aptGraceForce = false; G.aptReset();
+            G.noApt = true; const off = G.bench(30, false).dps; G.noApt = false; G.aptReset(); const on = G.bench(30, false).dps; return on / off; };
+          out.p1 = r(p1); out.p3 = r(p3); return out; }""", [apt_p1, apt_p3])
+        check(0.92 <= t9['p1'] <= 1.20 and 0.92 <= t9['p3'] <= 1.20, f"1·2부 베타 무사 저장은 적성을 켜도 크게 약해지지 않고(0.92 이상) 많이 세지지도 않는다(1.20 이하 — 무사는 공격력 쪽으로 기울어 있어 조금 오른다) {t9}")
+        # 짧은 시뮬(자객 3부 끝 5분): 오류 없이 돌고 무기 각인이 급소, 수호신은 맞는 능력 쪽
+        await apg.evaluate("() => { window.__game.hideModal && window.__game.hideModal(); }")
+        sm = await apg.evaluate(SIM, [5, 'jagaek', {'dt': 0.2, 'load': json.dumps(apt_jag)}])
+        t10 = await apg.evaluate("() => { const S = window.__game.S; return {e:S.craft.w.e, g:S.guard.on, n:S.craft.w.t}; }")
+        check(len(sm['log']) >= 0 and t10['e'] == 'vital' and t10['g'] in ('chilseong', 'jowang', 'seongju'), f"짧은 시뮬(자객 3부 끝)이 오류 없이 돌고 무기 각인은 급소·수호신은 맞는 쪽이다 {t10}")
+        await ctx30.close()
         # @@END-J
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
