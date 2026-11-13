@@ -4675,32 +4675,56 @@ const MOB_TTK = 20;   // 세계별 경험치 배율(레벨이 너무 빨리 오�
    I-1(지금): 게임 동작은 그대로 — 회복을 heroHeal/allyHeal로 모으고 싸움마다 받은 피해·회복·쓰러짐을 세는 계측기(TM)와 버티는 힘 계산 함수만 둔다.
    표(TANK_REF)가 비어 있으면(tkHas 거짓) 지수는 0, 예전 방식(tkOnAt 거짓) */
 const TANK_REF = [   // [세계] = [[단계, log10 버티는 힘(직업 몫 뺌)], …] — tools/sim_tank.py ref (2026-11-13, prog 1·4·5 off 네 직업)
+  // 2026-11-14: 저장 표본(다른 판에서 만든 저장 앵커 + 진행 가운데 저장, 쉬는 상태로 불러옴)이 이 표보다 평균 0.1~0.3 낮아서(판마다 운 차이가 2~3배) 두 쪽의 가운데로 내림 — 저승 -0.10·천계 -0.15·부상 -0.12·남쪽/깊은 바다 -0.08·란카 -0.09·젖의 바다 -0.10·수미산 -0.14.
+  // 4부는 장치를 켠 진행 판(prog 4)에서 싸울 때 지수가 평균 0.8~0.9로 나와 한 번 더 내림 — 동해 -0.05·남쪽 바다 -0.05·깊은 바다 -0.10
   [[3, 2.31], [8, 2.69], [13, 2.95], [18, 3.27], [23, 3.40], [28, 3.51], [33, 3.87], [38, 4.09], [43, 5.28], [48, 5.57], [53, 5.67], [58, 5.74], [63, 5.80], [68, 5.89], [73, 6.28], [78, 6.45], [83, 6.79], [88, 7.11], [93, 7.41], [98, 7.82], [103, 8.21], [106, 8.74]],   // 이승
-  [[3, 5.70], [8, 6.31], [13, 6.61], [18, 6.81], [23, 6.99], [28, 7.14], [33, 7.40], [38, 7.55], [43, 8.03], [48, 8.17], [53, 8.53], [58, 8.62], [63, 8.64], [68, 8.70], [73, 9.00], [78, 9.14], [83, 9.26], [88, 9.65], [93, 10.10], [98, 10.59], [102, 11.02]],   // 저승
-  [[3, 7.91], [8, 8.75], [13, 9.02], [18, 9.22], [23, 9.40], [28, 9.56], [33, 9.97], [38, 10.11], [43, 10.18], [48, 10.37], [53, 10.45], [58, 10.55], [63, 10.76], [68, 11.04], [73, 11.42], [78, 11.67], [83, 11.91], [88, 12.14], [92, 12.44]],   // 천계
-  [[3, 12.76], [8, 12.81], [13, 12.82], [18, 12.83], [23, 12.86], [28, 12.88], [33, 12.90], [38, 12.91], [43, 12.94], [48, 12.99], [53, 13.03], [58, 13.41], [63, 13.45], [68, 13.50], [73, 13.53], [78, 13.57], [83, 13.85], [88, 14.19], [93, 14.21], [98, 14.42], [103, 14.99], [108, 14.99], [113, 15.00], [118, 15.00], [123, 15.00], [128, 15.00], [133, 15.00], [138, 15.02], [143, 15.08], [148, 15.18], [153, 15.27], [156, 15.32]],   // 부상
-  [[1, 15.21], [138, 17.77]],   // 곤륜 — 임시: 저장 앵커 둘(q145 첫 단계·end 138단계, 네 직업 평균)을 이은 직선. prog 23 으로 다시 잴 것
-  [[3, 18.03], [8, 18.10], [13, 18.15], [18, 18.27], [23, 18.44], [28, 18.55], [33, 18.57], [38, 18.60], [43, 18.65], [48, 18.87]],   // 동해
-  [[3, 19.04], [8, 19.04], [13, 19.04], [18, 19.05], [23, 19.23], [28, 19.30], [33, 19.32], [38, 19.35], [43, 19.38]],   // 남쪽 바다
-  [[3, 19.40], [8, 19.40], [13, 19.41], [18, 19.43], [23, 19.45], [28, 19.48], [33, 19.56], [38, 19.63], [43, 19.64]],   // 깊은 바다
-  [[3, 19.74], [8, 19.80], [13, 19.94], [18, 20.11], [23, 20.24], [28, 20.32], [33, 20.36], [38, 20.42], [42, 20.42]],   // 란카 길
-  [[3, 20.46], [8, 20.46], [13, 20.46], [18, 20.49], [23, 20.50], [28, 20.55], [33, 20.63], [38, 20.75], [43, 20.88]],   // 젖의 바다
-  [[3, 20.89], [8, 20.89], [13, 20.92], [18, 20.99], [23, 21.05], [28, 21.49], [33, 21.52], [38, 21.56], [43, 21.57]],   // 수미산
+  [[3, 5.60], [8, 6.21], [13, 6.51], [18, 6.71], [23, 6.89], [28, 7.04], [33, 7.30], [38, 7.45], [43, 7.93], [48, 8.07], [53, 8.43], [58, 8.52], [63, 8.54], [68, 8.60], [73, 8.90], [78, 9.04], [83, 9.16], [88, 9.55], [93, 10.00], [98, 10.49], [102, 10.92]],   // 저승
+  [[3, 7.76], [8, 8.60], [13, 8.87], [18, 9.07], [23, 9.25], [28, 9.41], [33, 9.82], [38, 9.96], [43, 10.03], [48, 10.22], [53, 10.30], [58, 10.40], [63, 10.61], [68, 10.89], [73, 11.27], [78, 11.52], [83, 11.76], [88, 11.99], [92, 12.29]],   // 천계
+  [[3, 12.41], [8, 12.46], [13, 12.50], [18, 12.52], [23, 12.56], [28, 12.57], [33, 12.59], [38, 12.61], [43, 12.64], [48, 12.69], [53, 12.77], [58, 13.18], [63, 13.20], [68, 13.24], [73, 13.28], [78, 13.36], [83, 13.66], [88, 13.89], [93, 13.90], [98, 14.09], [103, 14.82], [108, 14.83], [113, 14.84], [118, 14.84], [123, 14.85], [128, 14.86], [133, 14.89], [138, 14.94], [143, 15.04], [148, 15.15]],   // 부상 — prog 23 off(2026-11-14, 부상 첫 저장 q113 에서 시작한 네 직업) -0.05. 1부부터 이어 온 판(prog 1)은 부상 앞쪽이 0.3 높았지만 2부 밸런스의 출발점이 q113 저장이라 이쪽을 따름
+  [[3, 15.45], [8, 15.48], [13, 15.51], [18, 15.57], [23, 15.59], [28, 15.62], [33, 15.65], [38, 15.70], [43, 15.79], [48, 15.83], [53, 15.88], [58, 15.93], [63, 16.04], [68, 16.26], [73, 16.32], [78, 16.75], [83, 16.80], [88, 16.90], [93, 17.06], [98, 17.15], [103, 17.30], [108, 17.59], [113, 17.61], [118, 17.64], [123, 17.69], [128, 17.76], [133, 17.81], [137, 17.85]],   // 곤륜 — prog 23 off(2026-11-14, 무사·술사·도인. 자객은 220시간에 3부를 못 끝내 뺌) -0.15(저장 앵커 둘이 이 판보다 0.23~0.39 낮아서 가운데로)
+  [[3, 17.98], [8, 18.05], [13, 18.10], [18, 18.22], [23, 18.39], [28, 18.50], [33, 18.52], [38, 18.55], [43, 18.60], [48, 18.82]],   // 동해
+  [[3, 18.91], [8, 18.91], [13, 18.91], [18, 18.92], [23, 19.10], [28, 19.17], [33, 19.19], [38, 19.22], [43, 19.25]],   // 남쪽 바다
+  [[3, 19.22], [8, 19.22], [13, 19.23], [18, 19.25], [23, 19.27], [28, 19.30], [33, 19.38], [38, 19.45], [43, 19.46]],   // 깊은 바다
+  [[3, 19.65], [8, 19.71], [13, 19.85], [18, 20.02], [23, 20.15], [28, 20.23], [33, 20.27], [38, 20.33], [42, 20.33]],   // 란카 길
+  [[3, 20.36], [8, 20.36], [13, 20.36], [18, 20.39], [23, 20.40], [28, 20.45], [33, 20.53], [38, 20.65], [43, 20.78]],   // 젖의 바다
+  [[3, 20.75], [8, 20.75], [13, 20.78], [18, 20.85], [23, 20.91], [28, 21.35], [33, 21.38], [38, 21.42], [43, 21.43]],   // 수미산
 ];
-const TANK_CLS = {musa:0.28, jagaek:0.15, sulsa:0.00, doin:-0.43, gungsa:0.00, changgaek:0.00};   // log10 직업 몫(같은 도구). 궁사·창객은 아직 안 잼(0)
-const TANK = {on:false, from:11,                   // on: 9-4 수치 맞추기(밸런스 담당) 전까지 꺼 둠 — 켜면 2~5부 몬스터 공격이 수십~수백 배가 됨(11-14 01시 메인). from: 이승은 11단계부터(손컨 패턴이 시작하는 곳)
-  k:[0.28, 0.55, 0.32, 1, 1, 1, 1, 1, 1, 1, 1],              // 세계별 몬스터 공격 배율(I-2). 1부 = 지금과 같은 세기(HERO_REF ÷ 기준, 머문 시간 무게 기하 평균 — 2026-11-13 잼), 2~5부 1.0에서 시작
+/* 직업 몫(log10) — [세계]. 부(1부 · 부상 · 곤륜 · 4부 · 5부)마다 다르다(2026-11-14, 진행 원자료 tank_*_off 와 저장 표본을 섞음).
+   4·5부는 같은 직업도 판마다 0.5 넘게 흔들려서(무사 수미산 끝: 진행 판 +0.4·저장 +0.6·예전 저장 -0.2) 잰 값보다 작게 잡았다 — 크게 잡으면 운 나쁜 판의 그 직업이 '위험'으로 떨어진다.
+   1부와 4부는 장치를 켠 진행 판(prog 1·4)에서 싸울 때의 지수가 직업끼리 같아지게 한 번 더 맞춤. 도인만은 어느 판에서나 가장 낮다(-0.55 ~ -1.2). 궁사·창객은 저장 앵커만으로 어림(1부는 못 재서 0) */
+const TANK_CLS = {
+  musa:     [0.17, 0.17, 0.17, 0.15, 0.28, 0.10, 0.10, 0.10, 0.25, 0.25, 0.25],
+  jagaek:   [0.03, 0.03, 0.03, 0.10, 0.08, 0.42, 0.42, 0.42, 0.25, 0.25, 0.25],
+  sulsa:    [-0.05, -0.05, -0.05, -0.14, -0.06, -0.12, -0.12, -0.12, -0.10, -0.10, -0.10],
+  doin:     [-0.15, -0.15, -0.15, -0.16, -0.30, -0.55, -0.55, -0.55, -0.65, -0.65, -0.65],
+  gungsa:   [0, 0, 0, -0.15, -0.15, 0.10, 0.10, 0.10, 0.05, 0.05, 0.05],
+  changgaek:[0, 0, 0, 0, 0, -0.10, -0.10, -0.10, -0.15, -0.15, -0.15]};
+/* 수치 맞추기(2026-11-14, tools/sim_tank.py — 한판 표 fight·raid 는 네 직업 16판씩, 진행 시뮬 prog 는 켬/끔):
+   k: 지수 1.0인 용사가 벽 보스(25초 안팎)에서 거의 안 쓰러지고(쓰러진 판 평균 5%, 체력 30% 아래 한 번쯤), 지수 0.7은 자주(평균 27% — 천계·부상 25~88%, 저승·곤륜·바다 0~31%), 1.3은 0%.
+      한판 표는 탕약을 넉넉히 준 값이라 탕약이 귀한 1부 진행 시뮬에서는 더 쓰러진다(저승·천계 지수 0.7~1.0에서 보스 판마다 0.2~0.5번).
+      이승은 예전과 같은 세기(처음 하는 사람의 땅). 저승 0.55 → 0.6·천계 0.32 → 0.6(예전 세기로는 지수 0.7도 안 쓰러짐). 부상·곤륜 1 → 0.8(1.0이면 지수 1.0이 25~50% 쓰러짐),
+      4·5부 1 → 1.25(1.5로 올리면 지수 0.7 쓰러짐이 평균 27%가 되지만 사냥터에서 10분에 두 번 쓰러져 그대로 둠).
+   일반 레이드: 보스 공격 raidK 1.7배·광폭 38초부터 1초마다 +20% — r(45초에 깨는 힘 + 그 레이드 평균 버티는 힘) 1.0에서 이김 95%·동료 쓰러짐 0.9번, 0.8에서 50%, 1.3에서 100%
+   사냥터: 잡몹 0.5 → 0.45·덤벼들기 1.5 → 1.2·상처 아묾 2 → 3%/초(지수 1.0 도인이 4·5부 사냥터 10분에 1~2번 쓰러져서), 지수 0.7 아래는 잡몹이 그 비율만큼 약해짐(fieldFloor)
+   진행 시간(켬 ÷ 끔): 1부 +15%(두세 판씩의 평균, 판마다 ±25% 흔들림 — 자객 +27%·도인 +25%·술사 +8%·무사 -2%) · 2·3부 -3%(무사 +8%·도인 -14%) · 4부 ±2%. 타임 보스(fitB)·오프라인(offPat·OFF_BOSS_X)·진은 못 잼 */
+const TANK = {on:true, from:11,                    // from: 이승은 11단계부터(손컨 패턴이 시작하는 곳)
+  k:[0.28, 0.6, 0.6, 0.8, 0.8, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25],   // 세계별 몬스터 공격 배율
   clsEq:1, cls:{},
-  mob:0.5, lunge:1.5,
-  wound:0.5, fieldDecay:0.02,
+  mob:0.45, lunge:1.2, fieldFloor:0.7,              // fieldFloor: 지수가 이 아래인 용사에게 잡몹은 (지수 ÷ 0.7)배로만 — 예전 저장(지수 0.1~0.3)이 제 사냥터에서 사냥조차 못 하는 일을 막는다(보스는 그대로)
+  wound:0.5, fieldDecay:0.03,
   bigK:1, past:0.7,
   susT:20, susMax:0.5,                              // 버티는 힘에 넣는 회복 몫
   danger:0.7, warn:0.95, ease:1.3,                  // 화면 띠
-  raidLives:3, allyLives:2, allyDown:10, allyUp:0.3, npcHp:{musa:1.3, def:0.85}, healParty:0.25, enrageT:60, enrageK:0.05,
+  raidLives:3, allyLives:2, allyDown:10, allyUp:0.3, npcHp:{musa:1.3, def:0.85}, healParty:0.25, enrageT:38, enrageK:0.2,
+  raidK:1.7,                                        // 일반 레이드 보스 공격 배율(단계 보스의 BOSS_K.atk 자리)
   fitB:1, offPat:1.3, offPot:0.08, more:false};
 const tkHas = w => !!(TANK_REF[w] && TANK_REF[w].length >= 2);
 const tkOnAt = (w, s) => TANK.on && !(window.__game && window.__game.tankOff) && tkHas(w) && (w > 0 || s >= TANK.from);
-const tkStage = () => raid && raid.norm ? raid.info.ref : S.stage;
+/* 레이드의 버티는 힘 기준 단계: 레이드 세기 단계(info.ref)와 내 최고 단계 가운데 낮은 쪽(2026-11-14).
+   이승·저승·천계 레이드는 레벨로 열려서 ref가 내 단계보다 한참 위일 수 있다(천계 12단계·Lv67 용사에게 ref 40단계 레이드 — 그 단계 평균 용사는 버티는 힘이 20배라
+   보스 한 방에 쓰러져, 예전엔 깨던 레이드를 못 깼다: sim_tank old). 내 단계가 더 낮으면 '내 단계의 평균 용사'가 기준 */
+const tkRaidS = ref => Math.max(1, Math.min(ref, S.maxStage || 1));
+const tkStage = () => raid && raid.norm ? tkRaidS(raid.info.ref) : S.stage;
 const tkOn = () => tkOnAt(S.world, tkStage());
 function tankRefLog(w, s){   // heroRef와 같은 선형 보간·끝은 연장(log10 값을 돌려줌). 표가 없으면 NaN
   const T = TANK_REF[w];
@@ -4710,10 +4734,12 @@ function tankRefLog(w, s){   // heroRef와 같은 선형 보간·끝은 연장(l
   const [s0, v0] = T[T.length - 2], [s1, v1] = T[T.length - 1];
   return v1 + (v1 - v0) / (s1 - s0) * (s - s1);
 }
-const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) + (TANK_CLS[c] || 0));   // 그 직업 평균 용사의 버티는 힘(표가 없으면 NaN)
+const tkCls = (c = S.cls, w = S.world) => { const v = TANK_CLS[c]; return (Array.isArray(v) ? v[Math.min(v.length - 1, w)] : v) || 0; };   // 직업 몫(log10) — 부마다 다름(2026-11-14: 4·5부에서 도인이 무사의 1/10까지 벌어져 한 값으로는 못 맞춤)
+const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) + tkCls(c, w));   // 그 직업 평균 용사의 버티는 힘(표가 없으면 NaN)
 const mAtkT = (s, w = S.world) => Math.pow(10, tankRefLog(w, s)) * TANK.k[w] / (2 * MOB_TTK);   // 직업 몫 없는 기준
-const tkClsK = (c = S.cls) => Math.pow(10, (TANK_CLS[c] || 0) * TANK.clsEq) * (TANK.cls[c] || 1);
+const tkClsK = (c = S.cls) => Math.pow(10, tkCls(c) * TANK.clsEq) * (TANK.cls[c] || 1);
 const tkPast = s => s < S.maxStage ? TANK.past : 1;
+const tkFieldEase = s => { const x = tankIdx(s) / (TANK.fieldFloor || 0.01); return x < 1 ? Math.max(0.1, x) : 1; };   // 함수 선언 순서: tankIdx는 아래에 있지만 부를 땐 이미 있다
 // 오래가는 것만(부적·서원·변신·파티 버프처럼 잠깐 켜지는 것 빼고). 회피는 기대값으로
 const takenStatic = () => (1 - petDR() / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100)
   * skMul('def') * elMul('def') * seaMul('def') * (S.myth.okdae > 0 ? 0.85 : 1) * (1 - (cls().evade || 0));
@@ -4806,10 +4832,10 @@ function allyHeal(a, amt, src){
   return real;
 }
 /* ===== 일반 파티 레이드(startRaid로 시작하는 것 — 진·타임 보스·강림 빼고) · I-2 =====
-   raid.norm = true. 표와 상관없이: 용사 TANK.raidLives번째 쓰러지면 패배 · 동료 10초 뒤 30%로 일어나되 TANK.allyLives번째 쓰러지면 끝까지 누움 · 60초 넘으면 광폭.
+   raid.norm = true. 표와 상관없이: 용사 TANK.raidLives번째 쓰러지면 패배 · 동료 10초 뒤 30%로 일어나되 TANK.allyLives번째 쓰러지면 끝까지 누움 · TANK.enrageT초 넘으면 광폭.
    표가 있을 때만(tkOnAt): 보스 공격 mAtkT · 용사가 맞을 때 내 직업 몫 tkClsK · NPC 동료 체력 = 그 레이드의 평균 용사 */
-const tkHeroK = () => raid && raid.norm && tkOnAt(S.world, raid.info.ref) ? tkClsK() : 1;
-const tkEnrage = R => R && R.norm && tkFx() ? 1 + TANK.enrageK * Math.max(0, R.limit - R.time - TANK.enrageT) : 1;   // 광폭 배율(60초 뒤 1초마다 +5%, 90초에 x2.5)
+const tkHeroK = () => raid && raid.norm && tkOnAt(S.world, tkRaidS(raid.info.ref)) ? tkClsK() : 1;
+const tkEnrage = R => R && R.norm && tkFx() ? 1 + TANK.enrageK * Math.max(0, R.limit - R.time - TANK.enrageT) : 1;   // 광폭 배율(enrageT초 뒤 1초마다 +enrageK)
 function tkBig(B){   // 큰 살: 기준 버티는 힘의 55%(평균 용사 55%, 지수 0.7이면 약 79%) — 단계 보스·수문장과 일반 레이드만
   let d = ST.maxHp * PAT.wipePct * tkEnrage(raid);
   if (tkOn() && (raid ? raid.norm && B === raid.boss : bossActive && B === bossRef)) d *= TANK.bigK / Math.min(4, Math.max(0.25, tankIdx()));
@@ -6117,7 +6143,7 @@ function makeMob(boss, tx, ty, old){   // old: 레이드 칸 콘텐츠(백귀야
   const m = {
     type, color:SPB ? SPB.color : boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:SPB ? SPB.name : gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
-    hp:mHp(s) * (boss ? 10 * bossHpK(s) : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:tk ? mAtkT(s) * tkClsK() * tkPast(s) * (boss ? 3 * BOSS_K.atk[S.world] : TANK.mob) : mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5), hit1:!tk || boss || !(TANK.lunge > 0),
+    hp:mHp(s) * (boss ? 10 * bossHpK(s) : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:tk ? mAtkT(s) * tkClsK() * tkPast(s) * (boss ? 3 * BOSS_K.atk[S.world] : TANK.mob * tkFieldEase(s)) : mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5), hit1:!tk || boss || !(TANK.lunge > 0),
     gold:mGold(s) * (boss ? 10 : FIELD.rew) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : FIELD.rew), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
@@ -6459,12 +6485,12 @@ function raidParty(info){
 function startRaid(i){
   if (raid || !raidReady(i) || !session && !window.__game) return false;
   const info = raidAt(i), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), party = raidParty(info);
-  const tk = tkOnAt(S.world, ref), past = tk && S.raid.first[info.key] ? TANK.past : 1;   // 9-4: 표가 있으면 보스 공격은 '그 레이드 평균 용사' 기준(mAtkT), 첫 토벌한 레이드는 익숙한 길
+  const tks = tkRaidS(ref), tk = tkOnAt(S.world, tks), past = tk && S.raid.first[info.key] ? TANK.past : 1;   // 9-4: 표가 있으면 보스 공격은 '그 레이드 평균 용사' 기준(mAtkT), 첫 토벌한 레이드는 익숙한 길
   if (tk) for (const a of party){   // NPC 동료 체력 = 그 레이드의 평균 용사(내가 세지든 약하든 같음), 다른 캐릭터 동료는 요약의 버티는 몫(ehp)이 있으면 그것
-    if (a.npc) a.maxHp = Math.pow(10, tankRefLog(S.world, ref)) * (a.cls === 'musa' ? TANK.npcHp.musa : TANK.npcHp.def);
+    if (a.npc) a.maxHp = Math.pow(10, tankRefLog(S.world, tks)) * (a.cls === 'musa' ? TANK.npcHp.musa : TANK.npcHp.def);
     else if (a.ehp > 0) a.maxHp = a.ehp;
   }
-  startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:(tk ? mAtkT(ref) * past : mAtk(ref)) * 3, aoe:(tk ? mAtkT(ref) * past : mAtk(ref)) * 2, time:RAID_TIME});   // 파티 버프만큼 단단하게(2026-11 (41))
+  startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:(tk ? mAtkT(tks) * past * TANK.raidK : mAtk(ref)) * 3, aoe:(tk ? mAtkT(tks) * past * TANK.raidK : mAtk(ref)) * 2, time:RAID_TIME});   // 파티 버프만큼 단단하게(2026-11 (41))
   raid.norm = true;   // 일반 파티 레이드(진·타임 보스·강림 빼고): 용사 목숨 TANK.raidLives · 동료 일어남 제한 · 광폭
   if (TM) TM.kind = 'raid';
   addLog(`${info.label} 토벌 시작! ${RAID_TIME}초 안에 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨려요.`, 'warn');
@@ -7613,7 +7639,7 @@ function updateRaid(dt){
   if (R.ending){ R.endT -= dt; if (R.endT <= 0) finishRaid(); return; }
   R.time -= dt;
   if (R.time <= 0){ raidEnd(false); return; }
-  if (R.norm && !R.enr && tkFx() && R.limit - R.time > TANK.enrageT){   // 광폭: 60초를 넘기면 보스가 주는 모든 피해가 1초마다 5%씩 늘어남
+  if (R.norm && !R.enr && tkFx() && R.limit - R.time > TANK.enrageT){   // 광폭: enrageT초를 넘기면 보스가 주는 모든 피해가 1초마다 enrageK씩 늘어남
     R.enr = 1; if (TM) TM.enr++;
     addText('광폭!', B.x, B.y - mobHeight(B) - 14, '#ff3a2a', 16, true); addLog(`${R.info.bossName}${josa(R.info.bossName, '이', '가')} 광폭해졌어요! 시간을 끌수록 아파요.`, 'warn'); sfx('boss'); shake = Math.max(shake, 0.4);
   }
@@ -18913,7 +18939,9 @@ function bossPortrait(type, color){
 const RAID_DPS_K = 3.5;
 function raidRecPower(info){
   const eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), hp = 10 * mHp(info.ref) / 15 * eff * 40;
-  const team = dpsOf(ST) * RAID_DPS_K * (1 + 0.45 * (partyOf(info) - 1)), est = hp / Math.max(1e-9, team);
+  // 9-4(2026-11-14): 후반엔 기본 초당 피해(dpsOf)가 실제의 수백~수천 분의 1이라 권장이 실제의 12~1,700배로 나왔다(천계 끝 12배·동해 끝 200~1,700배, sim_tank raid).
+  // 기억해 둔 실제 보스 피해(realDps)가 더 크면 그것으로 — 잰 값은 「45초에 깨는 힘」의 0.9~2.4배
+  const team = Math.max(dpsOf(ST) * RAID_DPS_K * (1 + 0.45 * (partyOf(info) - 1)), realDps()), est = hp / Math.max(1e-9, team);
   return power(ST) * est / 45;
 }
 function buildRaid(){
@@ -19173,7 +19201,7 @@ function buildRaid(){
       setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
       $('#raid-' + i).classList.toggle('ready', !dis);
       const rp = panel.querySelector(`[data-rp="${i}"]`);
-      if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(info.ref)}`); }
+      if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(tkRaidS(info.ref))}`); }
     });
     const jl = jinLeft();
     panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} 오늘 ${jl}/${JIN.tries}번`));
@@ -21440,7 +21468,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
   // @@END-H
   // @@HOOK-I (갈래 I의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
-  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
+  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, tkCls, tkFieldEase, tkRaidS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
   Object.assign(window.__game, {makeMob, tbFromSummary, tkFx, tkWoundOn, tkWoundAdd, tkWoundTick, tkAdvice, tkGo, tkLine, tkEnrage, tkBig, tkHeroK, tkCardUpd, tkFailNote, tkRaidHTML, tkDot, damageAlly, patHitHero, damageHero, finishRaid, tbHeroHp, showModal, updateHud, respawn, noTank:true});   // 9-4 I-2
   Object.defineProperty(window.__game, 'TM', {get:() => TM, configurable:true});
   // @@END-I
