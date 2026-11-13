@@ -44,12 +44,12 @@ SIM = r"""
   if (opts.late) Object.assign(G.LATE_K, opts.late);
   if (opts.sea) G.seaForce = true;   // 물의 신화 4단계: 4부의 새 성장(투구·어깨·신발·호박석)을 미리 열어 놓고 돌린다(tools/sim_sea.py)
   if (opts.load) { Object.assign(G.S, G.mergeState(JSON.parse(opts.load)));   // 예전 저장도 새 칸을 채워서
-    G.S.cls = cls; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
+    G.S.cls = cls; if (G.S.lg) G.S.lg.st = {t:0, b:0, e:0, q:0, i:0}; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
   G.S.buyMode = 1;
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
-  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0};
+  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
@@ -82,8 +82,8 @@ SIM = r"""
           if (!G.petUpgrade(pi)) break;
         }
       }
-      for (const gd of G.GUARDS) if (G.guardOpen(gd)) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k)) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지
-      if (G.guardOpen(G.GUARDS[1]) && G.S.guard.on !== 'jowang') G.guardSet('jowang');
+      for (const gd of G.GUARDS) if (G.guardOpen(gd) && !gd.w) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k), gd.k) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지(바다의 새 둘은 아래 lg 블록에서)
+      { const want = !opts.nolg && G.lgOn() && G.guardLv('yongsin') > 0 ? 'yongsin' : 'jowang'; if (G.guardOpen(G.GD[want]) && G.S.guard.on !== want) G.guardSet(want); }   // 레벨 문 앞에서는 용왕신을 모심
       let elRes = 0;   // 오장 영약(2026-11 (46)): 달일 것이 남았으면 엽전을 모아 두었다가(능력치에는 모은 몫을 빼고 씀) 값이 되면 달이고 추천 처방을 고름
       if (!opts.noelix && G.S.world >= 3) for (const O of G.ORGANS) {
         if (G.S.world < O.w) continue; const st = G.elSt(O.k);
@@ -105,6 +105,19 @@ SIM = r"""
       }
       if (memPend && !G.raid) { if (G.S.mem.p[memPend[0]] === memPend[1]) { memHold = t + 600; first.MF = (first.MF || 0) + 1; } memPend = null; }   // 지면 10분 뒤에 다시
       if (G.S.mem.orbs > 0) for (let z = 0; z < 50; z++) if (!G.rebUp('atk')) break;   // 기억으로 얻은 윤회 구슬은 무력에(값이 모일 때까지 기다렸다가)
+      // 물의 신화 9-3 — 레벨 문 앞 새 요소 셋(opts.nolg로 끔): 엽전 수입의 30%(opts.lgsave)·보석 수입의 20%(opts.lggem)를 따로 모아 쓴다
+      if (!opts.nolg && G.S.world >= G.LG.w0) {
+        const tg = Math.min(G.S.gold, (goldIn - lgG0) * (opts.lgsave ?? 0.3)), te = Math.min(G.S.gems, (gemIn - lgE0) * (opts.lggem ?? 0.2));
+        lgG0 = goldIn; lgE0 = gemIn; G.S.gold -= tg; lgBank.g += tg; G.S.gems -= te; lgBank.e += te;
+        const withBank = fn => { const g0 = G.S.gold, e0 = G.S.gems; G.S.gold += lgBank.g; G.S.gems += lgBank.e; const r = fn();   // 모은 몫에서 먼저 쓰고 모자라면 가진 것에서
+          lgBank.g = Math.max(0, G.S.gold - g0); lgBank.e = Math.max(0, G.S.gems - e0); G.S.gold = Math.min(G.S.gold, g0); G.S.gems = Math.min(G.S.gems, e0); return r; };
+        if (G.lgOn()) {
+          withBank(() => { G.lgReqClaim(); const r = G.S.lg.req; if (r && r.k === 'raid' && !r.sw) G.lgReqSwap(); if (!G.S.lg.req) G.lgReqTake(false) || G.lgReqTake(true); });   // 시뮬은 일부러 레이드를 돌지 않아 겨루기는 바꿈
+          if (G.S.lg.inc < 600 && !(G.lgAmbSpare(0) > 0 && G.lgIncLight(0)) && !(G.lgAmbSpare(1) > 0 && G.lgIncLight(1))) withBank(() => G.lgIncLight('gem'));   // 남는 희귀 → 영웅 → 보석
+        }
+        for (const k of ['yongsin', 'eopsin']) { const g = G.GD[k]; if (!G.guardOpen(g) || G.guardLv(k) >= G.guardMax(g)) continue;   // 용왕신을 다 올린 뒤 업신
+          if (lgBank.g >= G.guardGold(G.guardLv(k), k)) withBank(() => G.guardUp(k)); break; }
+      }
       // 초각성기 2 퀘스트 「두 번째 깨달음」(56장 뒤): 듣기 → 횟수 채우면 받기 → 스승과 다시 겨루기.
       // ②(레이드에서 되받기 30번)는 타임 보스·1일 보스·강림처럼 오래 가는 싸움에서 채우는데 시뮬은 그런 싸움을 안 하므로, 열린 지 opts.aw2h(기본 6)시간 뒤 채운 것으로 친다
       if (G.aw2Open() && !G.S.aw2.got) { const q = G.aw2Quest(); if (aw2T0 == null) aw2T0 = t;
@@ -4107,6 +4120,208 @@ async def main():
 
         # @@END-G
         # @@TEST-H (갈래 H의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-28) 물의 신화 9-3단계: 레벨 문 앞 새 요소 셋 — 새 수호신 둘(용왕신·업신)·수련 의뢰·기억의 향. 합쳐도 레벨 문 경험치는 기본의 2배까지
+        ctx28 = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        lq = await ctx28.new_page()
+        watch(lq, errors, '9-28 ')
+        await fresh(lq)
+        await signup(lq, 'lgtest', 'abcd', '수련꾼')
+        # --- a. 1~3부(곤륜까지)에서는 아무것도 안 보인다
+        w0 = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal();
+          const lq = G.MAIN_Q.findIndex(q => q.k === 'l5'); out.lq = lq;
+          G.setWorld(4); S.quest.main = lq; S.level = 1; G.refreshStats();
+          out.on4 = G.lgOn(); out.open4 = G.guardOpen(G.GD.yongsin); out.shown4 = G.GUARDS.filter(G.guardShown).map(g => g.k).join();
+          const st0 = JSON.stringify(S.lg.st); G.gainExp(100); out.same = JSON.stringify(S.lg.st) === st0; out.dot = G.lgDot();
+          out.why = G.lgReqWhy(false); out.notis = G.notiList().map(n => n.k).join();
+          out.ex = G.lgExtra(100); return out; }""")
+        check(w0['lq'] > 0 and w0['on4'] is False and w0['open4'] is False and w0['same'] and w0['dot'] is False and w0['ex'] == 0, f"곤륜(4부 전)에서는 레벨 문이 꺼져 있고 수호신·경험치·점이 그대로다 {w0}")
+        check(w0['shown4'] == 'seongju,jowang,teoju,samsin,chilseong', f"1~3부 용사의 수호신 카드는 예전 다섯 장 그대로 {w0['shown4']}")
+        check('lg' not in w0['notis'].split(',') and 'eopsin' not in w0['notis'].split(','), f"1~3부에서는 새 알림이 안 뜬다 {w0['notis']}")
+        await tab(lq, 'quest')
+        await lq.wait_for_timeout(300)
+        seg4 = await lq.evaluate("() => !!document.querySelector('[data-qv=\"lg\"]')")
+        check(seg4 is False, '[퀘스트]에 「수련 의뢰」 단추가 없다(곤륜)')
+        await lq.evaluate("() => { window.__game.closePage(); }")
+        # --- b. 레벨 문 판정
+        b = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'), q = G.MAIN_Q[lqi];
+          G.setWorld(5); S.quest.main = lqi; S.level = q.n - 2; S.job = Math.max(S.job, 4); G.refreshStats();
+          const g1 = G.lgGate(); out.g1 = g1 && g1.why; out.need = g1 && g1.need === q.n;
+          S.level = q.n; out.g2 = G.lgGate();
+          const si = G.MAIN_Q.findIndex(x => x.k === 's5'); out.si = si;
+          S.quest.main = si; const sq = G.MAIN_Q[si]; S.level = 1; S.stage = 1;
+          out.boss = G.lgGate() && G.lgGate().why;
+          S.level = 9999; out.boss2 = G.lgGate();
+          const ji = G.MAIN_Q.findIndex(x => x.k === 'job' && x.n === 5); out.ji = ji;
+          S.quest.main = ji; S.level = 503; S.job = 4; out.job = G.lgGate() && G.lgGate().why; S.level = G.LG ? 600 : 600; out.job2 = G.lgGate();
+          S.quest.main = G.MAIN_Q.length; out.end = G.lgGate();
+          S.quest.main = lqi; S.level = 1; out.on = G.lgOn(); S.level = 1; return out; }""")
+        check(b['g1'] == 'quest' and b['need'] and b['g2'] is None, f"레벨 퀘스트: 레벨이 모자라면 레벨 문(quest), 닿으면 꺼진다 {b['g1']} {b['g2']}")
+        check(b['si'] > 0 and b['boss'] in ('boss', None), f"단계 퀘스트: 레벨 때문에 막힌 보스만 레벨 문(boss) {b['boss']} {b['boss2']}")
+        check(b['ji'] > 0 and b['job'] == 'job' and b['job2'] is None, f"5차 전직 퀘스트 + Lv.503 = 레벨 문(job), 레벨이 되면 꺼진다 {b['job']} {b['job2']}")
+        check(b['end'] is None and b['on'] is True, f"이야기를 다 마치면 꺼진다(끝없는 신화) {b['end']}")
+        # --- c. 수호신
+        c = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          out.open5 = [G.guardOpen(G.GD.yongsin), G.guardOpen(G.GD.eopsin)]; out.shown5 = G.GUARDS.filter(G.guardShown).map(g => g.k).join();
+          out.max = G.guardMax(G.GD.yongsin); out.cost0 = G.guardGold(0, 'yongsin') === G.guardRefGold() * 150 * 50;
+          out.old = G.guardGold(3, 'jowang') === G.guardRefGold() * 150 * Math.pow(1.2, 3) && G.guardGold(3) === G.guardGold(3, 'jowang');
+          S.guard.lv.yongsin = 10; S.gold = 1e60; out.up = G.guardUp('yongsin'); out.lv = G.guardLv('yongsin');
+          S.lg.inc = 0; G.guardSet('yongsin'); out.mul10 = G.lgMulPct(); G.guardSet('seongju'); out.mul3 = G.lgMulPct();
+          G.setWorld(8); S.quest.main = G.MAIN_Q.findIndex(q => q.k === 'l8'); if (S.quest.main < 0) S.quest.main = G.MAIN_Q.findIndex(q => q.k === 'l5');
+          out.open8 = [G.guardOpen(G.GD.yongsin), G.guardOpen(G.GD.eopsin)]; out.shown8 = G.GUARDS.filter(G.guardShown).length;
+          S.guard.lv.eopsin = 10; G.guardSet('eopsin'); out.offOn = G.lgMulPct({off:true}) - G.lgMulPct(); out.offNo = G.lgMulPct(); G.guardSet('seongju'); out.offRest = G.lgMulPct({off:true}) - G.lgMulPct();
+          G.setWorld(5); return out; }""")
+        check(c['open5'] == [True, False] and c['shown5'].endswith('chilseong,yongsin'), f"동해에서는 용왕신만 열리고 업신은 카드도 없다 {c['open5']} {c['shown5']}")
+        check(c['max'] == 10 and c['cost0'] and c['old'], f"용왕신 최대 Lv.10·첫 값 = 기준 엽전 × 150 × 50, 옛 수호신 값은 그대로 {c['max']} {c['cost0']} {c['old']}")
+        check(c['up'] is False and c['lv'] == 10 and c['mul10'] == 10 and abs(c['mul3'] - 3) < 1e-9, f"Lv.10에서는 더 못 올리고, 모시면 +10%·다른 것을 모시면 +3% {c['up']} {c['mul10']} {c['mul3']}")
+        check(c['open8'] == [True, True] and c['shown8'] == 7 and c['offOn'] == 20 and c['offNo'] == 3 and abs(c['offRest'] - 6) < 1e-9, f"란카 길에서 업신이 열려 카드 일곱 장 · 자리 비운 동안에만 +20%(안 모시면 +6%) {c['open8']} {c['shown8']} {c['offOn']} {c['offNo']} {c['offRest']}")
+        # --- d. 2배 상한
+        d = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5; S.exp = 0; G.refreshStats();
+          S.guard.lv.yongsin = 10; G.guardSet('yongsin'); S.mem = {ch:'yes', p:[4, 4, 4], paid:[true, true, true], fin:true, orbs:0}; S.lg.inc = 36000; S.lg.pend = 2;
+          out.pct = G.lgIncPct(); const need = G.expNeed(S.level), x = need * 0.5, e = G.lgExtra(x);
+          out.exact = Math.abs(e - x) < x * 1e-9; out.pendDown = S.lg.pend < 2;
+          S.lg.pend = 2; S.lg.st = {t:0, b:0, e:0, q:0, i:0}; let maxR = 0;
+          for (let i = 0; i < 300; i++){ S.lg.pend = 2; const y = G.expNeed(S.level) * 0.0005, add = G.lgExtra(y); maxR = Math.max(maxR, (y + add) / y); }
+          out.maxR = maxR; out.ratio = (S.lg.st.b + S.lg.st.e) / S.lg.st.b;
+          const lv0 = S.level, ex0 = S.exp; G.gainExp(100, {raw:true}); out.raw = Math.abs((S.exp - ex0) - 100) < 1e-6 && S.level === lv0;
+          const q0 = JSON.stringify(S.lg.st); out.rawSame = q0 === JSON.stringify(S.lg.st);
+          S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n; out.off = G.lgExtra(100); return out; }""")
+        check(d['pct'] == 27 and d['exact'] and d['pendDown'], f"모두 최대(용왕신 10·향 켬·기억 셋 다·수련 기운 2)면 더하는 몫이 정확히 기본의 100%(= 2배)이고 수련 기운이 줄어든다 {d['pct']} {d['exact']} {d['pendDown']}")
+        check(d['maxR'] <= 2 + 1e-9 and d['ratio'] <= 2 + 1e-9, f"경험치가 들어올 때마다 2배를 넘지 않는다 {d['maxR']} {d['ratio']}")
+        check(d['raw'] and d['off'] == 0, f"만렙 모음({{raw:true}})과 레벨 문이 아닐 때는 더하지 않는다 {d['raw']} {d['off']}")
+        # --- e. 수련 의뢰
+        e = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; const L = G.LG;
+          const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5; G.refreshStats();
+          S.guard.lv.yongsin = 0; S.lg = {pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}};
+          S.gold = 1e12; S.gems = 1e9; S.mat.m3 = 500; const c = G.lgReqCost(false), g0 = S.gold, m0 = S.mat.m3;
+          out.take = G.lgReqTake(false); out.paid = Math.abs((g0 - S.gold) - c.gold) < 1e6 && m0 - S.mat.m3 === c.mat; out.k1 = S.lg.req && S.lg.req.k;
+          out.again = G.lgReqWhy(false);
+          G.ev('kill', 500); out.done = G.lgReqDone(); G.lgAuto(); out.pend1 = S.lg.pend; out.req1 = S.lg.req;
+          const seq = [out.k1];
+          for (let i = 0; i < 3; i++){ G.lgReqTake(false); seq.push(S.lg.req && S.lg.req.k); const r = S.lg.req; if (!r) break;
+            if (r.k === 'cast'){ G.lgEv('cast', 150); } else if (r.k === 'enh'){ G.ev('refine', 12); G.ev('enh', 8); } else if (r.k === 'raid'){ G.ev('raid'); } else G.ev('kill', 500);
+            G.lgAuto(); }
+          out.seq = seq.join(); out.left = S.lg.free;
+          S.lg.pend = 0; S.lg.req = null; S.lg.free = 5; out.sixth = G.lgReqWhy(false);
+          const gb = S.gems; const x0 = G.lgReqCost(true).gems; S.lg.extra = 0; out.g1 = G.lgReqTake(true); const x1 = G.lgReqCost(true).gems; out.ratio = x1 / x0; out.g1paid = gb - S.gems === x0;
+          S.lg.req = null; out.g2 = G.lgReqTake(true); S.lg.req = null; out.g3 = G.lgReqWhy(true);
+          G.addTime(25 * 3600 * 1000); G.lgDay(); out.nextDay = [S.lg.free, S.lg.extra];
+          S.lg.req = null; S.lg.seq = 0; out.sw0 = G.lgReqTake(false); const k0 = S.lg.req.k; out.sw1 = G.lgReqSwap(); out.swk = S.lg.req.k !== k0; out.sw2 = G.lgReqSwap();
+          S.lg.req = {k:'kill', n:500, c:500, sw:0}; S.lg.pend = 1.95; out.full = G.lgReqClaim(); out.fullKeep = !!S.lg.req && S.lg.pend === 1.95;
+          S.lg.pend = 0; S.lg.req = null; S.lg.free = 0; S.lg.auto = true; S.gold = 1e60; G.lgAuto(); out.auto = !!S.lg.req;
+          S.lg.req = null; S.lg.auto = false; S.level = G.MAIN_Q[lqi].n; G.lgOn(); out.notOn = G.lgReqWhy(false);
+          S.level = G.MAIN_Q[lqi].n - 5; S.lg.req = null; S.lg.day = ''; S.lg.free = 0; S.lg.seq = 3; out.rk = G.lgReqNext(3); out.rkOk = G.lgRaidOk();
+          return out; }""")
+        check(e['take'] and e['paid'] and e['k1'] == 'kill', f"의뢰 받기: 엽전·지금 땅 재료가 값만큼 빠지고 첫 차례는 사냥 {e['take']} {e['paid']} {e['k1']}")
+        check(e['again'] != '' and e['done'] and abs(e['pend1'] - 0.12) < 1e-9 and e['req1'] is None, f"몬스터 500마리를 세면 저절로 마치고 수련 기운 +0.12 {e['pend1']} {e['req1']}")
+        check(e['seq'].startswith('kill,cast,enh,') and (e['seq'].split(',')[3] in ('raid', 'kill')), f"차례가 사냥 → 기술 → 손질 → 겨루기로 돈다(겨루기는 할 싸움이 없으면 건너뜀) {e['seq']} raidOk={e['rkOk']}")
+        check(e['sixth'] != '' and '5번' in e['sixth'], f"엽전 의뢰 5번 뒤 6번째는 거절 {e['sixth']}")
+        check(e['g1'] and e['ratio'] == 2 and e['g1paid'] and e['g2'] and e['g3'] == '오늘 더 받기를 다 썼어요', f"보석 의뢰: 두 번째 값이 첫째의 2배(1+더 받은 수)·3번째 거절 {e['ratio']} {e['g3']}")
+        check(e['nextDay'] == [0, 0], f"하루가 지나면 횟수가 처음으로 {e['nextDay']}")
+        check(e['sw0'] and e['sw1'] and e['swk'] and e['sw2'] is False, f"바꾸기는 의뢰마다 한 번만 {e['sw1']} {e['sw2']}")
+        check(e['full'] is False and e['fullKeep'], f"수련 기운 1.95에서 0.12짜리는 마치지 않고 남는다 {e['full']} {e['fullKeep']}")
+        check(e['auto'] and e['notOn'] == '레벨 문 앞에서만 받아요', f"저절로 이어 받기가 켜지면 다음 엽전 의뢰를 받고, 레벨 문이 아니면 받기 거절 {e['auto']} {e['notOn']}")
+        # --- 기술 한 번이 기술 수련으로 센다(tryCast)
+        e2 = await lq.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5;
+          S.lg.req = {k:'cast', n:150, c:0, sw:0}; let n = 0; for (let i = 0; i < G.SKILLS.length; i++){ if (G.skLv(i) > 0 && G.tryCast(i, G.skLv(i), true)){ n++; break; } }
+          return {n, c:S.lg.req.c}; }""")
+        check(e2['n'] == 0 or e2['c'] >= 1, f"기술을 쓰면 기술 수련이 센다 {e2}")
+        # --- f. 기억의 향
+        f = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; const L = G.LG;
+          const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5; S.hero = null;
+          S.lg = {pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}; S.gems = 1e9;
+          const c1 = G.lgIncCost(); const g0 = S.gems; out.gem1 = G.lgIncLight('gem'); out.gemPaid = g0 - S.gems === c1; out.gemSec = S.lg.inc;
+          const c2 = G.lgIncCost(); out.c2 = c2 / c1; out.gem2 = G.lgIncLight('gem'); out.gem3 = G.lgIncWhy('gem');
+          S.lg.inc = 0; S.lg.inDay = 0; S.amber.raw = [3, 3, 3]; out.amb = [0, 1, 2].map(g => { const r0 = S.amber.raw[g], i0 = S.lg.inc; G.lgIncLight(g); return [r0 - S.amber.raw[g], S.lg.inc - i0]; });
+          S.lg.inc = 43200 - 1000; out.over = G.lgIncWhy(0); S.lg.inc = 0;
+          S.mem = {ch:'yes', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0}; const pc = [G.lgIncPct()];
+          S.mem.p = [4, 0, 0]; pc.push(G.lgIncPct()); S.mem.p = [4, 4, 0]; pc.push(G.lgIncPct()); S.mem.p = [4, 4, 4]; pc.push(G.lgIncPct()); S.mem.fin = true; pc.push(G.lgIncPct()); out.pc = pc.join();
+          S.mem.ch = 'no'; out.pcNo = G.lgIncPct() - 0; S.mem = {ch:'yes', p:[4, 4, 4], paid:[true, true, true], fin:true, orbs:0};
+          S.level = G.MAIN_Q[lqi].n - 60; S.exp = 0; S.lg.inc = 100; S.lg.st.i = 0; for (let i = 0; i < 60; i++){ G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.update(1); } out.burn = 100 - S.lg.inc;
+          S.level = G.MAIN_Q[lqi].n; const i1 = S.lg.inc = 100; for (let i = 0; i < 20; i++){ G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.update(1); } out.still = S.lg.inc === 100; S.level = G.MAIN_Q[lqi].n - 5;
+          S.guard.lv.yongsin = 0; S.lg.pend = 0; S.lg.inc = 0; const a0 = G.lgExtra(1000, {off:true, inF:0}); S.lg.inc = 1800; const fr = G.lgIncOff(3600); out.fr = [fr, S.lg.inc];
+          const a1 = G.lgExtra(1000, {off:true, inF:fr}); out.offMore = a1 > a0;
+          S.amber.raw = [8, 0, 0]; S.amber.st = {}; out.nsl = G.slotsNow().length; out.spare = G.lgAmbSpare(0); const sl = G.slotsNow()[0]; S.amber.st[sl] = {g:0, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare2 = G.lgAmbSpare(0); S.amber.st[sl] = {g:2, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare3 = G.lgAmbSpare(0);
+          S.amber.st = {}; return out; }""")
+        check(f['gem1'] and f['gemPaid'] and f['gemSec'] == 7200 and f['c2'] == 1.5 and f['gem2'] and '2번' in f['gem3'], f"보석 향: 값 지불·2시간·두 번째는 1.5배·하루 2번까지 {f['gemSec']} {f['c2']} {f['gem3']}")
+        check(f['amb'] == [[1, 3600], [1, 10800], [1, 28800]], f"호박석 향: 하나씩 쓰고 1·3·8시간 {f['amb']}")
+        check('12시간' in f['over'], f"12시간을 넘게는 못 피운다 {f['over']}")
+        check(f['pc'] == '15,18,21,24,27' and f['pcNo'] == 15, f"향 세기: 기억 0~3갈래·다 되찾으면 15/18/21/24/27% (떠올리지 않기는 15%) {f['pc']} {f['pcNo']}")
+        check(abs(f['burn'] - 60) < 1.5 and f['still'], f"레벨 문에서는 향이 타고(60초 → 60초 줄어듦), 아니면 그대로 {f['burn']} {f['still']}")
+        check(abs(f['fr'][0] - 0.5) < 1e-9 and f['fr'][1] == 0 and f['offMore'], f"자리를 비운 동안에도 탄다: 향 1800초가 1시간의 절반 → 몫이 붙는다 {f['fr']} {f['offMore']}")
+        check(f['spare'] == 8 - f['nsl'] and f['spare2'] == 8 - f['nsl'] + 1 and f['spare3'] == f['spare2'], f"남는 호박석 = 가진 수 − 낮은 돌/빈 칸 수 {f['spare']} {f['spare2']} {f['spare3']}")
+        # --- g. 저장
+        g = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          S.lg = {pend:0.5, day:'2026-11-13', free:3, extra:1, inDay:1, seq:2, req:{k:'cast', n:150, c:42, sw:1}, auto:true, inc:1234, st:{t:10, b:5, e:2, q:3, i:7}};
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.same = JSON.stringify(re.lg) === JSON.stringify(S.lg);
+          const old = JSON.parse(JSON.stringify(S)); delete old.lg; const o2 = G.mergeState(old).lg; out.old = o2.pend === 0 && o2.req === null && o2.inc === 0 && o2.st.b === 0;
+          const bad = JSON.parse(JSON.stringify(S)); bad.lg = {pend:99, req:{k:'constructor', n:1, c:1}, inc:-5, free:'x', extra:99, seq:99, st:{b:-4}}; bad.guard.lv.yongsin = 25;
+          const rb = G.mergeState(bad); out.bad = [rb.lg.pend, rb.lg.req, rb.lg.inc, rb.lg.free, rb.lg.extra, rb.lg.seq, rb.lg.st.b, rb.guard.lv.yongsin].join('|'); return out; }""")
+        check(g['same'] and g['old'], f"저장 왕복에 lg가 그대로 남고, lg가 없는 예전 저장은 기본값으로 채운다 {g['same']} {g['old']}")
+        check(g['bad'] == '2||0|0|2|3|0|10', f"망가진 값은 범위 안으로 다듬는다 {g['bad']}")
+        # --- i. 알림
+        ni = await lq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5;
+          out.on = G.notiList().map(n => n.k).filter(k => k === 'lg' || k === 'eopsin').join();
+          const j = S.jump; S.jump = {on:true}; out.jump = G.notiList().map(n => n.k).filter(k => k === 'lg' || k === 'eopsin').join(); S.jump = j;
+          G.setWorld(8); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5; out.w8 = G.notiList().map(n => n.k).filter(k => k === 'lg' || k === 'eopsin').join();
+          out.flag = G.noLg; G.setWorld(5); return out; }""")
+        check(ni['on'] == 'lg' and ni['jump'] == '' and 'eopsin' in ni['w8'] and ni['flag'] is True, f"알림: 동해 레벨 문에서 'lg' 한 번, 「4부부터 시작」 중에는 안 뜨고, 란카 길에서 'eopsin' {ni}")
+        # --- h. 화면 캡처(가로)
+        await lq.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.hideModal(); const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5;
+          S.gold = 1e60; S.gems = 1e9; S.mat.m3 = 500; S.guard.lv.yongsin = 4; G.guardSet('yongsin'); S.mem = {ch:'yes', p:[4, 2, 0], paid:[true, true, false], fin:false, orbs:0};
+          S.lg = {pend:0.24, day:'', free:2, extra:0, inDay:0, seq:1, req:{k:'kill', n:500, c:180, sw:0}, auto:false, inc:8000, st:{t:7200, b:12.4, e:1.9, q:4, i:3000}};
+          S.amber.raw = [3, 1, 0]; G.refreshStats(); }""")
+        await tab(lq, 'quest')
+        await lq.click('[data-qv="lg"]')
+        await lq.wait_for_timeout(500)
+        lqTxt = await lq.evaluate("() => document.querySelector('#panel').innerText")
+        check('수련 기운' in lqTxt and '사냥 수련' in lqTxt and '기억의 향' in lqTxt and '용왕신' in lqTxt and '남은 향' in lqTxt, f"[퀘스트] → [수련 의뢰] 칸에 수련 기운·진행 중인 의뢰·기억의 향·수호신이 보인다")
+        await lq.screenshot(path=str(OUT / '93_수련의뢰_칸.png'))
+        await lq.evaluate("() => { const S = window.__game.S; S.lg.req = null; S.lg.free = 5; }")
+        await lq.wait_for_timeout(500)
+        await lq.screenshot(path=str(OUT / '93_수련의뢰_받기전.png'))
+        await lq.click('[data-qv="main"]')
+        await lq.wait_for_timeout(400)
+        mqTxt = await lq.evaluate("() => { const e = document.querySelector('#mqLg'); return e && !e.hidden ? e.innerText : ''; }")
+        check('레벨 문' in mqTxt and '수련 의뢰' in mqTxt, f"이야기 카드에 레벨 문 안내 한 줄이 보인다 {mqTxt!r}")
+        await lq.screenshot(path=str(OUT / '93_이야기카드_레벨문.png'))
+        await lq.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); G.setWorld(8); S.quest.main = G.MAIN_Q.findIndex(q => q.k === 'l5'); S.guard.lv.eopsin = 2; S.guard.lv.yongsin = 4; G.refreshStats(); }")
+        await tab(lq, 'grow')
+        await lq.wait_for_timeout(300)
+        await lq.click('#gv-guard')
+        await lq.wait_for_timeout(400)
+        gdN = await lq.evaluate("() => document.querySelectorAll('#panel .card.guard').length")
+        check(gdN == 7, f"란카 길 [수련] → [수호신]에 카드 일곱 장 {gdN}")
+        await lq.screenshot(path=str(OUT / '93_수호신_일곱.png'))
+        # 세로 화면
+        await lq.set_viewport_size({'width': 390, 'height': 844})
+        await lq.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); G.setWorld(5); S.quest.main = G.MAIN_Q.findIndex(q => q.k === 'l5'); S.level = G.MAIN_Q[S.quest.main].n - 5; S.lg.req = {k:'enh', n:20, c:7, sw:0}; S.lg.inc = 5000; }")
+        await lq.wait_for_timeout(400)
+        await tab(lq, 'quest')
+        await lq.click('[data-qv="lg"]')
+        await lq.wait_for_timeout(500)
+        await lq.screenshot(path=str(OUT / '93_수련의뢰_세로.png'))
+        ovf = await lq.evaluate("() => document.documentElement.scrollWidth > window.innerWidth + 2")
+        check(ovf is False, '세로 화면에서 수련 의뢰가 가로로 넘치지 않는다')
+        await ctx28.close()
+        # --- j. 짧은 시뮬(세계 5 저장)
+        sv = ROOT / 'docs' / 'patch-sea' / 'sim' / 'save_musa_sea1.json'
+        if sv.exists():
+            ctx28b = await browser.new_context(viewport={'width': 844, 'height': 390})
+            sp = await ctx28b.new_page()
+            watch(sp, errors, '9-28j ')
+            await fresh(sp)
+            sv_txt = sv.read_text(encoding='utf-8')
+            r28 = await sp.evaluate(SIM, [60, 'musa', {'dt': 0.2, 'load': sv_txt, 'marks': [60]}])
+            st28 = await sp.evaluate("() => { const S = window.__game.S; return {st:S.lg.st, w:S.world}; }")
+            lgs = st28['st']
+            check(lgs['t'] > 0 and (lgs['b'] == 0 or (lgs['b'] + lgs['e']) / lgs['b'] <= 2 + 1e-9), f"짧은 시뮬(세계 5, 1시간): 오류 없이 돌고 배율이 2 이하 {lgs}")
+            await fresh(sp)
+            await sp.evaluate(SIM, [20, 'musa', {'dt': 0.2, 'load': sv_txt, 'marks': [20], 'nolg': True}])
+            st28b = await sp.evaluate("() => window.__game.S.lg.st")
+            check(st28b['e'] == 0 and st28b['q'] == 0, f"같은 저장을 nolg로 돌리면 더해진 몫·의뢰가 0 {st28b}")
+            await ctx28b.close()
         # @@END-H
         # 10) 앱으로 설치(PWA): 웹서버로 열어 앱 설정·아이콘·오프라인 도우미를 확인하고, 인터넷을 끊고 다시 연다
         srv, base = serve()
