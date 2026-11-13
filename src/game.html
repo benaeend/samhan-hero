@@ -1812,7 +1812,7 @@ const SP_FX = {
 };
 const SP_STAT = {atk:'공격력', hp:'체력', skill:'기술 피해', boss:'보스 피해', cdmg:'치명타 피해', spd:'공격 속도', move:'이동 속도', def:'받는 피해 감소'};
 const spFxText = fx => Object.entries(fx).map(([t, v]) => `${SP_STAT[t]} ${t === 'def' ? '−' : '+'}${v}%`).join(' · ');
-const SPIRIT_GEAR = {gate:{base:20, up:2, spirit:0.06}, raid:{base:20, up:2, spirit:0.15}};   // 5부 수문장·레이드 드롭(4부 유물과 같은 결: 평소 유물 I~II, 가끔 영물 I(25%는 II)). 천공의 탑 401층~·곳간은 다른 갈래가 같은 함수를 부른다
+const SPIRIT_GEAR = {gate:{base:20, up:2, spirit:0.06}, raid:{base:20, up:2, spirit:0.15}, vault:{base:20, up:2, spirit:0.25}};   // 5부 수문장·레이드 드롭(4부 유물과 같은 결: 평소 유물 I~II, 가끔 영물 I(25%는 II)). 천공의 탑 401층~·곳간은 다른 갈래가 같은 함수를 부른다
 const spiritOpen = () => S.world >= 8 || !!(window.__game && window.__game.spiritForce);
 function spSt(){
   if (!S.spirit || typeof S.spirit !== 'object') S.spirit = {pool:{}, eq:{}};
@@ -3987,6 +3987,7 @@ const MYTHS = [
   {k:'okdae', name:'용왕의 옥대', stat:'체력(받는 피해 -15%)', icon:'mirror', mul:1, pow:80, story:true, w:5},
   {k:'lotus', name:'인당수 연꽃', stat:'체력(싸움마다 한 번 더 되살아남)', icon:'pearl', mul:1, pow:50, story:true, w:6},
   {k:'yagwang', name:'용궁 야광주', stat:'엽전·경험치', icon:'pearl', mul:1, pow:60, story:true, vault:true, w:5},
+  {k:'goldjar', name:'마르지 않는 금항아리', stat:'엽전·보석(경험치도 조금)', icon:'mirror', mul:1, pow:50, story:true, vault:true, vsrc:'쿠베라의 곳간', w:8},   // 물의 신화 9-26: 쿠베라의 곳간에서만(7%) — 야차들이 곳간을 지키며 아껴 온, 퍼내도 마르지 않는다는 금항아리
   // 5부 천축(물의 신화 9단계): 이야기 보상으로만. 파사석 = 기술 재사용 -%(skCdOf) · 금강저 = 공격력 +% + 치명타가 터지면 번개(그 피해의 VAJRA_BOLT) · 영약 호리병 = 저절로 차는 체력 +%·탕약 회복량 +절반% · 구슬 그물의 구슬 = 가진 신화 보물 하나마다 모든 신화 보물의 수치 +pow%(mythK)
   {k:'pasa', name:'파사석', stat:'기술 재사용 감소', icon:'mirror', mul:1, pow:12, story:true, w:8},
   {k:'vajra', name:'금강저', stat:'공격력(치명타에 번개 +10%)', icon:'sword', mul:1, pow:120, story:true, w:9},
@@ -4472,7 +4473,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -4684,6 +4685,7 @@ function mergeState(d){
     out.mat.m4 = Math.max(0, +out.mat.m4 || 0); }
   // @@END-E
   // @@MERGE-F (갈래 F가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2.asura = n0(x.asura); out.sea2.kub = n0(x.kub); out.sea2.asuraBest = n0(x.asuraBest); out.sea2.kubBest = n0(x.kubBest); }   // 물의 신화 9-26: 아수라 야행·쿠베라의 곳간 하루 횟수·최고 기록
   // @@END-F
   // @@MERGE-G (갈래 G가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-G
@@ -4761,7 +4763,7 @@ function barrack(){
   const gain = Math.round(others.reduce((t, c) => t + Math.min(BR.gainMax, (BR.gainBase + Math.floor(cum(c) / 100)) * BR.per), 0));
   return (brCache = {n:others.length, top, stat:Math.min(BR.statMax, Math.floor(top / BR.statPer)), gain, exp:Math.round(gain * BR.expK), gem:Math.floor(gain / 2)});
 }
-const gemMul = () => 1 + (barrack().gem + titleEff('gem')) / 100;
+const gemMul = () => 1 + (barrack().gem + titleEff('gem') + (S.myth.goldjar || 0) * 0.5 * mythK()) / 100;   // 금항아리: 보석도 절반만큼
 const classAtk = () => { const C = cls(); return C.grow ? C.grow[0] + (C.grow[1] - C.grow[0]) * Math.min(1, cumLv() / 600) : C.atkMul; };
 // 세 나라 세트: 같은 줄 보물 셋(이승·부상·곤륜)을 모두 가지면 추가 효과. 오색 돌이 있으면 1.5배
 function mythSets(){
@@ -4823,7 +4825,7 @@ function statValue(k, st){
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
 const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -5566,6 +5568,7 @@ let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정
 function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
+  if (m.kubGuard && mine) kubStun(m);   // 쿠베라의 곳간: 야차 문지기는 맞으면 잠깐 기절
   const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && (aw2C || Math.random() < ST.crit + sc);
@@ -6557,6 +6560,101 @@ function drawBreathBubble(B){
   for (let j = 0; j < 3; j++){ const ph = (gtime * 0.8 + j / 3) % 1; b.fillStyle = `rgba(210,245,255,${0.7 * (1 - ph)})`; b.fillRect(x - 3 + j * 3, y - 2 - ph * 16, 1, 1); }
   b.restore();
 }
+/* ===== 5부 천축의 손컨 패턴 둘(물의 신화 9-26) =====
+   열 머리(라바나 레이드 「열 머리 왕」): 보스 머리 열 개(B.heads). 예고 때 남은 머리마다 붉은 칸이 하나씩 깔린다(머리 번호에 따라 고리·줄·십자·비 네 모양이 돌아가며, 자리는 용사 둘레에 흩어짐).
+     [되받기]를 성공할 때마다 머리 하나가 꺼져(고개를 떨굼) 다음 예고의 붉은 칸이 하나 줄고, 열 머리가 다 꺼지면 보스가 휘청이고 머리 IND_PAT.regrow개가 다시 눈을 뜬다. 이 레이드에서는 되받기가 두 번에 한 번 나온다.
+   꽃으로 바꾸기(마라의 군대 레이드): 예고 때 무기가 비처럼 쏟아질 붉은 칸 여럿(IND_PAT.flowerN곳) 가운데 금빛 무기 하나가 있다. 그 금빛 무기 근처(IND_PAT.near칸 안)에서 시간 안에 [되받기]를 성공하면 나머지가 모두 꽃잎으로 바뀌어 피해가 없다(보스도 되받기처럼 묶이고 맞는다).
+     못 하면 붉은 칸 피해(구르기·피하기로 피할 수도 있음). 자동 손: 지금 되받기 확률(HAND.counter)대로 성공하고, 못 하면 붉은 칸 피하기(HAND.dodge)로 넘어간다.
+   __game.noSeaPat·noIndPat이면 둘 다 꺼진다(다른 점검의 시간이 흔들리지 않게) */
+const IND_PAT = {heads:10, regrow:3, near:2, flowerN:7, flowerT:2.4, goldMin:3, goldMax:5};
+const patInd = B => {
+  if (!B || !raid || raid.boss !== B || S.world < 8 || !raid.info.sea || raid.info.jin || raid.info.trap || raid.info.mem || raid.info.pvp || raid.info.dummy || raid.info.haetae || raid.info.tower || raid.info.aw2t || raid.info.aw2tut) return null;
+  if (window.__game && (window.__game.noSeaPat || window.__game.noIndPat)) return null;
+  return raid.info.type === 'ravana' ? 'heads' : raid.info.name === '마라의 군대' ? 'flower' : null;
+};
+const headsLeft = B => B.heads == null ? IND_PAT.heads : B.heads;
+function patHeads(B, P){
+  const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
+  if (!tg) return;
+  if (B.heads == null) B.heads = IND_PAT.heads;
+  const n = B.heads, set = new Set(), add = (x, y) => { if (inMap(x, y)) set.add(x + ',' + y); }, kinds = ['ring', 'line', 'cross', 'rain'], anchors = [];
+  for (let i = 0; i < n; i++){
+    const kind = kinds[i % 4], ax = i === 0 ? tg.tx : tg.tx + Math.round((Math.random() * 2 - 1) * 6), ay = i === 0 ? tg.ty : tg.ty + Math.round((Math.random() * 2 - 1) * 4);
+    anchors.push([ax, ay, kind]);
+    if (kind === 'ring'){ for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) if (Math.max(Math.abs(dx), Math.abs(dy)) === 2) add(ax + dx, ay + dy); }   // 속이 빈 5×5 고리: 안쪽 3×3은 안전
+    else if (kind === 'line'){ for (let k = -4; k <= 4; k++) (i % 8 === 1) ? add(ax + k, ay) : add(ax, ay + k); }
+    else if (kind === 'cross'){ for (let k = -4; k <= 4; k++){ add(ax + k, ay); add(ax, ay + k); } }
+    else { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) add(ax + dx, ay + dy); }
+  }
+  P.tel = {kind:'tiles', shape:'heads', heads:n, anchors, t:0, T:PAT.warnRaid + 0.3, set, tiles:[...set].map(x => x.split(',').map(Number)),
+    auto:{ok:Math.random() < handP('dodge'), at:0.25 + Math.random() * 0.5, done:false}};
+  addText(`열 머리! ${n}개`, B.x, B.y - mobHeight(B) - 14, '#ffd24a', 12, true); sfx('blip');
+  if (!S.seenCut.patHeads){ S.seenCut.patHeads = 1; addLog('「열 머리」! 남은 머리마다 붉은 칸이 깔려요. [되받기]를 성공할 때마다 머리가 하나씩 꺼져 붉은 칸이 줄어요.', 'warn'); }
+}
+function headOff(B){
+  if (B.heads == null) B.heads = IND_PAT.heads;
+  if (B.heads <= 0) return;
+  B.heads--; B.headFx = gtime;
+  addText(B.heads > 0 ? `머리 하나 꺼짐! ${B.heads}개` : '열 머리가 모두 고개를 숙였다!', B.x, B.y - mobHeight(B) - 26, '#ffe08a', 13, true);
+  if (!fxOff()) vSparks(B.x, B.y - mobHeight(B) * 0.8, 10, '#ffd24a', 70, 24);
+  if (B.heads <= 0){ patBreak(B); B.heads = IND_PAT.regrow; addLog('열 머리가 모두 꺼졌어요! 보스가 휘청이는 동안 몰아쳐요.', 'gain'); }
+}
+function patFlower(B, P){
+  const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
+  if (!tg){ return; }
+  let gold = null;
+  for (let q = 0; q < 60 && !gold; q++){
+    const x = tg.tx + Math.round((Math.random() * 2 - 1) * 5), y = tg.ty + Math.round((Math.random() * 2 - 1) * 5), d = Math.max(Math.abs(x - tg.tx), Math.abs(y - tg.ty));   // 칸 거리(가로·세로 중 큰 쪽)가 3~5 — 적어도 한 걸음은 걸어가야 닿는다
+    if (d >= IND_PAT.goldMin && d <= IND_PAT.goldMax && inMap(x, y) && tileFree(x, y, hero)) gold = [x, y];
+  }
+  for (let d = IND_PAT.goldMin; d <= IND_PAT.goldMax && !gold; d++) for (let dx = -d; dx <= d && !gold; dx++) for (let dy = -d; dy <= d; dy++){ const x = tg.tx + dx, y = tg.ty + dy; if (Math.max(Math.abs(dx), Math.abs(dy)) === d && inMap(x, y) && tileFree(x, y, hero)){ gold = [x, y]; break; } }   // 가장자리라 못 찾았으면 칸 거리 3~5를 훑는다
+  if (!gold){ patTiles(B, P); return; }
+  const set = new Set(), add = (cx, cy) => { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) if (inMap(cx + dx, cy + dy)) set.add((cx + dx) + ',' + (cy + dy)); };
+  add(gold[0], gold[1]); add(tg.tx, tg.ty);   // 금빛 무기 자리와 용사 발밑은 늘 붉다(가만히 있으면 맞는다)
+  for (let k = 0; k < IND_PAT.flowerN - 2; k++) add(tg.tx + Math.round((Math.random() * 2 - 1) * 7), tg.ty + Math.round((Math.random() * 2 - 1) * 5));
+  P.tel = {kind:'tiles', shape:'flower', flower:{gold, auto:{ok:Math.random() < handP('counter'), at:0.5 + Math.random() * 0.8}}, t:0, T:PAT.warnRaid + IND_PAT.flowerT, set, tiles:[...set].map(x => x.split(',').map(Number)),
+    auto:{ok:Math.random() < handP('dodge'), at:0.4 + Math.random() * 0.5, done:false}};
+  addText('무기가 쏟아져요!', B.x, B.y - mobHeight(B) - 14, '#ffd24a', 12, true); sfx('blip');
+  if (!S.seenCut.patFlower){ S.seenCut.patFlower = 1; addLog('「꽃으로 바꾸기」! 쏟아지는 무기 가운데 금빛 무기 근처에서 [되받기]를 하면 나머지가 모두 꽃잎으로 바뀌어요.', 'warn'); }
+}
+const flowerNear = T => { const [hx, hy] = heroTile(), g = T.flower.gold; return Math.max(Math.abs(hx - g[0]), Math.abs(hy - g[1])) <= IND_PAT.near; };
+function flowerOk(B, manual){
+  const P = B.pat, T = P.tel; if (!T || !T.flower) return;
+  B.petals = {tiles:T.tiles, at:gtime};
+  counterOk(B, manual);   // 되받기와 같은 보상(보스 묶임·큰 피해·버팀) — P.tel은 여기서 비워진다
+  addText('꽃으로!', hero.x, hero.y - 54, '#ffb0d8', manual ? 14 : 11, true); S.rec.flowers = (S.rec.flowers || 0) + 1;
+  if (!fxOff()) for (const [tx, ty] of T.tiles.filter((_, k) => k % 3 === 0).slice(0, 18)){ const px = isoX(tx, ty), py = isoY(tx, ty); vSparks(px, py - 4, 2, '#ffb0d8', 30, 14); }
+}
+function drawIndGround(B, T){
+  if (T && T.flower){
+    const k = Math.min(1, T.t / T.T), g = T.flower.gold, pu = 0.5 + 0.5 * Math.sin(gtime * 14);
+    b.save();
+    for (let j = 0; j < T.tiles.length; j++){   // 쏟아지는 무기(작은 날붙이): 칸 위에서 떨어져 내린다
+      const [tx, ty] = T.tiles[j], x = isoX(tx, ty), y = isoY(tx, ty), ph = (k * 1.6 + j * 0.37) % 1, dy = -26 * (1 - ph);
+      b.strokeStyle = `rgba(215,220,235,${0.35 + 0.5 * ph})`; b.lineWidth = 1; b.beginPath(); b.moveTo(x + ((j * 5) % 5) - 2, y + dy - 5); b.lineTo(x + ((j * 5) % 5) - 2, y + dy + 1); b.stroke();
+    }
+    const gx = isoX(g[0], g[1]), gy = isoY(g[0], g[1]), near = flowerNear(T);
+    b.globalCompositeOperation = 'lighter';
+    b.fillStyle = `rgba(255,210,70,${0.25 + 0.2 * pu})`; b.beginPath(); b.ellipse(gx, gy + 1, 11, 5.5, 0, 0, 7); b.fill();
+    b.strokeStyle = near ? `rgba(160,255,170,${0.7 + 0.3 * pu})` : `rgba(255,220,100,${0.6 + 0.35 * pu})`; b.lineWidth = 1.2; b.beginPath(); b.ellipse(gx, gy + 1, IND_PAT.near * 9, IND_PAT.near * 4.5, 0, 0, 7); b.stroke();   // 되받기가 통하는 범위
+    b.globalCompositeOperation = 'source-over';
+    b.strokeStyle = '#2a1600'; b.lineWidth = 3; b.beginPath(); b.moveTo(gx, gy - 17 + Math.sin(gtime * 6)); b.lineTo(gx, gy - 3); b.stroke();   // 금빛 무기(칼)
+    b.strokeStyle = '#ffd24a'; b.lineWidth = 1.6; b.beginPath(); b.moveTo(gx, gy - 17 + Math.sin(gtime * 6)); b.lineTo(gx, gy - 3); b.stroke();
+    b.fillStyle = '#ffe9a0'; b.fillRect(gx - 3, gy - 6, 6, 1.5);
+    b.restore();
+  }
+  if (T && T.heads){   // 머리마다 앵커에 작은 머리 표시(모양 이름)
+    b.save(); b.globalCompositeOperation = 'lighter';
+    for (const [ax, ay] of T.anchors){ if (!inMap(ax, ay)) continue; b.fillStyle = 'rgba(255,200,80,.5)'; b.beginPath(); b.arc(isoX(ax, ay), isoY(ax, ay) - 3, 2.2, 0, 7); b.fill(); }
+    b.restore();
+  }
+  if (B && B.petals){   // 꽃잎: 쏟아지던 무기가 꽃으로 바뀌어 흩날린다
+    const ph = (gtime - B.petals.at) / 1.5;
+    if (ph >= 1) B.petals = null;
+    else { b.save(); for (let j = 0; j < B.petals.tiles.length; j++){ const [tx, ty] = B.petals.tiles[j]; if (j % 2) continue; const x = isoX(tx, ty) + Math.sin(gtime * 3 + j) * 3, y = isoY(tx, ty) - 14 * (1 - ph) + 4 * ph;
+        b.fillStyle = `rgba(255,${170 + (j % 3) * 20},${210 + (j % 2) * 20},${0.9 * (1 - ph)})`; b.beginPath(); b.ellipse(x, y, 2.2, 1.2, j, 0, 7); b.fill(); } b.restore(); }
+  }
+}
 function patTiles(B, P){
   const tg = !hero.dead ? hero : raid ? raid.allies.find(a => !a.down) : null;
   if (!tg) return;
@@ -6608,6 +6706,7 @@ function counterOk(B, manual){
   if (raid && raid.info.jin && !B.dead && P && !(P.grogT > 0)){ patBreak(B); P.grogT = JIN.ctrGrog; }   // 상위 레이드 「진」: 되받으면 바로 휘청
   shake = Math.max(shake, 0.3); sfx('crit');
   if (!fxOff()){ vadd({type:'shock', x:hero.x, y:hero.y, r0:4, r1:26, w:3, col:'#ffe08a', dur:0.45, ground:true}); vadd({type:'slashx', x:B.x, y:B.y - mobHeight(B) * 0.5, L:16, a:-0.6, col:'#ffe08a', dur:0.35}); }
+  if (patInd(B) === 'heads' && !B.dead) headOff(B);   // 열 머리: 되받을 때마다 머리 하나가 꺼진다
 }
 // 구르기: 붉은 칸이면 가장 가까운 안전한 칸으로, 아니면 보스 반대쪽으로 2~3칸. 0.35초 동안 붉은 칸에 맞지 않는다
 function heroRoll(manual){
@@ -6638,6 +6737,10 @@ function handPress(){
   if (raid && raid.info.haetae) return haetaeHalt() ? 'halt' : '';   // 해태 수련: 물러서기
   const B = patBoss(), P = B && B.pat;
   if (P && P.tel && P.tel.kind === 'counter' && !hero.dead){ counterOk(B, true); return 'counter'; }
+  if (P && P.tel && P.tel.kind === 'tiles' && P.tel.flower && !hero.dead){   // 꽃으로 바꾸기: 금빛 무기 근처에서 되받기
+    if (flowerNear(P.tel)){ flowerOk(B, true); return 'counter'; }
+    addText('금빛 무기 가까이에서!', hero.x, hero.y - 44, '#ffd24a', 11, true); sfx('blip'); return '';
+  }
   return heroRoll(true) ? 'roll' : '';
 }
 function patHitHero(d, raw){
@@ -6666,6 +6769,7 @@ function updatePat(dt){
     if (T.kind === 'tiles'){
       if (T.flow && !hero.dead){ T.pushT -= dt;   // 물살: 거슬러 걷거나 버티지 않으면 한 칸씩 떠밀린다
         if (T.pushT <= 0){ T.pushT = PAT.flowPush; if (!(hero.rollT > 0) && !(hero.dodgeT > 0) && !hero.goal && !hero.moving && !(hero.stunT > 0)){ const nx = hero.tx + T.flow[0], ny = hero.ty + T.flow[1]; if (tileFree(nx, ny, hero)) startMove(hero, nx, ny, 0.3); } } }
+      if (T.flower && T.flower.auto.ok && T.t >= T.flower.auto.at && !hero.dead){ flowerOk(B, false); return; }   // 자동 손: 지금 되받기 확률대로 꽃으로 바꾼다
       if (T.auto.ok && T.t >= T.auto.at && !hero.dead){   // 자동 손: 붉은 칸 안이면 구르고(3번까지), 밖이면 터질 때까지 들어가지 않고 버틴다
         const [x, y] = heroTile();
         if (T.set.has(x + ',' + y)){ if (!(hero.rollT > 0) && (T.auto.n || 0) < 3){ T.auto.n = (T.auto.n || 0) + 1; heroRoll(false); } }
@@ -6704,12 +6808,15 @@ function updatePat(dt){
   if (lv >= 3 && P.wipes.length && B.hp <= B.maxHp * P.wipes[0]){ P.wipes.shift(); patWipe(B, P); return; }
   P.cd -= dt;
   if (P.cd <= 0){
-    const jin = !!(raid && raid.info.jin), trap = !!(raid && raid.info.trap), cd = jin ? [JIN.cdA, JIN.cdB] : trap ? [2.2, 3.2] : PAT.cd;
+    const ik = patInd(B), jin = !!(raid && raid.info.jin), trap = !!(raid && raid.info.trap), cd = jin ? [JIN.cdA, JIN.cdB] : trap ? [2.2, 3.2] : PAT.cd;
     P.cd = cd[0] + Math.random() * (cd[1] - cd[0]); P.n++;
     if (trap) patTiles(B, P);   // 용궁 보물고 함정 방: 붉은 칸만, 자주
     else if (jin && P.n % JIN.chaseN === 0) patChase(B, P);
     else if (patSea(B) && P.n % 4 === 2) patFlow(B, P);   // 바다: 네 번에 한 번은 물살   // 상위 레이드 「진」: 쫓는 살
-    else if (lv >= 2 && P.n % (fitOn(B) || jin ? 2 : 3) === 0 && !hero.dead) patCounter(B, P); else patTiles(B, P);   // 진·타임 보스·1일 보스는 되받기가 더 잦다   // 타임 보스·1일 보스는 되받기가 더 잦다
+    else if (lv >= 2 && P.n % (ik === 'heads' || fitOn(B) || jin ? 2 : 3) === 0 && !hero.dead) patCounter(B, P);
+    else if (ik === 'heads') patHeads(B, P);   // 열 머리(라바나): 붉은 칸이 남은 머리 수만큼
+    else if (ik === 'flower' && P.n % 3 === 1) patFlower(B, P);   // 꽃으로 바꾸기(마라의 군대)
+    else patTiles(B, P);   // 진·타임 보스·1일 보스는 되받기가 더 잦다   // 타임 보스·1일 보스는 되받기가 더 잦다
   }
 }
 function jinStun(t){ if (!raid || !raid.info.jin || hero.dead || !(t > 0) || hero.budongT > 0) return;   // 부동심(6차): 기절·휘청 안 함
@@ -6720,6 +6827,7 @@ const patBusy = m => !!(m.stunT > 0 || m.pat && (m.pat.grogT > 0 || m.pat.tel));
 function drawPatGround(){
   const B = patBoss(), P = B && B.pat, T = P && P.tel;
   drawBreathBubble(B);
+  if (B && (B.petals || T && (T.flower || T.heads))) drawIndGround(B, T);
   if (!T) return;
   const k = Math.min(1, T.t / T.T), pu = 0.5 + 0.5 * Math.sin(gtime * 14);
   b.save();
@@ -6753,6 +6861,11 @@ function drawPatMarks(){
   if (!P) return;
   const x = (B.x - camX) * scale, y = Math.max(112, (B.y - mobHeight(B) - 10 - camY) * scale);   // 큰 보스도 위 보스 막대에 가리지 않게
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  if (P.tel && P.tel.flower){
+    const g = P.tel.flower.gold, gx = (isoX(g[0], g[1]) - camX) * scale, gy = (isoY(g[0], g[1]) - 24 - camY) * scale, near = flowerNear(P.tel);
+    ctx.font = '900 13px SamhanSans, sans-serif'; ctx.lineWidth = 4; ctx.strokeStyle = '#2a1600'; const msg = near ? '지금 되받기!' : '금빛 무기!';
+    ctx.strokeText(msg, gx, gy); ctx.fillStyle = near ? '#a0ffb0' : '#ffd24a'; ctx.fillText(msg, gx, gy);
+  }
   if (P.tel && P.tel.kind === 'counter'){
     const bob = Math.sin(gtime * 16) * 3;
     ctx.font = '900 34px SamhanSans, sans-serif'; ctx.lineWidth = 6; ctx.strokeStyle = '#2a1600'; ctx.strokeText('!', x, y - 10 + bob);
@@ -6975,7 +7088,7 @@ const TB_GEMS = {normal:100, hell:200, deep:400}, GR_GEMS = 180, VAULT_GEMS = 90
 function raidReset(){
   dummyLeft(); paradeLeft(); vaultLeft(); dbCheck(); grCheck();
   S.dummy.n = 0; S.parade.n = 0; S.vault.n = 0; S.dboss.n = 0; S.dboss.won = false; S.gr.n = 0; S.gr.won = false;
-  { const D = seaDay(); D.sugun = 0; D.yv = 0; D.ygr = 0; D.ygrWon = false; }   // 4부 윗단계(수군 야행·용궁 보물고·용왕 강림)도 함께
+  { const D = seaDay(); D.sugun = 0; D.yv = 0; D.ygr = 0; D.ygrWon = false; D.asura = 0; D.kub = 0; }   // 4부 윗단계(수군 야행·용궁 보물고·용왕 강림)도 함께
   S.raid.tk = Math.max(S.raid.tk, TICKET_MAX); S.raid.tkT = now();
   addLog('레이드 리셋권! 허수아비·백귀야행·보물 동굴·1일 보스·강림 레이드를 오늘 다시 할 수 있어요. 토벌패도 가득!', 'gain');
 }
@@ -7036,6 +7149,8 @@ function startParade(){
 function updateParade(dt){
   const P = parade;
   if (P.sea){ updateSugun(dt); return; }
+  if (P.asura){ updateAsura(dt); return; }
+  if (P.kub){ updateKub(dt); return; }
   P.t -= dt;
   if (P.t <= 0){ finishParade(); return; }
   P.spawnT -= dt;
@@ -7051,6 +7166,8 @@ function updateParade(dt){
 }
 function finishParade(){
   if (parade && parade.sea) return finishSugun();
+  if (parade && parade.asura) return finishAsura();
+  if (parade && parade.kub) return finishKub();
   const P = parade, k = P.kills; parade = null; presetDrop(); ev('parade');
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   spawnT = 1.2;
@@ -7076,7 +7193,7 @@ function finishParade(){
 const SUGUN = {tries:2, time:60, max:30, hp:0.6, tideEvery:20, tideT:9, tideWarn:2, tideDmg:0.05, bossAt:18, bossHp:26, soulP:0.3, relicP:0.06, piece:6};
 const SUGUN_MOBS = [['mulgwi', '#6a8a9a', '물귀신'], ['ghostship', '#8a9aa8', '헛배'], ['wisp', '#8ff0ff', '도깨비불'], ['conch', '#e8c8a8', '소라 껍질 귀신'], ['dokkaebi', '#4aa8c8', '물 도깨비'], ['bonefish', '#d8d8c8', '뼈 물고기'], ['jelly', '#9ad8ff', '해파리 등불']];
 // 4부 딸린 콘텐츠의 하루 횟수(수군 야행·용궁 보물고·용왕 강림)는 S.sea2 한 칸에 모아 둔다
-function seaDay(){ if (!S.sea2 || S.sea2.day !== dummyDay()){ const o = S.sea2 || {}; S.sea2 = {day:dummyDay(), sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:o.ygrPity || 0, sugunBest:o.sugunBest || 0}; } return S.sea2; }
+function seaDay(){ if (!S.sea2 || S.sea2.day !== dummyDay()){ const o = S.sea2 || {}; S.sea2 = {day:dummyDay(), sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:o.ygrPity || 0, sugunBest:o.sugunBest || 0, asura:0, kub:0, asuraBest:o.asuraBest || 0, kubBest:o.kubBest || 0}; } return S.sea2; }
 const sugunOpen = () => S.world >= 6;
 const sugunLeft = () => SUGUN.tries - seaDay().sugun;
 const sugunWet = (P, x) => !!(P.tide && P.tide.on && (P.tide.side ? x >= COLS / 2 : x < COLS / 2));
@@ -7165,6 +7282,212 @@ function drawSugunTide(){
     b.beginPath(); b.moveTo(x, y - IH / 2); b.lineTo(x + IW / 2, y); b.lineTo(x, y + IH / 2); b.lineTo(x - IW / 2, y); b.closePath();
     if (T.on){ b.fillStyle = `rgba(40,130,220,${0.42 + 0.08 * Math.sin(gtime * 3 + tx * 0.7 + ty)})`; b.fill(); if ((tx + ty) % 3 === 0){ b.fillStyle = 'rgba(220,245,255,.5)'; b.fillRect(x - 3 + Math.sin(gtime * 2 + ty) * 2, y - 0.5, 6, 1); } }
     else { b.fillStyle = `rgba(90,190,255,${0.08 + 0.14 * pu})`; b.fill(); }
+  }
+  b.restore();
+}
+/* ===== 아수라 야행(물의 신화 9-26, 수군 야행의 윗단계 — 5부 76장 「젖의 바다」, 세계 9부터) =====
+   신과 아수라가 영약을 두고 밧줄을 당기는 한복판. ASURA.time초 동안 아수라 병사·락샤사·독 방울 행렬이 몰려오고, 화면 위에 밧줄 막대(가운데 ASURA.start에서 시작)가 있다.
+   요괴를 잡을 때마다 밧줄이 내 쪽(오른쪽)으로 ASURA.pull만큼 당겨지고, 가만히 있어도 시간이 흐르며 ASURA.drift/초씩 아수라 쪽으로 끌려가고 ASURA.jerkEvery초마다 아수라가 확 당긴다(−ASURA.jerk).
+   끝 bossAt초를 남기고 대장 「밧줄을 당기는 아수라 대장」이 나온다(잡으면 밧줄 +ASURA.boss). 끝났을 때 밧줄 자리 = 단계 1~5(ASURA.tier 문턱) → 보상 크기.
+   보상: 천축 향목·엽전·보석·쇳가루·고삐 조각 + 4단계부터 5부 넋 구슬 기회(soulP) + 5단계에서 영물 치장 기회(spiritP). 하루 ASURA.tries번(S.sea2.asura, 백귀야행·수군 야행과 따로) */
+const ASURA = {tries:2, time:60, max:30, hp:0.6, start:0.5, pull:0.022, boss:0.14, drift:0.0065, jerkEvery:15, jerk:0.06, bossAt:20, bossHp:28, tier:[0, 0.3, 0.5, 0.7, 0.88], kEff:[10, 20, 32, 46, 62], soulP:[0, 0, 0, 0.3, 0.6], skinP:[0, 0, 0, 0, 0.15], piece:[1, 2, 3, 4, 6]};
+const ASURA_MOBS = [['asura', '#8a3a4a', '아수라 병사'], ['asura', '#6a3a6a', '아수라 창잡이'], ['rakshasa', '#5a7a4a', '숲 락샤사'], ['batrak', '#6a4a7a', '박쥐 날개 락샤사'], ['serpent', '#a88a5a', '가뭄 뱀'], ['blackdrop', '#2a6a8a', '독 방울']];
+const asuraOpen = () => S.world >= 9;
+const asuraLeft = () => ASURA.tries - seaDay().asura;
+const asuraTier = p => { let t = 0; for (let i = 0; i < ASURA.tier.length; i++) if (p >= ASURA.tier[i]) t = i + 1; return Math.max(1, t); };
+function indSoulRoll(){ const pool = SOULS.filter(s => s.pt === 5); let tot = 0; for (const s of pool) tot += SOUL_GW[s.g]; let r = Math.random() * tot; for (const s of pool){ r -= SOUL_GW[s.g]; if (r <= 0) return s.k; } return pool[0].k; }
+function startAsura(){
+  if (parade || raid || bossActive || market || !asuraOpen() || asuraLeft() <= 0 || !session && !window.__game) return false;
+  seaDay().asura++;
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
+  parade = {asura:true, t:ASURA.time, kills:0, spawnT:0.3, rope:ASURA.start, lastK:0, jerkN:0, boss:null, bossKill:false, lab:() => `아수라 야행${parade.boss && !parade.boss.dead ? ' · 대장!' : ''} · ${Math.max(0, Math.ceil(parade.t))}초`};
+  hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); presetTake('mob');
+  addLog(`아수라 야행! ${ASURA.time}초 동안 요괴를 잡아 밧줄을 내 쪽으로 당겨요. 가만히 있으면 아수라 쪽으로 끌려가요.`, 'warn'); sfx('boss'); shake = 0.3;
+  if (!fxOff()) fxBanner('아수라 야행', '밧줄을 당겨요!', '#ff9a5a', '34%', 1.6);
+  return true;
+}
+function updateAsura(dt){
+  const P = parade;
+  P.t -= dt;
+  if (P.t <= 0){ finishAsura(); return; }
+  const dk = P.kills - P.lastK; P.lastK = P.kills;
+  if (dk > 0){ P.rope = Math.min(1, P.rope + dk * ASURA.pull); P.pulled = (P.pulled || 0) + dk; }
+  P.rope = Math.max(0, P.rope - ASURA.drift * dt);
+  const jn = Math.floor((ASURA.time - P.t) / ASURA.jerkEvery);
+  if (jn > P.jerkN && P.t > 3){ P.jerkN = jn; P.rope = Math.max(0, P.rope - ASURA.jerk); addText('아수라가 당겨요!', hero.x, hero.y - 56, '#ff7a5a', 11, true); sfx('blip'); if (!fxOff()) shake = Math.max(shake, 0.2); }
+  if (!P.boss && P.t <= ASURA.bossAt){
+    const spot = spawnTile(4) || spawnTile(3) || spawnTile(2);
+    if (spot){ const m = makeMob(false, spot[0], spot[1]); Object.assign(m, {type:'asura', color:'#4a2a5a', name:'밧줄을 당기는 아수라 대장', aggro:true, asBoss:true, sc:1.9}); m.hp = m.maxHp = m.hp * ASURA.bossHp; m.atk *= 2;
+      mobs.push(m); P.boss = m; fx.push({type:'poof', t:0, dur:0.5, x:m.x, y:m.y - 10}); addLog('「밧줄을 당기는 아수라 대장」이 나타났어요! 잡으면 밧줄이 크게 당겨져요.', 'warn'); sfx('boss');
+      if (!fxOff()) fxBanner('아수라 대장', '밧줄을 쥔 대장이 나타났어요', '#ff9a5a', '34%', 1.2); }
+  }
+  if (P.boss && P.boss.dead && !P.boss.fled && !P.bossKill){ P.bossKill = true; P.rope = Math.min(1, P.rope + ASURA.boss); P.kills += 9; addLog('아수라 대장을 쓰러뜨렸어요! 밧줄이 크게 당겨져요.', 'good'); }
+  P.spawnT -= dt;
+  if (P.spawnT <= 0){
+    P.spawnT = 0.35 + Math.random() * 0.25;
+    for (let n = 0; n < 3 && aliveMobs().length < ASURA.max; n++){
+      const spot = spawnTile(3) || spawnTile(2); if (!spot) break;
+      const [type, color, name] = ASURA_MOBS[(Math.random() * ASURA_MOBS.length) | 0], m = makeMob(false, spot[0], spot[1]);
+      Object.assign(m, {type, color, name, aggro:true}); m.hp = m.maxHp = m.hp * ASURA.hp;
+      mobs.push(m); fx.push({type:'poof', t:0, dur:0.35, x:m.x, y:m.y - 6});
+    }
+  }
+}
+function finishAsura(){
+  const P = parade, k = P.kills, boss = !!P.bossKill, D = seaDay(), tier = asuraTier(P.rope), ke = ASURA.kEff[tier - 1], rope = P.rope;
+  const luck = window.__game && window.__game.asLuck != null ? window.__game.asLuck : 1; parade = null; presetDrop(); ev('parade');
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
+  spawnT = 1.2;
+  const gold = mGold(Math.max(1, S.stage)) * ke * 8 * gainMul('gold'), gems = Math.round(ke * 1.5 * gemMul() * RAID_GEM_K), dust = ke * (2 + S.world);
+  const mat = Math.ceil(ke / 4), piece = ASURA.piece[tier - 1], extra = [];
+  S.gold += gold; S.gems += gems; S.dust += dust; if (mat) gainMat(mat, true); if (piece) gainPiece(piece, true);
+  const grudge = gainGrudge(2 * ke / GRUDGE.paradePer, true);
+  if (Math.random() < ASURA.soulP[tier - 1] * luck){ const so = giveSoul(indSoulRoll(), true); if (so) extra.push(soulDropText(so)); }
+  if (Math.random() < ASURA.skinP[tier - 1] * luck){ const sk = skinDrop(null, true, 2, 1, 0.9, 0, 1); if (sk) extra.push(`치장: ${skName(sk.it)}${sk.better ? '(바로 낌)' : ''}`); }
+  const best = tier > (D.asuraBest || 0); if (best) D.asuraBest = tier;
+  S.rec.asuras = (S.rec.asuras || 0) + 1; recWin(false, true); refreshStats();
+  addLog(`아수라 야행 끝! 밧줄 ${tier}단계(요괴 ${k}마리${boss ? ' · 대장 포함' : ''}) · 엽전 +${fmt(gold)} · 보석 +${gems} · ${MATS[matW()].name} +${mat}${piece ? ` · 고삐 조각 +${piece}` : ''}${extra.length ? ' · ' + extra.join(' · ') : ''}`, 'gain'); sfx('win');
+  saveLocal();
+  if (!(window.__game && window.__game.quiet)) showModal('아수라 야행 · 끝', `<p>밧줄이 <b>${tier}단계</b>까지 당겨졌어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''} <span class="small">(요괴 ${k}마리${boss ? ' · 아수라 대장 격파' : ''})</span></p>
+    <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
+    <li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}${grudge ? `<li style="color:#ff8a9a">${grudge}<span>원한 조각</span></li>` : ''}
+    ${extra.map(x => `<li style="color:var(--myth)">${x}<span>${tier}단계 보상</span></li>`).join('')}</ul>
+    <p class="small" style="margin-top:8px">오늘 ${asuraLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
+  return {kills:k, boss, tier, rope, gold, gems, dust, mat, piece, grudge, extra};
+}
+// 밧줄 막대(화면 위): 왼쪽 = 아수라, 오른쪽 = 내 쪽. 문턱마다 눈금과 단계 이름
+function drawAsuraRope(cx, y, cw, portrait){
+  const P = parade; if (!P || !P.asura) return y;
+  const bw = Math.round(Math.min(cw * (portrait ? 0.9 : 0.42), 380)), bx = cx - bw / 2, tier = asuraTier(P.rope);
+  box(bx, y, bw, 32);
+  rrect(bx + 4, y + 17, bw - 8, 8, 4); ctx.fillStyle = 'rgba(120,30,50,.55)'; ctx.fill();
+  const fw = Math.max(0, (bw - 8) * P.rope);
+  if (fw > 0){ const gr = ctx.createLinearGradient(bx + 4, 0, bx + bw - 4, 0); gr.addColorStop(0, '#d8a040'); gr.addColorStop(1, '#ffe27a'); rrect(bx + 4, y + 17, Math.max(6, fw), 8, 4); ctx.fillStyle = gr; ctx.fill(); }
+  for (let i = 1; i < ASURA.tier.length; i++){ const tx = bx + 4 + (bw - 8) * ASURA.tier[i]; ctx.fillStyle = P.rope >= ASURA.tier[i] ? '#fff4c0' : 'rgba(255,255,255,.45)'; ctx.fillRect(Math.round(tx) - 1, y + 15, 2, 12); }
+  const kx = bx + 4 + (bw - 8) * P.rope; ctx.beginPath(); ctx.arc(kx, y + 21, 6.5, 0, 7); ctx.fillStyle = '#b8742a'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = '#2a1600'; ctx.stroke();   // 밧줄 매듭
+  ctx.font = '800 10px SamhanSans, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ff9a8a'; ctx.fillText('◀ 아수라', bx + 8, y + 8);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff4e0'; ctx.fillText(`밧줄 ${tier}단계`, cx, y + 8);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#ffe9a0'; ctx.fillText('내 쪽 ▶', bx + bw - 8, y + 8); ctx.textAlign = 'left';
+  return y + 34;
+}
+/* ===== 쿠베라의 곳간(물의 신화 9-26, 용궁 보물고의 짝 — 5부 75장 「란카 길」을 마친 뒤) =====
+   재물의 신의 곳간을 지키는 야차 문지기. KUB.time초 동안 곳간 판에 보물 상자가 KUB.every초마다 솟고(최대 KUB.maxChests개, KUB.life초 뒤 사라짐), 용사가 가서 닿으면 하나 나른다 — 저절로 가까운 상자로 걸어가고(눌러서 움직여도 됨).
+   야차 문지기(돌아다니다 5칸 안이면 쫓아와 때림)는 쓰러지지 않지만 맞으면 KUB.stun초 기절한다(그 뒤 KUB.stunCd초는 다시 기절하지 않음). 나른 수 = 보상 단계 1~5(KUB.tier 문턱).
+   보상: 영물 장비(spiritGearDrop('vault') 단계마다 한 번씩, 높은 단계부터) · 엽전 · 천축 향목 · 3단계부터 영물 치장 기회 · 곳간 전용 신화 보물 「마르지 않는 금항아리」 KUB.mythP. 하루 KUB.tries번(S.sea2.kub) */
+const KUB = {tries:2, time:60, every:1.4, maxChests:5, life:12, tier:[6, 14, 22, 30, 38], stun:1.8, stunCd:2.4, aggroR:5, kEff:[10, 20, 32, 46, 62], gearN:[0, 1, 1, 2, 3], mythP:0.07, skinP:[0, 0, 0.1, 0.2, 0.35], guardAtk:0.8};
+const kubOpen = () => S.world >= 8 && S.quest.main >= PART5A_END;
+const kubLeft = () => KUB.tries - seaDay().kub;
+const kubTier = n => { let t = 0; for (let i = 0; i < KUB.tier.length; i++) if (n >= KUB.tier[i]) t = i + 1; return t; };   // 0 = 1단계도 못 채움(그래도 위로금)
+function startKub(){
+  if (parade || raid || bossActive || market || !kubOpen() || kubLeft() <= 0 || !session && !window.__game) return false;
+  seaDay().kub++;
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
+  parade = {kub:true, t:KUB.time, kills:0, carried:0, chests:[], chestT:0.5, guard:null, guardT:0.4, seq:0, lab:() => `쿠베라의 곳간 · ${Math.max(0, Math.ceil(parade.t))}초`};
+  hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); hero.kubGoal = false; presetTake('mob');
+  addLog(`쿠베라의 곳간! ${KUB.time}초 동안 솟는 보물 상자에 닿아 최대한 많이 날라요. 야차 문지기는 맞으면 잠깐 기절해요.`, 'warn'); sfx('boss'); shake = 0.3;
+  if (!fxOff()) fxBanner('쿠베라의 곳간', '상자를 날라요!', '#ffd24a', '34%', 1.6);
+  return true;
+}
+function kubStun(m){
+  if (m.kubCd > 0) return;
+  m.stunT = Math.max(m.stunT || 0, KUB.stun); m.kubCd = KUB.stun + KUB.stunCd; addText('기절!', m.x, m.y - mobHeight(m) - 8, '#ffe08a', 11, true);
+  if (!fxOff()) vSparks(m.x, m.y - mobHeight(m) * 0.6, 8, '#ffe08a', 60, 20);
+}
+function kubFreeTile(){
+  const [hx, hy] = heroTile();
+  for (let q = 0; q < 60; q++){
+    const x = Math.max(0, Math.min(COLS - 1, hx + Math.round((Math.random() * 2 - 1) * 11))), y = Math.max(TOPR, Math.min(ROWS - 1, hy + Math.round((Math.random() * 2 - 1) * 7))), d = Math.abs(x - hx) + Math.abs(y - hy);
+    if (d >= 3 && d <= 12 && tileFree(x, y, null) && !parade.chests.some(c => c.tx === x && c.ty === y)) return [x, y];
+  }
+  return null;
+}
+function updateKub(dt){
+  const P = parade;
+  P.t -= dt;
+  if (P.t <= 0){ finishKub(); return; }
+  // 야차 문지기: 쓰러지지 않는다(체력을 되돌림). 없으면 새로 세운다
+  if (!P.guard || P.guard.dead){
+    P.guardT -= dt;
+    if (P.guardT <= 0){ const spot = spawnTile(5) || spawnTile(3) || spawnTile(2);
+      if (spot){ const m = makeMob(false, spot[0], spot[1]); Object.assign(m, {type:'yaksha', color:'#8a8a7a', name:'야차 문지기', aggro:false, kubGuard:true, sc:1.9, kubCd:0}); m.hp = m.maxHp = m.hp * 5000; m.atk = mAtk(Math.max(1, S.stage)) * KUB.guardAtk; m.stepDur = 0.4;
+        mobs.push(m); P.guard = m; fx.push({type:'poof', t:0, dur:0.5, x:m.x, y:m.y - 10}); if (!P.guardSeen){ P.guardSeen = 1; addLog('야차 문지기가 곳간을 지켜요! 맞으면 잠깐 기절하니 그 틈에 상자를 날라요.', 'warn'); } } }
+  } else { const g = P.guard; g.hp = g.maxHp; if (g.kubCd > 0) g.kubCd -= dt; g.aggro = Math.abs(g.tx - hero.tx) + Math.abs(g.ty - hero.ty) <= KUB.aggroR; }
+  // 상자: 솟고(KUB.every초마다), 오래되면 사라지고, 용사가 닿으면 나른다
+  P.chestT -= dt;
+  if (P.chestT <= 0 && P.chests.length < KUB.maxChests){
+    P.chestT = KUB.every * (0.8 + Math.random() * 0.4); const spot = kubFreeTile();
+    if (spot){ P.chests.push({tx:spot[0], ty:spot[1], t:0, id:++P.seq}); fx.push({type:'poof', t:0, dur:0.3, x:isoX(spot[0], spot[1]), y:isoY(spot[0], spot[1]) - 4}); }
+  }
+  const [hx, hy] = heroTile();
+  for (const c of P.chests){
+    c.t += dt;
+    if (!hero.dead && Math.abs(c.tx - hx) + Math.abs(c.ty - hy) <= 1){
+      c.got = true; P.carried++; const cx = isoX(c.tx, c.ty), cy = isoY(c.tx, c.ty);
+      addText(`상자 ${P.carried}`, cx, cy - 20, '#ffd24a', 11, true); sfx('coin');
+      if (!fxOff()){ vSparks(cx, cy - 6, 8, '#ffd24a', 60, 20); }
+    }
+  }
+  P.chests = P.chests.filter(c => !c.got && c.t < KUB.life);
+  // 용사: 저절로 가장 가까운 상자로(눌러서 움직인 뒤 멈춰 선 동안은 기다린다). 문지기가 바로 옆이면 한 번 친다(기절)
+  if (hero.kubGoal && !hero.goal){ hero.kubGoal = false; hero.holdT = 0; }
+  if (!hero.dead && !hero.goal && !hero.moving && !(hero.stunT > 0) && !(hero.holdT > 0)){
+    let best = null, bd = 1e9; for (const c of P.chests){ const d = Math.abs(c.tx - hx) + Math.abs(c.ty - hy) + (c.t > KUB.life - 3 ? -2 : 0); if (d < bd){ bd = d; best = c; } }
+    if (best){ hero.goal = [best.tx, best.ty]; hero.goalT = 5; hero.goalBlk = 0; hero.target = null; hero.engaged = false; hero.kubGoal = true; }
+  }
+  const g = P.guard;
+  if (g && !g.dead && g.spawnT <= 0 && !hero.dead && !hero.moving && hero.atkT <= 0 && !(g.kubCd > 0)){
+    const gm = mobInReach(); if (gm === g){ hero.dir = dirOf(g.tx - hero.tx, g.ty - hero.ty); attack(g); }
+  }
+}
+function finishKub(){
+  const P = parade, n = P.carried, D = seaDay(), tier = kubTier(n), ke = tier ? KUB.kEff[tier - 1] : Math.max(2, n);
+  const luck = window.__game && window.__game.kubLuck != null ? window.__game.kubLuck : 1; parade = null; presetDrop(); hero.kubGoal = false; hero.goal = null;
+  for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
+  spawnT = 1.2;
+  const gold = mGold(Math.max(1, S.stage)) * ke * 9 * gainMul('gold'), mat = Math.ceil(ke / 3), extra = [];
+  S.gold += gold; gainMat(mat, true);
+  let gearN = tier ? KUB.gearN[tier - 1] : 0;
+  for (let i = 0; i < gearN; i++){ const sg = spiritGearDrop('vault'); if (sg) extra.push(`${GRADES[itemG(sg.it)].name} ${gearName(sg.slot, sg.it)}${sg.beast != null ? ` · 깃든 짐승 ${SPIRITS[sg.beast].name}` : ''}${sg.isNew ? ' (새 장비)' : ''}`); }
+  const sh = tier >= 3 ? vaultShards() : 0; if (sh){ S.mythShard += sh; extra.push(`신화 조각 ${sh}`); }
+  let myth = null;
+  if (tier >= 1 && Math.random() < KUB.mythP * (window.__game && window.__game.vaultLuck || 1)){ myth = dropMyth(vaultD(), 'goldjar', true); extra.push(`신화 보물 마르지 않는 금항아리 +${myth.p}%${myth.up ? '' : ' (가방으로)'}`); announce(`${S.name}님이 쿠베라의 곳간에서 신화 보물 마르지 않는 금항아리를 찾았어요!`); }
+  if (tier && Math.random() < KUB.skinP[tier - 1] * luck){ const sk = skinDrop(null, true, 2, 1, 0.9, 0, 1); if (sk) extra.push(`치장: ${skName(sk.it)}${sk.better ? '(바로 낌)' : ''}`); }
+  const best = n > (D.kubBest || 0); if (best) D.kubBest = n;
+  S.rec.kubs = (S.rec.kubs || 0) + 1; recWin(false, true); refreshStats();
+  addLog(`쿠베라의 곳간 끝! 상자 ${n}개(${tier ? tier + '단계' : '단계 없음'}) · 엽전 +${fmt(gold)} · ${MATS[matW()].name} +${mat}${extra.length ? ' · ' + extra.join(' · ') : ''}`, 'gain'); sfx('win');
+  saveLocal();
+  if (!(window.__game && window.__game.quiet)) showModal('쿠베라의 곳간 · 끝', `<p>보물 상자를 <b>${n}개</b> 날랐어요!${tier ? ` <b>${tier}단계</b>` : ' <span class="small">(1단계까지 ' + KUB.tier[0] + '개)</span>'}${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
+    <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>
+    ${extra.map(x => `<li style="color:var(--myth)">${x}</li>`).join('')}</ul>
+    <p class="small" style="margin-top:8px">오늘 ${kubLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
+  return {carried:n, tier, gold, mat, extra, myth};
+}
+// 곳간 막대(화면 위): 나른 상자 수와 단계 눈금
+function drawKubBar(cx, y, cw, portrait){
+  const P = parade; if (!P || !P.kub) return y;
+  const bw = Math.round(Math.min(cw * (portrait ? 0.9 : 0.42), 380)), bx = cx - bw / 2, top = KUB.tier[KUB.tier.length - 1], tier = kubTier(P.carried);
+  box(bx, y, bw, 32);
+  rrect(bx + 4, y + 17, bw - 8, 8, 4); ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fill();
+  const fw = (bw - 8) * Math.min(1, P.carried / top);
+  if (fw > 0){ const gr = ctx.createLinearGradient(bx + 4, 0, bx + bw - 4, 0); gr.addColorStop(0, '#d8a040'); gr.addColorStop(1, '#ffe27a'); rrect(bx + 4, y + 17, Math.max(6, fw), 8, 4); ctx.fillStyle = gr; ctx.fill(); }
+  for (let i = 0; i < KUB.tier.length - 1; i++){ const tx = bx + 4 + (bw - 8) * KUB.tier[i] / top; ctx.fillStyle = P.carried >= KUB.tier[i] ? '#fff4c0' : 'rgba(255,255,255,.45)'; ctx.fillRect(Math.round(tx) - 1, y + 15, 2, 12); }
+  ctx.font = '800 10px SamhanSans, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffe9a0'; ctx.fillText(`상자 ${P.carried}개 · ${tier || '–'}단계`, bx + 8, y + 8);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#cfe6ff'; ctx.fillText(tier < KUB.tier.length ? `다음 ${tier + 1}단계까지 ${KUB.tier[tier] - P.carried}개` : '최고 단계!', bx + bw - 8, y + 8); ctx.textAlign = 'left';
+  return y + 34;
+}
+// 곳간 보물 상자 그림(땅 위): 솟는 순간 튀어나오고, 사라지기 3초 전부터 깜빡인다
+function drawKubChests(){
+  const P = parade; if (!P || !P.kub) return;
+  b.save();
+  for (const c of P.chests){
+    const x = isoX(c.tx, c.ty), y = isoY(c.tx, c.ty), pop = Math.min(1, c.t / 0.3), old = c.t > KUB.life - 3, blink = old && Math.sin(gtime * 16) > 0;
+    if (blink) continue;
+    const yy = y - 3 - (1 - pop) * 10 + Math.sin(gtime * 4 + c.id) * 0.8;
+    b.globalAlpha = 1; b.fillStyle = 'rgba(0,0,0,.3)'; b.beginPath(); b.ellipse(x, y + 1, 7, 3, 0, 0, 7); b.fill();
+    b.globalCompositeOperation = 'lighter'; b.fillStyle = `rgba(255,210,80,${0.22 + 0.12 * Math.sin(gtime * 6 + c.id)})`; b.beginPath(); b.ellipse(x, yy - 3, 10, 6, 0, 0, 7); b.fill(); b.globalCompositeOperation = 'source-over';
+    b.fillStyle = '#7a4a1e'; b.fillRect(x - 6, yy - 6, 12, 7); b.fillStyle = '#a8662a'; b.fillRect(x - 6, yy - 9, 12, 4);   // 몸통 · 뚜껑
+    b.fillStyle = '#ffd24a'; b.fillRect(x - 6, yy - 6, 12, 1); b.fillRect(x - 1, yy - 9, 2, 10); b.fillRect(x - 6, yy - 9, 1, 10); b.fillRect(x + 5, yy - 9, 1, 10);   // 쇠띠
+    b.fillStyle = '#fff4c0'; b.fillRect(x - 1, yy - 5, 2, 2);
   }
   b.restore();
 }
@@ -7265,20 +7588,32 @@ const DBOSS_SEA = [
   {name:'초롱아귀 할멈', type:'angler', color:'#4a6a8a', part:'foot', d:'깊은 물에서 초롱 하나로 길을 밝히는 아귀'},
   {name:'떠도는 헛배', type:'ghostship', color:'#8a9aa8', part:'any', d:'주인 없이 물 위를 떠도는 배(부위는 그날 무작위)'},
 ];
+// 5부 천축의 1일 보스(물의 신화 9-26): 천축에 들어선 용사(세계 8 이상)에게는 홀수 날마다 4부(짝수 날)와 번갈아 나온다. 그날 부위의 5부 치장(68장~)만 주고, DB_SPIRIT_P로 영물 치장
+const DBOSS_IND = [
+  {name:'밧줄을 쥔 아수라 대장', type:'asura', color:'#4a2a5a', part:'all', d:'신들과 줄다리기하던 아수라의 대장. 일요일엔 전설·영물 치장만, 아주 드물게'},
+  {name:'숲 락샤사 장수', type:'rakshasa', color:'#5a7a4a', part:'guard', d:'단다카 숲 어귀를 지키는 락샤사 장수'},
+  {name:'박쥐 날개 락샤사', type:'batrak', color:'#6a4a7a', part:'shoe', d:'박쥐 날개로 밤하늘을 가르는 락샤사'},
+  {name:'둔갑한 황금 사슴', type:'deer', color:'#f0c850', part:'belt', d:'금빛으로 둔갑해 길손을 홀리는 사슴(옛이야기 속의 속임수)'},
+  {name:'불 수레', type:'chariot', color:'#ff7a2a', part:'tassel', d:'주인 없이 불을 뿜으며 달리는 하늘 수레'},
+  {name:'파도 코끼리', type:'elephant', color:'#cfe0f0', part:'foot', d:'젖빛 파도를 타고 오는 큰 코끼리'},
+  {name:'잠 깬 거인', type:'kumbha', color:'#7a6a8a', part:'any', d:'하루만 깨어 있는 잠꾸러기 거인(부위는 그날 무작위)'},
+];
+const DB_SPIRIT_P = 0.02;   // 5부 1일 보스: 이기면 그 부위 치장이 영물 등급일 확률(일요일은 DB_SUN_P 안에서 25%)
+const dbInd = () => S.world >= 8 && new Date(now()).getDate() % 2 === 1;
 const DB_RELIC_P = 0.04;
 const dbSea = () => S.world >= 5 && new Date(now()).getDate() % 2 === 0;
 const DB_TRIES = 3, DB_TIME = 60, DB_GP = [40, 30, 18, 9, 3], DB_SUN_P = 0.1;
 const DB_FIT = {tgt:50, sunTgt:54, hit:0.04, sunHit:0.05, aoe:0.03, self:1};   // 기본 피해로만 치면 50초(일요일 54초)에 쓰러지게(FIT, (43)에 61·63에서 낮춤, 제한 60초), 보스 한 방 = 최대 체력의 4%(일 5%, 방어 빼고)
 const dbDay = () => new Date(now()).getDay();
-const dbBoss = () => (dbSea() ? DBOSS_SEA : DBOSS)[dbDay()];
+const dbBoss = () => (dbInd() ? DBOSS_IND : dbSea() ? DBOSS_SEA : DBOSS)[dbDay()];
 function dbCheck(){ if (S.dboss.day !== dummyDay()) S.dboss = {day:dummyDay(), n:0, paid:false, won:false}; }
 const dbLeft = () => { dbCheck(); return S.dboss.won ? 0 : DB_TRIES - S.dboss.n; };
 function dbPart(){ const B = dbBoss(); if (B.part === 'any'){ const r = rng(strHash(dummyDay() + ':part')); return SK_PARTS[Math.floor(r() * SK_PARTS.length)].k; } return B.part; }
 const dbGems = () => Math.round(150 * RAID_GEM_K * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul());
 const dbGold = () => mGold(Math.max(1, S.maxStage)) * 400 * gainMul('gold');
 // 그 부위의 치장 가운데 지금 장까지 열린 것(아직 하나도 안 열렸으면 그 부위의 첫 치장)
-function skinDropPart(part, g, sea){   // sea: 4부 치장(46장~)만(4부 1일 보스)
-  const all = SK_LIST.filter(x => (part === 'all' || x.p === part) && (!(sea || g >= 5) || x.c >= SK_SEA_CH)), ch = Math.min(skCh(), skChCap());
+function skinDropPart(part, g, sea, ind){   // sea: 4부 치장(46장~)만(4부 1일 보스) · ind: 5부 치장(68장~)만(5부 1일 보스, g 6이면 영물)
+  const all = SK_LIST.filter(x => (part === 'all' || x.p === part) && (ind || g >= 6 ? x.c >= SK_IND_CH : !(sea || g >= 5) || x.c >= SK_SEA_CH)), ch = Math.min(skCh(), skChCap());
   const pool = all.filter(x => x.c <= ch);
   const list = pool.length ? pool : part === 'all' ? SK_PARTS.map(P => SK_LIST.find(x => x.p === P.k)) : [all[0]];
   const sk = list[Math.floor(Math.random() * list.length)];
@@ -7292,7 +7627,7 @@ function startDBoss(){
   S.dboss.n++;
   const B = dbBoss(), sun = dbDay() === 0, s = Math.max(1, S.maxStage - (sun ? 0 : 3));
   const info = {dboss:true, label:'1일 보스', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:1, ref:s, g:0,
-    day:dummyDay(), dow:dbDay(), sun, sea:dbSea(), part:sun ? 'all' : dbPart(), paid0:S.dboss.paid};   // 자정을 넘겨 끝나도 시작한 날 것으로 셈
+    day:dummyDay(), dow:dbDay(), sun, sea:dbSea(), ind:dbInd(), part:sun ? 'all' : dbPart(), paid0:S.dboss.paid};   // 자정을 넘겨 끝나도 시작한 날 것으로 셈
   const est = realDps() * DB_FIT.self, tgt = sun ? DB_FIT.sunTgt : DB_FIT.tgt;
   info.fit = fitNew(tgt, est, 'fitKd');
   startFight(info, [], {hp:info.fit.rate * tgt, atk:ST.maxHp * (sun ? DB_FIT.sunHit : DB_FIT.hit), aoe:ST.maxHp * DB_FIT.aoe, time:DB_TIME});
@@ -7304,15 +7639,15 @@ function finishDBoss(R){
   const I = R.info || {}, cross = !!I.day && I.day !== dummyDay();   // 자정을 넘겨 끝난 싸움: 시작한 날의 보스·부위·보상으로, 새 날의 도전 횟수·보상은 건드리지 않음
   if (!cross) dbCheck();
   const st = cross ? {paid:!!I.paid0, won:false} : S.dboss;
-  const sea = cross ? !!I.sea : dbSea(), B = cross ? (sea ? DBOSS_SEA : DBOSS)[I.dow] : dbBoss(), sun = cross ? !!I.sun : dbDay() === 0, part = cross ? I.part : sun ? 'all' : dbPart(), out = [];
-  const relic = sea && Math.random() < DB_RELIC_P * (window.__game && window.__game.skRelic || 1);
+  const sea = cross ? !!I.sea : dbSea(), ind = cross ? !!I.ind : dbInd(), B = cross ? (ind ? DBOSS_IND : sea ? DBOSS_SEA : DBOSS)[I.dow] : dbBoss(), sun = cross ? !!I.sun : dbDay() === 0, part = cross ? I.part : sun ? 'all' : dbPart(), out = [];
+  const relic = sea && !ind && Math.random() < DB_RELIC_P * (window.__game && window.__game.skRelic || 1);
   if (!st.paid){ st.paid = true; const g = dbGems(), gd = dbGold(); S.gems += g; S.gold += gd; out.push(`보석 ${fmt(g)}`, `엽전 ${fmt(gd)}`); const m = gainMat(MAT_SRC.dbJoin, true); if (m) out.push(`${MATS[matW()].name} ${m}`); }
   let skin = null;
   if (R.win && !st.won){
     st.won = true; recWin(true, true);
     { const m = gainMat(MAT_SRC.dbWin, true), sh = gainShard(SHARD_SRC.dboss); if (m) out.push(`${MATS[matW()].name} ${m}`); if (sh) out.push(`신화 조각 ${sh}`); }
-    if (sun){ if (Math.random() < DB_SUN_P * (window.__game && window.__game.dbLuck || 1)) skin = skinDropPart('all', sea && Math.random() < 0.3 ? 5 : 4, sea); }
-    else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; if (relic) g = 5; skin = skinDropPart(part, g, sea); }
+    if (sun){ if (Math.random() < DB_SUN_P * (window.__game && window.__game.dbLuck || 1)) skin = skinDropPart('all', ind ? (Math.random() < 0.25 ? 6 : 4) : sea && Math.random() < 0.3 ? 5 : 4, sea, ind); }
+    else { let r = Math.random() * 100, g = 0; for (; g < 4; g++){ if (r < DB_GP[g]) break; r -= DB_GP[g]; } if (window.__game && window.__game.skGrade != null) g = window.__game.skGrade; if (relic) g = 5; if (ind && Math.random() < DB_SPIRIT_P * (window.__game && window.__game.skSpirit || 1)) g = 6; skin = skinDropPart(part, g, sea, ind); }
     if (skin) out.push(`치장: ${skName(skin.it)}${skin.better ? '(바로 낌)' : ''}`);
     else if (sun) out.push('전설 치장은 이번엔 나오지 않았어요');
     const nf = formDrop(FORM_DB_P); if (nf) out.push(`변신: ${nf.name}`);   // 1일 보스: 아주 드물게 변신(부상부터)
@@ -14224,7 +14559,7 @@ function render(){
   for (const a of soulApp) ents.push({y:a.y + 0.05, soul:a});
   if (market){ for (const n of MK_NPC) ents.push({y:isoY(n.tx, n.ty) + 1, npc:n}); for (const p2 of market.peers.values()) ents.push({y:p2.y, peer:p2}); }
   ents.sort((a, b2) => a.y - b2.y);
-  drawGoalMark(); drawSugunTide(); drawPatGround();
+  drawGoalMark(); drawSugunTide(); drawKubChests(); drawPatGround();
   drawVfx(true);
   for (const e of ents){ if (e.hero) drawEntityHero(); else if (e.npc || e.peer) drawMarketEnt(e); else if (e.a) drawAlly(e.a); else if (e.pet) drawPet(e.pet); else if (e.soul) drawSoulApp(e.soul); else drawMob(e.m); }
   for (const p of parts) if (p.type === 'gem'){ b.globalAlpha = Math.max(0, 1 - p.t / p.dur); P(p.x - 1, p.y - 2, 3, 1, '#7fdcff'); P(p.x - 2, p.y - 1, 5, 1, '#5ac8f0'); P(p.x - 1, p.y, 3, 1, '#2a88b0'); P(p.x, p.y + 1, 1, 1, '#2a88b0'); P(p.x, p.y - 3, 1, 1, '#ffffff'); b.globalAlpha = 1; }
@@ -14306,11 +14641,13 @@ function drawOverlay(){
   drawBuffsAndSay(cw);
   ctx.textBaseline = 'middle';
   ctx.font = '800 13px SamhanSans, sans-serif';
-  const label = market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? (raid.allies.length || raid.info.key || raid.info.tb ? '레이드 · ' : '') + (raid.info.pvp ? `결투 · ${raid.info.opp.name}` : raid.info.label) : parade ? `${parade.sea ? `수군 야행 · ${parade.kills}마리${parade.tide ? (parade.tide.on ? ' · 밀물!' : ' · 밀물이 와요') : parade.boss && !parade.boss.dead ? ' · 대장!' : ''}` : `백귀야행 · 요괴 ${parade.kills}마리`} · ${Math.max(0, Math.ceil(parade.t))}초` : stageLabel(S.stage);
+  const label = market ? `장터 마을${market.peers.size ? ` · 함께 ${market.peers.size + 1}명` : ''}` : raid ? (raid.allies.length || raid.info.key || raid.info.tb ? '레이드 · ' : '') + (raid.info.pvp ? `결투 · ${raid.info.opp.name}` : raid.info.label) : parade && parade.lab ? parade.lab() : parade ? `${parade.sea ? `수군 야행 · ${parade.kills}마리${parade.tide ? (parade.tide.on ? ' · 밀물!' : ' · 밀물이 와요') : parade.boss && !parade.boss.dead ? ' · 대장!' : ''}` : `백귀야행 · 요괴 ${parade.kills}마리`} · ${Math.max(0, Math.ceil(parade.t))}초` : stageLabel(S.stage);
   const tw = Math.ceil(ctx.measureText(label).width);
   box(cx - tw / 2 - 10, y0, tw + 20, 22);
   ctx.fillStyle = raid ? '#ffb39a' : '#f3e6c8'; ctx.textAlign = 'center'; ctx.fillText(label, cx, y0 + 11.5); ctx.textAlign = 'left';
   ovBot = y0 + 22;
+  if (parade && parade.asura){ ovBot = drawAsuraRope(cx, y0 + 27, cw, portrait) - 2; return; }   // 아수라 야행: 밧줄 막대
+  if (parade && parade.kub){ ovBot = drawKubBar(cx, y0 + 27, cw, portrait) - 2; return; }   // 쿠베라의 곳간: 상자 막대
   if (market || parade) return;   // 장터 마을·백귀야행에는 보스 막대가 없다
   const bRef = raid ? raid.boss : bossActive ? bossRef : null;
   const y1 = y0 + 27;
@@ -14350,6 +14687,12 @@ function drawOverlay(){
         if (v > 0){ rrect(lx2, ry + 4, Math.max(4, lw2 * v), 7, 3.5); ctx.fillStyle = v < 0.25 ? '#ff6a5a' : '#5ad8ff'; ctx.fill(); }
         ry += 19;
       }
+    }
+    if (raid && patInd(bRef) === 'heads'){   // 열 머리: 켜진 머리는 금빛 점, 꺼진 머리는 어두운 점
+      const sw = Math.round(Math.min(bw, 300) * 0.7), sx = cx - sw / 2, n = headsLeft(bRef), tel = !!(PP && PP.tel && PP.tel.heads);
+      box(sx, ry, sw, 15); ctx.font = '800 10px SamhanSans, sans-serif'; ctx.fillStyle = '#ffd96a'; ctx.fillText(`열 머리 ${n}`, sx + 7, ry + 8);
+      for (let j = 0; j < IND_PAT.heads; j++){ const on = j < n, hx = sx + 62 + j * ((sw - 72) / (IND_PAT.heads - 1)); ctx.beginPath(); ctx.arc(hx, ry + 7.5, 3.4, 0, 7); ctx.fillStyle = on ? (tel && Math.sin(gtime * 14) > 0 ? '#fff0b0' : '#ffd24a') : 'rgba(40,30,30,.8)'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = on ? '#6a4a10' : 'rgba(255,255,255,.25)'; ctx.stroke(); }
+      ry += 19;
     }
     ovBot = ry - 4;
     if (raid){
@@ -15855,7 +16198,7 @@ function updateActBtns(){
   const B = patBoss(), showH = !!B && patLv(B) > 0 && !hero.dead && !!session;
   if (elHand.hidden === showH) elHand.hidden = !showH;
   if (showH){
-    const ctr = !!(B.pat && B.pat.tel && B.pat.tel.kind === 'counter');
+    const ctr = !!(B.pat && B.pat.tel && (B.pat.tel.kind === 'counter' || B.pat.tel.flower));
     if (elHand.classList.contains('ctr') !== ctr){ elHand.classList.toggle('ctr', ctr); elHand.setAttribute('aria-label', ctr ? '되받기' : '구르기'); }
     setText($('#handTxt'), ctr ? '되받기!' : '구르기');
     elHand.style.setProperty('--p', ctr ? '0%' : Math.min(100, Math.max(0, (hero.rollCd || 0) / PAT.rollCd * 100)).toFixed(1) + '%');
@@ -15930,7 +16273,7 @@ function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
   else if (raid){ cls = 'fight'; txt = raid.info.mem ? '옛 기억' : raid.info.aw2tut ? '연습' : raid.info.aw2t ? '겨루기' : raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.haetae ? '해태 수련' : raid.info.jin ? '진 레이드' : raid.info.yv ? '용궁 보물고' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
-  else if (parade){ cls = 'fight'; txt = parade.sea ? '수군 야행' : '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / (parade.sea ? SUGUN.time : PARADE_TIME)); }
+  else if (parade){ cls = 'fight'; txt = parade.kub ? '쿠베라의 곳간' : parade.asura ? '아수라 야행' : parade.sea ? '수군 야행' : '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / (parade.kub ? KUB.time : parade.asura ? ASURA.time : parade.sea ? SUGUN.time : PARADE_TIME)); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
   else if (S.kills >= FIELD.kills){ cls = 'ready'; txt = '도전!'; sub = S.autoBoss ? '곧 나와요' : S.bossAuto ? `${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '눌러서 시작'; p = 1; }
@@ -16963,7 +17306,7 @@ function buildMyth(){
         <div><div class="nm">${M.name}<span class="l" data-r="st"></span></div><div class="small" style="margin:1px 0 2px">${M.d} · ${mythReqText({w:M.w})}부터</div><div class="val" data-r="need"></div><div class="nx" data-r="rate"></div></div>
         <button class="btn sm primary" data-mw="${M.k}">제작</button></li>`).join('')}</ul></div>
     <ul class="list">${MYTHS.map(m => `<li class="row" id="my-${m.k}" data-part="${mythPart(m)}" data-pk="${m.k}"><div class="ic myth" style="--myth:${MYTH_COLOR}">${SVG[m.icon]}</div>
-      <div><div class="nm">${m.name}<span class="l">${m.stat}${(m.w || 0) ? ` · ${mythReqText(m)}부터 착용` : ''}${m.vault ? ' · 용궁 보물고' : m.story ? ' · 이야기·레이드' : ''}</span></div><div class="val" data-r="v"></div></div><span></span></li>`).join('')}</ul>
+      <div><div class="nm">${m.name}<span class="l">${m.stat}${(m.w || 0) ? ` · ${mythReqText(m)}부터 착용` : ''}${m.vault ? ' · ' + (m.vsrc || '용궁 보물고') : m.story ? ' · 이야기·레이드' : ''}</span></div><div class="val" data-r="v"></div></div><span></span></li>`).join('')}</ul>
     <p class="small" style="margin-top:6px">신화 보물은 레이드·타임 보스·보물 동굴에서 <b>어느 것이든</b> 나올 수 있지만, 2부 보물은 부상·3부 보물은 곤륜에 들어가야 낄 수 있어요(그 전에는 가방에 보관). 퀘스트를 깰 때 ${Math.round(LUCK_RESET * 100)}% 확률로 모든 기술의 재사용 시간도 초기화돼요.</p>`;
   wireGearSeg();
   partWire('myth', {own:k => k.startsWith('mw_') ? !!mwSt(k.slice(3)).own : (S.myth[k] || 0) > 0});
@@ -17619,7 +17962,7 @@ function buildRaid(){
     if (!dbOpen()) setHTML($('#dbBox'), `<div class="card dcard"><div class="dport"><img src="${bossPortrait(dbBoss().type, dbBoss().color)}" alt=""></div><div><div class="ct">1일 보스<span class="tag">잠김</span></div><p class="story">이야기 <b>${SK_CH0}장(천계)</b>에 닿으면 열려요. 이기면 치장(장비 위에 끼우는 장식)을 줘요.</p><button class="btn" disabled>이야기 ${SK_CH0}장부터</button></div></div>`);
     else { dbCheck(); const B = dbBoss(), sun = dbDay() === 0, part = sun ? null : dbPart(), left = dbLeft(), days = '일월화수목금토';
       const gp = DB_GP.map((v, g) => `${GRADES[g].name} ${v}%`).join(' · ');
-      const week = DBOSS.map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
+      const week = (dbInd() ? DBOSS_IND : dbSea() ? DBOSS_SEA : DBOSS).map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
       setHTML($('#dbBox'), `<div class="card dcard ${left > 0 && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
         <div class="ct">1일 보스 · ${B.name}<span class="tag">${S.dboss.won ? '오늘 토벌함' : `오늘 ${left} / ${DB_TRIES}번`}</span></div>
         <p class="story">${B.d}. 날마다 보스와 <b>치장 부위</b>가 바뀌어요. ${sun ? `<b>일요일</b>엔 이기면 <b>전설 치장</b>(부위 무작위)이 <b>${Math.round(DB_SUN_P * 100)}%</b> 확률로 하나 나와요.` : `이기면 오늘 부위 <b>${SK_PART[part].name}</b> 치장 하나(모든 등급: ${gp}).`} 이기든 지든 하루 한 번 <b>보석 ${fmt(dbGems())}·엽전 ${fmt(dbGold())}</b>을 줘요. ${DB_TIME}초 혼자 싸움 — 그냥 두면 이기고 지는 게 반반이라, 금빛 「!」에 <b>[되받기]</b>, 붉은 칸은 <b>피하기</b>, 휘청일 때 기술을 넣어야 이겨요.</p>
@@ -17651,8 +17994,13 @@ function buildRaid(){
       ${yvOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('gwangeo', '#b8a070')}" alt=""></div>
         <div><div class="ct">용궁 보물고<span class="tag" id="yvLeft"></span></div>
         <p class="story">보물 동굴의 윗단계예요. 방 셋을 차례로 지나요 — <b>문어 문지기</b> → <b>함정 방</b>(붉은 칸이 쉴 새 없이 깔려요) → <b>광어 창고지기</b>. 방을 깰 때마다 <b>상자 하나</b>를 골라요: 호박석(영웅 이상) · 장비(깊은 방일수록 <b style="color:${GRADES[7].color}">유물</b>) · 재물(보석·용궁 진주·고삐 조각). 끝까지 가면 신화 조각과 <b>${Math.round(YV.mythP * 100)}%</b>로 신화 보물 「용궁 야광주」. 하루 ${YV.tries}번, 지면 거기까지 고른 것만 가져가요.</p></div></div>
-      <button class="btn primary big" id="yvGo">용궁 보물고 들어가기</button>` : ''}`;
+      <button class="btn primary big" id="yvGo">용궁 보물고 들어가기</button>` : ''}${kubOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('yaksha', '#8a8a7a')}" alt=""></div>
+        <div><div class="ct">쿠베라의 곳간<span class="tag" id="kubLeft"></span></div>
+        <p class="story">재물의 신의 곳간을 지키는 <b>야차 문지기</b> 곁에서 ${KUB.time}초 동안 <b>솟는 보물 상자</b>에 닿아 나르는 곳이에요(하루 ${KUB.tries}번). 용사가 저절로 가까운 상자로 걸어가고, 땅을 눌러 움직여도 돼요. 문지기는 쫓아와 때리지만 <b>맞으면 잠깐 기절</b>해요. 나른 수가 <b>${KUB.tier.join('·')}개</b>를 넘을 때마다 1~5단계 — 영물 장비(단계가 높을수록 여러 개)·엽전·천축 향목, 3단계부터 영물 치장 기회, 그리고 <b>${Math.round(KUB.mythP * 100)}%</b>로 곳간 전용 신화 보물 「마르지 않는 금항아리」.</p>
+        <p class="small" style="margin:0"><b id="kubBest"></b></p></div></div>
+      <button class="btn primary big" id="kubGo">쿠베라의 곳간 들어가기</button>` : ''}`;
     wireSeg();
+    if ($('#kubGo')) $('#kubGo').addEventListener('click', () => { if (!raid && !parade && kubLeft() > 0) presetAsk('mob', '쿠베라의 곳간', () => { if (startKub()){ closePage(); return true; } }); });
     if ($('#yvGo')) $('#yvGo').addEventListener('click', () => { if (!raid && yvLeft() > 0) presetAsk('boss', '용궁 보물고', () => { if (startYv()){ closePage(); return true; } }); });
     $('#vGo').addEventListener('click', () => { if (!raid && vaultLeft() > 0) presetAsk('boss', '보물 동굴', () => { if (startVault()){ closePage(); return true; } }); });
     panel.querySelectorAll('[data-vm]').forEach(b => b.addEventListener('click', () => {
@@ -17665,6 +18013,8 @@ function buildRaid(){
       setText($('#vLeft'), `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
       for (const m of list){ setText(panel.querySelector(`[data-vmc="${m.k}"]`), `지금 +${S.myth[m.k] || 0}% · 만들면 +${mythPower(m, vaultD())}%`); const bt = panel.querySelector(`[data-vm="${m.k}"]`); bt.disabled = S.mythShard < SHARD_COST; }
       const b = $('#vGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.vault && !raid.info.yv ? '싸우는 중…' : '다른 싸움 중') : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)');
+      if ($('#kubGo')){ const l3 = kubLeft(), b3 = $('#kubGo'); setText($('#kubLeft'), `오늘 ${l3} / ${KUB.tries}번`); setText($('#kubBest'), S.sea2 && S.sea2.kubBest ? `최고 기록 상자 ${S.sea2.kubBest}개` : '');
+        b3.disabled = !!raid || !!parade || l3 <= 0; setText(b3, parade ? (parade.kub ? '곳간 안…' : '다른 싸움 중') : raid ? '다른 싸움 중' : l3 > 0 ? '쿠베라의 곳간 들어가기' : '오늘은 다 했어요(내일 다시)'); }
       if ($('#yvGo')){ const l2 = yvLeft(), b2 = $('#yvGo'); setText($('#yvLeft'), `오늘 ${l2} / ${YV.tries}번`); b2.disabled = !!raid || !!yvRun || l2 <= 0; setText(b2, raid ? (raid.info.yv ? '보물고 안…' : '다른 싸움 중') : yvRun ? '상자를 골라요' : l2 > 0 ? '용궁 보물고 들어가기' : '오늘은 다 했어요(내일 다시)'); }
     };
   }
@@ -17680,11 +18030,18 @@ function buildRaid(){
         <div><div class="ct">수군 야행<span class="tag" id="sgLeft"></span></div>
         <p class="story">백귀야행의 윗단계예요. 물 위로 올라오는 <b>물귀신·헛배·도깨비불 행렬</b>을 ${SUGUN.time}초 동안 잡아요(하루 ${SUGUN.tries}번, 백귀야행과 따로 세요). <b>${SUGUN.tideEvery}초마다 밀물</b>이 들어와 판의 절반이 잠겨요 — 잠긴 쪽에 서 있으면 다치니 마른 쪽으로 걸어요(가만히 두면 저절로 나와요). 끝 무렵 올라오는 <b>물어귀 대장</b>을 잡으면 고삐 조각 ${SUGUN.piece}개·치장 하나(드물게 <b style="color:${GRADES[7].color}">유물</b>)와 바다의 넋 구슬 기회.</p>
         <p class="small" style="margin:0">한 마리마다 엽전(몬스터 6마리분)·보석 1·쇳가루 ${2 + S.world} · 8마리마다 재료 1 · 20마리마다 고삐 조각 1 <b id="sgBest"></b></p></div></div>
-      <button class="btn primary big" id="sgGo">수군 야행 시작</button>` : ''}`;
+      <button class="btn primary big" id="sgGo">수군 야행 시작</button>` : ''}${asuraOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('asura', '#4a2a5a')}" alt=""></div>
+        <div><div class="ct">아수라 야행<span class="tag" id="asLeft"></span></div>
+        <p class="story">신과 아수라의 줄다리기 한복판이에요. ${ASURA.time}초 동안 몰려오는 <b>아수라 병사·락샤사·독 방울</b>을 잡을수록 화면 위 <b>밧줄이 내 쪽으로 당겨져요</b>(하루 ${ASURA.tries}번). 가만히 있으면 시간이 갈수록 아수라 쪽으로 끌려가고, ${ASURA.jerkEvery}초마다 아수라가 확 당겨요. 끝 무렵 나오는 <b>아수라 대장</b>을 잡으면 밧줄이 크게 당겨져요. 끝날 때 밧줄 자리가 <b>1~5단계</b> 보상이 돼요.</p>
+        <p class="small" style="margin:0">천축 향목·엽전·보석·고삐 조각 · 4단계부터 5부 넋 구슬 기회 · 5단계에서 영물 치장 기회 <b id="asBest"></b></p></div></div>
+      <button class="btn primary big" id="asGo">아수라 야행 시작</button>` : ''}`;
     wireSeg();
     $('#pGo').addEventListener('click', () => { if (!raid && !parade && paradeLeft() > 0) presetAsk('mob', '백귀야행', () => { if (startParade()){ closePage(); return true; } }); });
     if ($('#sgGo')) $('#sgGo').addEventListener('click', () => { if (!raid && !parade && sugunLeft() > 0) presetAsk('mob', '수군 야행', () => { if (startSugun()){ closePage(); return true; } }); });
+    if ($('#asGo')) $('#asGo').addEventListener('click', () => { if (!raid && !parade && asuraLeft() > 0) presetAsk('mob', '아수라 야행', () => { if (startAsura()){ closePage(); return true; } }); });
     return () => {
+      if ($('#asGo')){ const l3 = asuraLeft(), b3 = $('#asGo'); setText($('#asLeft'), `오늘 ${l3} / ${ASURA.tries}번`); setText($('#asBest'), S.sea2 && S.sea2.asuraBest ? `· 최고 기록 ${S.sea2.asuraBest}단계` : '');
+        b3.disabled = !!raid || !!parade || l3 <= 0; setText(b3, parade ? (parade.asura ? '아수라 야행 중…' : '다른 싸움 중') : raid ? '다른 싸움 중' : l3 > 0 ? '아수라 야행 시작' : '오늘은 다 했어요(내일 다시)'); }
       if ($('#sgGo')){ const l2 = sugunLeft(), b2 = $('#sgGo'); setText($('#sgLeft'), `오늘 ${l2} / ${SUGUN.tries}번`); setText($('#sgBest'), S.sea2 && S.sea2.sugunBest ? `· 최고 기록 ${S.sea2.sugunBest}마리` : '');
         b2.disabled = !!raid || !!parade || l2 <= 0; setText(b2, parade ? (parade.sea ? '수군 야행 중…' : '백귀야행 중…') : raid ? '다른 싸움 중' : l2 > 0 ? '수군 야행 시작' : '오늘은 다 했어요(내일 다시)'); }
       const left = paradeLeft();
@@ -19972,6 +20329,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {refreshPanel, topTier, bossWin, raidReward, seaMul, setPieceName, SPIRITS, SP_AT, SP_FX, SPIRIT_GEAR, spiritOpen, spSt, spBeast, spiritSum, spGive, spMerge, spPick, spFixAll, spiritGearDrop, spiritLine, spOwned, setShown, SETS, MATS, CRAFT_T, CRAFT_RATE, CRAFT_PITY, craftName, matShown, gradeHave, mergeOne, mergeAll, equipBest, spiritForce:false, spiritLuck:null, spBeastForce:null, drawSpiritAura});
   // @@END-E
   // @@HOOK-F (갈래 F의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {ASURA, startAsura, finishAsura, asuraOpen, asuraLeft, asuraTier, indSoulRoll, asLuck:null, KUB, startKub, finishKub, kubOpen, kubLeft, kubTier, kubLuck:null, IND_PAT, patInd, patHeads, headOff, headsLeft, patFlower, flowerNear, flowerOk, patTiles, updatePat, heroTile, noIndPat:false, DBOSS_IND, dbInd, DB_SPIRIT_P, skinDropPart});   // 물의 신화 9-26
   // @@END-F
   // @@HOOK-G (갈래 G의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-G

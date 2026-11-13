@@ -3698,6 +3698,187 @@ async def main():
 
         # @@END-E
         # @@TEST-F (갈래 F의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-26) 물의 신화 9-26단계: 아수라 야행(줄다리기 밧줄)·쿠베라의 곳간(상자·야차 문지기)·손컨 「열 머리」「꽃으로 바꾸기」·5부 1일 보스 — 4부 용사에게는 안 보임
+        sea26 = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        ind26 = json.loads((ROOT / 'tools' / 'beta_saves' / '90_musa_ind3_end.json').read_text(encoding='utf-8'))['save']
+        ctx26 = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        sq = await ctx26.new_page()
+        watch(sq, errors, '9-26 ')
+        await fresh(sq)
+        await signup(sq, 'aztest', 'abcd', '줄다리기')
+        LOAD26 = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal(); Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '줄다리기'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); S.inv.potion = 999; S.inv.elixir = 99; S.inv.mana = 999; S.raid.tk = 3; G.hero.hp = G.ST.maxHp; }"""
+        # --- 4부 끝 용사: 새 콘텐츠가 모두 닫혀 있다
+        await sq.evaluate(LOAD26, sea26)
+        z0 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          out.open = [G.asuraOpen(), G.kubOpen(), G.dbInd(), S.world]; out.start = [G.startAsura(), G.startKub(), !!G.parade];
+          const B = {type:'ravana', pat:{}, raid:true}; out.pat = [G.patInd(B), G.patInd(null)];
+          return out; }""")
+        check(z0['open'][:3] == [False, False, False] and z0['start'] == [False, False, False] and z0['pat'] == [None, None], f"4부 끝 용사에게는 아수라 야행·쿠베라의 곳간·5부 1일 보스·새 손컨 패턴이 안 보인다 {z0}")
+        for rv, ids in (('parade', ['#asGo', '#sgGo']), ('vault', ['#kubGo', '#yvGo'])):
+            await tab(sq, 'raid')
+            await sq.evaluate("(rv) => { const G = window.__game; G.hideModal(); G.buildTab('raid'); const b = document.querySelector(`[data-rv=\"${rv}\"]`); if (b) b.click(); }", rv)
+            await sq.wait_for_timeout(300)
+            u = await sq.evaluate("(ids) => ids.map(i => !!document.querySelector(i))", ids)
+            check(u == [False, True], f"4부 끝 용사의 [레이드] → [{'백귀야행' if rv == 'parade' else '보물 동굴'}] 칸에는 5부 칸이 없고 4부 칸(수군 야행·용궁 보물고)만 있다 {u}")
+        await sq.evaluate("() => { window.__game.closePage(); }")
+        # --- 5부 용사
+        await sq.evaluate(LOAD26, ind26)
+        z1 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true;
+          out.open = [G.asuraOpen(), G.kubOpen(), S.world, G.asuraLeft(), G.kubLeft()];
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !(until && until()); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          // 아수라 야행: 잡으면 밧줄이 내 쪽으로
+          G.startAsura(); const P = G.parade; out.as0 = [!!P && P.asura, P.rope, G.seaDay().asura];
+          run(1, null); const r0 = P.rope; P.kills += 5; G.update(0.05); out.pull = [r0, P.rope, P.rope - r0 > 0.08];   // 다섯 마리 → +0.11 − 흘러간 몫
+          let maxK = 0, bossSeen = false; run(62, () => { maxK = Math.max(maxK, P.kills); if (P.boss) bossSeen = true; return !G.parade; });
+          out.as1 = [!G.parade, maxK, bossSeen, G.seaDay().asura, G.asuraLeft(), S.sea2.asuraBest >= 1, S.rec.asuras];
+          return out; }""")
+        check(z1['open'] == [True, True, 10, 2, 2] and z1['as0'][0] and z1['as0'][1] == 0.5 and z1['as0'][2] == 1, f"5부 용사에게는 아수라 야행·쿠베라의 곳간이 열려 있고 하루 2번씩이다 {z1['open']} {z1['as0']}")
+        check(z1['pull'][2], f"아수라 야행: 요괴를 잡을수록 밧줄이 내 쪽으로 당겨진다 {z1['pull']}")
+        check(z1['as1'][0] and z1['as1'][1] >= 3 and z1['as1'][2] and z1['as1'][3] == 1 and z1['as1'][4] == 1 and z1['as1'][5] and z1['as1'][6] == 1, f"아수라 야행: 자동으로 60초를 돌면 요괴를 잡고 끝의 대장이 나오고 하루 횟수가 줄며 기록이 남는다 {z1['as1']}")
+        # 단계별 보상(운 고정): 낮은 단계는 넋·치장 없음, 5단계는 5부 넋 구슬·영물 치장
+        z2 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.asLuck = 1e9;
+          const fin = (rope) => { G.startAsura(); const P = G.parade; P.rope = rope; P.t = 0.03; const g0 = S.gold, m0 = S.mat.m4 || 0; G.update(0.05); return {g:S.gold - g0, m:(S.mat.m4 || 0) - m0}; };
+          const n5 = () => Object.values(S.skin.eq).concat(S.skin.inv).filter(x => x && x.g === 6).length, soulN = () => G.SOULS.filter(x => x.pt === 5 && S.soul.own[x.k]).length;
+          for (const x of G.SOULS) if (x.pt === 5){ delete S.soul.own[x.k]; delete S.soul.star[x.k]; } S.soul.eq = ['', '']; S.sea2.asura = 0; const s0 = soulN(), k0 = n5();
+          const t1 = fin(0.1); out.t1 = [t1.g > 0, t1.m > 0, soulN() - s0, n5() - k0];   // 1단계: 넋·영물 치장 없음(운 1e9라도 확률 0)
+          const t3 = fin(0.6); out.t3 = [t3.g > t1.g, soulN() - s0, n5() - k0];
+          S.sea2.asura = 0; const t5 = fin(0.95); out.t5 = [t5.g > t3.g, t5.m > t3.m, soulN() - s0, n5() - k0, S.sea2.asuraBest];
+          fin(0.5); out.third = G.startAsura(); const left = G.asuraLeft();
+          G.raidReset(); out.reset = [left, G.asuraLeft(), S.sea2.asura];
+          out.tiers = [0, 0.29, 0.3, 0.5, 0.7, 0.88, 1].map(G.asuraTier).join(''); G.asLuck = null;
+          return out; }""")
+        check(z2['t1'][0] and z2['t1'][1] and z2['t1'][2] == 0 and z2['t1'][3] == 0, f"아수라 야행 1단계: 엽전·향목만(넋·영물 치장 없음) {z2['t1']}")
+        check(z2['t5'][0] and z2['t5'][1] and z2['t5'][2] >= 1 and z2['t5'][3] >= 1 and z2['t5'][4] == 5, f"아수라 야행 5단계: 더 많이 + 5부 넋 구슬 + 영물 치장(운 고정) {z2['t5']} {z2['t3']}")
+        check(z2['tiers'] == '1123455' and z2['third'] is False and z2['reset'] == [0, 2, 0], f"아수라 야행: 밧줄 자리 → 단계(문턱 0·0.3·0.5·0.7·0.88), 하루 2번, 레이드 리셋권으로 되돌아온다 {z2['tiers']} {z2['reset']}")
+        # --- 쿠베라의 곳간
+        await sq.evaluate("() => { const G = window.__game; G.closePage(); G.hideModal(); }")
+        z3 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !(until && until()); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          out.start = G.startKub(); const P = G.parade; out.p0 = [!!P && P.kub, P.carried, G.seaDay().kub];
+          let stunned = 0, guardSeen = false, chestsMax = 0; run(62, () => { if (P.guard && !P.guard.dead){ guardSeen = true; if (P.guard.stunT > 0) stunned += 0.05; } chestsMax = Math.max(chestsMax, P.chests.length); return !G.parade; });
+          out.kub = [!G.parade, P.carried, guardSeen, chestsMax, G.kubLeft(), S.sea2.kubBest === P.carried, S.rec.kubs, Math.round(stunned * 10) / 10];
+          return out; }""")
+        check(z3['start'] and z3['p0'][0] and z3['p0'][1] == 0 and z3['p0'][2] == 1, f"쿠베라의 곳간: 시작하면 하루 횟수가 줄고 상자 0개에서 시작 {z3['p0']}")
+        check(z3['kub'][0] and z3['kub'][1] >= 10 and z3['kub'][2] and z3['kub'][3] >= 2 and z3['kub'][4] == 1 and z3['kub'][5], f"쿠베라의 곳간: 60초 동안 자동으로 상자를 나르고(상자 {z3['kub'][1]}개) 문지기가 지키며 기록이 남는다 {z3['kub']}")
+        z4 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.kubLuck = 1e9; G.vaultLuck = 1e9; G.spiritLuck = 1e6;
+          const sgN = () => G.ALL_SLOTS.reduce((t, sl) => t + G.spOwned(sl), 0), n6 = () => Object.values(S.skin.eq).concat(S.skin.inv).filter(x => x && x.g === 6).length;
+          const fin = (n) => { G.startKub(); const P = G.parade; P.carried = n; P.t = 0.03; const g0 = S.gold, s0 = sgN(), k0 = n6(), j0 = S.myth.goldjar || 0; G.update(0.05); return {g:S.gold - g0, sg:sgN() - s0, sk:n6() - k0, jar:(S.myth.goldjar || 0) - j0}; };
+          G.vaultLuck = 0; S.sea2.kub = 0; const a = fin(2), b = fin(14);
+          G.vaultLuck = 1e9; S.sea2.kub = 0; S.myth.goldjar = 0; const c = fin(40); fin(5);
+          out.low = [a.g > 0, a.sg, b.sg, b.g > a.g]; out.top = [c.g > b.g, c.sg, c.sk, c.jar > 0, S.myth.goldjar];
+          out.tiers = [0, 5, 6, 13, 14, 22, 30, 38, 60].map(G.kubTier).join('');
+          out.third = G.startKub(); G.kubLuck = null; G.vaultLuck = null; G.spiritLuck = null;
+          const M = G.MYTHS.find(x => x.k === 'goldjar'); out.myth = [M.name, M.vault, M.w, M.stat];
+          return out; }""")
+        check(z4['low'][0] and z4['low'][1] == 0 and z4['low'][2] == 1 and z4['low'][3], f"쿠베라의 곳간 낮은 단계: 엽전만(영물 장비 없음), 2단계는 영물 장비 한 번 기회 {z4['low']}")
+        check(z4['top'][0] and z4['top'][1] >= 3 and z4['top'][2] >= 1 and z4['top'][3] and z4['top'][4] > 0, f"쿠베라의 곳간 5단계: 영물 장비 셋 + 영물 치장 + 신화 보물 「마르지 않는 금항아리」(운 고정) {z4['top']}")
+        check(z4['tiers'] == '001123455', f"쿠베라의 곳간: 나른 수 → 단계(문턱 6·14·22·30·38개) {z4['tiers']}")
+        check(z4['third'] is False and z4['myth'][0] == '마르지 않는 금항아리' and z4['myth'][1] and z4['myth'][2] == 8, f"곳간은 하루 2번, 금항아리는 곳간 전용 신화 보물 {z4['myth']}")
+        # --- 손컨 패턴 「열 머리」(라바나 레이드)
+        z5 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; G.noIndPat = false;
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !(until && until()); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          S.world = 8; S.best.s8 = Math.max(S.best.s8 || 0, 60); S.raid.tk = 3; G.refreshStats(); out.start = G.startRaid(2); const R = G.raid, B = R && R.boss;
+          if (!B) return out; B.hp = B.maxHp = B.maxHp * 1e12; run(8, () => !!(B.pat && B.pat.tel)); out.kind = [R.info.type, G.patInd(B), B.heads == null ? G.IND_PAT.heads : B.heads];
+          for (let i = 0; i < 200 && B.pat.tel; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; }
+          B.pat.tel = null; B.heads = 10; G.patHeads(B, B.pat); const T = B.pat.tel; out.t10 = [T.shape, T.heads, T.anchors.length, T.set.size, new Set(T.anchors.map(a => a[2])).size];
+          const sizes = [T.set.size]; const seq = [];
+          for (let k = 0; k < 4; k++){ B.pat.tel = null; G.counterOk(B, true); seq.push(B.heads); B.pat.grogT = 0; B.pat.tel = null; G.patHeads(B, B.pat); sizes.push(B.pat.tel.set.size); }
+          out.seq = seq; out.last = [B.pat.tel.anchors.length, B.pat.tel.heads];
+          B.pat.tel = null; B.heads = 1; B.pat.grogT = 0; B.stunT = 0; G.counterOk(B, true); out.zero = [B.heads, B.pat.grogT > 0];   // 마지막 머리를 끄면 보스가 휘청이고 머리 셋이 다시 눈을 뜬다
+          // 자동 손(되받기 확률 1)으로 몇 초 돌리면 머리가 줄어든다
+          B.pat.grogT = 0; B.stunT = 0; B.heads = 10; G.hand = {dodge:1, counter:1}; run(45, () => B.heads <= 6); out.auto = [B.heads, !G.hero.dead]; G.hand = null;
+          B.pat.tel = null; G.raid.time = 0.05; run(12, () => !G.raid); out.end = !G.raid; S.world = 10;
+          return out; }""")
+        check(z5.get('start') and z5['kind'][0] == 'ravana' and z5['kind'][1] == 'heads' and z5['kind'][2] == 10, f"열 머리: 라바나 레이드에서만 켜지고 머리가 열 개로 시작한다 {z5.get('kind')}")
+        check(z5['t10'][0] == 'heads' and z5['t10'][1] == 10 and z5['t10'][2] == 10 and z5['t10'][3] >= 60 and z5['t10'][4] == 4, f"열 머리: 예고 때 머리마다 다른 붉은 칸(고리·줄·십자·비 네 모양)이 한꺼번에 깔린다 {z5['t10']}")
+        check(z5['seq'] == [9, 8, 7, 6] and z5['last'] == [6, 6], f"열 머리: 되받기를 성공할 때마다 머리 하나가 꺼져 다음 예고의 붉은 칸 모양이 하나씩 줄어든다 {z5['seq']} {z5['last']}")
+        check(z5['zero'] == [3, True] and z5['auto'][0] <= 8 and z5['auto'][1] and z5['end'], f"열 머리: 마지막 머리가 꺼지면 보스가 휘청이고 머리 셋이 다시 뜨며, 자동 손으로도 머리가 줄고 오류 없이 끝난다 {z5['zero']} {z5['auto']}")
+        # --- 손컨 패턴 「꽃으로 바꾸기」(마라의 군대)
+        z6 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; G.noIndPat = false; S.world = 10; G.refreshStats();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !(until && until()); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          S.raid.tk = 3; out.start = G.startRaid(1); const R = G.raid, B = R && R.boss; if (!B) return out;
+          B.hp = B.maxHp = B.maxHp * 1e12; run(8, () => !!(B.pat && B.pat.tel)); out.kind = [R.info.name, G.patInd(B)];
+          for (let i = 0; i < 200 && B.pat.tel; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; }
+          const mk = () => { B.pat.tel = null; B.pat.grogT = 0; B.stunT = 0; G.hero.goal = null; G.hero.rollT = 0; G.hero.dodgeT = 0; G.patFlower(B, B.pat); return B.pat.tel; };
+          let T = mk(); const [hx, hy] = G.heroTile(), g = T.flower.gold; out.t = [T.shape, Math.max(Math.abs(g[0] - hx), Math.abs(g[1] - hy)), T.set.size, T.set.has(g[0] + ',' + g[1]), T.set.has(hx + ',' + hy)];
+          // 멀리서 [되받기]: 통하지 않는다(힌트만)
+          out.far = [G.flowerNear(T), G.handPress()]; 
+          // 못 하면 붉은 칸 피해(제자리에서 버팀·구르기 없음)
+          T.flower.auto.ok = false; T.auto.ok = false; const hit0 = S.rec.patHits || 0, hp0 = G.hero.hp; T.T = 0.3; T.t = 0; G.hero.hp = G.ST.maxHp;
+          for (let i = 0; i < 12 && B.pat.tel === T; i++){ G.update(0.05); }
+          out.fail = [(S.rec.patHits || 0) - hit0, G.hero.hp < G.ST.maxHp];
+          // 금빛 무기 근처에서 [되받기]: 나머지가 꽃잎이 되어 피해 0
+          T = mk(); const g2 = T.flower.gold; T.flower.auto.ok = false; T.auto.ok = false;
+          G.hero.tx = G.hero.fx = g2[0]; G.hero.ty = G.hero.fy = g2[1]; G.hero.moving = false; G.hero.hp = G.ST.maxHp;
+          out.near = [G.flowerNear(T)]; const hit1 = S.rec.patHits || 0, fl0 = S.rec.flowers || 0; out.press = G.handPress(); out.after = [B.pat.tel === null, !!B.petals, (S.rec.flowers || 0) - fl0, B.stunT > 0];
+          run(3, null); out.safe = [(S.rec.patHits || 0) - hit1];
+          // 자동 손(되받기 확률 1): 알아서 꽃으로 바꾼다
+          T = mk(); G.hand = {dodge:0, counter:1}; T.flower.auto.ok = true; T.flower.auto.at = 0.1; const fl1 = S.rec.flowers || 0; run(2, () => B.pat.tel !== T); out.autoOk = [B.pat.tel !== T, (S.rec.flowers || 0) - fl1]; G.hand = null;
+          // 자동으로 몇 초 돌려 본다(손은 기본값)
+          run(20, () => !G.raid); out.alive = [!!G.raid, !G.hero.dead];
+          if (G.raid){ B.pat.tel = null; G.raid.time = 0.05; run(12, () => !G.raid); }
+          S.world = 10;
+          // 끄개: noIndPat이면 패턴이 안 켜진다
+          G.noIndPat = true; out.off = [G.patInd({type:'ravana'})]; G.noIndPat = false;
+          return out; }""")
+        check(z6.get('start') and z6['kind'] == ['마라의 군대', 'flower'] and z6['t'][0] == 'flower' and z6['t'][1] >= 3 and z6['t'][2] >= 20 and z6['t'][3] and z6['t'][4], f"꽃으로 바꾸기: 마라의 군대 레이드에서 무기가 쏟아질 붉은 칸 여럿과 금빛 무기 하나(용사에게서 칸 거리 3 이상)가 예고된다 {z6.get('t')} {z6.get('kind')}")
+        check(z6['far'] == [False, ''] and z6['fail'][0] == 1, f"꽃으로 바꾸기: 금빛 무기에서 멀리서 [되받기]는 안 통하고, 못 하면 붉은 칸 피해 {z6['far']} {z6['fail']}")
+        check(z6['near'] == [True] and z6['press'] == 'counter' and z6['after'] == [True, True, 1, True] and z6['safe'] == [0], f"꽃으로 바꾸기: 금빛 무기 근처에서 [되받기]를 하면 꽃잎이 되어 피해 0, 보스는 묶인다 {z6['near']} {z6['press']} {z6['after']} {z6['safe']}")
+        check(z6['autoOk'] == [True, 1] and z6['alive'][1] and z6['off'] == [None], f"꽃으로 바꾸기: 자동 손도 되받기 확률대로 꽃으로 바꾸고, 몇 초 돌려도 오류가 없다 {z6['autoOk']} {z6['alive']} {z6['off']}")
+        # --- 5부 1일 보스(홀수 날 5부·짝수 날 4부)
+        z7 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; G.dbForce = true; S.world = 10;
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !(until && until()); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          const day = () => new Date(G.now()).getDate(); const dow = () => new Date(G.now()).getDay();
+          while (day() % 2 !== 1) G.addTime(86400000);   // 홀수 날로
+          out.ind = [G.dbInd(), G.dbSea(), G.dbBoss().name === G.DBOSS_IND[dow()].name, G.DBOSS_IND.length, G.DBOSS_IND.every(x => !!G.bossPortrait(x.type, x.color))];
+          G.addTime(86400000); out.sea = [G.dbInd(), G.dbSea(), G.dbBoss().name === G.DBOSS_SEA[dow()].name];   // 다음 날(짝수)은 4부 보스
+          while (day() % 2 !== 1) G.addTime(86400000); if (dow() === 0) G.addTime(2 * 86400000);   // 일요일이 아닌 홀수 날
+          G.skSpirit = 1e9; G.skGrade = null; S.sea2.day = ''; G.dbCheck(); out.start = G.startDBoss(); const R = G.raid; out.info = R ? [R.info.ind, R.info.sea, R.info.part] : null;
+          const sk0 = new Set(Object.values(S.skin.eq).concat(S.skin.inv).map(x => x && x.id));
+          if (R){ R.info.fit = null; R.boss.hp = 1; } run(40, () => !G.raid);
+          const got = Object.values(S.skin.eq).concat(S.skin.inv).filter(x => x && !sk0.has(x.id));
+          out.skin = got.map(x => [x.g, x.c]); out.won = S.dboss.won; G.skSpirit = null; G.dbForce = false;
+          // 3부 용사: 5부 보스는 안 나온다
+          S.world = 7; out.w7 = [G.dbInd()]; S.world = 10;
+          return out; }""")
+        check(z7['ind'] == [True, False, True, 7, True] and z7['sea'] == [False, True, True], f"1일 보스: 5부 용사는 홀수 날엔 5부 보스(7명), 짝수 날엔 4부 보스가 번갈아 나온다 {z7['ind']} {z7['sea']}")
+        check(z7['start'] and z7['info'][0] is True and z7['info'][1] is False and z7['won'] and len(z7['skin']) >= 1 and all(g == 6 and c >= 68 for g, c in z7['skin']) and z7['w7'] == [False], f"5부 1일 보스: 이기면 그 부위 5부 치장(영물 확률 고정으로 영물 등급)을 주고 4부 이하 용사에게는 안 나온다 {z7['info']} {z7['skin']} {z7['w7']}")
+        # --- 저장·불러오기: 하루 횟수·기록이 그대로, 예전 저장(칸 없음)도 안 깨진다
+        z8 = await sq.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; S.sea2.asuraBest = 4; S.sea2.kubBest = 17; S.sea2.asura = 1; S.sea2.kub = 2;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.sea2.asuraBest, re.sea2.kubBest, re.sea2.asura, re.sea2.kub];
+          const old = JSON.parse(JSON.stringify(S)); delete old.sea2.asura; delete old.sea2.kub; delete old.sea2.asuraBest; delete old.sea2.kubBest; const r2 = G.mergeState(old); out.old = [r2.sea2.asura, r2.sea2.kub, r2.sea2.asuraBest, r2.sea2.kubBest, r2.myth.goldjar];
+          const d = G.seaDay(); out.day = [typeof d.asura, typeof d.kub];
+          return out; }""")
+        check(z8['re'] == [4, 17, 1, 2] and z8['old'][:4] == [0, 0, 0, 0] and z8['day'] == ['number', 'number'], f"저장·불러오기: 하루 횟수·최고 기록이 그대로 돌아오고, 이 칸이 없는 예전 저장도 0으로 채워진다 {z8['re']} {z8['old']}")
+        # --- 캡처: 아수라 야행(밧줄)
+        await sq.evaluate("() => { const G = window.__game; G.closePage(); G.hideModal(); G.quiet = true; G.S.world = 10; G.S.sea2.asura = 0; G.S.sea2.kub = 0; G.refreshStats(); G.hero.hp = G.ST.maxHp; G.startAsura(); G.hand = null; }")
+        await sq.evaluate("() => { const G = window.__game; for (let i = 0; i < 160; i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } }")
+        await sq.wait_for_timeout(500)
+        await sq.screenshot(path=str(OUT / '9-26a_아수라야행_밧줄.png'))
+        await sq.evaluate("() => { const G = window.__game; G.parade.t = 0.03; G.update(0.05); G.hideModal(); }")
+        # --- 캡처: 쿠베라의 곳간
+        await sq.evaluate("() => { const G = window.__game; G.startKub(); for (let i = 0; i < 140; i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } }")
+        await sq.wait_for_timeout(300)
+        await sq.screenshot(path=str(OUT / '9-26b_쿠베라곳간_상자문지기.png'))
+        await sq.evaluate("() => { const G = window.__game; G.parade.t = 0.03; G.update(0.05); G.hideModal(); G.dbForce = false; }")
+        # --- 캡처: 열 머리 예고·꽃으로 바꾸기 예고·꽃잎
+        await sq.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; G.wipeOff = true; S.world = 8; S.best.s8 = Math.max(S.best.s8 || 0, 60); S.raid.tk = 3; G.refreshStats(); G.startRaid(2); const B = G.raid.boss; B.hp = B.maxHp = B.maxHp * 1e12;
+          for (let i = 0; i < 60; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; } B.pat.tel = null; B.heads = 10; G.patHeads(B, B.pat); B.pat.tel.T = 1e3; B.pat.tel.auto.ok = false; window.__b26 = B; }""")
+        await sq.wait_for_timeout(500)
+        await sq.screenshot(path=str(OUT / '9-26c_열머리_예고.png'))
+        await sq.evaluate(r"""() => { const G = window.__game, S = G.S; const B = window.__b26; B.pat.tel = null; for (let i = 0; i < 3; i++){ G.counterOk(B, true); B.pat.grogT = 0; B.pat.tel = null; } G.patHeads(B, B.pat); B.pat.tel.T = 1e3; B.pat.tel.auto.ok = false; }""")
+        await sq.wait_for_timeout(400)
+        await sq.screenshot(path=str(OUT / '9-26c2_열머리_일곱개로줄어듦.png'))
+        await sq.evaluate(r"""() => { const G = window.__game, S = G.S; G.raid.time = 0.05; for (let i = 0; i < 60 && G.raid; i++){ G.update(0.05); } G.hideModal(); S.world = 10; G.refreshStats(); S.raid.tk = 3; G.startRaid(1); const B = G.raid.boss; B.hp = B.maxHp = B.maxHp * 1e12;
+          for (let i = 0; i < 60; i++){ G.update(0.05); G.hero.hp = G.ST.maxHp; } B.pat.tel = null; B.pat.grogT = 0; G.hero.goal = null; G.patFlower(B, B.pat); const T = B.pat.tel; T.T = 1e3; T.auto.ok = false; T.flower.auto.ok = false; window.__b26 = B; }""")
+        await sq.wait_for_timeout(500)
+        await sq.screenshot(path=str(OUT / '9-26d_꽃으로바꾸기_예고.png'))
+        await sq.evaluate(r"""() => { const G = window.__game, B = window.__b26, T = B.pat.tel, g = T.flower.gold; G.hero.tx = G.hero.fx = g[0]; G.hero.ty = G.hero.fy = g[1]; G.hero.moving = false; G.hero.goal = null; G.handPress(); }""")
+        await sq.wait_for_timeout(250)
+        await sq.screenshot(path=str(OUT / '9-26e_꽃으로바꾸기_꽃잎.png'))
+        await sq.evaluate("() => { const G = window.__game; if (G.raid){ G.raid.boss.pat.tel = null; G.raid.time = 0.05; for (let i = 0; i < 60 && G.raid; i++) G.update(0.05); } G.hideModal(); }")
+        await ctx26.close()
+
         # @@END-F
         # @@TEST-G (갈래 G의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-G
