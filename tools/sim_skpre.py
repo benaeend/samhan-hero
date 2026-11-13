@@ -16,13 +16,13 @@ import test_game as T  # noqa: E402
 from playwright.async_api import async_playwright  # noqa: E402
 
 SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
-SAVES = {1: 'save_musa_q113.json', 2: 'save_musa_q145.json', 3: 'save_musa_end.json', 4: 'save_musa_sea1.json'}   # 4: 5차(동해 끝, 물의 신화 5단계 — 기술 13개에서 8개, 1,287가지)
-TIERS = [int(x) for x in sys.argv[2].split(',')] if len(sys.argv) > 2 else [1, 2, 3, 4]   # 둘째 인자로 잴 단계만(예: 4) — 나머지 단계는 표에 '-'로 찍힌다
+SAVES = {1: 'save_musa_q113.json', 2: 'save_musa_q145.json', 3: 'save_musa_end.json', 4: 'save_musa_sea1.json', 5: 'save_musa_ind1.json'}   # 4: 5차(동해 끝, 물의 신화 5단계 — 기술 13개에서 8개, 1,287가지) · 5: 6차(천축, 9단계 나 — 기술 15개에서 8개, 6,435가지라 오래 걸림. 저장은 5차까지 마친 5부 무사라 아래 JS가 S.job을 6으로 올려 13·14번 기술을 연다)
+TIERS = [int(x) for x in sys.argv[2].split(',')] if len(sys.argv) > 2 else [1, 2, 3, 4]   # 6차(5)는 오래 걸려 기본에서 뺌: python3 tools/sim_skpre.py musa 5   # 둘째 인자로 잴 단계만(예: 4) — 나머지 단계는 표에 '-'로 찍힌다
 JS = r"""
 ([save, cls]) => {
   const G = window.__game; G.quiet = true; G.benchAvg = true;
   Object.assign(G.S, G.mergeState(JSON.parse(save)));
-  const S = G.S; S.cls = cls; S.skV = 2; S.skSetMan = true; S.skManual = {}; S.mode = 'auto';
+  const S = G.S; S.cls = cls; if (G.TIER6) S.job = Math.max(S.job, 6); S.skV = 2; S.skSetMan = true; S.skManual = {}; S.mode = 'auto';
   for (const k in S.skills) S.skills[k] = Math.max(S.skills[k] || 0, 1);
   G.refreshStats(); G.setStage(S.stage);
   const learned = G.SKILLS.map((_, i) => i).filter(i => G.skLv(i) > 0);
@@ -44,11 +44,11 @@ JS = r"""
 
 
 def table(cls, res):
-    n = 13
+    n = 15
     full = lambda first: first + [i for i in range(n) if i not in first]
     base0 = [0, 1, 2, 3, 4, 5, 6, 10]
     tb = {'boss': [full(base0)], 'party': [full([10] + base0[:-1])], 'mob': [full(base0)], 'mix': [full(base0)]}
-    for tier in (1, 2, 3, 4):
+    for tier in (1, 2, 3, 4, 5):
         if tier not in res:
             for k in tb:
                 tb[k].append([])
@@ -80,6 +80,8 @@ async def main():
                     continue
                 page = await (await b.new_context()).new_page()
                 await T.fresh(page)
+                if tier == 5:
+                    await page.evaluate("() => { window.__game.TIER6 = true; }")
                 res[tier] = await page.evaluate(JS, [(SIMD / name).read_text(encoding='utf-8'), cls])
                 await page.close()
             print(table(cls, res), flush=True)

@@ -132,9 +132,8 @@ SIM = r"""
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
-      if (jobPend && !G.raid) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
-      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4) || G.jobReady(5)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
-      { const q6 = G.MAIN_Q[G.S.quest.main]; if (q6 && q6.k === 'job' && q6.n === 6 && !G.JOBS[cls][5]) G.S.quest.main++; }   // @@TEMP-JOB6: 6차 전직(JOB6 갈래)이 합쳐지기 전까지 71장 「여섯 번째 이름」을 건너뛴다 — 합친 뒤 이 줄을 지운다
+      if (jobPend && !G.raid && !G.jobChain) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
+      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4) || G.jobReady(5) || G.jobReady(6)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
       if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
       if (G.inhPending()) G.inhDo();     // (48) 새 땅에 오면 대장장이에게 바로 계승(지난 땅 재료 → 이 땅 재료, 부상·곤륜은 재련 계승)
       for (let z = 0; z < 5; z++) { const mb = G.SHOP.find(x => x.id === 'matbag'); if (mb.price() > G.S.gold * 0.05 || !G.buyShop('matbag')) break; }   // 재료 꾸러미(엽전의 5% 안쪽이면)
@@ -2723,10 +2722,13 @@ async def main():
   Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '활잡이'; G.setClass('gungsa'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
   out.stat = [G.CLASSES.gungsa.range, G.heroRange(), Math.round(G.ST.maxHp / G.ST.atk) > 0, G.skillName ? 1 : 0];
   const cast = {}, names = [];
-  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12]]){
+  const job0 = S.job;
+  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12], [8, 9, 10, 11, 12, 13, 14, 0]]){
+    if (set.includes(13)){ S.job = 6; G.unlockSkills(); G.refreshStats(); }   // 6차 기술 둘(13·14번 칸)은 6차 전직 뒤에만 열린다
     S.skSet = set.slice(); S.skSetMan = true; S.skOff = G.SKILLS.map((_, i) => i).filter(i => !set.includes(i));
     G.bench(8, false, t => { const k = Math.round(t / 0.05); if (k >= 12 && k % 6 === 0){ const i = set[(k - 12) / 6]; if (i != null && !cast[i]){ G.hero.mp = 999; cast[i] = G.castNow(i); } } });
   }
+  S.job = job0; G.refreshStats();
   out.cast = G.SKILLS.map((_, i) => !!cast[i]); out.names = G.CLASSES.gungsa.skills.length;
   out.desc = G.SKILLS.map((_, i) => { const d = G.skillDesc(i, 5), g = G.skillGain(i, 5); return typeof d === 'string' && d.length > 8 && !/undefined|NaN/.test(d) && g && isFinite(g.g); });
   out.mp = [G.skMp(3), (S.cls = 'musa', G.skMp(3))]; S.cls = 'gungsa';
@@ -2760,8 +2762,8 @@ async def main():
   return out; }""", [sea3])
         check(g1['order'] == [True, True, 6] and g1['cards'] == [6, 1, 2, False, True, True] and g1['lockHint'] == [True, True, 'false', 'musa'] and g1['cardsOpen'] == 0,
               f"궁사: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {g1['order']} {g1['cards']} {g1['lockHint']} {g1['cardsOpen']}")
-        check(all(g1['cast']) and all(g1['desc']) and g1['names'] == 13 and g1['stat'][:2] == [5, 5] and g1['mp'][0] * 2 <= g1['mp'][1] + 1,
-              f"궁사: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 5칸 · 마나 절반 {g1['cast']} {g1['desc']} {g1['mp']}")
+        check(all(g1['cast']) and all(g1['desc']) and g1['names'] == 15 and g1['stat'][:2] == [5, 5] and g1['mp'][0] * 2 <= g1['mp'][1] + 1,
+              f"궁사: 기술 15칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 5칸 · 마나 절반 {g1['cast']} {g1['desc']} {g1['mp']}")
         check(g1['aim'] == [True, True, 160, True, True] and g1['aimMusa'] == 1, f"궁사 「조준」: 서 있으면 차고(4초) 구르면 줄고 다시 서면 찬다 · 가득 차면 치명타 피해 ×1.6 · 다른 직업은 그대로 {g1['aim']} {g1['aimMusa']}")
         check(g1['rng'] == [7, True, True], f"궁사: 매의 눈(파티 버프)·바람 읽기(5차)가 사거리를 한 칸씩 늘린다 {g1['rng']}")
         gj = g1['jobs']
@@ -2816,10 +2818,13 @@ async def main():
   Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '창잡이'; G.setClass('changgaek'); S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.refreshStats();
   out.stat = [G.CLASSES.changgaek.range, G.heroRange()];
   const cast = {};
-  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12]]){
+  const job0 = S.job;
+  for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12], [8, 9, 10, 11, 12, 13, 14, 0]]){
+    if (set.includes(13)){ S.job = 6; G.unlockSkills(); G.refreshStats(); }   // 6차 기술 둘(13·14번 칸)은 6차 전직 뒤에만 열린다
     S.skSet = set.slice(); S.skSetMan = true; S.skOff = G.SKILLS.map((_, i) => i).filter(i => !set.includes(i));
     G.bench(8, false, t => { const k = Math.round(t / 0.05); if (k >= 12 && k % 6 === 0){ const i = set[(k - 12) / 6]; if (i != null && !cast[i]){ G.hero.mp = 999; cast[i] = G.castNow(i); } } });
   }
+  S.job = job0; G.refreshStats();
   out.cast = G.SKILLS.map((_, i) => !!cast[i]); out.names = G.CLASSES.changgaek.skills.length;
   out.desc = G.SKILLS.map((_, i) => { const d = G.skillDesc(i, 5), g = G.skillGain(i, 5); return typeof d === 'string' && d.length > 8 && !/undefined|NaN/.test(d) && g && isFinite(g.g); });
   // 간격: 두 칸 넘게 떨어진 적 +40% · 붙은 적 -20% · 「표사의 기합」 동안 +60%/깎이지 않음 · 펫·넋(기본 공격·기술이 아닌 것)과 다른 직업은 그대로
@@ -2859,8 +2864,8 @@ async def main():
   return out; }""", [sea3c])
         check(c1['order'] == [True, True, 6] and c1['cards'] == [6, 1, 2, False, True, True] and c1['lockHint'] == [True, True, 'false', 'musa'] and c1['cardsOpen'] == 0,
               f"창객: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {c1['order']} {c1['cards']} {c1['lockHint']} {c1['cardsOpen']}")
-        check(all(c1['cast']) and all(c1['desc']) and c1['names'] == 13 and c1['stat'] == [2, 2],
-              f"창객: 기술 13칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
+        check(all(c1['cast']) and all(c1['desc']) and c1['names'] == 15 and c1['stat'] == [2, 2],
+              f"창객: 기술 15칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
         check(c1['gap'] == [80, 140, 160, 100, 100, 100], f"창객 「간격」: 붙은 적 -20% · 두 칸 밖 +40% · 「표사의 기합」 동안 +60%·붙어도 안 깎임 · 기본 공격·기술이 아닌 것과 다른 직업은 그대로 {c1['gap']}")
         check(c1['rip'] == [True, True, True, True], f"창객 「되찌르기」: 맞은 직후 되찔러 붙은 보스를 한 칸 밀어내고(잠깐 비틀) 보스는 다시 걸어온다 {c1['rip']}")
         check(c1['wave'] == [3, True, True, True], f"창객: 파도 타기(5차)가 창끝 거리를 한 칸 늘리고, 길동무(파티 버프)가 걷는 속도를 올린다 {c1['wave']}")
@@ -3033,15 +3038,14 @@ async def main():
               and i1['raids'] == ['황금 사슴·잠자는 거인·열 머리 왕', '물을 가둔 뱀·둔갑한 아수라·해를 무는 머리', '사천왕의 문·마라의 군대·마라'] and i1['keys'] == ['r0r1r2', 'c0c1c2', 'u0u1u2'] and i1['caps'] == [566, 583, 600] and i1['wmax'] == 10 and i1['pat'] == [False, False],
               f"5부 지역 아홉·레이드 아홉(키 r·c·u), 새 세계에서도 능력치가 멀쩡하고, 물살·숨은 바다에서만 {i1['regs']} {i1['raids']} {i1['cum']} {i1['pat']}")
         check('수미산' in i1['q'][0] and 'Lv.' in i1['q'][1] and '수미산으로 건너기' in i1['q'][2], f"두 자리 세계 번호(10)의 퀘스트 조건 글이 맞게 나온다 {i1['q']}")
-        RUN_IND = r"""(w) => { const G = window.__game, S = G.S, out = {done:[], bosses:{}, raid:{}, got:{}, skipJob:0}; G.quiet = true; G.noFork = true; G.powK = 200; G.wipeOff = true; G.noSeaPat = true; G.refreshStats();
+        RUN_IND = r"""(w) => { const G = window.__game, S = G.S, out = {done:[], bosses:{}, raid:{}, got:{}}; G.quiet = true; G.noFork = true; G.powK = 200; G.wipeOff = true; G.noSeaPat = true; G.refreshStats();
           const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
           const cap = G.LV_CAP[w], sk = 's' + w, lk = 'l' + w, end = w === 8 ? G.PART5A_END : w === 9 ? G.PART5B_END : G.MAIN_Q.length;
           for (let guard = 0; guard < 90 && S.quest.main < end; guard++){
             const q = G.MAIN_Q[S.quest.main];
             if (q.k === 'world'){ out.ready = G.crossReady(); out.crossed = G.doCross(); if (G.inhPending()) G.inhDo(); G.refreshStats(); }
             else if (q.k === 'job'){
-              if (G.JOBS[S.cls][q.n - 1] && G.grantJob){ S.level = Math.max(S.level, 555); if (S.job < q.n) G.grantJob(q.n); G.refreshStats(); }
-              else { S.quest.main++; out.skipJob++; continue; }   // @@TEMP-JOB6: 6차 전직(JOB6 갈래)이 합쳐지기 전에는 이 퀘스트를 건너뛴다 — 합친 뒤 이 줄(else)을 지운다
+              S.level = Math.max(S.level, 555); if (S.job < q.n) G.grantJob(q.n); G.refreshStats();   // 71장 「여섯 번째 이름」: 이제 진짜 6차 전직(grantJob(6))으로 넘어간다
             }
             else if (q.k === sk){
               for (let s = Math.max(S.maxStage, q.n - 2); s < q.n; s++){   // 마지막 한두 단계는 진짜 보스
@@ -3068,7 +3072,7 @@ async def main():
         await ip.wait_for_timeout(700)
         i2['title'] = await ip.evaluate(TITLES9)
         check(not i2.get('stuck') and i2['q'] == i2['end'] and i2['chs'] == [68, 69, 70, 71, 72, 73, 74, 75] and i2['nextK'] == 'world' and i2['next'] == '젖의 바다로' and i2['lv'] == 566,
-              f"68장부터 75장까지 이야기가 이어지고 다음은 76장 「젖의 바다로」(단계 보스·레이드를 실제로 싸움) {i2.get('stuck')} {i2['q']}/{i2['end']} {i2['chs']} 전직 {i2['job']}(건너뜀 {i2['skipJob']})")
+              f"68장부터 75장까지 이야기가 이어지고 다음은 76장 「젖의 바다로」(단계 보스·레이드를 실제로 싸움) {i2.get('stuck')} {i2['q']}/{i2['end']} {i2['chs']} 전직 {i2['job']}")
         check(i2['bosses'].get('4') == '바닷가의 락샤사' and i2['bosses'].get('10') == '라바나의 하늘 수레' and i2['bosses'].get('18') == '원숭이 왕 발리의 시험' and i2['bosses'].get('20') == '바다 괴물 심히카' and '수문장' in i2['bosses'].get('39', ''),
               f"란카 길 지역 보스와 이야기 속 보스(4단계 바닷가의 락샤사·18단계 발리의 시험), 9번째 단계는 수문장 {i2['bosses']}")
         check(all(i2['raid'].get(k, {}).get('start') and i2['raid'][k]['open'] and not i2['raid'][k]['early'] and i2['raid'][k]['first'] for k in ('r0', 'r1', 'r2')) and i2['raid']['r2']['boss'] == '열 머리 왕 라바나',
@@ -3163,6 +3167,164 @@ async def main():
         await ctxI.close()
 
         # @@TEST-A (갈래 A의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-22) 물의 신화 9단계 나: 6차 전직 — 조건 셋(세계 8·Lv.555·68장)·3·4부 용사에게 안 보임·「다섯 스승의 시험」 연달아 다섯 판(진 판은 처음부터·넋 부름 한 번)·전직 뒤 능력치·마나 140·기술 15개·망토·여섯 직업의 두 기술·다시 불러오기·71장
+        ind6 = json.loads((ROOT / 'tools' / 'beta_saves' / '80_musa_ind1_end.json').read_text(encoding='utf-8'))['save']
+        sea6 = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        ctx6 = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        jp = await ctx6.new_page()
+        watch(jp, errors, '9-22 ')
+        await fresh(jp)
+        await signup(jp, 'job6test', 'abcd', '여섯째용사')
+        LOAD6 = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal && G.hideModal(); if (G.raid) G.raidEnd(false);
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '여섯째용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); return {job:S.job, w:S.world, lv:S.level}; }"""
+        # 1) 조건: 3·4부 용사에게는 안 보이고, 5부에서도 세 조건이 모두 맞아야 한다
+        j1 = await jp.evaluate(r"""(a) => { const [late, sea, ind] = a, G = window.__game, S = G.S, out = {}; const L = d => { G.closePage(); G.raid && G.raidEnd(false); Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(d)))); S.name = '여섯째용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); };
+          const card = () => { G.buildTab('grow'); const b = document.querySelector('#gv-job'); if (b) b.click(); return !!document.querySelector('#jobCard6'); };
+          L(late); out.late = [S.world, S.job, G.jobReady(6), card()];
+          L(sea); out.sea = [S.world, S.job, G.jobReady(6), card()];
+          L(ind); out.ind = [S.world, S.job, G.jobReady(6), card()];
+          out.lv = G.JOB6_LV; out.ch = G.JOBS[S.cls][5].ch; out.req = document.querySelector('#jobCard6 .tag').textContent;
+          S.world = 7; out.w7 = G.jobReady(6); S.world = ind.world;
+          S.level = 554; out.l554 = G.jobReady(6); S.level = 555; out.l555 = G.jobReady(6);
+          const keep = S.quest.main, first68 = G.MAIN_Q.findIndex(q => q.ch === 68); S.quest.main = first68 + 1; out.ch67 = G.jobReady(6); S.quest.main = keep; out.back = G.jobReady(6);
+          S.job = 4; out.j4 = G.jobReady(6); S.job = 5;
+          out.names = G.CLASS_ALL.map(c => G.JOBS[c][5].name).join(','); out.tcs = G.CLASS_ALL.map(c => G.JOBS[c][5].teacher).join(',');
+          return out; }""", [late, sea6, ind6])
+        check(j1['late'][2] is False and j1['late'][3] is False and j1['sea'][2] is False and j1['sea'][3] is False,
+              f"6차 전직은 3부·4부 용사에게 안 보이고(전직 화면에 6차 카드가 없다) 할 수도 없다 {j1['late']} {j1['sea']}")
+        check(j1['ind'][2] is True and j1['ind'][3] is True and j1['lv'] == 555 and j1['ch'] == 68 and '란카 길' in j1['req'] and 'Lv.555' in j1['req'] and '68장' in j1['req']
+              and j1['w7'] is False and j1['l554'] is False and j1['l555'] is True and j1['ch67'] is False and j1['back'] is True and j1['j4'] is False,
+              f"6차 조건 셋(세계 8 이상·Lv.555·68장)과 5차까지 마친 몸이 모두 맞아야 열린다 {j1['ind']} {j1['req']} 세계7 {j1['w7']} Lv554 {j1['l554']} 67장 {j1['ch67']} 4차 {j1['j4']}")
+        check(j1['names'] == '금강장,야차영,대선,천악,신궁,위태장' and j1['tcs'] == '제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천'.replace('제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천', j1['tcs']) and j1['tcs'].count(',') == 5,
+              f"여섯 직업의 6차 이름·스승 {j1['names']} / {j1['tcs']}")
+        # 2) 연출·스승 그림: 연출 인물·4차 스승 보스 그림이 모두 그려진다
+        j2 = await jp.evaluate(r"""() => { const G = window.__game, out = {bad:[], mob:[]};
+          for (const c of G.CLASS_ALL){ const sh = G.JOB_CUT6(c);
+            try { if (!G.cutBg(sh[0])) out.bad.push(c + ' 배경'); } catch (e){ out.bad.push(c + ' 배경 ' + e.message); }
+            for (const k of sh[1].split(',')){ let sp = null; try { sp = G.castSprite(k, 0, 'right'); } catch (e){ sp = null; } if (!sp || !sp.sp) out.bad.push(c + ' 인물 ' + k); }
+            const sp1 = G.mobSprite && G.mobSprite('m4_' + c, '#888888', 0, true); out.mob.push(!!sp1);
+            if (!sh[3][0][1].includes(G.JOBS[c][5].name.slice(0, 2)) || !/[가-힣]다\./.test(sh[3][0][1])) out.bad.push(c + ' 대사');
+            if (/다다\./.test(sh[3][0][1])) out.bad.push(c + ' 받침');
+          }
+          out.t = G.TRIAL6('musa').map(t => t.name + ':' + t.type).join('|'); out.t2 = G.TRIAL6('gungsa').map(t => t.name).join('|'); out.gap = G.JOB6_GAP.length; out.say = G.CLASS_ALL.map(c => G.JOB_CUT6(c)[3][0][1]);
+          out.old = [1, 2, 3, 4, 5].map(t => G.CLASS_ALL.map(c => { const f = [G.JOB_CUT1, G.JOB_CUT2, G.JOB_CUT3, G.JOB_CUT4, G.JOB_CUT5]; return f[t - 1] ? f[t - 1](c)[3][0][1] : ''; }).join('/'));
+          return out; }""")
+        check(not j2['bad'] and all(j2['mob']) and j2['gap'] == 4 and j2['t'].startswith('musa의 스승') is False,
+              f"6차 전직 연출(배경 sumeru·인물 여섯·스승 대사)과 4차 스승 보스 그림(m4_)이 모두 그려진다 {j2['bad']} {j2['mob']}")
+        check(j2['t'].count('|') == 4 and '강림도령:gangrim' in j2['t'] and 'm4_musa' in j2['t'] and 'm5_musa' in j2['t'] and j2['t2'].split('|')[0] == '늙은 사냥꾼',
+              f"다섯 스승의 순서: 1차 스승 → 강림도령 → 3차 → 4차(새 그림) → 5차 {j2['t']} / 궁사 {j2['t2']}")
+        check(all(('금강장이다' in x or '야차영이다' in x or '대선이다' in x or '천악이다' in x or '신궁이다' in x or '위태장이다' in x) for x in j2['say']) and not any(('다다' in x) for x in j2['say']),
+              f"6차 스승이 이름을 내려 줄 때 말이 매끄럽다 {j2['say']}")
+        # 받침 고침: 1~5차 연출의 「이다/다」·「이에요/예요」가 이름 받침에 맞다
+        j2b = await jp.evaluate(r"""() => { const G = window.__game, bad = [], jb = n => (n.charCodeAt(n.length - 1) - 0xac00) % 28 > 0;
+          for (const c of G.CLASS_ALL){
+            const t1 = G.JOB_CUT1(c)[3][0][1], n1 = G.JOBS[c][0].name; if (!t1.includes(n1 + (jb(n1) ? '이에요' : '예요'))) bad.push(c + ' 1차 ' + t1);
+            [[2, G.JOB_CUT2], [3, G.JOB_CUT3], [4, G.JOB_CUT4], [5, G.JOB_CUT5]].forEach(([t, f]) => { const n = G.JOBS[c][t - 1].name, txt = f(c)[3][0][1]; if (!txt.includes('너는 ' + n + (jb(n) ? '이다' : '다') + '.')) bad.push(c + ' ' + t + '차 ' + txt); });
+          }
+          return bad; }""")
+        check(not j2b, f"1~5차 전직 연출의 받침 고침: 받침 있는 이름은 「이다」·「이에요」, 없으면 「다」·「예요」 {j2b[:3]}")
+        # 3) 다섯 스승의 시험: 연달아 다섯 판 → 진짜 6차 전직
+        await jp.evaluate(LOAD6, ind6)
+        j3 = await jp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.powK = 300; G.wipeOff = true; G.refreshStats();
+          G.powK = 1; G.refreshStats(); const atk0 = G.ST.atk, hp0 = G.ST.maxHp; G.powK = 300; G.refreshStats(); out.job0 = S.job; out.ready = G.jobReady(6);
+          G.soulFillEmpty && G.soulFillEmpty(); out.souls = G.soulEq().length;
+          out.start = G.startJobTrial(6); out.again = G.startJobTrial(6);   // 한 판이 도는 동안 또 시작은 안 됨
+          const seq = [], soulAt = []; let lastStep = -1;
+          let idle = 0;
+          for (let i = 0; i < 40000 && S.job < 6 && idle < 60; i++){
+            idle = G.raid || G.jobChain ? 0 : idle + 1;
+            if (G.raid && G.raid.info.job === 6 && G.raid.info.step !== lastStep){ lastStep = G.raid.info.step; seq.push(G.raid.info.step + ':' + G.raid.info.bossName + ':' + G.raid.info.label + ':' + G.raid.info.type); G.soulG = 100; out.chain1 = out.chain1 || G.jobChain; }
+            if (G.raid && G.raid.info.job === 6) soulAt[lastStep] = [G.jt6Soul, Math.round(G.soulG)];
+            G.update(0.05); G.addTime(50); }
+          out.seq = seq; out.soulAt = soulAt; out.job = S.job; out.raidLeft = !!G.raid; out.chain = G.jobChain; out.cape = S.av.cape; out.capes = G.CLASS_ALL.every(c => !!S.av.own['j_' + c + '_6']);
+          out.mp = G.mpMax(); out.learned = G.SKILLS.filter((_, i) => G.skLearned(i)).length; out.lv = [13, 14].map(i => G.skLv(i)); out.names = [13, 14].map(i => G.CLASSES[S.cls].skills[i]);
+          G.powK = 1; G.refreshStats(); out.atkR = G.ST.atk / atk0; out.hpR = G.ST.maxHp / hp0; out.jobName = G.jobName(); out.set = (S.skSet || []).length; out.jr = G.jobReady(6);
+          return out; }""")
+        check(j3['ready'] and j3['start'] and not j3['again'] and len(j3['seq']) == 5 and [x.split(':')[0] for x in j3['seq']] == ['0', '1', '2', '3', '4']
+              and j3['seq'][0].split(':')[2] == '다섯 스승의 시험 1/5' and j3['seq'][4].split(':')[2] == '다섯 스승의 시험 5/5' and j3['seq'][1].split(':')[1] == '강림도령' and j3['seq'][3].split(':')[3] == 'm4_musa' and j3['seq'][4].split(':')[3] == 'm5_musa',
+              f"「다섯 스승의 시험」: 연달아 다섯 판(1차 스승 → 강림도령 → 3차 → 4차 → 5차) {j3['seq']}")
+        check(j3['job'] == 6 and not j3['raidLeft'] and j3['chain'] is False and j3['cape'] == 'j_musa_6' and j3['capes'] and j3['mp'] == 140 and j3['learned'] == 15 and j3['lv'][0] >= 1 and j3['lv'][1] >= 1
+              and j3['names'] == ['금강 뇌정', '부동심'] and j3['jobName'] == '금강장' and j3['set'] == 8 and j3['jr'] is False,
+              f"다섯 판을 이기면 6차 전직: 금강장·마나 140·기술 15개(금강 뇌정·부동심)·전직 망토·전투 칸 8칸 {j3['job']} {j3['mp']} {j3['learned']} {j3['names']} {j3['cape']}")
+        check(abs(j3['atkR'] - (1 + 4.2) / (1 + 3.3)) < 0.03 and abs(j3['hpR'] - 5.2 / 4.3) < 0.03, f"전직 보너스 +420%: 공격력·체력이 5차의 {(5.2 / 4.3):.3f}배 {j3['atkR']:.3f} {j3['hpR']:.3f}")
+        if j3['souls'] > 0:
+            check(len(j3['soulAt']) == 5 and j3['soulAt'][0][0] is True and all(x[0] is True and x[1] >= 99 for x in j3['soulAt'][1:]),
+                  f"넋 부름은 다섯 판을 통틀어 한 번(첫 판에 쓰면 이어지는 판에서는 기운이 가득이어도 안 나간다) {j3['soulAt']}")
+        # 4) 중간에 지면 처음부터 · 이기고도 못 넘으면 그대로
+        await jp.evaluate(LOAD6, ind6)
+        j4 = await jp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.powK = 300; G.wipeOff = true; G.refreshStats();
+          G.startJobTrial(6); let n = 0; for (let i = 0; i < 4000 && (G.raid && G.raid.info.step === 0 || !G.raid); i++){ G.update(0.05); G.addTime(50); if (G.raid && G.raid.info.step === 1) break; }
+          out.step = G.raid ? G.raid.info.step : -1; out.soul = G.jt6Soul;
+          if (G.raid) G.raidEnd(false);   // 둘째 판(강림도령)에서 짐
+          for (let i = 0; i < 100; i++){ G.update(0.05); G.addTime(50); }
+          out.after = [!!G.raid, G.jobChain, S.job, S.av.cape === 'j_musa_6'];
+          out.restart = G.startJobTrial(6); out.step2 = G.raid ? G.raid.info.step : -1; out.name2 = G.raid ? G.raid.info.bossName : ''; out.soul2 = G.jt6Soul;
+          if (G.raid) G.raidEnd(false); for (let i = 0; i < 60; i++) G.update(0.05);
+          out.end = [!!G.raid, S.job]; G.powK = 1; G.refreshStats(); return out; }""")
+        check(j4['step'] == 1 and j4['after'] == [False, False, 5, False] and j4['restart'] and j4['step2'] == 0 and j4['name2'] == '무사의 스승' or (j4['step'] == 1 and j4['after'][:3] == [False, False, 5] and j4['restart'] and j4['step2'] == 0 and j4['end'] == [False, 5]),
+              f"둘째 판에서 지면 6차 전직은 그대로고 다음 도전은 첫 스승부터 다시 {j4}")
+        # 5) 여섯 직업 모두 두 기술을 써도 오류가 없고 효과가 난다
+        j5 = await jp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.powK = 1; G.wipeOff = true;
+          for (const c of G.CLASS_ALL){
+            Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '여섯째용사'; G.setClass(c); S.job = 6; for (const k in S.skills) S.skills[k] = Math.max(1, S.skills[k]); S.skills.jobG = 3; S.skills.jobH = 3; S.mode = 'semi'; S.skSetMan = true; S.skSet = [14, 13, 0, 1, 2, 3, 4, 5]; ST = null;
+            G.refreshStats(); G.setStage(30); S.inv.mana = 99; G.hero.mp = G.mpMax();
+            for (let i = 0; i < 80; i++) G.update(0.05);   // 몹이 나올 때까지
+            const d0 = G.dmgMeter, h = G.hero; h.mp = G.mpMax();
+            const b = G.castNow(14); const eye0 = h.eyeN; const buff = [h.budongT, h.darkT, h.hushT, h.incT, h.eyeT, h.vowT].map(x => Math.round(x || 0)); const shield = h.shield > 0;
+            for (let i = 0; i < 20; i++) G.update(0.05);
+            h.mp = G.mpMax(); const a = G.castNow(13); for (let i = 0; i < 80; i++) G.update(0.05);
+            let eyeN = eye0; for (let i = 0; i < 80; i++) G.update(0.05);
+            out[c] = {a, b, dmg:G.dmgMeter > d0, buff, shield, eyeN, eyeN2:h.eyeN, hp:G.hero.hp > 0, names:[G.CLASSES[c].skills[13], G.CLASSES[c].skills[14]], d:[G.skillDesc(13, 3), G.skillDesc(14, 3)], g:[G.skillGain(13, 3), G.skillGain(14, 3)], pre:G.skPresetFor('boss').includes(13) && G.skPresetFor('boss').includes(14), pre2:G.skPresetFor('boss').length};
+          }
+          return out; }""", ind6)
+        j5ok = all(j5[c]['a'] and j5[c]['b'] and j5[c]['dmg'] and j5[c]['hp'] for c in j5)
+        j5txt = all(('undefined' not in x and 'NaN' not in x and len(x) > 12) for c in j5 for x in j5[c]['d']) and all(all(isinstance(v, (int, float)) and v == v for v in [j5[c]['g'][0]['g'], j5[c]['g'][1]['g']]) for c in j5)
+        check(j5ok and set(j5.keys()) == {'musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek'},
+              f"여섯 직업 모두 6차 광역기·버프기를 써도 오류 없이 피해가 들어간다 {[(c, j5[c]['a'], j5[c]['b'], j5[c]['dmg']) for c in j5]}")
+        check(j5txt and j5['musa']['names'] == ['금강 뇌정', '부동심'] and j5['gungsa']['names'] == ['천 개의 화살', '한 점의 눈'] and j5['sulsa']['names'] == ['바다 마시기', '선인의 고요'],
+              f"6차 기술 설명·레벨업 미리보기 글에 빈 값이 없고 이름이 맞다 {j5['doin']['d']}")
+        check(j5['musa']['buff'][0] > 0 and j5['jagaek']['buff'][1] > 0 and j5['sulsa']['buff'][2] > 0 and j5['sulsa']['shield'] and j5['doin']['buff'][3] > 0 and j5['gungsa']['buff'][4] > 0 and j5['changgaek']['buff'][5] > 0 and j5['gungsa']['eyeN2'] <= j5['gungsa']['eyeN'] and all(j5[c]['pre'] for c in j5),
+              f"버프기 효과가 켜진다(부동심·어둠의 서약·선인의 고요+보호막·간다르바의 향·한 점의 눈·위태의 서원), 추천 조합에 13·14가 든다 {[(c, j5[c]['buff']) for c in j5]} 눈 {j5['gungsa']['eyeN']}→{j5['gungsa']['eyeN2']}")
+        # 6) 저장 → 다시 불러와도 6차, 예전 저장(6차 없음)은 그대로 열린다, 71장 「여섯 번째 이름」은 6차 전직을 해야 마친다
+        j6 = await jp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '여섯째용사'; G.refreshStats(); out.old = [S.job, S.skills.jobG, S.skills.jobH, G.skLv(13), G.jobReady(6), G.mpMax()];
+          const i71 = G.MAIN_Q.findIndex(q => q.k === 'job' && q.n === 6); out.i71 = G.MAIN_Q[i71].ch; out.t71 = G.MAIN_Q[i71].t;
+          const keep = S.quest.main; S.quest.main = i71; out.cur5 = G.questCur(G.MAIN_Q[i71]); const b = S.quest.main; G.claimMain(); out.blocked = S.quest.main === b;
+          G.grantJob(6); G.refreshStats(); out.cur6 = G.questCur(G.MAIN_Q[i71]); G.claimMain(); out.passed = S.quest.main === i71 + 1;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.job, re.skills.jobG, re.skills.jobH, re.av.cape]; Object.assign(S, re); G.refreshStats(); out.after = [S.job, G.mpMax(), G.skLv(13), G.skLv(14), G.jobName()];
+          const o2 = JSON.parse(JSON.stringify(save)); delete o2.skills.jobG; delete o2.skills.jobH; const m2 = G.mergeState(o2); out.noKey = [m2.skills.jobG, m2.skills.jobH];
+          S.quest.main = keep; return out; }""", ind6)
+        check(j6['old'][0] == 5 and j6['old'][1] == 0 and j6['old'][4] is True and j6['old'][5] == 120 and j6['noKey'] == [0, 0],
+              f"예전 저장(6차 없음)은 그대로 열린다: 5차·마나 120·6차 전직 가능 {j6['old']} {j6['noKey']}")
+        check(j6['i71'] == 71 and j6['t71'] == '여섯 번째 이름' and j6['cur5'] == 5 and j6['blocked'] and j6['cur6'] == 6 and j6['passed'],
+              f"71장 「여섯 번째 이름」은 이제 진짜 6차 전직을 해야 마친다(5차까지는 막힘) {j6['cur5']} → {j6['cur6']}")
+        check(j6['re'][0] == 6 and j6['re'][1] >= 1 and j6['re'][2] >= 1 and j6['re'][3] == 'j_musa_6' and j6['after'] == [6, 140, j6['after'][2], j6['after'][3], '금강장'] and j6['after'][2] >= 1,
+              f"저장했다 다시 불러와도 6차 전직·마나 140·6차 기술이 그대로다 {j6['re']} {j6['after']}")
+        # 7) 화면: 전직 화면 · 전직 연출 · 6차 기술을 쓰는 장면
+        await jp.evaluate(LOAD6, ind6)
+        await tab(jp, 'grow')
+        await jp.click('#gv-job')
+        await jp.wait_for_timeout(300)
+        await jp.evaluate("() => { const c = document.querySelector('#jobCard6'); if (c) c.scrollIntoView({block:'center'}); }")
+        await jp.wait_for_timeout(300)
+        await jp.screenshot(path=str(OUT / '49a_6차전직_화면.png'))
+        await jp.evaluate("() => { const G = window.__game; G.closePage(); G.quiet = false; G.playCut([G.JOB_CUT6('musa')], {title:'6차 전직 · 금강장'}); }")
+        await jp.wait_for_timeout(1500)
+        await jp.screenshot(path=str(OUT / '49b_6차전직_연출_무사.png'))
+        await jp.evaluate("() => { const G = window.__game; G.endCut(); }")
+        for c6 in ('sulsa', 'gungsa', 'changgaek', 'doin', 'jagaek'):
+            await jp.evaluate("""(c) => { const G = window.__game; G.quiet = false; G.playCut([G.JOB_CUT6(c)], {title:'6차 전직'}); }""", c6)
+            await jp.wait_for_timeout(1300)
+            await jp.screenshot(path=str(OUT / f'49c_6차전직_연출_{c6}.png'))
+        await jp.evaluate("() => { const G = window.__game; G.endCut(); G.quiet = true; }")
+        for c6 in ('musa', 'sulsa', 'gungsa', 'changgaek', 'doin', 'jagaek'):
+            await jp.evaluate(r"""(a) => { const [save, c] = a, G = window.__game, S = G.S; G.quiet = false; G.closePage(); G.endCut();
+              Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '여섯째용사'; G.setClass(c); S.job = 6; for (const k in S.skills) S.skills[k] = Math.max(5, S.skills[k]); S.mode = 'semi'; S.skSetMan = true; S.skSet = [14, 13, 0, 1, 2, 3, 4, 5]; G.refreshStats(); G.setStage(30); S.inv.mana = 99;
+              for (let i = 0; i < 90; i++) G.update(0.05); G.hero.mp = G.mpMax(); G.castNow(14); for (let i = 0; i < 6; i++) G.update(0.05); G.hero.mp = G.mpMax(); G.castNow(13); for (let i = 0; i < 10; i++) G.update(0.05); }""", [ind6, c6])
+            await jp.wait_for_timeout(250)
+            await jp.screenshot(path=str(OUT / f'49d_6차기술_{c6}.png'))
+        await ctx6.close()
+
         # @@END-A
         # @@TEST-B (갈래 B의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-B
