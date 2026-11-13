@@ -27,7 +27,11 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig (ksPath && ksPass) ? signingConfigs.release : signingConfigs.debug
+            if (ksPath && ksPass) {
+                signingConfig = signingConfigs.release
+            } else {
+                signingConfig = signingConfigs.debug
+            }
         }
     }
     compileOptions {
