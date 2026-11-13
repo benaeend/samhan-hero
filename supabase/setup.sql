@@ -147,6 +147,21 @@ begin
   delete from samhan_chars where acc = a and cid = p_cid;
 end $$;
 
+-- 한 계정은 한 화면에서만 접속(2026-11-13): 들어올 때 p_take=true로 이 화면의 표(p_dev)를 적고, 접속 중인 화면은 p_take=false로 지금 적힌 표를 물어 자기 것이 아니면 멈춘다
+alter table public.samhan_accounts add column if not exists active_dev text;
+alter table public.samhan_accounts add column if not exists active_at timestamptz;
+create or replace function public.samhan_claim(p_token uuid, p_dev text, p_take boolean) returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); cur text;
+begin
+  if p_take then
+    update samhan_accounts set active_dev = left(p_dev, 40), active_at = now() where id = a;
+    return left(p_dev, 40);
+  end if;
+  select active_dev into cur from samhan_accounts where id = a;
+  return cur;
+end $$;
+
 -- 캐릭터 이름이 비었는지(만들기 전에 확인)
 create or replace function public.samhan_name_free(p_name text) returns boolean
 language sql security definer set search_path = public, extensions as $$
@@ -156,10 +171,10 @@ $$;
 revoke all on function public.samhan_acc(uuid) from public, anon, authenticated;
 revoke all on function public.samhan_signup(text, text), public.samhan_login(text, text), public.samhan_logout(uuid),
   public.samhan_list(uuid), public.samhan_load(uuid, text), public.samhan_save(uuid, text, text, jsonb, text, bigint),
-  public.samhan_delete(uuid, text), public.samhan_name_free(text) from public;
+  public.samhan_delete(uuid, text), public.samhan_name_free(text), public.samhan_claim(uuid, text, boolean) from public;
 grant execute on function public.samhan_signup(text, text), public.samhan_login(text, text), public.samhan_logout(uuid),
   public.samhan_list(uuid), public.samhan_load(uuid, text), public.samhan_save(uuid, text, text, jsonb, text, bigint),
-  public.samhan_delete(uuid, text), public.samhan_name_free(text) to anon, authenticated;
+  public.samhan_delete(uuid, text), public.samhan_name_free(text), public.samhan_claim(uuid, text, boolean) to anon, authenticated;
 
 -- ── 장터(2026-11): 기본 장비를 뺀 물건(장신구·신화 보물·치장·재료·조각·소모품)을 보석 값에 올리고 다른 용사가 산다. 거래 돈은 보석뿐 ──
 -- 물건(item)은 게임이 다시 확인해서 받는다. 사흘 안 팔리면 목록에서 빠지고 판 사람이 돌려받는다. 판 값은 수수료 5%를 떼고 받는다.

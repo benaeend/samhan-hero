@@ -162,6 +162,7 @@ async def main():
 
             async def device(api_url, shared_ctx=None):
                 ctx = shared_ctx or await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)
+                await ctx.add_init_script('window.__samhanNoKick = true;')   # 접속 끊기는 맨 끝 점검에서만 켠다(앞의 기기 둘 점검은 그대로)
                 await ctx.add_init_script(f'window.__samhanOnline = {json.dumps({"url": api_url, "key": "test-publishable-key"})};')
                 await ctx.add_init_script(VENDOR + '\n;window.supabase = supabase;')
                 await ctx.add_init_script(FAKE_CHANNEL)
@@ -400,6 +401,37 @@ async def main():
             srv2 = db("select save::json->>'saveBuild', save::json->>'level' from samhan_chars where name = '온라인용사'")
             check('새 버전' in ttl and srv2 == [('2', sb[0][1])], f'더 새 판의 기록을 만나면 덮어쓰지 않고 새로 고침을 안내한다 {ttl} {srv2}')
             await A.screenshot(path=str(OUT / '33_온라인_새버전안내.png'))
+
+            # 한 계정은 한 화면에서만(2026-11-13): 새 기기가 접속하면 켜져 있던 기기는 저장하지 않고 멈춘다
+            await B.evaluate("() => { window.__samhanNoKick = false; }")
+            await B.evaluate('async () => { await window.__game.claimActive(true); }')
+            kb = await B.evaluate('async () => await window.__game.checkKick()')
+            check(kb is False, f'내가 마지막으로 접속한 화면은 멈추지 않는다 {kb}')
+            with pg.conn() as c, c.cursor() as cur:   # 앞 점검이 올려 둔 「더 새 판」 기록을 되돌려, 새 기기가 정상으로 들어오게 한다
+                cur.execute("update samhan_chars set save = replace(save, '\"saveBuild\":2', '\"saveBuild\":1') where name = '온라인용사'")
+            ctxF, F = await device(api)
+            await F.evaluate("() => { window.__samhanNoKick = false; }")
+            await F.click('#lg-tab-login')
+            await F.fill('#lg-id', 'online1'); await F.fill('#lg-pw', 'pass1234')
+            await F.click('#modal-btn-0')
+            await F.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            await F.click('#modal-btn-1')
+            try:
+                await F.wait_for_function('() => window.__game.session && document.querySelector("#modal").hidden', timeout=15000)
+            except Exception:
+                print('DEBUG F', await F.inner_text('#mTitle'), '|', (await F.inner_text('#mBody'))[:200], '|', await F.evaluate('() => !!window.__game.session'))
+                raise
+            lvBefore = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
+            kk = await B.evaluate('async () => await window.__game.checkKick()')
+            ttlB = await B.inner_text('#mTitle')
+            await B.evaluate("() => { window.__game.S.level = 4; }")
+            await B.evaluate('async () => { await window.__game.pushOnline(); }')
+            await B.wait_for_timeout(600)
+            lvAfter = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
+            kf = await F.evaluate('async () => await window.__game.checkKick()')
+            check(kk is True and '다른 기기에서 접속' in ttlB and lvAfter == lvBefore and kf is False,
+                  f'다른 기기가 접속하면 먼저 켜진 기기는 멈추고 저장하지 않는다 {kk} {ttlB} {lvBefore} {lvAfter} {kf}')
+            await B.screenshot(path=str(OUT / '34_온라인_접속끊김.png'))
             await browser.close()
         web.shutdown(); rpc_srv.shutdown()
     finally:
