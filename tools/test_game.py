@@ -3313,7 +3313,7 @@ async def main():
             for (let i = 0; i < 20; i++) G.update(0.05);
             h.mp = G.mpMax(); const a = G.castNow(13); for (let i = 0; i < 80; i++) G.update(0.05);
             let eyeN = eye0; for (let i = 0; i < 80; i++) G.update(0.05);
-            out[c] = {a, b, dmg:G.dmgMeter > d0, buff, shield, eyeN, eyeN2:h.eyeN, hp:G.hero.hp > 0, names:[G.CLASSES[c].skills[13], G.CLASSES[c].skills[14]], d:[G.skillDesc(13, 3), G.skillDesc(14, 3)], g:[G.skillGain(13, 3), G.skillGain(14, 3)], pre:G.skPresetFor('boss').includes(13) && G.skPresetFor('boss').includes(14), pre2:G.skPresetFor('boss').length};
+            out[c] = {a, b, dmg:G.dmgMeter > d0, buff, shield, eyeN, eyeN2:h.eyeN, hp:G.hero.hp > 0, names:[G.CLASSES[c].skills[13], G.CLASSES[c].skills[14]], d:[G.skillDesc(13, 3), G.skillDesc(14, 3)], g:[G.skillGain(13, 3), G.skillGain(14, 3)], pre:(G.skPresetFor('boss').includes(13) || G.skPresetFor('boss').includes(14)) && [13, 14].every(i => ['boss', 'party', 'mob', 'mix'].some(k => G.skPresetFor(k).includes(i))), pre2:G.skPresetFor('boss').length};
           }
           return out; }""", ind6)
         j5ok = all(j5[c]['a'] and j5[c]['b'] and j5[c]['dmg'] and j5[c]['hp'] for c in j5)
@@ -3323,7 +3323,7 @@ async def main():
         check(j5txt and j5['musa']['names'] == ['금강 뇌정', '부동심'] and j5['gungsa']['names'] == ['천 개의 화살', '한 점의 눈'] and j5['sulsa']['names'] == ['바다 마시기', '선인의 고요'],
               f"6차 기술 설명·레벨업 미리보기 글에 빈 값이 없고 이름이 맞다 {j5['doin']['d']}")
         check(j5['musa']['buff'][0] > 0 and j5['jagaek']['buff'][1] > 0 and j5['sulsa']['buff'][2] > 0 and j5['sulsa']['shield'] and j5['doin']['buff'][3] > 0 and j5['gungsa']['buff'][4] > 0 and j5['changgaek']['buff'][5] > 0 and j5['gungsa']['eyeN2'] <= j5['gungsa']['eyeN'] and all(j5[c]['pre'] for c in j5),
-              f"버프기 효과가 켜진다(부동심·어둠의 서약·선인의 고요+보호막·간다르바의 향·한 점의 눈·위태의 서원), 추천 조합에 13·14가 든다 {[(c, j5[c]['buff']) for c in j5]} 눈 {j5['gungsa']['eyeN']}→{j5['gungsa']['eyeN2']}")
+              f"버프기 효과가 켜진다(부동심·어둠의 서약·선인의 고요+보호막·간다르바의 향·한 점의 눈·위태의 서원), 추천 조합에 13·14가 든다(보스 조합에 적어도 하나 · 둘 다 어느 조합엔가 — 9-5에서 맞춤 빌드로 다시 고른 뒤 술사 보스 조합은 14, 도인은 13이 빠짐) {[(c, j5[c]['buff']) for c in j5]} 눈 {j5['gungsa']['eyeN']}→{j5['gungsa']['eyeN2']}")
         # 6) 저장 → 다시 불러와도 6차, 예전 저장(6차 없음)은 그대로 열린다, 71장 「여섯 번째 이름」은 6차 전직을 해야 마친다
         j6 = await jp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true;
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '여섯째용사'; G.refreshStats(); out.old = [S.job, S.skills.jobG, S.skills.jobH, G.skLv(13), G.jobReady(6), G.mpMax()];
