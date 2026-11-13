@@ -1201,8 +1201,8 @@ async def main():
         await page.evaluate("() => { const G = window.__game; G.buildTab('raid'); document.querySelector('[data-rv=\"raid\"]').click(); document.querySelector('[data-ptab=\"1\"]').click(); }")
         await page.wait_for_timeout(400); await page.screenshot(path=str(OUT / '6z_부별탭_레이드.png'))
         await page.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); Object.assign(S, JSON.parse(window.__keepPt)); for (const k of ['tab', 'own', 'sort', 'kd']) for (const x of Object.keys(G.PV[k])) delete G.PV[k][x]; G.applyWorld(); G.refreshStats(); G.setStage(S.stage); G.quiet = false; }")
-        check(pt['t0'] == ['0', '1*', '2L', '3L', '4L'] and pt['v0n'] == 15 and pt['v0max'] == 1 and pt['lockKept'], f'부별 탭: 1부에서는 2부·3부 탭이 잠겨 있고 그 부의 펫은 안 보인다 {pt["t0"]} {pt["v0n"]}')
-        check(pt['t4'] == ['0', '1', '2', '3*', '4L'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
+        check(pt['t0'] == ['0', '1*', '2L', '3L', '4L', '5L'] and pt['v0n'] == 15 and pt['v0max'] == 1 and pt['lockKept'], f'부별 탭: 1부에서는 2부·3부 탭이 잠겨 있고 그 부의 펫은 안 보인다 {pt["t0"]} {pt["v0n"]}')
+        check(pt['t4'] == ['0', '1', '2', '3*', '4L', '5L'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
               f'부별 탭: 처음 열리는 탭은 지금 있는 부, 「전체」·「가진 것만」·종류 거르기가 된다 {pt["t4"]} {pt["vAll"]} {pt["vOwn"]} {pt["vAtk"]}')
         check('1!' in pt['dot'] and '1*' in pt['dot2'] and pt['isNew'], f'부별 탭: 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점, 열어 보면 사라진다 {pt["dot"]} {pt["dot2"]}')
         check(pt['rt'] == ['0', '1', '2', '3*', '4L', '5L'] and pt['past'] == 34 and pt['pastVis'] == 0 and pt['r1'] == [1] and pt['curHidden'],
@@ -1432,7 +1432,7 @@ async def main():
           const imgs = newIdx.every(i => typeof G.petImg(i) === 'string' && G.petImg(i).length > 100);
           const out = {n: G.PETS.length, none0: newIdx.every(i => !c0[i]), some4: newIdx.filter(i => c4[i]).length, imgs};
           Object.assign(S, JSON.parse(keep)); G.setWorld(S.world); G.refreshStats(); return out; }""")
-        check(np_['n'] == 34 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
+        check(np_['n'] == 39 and np_['none0'] and np_['some4'] >= 6 and np_['imgs'], f'부상·곤륜 펫: 1부 소환엔 안 나오고 곤륜에선 새 펫들이 나온다(그림도 그려짐) {np_}')
         # 6-8m) 퀘스트 창: 오늘의 할 일 보상을 받아도 창이 닫히지 않는다(사용자 요청)
         await page.evaluate("""() => { const G = window.__game, S = G.S; G.dailyCheck(); S.quest.dgot = []; for (const d of G.DAILY) S.quest.dp[d.key] = d.goal; G.quiet = false; G.buildTab('quest'); }""")
         await page.wait_for_timeout(200); await page.click('[data-qv=daily]'); await page.wait_for_timeout(200)
@@ -2547,7 +2547,7 @@ async def main():
           out.parts = [G.PETS.filter(p => G.petPart(p) === 4).length, G.MOUNTS.filter(m => G.mountPart(m) === 4).length, G.SOULS.filter(x => G.soulPart(x) === 4).length];
           S.mount.piece = 999; out.buy = G.buyMount('seaturtle'); out.col = isFinite(G.mountCol()) && G.mountCol() > 0;
           // 그림: 새 펫 다섯·탈것 셋이 오류 없이 그려진다(두 프레임)
-          out.art = G.PETS.map((p, i) => [p, i]).filter(([p]) => p.part >= 5).map(([p, i]) => G.petSprite(i, 0).width > 0 && G.petSprite(i, 1).width > 0).concat(['dolphin', 'seaturtle', 'yongma'].map(k => G.mountSprite(k, 0, false).width > 0 && G.mountSprite(k, 1, true).width > 0));
+          out.art = G.PETS.map((p, i) => [p, i]).filter(([p]) => p.part >= 5 && p.part <= 7).map(([p, i]) => G.petSprite(i, 0).width > 0 && G.petSprite(i, 1).width > 0).concat(['dolphin', 'seaturtle', 'yongma'].map(k => G.mountSprite(k, 0, false).width > 0 && G.mountSprite(k, 1, true).width > 0));
           // 탑: 층 → 세계·단계, 보상 글, 301층 도전
           out.ws = [300, 301, 330, 331, 365, 366, 400].map(f => G.towerWS(f)); out.boss = [301, 340, 380, 400].map(f => !!G.towerBoss(f).name && !!G.towerBoss(f).type);
           out.rw = [G.towerRewardText(305).join('|'), G.towerRewardText(310).join('|'), G.towerRewardText(350).join('|'), G.towerRewardText(400).join('|')];
@@ -2577,8 +2577,8 @@ async def main():
               f"탑: 301·305(호박석)·350(지느러미 날개)·400층(용마)을 오르고 저장·되찾기가 맞다 {tw2}")
         # 7-2b: 4부 치장 22가지(46~67장)·유물 치장·아바타 여덟·세트 둘·용궁 조합식(10~12단계)
         u2 = await up.evaluate(r"""(lateS) => { const G = window.__game, S = G.S, out = {}; const keep = JSON.parse(JSON.stringify(S));
-          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || a.w >= 5).length, G.SETS.length];
-          out.parts = ['guard', 'shoe', 'belt', 'tassel', 'foot'].map(p => G.SK_LIST.filter(x => x.c >= 46 && x.p === p).length);
+          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_GRADES.length, G.AVATARS.filter(a => a.pt === 4 || (a.w >= 5 && a.w <= 7)).length, G.SETS.length];
+          out.parts = ['guard', 'shoe', 'belt', 'tassel', 'foot'].map(p => G.SK_LIST.filter(x => x.c >= 46 && x.c <= 67 && x.p === p).length);
           // 사냥터 드롭: 4부 끝 용사는 46~67장 치장도 나오고 유물은 안 나온다. 한 줄 값은 4부 것이 1.15배까지
           let sea = 0, relic = 0, maxOld = 0, maxSea = 0; S.skin = {eq:{}, inv:[], seq:0, found:{}};
           for (let i = 0; i < 400; i++){ const r = G.skinDrop(null, true); if (!r) continue; const it = r.it; if (it.c >= 46) sea++; if (it.g >= 5) relic++; for (const l of it.l){ if (it.g === 4){ if (it.c >= 46) maxSea = Math.max(maxSea, l[1]); else maxOld = Math.max(maxOld, l[1]); } } }
@@ -2606,7 +2606,7 @@ async def main():
           G.giveAvatar('c_haenyeo', true); G.equipAvatar('c_haenyeo'); G.giveMount('dolphin', true); G.rideMount('dolphin'); G.pickSet('haenyeo'); G.refreshStats();
           out.set = [G.setCount(G.SETS.find(x => x.k === 'haenyeo')), G.setSum().k || (G.setSum().set && G.setSum().set.k) || ''];
           return out; }""", late)
-        check(u2['n'] == [51, 22, 51, 6, 9, 11] and u2['parts'] == [5, 4, 4, 5, 4], f"4부 치장 22가지(46~67장, 부위 다섯에 고르게)·아바타 아홉(날개 포함)·세트 둘 {u2['n']} {u2['parts']}")
+        check(u2['n'] == [74, 22, 74, 7, 9, 11] and u2['parts'] == [5, 4, 4, 5, 4], f"4부 치장 22가지(46~67장, 부위 다섯에 고르게)·아바타 아홉(날개 포함)·세트 둘 {u2['n']} {u2['parts']}")
         check(u2['drop'] == [True, 0, True, True] and u2['relic'][:4] == [5, True, 4, '유물'] and u2['relic'][4] and u2['relicKept'] and u2['relicBad'] == 0 and u2['dpart'] == [True, 'guard'],
               f"4부 치장: 사냥터에서는 전설까지(한 줄 값 1.15배), 유물은 따로 주는 곳에서만·4부 치장만·저장해도 그대로 {u2['drop']} {u2['relic']} {u2['relicKept']} {u2['relicBad']} {u2['dpart']}")
         check(u2['late'][:5] == [46, 45, 0, 9, True], f"3부 끝 용사: 46장 첫 퀘스트 중에도 바다 치장은 안 나오고 용궁 조합식은 안 보인다 {u2['late']}")
@@ -3329,6 +3329,170 @@ async def main():
         # @@TEST-B (갈래 B의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-B
         # @@TEST-C (갈래 C의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
+        # 9-23) 물의 신화 9단계 다: 5부 천축의 물건 — 펫 다섯·탈것 둘·넋 구슬 다섯·치장 23가지·아바타 넷·도감 5부·p_wave 키 겹침 고침. 3·4부 용사에게는 안 보이고 5부 용사에게만
+        i4s = json.loads((ROOT / 'tools' / 'beta_saves' / '70_musa_sea3_end.json').read_text(encoding='utf-8'))['save']
+        i5a = json.loads((ROOT / 'tools' / 'beta_saves' / '80_musa_ind1_end.json').read_text(encoding='utf-8'))['save']
+        i5b = json.loads((ROOT / 'tools' / 'beta_saves' / '90_musa_ind3_end.json').read_text(encoding='utf-8'))['save']
+        ctxK = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        kp = await ctxK.new_page()
+        watch(kp, errors, '9-23 ')
+        await fresh(kp)
+        await signup(kp, 'item5test', 'abcd', '천축물건')
+        LOADK = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal && G.hideModal(); if (G.raid) G.raidEnd(false);
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '천축물건'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); return {w:S.world, q:S.quest.main}; }"""
+        NEW5 = "G.PETS.filter(p => p.part >= 8).map(p => p.draw)"
+        # 1) 4부 끝 용사(세계 7): 5부 물건이 하나도 안 나온다
+        k1 = await kp.evaluate(r"""(arg) => { const [save, LOAD] = arg; const G = window.__game, S = G.S, out = {}; eval('(' + LOAD + ')')(save);
+          const reg = {}; for (const q of G.MAIN_Q) for (const k of ['pet', 'mount', 'soul']) if (q[k] && q.ch >= 68) reg[q[k]] = G.MAIN_Q.indexOf(q); out.reg = reg;
+          out.w = S.world; out.cap = G.skChCap();
+          let pp = 0; for (let i = 0; i < 3000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8) pp++; } out.pet = pp;
+          let so = 0; for (let i = 0; i < 600; i++){ G.soulLuck = (i % 100) / 100 + 0.001; if (G.SL[G.soulRoll()].pt === 5) so++; } G.soulLuck = null; out.soul = so;
+          let av = 0; for (let i = 0; i < 400; i++){ const r = G.openAvatarBox ? null : null; } out.av = G.avBoxPool().filter(a => a.w >= 8).length;
+          S.skin = {eq:{}, inv:[], seq:0, found:{}}; let sk = 0; for (let i = 0; i < 400; i++){ const r = G.skinDrop(null, true); if (r && r.it.c >= 68) sk++; } out.skin = sk;
+          S.mount.piece = 9999; out.buy = G.buyMount('camel'); G.mountCatchUp(); out.own = [S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] || 0, !!S.mount.own.welephant, !!S.soul.own.jatayu, !!S.soul.own.savitri, !!S.soul.own.nachiketa];
+          out.how = G.petHowText(G.PETS.find(p => p.draw === 'mongoose'));
+          out.dex = G.dexParts(); out.dt = G.TT.dex5 ? G.TT.dex5.prog() : null;
+          return out; }""", [i4s, LOADK])
+        check(k1['w'] == 7 and k1['cap'] == 67 and k1['pet'] == 0 and k1['soul'] == 0 and k1['av'] == 0 and k1['skin'] == 0 and k1['buy'] is False and k1['own'] == [0, False, False, False, False] and 'indtest' not in k1 and '란카 길' in k1['how'] and 5 not in k1['dex'],
+              f"4부 끝 용사: 5부 펫·넋·치장·아바타는 안 나오고 낙타도 못 사며 도감 5부 줄도 안 보인다 {k1['pet']} {k1['soul']} {k1['av']} {k1['skin']} {k1['buy']} {k1['own']} {k1['how']} {k1['dex']}")
+        # 2) 란카 길·젖의 바다 끝(세계 9, 이야기 293번): 지난 이야기 보상은 들어올 때 챙겨 받고, 수미산(세계 10) 물건은 아직
+        k2 = await kp.evaluate(r"""(arg) => { const [save, LOAD] = arg; const G = window.__game, S = G.S, out = {}; const L = eval('(' + LOAD + ')')(save);
+          const reg = {}; for (const q of G.MAIN_Q) for (const k of ['pet', 'mount', 'soul']) if (q[k] && q.ch >= 68) reg[q[k]] = G.MAIN_Q.indexOf(q);
+          out.reg = reg; out.main = S.quest.main; G.mountCatchUp();
+          out.own = {eaglet:(S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] || 0) > 0, welephant:!!S.mount.own.welephant, jatayu:!!S.soul.own.jatayu, savitri:!!S.soul.own.savitri, nachiketa:!!S.soul.own.nachiketa};
+          out.jambavan = [!!S.soul.own.jambavan, !!S.soul.own.agastya];
+          const pp = {}; for (let i = 0; i < 30000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8) pp[p.draw] = p.part; } out.pet = pp;
+          const so = {}; for (let i = 0; i < 900; i++){ G.soulLuck = (i % 100) / 100 + 0.001; const k = G.soulRoll(); if (G.SL[k].pt === 5) so[k] = 1; } G.soulLuck = null; out.soul = Object.keys(so).sort();
+          out.av = G.avBoxPool().filter(a => a.w >= 8).map(a => a.k).sort(); out.cap = G.skChCap();
+          S.mount.piece = 9999; out.buy = [G.buyMount('camel'), !!S.mount.own.camel, S.mount.piece];
+          return out; }""", [i5a, LOADK])
+        exp_own = {k: (v < k2['main']) for k, v in {'eaglet': k2['reg']['eaglet'], 'welephant': k2['reg']['welephant'], 'jatayu': k2['reg']['jatayu'], 'savitri': k2['reg']['savitri'], 'nachiketa': k2['reg']['nachiketa']}.items()}
+        check(k2['own'] == exp_own,
+              f"젖의 바다 끝 용사: 이미 지난 이야기(70·80·83·84장)의 아기 독수리 왕·흰 코끼리·자타유·사비트리·나치케타를 챙겨 받는다 {k2['own']} {k2['reg']} {k2['main']}")
+        check(k2['pet'] and set(k2['pet'].values()) <= {8, 9} and 'babyele' not in k2['pet'] and 'eaglet' not in k2['pet'] and {'mongoose', 'squirrel', 'peacock'} <= set(k2['pet']) and 'jambavan' in k2['soul'] and 'agastya' in k2['soul'] and not k2['jambavan'][0] and k2['cap'] == 82 and k2['buy'][0] and k2['buy'][1],
+              f"세계 9: 몽구스·다람쥐·공작이 소환에 나오고(아기 코끼리는 수미산부터·아기 독수리 왕은 이야기만), 잠바반·아가스티아가 구슬에 나오며 낙타를 살 수 있다 {k2['pet']} {k2['soul']} {k2['cap']} {k2['buy']}")
+        check(k2['av'] == ['c_forest', 'c_lanka', 'p_lamp'], f"세계 9 꾸미기 상자: 숲의 수행자 옷·란카 갑옷·등불 망토(수미산 하늘옷은 아직) {k2['av']}")
+        # 3) 5부 끝 용사(세계 10): 모두 챙겨 받고, 치장 23가지가 세계에 맞게 나오고, 영물 치장 틀, 도감 5부 줄
+        k3 = await kp.evaluate(r"""(arg) => { const [save, LOAD] = arg; const G = window.__game, S = G.S, out = {}; eval('(' + LOAD + ')')(save); G.mountCatchUp();
+          out.own = [(S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] || 0) > 0, !!S.mount.own.welephant, !!S.soul.own.jatayu, !!S.soul.own.savitri, !!S.soul.own.nachiketa];
+          const pp = {}; for (let i = 0; i < 40000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8) pp[p.draw] = 1; } out.pet = Object.keys(pp).sort();
+          out.av = G.avBoxPool().filter(a => a.w >= 8).map(a => a.k).sort(); out.cap = G.skChCap();
+          // 치장: 68~90장 23가지(부위 다섯), 사냥터 드롭은 90장까지(한 줄 값 1.3배, 영물은 안 나옴), 장에 따른 등급 확률
+          out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 68).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_LIST.filter(x => x.c >= 68).map(x => x.p).reduce((a, p) => (a[p] = (a[p] || 0) + 1, a), {})];
+          const named = {73:'금방울 토시', 76:'공작 깃 허리띠', 88:'연꽃 발밑 빛'}; out.named = Object.entries(named).every(([c, n]) => G.SKC[c] && G.SKC[c].name === n);
+          out.adj = G.SK_LIST.filter(x => x.c > 68).every(x => x.p !== G.SKC[x.c - 1].p);
+          S.skin = {eq:{}, inv:[], seq:0, found:{}}; let cs = {}, hi = 0, maxI = 0, maxS = 0, spirit = 0;
+          for (let i = 0; i < 1500; i++){ const r = G.skinDrop(null, true); if (!r) continue; const it = r.it; cs[it.c] = 1; if (it.g >= 5) spirit++; if (it.g === 4) for (const l of it.l){ if (it.c >= 68) maxI = Math.max(maxI, l[1]); else if (it.c >= 46) maxS = Math.max(maxS, l[1]); } }
+          out.drop = [Object.keys(cs).some(c => +c >= 68), Math.max(...Object.keys(cs).map(Number)) <= 90, spirit, maxI > 0.4 && maxI <= 0.40 * 1.3 + 1e-9, maxS <= 0.46 + 1e-9];
+          out.gp = [G.skGradeP ? 1 : 0, G.SK_GRADES.length, G.skGr(6).name, G.skGr(5).name];
+          // 영물 치장: 5부 치장만, 따로 부를 때만
+          G.skSpirit = 1e9; const sp = G.skinDrop(90, true, 0, 1, 0.9, 0, 0.05); G.skSpirit = null;
+          out.spirit = [sp.it.g, sp.it.c >= 68, sp.it.l.length, G.skGr(sp.it.g).name, sp.it.l.every(l => l[1] <= 0.52 * 1.3 + 0.006 && l[1] >= 0.52 * 1.3 * 0.9 - 0.006)];
+          G.skSpirit = 1e9; const sp2 = G.skinDrop(60, true, 0, 1, 0.9, 0, 0.05); G.skSpirit = null; out.spirit2 = sp2 ? sp2.it.g : -1;
+          const cl = G.skClean(JSON.parse(JSON.stringify(S.skin))); out.kept = Object.values(cl.eq).concat(cl.inv).some(x => x.g === 6);
+          out.bad = [G.skClean({eq:{}, inv:[{id:1, c:50, g:6, l:[['hp', 0.4]]}], seq:1, found:{}}).inv.length, G.skClean({eq:{}, inv:[{id:1, c:80, g:6, l:[['hp', 0.4]]}], seq:1, found:{}}).inv.length];
+          // 아바타: 상자에서 새 아바타 넷 + 이름이 겹치지 않는 키, 3부 것은 그대로
+          out.avk = [G.AVATARS.length, new Set(G.AVATARS.map(a => a.k)).size, G.AV.p_wave.name, G.AV.p_wave.w, G.AV.p_seawave.name, G.AV.p_seawave.w];
+          out.avt = [['c_forest', 'char', 8], ['c_lanka', 'char', 8], ['c_sumeru', 'char', 10], ['p_lamp', 'cape', 8]].map(([k, t, w]) => G.AV[k] && G.AV[k].type === t && G.AV[k].w === w && G.avPart && G.avPart(G.AV[k]) === 5);
+          // 도감 5부 줄
+          const dc = G.dexCount(5); out.dex = [G.dexParts().includes(5), dc.map(x => x[1]), G.dexSum(5)[0], G.TT.dex5 && G.TT.dex5.name];
+          out.parts = [G.PETS.filter(p => G.petPart(p) === 5).length, G.MOUNTS.filter(m => G.mountPart(m) === 5).length, G.SOULS.filter(x => G.soulPart(x) === 5).length];
+          return out; }""", [i5b, LOADK])
+        check(all(k3['own']) and k3['pet'] == ['babyele', 'mongoose', 'peacock', 'squirrel'] and k3['av'] == ['c_forest', 'c_lanka', 'c_sumeru', 'p_lamp'] and k3['cap'] == 90,
+              f"5부 끝 용사: 아기 독수리 왕·흰 코끼리·자타유·사비트리·나치케타를 모두 받고, 소환에 네 펫(아기 코끼리 포함)·상자에 아바타 넷 {k3['own']} {k3['pet']} {k3['av']} {k3['cap']}")
+        check(k3['n'][:3] == [74, 23, 74] and k3['n'][3] == {'guard': 5, 'tassel': 5, 'shoe': 5, 'belt': 4, 'foot': 4} and k3['named'] and k3['adj'],
+              f"치장 23가지(68~90장, 토시 5·무기 술 5·버선 5·허리띠 4·발밑 빛 4)·금방울 토시·공작 깃 허리띠·연꽃 발밑 빛, 이웃한 장은 부위가 겹치지 않는다 {k3['n']} {k3['named']} {k3['adj']}")
+        check(k3['drop'][0] and k3['drop'][1] and k3['drop'][2] == 0 and k3['drop'][3] and k3['drop'][4] and k3['gp'][1] == 7 and k3['gp'][2] == '영물' and k3['gp'][3] == '유물',
+              f"5부 치장은 사냥터에서 90장까지 나오고(영물 등급은 안 나옴), 영물이 6번째 등급이다 {k3['drop']} {k3['gp']}")
+        check(k3['spirit'][:4] == [6, True, 4, '영물'] and k3['spirit'][4] and k3['spirit2'] != 6 and k3['kept'] and k3['bad'] == [0, 1],
+              f"영물 치장 틀: 5부 치장만 그 등급이 될 수 있고(60장에서는 안 됨), 저장해도 그대로, 1~4부 치장은 영물이 될 수 없다 {k3['spirit']} {k3['spirit2']} {k3['kept']} {k3['bad']}")
+        check(k3['avk'][0] == k3['avk'][1] and k3['avk'][2] == '물결 무늬 망토' and k3['avk'][3] == 3 and k3['avk'][4] == '물결 망토' and k3['avk'][5] == 5 and all(k3['avt']),
+              f"아바타: 키 p_wave가 더 겹치지 않고(3부 물결 무늬 망토 · 4부 물결 망토는 p_seawave), 5부 아바타 넷의 종류·세계 {k3['avk']} {k3['avt']}")
+        check(k3['dex'][0] and k3['dex'][1][0] == 5 and k3['dex'][1][1] == 2 and k3['dex'][1][3] == 23 and k3['dex'][1][4] == 5 and k3['dex'][1][2] >= 4 and k3['dex'][3] == '천축의 수집가',
+              f"도감 5부 줄: 펫 5·탈것 2·아바타·치장 23·넋 5, 별호 「천축의 수집가」 {k3['dex']} {k3['parts']}")
+        # 4) 저장했다 다시 불러와도 그대로, 새 그림이 모두 그려진다
+        k4 = await kp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
+          for (const k of ['eaglet']) { const i = G.PETS.findIndex(p => p.draw === k); S.pets.lv[i] = Math.max(1, S.pets.lv[i] || 0); }
+          S.mount.own.camel = 1; S.soul.own.jambavan = 1; S.soul.own.agastya = 1; S.av.own.c_forest = 1; S.av.own.p_lamp = 1; S.av.own.p_seawave = 1;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S)));
+          out.re = [re.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] > 0, !!re.mount.own.camel, !!re.mount.own.welephant, !!re.soul.own.jatayu, !!re.soul.own.jambavan, !!re.soul.own.agastya, !!re.av.own.c_forest, !!re.av.own.p_lamp, !!re.av.own.p_seawave];
+          const NP = G.PETS.map((p, i) => [p, i]).filter(([p]) => p.part >= 8);
+          out.pets = NP.map(([p, i]) => G.petSprite(i, 0).width > 0 && G.petSprite(i, 1).width > 0 && G.petImg(i).length > 100);
+          out.mounts = ['camel', 'welephant'].map(k => G.mountSprite(k, 0, false).width > 0 && G.mountSprite(k, 1, true).width > 0 && G.mountImg(k).length > 100);
+          out.souls = ['jatayu', 'savitri', 'nachiketa', 'jambavan', 'agastya'].map(k => G.soulSprite(k, 0).width > 0 && G.soulSprite(k, 3, true).width > 0 && G.soulImg(k).length > 100);
+          out.defs = G.PETS.filter(p => p.part >= 8).map(p => [p.draw, p.type, p.g, p.part, !!p.story].join(':'));
+          out.mts = ['camel', 'welephant'].map(k => { const m = G.MT[k]; return [m.g, m.pt, m.src, m.cost || 0, Object.keys(m.ab).join('+')].join(':'); });
+          out.sls = ['jatayu', 'savitri', 'nachiketa', 'jambavan', 'agastya'].map(k => { const x = G.SL[k]; return [x.g, x.kind, x.v, x.pt, !!x.mob].join(':'); });
+          out.bond = ['jatayu', 'savitri', 'nachiketa', 'jambavan', 'agastya'].map(k => (G.SOUL_BOND && G.SOUL_BOND[k] || []).length);
+          return out; }""")
+        check(all(k4['re']), f"저장했다 불러와도 5부 물건이 그대로 {k4['re']}")
+        check(all(k4['pets']) and len(k4['pets']) == 5 and all(k4['mounts']) and all(k4['souls']), f"새 펫 다섯·탈것 둘·넋 다섯 그림이 오류 없이 그려진다 {k4['pets']} {k4['mounts']} {k4['souls']} {k4['defs']} {k4['mts']} {k4['sls']} {k4['bond']}")
+        # 5) 싸움에 데려가 돌려 본다: 새 펫(독수리·코끼리·공작) · 낙타 · 새·곰 넋 부름 · 아가스티아
+        k5 = await kp.evaluate(r"""(arg) => { const [save, LOAD] = arg; const G = window.__game, S = G.S, out = {}; eval('(' + LOAD + ')')(save); G.mountCatchUp();
+          for (const d of ['mongoose', 'peacock', 'babyele', 'squirrel', 'eaglet']){ const i = G.PETS.findIndex(p => p.draw === d); S.pets.lv[i] = 3; }
+          G.petEquip(G.PETS.findIndex(p => p.draw === 'eaglet')); G.petEquip(G.PETS.findIndex(p => p.draw === 'peacock')); G.petEquip(G.PETS.findIndex(p => p.draw === 'mongoose'));
+          S.mount.own.camel = 1; S.soul.own.jambavan = 1; S.soul.own.agastya = 1; G.rideMount('camel');
+          S.soul.eq = ['jatayu', 'jambavan']; G.refreshStats(); S.mode = 'auto';
+          let err = 0; G.quiet = true;
+          for (let i = 0; i < 200; i++) G.update(0.05);
+          out.pets = [0, 1, 2].map(t => G.S.petEq[['atk', 'def', 'sup'][t]]);
+          for (const k of ['jatayu', 'jambavan', 'savitri', 'nachiketa', 'agastya']){ try { S.soul.own[k] = 1; G.soulAct(k, true); for (let i = 0; i < 40; i++) G.update(0.05); } catch (e) { err++; out.err = String(e); } }
+          out.err = err; out.hp = isFinite(G.hero.hp) && G.ST.atk > 0; out.ride = S.mount.ride; out.rid = G.rideAb ? 1 : 0;
+          return out; }""", [i5b, LOADK])
+        check(k5['err'] == 0 and k5['hp'] and k5['ride'] == 'camel', f"새 펫·낙타를 데리고 싸우고 새·곰·성자 넋을 불러도 오류가 없다 {k5}")
+        # 캡처: 새 펫 다섯·탈것 둘(용사가 탄 모습)·넋 부름 다섯·아바타 넷
+        await kp.evaluate(r"""() => { const G = window.__game; G.closePage(); G.quiet = false; document.querySelectorAll('.sheet5').forEach(e => e.remove());
+          const el = document.createElement('div'); el.className = 'sheet5'; el.style.cssText = 'position:fixed;inset:0;z-index:99;background:#1a1a2e;display:flex;flex-wrap:wrap;gap:12px;padding:16px;align-content:flex-start;color:#fff;font:12px sans-serif';
+          const add = (src, label, w) => { const d = document.createElement('div'); d.style.cssText = 'text-align:center;width:' + (w || 150) + 'px'; d.innerHTML = '<img style="image-rendering:pixelated;width:' + (w || 150) + 'px;height:auto;background:#2a2a44;border-radius:8px" src="' + src + '"><div>' + label + '</div>'; el.appendChild(d); };
+          for (const [p, i] of G.PETS.map((p, i) => [p, i]).filter(([p]) => p.part >= 8)) add(G.petImg(i), p.name, 120);
+          for (const k of ['camel', 'welephant']) add(G.mountImg(k), G.MT[k].name, 190);
+          for (const k of ['jatayu', 'jambavan']) add(G.soulImg(k), G.SL[k].name, 110);
+          document.body.appendChild(el); }""")
+        await kp.wait_for_timeout(300)
+        await kp.screenshot(path=str(OUT / '51a_5부_펫_탈것_넋_그림.png'))
+        await kp.evaluate("() => { document.querySelectorAll('.sheet5').forEach(e => e.remove()); }")
+        for mk in ('camel', 'welephant'):
+            await kp.evaluate(r"""(mk) => { const G = window.__game, S = G.S; G.quiet = false; G.closePage(); G.endCut && G.endCut(); S.mount.own.camel = 1; S.mount.own.welephant = 1; G.rideMount(''); G.rideMount(mk); G.refreshStats(); S.mode = 'semi'; S.soul.eq = []; G.mobs.length = 0; G.hero.hp = G.ST.maxHp; S.petEq = {atk:-1, def:-1, sup:-1}; G.texts && (G.texts.length = 0);
+              for (let i = 0; i < 20; i++) G.update(0.05); G.mobs.length = 0; G.hero.goal = null; }""", mk)
+            await kp.wait_for_timeout(1200)
+            await kp.screenshot(path=str(OUT / f'51b_5부_탈것_{mk}.png'), clip={'x': 350, 'y': 140, 'width': 200, 'height': 140})
+        for sk in ('jatayu', 'jambavan', 'savitri', 'nachiketa', 'agastya'):
+            await kp.evaluate(r"""(sk) => { const G = window.__game, S = G.S; G.quiet = false; G.closePage(); G.rideMount(''); S.soul.own[sk] = 1; S.soul.eq = [sk]; G.refreshStats(); S.mode = 'auto'; G.soulG = 100; G.castSoul(false); G.update(0.05); }""", sk)
+            await kp.wait_for_timeout(900)
+            await kp.screenshot(path=str(OUT / f'51c_5부_넋부름_{sk}.png'))
+        # 아바타 넷: 용사(전직 없는 모습)에게 입혀 앞·뒤로 크게
+        await kp.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = false; G.closePage(); document.querySelectorAll('.sheet5').forEach(e => e.remove());
+          const el = document.createElement('div'); el.className = 'sheet5'; el.style.cssText = 'position:fixed;inset:0;z-index:99;background:#3a3a5a;display:flex;flex-wrap:wrap;gap:10px;padding:14px;align-content:flex-start;color:#fff;font:12px sans-serif';
+          const add = (cv, label) => { const d = document.createElement('div'); d.style.cssText = 'text-align:center;width:140px'; const im = document.createElement('img'); im.src = cv.toDataURL(); im.style.cssText = 'image-rendering:pixelated;width:140px;height:auto;background:#2a2a44;border-radius:8px'; d.appendChild(im); const t = document.createElement('div'); t.textContent = label; d.appendChild(t); el.appendChild(d); };
+          for (const [k, ex] of [['c_forest', {costume:'c_forest'}], ['c_lanka', {costume:'c_lanka'}], ['c_sumeru', {costume:'c_sumeru'}], ['p_lamp', {cape:'p_lamp'}]]){
+            for (const dir of ['right', 'up']) add(G.personSprite('musa', S.look, 2, 2, dir, 0, false, Object.assign({job:0}, ex)).base || G.personSprite('musa', S.look, 2, 2, dir, 0, false, Object.assign({job:0}, ex)), G.AV[k].name + (dir === 'up' ? ' (뒤)' : ''));
+          }
+          document.body.appendChild(el); }""")
+        await kp.wait_for_timeout(400)
+        await kp.screenshot(path=str(OUT / '51d_5부_아바타_넷.png'))
+        await kp.evaluate("() => { document.querySelectorAll('.sheet5').forEach(e => e.remove()); }")
+        # 부별 탭: 펫·넋 화면의 「5부」 탭에 새것이 보인다
+        await kp.evaluate("() => { const G = window.__game; G.quiet = false; G.equipAvatar && G.equipAvatar(''); }")
+        await tab(kp, 'pet')
+        await kp.wait_for_timeout(500)
+        k6 = await kp.evaluate(r"""() => { const t = [...document.querySelectorAll('[data-ptab]')].map(b => b.dataset.ptab), n = [...document.querySelectorAll('#page [data-part="5"]')].filter(e => !e.classList.contains('part-off')).length; return {tabs:t, n5:document.querySelectorAll('#page [data-part="5"]').length, shown:n}; }""")
+        await kp.click('[data-ptab="5"]')
+        await kp.wait_for_timeout(300)
+        k6b = await kp.evaluate(r"""() => ({shown:[...document.querySelectorAll('#page [data-part="5"]')].filter(e => !e.classList.contains('part-off')).length, hidden:[...document.querySelectorAll('#page [data-part="4"]')].filter(e => !e.classList.contains('part-off')).length})""")
+        await kp.screenshot(path=str(OUT / '51e_5부_펫_탭.png'))
+        check('5' in k6['tabs'] and k6b['shown'] >= 5 and k6b['hidden'] == 0, f"[펫]의 「5부」 탭에 새 펫이 보인다(4부 것은 가려진다) {k6} {k6b}")
+        await kp.evaluate("() => { const G = window.__game; G.closePage(); }")
+        await tab(kp, 'skill')
+        await kp.wait_for_timeout(300)
+        k7 = await kp.evaluate(r"""() => { const b = document.querySelector('#kv-soul'); if (b) b.click(); return !!b; }""")
+        await kp.wait_for_timeout(500)
+        k7b = await kp.evaluate(r"""() => { const t = [...document.querySelectorAll('[data-ptab]')].map(b => b.dataset.ptab); const sel = document.querySelector('[data-ptab="5"]'); if (sel) sel.click(); return {t, n:[...document.querySelectorAll('#page [data-part="5"]')].filter(e => !e.classList.contains('part-off')).length}; }""")
+        await kp.wait_for_timeout(300)
+        await kp.screenshot(path=str(OUT / '51f_5부_넋_탭.png'))
+        check(k7 and '5' in k7b['t'] and k7b['n'] >= 5, f"[기술]의 넋 화면 「5부」 탭에 새 넋 다섯이 보인다 {k7b}")
+        await kp.evaluate("() => { const G = window.__game; G.closePage(); }")
+        await ctxK.close()
+
         # @@END-C
         # @@TEST-D (갈래 D의 자동 점검 대목은 이 줄 바로 아래에 — 다른 갈래와 합칠 때 부딪히지 않게)
         # @@END-D

@@ -2456,6 +2456,12 @@ const PETS = [
   {type:'atk', g:4, name:'아기 곰새기', draw:'gomsaegi', c:'#6a8ab8', part:6},
   {type:'sup', g:4, name:'점박이 물범', draw:'mulbeom', c:'#b8c0c8', part:7},
   {type:'atk', g:5, name:'불개', draw:'bulgae', c:'#c8402a', part:6, story:true},
+  // 5부 천축 펫(물의 신화 9단계): part 8 란카 길 · 9 젖의 바다 · 10 수미산에 들어서면 소환 후보에. 아기 독수리 왕은 70장 「독수리 왕」 이야기 보상으로만
+  {type:'atk', g:3, name:'뱀잡이 몽구스', draw:'mongoose', c:'#a8906a', part:8},
+  {type:'sup', g:3, name:'세 줄 다람쥐', draw:'squirrel', c:'#b8905a', part:8},
+  {type:'sup', g:4, name:'비 부르는 공작', draw:'peacock', c:'#1f8fa0', part:9},
+  {type:'def', g:4, name:'꽃이마 아기 코끼리', draw:'babyele', c:'#a8a8b8', part:10},
+  {type:'def', g:5, name:'아기 독수리 왕', draw:'eaglet', c:'#b8905a', part:8, story:true},
 ];
 const PET_N = PETS.length, PET_MAX = 30, PET_STAR_MAX = 5, PET_DUP_GEMS = 20;
 const PET_P = [0.55, 0.28, 0.13, 0.035, 0.005];
@@ -3527,10 +3533,10 @@ const MAIN_Q = [
 
   {ch:70, t:'하늘 수레의 그림자', s:'란카 길 1-9에 닿아요.', k:'s8', n:9, gems:132000,
     c:['dandaka', 'hero,wukong', 'shake', [['', '숲 위로 큰 그림자가 지나갔어요. 바퀴 소리가 천둥 같았어요.'], ['손오공', '근두운으로도 못 따라잡겠는걸. 저건 수레가 아니라 날아다니는 궁궐이다.']]]},
-  {ch:70, t:'독수리 왕', s:'란카 길 2-1에 닿아요(라바나의 하늘 수레를 물리쳐요).', k:'s8', n:11, gems:133000,
+  {ch:70, t:'독수리 왕', s:'란카 길 2-1에 닿아요(라바나의 하늘 수레를 물리쳐요). 신화 환수 「아기 독수리 왕」이 함께해요.', k:'s8', n:11, gems:133000, pet:'eaglet',
     cs:[['sky', 'm:chariot:#c8862a,hero', 'flash', [['', '라바나가 뒤에 남기고 간 수레 하나가 불을 뿜으며 길을 막았어요.'], ['나', '자타유가 붙잡아 둔 시간이야. 헛되게 하지 않아!']]],
       ['dandaka', 'm:hawk:#b8905a,rama,hero', 'dark', [['', '벼랑 아래, 두 날개가 꺾인 늙은 독수리가 누워 있었어요.'], ['자타유', '라마여… 막지 못했다. 그러나 보았다. 내 눈이 어두워도 그것만은 보았다.']]]]},
-  {ch:70, t:'마지막 숨', s:'레벨 554를 달성해요.', k:'l8', n:554, gems:133500,
+  {ch:70, t:'마지막 숨', s:'레벨 554를 달성해요. 자타유의 넋이 넋 주머니에 깃들어요.', k:'l8', n:554, gems:133500, soul:'jatayu',
     cs:[['dandaka', 'm:hawk:#b8905a,rama,hero', 'light', [['자타유', '남쪽이다. 바다 건너 남쪽, 황금 성 란카… 그 말을 전하려고… 숨을 아껴 두었다.'], ['라마', '아버지의 벗이여. 당신은 내 아버지처럼 싸우셨습니다.']]],
       ['dandaka', 'rama,lakshmana,hero,kkachi', 'sparkle', [['', '라마는 제 아버지를 모시듯 독수리 왕을 보냈어요. 용사는 그 곁에 등불 하나를 놓았어요.'], ['', '이길 수 없는 싸움에 왜 나서는 걸까 — 이기려는 것이 아니었어요. 뒤에 올 사람에게 방향 하나를 남기려는 것이었어요.']]]]},
 
@@ -3638,7 +3644,7 @@ const MAIN_Q = [
     cs:[['milksea', 'hero,m:turtle:#6a9a5a', '', [['별주', '깊은 바다의 검은 물은 「한마디 거짓」이었소. 그럼 이 독은 무엇이오?'], ['나', '바다 밑에 가라앉혀 두고 모른 척한 것 전부. 약을 얻겠다고 저으니 그것부터 올라온 거야.']]],
       ['milksea', 'indra,hero', 'light', [['', '좋은 것을 얻으려 할 때 먼저 올라오는 것은 누가 맡는가 — 물러서지 않은 한 사람이었어요. 누군가 쓴 것을 머금어 주어야 그다음이 올라와요.'], ['제석천', '부끄럽구나. 줄은 같이 잡고, 독 앞에서는 같이 물러섰다. … 다시 잡자. 이번에는 끝까지.']]]]},
 
-  {ch:80, t:'달과 흰 코끼리', s:'젖의 바다 3-9에 닿아요.', k:'s9', n:29, gems:168000,
+  {ch:80, t:'달과 흰 코끼리', s:'젖의 바다 3-9에 닿아요. 어린 흰 코끼리, 탈것 「젖빛 흰 코끼리」가 함께해요.', k:'s9', n:29, gems:168000, mount:'welephant',
     c:['milksea', 'm:elephant:#f4f4fa,indra,hero', 'light', [['', '흰 코끼리는 제 발로 하늘 임금 곁에 가 섰어요.'], ['제석천', '이번에는 네 머리에 무엇을 얹든 귀히 얹겠다.']]]},
   {ch:80, t:'소원 나무', s:'레벨 577을 달성해요.', k:'l9', n:577, gems:169000,
     c:['milksea', 'hero,kkachi,wukong', 'sparkle', [['', '소원 나무 아래 서면 바라는 것이 가지에 열린대요. 까치는 한참 올려다보다 고개를 저었어요.'], ['까치', '저는 됐어요. 제가 바라는 건 {name}님이랑 끝까지 가는 건데, 그건 나무가 주는 게 아니니까요.']]]},
@@ -3690,7 +3696,7 @@ const MAIN_Q = [
   {ch:83, t:'죽음을 따라간 사람', s:'레벨 584를 달성해요.', k:'l10', n:584, gems:183500,
     cs:[['yamaroad', 'savitri,hero,kkachi', 'light', [['', '길가 바위에 한 여인이 앉아 있었어요. 넋이 아니라, 산 사람이었어요.'], ['사비트리', '이 길을 걸어서 갔다가 걸어서 돌아온 사람이오. 길을 물으려거든 내게 물으시오.'], ['까치', '사비트리 님! 그래서 소원은 뭐라고 하셨어요?']]],
       ['yamaroad', 'savitri,hero', '', [['사비트리', '첫째는 앞 못 보는 시아버님의 눈. 둘째는 시아버님이 잃은 나라. 그분은 다 들어주셨소.'], ['사비트리', '셋째로 이렇게 청했소. 「저와 제 남편 사이에 아이들이 태어나게 해 주십시오.」'], ['', '죽음의 신은 「그리하마」 해 놓고서야 알아챘어요. 남편을 데려가서는 지킬 수 없는 약속이라는 것을.']]]]},
-  {ch:83, t:'야마의 시험', s:'수미산 2-1에 닿아요(길목을 지키는 네 눈 박이 개를 넘어요).', k:'s10', n:11, gems:185000,
+  {ch:83, t:'야마의 시험', s:'수미산 2-1에 닿아요(길목을 지키는 네 눈 박이 개를 넘어요). 사비트리의 넋이 넋 주머니에 깃들어요.', k:'s10', n:11, gems:185000, soul:'savitri',
     cs:[['yamaroad', 'm:wolf:#2a2a3a,hero', 'flash', [['', '길목에 눈 넷 달린 개가 버티고 섰어요. 죽음의 집을 지키는 문지기예요.'], ['나', '물지 않는구나. 쫓으려는 게 아니야. 내가 지나갈 만한지 보는 거지.']]],
       ['yamaroad', 'yama,hero,kkachi', 'light', [['', '개가 꼬리를 내리자, 그 뒤에 짙은 초록 옷을 입은 이가 서 있었어요. 낯선 옷인데, 낯익은 눈이었어요.'], ['야마', '동쪽 저승에서는 나를 염라라 부르더구나. 네가 내 앞에 선 것이 처음이 아니다.'], ['나', '… 염라대왕. 이것이 옛 얼굴이셨군요.']]],
       ['yamaroad', 'yama,savitri,hero', '', [['야마', '저 여인은 나를 이긴 것이 아니다. 끝까지 따라와 바른 말을 했을 뿐이지. 나는 그 소원에 걸린 것이 조금도 분하지 않았다.'], ['', '죽음은 무엇에 길을 비켜 주는가 — 칼이 아니라, 끝까지 따라 걸으며 건넨 바른 말이었어요.'], ['야마', '내 집에 손님이 하나 더 와 있다. 사흘째 문 앞에 앉아 있는 아이다.']]]]},
@@ -3700,7 +3706,7 @@ const MAIN_Q = [
   {ch:84, t:'사흘의 기다림', s:'레벨 586을 달성해요.', k:'l10', n:586, gems:187000,
     cs:[['yamaroad', 'yama,nachiketa,hero', '', [['야마', '그것만은 묻지 마라. 신들도 오래 헷갈려 한 일이다. 대신 백 년의 목숨, 소 떼와 말 떼, 구슬 목걸이를 주마.'], ['나치케타', '그것들은 내일이면 닳습니다. 목숨이 길어도 끝은 당신 것이고요. 저는 여쭌 것만 받겠습니다.']]],
       ['yamaroad', 'hero,wukong,kkachi', '', [['손오공', '거참. 나는 저승 명부에서 내 이름을 먹으로 지워 버렸는데, 저 꼬마는 그걸 묻고 앉았네.'], ['까치', '구슬 목걸이를 마다하다니… 저라면 일단 물고 날았을 거예요.']]]]},
-  {ch:84, t:'세 가지 소원', s:'레벨 587을 달성해요.', k:'l10', n:587, gems:188500,
+  {ch:84, t:'세 가지 소원', s:'레벨 587을 달성해요. 나치케타의 넋이 넋 주머니에 깃들어요.', k:'l10', n:587, gems:188500, soul:'nachiketa',
     cs:[['yamaroad', 'yama,nachiketa', 'light', [['', '죽음의 신은 구슬 목걸이를 거두고 웃었어요. 보배를 마다하는 아이에게만 열리는 문이 있었어요.'], ['', '야마가 아이에게 무엇을 일러 주었는지는 옛 글에 길게 적혀 있어요. 여기서는 한 가지만 — 아이는 답을 품고, 살아서 집에 돌아갔어요.']]],
       ['yamaroad', 'yama,hero', 'dark', [['야마', '이제 네 차례다. 너는 두 번 죽고 두 번 났다. 내 앞을 지나간 것도 내가 보았다.'], ['야마', '그러니 이번에는 내가 묻겠다. 죽음 뒤에는 무엇이 있더냐.']]],
       ['yamaroad', 'hero,kkachi', '', [['', '죽음 뒤에는 무엇이 있는가 — 죽음의 신은 답을 주지 않고 되물었어요. 답은 묻는 사람이 살아서 들고 가는 것이었어요.'], ['까치', '{name}님… 뭐라고 대답하실 거예요?']]]]},
@@ -9212,6 +9218,54 @@ Object.assign(PET_HD, {
     Pl([[5, 5], [7, -1 - fl], [9, 4]], O); Pl([[10, 4], [13, -2 - fl], [14, 5]], O); Pl([[6.4, 4.4], [7.4, 1 - fl], [8.4, 4]], Y);
     E(1.6, 16, 4.4, 4.4, 'rgba(255,226,74,.3)'); E(1.6, 16, 3, 3, Y); E(1.6, 16, 1.7, 1.7, '#fff6c0'); }],
 });
+// 5부 천축 펫(물의 신화 9단계): 몽구스·공작·아기 코끼리·다람쥐·아기 독수리 왕 — 모두 새로. 아기 코끼리는 상아·과자·쥐 없이, 아기 독수리 왕은 사람 몸·왕관·뱀 없이 그냥 새로
+Object.assign(PET_HD, {
+  mongoose:[34, 24, (g, f, c) => { const {E, Pl, RR, blob, bigEye} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.5), o = f ? 1 : 0;
+    Pl([[27, 13], [31, 3 - o], [33.4, 4 - o], [30, 15]], c); Pl([[31, 3 - o], [33.4, 4 - o], [33.6, 0.4 - o], [31.2, 0.6 - o]], '#2a2226');
+    RR(21, 15, 2.8, 6.4, 1.4, d); RR(17, 15, 2.8, 6.4, 1.4, d);
+    blob(17, 13, 11.5, 5.6, c); E(16, 16.4, 8, 2.2, l);
+    for (const x of [12, 16, 20]) RR(x, 8.6, 1.2, 3.6, 0.6, d);
+    RR(10.6, 15, 2.8, 6.4, 1.4, d); RR(6.6, 13.4 - o * 2, 2.8, 6, 1.4, c);
+    blob(7.6, 9.6, 5.6, 4.8, c); E(2.6, 11.6, 3, 2, l); E(0.8, 11.2, 0.9, 0.7, '#1d1420'); E(9.8, 5.4, 1.8, 1.8, d); E(9.8, 5.6, 0.9, 0.9, '#f0b8b0');
+    bigEye(6.8, 9, 0.56); RR(11.6, 11, 1.8, 5.2, 0.9, '#d8382f'); }],
+  squirrel:[28, 26, (g, f, c) => { const {E, Pl, RR, blob, bigEye} = hdKit(g), d = darken(c, 0.28), l = mix(c, '#ffffff', 0.6), o = f ? 1 : 0;
+    blob(21.6, 11 - o, 6.2, 10.4, c); E(23.4, 8 - o, 3.2, 6, mix(c, '#ffffff', 0.25)); E(20, 3 - o, 2.2, 2.6, d);
+    RR(15, 19.4, 3, 5.4, 1.5, d); RR(9, 20, 3, 4.8, 1.5, d);
+    blob(13, 17, 7.4, 6.2, c);
+    g.strokeStyle = '#f6efe0'; g.lineWidth = 1.2; g.lineCap = 'round'; for (const dy of [-3.2, -1.4, 0.4]){ g.beginPath(); g.moveTo(7.6, 14 + dy + 1.6); g.quadraticCurveTo(13, 9.4 + dy, 18.6, 14 + dy + 2.4); g.stroke(); }
+    E(12, 21, 5, 2, l);
+    RR(5.4, 20.4, 2.8, 4.4, 1.4, c); RR(11.6, 21, 2.8, 4, 1.4, d);
+    blob(7.6, 12, 5.6, 5.2, c); E(4.4, 14, 3.2, 2.6, mix(c, '#e8d0a0', 0.6)); E(2.4, 13.4, 0.8, 0.7, '#1d1420'); E(6.2, 5.6, 1.7, 1.9, d); E(10.2, 6.2, 1.7, 1.9, d);
+    bigEye(6.8, 11, 0.56); E(3.6, 15.8, 1.2, 0.5, 'rgba(180,140,90,.7)'); }],
+  peacock:[34, 30, (g, f, c) => { const {E, Pl, RR, blob, bigEye} = hdKit(g), d = darken(c, 0.3), o = f ? 1.4 : 0, gold = '#f0c84a', teal = '#2aa8b8';
+    const R = 12 + o;
+    for (let i = 0; i < 8; i++){ const a = -1.35 + i * 0.27, x = 21 + Math.cos(a) * R * 0.62, y = 17 + Math.sin(a) * R * 0.95;
+      g.save(); g.translate(x, y); g.rotate(a + Math.PI / 2); E(0, 0, 3, 5 + o * 0.5, i % 2 ? '#1f7a8a' : '#2a8f6a'); E(0, -1.6, 1.8, 2.4, gold); E(0, -1.6, 1, 1.4, teal); E(0, -1.6, 0.4, 0.5, '#1a2a4a'); g.restore(); }
+    RR(14, 22, 1.6, 6, 0.8, '#8a6a3a'); RR(19.4, 22, 1.6, 6, 0.8, '#8a6a3a');
+    blob(17, 17, 8.4, 6.4, c); E(15.4, 20, 5.4, 2.6, mix(c, '#ffffff', 0.35)); E(21.4, 15.4, 4.2, 2.8, darken(c, 0.18), 0.4);
+    RR(7.6, 7.4, 4.4, 10, 2.2, c); blob(7.6, 6.2, 4.6, 4.2, c); E(7.8, 10, 2.4, 3, mix(c, '#ffffff', 0.4));
+    Pl([[3.6, 6.4], [0.4, 7.8], [3.8, 8.6]], '#e8a03a'); bigEye(6.6, 5.6, 0.5);
+    g.strokeStyle = '#1f6a7a'; g.lineWidth = 0.8; g.lineCap = 'round'; for (const [x, y] of [[5.4, 3.6], [8, 2.8], [10.6, 3.8]]){ g.beginPath(); g.moveTo(8, 3.8); g.lineTo(x, y - 0.8); g.stroke(); E(x, y - 1.2, 1, 1, gold); } }],
+  babyele:[34, 28, (g, f, c) => { const {E, Pl, RR, blob, bigEye} = hdKit(g), d = darken(c, 0.25), l = mix(c, '#ffffff', 0.4), pk = '#f08ab0', o = f ? 1 : 0;
+    RR(23, 20, 4.6, 7.4, 2.2, d); RR(16.6, 20, 4.6, 7.4, 2.2, d); E(27.6, 14.4, 1.6, 3, d, 0.4);
+    blob(18, 14.6, 12.4, 9.6, c); E(18, 21, 9, 2.4, l);
+    RR(12, 20, 5, 8, 2.4, c); RR(6.6, 20.4 - o * 1.2, 5, 7.6, 2.4, c); E(9.2, 25.6 - o * 1.2, 2, 1.7, '#ffd24a'); E(9, 25, 0.7, 0.6, '#ffffff');
+    E(15, 12.6, 6, 7.6, mix(c, '#d8a8b8', 0.4), 0.2); E(15, 12.6, 4.2, 5.6, mix(c, '#f0b0c8', 0.55), 0.2);
+    blob(8.4, 12.4, 7.4, 6.8, c);
+    g.strokeStyle = c; g.lineWidth = 3.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(3.6, 15); g.quadraticCurveTo(0.4, 20.4, 3 + o, 24.4); g.stroke();
+    g.strokeStyle = d; g.lineWidth = 0.7; g.beginPath(); g.moveTo(2, 18); g.lineTo(4.6, 18.4); g.moveTo(1.8, 21); g.lineTo(4.2, 21.2); g.stroke();
+    for (let i = 0; i < 5; i++){ const a = i * 1.257 - 1.57; E(8.6 + Math.cos(a) * 1.9, 6.6 + Math.sin(a) * 1.5, 1.3, 1.1, i % 2 ? pk : '#f8b8d0'); } E(8.6, 6.6, 0.9, 0.9, '#ffd84a');
+    bigEye(6.6, 11.6, 0.62); E(10.4, 15, 1.4, 0.7, 'rgba(240,138,176,.6)'); }],
+  eaglet:[32, 30, (g, f, c) => { const {E, Pl, RR, blob, bigEye} = hdKit(g), d = darken(c, 0.3), o = f ? 1.6 : 0, gold = '#f0c84a', white = '#f6f2ea';
+    Pl([[24, 22], [30, 28], [26, 28.6], [22, 26]], d); Pl([[26, 24], [29.6, 28.6], [27.4, 29.2]], white);
+    RR(12, 24, 2, 4, 1, '#e0b03c'); RR(17, 24, 2, 4, 1, '#e0b03c'); for (const x of [10.6, 15.6]) RR(x, 27.4, 5, 1.4, 0.7, '#e0b03c');
+    blob(16, 18, 9.6, 8.6, c); E(14, 21, 5.6, 4.6, mix(c, '#ffffff', 0.55));
+    g.save(); g.translate(20, 14); g.rotate(-0.3 - o * 0.12); E(0, 5, 4.6, 8, d); E(0, 5, 3.4, 6.6, mix(c, d, 0.4)); for (const dx of [-2.6, 0, 2.6]) Pl([[dx - 1.4, 10.4], [dx + 1.4, 10.4], [dx, 14.4]], white); g.restore();
+    blob(9, 10.4, 6.8, 6.2, white); for (const [x, y] of [[4.6, 7], [8, 4], [12.4, 6.6]]) E(x, y, 1.6, 1.4, white);
+    Pl([[6.6, 3.4], [6, -0.4], [7.8, 3]], gold); Pl([[8.6, 3.4], [9, -1], [10.4, 3.2]], gold); Pl([[10.4, 3.8], [12.4, 0.2], [12.6, 4.6]], gold);
+    Pl([[3.4, 9.6], [-0.6, 12], [3.6, 14.2], [4.6, 12]], gold); Pl([[0, 12], [-0.6, 12], [1.6, 13.6]], darken(gold, 0.3));
+    bigEye(6.8, 9.6, 0.62, '#4a3a20'); }],
+});
 function petFeline(g, f, c, stripes){
   const {E, Pl, blob, bigEye, legs, RR} = hdKit(g), d = darken(c, 0.3), l = mix(c, '#ffffff', 0.45), o = f ? 1.5 : 0;
   RR(22, 2 + o, 3, 12, 1.5, c); E(23.5, 2.4 + o, 2, 2, c);
@@ -9529,12 +9583,17 @@ const AVATARS = [
   // 4부 바다(물의 신화 7-2): 꾸미기 상자(동해·남쪽 바다에 들어선 뒤) 넷 + 용왕 강림에서만 나오는 넷
   {k:'c_yonggung', type:'char', name:'용궁 관복', outfit:'#2a6a9a', deco:'sash', src:'box', w:5},
   {k:'c_haenyeo', type:'char', name:'해녀 물옷', outfit:'#2a2a36', deco:'sash', src:'box', w:6},
-  {k:'p_wave', type:'cape', name:'물결 망토', capeC:'#3aa8d8', star:true, src:'box', w:5},
+  {k:'p_seawave', type:'cape', name:'물결 망토', capeC:'#3aa8d8', star:true, src:'box', w:5},   // 4부 것(예전 키 p_wave는 3부 「물결 무늬 망토」와 겹쳤음 — 물의 신화 9단계에 새 키로)
   {k:'q_pearl', type:'pet', name:'진주빛', tint:'#f4f0ff', src:'box', w:5},
   {k:'c_cheoyong', type:'char', name:'처용 옷', outfit:'#c8382f', deco:'sash', src:'용왕 강림', pt:4},
   {k:'c_yongwang', type:'char', name:'용왕 곤룡포', outfit:'#1f8f8a', deco:'armor', src:'용왕 강림', pt:4},
   {k:'p_yongwang', type:'cape', name:'용 비늘 망토', capeC:'#2fbf9a', star:true, src:'용왕 강림', pt:4},
   {k:'q_coral', type:'pet', name:'산호빛', tint:'#ff9a8a', src:'용왕 강림', pt:4},
+  // 5부 천축(물의 신화 9단계): 꾸미기 상자(란카 길·수미산에 들어선 뒤)
+  {k:'c_forest', type:'char', name:'숲의 수행자 옷', outfit:'#9a7448', deco:'sash', src:'box', w:8},
+  {k:'c_lanka', type:'char', name:'란카 갑옷', outfit:'#c8962a', deco:'armor', src:'box', w:8},
+  {k:'c_sumeru', type:'char', name:'수미산 하늘옷', outfit:'#dfe8ff', deco:'sash', src:'box', w:10},
+  {k:'p_lamp', type:'cape', name:'등불 망토', capeC:'#4a2230', star:true, src:'box', w:8},
   // 날개(2026-11 (42), 천공의 탑·태초의 신 보상): 등 뒤에 그려진다(변신 날개가 있으면 그쪽이 먼저)
   {k:'w_cloud', type:'wing', name:'구름 깃 날개', wingC:['#c8d8f0', '#dfe8f8', '#eef4ff', '#ffffff'], src:'천공의 탑 50층'},
   {k:'w_phoenix', type:'wing', name:'봉황 날개', wingC:['#c8302a', '#ff6a3a', '#ffa040', '#ffe08a'], src:'천공의 탑 150층'},
@@ -9611,14 +9670,39 @@ const SK_LIST = [
   {c:65, p:'foot', name:'먹물 걷힌 빛', col:'#8a7ab8', d:'검은 물이 걷힌 자리에 도는 맑은 빛.'},
   {c:66, p:'guard', name:'은대야 토시', col:'#c8d4e0', d:'제자리로 돌아간 은대야의 빛을 닮은 토시.'},
   {c:67, p:'tassel', name:'만파식적 술', col:'#3fbf9a', d:'다시 우는 피리에 달았던 옥빛 술.'},
+  // 5부 천축(물의 신화 9단계): 68~90장, 장마다 하나(23가지). 한 줄 값이 4부 치장보다 한 번 더(SK_IND배) 높다
+  {c:68, p:'foot', name:'뱃등 물빛', col:'#ffc870', d:'돌탑을 실은 배의 등불이 물 위에 길게 드리우던, 돌아갈 길의 빛.'},
+  {c:69, p:'tassel', name:'금빛 사슴털 술', col:'#f0c850', d:'화살에 벗겨져 흩날리던 금빛 사슴털을 꼰 술, 고울수록 한 번 더 살피라는 뜻.'},
+  {c:70, p:'guard', name:'독수리 깃 토시', col:'#a8805a', d:'홀로 하늘 수레를 막아선 늙은 독수리 왕의 깃을 감은 토시.'},
+  {c:71, p:'shoe', name:'바람 뜀 버선', col:'#d8964a', d:'잊었던 힘을 되찾은 원숭이들이 신던 버선, 한 번 디디면 골짜기를 건넌다.'},
+  {c:72, p:'belt', name:'다람쥐 세 줄 띠', col:'#8a6a4a', d:'모래를 나르던 다람쥐 등의 세 줄을 본뜬 띠, 작은 것이 큰 돌 틈을 메운다.'},
+  {c:73, p:'guard', name:'금방울 토시', col:'#e8c040', d:'잠자는 거인을 깨우려 성 안 사람들이 흔들던 금방울을 단 토시.'},
+  {c:74, p:'shoe', name:'황금 성 버선', col:'#c8962a', d:'황금 성 란카의 창병들이 신던 버선, 왕을 아껴 끝까지 물러서지 않던 걸음.'},
+  {c:75, p:'tassel', name:'흙 등잔 술', col:'#d8783a', d:'열네 해를 기다린 흙 등잔의 불빛을 꼰 술, 값은 없어도 꺼지지 않는다.'},
+  {c:76, p:'belt', name:'공작 깃 허리띠', col:'#1f8fa0', d:'갇혔던 물이 쏟아지던 날, 비를 반겨 춤추던 공작의 깃으로 엮은 허리띠.'},
+  {c:77, p:'tassel', name:'꽃목걸이 술', col:'#e8a0c0', d:'흙을 털고 다시 꿴 꽃목걸이의 실로 꼰 술, 받은 것을 귀히 여기라는 뜻.'},
+  {c:78, p:'shoe', name:'거북 등 버선', col:'#6a9a5a', d:'가라앉는 산을 등으로 받친 큰 거북의 등딱지 무늬를 새긴 버선.'},
+  {c:79, p:'guard', name:'독 막이 토시', col:'#2a4ab8', d:'흘러넘친 독 방울을 막아 낸 손목에 감은 검푸른 토시, 쓴 것을 먼저 맡는 손.'},
+  {c:80, p:'belt', name:'소원 나무 잎 띠', col:'#6ac86a', d:'소원 나무 아래 떨어진 잎을 엮은 띠, 까치는 끝내 아무것도 빌지 않았다.'},
+  {c:81, p:'tassel', name:'호리병 술', col:'#e8d48a', d:'영약을 담았던 호리병 목에 감겨 있던 술, 마지막 한 방울의 향이 남았다.'},
+  {c:82, p:'guard', name:'뱀 허물 토시', col:'#6aa890', d:'산을 감고 천 년을 버틴 큰 뱀이 떠나며 남긴 허물을 감은 토시.'},
+  {c:83, p:'shoe', name:'이슬 길 버선', col:'#c8d8e8', d:'이슬이 구슬처럼 맺힌 죽음의 길을 끝까지 따라 걷던 버선.'},
+  {c:84, p:'foot', name:'기다림의 불빛', col:'#ffb050', d:'죽음의 집 앞에서 사흘 밤을 기다린 아이에게 죽음의 신이 일러 준 불의 빛.'},
+  {c:85, p:'guard', name:'네 하늘 문 토시', col:'#4a7ab8', d:'동서남북 네 하늘 문을 지나며 받은 네 빛깔 매듭을 감은 토시.'},
+  {c:86, p:'foot', name:'구슬 그물 빛', col:'#cfe0ff', d:'구슬마다 다른 모든 구슬이 비치는 그물의 빛, 지나온 길이 발밑에 다 비친다.'},
+  {c:87, p:'shoe', name:'아지랑이 버선', col:'#f0b8d8', d:'달콤한 목소리가 피던 들을 지나온 버선, 아지랑이에도 걸음이 꼬이지 않는다.'},
+  {c:88, p:'foot', name:'연꽃 발밑 빛', col:'#ffc0d8', d:'쏟아지던 무기가 꽃잎이 되어 내려앉던 자리에 피어나는 연꽃 빛.'},
+  {c:89, p:'belt', name:'여섯 증인 띠', col:'#c8a86a', d:'여섯 세계의 증인이 한 올씩 보태 짠 여섯 빛깔 띠.'},
+  {c:90, p:'tassel', name:'까치집 술', col:'#2a3a6a', d:'하늘 문 꿰맨 자리의 까치집에서 떨어진 잔가지와 푸른 깃을 꼰 술.'},
 ];
 const SKC = Object.fromEntries(SK_LIST.map(x => [x.c, x]));
-const SK_CH0 = 17, SK_SEA_CH = 46, SK_SEA = 1.15;   // SK_SEA: 4부 치장(46장~)의 한 줄 값 배율
-const skChCap = () => S.world >= 7 ? 67 : S.world === 6 ? 59 : S.world === 5 ? 52 : 45;   // 지금 땅까지의 치장만 떨어진다(곤륜에서 46장 첫 퀘스트를 하는 동안 바다 치장이 나오지 않게)
-const skGr = g => GRADES[g >= 5 ? 7 : g];   // 치장 5번 = 유물(GRADES 7번, 청록)
-const SK_GRADES = [{n:1, se:0.30, set:0.1}, {n:2, se:0.32, set:0.3}, {n:3, se:0.29, set:0.7}, {n:4, se:0.24, set:1.2}, {n:4, se:0.40, set:2.0}, {n:4, se:0.46, set:2.6}];   // (5번 유물: 4부 수군 야행·용궁 보물고·1일 보스에서만, 사냥터 드롭에는 없음)   // 줄 수·한 줄 최대 단계 값·모든 부위 효과(가장 낮은 등급 기준)
-const SK_GP = [[17, [70, 30, 0, 0, 0]], [26, [52, 36, 12, 0, 0]], [31, [42, 36, 16, 6, 0]], [35, [32, 34, 22, 10, 2]], [40, [24, 30, 25, 13, 8]], [46, [18, 28, 27, 16, 11]], [53, [14, 26, 28, 18, 14]], [60, [10, 24, 28, 21, 17]]];   // 지금 장에 따른 등급 확률(%)
-const SK_P = 1 / 1200, SK_CUR = 0.4, SK_INV = 40, SK_SELL = [5, 15, 40, 100, 300, 800];   // 몹 하나당 확률·지금 장 것이 나올 몫·보관 칸·넘치면 보석
+const SK_CH0 = 17, SK_SEA_CH = 46, SK_SEA = 1.15, SK_IND_CH = 68, SK_IND = 1.3;   // SK_SEA: 4부 치장(46장~)의 한 줄 값 배율 · SK_IND: 5부 치장(68장~)
+const skChCap = () => S.world >= 10 ? 90 : S.world === 9 ? 82 : S.world === 8 ? 75 : S.world >= 7 ? 67 : S.world === 6 ? 59 : S.world === 5 ? 52 : 45;   // 지금 땅까지의 치장만 떨어진다(곤륜에서 46장 첫 퀘스트를 하는 동안 바다 치장이 나오지 않게)
+const skGr = g => GRADES[g >= 6 ? 8 : g === 5 ? 7 : g];   // 치장 5번 = 유물(GRADES 7번, 청록) · 6번 = 영물(GRADES 8번, 5부 치장만)
+const skUp = c => c >= SK_IND_CH ? SK_IND : c >= SK_SEA_CH ? SK_SEA : 1;   // 장(c)에 따른 한 줄 값 배율
+const SK_GRADES = [{n:1, se:0.30, set:0.1}, {n:2, se:0.32, set:0.3}, {n:3, se:0.29, set:0.7}, {n:4, se:0.24, set:1.2}, {n:4, se:0.40, set:2.0}, {n:4, se:0.46, set:2.6}, {n:4, se:0.52, set:3.2}];   // (6번 영물: 5부 치장만, 틀만 — 나오는 곳은 뒤 일감) (5번 유물: 4부 수군 야행·용궁 보물고·1일 보스에서만, 사냥터 드롭에는 없음)   // 줄 수·한 줄 최대 단계 값·모든 부위 효과(가장 낮은 등급 기준)
+const SK_GP = [[17, [70, 30, 0, 0, 0]], [26, [52, 36, 12, 0, 0]], [31, [42, 36, 16, 6, 0]], [35, [32, 34, 22, 10, 2]], [40, [24, 30, 25, 13, 8]], [46, [18, 28, 27, 16, 11]], [53, [14, 26, 28, 18, 14]], [60, [10, 24, 28, 21, 17]], [68, [8, 22, 28, 22, 20]], [78, [6, 20, 28, 24, 22]], [86, [4, 18, 28, 26, 24]]];   // 지금 장에 따른 등급 확률(%)
+const SK_P = 1 / 1200, SK_CUR = 0.4, SK_INV = 40, SK_SELL = [5, 15, 40, 100, 300, 800, 2000];   // 몹 하나당 확률·지금 장 것이 나올 몫·보관 칸·넘치면 보석
 const SK_GW = [[1.22, 1.1], [1.24, 1.1], [1.2564, 1.12], [1.0709, 1.0495], [1.0709, 1.0495]];   // 세계별 한 단계마다 몬스터 [체력, 공격] 배율(시뮬로 잼)
 const skCh = () => { const q = S.quest.main < MAIN_Q.length ? MAIN_Q[S.quest.main] : null; return q ? q.ch : 99; };
 const skinOpen = () => skCh() >= SK_CH0;
@@ -9628,7 +9712,7 @@ const skName = it => `${skGr(it.g).name} ${SKC[it.c].name}`;
 function skMake(sk, g, q = 0.8){   // q: 한 줄 값이 최대의 몇 배부터(보통 0.8, 엔드 상자 0.95)
   const P = SK_PART[sk.p], G = SK_GRADES[g], rest = Object.keys(SK_STATS).filter(t => t !== P.stat);
   for (let i = rest.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
-  const up = sk.c >= SK_SEA_CH ? SK_SEA : 1;
+  const up = skUp(sk.c);
   return {id:++S.skin.seq, c:sk.c, g, l:[P.stat, ...rest].slice(0, G.n).map(t => [t, Math.round(G.se * up * (q + (1 - q) * Math.random()) * 100) / 100])};
 }
 let skCache = null;
@@ -9663,10 +9747,11 @@ function skinGet(it, quiet){
   }
   return {it, better, fresh};
 }
-function skinDrop(ch, quiet, minG = 0, rolls = 1, q, relicP = 0){   // minG: 이 등급 아래로는 안 나옴, rolls: 등급을 몇 번 굴려 좋은 것으로, relicP: 유물 등급 확률(4부 치장만)
+function skinDrop(ch, quiet, minG = 0, rolls = 1, q, relicP = 0, spiritP = 0){   // minG: 이 등급 아래로는 안 나옴, rolls: 등급을 몇 번 굴려 좋은 것으로, relicP: 유물 등급 확률(4부 치장만), spiritP: 영물 등급 확률(5부 치장만, 틀만 — 부르는 곳은 아직 없음)
   ch = Math.min(ch == null ? skCh() : ch, skChCap());
   const relic = relicP > 0 && ch >= SK_SEA_CH && Math.random() < relicP * (window.__game && window.__game.skRelic || 1);
-  const pool = SK_LIST.filter(x => x.c <= ch && (!relic || x.c >= SK_SEA_CH)); if (!pool.length) return null;
+  const spirit = spiritP > 0 && ch >= SK_IND_CH && Math.random() < spiritP * (window.__game && window.__game.skSpirit || 1);
+  const pool = SK_LIST.filter(x => x.c <= ch && (!relic || x.c >= SK_SEA_CH) && (!spirit || x.c >= SK_IND_CH)); if (!pool.length) return null;
   const sk = SKC[ch] && Math.random() < SK_CUR ? SKC[ch] : pool[Math.floor(Math.random() * pool.length)];
   const gp = skGradeP(ch), luck = window.__game && window.__game.skGrade;
   let g = 0;
@@ -9674,6 +9759,7 @@ function skinDrop(ch, quiet, minG = 0, rolls = 1, q, relicP = 0){   // minG: 이
   g = Math.max(g, minG);
   if (luck != null) g = luck;
   if (relic) g = 5;
+  if (spirit) g = 6;
   return skinGet(skMake(sk, g, q), quiet);
 }
 function skinRoll(){ if (skinOpen() && Math.random() < SK_P * (window.__game && window.__game.skLuck || 1)) return skinDrop(); return null; }
@@ -9692,9 +9778,9 @@ function skSellWorse(){   // 끼고 있는 것보다 단계 값이 낮은 보관
 }
 const skinLook = () => { const o = {}; for (const P of SK_PARTS){ const it = S.skin && S.skin.eq[P.k]; if (it) o[P.k] = SKC[it.c].col; } return o; };
 function skClean(d){   // 저장에서 온 치장 다듬기
-  const ok = it => it && hasK(SKC, String(it.c)) && Number.isInteger(it.g) && it.g >= 0 && it.g < SK_GRADES.length && (it.g < 5 || +it.c >= SK_SEA_CH) && Array.isArray(it.l) && it.l.length >= 1 && it.l.length <= SK_GRADES[it.g].n
+  const ok = it => it && hasK(SKC, String(it.c)) && Number.isInteger(it.g) && it.g >= 0 && it.g < SK_GRADES.length && (it.g < 5 || +it.c >= SK_SEA_CH) && (it.g < 6 || +it.c >= SK_IND_CH) && Array.isArray(it.l) && it.l.length >= 1 && it.l.length <= SK_GRADES[it.g].n
     && it.l.every(l => Array.isArray(l) && hasK(SK_STATS, l[0]) && isFinite(+l[1])) && new Set(it.l.map(l => l[0])).size === it.l.length;
-  const fix = it => ({id:Math.max(1, Math.floor(+it.id) || 1), c:+it.c, g:it.g, l:it.l.map(l => [l[0], Math.max(0, Math.min(SK_GRADES[it.g].se * (+it.c >= SK_SEA_CH ? SK_SEA : 1) + 0.005, +l[1]))])});
+  const fix = it => ({id:Math.max(1, Math.floor(+it.id) || 1), c:+it.c, g:it.g, l:it.l.map(l => [l[0], Math.max(0, Math.min(SK_GRADES[it.g].se * skUp(+it.c) + 0.005, +l[1]))])});
   const o = {eq:{}, inv:[], seq:Math.max(0, Math.floor(+(d && d.seq)) || 0), found:{}};
   if (d && d.eq) for (const P of SK_PARTS){ const it = d.eq[P.k]; if (ok(it) && SKC[it.c].p === P.k) o.eq[P.k] = fix(it); }
   if (d && Array.isArray(d.inv)) o.inv = d.inv.filter(ok).slice(0, SK_INV).map(fix);
@@ -9723,6 +9809,9 @@ const MOUNTS = [
   {k:'dolphin', name:'곰새기', g:3, spd:45, ab:{exp:12, heal:2}, src:'story', from:'57장 이야기', pt:4, d:'해녀들이 곰새기라 부르는 돌고래. 물길을 먼저 알아요.'},
   {k:'seaturtle', name:'큰 거북', g:4, spd:45, ab:{dr:18, hp:15}, src:'piece', cost:150, pt:4, d:'등에 작은 섬 하나를 얹고도 끄떡없다는 용궁의 큰 거북.'},
   {k:'yongma', name:'용마', g:5, spd:65, ab:{skill:15, boss:12, cdr:8}, src:'tower', from:'천공의 탑 400층', pt:4, d:'못에서 솟아올랐다는 비늘 돋친 말. 물 위도 땅처럼 달려요.'},
+  // 5부 천축(물의 신화 9단계): 방울 낙타 = 고삐 조각 · 젖빛 흰 코끼리 = 80장 이야기
+  {k:'camel', name:'방울 낙타', g:4, spd:50, ab:{off:20, gold:14}, src:'piece', cost:220, pt:5, d:'목방울 소리로 모래바람 속에서도 길을 잃지 않는 사막의 낙타.'},
+  {k:'welephant', name:'젖빛 흰 코끼리', g:4, spd:50, ab:{hp:18, heal:3, dr:12}, src:'story', from:'80장 이야기', pt:5, d:'젖의 바다에서 큰 흰 코끼리를 따라 함께 솟은 어린 흰 코끼리, 제 발로 용사 곁에 와 섰어요.'},
 ];
 const MT = Object.fromEntries(MOUNTS.map(m => [m.k, m]));
 const MOUNT_STAR_MAX = 5, MOUNT_GEMS = 15000, MOUNT_PIECE = {busang:1, kunlun:2, first:2, tb:3};
@@ -9803,12 +9892,13 @@ function mountQuad(g, f, o){
   else if (o.tail === 'flame'){ for (let i = 0; i < 4; i++) E(51 + i * 2.8, 22 - i * 2.6 + run, 3.6 - i * 0.5, 2.6 - i * 0.3, i % 2 ? '#ffd24a' : mn); }
   else if (o.tail === 'deer'){ E(50, 22, 3, 2.4, c); E(51, 22.5, 1.8, 1.4, '#ffffff'); }
   else { g.save(); g.translate(48, 22); g.rotate(0.5 + run * 0.25); E(6, 1, 7.5, 3.2, mn); E(11, 2.5, 4.5, 2.4, darken(mn, 0.15)); g.restore(); }
-  const leg = (x, i, col) => { const up = (i + run) % 2 ? -1.6 : 0; RR(x, 31 + up, 5, 13, 2.5, col); RR(x - 0.3, 41.5 + up, 5.6, 3.2, 1.4, hf); if (o.glow) E(x + 2.5, 45 + up, 4.2, 1.5, o.glow); };
+  const lw = o.legW || 5, leg = (x, i, col) => { const up = (i + run) % 2 ? -1.6 : 0; RR(x, 31 + up, lw, 13, lw / 2, col); RR(x - 0.3, 41.5 + up, lw + 0.6, 3.2, 1.4, hf); if (o.glow) E(x + 2.5, 45 + up, 4.2, 1.5, o.glow); };
   leg(20, 0, d); leg(44, 1, d);
   blob(33, 27, 17, 9.5, c); E(33, 32.4, 12, 3.4, l);
   if (o.stripes) for (const x of [25, 30.5, 36, 41.5]) Pl([[x, 18.8], [x + 2.4, 18.8], [x + 0.8, 26]], o.stripes);
   if (o.spots) for (const [x, y] of [[26, 23], [33, 21], [40, 23.5], [29.5, 27.5], [43, 28]]) E(x, y, 1.4, 1.1, o.spots);
   if (o.scales) for (let x = 21; x < 47; x += 4) for (const y of [23, 28]) E(x + (y > 25 ? 2 : 0), y, 1.9, 1.3, o.scales);
+  if (o.humps) for (const hx of [23.4, 44]){ blob(hx, 20.4, 4.4, 5.4, c); E(hx - 0.8, 17.6, 1.6, 1.2, mix(c, '#ffffff', 0.35)); }   // 낙타: 안장 앞뒤의 혹 둘(5부)
   leg(15, 1, mix(c, d, 0.35)); leg(39, 0, mix(c, d, 0.35));
   // 목·머리
   if (o.head === 'ox'){
@@ -9825,6 +9915,20 @@ function mountQuad(g, f, o){
     blob(13, 18.5, 8.6, 8, c); Pl([[12, 9], [14, 1.5], [16.5, 9]], '#f3d36b');
     E(8, 22.5, 5, 3.4, l); E(5, 21.4, 1.3, 1, '#2a1a1a'); RR(5.5, 24.5, 6, 2.4, 1.2, '#8a2a2a');
     bigEye(10, 17, 0.7); bigEye(16.5, 16.6, 0.66);
+  } else if (o.head === 'camel'){
+    // 낙타(5부): 길게 굽은 목, 처진 아랫입술, 목에 방울
+    Pl([[24, 23], [18.4, 4.4], [12.4, 5.6], [14, 31]], c); for (let i = 0; i < 5; i++) E(19.4 + i * 0.8 + (run ? 0.4 : 0), 7 + i * 3.4, 2.2, 2.3, mn);
+    blob(9.6, 5.6, 6.2, 4.8, c); E(4.2, 7.8, 3.8, 2.7, o.muzzle || l); E(2, 7.2, 0.7, 0.6, '#1d1420'); RR(1.4, 9.6, 5.4, 1.4, 0.7, darken(c, 0.35));
+    E(13.2, 1.8, 1.4, 1.9, c); E(13.2, 2, 0.7, 1, '#f6c8b8'); bigEye(9.4, 4.8, 0.5);
+    g.strokeStyle = '#8a5a2a'; g.lineWidth = 1; g.beginPath(); g.moveTo(14, 18.4); g.lineTo(15.4, 20.6); g.stroke(); E(15.6, 22, 2.3, 2.3, '#e8b830'); E(15, 21.4, 0.8, 0.8, '#fff6c0'); RR(14.6, 23.6, 2, 0.9, 0.4, '#8a5a2a');
+  } else if (o.head === 'elephant'){
+    // 어린 코끼리(5부): 둥근 머리·큰 귀·말아 내린 코, 이마에 금빛 장식(상아는 그리지 않음)
+    E(18.4, 18.4, 5.8, 7.8, darken(c, 0.14), 0.15); E(18.6, 18.6, 4, 5.8, o.ear || '#f4c8c8', 0.15);
+    blob(11, 19.6, 9.4, 8.4, c);
+    g.strokeStyle = c; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath(); g.moveTo(5.6, 23); g.quadraticCurveTo(0.2, 29.5, 3.4 + run, 37); g.stroke();
+    g.strokeStyle = darken(c, 0.2); g.lineWidth = 0.7; for (const y of [27, 31]){ g.beginPath(); g.moveTo(1.6, y); g.lineTo(4.6, y + 0.6); g.stroke(); }
+    Pl([[8.6, 12.6], [13.4, 12.6], [11, 17.4]], '#e8c84a'); E(11, 14, 0.9, 0.9, '#d8382f');
+    bigEye(10.2, 18, 0.66);
   } else {
     // 말·사슴·기린: 긴 목
     Pl([[23.5, 22], [16.5, 8.5], [9, 10], [13.5, 30]], c);
@@ -9877,6 +9981,8 @@ const MOUNT_HD = {
   girin:(g, f) => mountQuad(g, f, {c:'#f0c048', belly:'#fff4d0', mane:'#ff7a3a', flameMane:true, scales:'#d8a030', ears:'deer', horn:'#ffffff', tail:'flame', saddle:'#c83a2a', trim:'#ffffff', glow:'#ffe8a0', hoof:'#c86a2a'}),
   dolphin:(g, f) => mountDolphin(g, f, {c:'#5a7ab0', belly:'#e8f2fb'}),
   seaturtle:(g, f) => mountTurtle(g, f, {c:'#4a7a5a', skin:'#a8b878', moss:'#7ac86a'}),
+  camel:(g, f) => mountQuad(g, f, {c:'#d4ac72', belly:'#f0dcb0', mane:'#8a6a44', muzzle:'#ecd8ac', head:'camel', humps:true, tail:'tuft', saddle:'#1f8fa0', trim:'#e0b03c', hoof:'#6a4a2a'}),
+  welephant:(g, f) => mountQuad(g, f, {c:'#f2efe6', belly:'#fffaf0', ear:'#f4c8c8', head:'elephant', legW:6.6, tail:'tuft', mane:'#cfc8b8', saddle:'#7ab8d8', trim:'#ffe08a', hoof:'#d8cfbc'}),
   yongma:(g, f) => mountQuad(g, f, {c:'#2f8f8a', belly:'#c8f0e0', mane:'#8ff0ff', scales:'#1f6a6a', horn:'#ffe08a', tail:'horse', saddle:'#e0b03c', trim:'#ffffff', glow:'#8ff0ff', hoof:'#1f5a6a'}),
 };
 // 4부 탈것 그림(물의 신화 7-2): 곰새기(돌고래)·큰 거북 — 64×48, 왼쪽을 봄
@@ -9967,6 +10073,7 @@ const TITLES = [
   {k:'dex2', name:'부상의 수집가', need:'2부 도감을 모두 모아요', prog:() => dexProg(2), eff:{atk:6, hp:6}},
   {k:'dex3', name:'곤륜의 수집가', need:'3부 도감을 모두 모아요', prog:() => dexProg(3), eff:{boss:8, critDmg:10}},
   {k:'dex4', name:'바다의 수집가', need:'4부 도감을 모두 모아요', prog:() => dexProg(4), eff:{atk:8, hp:8, boss:6}},   // 물의 신화 7-2
+  {k:'dex5', name:'천축의 수집가', need:'5부 도감을 모두 모아요', prog:() => dexProg(5), eff:{atk:10, hp:10, boss:8}},   // 물의 신화 9단계
 ];
 const TT = Object.fromEntries(TITLES.map(t => [t.k, t]));
 const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해'};
@@ -10759,6 +10866,12 @@ const SOUL_BOND = {
   admiral:['장군은 거북선을 만들고 수군을 훈련하며 바다를 지킬 준비를 했어요.', '남은 배가 열두 척뿐일 때도 "아직 열두 척이 있다"며 물러서지 않았어요.', '명량의 거센 물살을 이용해 훨씬 많은 배를 물리치고 바다를 지켰어요.'],
   haemosu:['해모수는 다섯 용이 끄는 수레를 타고 아침이면 내려오고 저녁이면 하늘로 돌아갔어요.', '웅심연 물가에서 물의 신 하백의 딸 유화를 만났어요.', '잉어·수달·사슴·꿩으로 변한 하백과 재주를 겨루어 이기고 사위로 인정받았대요.'],
   mago:['마고할미는 하늘과 땅이 갈라지기 전부터 있었다는 큰 할미예요.', '치마에 돌과 흙을 날라 산과 섬을 빚었대요.', '할미가 지나간 자리마다 강과 골짜기가 생겼고, 지금도 산마다 할미의 발자국이 남아 있대요.'],
+  // 5부 천축의 넋 결이야기(물의 신화 9단계): 옛이야기 줄거리 차례대로
+  jatayu:['어린 자타유는 형과 누가 해에 더 가까이 나는지 겨루었어요. 형이 날개를 펴 해를 가려 준 덕에 자타유는 타지 않고 살았대요.', '늙은 독수리 왕은 라마의 아버지와 오랜 벗이었어요. 숲에 온 왕자 부부를 보고 「내가 지켜 주마」 하고 맞았대요.', '열 머리 왕의 하늘 수레가 시타를 싣고 지나가자, 늙은 몸으로 홀로 막아섰어요. 날개가 꺾인 뒤에도 숨을 아껴 두었다가 라마에게 간 쪽을 일러 주었대요.'],
+  savitri:['공주 사비트리는 숲에서 눈먼 아버지를 모시고 사는 왕자 사티야반을 남편으로 골랐어요. 한 해 뒤에 그가 죽는다는 말을 듣고도 마음을 바꾸지 않았대요.', '그날이 오자 사비트리는 남편을 따라 숲에 갔어요. 죽음의 신이 남편의 넋을 거두어 가자, 그 뒤를 끝까지 따라 걸었어요.', '따라오는 내내 바른 말을 건네는 사비트리에게 죽음의 신은 소원을 들어주었어요. 셋째 소원 「남편과의 아이들」을 들어준 뒤에야, 남편을 돌려주어야 한다는 걸 알았대요.'],
+  nachiketa:['아버지가 늙고 여윈 소만 골라 제물로 바치자, 어린 나치케타가 물었어요. 「그럼 저는 누구에게 바치시렵니까?」 세 번째 물음에 아버지가 성을 내며 「죽음에게 주마」 했대요.', '아이는 그 말대로 죽음의 집을 찾아갔어요. 주인이 집을 비운 사흘 동안, 먹지도 않고 문 앞에서 기다렸대요.', '손님을 굶긴 사흘이 미안해진 죽음의 신이 소원 셋을 주마 했어요. 아이는 아버지와의 화해, 불 피우는 법, 그리고 죽음 뒤를 물었고, 보배를 다 마다한 끝에 답을 듣고 돌아왔대요.'],
+  jambavan:['잠바반은 아주 오래 산 곰들의 임금이었어요. 신들과 아수라가 젖의 바다를 휘저을 때, 바다에 넣을 약초를 모아 온 것도 젊은 날의 잠바반이었대요.', '원숭이들이 끝없는 바다 앞에서 주저앉았을 때, 늙은 곰 왕은 하누만 곁에 앉았어요. 「너는 어려서 해까지 뛰었다」 하고 잊고 있던 힘을 일깨워 주었대요.', '란카의 싸움에서 모두가 쓰러졌을 때, 눈이 어두운 늙은 곰 왕은 「하누만은 살아 있느냐」부터 물었어요. 그 말대로 하누만이 약초 산을 통째로 들고 와 모두가 다시 일어났대요.'],
+  agastya:['빈디아 산이 해 가는 길을 막을 만큼 자꾸 높아지자, 키 작은 성자 아가스티아가 그 앞을 지나갔어요. 산이 절하듯 고개를 숙이자 「내가 돌아올 때까지 그대로 있거라」 하고 남쪽으로 가서, 다시는 돌아오지 않았대요.', '아수라들이 바닷속에 숨어 밤마다 성자들을 해치자, 아가스티아는 온 바다를 한 모금에 마셔 숨을 곳을 없애 주었대요.', '숲으로 쫓겨난 라마가 찾아오자, 늙은 성자는 하늘에서 받아 둔 활과 화살통을 내주며 남쪽 길을 일러 주었대요.'],
 };
 function bondUp(k){
   const s = SL[k], b = soulBond(k);
@@ -10856,6 +10969,13 @@ const SOULS = [
   {k:'simcheong', name:'심청', g:4, kind:'heal', v:75, pt:4, tale:'눈먼 아버지를 위해 인당수에 몸을 던지고 연꽃에 실려 돌아온 심청', p:['doin', {outfit:'#f4c8d8', hair:'#241c26', hat:'flower', skin:0}, 4, -1], ex:{wtype:'none', capeC:'#ff9ab8'}},
   {k:'munmu', name:'문무대왕', g:5, kind:'quake', v:9000, pt:4, tale:'죽어서도 나라를 지키려 동해의 용이 된 문무대왕', p:['musa', {outfit:'#2a5a8a', hair:'#e8e8f0', hat:'mcrown', skin:1, beard:true}, 4, 4], ex:{job:2, capeC:'#5ad8ff'}},
   {k:'gaeyang', name:'개양할미', g:5, kind:'grace', v:50, pt:4, tale:'굽 나막신을 신고 칠산 바다를 걸어 다니며 풍랑을 재운 개양할미', p:['doin', {outfit:'#3a6a9a', hair:'#e8e8f0', hat:'none', skin:1}, 4, -1], ex:{wtype:'none', capeC:'#8ab8e8'}},
+  // 5부 천축의 넋(물의 신화 9단계, pt:5 — 란카 길에 들어선 뒤에만 구슬에서 나온다). 자타유·사비트리·나치케타는 이야기 보상(70·83·84장)으로도.
+  // 자타유(새)·잠바반(곰)은 사람 모양이 아니라 mob:[몬스터 그림, 색]으로 그린다
+  {k:'jatayu', name:'자타유', g:4, kind:'bind', v:36, pt:5, tale:'날개가 꺾이도록 홀로 하늘 수레를 막고, 마지막 숨으로 길을 일러 준 독수리 왕 자타유', mob:['hawk', '#b8905a']},
+  {k:'savitri', name:'사비트리', g:4, kind:'heal', v:75, pt:5, tale:'죽음의 신을 끝까지 따라가 바른 말로 남편의 넋을 되찾아 온 사비트리', p:['doin', {outfit:'#e8e0d0', hair:'#241c26', hat:'flower', skin:1}, 2, -1], ex:{wtype:'none', capeC:'#c8503a'}},
+  {k:'nachiketa', name:'나치케타', g:3, kind:'mark', v:34, pt:5, tale:'죽음의 집 문 앞에서 사흘을 기다려 「죽음 뒤에는 무엇이 있나」를 물은 소년 나치케타', p:['doin', {outfit:'#f0d890', hair:'#241c26', hat:'none', skin:1}, -1, -1], ex:{wtype:'none'}},
+  {k:'jambavan', name:'곰 왕 잠바반', g:4, kind:'grace', v:42, pt:5, tale:'바다 앞에서 주저앉은 하누만에게 잊고 있던 힘을 일깨워 준 늙은 곰 왕 잠바반', mob:['bear', '#6a4a3a']},
+  {k:'agastya', name:'성자 아가스티아', g:5, kind:'quake', v:9000, pt:5, tale:'바다를 한 모금에 마시고, 높아만 가던 산을 고개 숙이게 한 작은 성자 아가스티아', p:['doin', {outfit:'#b8743a', hair:'#e8e8f0', hat:'none', skin:2, beard:true}, 1, -1], ex:{wtype:'staff', capeC:'#7a5a3a'}},
 ];
 const SL = Object.fromEntries(SOULS.map(s => [s.k, s]));
 const SOUL_KIND = {nuke:'한 적에게 큰 피해', aoe:'모든 적에게 피해', quake:'모든 적에게 피해 + 보스를 2초 묶음', mark:'모든 적이 받는 피해 +%', bind:'보스를 3초 묶고 받는 피해 +%',
@@ -11042,17 +11162,28 @@ function updateSoul(dt){
 const soulCache = new Map();
 function soulSprite(k, f, white){
   const key = k + ':' + f + ':' + (white ? 1 : 0); let sp = soulCache.get(key);
-  if (!sp){ const s = SL[k], [c, look, aG, wG] = s.p; sp = personSprite(c, look, aG, wG, 'right', f, white, s.ex); soulCache.set(key, sp); }
+  if (!sp){ const s = SL[k]; if (s.mob) sp = mobSprite(s.mob[0], s.mob[1], f === 3 ? 1 : 0, false, white); else { const [c, look, aG, wG] = s.p; sp = personSprite(c, look, aG, wG, 'right', f, white, s.ex); } soulCache.set(key, sp); }   // 새·곰 넋(mob)은 몬스터 그림을 그대로
   return sp;
 }
 const soulImgCache = new Map();
-function soulImg(k){ let u = soulImgCache.get(k); if (!u){ const s = SL[k], [c, look, aG, wG] = s.p; u = lookPreview(c, look, aG, wG, 'down', s.ex); soulImgCache.set(k, u); } return u; }
+function soulImg(k){
+  let u = soulImgCache.get(k);
+  if (!u){
+    const s = SL[k];
+    if (s.mob){ const sp = mobSprite(s.mob[0], s.mob[1], 0, false), c = document.createElement('canvas'); c.width = 64; c.height = 60; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+      const sc = Math.min(56 / sp.width, 54 / sp.height), w = sp.width * sc, h = sp.height * sc; g.drawImage(sp, (64 - w) / 2, 58 - h, w, h); u = c.toDataURL(); }   // 둘 다 왼쪽을 봄 → 그대로
+    else { const [c, look, aG, wG] = s.p; u = lookPreview(c, look, aG, wG, 'down', s.ex); }
+    soulImgCache.set(k, u);
+  }
+  return u;
+}
 // 나타난 넋: 반투명한 몸 + 등급 빛 테두리, 천천히 떠올랐다 사라진다
 function drawSoulApp(a){
   const s = SL[a.k], col = GRADES[s.g].color, k = a.t / a.dur;
   const al = Math.min(1, a.t / 0.25) * (1 - Math.max(0, (k - 0.75) / 0.25));
   const sp = soulSprite(a.k, a.t < 0.6 ? 3 : 0), wsp = soulSprite(a.k, a.t < 0.6 ? 3 : 0, true);
-  const w = spW(sp), h = spH(sp), x = Math.round(a.x - HD_AX), y = Math.round(a.y - HD_AY - 4 - Math.sin(a.t * 3) * 2 - k * 6);
+  const mb = !!s.mob, sc = mb ? 1.5 : 1, w = spW(sp) * sc, h = spH(sp) * sc;
+  const x = mb ? Math.round(a.x - w / 2) : Math.round(a.x - HD_AX), y = mb ? Math.round(a.y - h + 2 - Math.sin(a.t * 3) * 2 - k * 6) : Math.round(a.y - HD_AY - 4 - Math.sin(a.t * 3) * 2 - k * 6);   // 새·곰 넋은 발끝을 자리에 맞춤
   b.save(); b.globalCompositeOperation = 'lighter';
   vGlow(a.x, a.y - 14, 18, col, 0.45 * al);
   b.globalAlpha = 0.5 * al; for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) b.drawImage(wsp, x + ox, y + oy, w, h);
@@ -11285,6 +11416,7 @@ function equipAvatar(k){
 // 펫 꾸미기: 머리(또는 목) 자리. 펫 그림 칸 기준(HD 픽셀, 왼쪽을 봄)
 const PET_HEAD = {cat:[8, 2], tiger:[8, 2], hawk:[7, 1.6], crow:[7, 1], magpie:[7, 1.6], phoenix:[7, 0.6], turtle:[5, 6.6], bear:[9, 2], haetae:[9, 3.6], toad:[13, 2.6], dog:[9, 3], crane:[7, 0.4]};
 Object.assign(PET_HEAD, {raiju:[8, 2], baku:[9, 2], amabie:[7, 1.6], bifang:[7, 0.4], baize:[9, 3.6], pixiu:[9, 3.6], kitsu:[8, 2], kama:[8, 2], tanuki:[9, 2], kappa:[13.5, 3.4], luan:[7, 0.6], qingniao:[7, 1], aojiao:[5, 12.6], okto:[9, 5]});
+Object.assign(PET_HEAD, {mongoose:[8, 3], squirrel:[8, 5], peacock:[8, 2.4], babyele:[9, 6], eaglet:[9, 3]});
 function drawPetAcc(g, draw, acc){
   const [hx, hy] = PET_HEAD[draw] || [8, 2], {E, Pl, RR} = hdKit(g);
   if (acc === 'gat'){ E(hx, hy - 0.6, 5.6, 1.3, '#16131c'); RR(hx - 2.2, hy - 4.6, 4.4, 4.2, 1.4, '#16131c'); RR(hx - 1.4, hy - 4, 1, 3, 0.5, '#3a3444'); }
@@ -16376,7 +16508,7 @@ function buildForm(){
 
 /* --- 탈것 --- */
 // 살 수 있거나 별을 올릴 수 있으면 메뉴에 점
-const mountNew = () => mountOpen() && MOUNTS.some(m => S.mount.own[m.k] ? (S.mount.star[m.k] || 0) < MOUNT_STAR_MAX && S.mount.piece >= mountStarCost(m) : (() => { const c = mountBuyCost(m); return c && c.cur === 'piece' && S.mount.piece >= c.n; })());
+const mountNew = () => mountOpen() && MOUNTS.some(m => S.mount.own[m.k] ? (S.mount.star[m.k] || 0) < MOUNT_STAR_MAX && S.mount.piece >= mountStarCost(m) : (() => { const c = mountBuyCost(m); return c && c.cur === 'piece' && S.mount.piece >= c.n && mountPart(m) <= partOfW(S.world); })());
 function buildMount(){
   panel.innerHTML = `${gearSegHTML()}
     <div class="ph" style="margin-top:10px"><h2>탈것</h2><span class="small">모음 효과 공격력·체력 <b id="mtCol"></b> · 고삐 조각 <b id="mtPiece"></b></span></div>
@@ -16441,7 +16573,7 @@ function buildSkin(){
     <div class="dl"><span>보스 피해 · 받는 피해</span><b>+${((skMul('boss') - 1) * 100).toFixed(1)}% · −${((1 - skMul('def')) * 100).toFixed(1)}%</b></div>
     <p class="small">${open ? `지금 장: <b>${CHAPTERS[Math.min(ch, 45)] || ''}</b>${cur && ch <= 45 ? ` · 이 장의 치장 「${cur.name}」(${Math.round(SK_CUR * 100)}%)` : ' · 모든 장의 치장'} · 몹 약 ${fmt(Math.round(1 / SK_P))}마리에 하나 · 나오는 등급 ${gp.map((v, g) => v ? `${GRADES[g].name} ${v}%` : '').filter(Boolean).join(' · ')}` : '천계 17장(하늘의 선전포고)부터 사냥터 몹에게서 나와요.'}
       · 한 단계마다 몬스터 체력 ×${Gw}, 공격 ×${Aw}(지금 땅)</p>
-    <h3 class="sub">끼운 치장</h3><div class="skgrid">${SK_PARTS.map(part).join('')}${sum.n === SK_PARTS.length ? `<div class="skcard set" style="--g:${GRADES[sum.minG].color}"><div class="skh"><b>다섯 부위</b><span>가장 낮은 등급 ${GRADES[sum.minG].name}</span></div><ul class="skl"><li>공격력·체력 +${sum.set}단계</li></ul></div>` : `<div class="skcard set"><div class="skh"><b>다섯 부위</b><span>모두 채우면</span></div><ul class="skl">${SK_GRADES.map((G, g) => `<li style="color:${GRADES[g].color}">${GRADES[g].name}: 공격력·체력 +${G.set}단계</li>`).join('')}</ul></div>`}</div>
+    <h3 class="sub">끼운 치장</h3><div class="skgrid">${SK_PARTS.map(part).join('')}${sum.n === SK_PARTS.length ? `<div class="skcard set" style="--g:${skGr(sum.minG).color}"><div class="skh"><b>다섯 부위</b><span>가장 낮은 등급 ${skGr(sum.minG).name}</span></div><ul class="skl"><li>공격력·체력 +${sum.set}단계</li></ul></div>` : `<div class="skcard set"><div class="skh"><b>다섯 부위</b><span>모두 채우면</span></div><ul class="skl">${SK_GRADES.map((G, g) => `<li style="color:${skGr(g).color}">${skGr(g).name}: 공격력·체력 +${G.set}단계</li>`).join('')}</ul></div>`}</div>
     ${partBarHTML()}
     <div class="ph" style="margin-top:12px"><h3 class="sub" style="margin:0">보관함</h3><span class="small">${S.skin.inv.length} / ${SK_INV} · 눌러서 끼거나 장터에 올려요 · 넘치면 가장 약한 것이 보석이 돼요</span></div>
     <div class="dbtns" style="margin:6px 0 8px"><button class="btn" id="skSell">끼운 것보다 약한 것 모두 보석으로</button></div>
@@ -16967,7 +17099,7 @@ function buildPet(){
     <p class="odds">확률 공개 — 전설 0.5% · 영웅 3.5% · 희귀 13% · 고급 28% · 일반 55% (등급 안에서 공격·방어·지원 펫이 똑같이 3분의 1씩, 예: 전설 펫 한 마리는 0.17%). <b style="color:#ff5a8a">신화 ${MYTH_PET_P * 100}%</b>: 2부 부상·3부 곤륜에 들어가면 그 땅의 환수가 소환에 나와요(${MYTH_PET_PITY}번 안에 확정). <b id="petPity"></b></p>
     ${partBarHTML()}
     <div class="pgrid">${grid}</div>
-    <div data-psec><h3 class="sub">부상 · 곤륜 · 바다의 펫</h3>
+    <div data-psec><h3 class="sub">부상 · 곤륜 · 바다 · 천축의 펫</h3>
     <p class="small" style="margin:0 0 6px">그 땅에 들어가면 같은 등급의 펫 소환 후보에 더해져요(그 등급 안에서 똑같은 확률).</p>
     <div class="pgrid pmyth">${PETS.map((p, i) => [p, i]).filter(([p]) => p.part && p.g < 5).map(([p, i]) => { const own = S.pets.lv[i] > 0, eq = eqPet(p.type) === i, lock = !own && S.world < p.part;
       return `<button class="pcell${own ? '' : ' unseen'}${petSel === i ? ' sel' : ''}" data-i="${i}" data-part="${petPart(p)}" data-pk="p${i}" data-kd="${p.type}" data-g="${p.g}" style="--g:${GRADES[p.g].color}" aria-label="${p.name}${own ? ` Lv.${S.pets.lv[i]}` : lock ? `, ${petPart(p)}부에서` : ', 아직 없음'}${eq ? ', 데려가는 중' : ''}"><img src="${petImg(i)}" alt="">${own ? `<span class="lvl">Lv.${S.pets.lv[i]}</span><span class="st">${starStr(S.pets.star[i])}</span>` : lock ? `<span class="lvl">${WORLD_NAME[p.part]}</span>` : ''}${eq ? '<span class="eq">함께</span>' : ''}</button>`; }).join('')}</div></div>
@@ -19656,6 +19788,7 @@ if (location.search.indexOf('simtest') >= 0){
   // @@HOOK-B (갈래 B의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-B
   // @@HOOK-C (갈래 C의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip});   // 물의 신화 9단계(5부 물건)
   // @@END-C
   // @@HOOK-D (갈래 D의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   // @@END-D
