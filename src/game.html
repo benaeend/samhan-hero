@@ -10775,9 +10775,9 @@ const SETS = [
   {k:'taecho', name:'태초의 조합', d:'태초의 신을 넘은 이의 빛', p:[{t:'weapon', g:6}, {t:'armor', g:6}, {t:'av', k:'w_taecho'}, {t:'mount', k:'cheonma'}, {t:'tower', f:300}],
     fx:{2:{atk:0.5, hp:0.5}, 3:{boss:1.2}, 4:{atk:1.2, hp:1.2}, 5:{skill:1.2, crit:10}}},
   // 4부 바다(물의 신화 7-2): 새 장비 칸(투구·신발)이 조각에 들어간다
-  {k:'haenyeo', name:'해녀의 조합', d:'숨비소리로 깊은 바다를 여는 해녀의 차림', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'boots', g:4}, {t:'av', k:'c_haenyeo'}, {t:'mount', k:'dolphin'}],
+  {k:'haenyeo', w:5, name:'해녀의 조합', d:'숨비소리로 깊은 바다를 여는 해녀의 차림', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'boots', g:4}, {t:'av', k:'c_haenyeo'}, {t:'mount', k:'dolphin'}],
     fx:{2:{hp:0.5}, 3:{skill:1.2}, 4:{atk:1.1, hp:1.1}, 5:{boss:1.3, crit:8}}},
-  {k:'yonggung', name:'용궁의 조합', d:'동해 용왕을 모시는 용궁 벼슬아치의 차림', p:[{t:'weapon', g:7}, {t:'armor', g:7}, {t:'helm', g:4}, {t:'av', k:'c_yonggung'}, {t:'mount', k:'seaturtle'}],
+  {k:'yonggung', w:5, name:'용궁의 조합', d:'동해 용왕을 모시는 용궁 벼슬아치의 차림', p:[{t:'weapon', g:7}, {t:'armor', g:7}, {t:'helm', g:4}, {t:'av', k:'c_yonggung'}, {t:'mount', k:'seaturtle'}],
     fx:{2:{atk:0.55, hp:0.55}, 3:{boss:1.3}, 4:{atk:1.3, hp:1.3}, 5:{skill:1.3, crit:10}}},
   // 5부 천축(물의 신화 9-25): 영물 무기·갑옷이 중심이고, 천축의 아바타·탈것·넋이 조각. 효과는 4부 세트의 한 계단 위(w = 세계 8부터 보임)
   {k:'lanka', w:8, name:'란카의 조합', d:'황금 성 란카의 주인을 겨누는 이의 갑주', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_lanka'}, {t:'mount', k:'camel'}, {t:'soul', k:'jatayu'}],
@@ -10785,7 +10785,7 @@ const SETS = [
   {k:'sumeru', w:8, name:'수미의 조합', d:'세계의 한가운데 수미산을 오른 이의 하늘옷', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_sumeru'}, {t:'mount', k:'welephant'}, {t:'soul', k:'savitri'}],
     fx:{2:{atk:0.7, hp:0.7}, 3:{skill:1.6}, 4:{atk:1.6, hp:1.6}, 5:{boss:1.7, crit:12}}},
 ];
-const setShown = T => !T.w || S.world >= T.w;
+const setShown = T => !T.w || S.world >= T.w || (T.w <= 5 && seaOpen());   // 4부 세트(해녀·용궁 w:5)는 바다부터 — 예전엔 3부 용사도 전설 무기·갑옷만 끼면 해녀 2세트가 저절로 켜졌음
 const SET_STAT = {atk:'공격력', hp:'체력', boss:'보스 피해', skill:'기술 피해', crit:'치명타 확률'};
 function setPieceOk(P){
   if (hasK(GEAR, P.t)) return (!GEAR[P.t].sea || seaOpen()) && S.equip[P.t] >= 0 && gearG(P.t) >= P.g;
@@ -10813,9 +10813,9 @@ function setSum(){
   if (setCache) return setCache;
   const o = {atk:0, hp:0, boss:0, skill:0, crit:0, on:[]};
   let best = null, bn = 1;   // 세트는 하나만 켜진다: 내가 고른 세트(S.setPick, 2조각 이상일 때) 아니면 가장 많이 맞춘 것(같으면 뒤의 더 센 세트)
-  const pk = S.setPick && SETS.find(T => T.k === S.setPick), pn = pk ? setCount(pk) : 0;
+  const pk = S.setPick && SETS.find(T => T.k === S.setPick && setShown(T)), pn = pk ? setCount(pk) : 0;   // 아직 안 간 부의 세트는 켜지지 않는다(setShown)
   if (pk && pn >= 2){ best = pk; bn = pn; }
-  else for (const T of SETS){ const n = setCount(T); if (n >= 2 && n >= bn){ best = T; bn = n; } }
+  else for (const T of SETS){ if (!setShown(T)) continue; const n = setCount(T); if (n >= 2 && n >= bn){ best = T; bn = n; } }
   if (best){ o.on.push([best.k, bn]); for (let k = 2; k <= bn; k++) for (const [t, v] of Object.entries(best.fx[k] || {})) o[t] += v; }
   return setCache = o;
 }
