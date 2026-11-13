@@ -32,6 +32,7 @@ SIM = r"""
   const [minutes, cls, opts = {}] = args;   // opts.nocraft: 조합 공방을 쓰지 않는 사람
   const G = window.__game;
   G.quiet = true;
+  if (opts.tankoff) G.tankOff = true;   // 9-4: 버티는 힘 장치를 끈 예전 방식(같은 코드에서 견주는 기준, I-1은 늘 같음)
   G.setClass(cls);
   if (opts.curve) Object.assign(G.CURVE, opts.curve);
   if (opts.busang) Object.assign(G.BUSANG, opts.busang);
@@ -45,12 +46,16 @@ SIM = r"""
   if (opts.sea) G.seaForce = true;   // 물의 신화 4단계: 4부의 새 성장(투구·어깨·신발·호박석)을 미리 열어 놓고 돌린다(tools/sim_sea.py)
   if (opts.load) { Object.assign(G.S, G.mergeState(JSON.parse(opts.load)));   // 예전 저장도 새 칸을 채워서
     G.S.cls = cls; if (G.S.lg) G.S.lg.st = {t:0, b:0, e:0, q:0, i:0}; if (G.S.world >= 3) G.refineInherit(); G.refreshStats(); G.setStage(G.S.stage); }   // 저장 시점부터 이어서
+  if (opts.leanLoad && opts.lean) G.tkLean(opts.lean);   // 9-4: 불러온 저장을 「공격만 올린 쌍둥이」로
   G.S.buyMode = 1;
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
   let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
+  const LEAN = opts.lean === 'hard' ? {d:25, r:12} : opts.lean === 'mild' ? {d:10, r:5} : null;   // 9-4: 공격만 올리는 사람(Δ = 체력이 공격력보다 뒤에 머무는 레벨·재련 단계)
+  if (LEAN) { Wt.hp *= Math.pow(1.09, LEAN.d); if (opts.lean === 'hard') Wt.regen *= 100; }
+  const tank = [], tseen = new Set(), wsnap = new Set();   // opts.tanklog: 세계·단계에 처음 닿을 때의 버티는 힘
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
   for (let i = 1; i <= steps; i++) {
@@ -68,12 +73,15 @@ SIM = r"""
       const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
       for (let k = 0; k < 20; k++) {
         const capW = G.refineCap('weapon'), capA = G.refineCap('armor'), rw = G.S.refine.weapon.lv, ra = G.S.refine.armor.lv;
-        const slot = rw < capW && (rw <= ra + 3 || ra >= capA) ? 'weapon' : 'armor', lv = G.S.refine[slot].lv;
+        let slot = rw < capW && (rw <= ra + 3 || ra >= capA) ? 'weapon' : 'armor';
+        if (LEAN && slot === 'armor' && ra >= rw - LEAN.r) { if (rw < capW) slot = 'weapon'; else break; }   // 9-4 lean: 방어구는 무기보다 Δ단계 아래에서만
+        const lv = G.S.refine[slot].lv;
         if (lv >= G.refineCap(slot) || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
         G.refineTry(slot);
       }
-      if (G.seaOpen() && !opts.nosea) G.seaGrow();   // 물의 신화 4단계: 4부부터 새 장비 칸(투구·어깨·신발) 소환·합성·재련과 호박석 세공(추천 줄)
+      if (G.seaOpen() && !opts.nosea) G.seaGrow({lean:opts.lean});   // 물의 신화 4단계: 4부부터 새 장비 칸(투구·어깨·신발) 소환·합성·재련과 호박석 세공(추천 줄)
       for (const pt of G.PET_TYPE_ORDER) {
+        if (opts.lean === 'hard' && pt === 'def') { G.S.petEq.def = -1; continue; }   // 9-4 lean hard: 방어 펫은 안 끼움
         G.petEquipBest(pt);
         const pi = G.eqPet(pt); if (pi < 0) continue;
         for (let k = 0; k < 40; k++) {
@@ -82,7 +90,7 @@ SIM = r"""
           if (!G.petUpgrade(pi)) break;
         }
       }
-      for (const gd of G.GUARDS) if (G.guardOpen(gd) && !gd.w) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k), gd.k) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지(바다의 새 둘은 아래 lg 블록에서)
+      for (const gd of G.GUARDS) if (G.guardOpen(gd) && !gd.w && !(opts.lean === 'hard' && gd.k === 'seongju')) for (let z = 0; z < 5; z++) { if (G.guardGold(G.guardLv(gd.k), gd.k) > G.S.gold * 0.1 || !G.guardUp(gd.k)) break; }   // 수호신: 엽전의 10%까지(바다의 새 둘은 아래 lg 블록에서)
       { const want = !opts.nolg && G.lgOn() && G.guardLv('yongsin') > 0 ? 'yongsin' : 'jowang'; if (G.guardOpen(G.GD[want]) && G.S.guard.on !== want) G.guardSet(want); }   // 레벨 문 앞에서는 용왕신을 모심
       let elRes = 0;   // 오장 영약(2026-11 (46)): 달일 것이 남았으면 엽전을 모아 두었다가(능력치에는 모은 몫을 빼고 씀) 값이 되면 달이고 추천 처방을 고름
       if (!opts.noelix && G.S.world >= 3) for (const O of G.ORGANS) {
@@ -180,6 +188,8 @@ SIM = r"""
       }
     }
     // 보스 다시 도전은 게임의 [보스 자동]에 맡긴다(예전엔 여기서 60초마다 억지로 도전시켰음 — 물의 신화: 도전 기운이 다 찬 뒤엔 간격이 벌어짐)
+    if (opts.tanklog) { const tk = G.S.world + ':' + G.S.stage; if (!tseen.has(tk)) { tseen.add(tk); tank.push([G.S.world, G.S.stage, Math.round(t / 60), +Math.log10(G.tankPow()).toFixed(3), G.S.up.hp, G.S.up.atk, G.S.refine.armor.lv, G.S.refine.weapon.lv, G.petDR(), G.guardLv('seongju')]); } }
+    if (opts.snapW && !G.raid && !G.bossActive) for (const [sw, ss] of opts.snapW) { const kk = 'w' + sw + 's' + ss; if (!wsnap.has(kk) && G.S.world === sw && G.S.stage >= ss) { wsnap.add(kk); snaps[kk] = JSON.stringify(G.S); } }   // 9-4: 그 세계·단계에 처음 닿은 저장
     mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
     if (G.S.aw2.q) mark('A' + G.S.aw2.q, t); { const mn = G.S.mem.p[0] + G.S.mem.p[1] + G.S.mem.p[2]; if (mn) mark('M' + mn, t); }
@@ -189,9 +199,9 @@ SIM = r"""
     if (marks.has(i)) log.push(`${cls} ${Math.round(t / 60)}분: ${G.WORLD_NAME[G.S.world]} ${G.S.stage}단계, Lv ${G.S.level}, 전직 ${G.S.job}, 환생 ${G.S.reb.n}, 이야기 ${G.S.quest.main}/${G.MAIN_Q.length}, 히든 ${G.S.quest.hid}, 레이드 ${G.S.rec.raids}회, `
       + `재련 +${G.S.refine.weapon.lv}/+${G.S.refine.armor.lv}, 펫 Lv ${G.PET_TYPE_ORDER.map(pt => { const pi = G.eqPet(pt); return pi < 0 ? '-' : G.S.pets.lv[pi]; }).join('/')}, `
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`
-      + (G.seaOpen() ? `, 새 칸 ${G.NEW_SLOTS.map(k => `${G.S.equip[k]}(+${G.S.refine[k].lv})`).join('/')}, 호박석 빛 ${Object.values(G.ambSum().L).reduce((a, b) => a + b, 0)}, 바다 몫 공×${G.seaSum().atk.toFixed(2)}·체×${G.seaSum().hp.toFixed(2)}·받는 피해×${G.seaSum().def.toFixed(2)}` : ''));
+      + (G.seaOpen() ? `, 새 칸 ${G.NEW_SLOTS.map(k => `${G.S.equip[k]}(+${G.S.refine[k].lv})`).join('/')}, 호박석 빛 ${Object.values(G.ambSum().L).reduce((a, b) => a + b, 0)}, 바다 몫 공×${G.seaSum().atk.toFixed(2)}·체×${G.seaSum().hp.toFixed(2)}·받는 피해×${G.seaSum().def.toFixed(2)}` : '') + `, 쓰러짐 ${G.S.rec.falls}`);
   }
-  return {log, first, snaps, raids};
+  return {log, first, snaps, raids, tank, tm:opts.tmlog ? G.tmAgg() : null};
 }
 """
 
@@ -4324,6 +4334,83 @@ async def main():
             await ctx28b.close()
         # @@END-H
         # @@TEST-I (갈래 I(9-4)의 자동 점검 대목은 이 줄 바로 아래에)
+        # 9-29) 버티는 힘 — I-1(계측만, 동작은 그대로): 싸움 계측기 TM·회복 한곳으로(heroHeal)·쓰러짐 기록·mergeState·tmAgg·tkLean
+        ctx29 = await browser.new_context(viewport={'width': 844, 'height': 390})
+        t29 = await ctx29.new_page()
+        watch(t29, errors, '9-29 ')
+        await fresh(t29)
+        a29 = await t29.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 30; S.chosen = true; G.refreshStats(); G.tmReset();
+          const out = {};
+          // a. 단계 보스 한 판: 맞은 피해·탕약·쓰러짐
+          G.setStage(5); S.inv.potion = 50; S.inv.elixir = 5; S.autoBoss = false; S.myth.elixir = 0; S.myth.lotus = 0;
+          G.startBoss(); const B = G.bossRef; B.hp = B.maxHp = 1e15; B.atk = G.ST.maxHp * 0.06;
+          for (let i = 0; i < 300; i++) G.update(0.05);
+          out.kind = G.TM && G.TM.kind; out.dmg = G.TM ? G.TM.dmg : 0;
+          G.hero.hp = G.ST.maxHp * 0.2; G.potCd = 0; const p0 = (G.TM.heal.pot || 0) + (G.TM.heal.elixir || 0); for (let i = 0; i < 10; i++) G.update(0.05); out.pot = (G.TM.heal.pot || 0) + (G.TM.heal.elixir || 0) - p0;
+          const f0 = S.rec.falls; G.heroDie();
+          out.falls = S.rec.falls - f0; out.aggBoss = G.tmAgg()['0:boss']; out.tm = G.TM && G.TM.kind;
+          // 되살아남(불사약)은 쓰러짐으로 세지 않고 revive 로 센다
+          for (let i = 0; i < 100; i++) G.update(0.05);
+          G.setStage(5); G.startBoss(); S.myth.elixir = 1; const f1 = S.rec.falls; G.hero.hp = 0; G.hero.dead = false; G.heroDie();
+          out.revive = {falls:S.rec.falls - f1, hp:G.hero.hp / G.ST.maxHp, dead:G.hero.dead, rv:G.TM && G.TM.heal.revive > 0};
+          S.myth.elixir = 0;
+          // 사냥터 60초 칸
+          G.setStage(5); G.hero.dead = false; for (let i = 0; i < 400; i++) G.update(0.2); out.field = (G.tmAgg()['0:field'] || {}).n;
+          // mergeState: rec.falls
+          const d = JSON.parse(JSON.stringify(S)); const m = v => { d.rec.falls = v; return G.mergeState(JSON.parse(JSON.stringify(d))).rec.falls; };
+          const d0 = JSON.parse(JSON.stringify(S)); delete d0.rec.falls;
+          out.merge = [m(7), m(-3), m('x'), m(2.9), G.mergeState(d0).rec.falls];
+          return out; }""")
+        check(a29['kind'] == 'boss' and a29['dmg'] > 0 and a29['pot'] > 0, f"계측: 보스 한 판에서 맞은 피해와 탕약 회복이 TM에 센다 {a29['kind'], a29['dmg'] > 0, a29['pot'] > 0}")
+        check(a29['falls'] == 1 and a29['aggBoss'] and a29['aggBoss']['n'] == 1 and a29['aggBoss']['falls'] == 1 and a29['aggBoss']['why'].get('쓰러짐') == 1 and a29['tm'] != 'boss',
+              f"계측: 쓰러지면 S.rec.falls +1, 보스 칸이 닫혀 tmAgg['0:boss'] 에 한 판·쓰러짐 1 {a29['falls'], a29['aggBoss'] and a29['aggBoss']['n']}")
+        check(a29['revive']['falls'] == 0 and a29['revive']['hp'] > 0.4 and not a29['revive']['dead'] and a29['revive']['rv'], f"계측: 불사약으로 일어나면 쓰러짐이 아니라 revive 회복으로 센다 {a29['revive']}")
+        check((a29['field'] or 0) >= 1, f"계측: 사냥터는 60초마다 끊어 한 칸으로 센다 {a29['field']}")
+        check(a29['merge'] == [7, 0, 0, 2, 0], f"mergeState: rec.falls 는 0 이상 정수(없으면 0) {a29['merge']}")
+        b29 = await t29.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.chosen = true; S.level = 30; G.refreshStats(); G.setStage(3); G.tmReset(); G.resetRuntime();
+          const out = {}, hero = G.hero, mx = () => G.ST.maxHp;
+          for (let i = 0; i < 10; i++) G.update(0.05);                      // 사냥터 칸이 열리게
+          const heal = () => Object.assign({}, G.TM.heal);
+          // 저절로 차는 회복
+          hero.hp = mx() * 0.5; let h0 = heal(); for (let i = 0; i < 10; i++) G.update(0.05); out.regen = (heal().regen || 0) - (h0.regen || 0);
+          // 레벨 업
+          hero.hp = mx() * 0.5; h0 = heal(); G.gainExp(G.expNeed(S.level) * 1.1); out.level = (heal().level || 0) - (h0.level || 0);
+          // 지원 펫(5초마다)
+          const si = G.PETS.findIndex(p => p.type === 'sup'); S.pets.lv[si] = 5; S.petEq.sup = si; G.refreshStats();
+          hero.hp = mx() * 0.3; h0 = heal(); for (let i = 0; i < 160; i++){ hero.hp = Math.min(hero.hp, mx() * 0.5); G.update(0.05); } out.pet = (heal().pet || 0) - (h0.pet || 0); S.petEq.sup = -1;
+          // 넋 치유
+          const sk = G.SOULS.find(s => s.kind === 'heal'); hero.hp = mx() * 0.3; h0 = heal(); if (sk) G.soulAct(sk.k, true); out.soul = (heal().soul || 0) - (h0.soul || 0); out.soulK = !!sk;
+          // 직접 부르는 함수들: 용사 회복은 최대 체력까지·계측, 동료 회복은 aHeal
+          hero.hp = mx() * 0.5; const r = G.heroHeal(1e30, 'pb'); out.cap = hero.hp === mx() && Math.abs(r - mx() * 0.5) < 1e-6 * mx();
+          const a = {hp:10, maxHp:100}; const a0 = G.TM.aHeal; const ar = G.allyHeal(a, 500, 'pb'); out.ally = a.hp === 100 && ar === 90 && G.TM.aHeal - a0 === 90;
+          // 도인 기술 d_heal
+          G.setClass('doin'); S.level = 60; G.unlockSkills(); G.refreshStats(); const di = G.SKILLS.findIndex((_, i) => G.skDef(i).kind === 'd_heal'); out.di = di;
+          if (di >= 0){ hero.hp = mx() * 0.5; hero.mp = G.mpMax(); h0 = heal(); out.dheal = G.tryCast(di, 1, true); out.skill = (heal().skill || 0) - (h0.skill || 0); }
+          // 꺼짐(tankOff)이든 아니든 같은 체력
+          const res = []; for (const off of [false, true]){ G.tankOff = off; hero.hp = mx() * 0.1; G.heroHeal(mx() * 0.3, 'pot'); res.push(Math.round(hero.hp / mx() * 1000)); } G.tankOff = false; out.same = res;
+          // tkLean: 같은 재화로 공격만 올린 쌍둥이
+          G.setClass('musa'); S.up.hp = 60; S.up.atk = 60; S.up.regen = 40; S.refine.armor.lv = 12; S.gold = 0; G.refreshStats();
+          const L1 = G.tkLean('mild'); out.mild = {hp:S.up.hp, atk:S.up.atk > 60, arm:S.refine.armor.lv, i:L1.idx1 < L1.idx0, a:L1.atk1 > L1.atk0};
+          const L2 = G.tkLean('hard'); out.hard = {hp:S.up.hp, reg:S.up.regen, arm:S.refine.armor.lv, i:L2.idx1 < L2.idx0, def:S.petEq.def};
+          out.bad = G.tkLean('x');
+          // tankK: 체력만 곱함(버티는 힘 ×)
+          G.tankK = 1; G.refreshStats(); const p1 = G.tankPow(); G.tankK = 0.5; G.refreshStats(); const p2 = G.tankPow(); G.tankK = 1; G.refreshStats(); out.tankK = p2 / p1;
+          out.idx0 = G.tankIdx(); out.hasRef = G.tkHas(0); out.on = G.tkOnAt(1, 30);
+          out.bands = [G.tkBand(0.69).k, G.tkBand(0.9).k, G.tkBand(1.1).k, G.tkBand(1.4).k];
+          return out; }""")
+        check(b29['regen'] > 0 and b29['level'] > 0 and b29['pet'] > 0 and (not b29['soulK'] or b29['soul'] > 0), f"회복 한곳으로: 저절로·레벨 업·지원 펫·넋 치유가 TM.heal 의 제 열쇠로 더해진다 {b29['regen'] > 0, b29['level'] > 0, b29['pet'] > 0, b29['soul']}")
+        check(b29['cap'] and b29['ally'], f"회복 한곳으로: heroHeal 은 최대 체력까지만 채우고 실제로 찬 양을 돌려주며, allyHeal 은 동료 회복(aHeal)을 센다 {b29['cap'], b29['ally']}")
+        check(b29['di'] < 0 or (b29['dheal'] and b29['skill'] > 0), f"회복 한곳으로: 도인 d_heal 이 'skill' 로 센다 {b29['di'], b29.get('dheal'), b29.get('skill')}")
+        check(b29['same'][0] == b29['same'][1] == 400, f"I-1 은 동작이 그대로: tankOff 든 아니든 같은 체력으로 찬다 {b29['same']}")
+        check(b29['mild']['hp'] == 50 and b29['mild']['atk'] and b29['mild']['arm'] == 7 and b29['mild']['i'] and b29['mild']['a'], f"tkLean('mild'): 체력 −10·재련 −5·공격력 레벨 상승·버티는 힘 하락 {b29['mild']}")
+        check(b29['hard']['hp'] == 25 and b29['hard']['reg'] == 30 and b29['hard']['i'] and b29['hard']['def'] == -1 and b29['bad'] is None, f"tkLean('hard'): 체력 −25·체력 회복 30까지·방어 펫 빼기·버티는 힘 하락 {b29['hard']}")
+        check(abs(b29['tankK'] - 0.5) < 0.02 and (b29['idx0'] is None or b29['idx0'] != b29['idx0']) and b29['hasRef'] is False and b29['on'] is False and b29['bands'] == ['danger', 'low', 'ok', 'ease'],
+              f"버티는 힘: tankK 0.5 면 절반 · 기준표가 비면 지수 NaN·예전 방식(tkOnAt 거짓) · tkBand 띠 {b29['tankK']:.3f} {b29['bands']}")
+        # 짧은 시뮬(무사 20분): 오류 없이 돌고 tanklog·tmlog·쓰러짐 줄
+        r29 = await t29.evaluate(SIM, [20, 'musa', {'dt': 0.2, 'marks': [20], 'tanklog': True, 'tmlog': True, 'snapW': [[0, 5]]}])
+        check(len(r29['tank']) > 3 and r29['tm'] and any(k.endswith(':field') for k in r29['tm']) and '쓰러짐' in r29['log'][-1] and 'w0s5' in r29['snaps'],
+              f"짧은 시뮬: tanklog 기록·tm 에 사냥터·로그 줄에 쓰러짐·세계 가운데 저장 {len(r29['tank'])} {list((r29['tm'] or {}).keys())[:4]}")
+        await ctx29.close()
         # @@END-I
         # @@TEST-J (갈래 J(9-5)의 자동 점검 대목은 이 줄 바로 아래에)
         # @@END-J
