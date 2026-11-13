@@ -4424,7 +4424,7 @@ async def main():
         await fresh(t29b)
         c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp;
-          const fillT = k => { const L = Math.log10(G.tankPow() / k); G.TANK_REF[0] = [[1, L], [900, L]]; };
+          const fillT = k => { const L = Math.log10(G.tankPow() / k) - (G.TANK_CLS[G.S.cls] || 0); G.TANK_REF[0] = [[1, L], [900, L]]; };
           const clrT = () => { G.TANK_REF.length = 0; };
           // c. 표가 비어 있으면 예전 방식
           clrT(); G.tankOff = false; G.setStage(20); S.maxStage = 20;
@@ -4468,7 +4468,7 @@ async def main():
         check(c29['norm2'] and c29['lives']['why'] == 'lives' and c29['lives']['falls'] >= 3, f"일반 레이드: 용사가 세 번 쓰러지면 목숨이 다해 진다 {c29['lives']}")
         check(abs(c29['enr'] - 1.5) < 0.01 and c29['enr2'] == 1 and abs(c29['enr3'] - 2.5) < 0.01, f"광폭: 60초 뒤 1초마다 +5%, 90초에 ×2.5 {c29['enr'], c29['enr2'], c29['enr3']}")
         d29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; G.refreshStats();
-          const L = Math.log10(G.tankPow()); G.TANK_REF[0] = [[1, L], [900, L]];
+          const L = Math.log10(G.tankPow()) - (G.TANK_CLS[G.S.cls] || 0); G.TANK_REF[0] = [[1, L], [900, L]];
           G.tkLean('hard'); const A = G.tkAdvice(); const out = {adv: A ? {k:A.k} : null};
           G.TANK_REF.length = 0; return out; }""")
         check(d29['adv'] is not None, f"무엇을 올리면 버틸까: 공격 쪽만 올린 용사는 조언이 나온다 {d29}")
