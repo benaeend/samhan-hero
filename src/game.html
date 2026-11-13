@@ -232,7 +232,8 @@ body.cmp #page .partbar{margin:5px 0 5px;padding:3px}body.cmp #page .ptab{paddin
   box-shadow:0 3px 0 #a86a07,0 6px 16px rgba(245,165,36,.25),inset 0 1px 0 rgba(255,255,255,.6);font-variant-numeric:tabular-nums;transition:transform .06s}
 .buy:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #a86a07,inset 0 1px 0 rgba(255,255,255,.6)}
 .buy:disabled{background:var(--panel-3);color:#66728a;box-shadow:none;cursor:default}
-.buy:disabled .coin,.buy:disabled .gem{filter:grayscale(1) opacity(.5);box-shadow:none}
+.buy:disabled .gem{filter:grayscale(1) opacity(.5);box-shadow:none}
+.buy:disabled .coin{background:radial-gradient(circle at 35% 30%,#a89a62,#7d6b34 45%,#4f4222);box-shadow:none;opacity:.75}   /* 살 수 없을 때 엽전: 회색(돌처럼 보임) 대신 흐린 금빛 */
 .buy.nocoin .coin{display:none}
 .buy small{font-size:11px;font-weight:700}
 .buy.gemc{background:linear-gradient(180deg,#8fe3ff,#1fa3e6);color:#04202f;box-shadow:0 3px 0 #0b6a99,0 6px 16px rgba(60,195,255,.25),inset 0 1px 0 rgba(255,255,255,.6)}
@@ -2424,7 +2425,7 @@ const aptLineW = ab => aptMain().includes(ab) ? 1 + APT.lineK : ab === 'x' || ab
 const aptStar = ab => aptMain().includes(ab) ? `<i class="apt-ok" title="${esc(cls().name)}에게 잘 맞아요">★</i>` : '';
 const aptStarOf = (map, k) => Object.keys(aptOne(map, k)).some(a => aptMain().includes(a)) ? aptStar(aptMain()[0]) : '';
 const aptLegend = () => `<span class="apt-ok">★</span> = ${esc(cls().name)}에게 잘 맞는 옵션(맞는 능력 ${aptMain().map(a => aptName(a)).join(' · ')})`;
-const aptPct = a => (a >= 0 ? '+' : '−') + Math.round(Math.abs(a) * 100) + '%';
+const aptPct = a => { const n = Math.round(Math.abs(a) * 100); return (n === 0 ? '' : a >= 0 ? '+' : '−') + n + '%'; };   // 0이면 부호 없이 「0%」(−0%·+0% 방지)
 const aptX = m => '×' + m.toFixed(2);
 // 시뮬·화면 「추천」: 맞는 능력 쪽으로 고르기
 function aptGuardPick(){ const op = GUARDS.filter(g => guardOpen(g) && guardLv(g.k) > 0 && Object.keys(aptOne(APT_CAT.guard, g.eff)).some(a => aptMain().includes(a))).sort((x, y) => guardLv(y.k) - guardLv(x.k));
@@ -4372,12 +4373,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-2', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
   ['파티 화면 글자 겹침', '[레이드]의 내 파티에서 「켜진 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
+  ['이승 5지역 보스가 덜 아파요', '이승 5지역(42단계~)에서 새 캐릭터가 보스에게 자꾸 쓰러져 길이 막히던 것을 완화했어요. 버티는 힘이 낮을 때 보스의 큰 살이 체력을 거의 다 깎지 않게 하고, 보스의 평범한 공격도 버티는 힘이 낮을수록 줄여 줘요. 버티는 힘 카드의 안내에는 방어구 등급(소환·합성)과 체력 능력치가 몇 레벨어치 모자란지도 보여요. 살 수 없는 능력치 단추의 엽전은 돌 같은 회색 대신 흐린 금빛으로, 직업 적성의 「−0%」는 「0%」로 보여요.'],
   ['#', '물의 신화 업데이트 · 버티는 힘 · 직업마다 맞는 능력 · 레벨 문 수련'],
   ['버티는 힘', '저승부터 5부까지 몬스터가 「그 단계 평균 용사」의 버티는 힘에 맞춰 다시 아프게 때려요(이승은 예전 세기 그대로). 2부부터는 보스도 레이드도 거의 아프지 않았는데, 이제 공격만 키우면 보스 한 방에 쓰러질 수 있어요. [수련] 맨 위 카드에 지금 버티는 힘이 평균의 몇 %인지(위험 · 모자람 · 보통 · 넉넉) 보여요.'],
   ['직업마다 맞는 능력', '직업마다 잘 맞는 능력이 둘씩 생겼어요. 무사 공격력·체력 / 자객 치명 확률·치명 피해 / 술사 기술 피해·재사용 / 도인 공격 속도·체력 / 궁사 치명 피해·공격 속도 / 창객 공격력·휘청(보스 피해). 기술마다 꼬리표가 붙고, 각인·영약·치장·호박석·영물 짐승·수호신·탈것·장신구 옵션을 맞는 능력 쪽으로 고를수록 그 기술이 최대 약 35% 세져요. 엉뚱한 쪽으로 몰면 약해져요.'],
@@ -4743,6 +4745,9 @@ const TANK = {on:true, from:11,                    // from: 이승은 11단계�
   mob:0.45, lunge:1.2, fieldFloor:0.7,              // fieldFloor: 지수가 이 아래인 용사에게 잡몹은 (지수 ÷ 0.7)배로만 — 예전 저장(지수 0.1~0.3)이 제 사냥터에서 사냥조차 못 하는 일을 막는다(보스는 그대로)
   wound:0.5, fieldDecay:0.03,
   bigK:1, past:0.7,
+  bigFloor:[0.6, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25],   // 세계별 큰 살 지수 바닥(보스 한 방 = 최대 체력×55%÷지수, 지수가 이 아래면 이 값으로 침). 이승만 0.6 — 2026-11-14 밸런스 검토: 이승 5지역(42~78단계) 기준표가 부풀어 새 캐릭터 지수가 5~25%로 찍혀 큰 살이 최대 체력의 220%까지 가서 길이 막힘(큰 살이 최대 체력의 약 90%를 안 넘게). 기준표를 다시 재면(후보안 가) 0.25로 되돌림
+  bossFloor:[0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],   // 세계별 일반 단계 보스(수문장 포함) 공격 안전장치(0이면 끔): 지수가 이 아래면 보스 공격을 「지수÷이 값」배로(최저 bossMin). 사냥터 잡몹의 fieldFloor와 같은 방식. 레이드·타임 보스·시련은 그대로. 이승만(같은 이유)
+  bossMin:0.2,
   susT:20, susMax:0.5,                              // 버티는 힘에 넣는 회복 몫
   danger:0.7, warn:0.95, ease:1.3,                  // 화면 띠
   raidLives:3, allyLives:2, allyDown:10, allyUp:0.3, npcHp:{musa:1.3, def:0.85}, healParty:0.25, enrageT:38, enrageK:0.2,
@@ -4769,6 +4774,7 @@ const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) + tkCls(c, w)
 const mAtkT = (s, w = S.world) => Math.pow(10, tankRefLog(w, s)) * TANK.k[w] / (2 * MOB_TTK);   // 직업 몫 없는 기준
 const tkClsK = (c = S.cls) => Math.pow(10, tkCls(c) * TANK.clsEq) * (TANK.cls[c] || 1);
 const tkPast = s => s < S.maxStage ? TANK.past : 1;
+const tkBossEase = s => { const f = (TANK.bossFloor || [])[S.world] || 0; if (!f) return 1; const x = tankIdx(s) / f; return x < 1 ? Math.max(TANK.bossMin || 0.2, x) : 1; };   // 일반 단계 보스 안전장치(이승만, 지수 NaN이면 1)
 const tkFieldEase = s => { const x = tankIdx(s) / (TANK.fieldFloor || 0.01); return x < 1 ? Math.max(0.1, x) : 1; };   // 함수 선언 순서: tankIdx는 아래에 있지만 부를 땐 이미 있다
 // 오래가는 것만(부적·서원·변신·파티 버프처럼 잠깐 켜지는 것 빼고). 회피는 기대값으로
 const takenStatic = () => (1 - petDR() / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100)
@@ -4868,7 +4874,7 @@ const tkHeroK = () => raid && raid.norm && tkOnAt(S.world, tkRaidS(raid.info.ref
 const tkEnrage = R => R && R.norm && tkFx() ? 1 + TANK.enrageK * Math.max(0, R.limit - R.time - TANK.enrageT) : 1;   // 광폭 배율(enrageT초 뒤 1초마다 +enrageK)
 function tkBig(B){   // 큰 살: 기준 버티는 힘의 55%(평균 용사 55%, 지수 0.7이면 약 79%) — 단계 보스·수문장과 일반 레이드만
   let d = ST.maxHp * PAT.wipePct * tkEnrage(raid);
-  if (tkOn() && (raid ? raid.norm && B === raid.boss : bossActive && B === bossRef)) d *= TANK.bigK / Math.min(4, Math.max(0.25, tankIdx()));
+  if (tkOn() && (raid ? raid.norm && B === raid.boss : bossActive && B === bossRef)) d *= TANK.bigK / Math.min(4, Math.max((TANK.bigFloor || [])[S.world] || 0.25, tankIdx()));
   return d;
 }
 /* ===== 「무엇을 올리면 버틸까」(I-2) — 내 공격 쪽과 견줘 가장 뒤처진 방어 쪽을 고른다 ===== */
@@ -4884,6 +4890,11 @@ function tkArmorGain(){
     }
   }
   return {g, wl, al};
+}
+function tkGearGain(){   // 방어구 등급(소환·합성, 번호 0~19)을 한 칸 올렸을 때 버티는 힘이 몇 배가 되나
+  const e = S.equip.armor; if (e < 0 || e >= 19) return null;
+  const gp = gearPct('armor'), delta = (gearEquipPct(e + 1) - gearEquipPct(e)) * ascMul('armor') * mwMul('armor');
+  return {g:(1 + (gp + delta) / 100) / (1 + gp / 100), cur:gearName('armor', e), next:gearName('armor', e + 1)};
 }
 function tkPetGain(){
   const cur = eqPet('def'), dr0 = petDR(), hp0 = petHpPct();
@@ -4905,8 +4916,9 @@ function tkGuardGain(){
 }
 function tkAdvice(){
   const C = [];
-  { const d = S.up.atk - S.up.hp; if (d > 0) C.push({k:'hp', g:Math.pow(CURVE.statMul, d), name:'체력 능력치', detail:`공격력 Lv.${S.up.atk} · 체력 Lv.${S.up.hp}`, act:'공격력만큼 올리면', go:'능력치 보러 가기'}); }
+  { const d = S.up.atk - S.up.hp; if (d > 0) C.push({k:'hp', g:Math.pow(CURVE.statMul, d), name:'체력 능력치', detail:`공격력 Lv.${S.up.atk} · 체력 Lv.${S.up.hp} — 약 ${d}레벨어치가 모자라요`, act:'공격력만큼 올리면', go:'능력치 보러 가기'}); }
   { const A = tkArmorGain(); if (A.g > 1) C.push({k:'armor', g:A.g, name:'방어구 재련', detail:`무기 +${A.wl} · 방어구 +${A.al}${seaOpen() ? ' · 투구·신발도' : ''}`, act:'무기만큼 맞추면', go:'재련 보러 가기'}); }
+  { const Gr = tkGearGain(); if (Gr && Gr.g > 1) C.push({k:'gear', g:Gr.g, name:'방어구 등급', detail:`지금 ${Gr.cur} → ${Gr.next}`, act:'한 칸 올리면', go:'방어구 보러 가기'}); }   // 2026-11-14: 소환·합성으로 방어구 등급을 올리는 길도 후보에
   { const P = tkPetGain(); if (P && P.g > 1) C.push(P.equip ? {k:'pet', g:P.g, name:'방어 펫', detail:`${PETS[P.i].name}${josa(PETS[P.i].name, '을', '를')} 안 끼웠어요`, act:'끼우면', go:'펫 보러 가기'} : {k:'pet', g:P.g, name:'방어 펫', detail:`공격 펫 Lv.${P.la} · 방어 펫 Lv.${P.ld}`, act:'공격 펫만큼 올리면', go:'펫 보러 가기'}); }
   { const G = tkGuardGain(); if (G && G.g > 1) C.push({k:'guard', g:G.g, name:'성주신', detail:`조왕신 Lv.${G.t} · 성주신 Lv.${G.n}`, act:'조왕신만큼 올리면', go:'수호신 보러 가기'}); }
   C.sort((a, b) => b.g - a.g);
@@ -4915,11 +4927,15 @@ function tkAdvice(){
 }
 function tkGo(k){
   if (k === 'armor'){ gearSlot = 'refine'; buildTab('gear'); }
+  else if (k === 'gear'){ gearSlot = 'armor'; buildTab('gear'); }
   else if (k === 'pet') buildTab('pet');
   else if (k === 'guard'){ growView = 'guard'; buildTab('grow'); }
   else { growView = 'stats'; buildTab('grow'); }
 }
-const tkEven = '고르게 올렸어요 — 체력 능력치를 조금 더 올리거나, 탕약을 챙기고 붉은 칸을 피하고 되받기를 써 봐요.';
+const tkNeedLv = idx => idx > 0 && idx < 1 ? Math.ceil(Math.log(1 / idx) / Math.log(CURVE.statMul) - 1e-9) : 0;   // 체력 능력치를 몇 레벨 올려야 평균(지수 1)이 되나(레벨 하나 = ×statMul)
+const tkEven = (idx = tankIdx()) => idx >= 2 ? '버티는 힘이 아주 넉넉해요 — 이제 공격 쪽에 써도 돼요.'
+  : idx >= 1 ? '고르게 올렸어요 — 지금은 버티는 힘이 충분해요.'
+  : `고르게 올렸어요 — 체력 능력치 약 ${tkNeedLv(idx)}레벨어치가 더 모자라요. 방어구 등급(소환·합성)을 올려도 좋고, 탕약을 챙기고 붉은 칸을 피하고 되받기를 써 봐요.`;
 // 결과 창·기록 한 줄. opt {ref: 기준 단계(레이드면 그 레이드 ref), raid: 레이드, plain: 글자만}. 표가 없거나 지수가 안 나오면 ''
 function tkLine(opt = {}){
   if (!tkHas(S.world)) return '';
@@ -4929,10 +4945,10 @@ function tkLine(opt = {}){
   let t;
   if (idx < TANK.warn){
     const A = tkAdvice();
-    t = A.even ? `버티는 힘이 ${where}의 ${B(pct + '%')}예요 — ${tkEven}`
+    t = A.even ? `버티는 힘이 ${where}의 ${B(pct + '%')}예요 — ${tkEven(idx)}`
       : `버티는 힘이 ${where}의 ${B(pct + '%')}예요 — ${A.name}(${A.detail})${josa(A.name, '을', '를')} ${A.act} ×${A.g.toFixed(1)}${opt.raid ? '' : '.'}`;
   } else if (opt.raid) t = idx >= TANK.ease ? '버티는 힘은 넉넉해요 — 공격을 더 키우거나 동료(내 파티)를 바꿔 봐요.' : '버티는 힘은 평균이에요 — 공격을 더 키우거나 동료(내 파티)를 바꿔 봐요.';
-  else t = `버티는 힘은 ${where}의 ${B(pct + '%')}예요.`;
+  else t = `버티는 힘은 ${where}의 ${B(pct + '%')}예요.${idx >= 2 ? ' 이제 공격 쪽에 써도 돼요.' : ''}`;
   return t;
 }
 const tkBandCls = k => ({danger:'jt-low', low:'jt-fit', ok:'jt-good', ease:'jt-over'}[k]);
@@ -4963,9 +4979,10 @@ function tkCardUpd(){
     setText($('#tkTx2'), bd.k === 'ease' ? '이 단계 평균 용사보다 단단해요. 보스의 큰 살도 버틸 만해요.' : bd.k === 'ok' ? '평균만큼이에요. 보스전마다 한두 번은 아슬아슬할 거예요.'
       : bd.k === 'low' ? `이 단계(${stageLabel(S.stage)}) 평균 용사의 ${pct}%예요. 공격만 올리면 보스의 한 방·요괴 무리에 쓰러져요.` : `이 단계(${stageLabel(S.stage)}) 평균 용사의 ${pct}%예요. 이대로는 보스 앞에서 자주 쓰러져요. 아래 것을 먼저 올려요.`);
     const t3 = $('#tkTx3'), b = $('#tkGoBtn');
-    if (A.even){ t3.hidden = bd.k === 'ease'; setText(t3, tkEven); }
+    if (idx >= 2){ t3.hidden = false; setText(t3, tkEven(idx)); }   // 아주 넉넉하면(200%~) 「이제 공격 쪽에 써도 돼요」
+    else if (A.even){ t3.hidden = bd.k === 'ease'; setText(t3, tkEven(idx)); }
     else { t3.hidden = false; setText(t3, `가장 뒤처진 것 · ${A.name} (${A.detail}) — 맞추면 버티는 힘 ×${A.g.toFixed(1)}`); }
-    setText(b, A.go); b.dataset.k = A.k; b.hidden = bd.k === 'ease' && A.even;
+    setText(b, A.go); b.dataset.k = A.k; b.hidden = bd.k === 'ease' && (A.even || idx >= 2);
   }
   if (tw){ const low = show && tankIdx() < TANK.warn, hide = !(low && adv && (adv.k === 'hp' || S.up.hp < S.up.atk - 5)); if (tw.hidden !== hide) tw.hidden = hide; }
 }
@@ -4998,7 +5015,7 @@ function tkFailNote(){
   if (!S.seenCut[key] && !(window.__game && window.__game.quiet)){
     S.seenCut[key] = 1; const A = tkAdvice(), idx = tankIdx();
     showModal('버티는 힘이 모자라요', `<p>이 단계(${stageLabel(S.stage)}) 평균 용사의 <b>${Math.round(idx * 100)}%</b>예요. 공격만 올리면 보스의 한 방·요괴 무리에 쓰러져요.</p>
-      <p class="small">${A.even ? tkEven : `가장 뒤처진 것 · <b>${A.name}</b> (${A.detail}) — 맞추면 버티는 힘 ×${A.g.toFixed(1)}`}</p>`,
+      <p class="small">${A.even ? tkEven(idx) : `가장 뒤처진 것 · <b>${A.name}</b> (${A.detail}) — 맞추면 버티는 힘 ×${A.g.toFixed(1)}`}</p>`,
       [{label:'닫기'}, {label:'바로 가기', primary:true, fn:() => tkGo(A.k)}]);
   }
 }
@@ -6173,7 +6190,7 @@ function makeMob(boss, tx, ty, old){   // old: 레이드 칸 콘텐츠(백귀야
   const m = {
     type, color:SPB ? SPB.color : boss && R.bossColor && !gate ? R.bossColor : gate ? darken(color, 0.25) : color, name:SPB ? SPB.name : gate ? `수문장 ${name}` : boss ? R.boss : name, boss, gate,
     tx, ty, fx:tx, fy:ty, mt:0, moving:false, stepDur:boss ? 0.45 : 0.36 + Math.random() * 0.1, dir:'left', x:0, y:0,
-    hp:mHp(s) * (boss ? 10 * bossHpK(s) : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:tk ? mAtkT(s) * tkClsK() * tkPast(s) * (boss ? 3 * BOSS_K.atk[S.world] : TANK.mob * tkFieldEase(s)) : mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5), hit1:!tk || boss || !(TANK.lunge > 0),
+    hp:mHp(s) * (boss ? 10 * bossHpK(s) : (CONT[S.world] && CONT[S.world].mobK) || 1), atk:tk ? mAtkT(s) * tkClsK() * tkPast(s) * (boss ? 3 * BOSS_K.atk[S.world] * tkBossEase(s) : TANK.mob * tkFieldEase(s)) : mAtk(s) * (boss ? 3 * BOSS_K.atk[S.world] : 0.5), hit1:!tk || boss || !(TANK.lunge > 0),
     gold:mGold(s) * (boss ? 10 : FIELD.rew) * (0.9 + Math.random() * 0.2), exp:mExp(s) * (boss ? 10 : FIELD.rew), markT:0, markP:0,
     atkT:0.6, flash:0, lunge:0, dead:false, deathT:0, spawnT:0.35, thinkT:Math.random(), anim:Math.random() * 2, aggro:false,
   };
@@ -21498,7 +21515,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
   // @@END-H
   // @@HOOK-I (갈래 I의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
-  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, tkCls, tkFieldEase, tkRaidS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
+  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, tkCls, tkFieldEase, tkBossEase, tkRaidS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
   Object.assign(window.__game, {makeMob, tbFromSummary, tkFx, tkWoundOn, tkWoundAdd, tkWoundTick, tkAdvice, tkGo, tkLine, tkEnrage, tkBig, tkHeroK, tkCardUpd, tkFailNote, tkRaidHTML, tkDot, damageAlly, patHitHero, damageHero, finishRaid, tbHeroHp, showModal, updateHud, respawn, noTank:true});   // 9-4 I-2
   Object.defineProperty(window.__game, 'TM', {get:() => TM, configurable:true});
   // @@END-I

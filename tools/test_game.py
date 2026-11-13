@@ -4475,6 +4475,28 @@ async def main():
           G.tkLean('hard'); const A = G.tkAdvice(); const out = {adv: A ? {k:A.k} : null};
           G.TANK_REF.length = 0; return out; }""")
         check(d29['adv'] is not None, f"무엇을 올리면 버틸까: 공격 쪽만 올린 용사는 조언이 나온다 {d29}")
+        # 이승 안전장치(2026-11-14 밸런스 검토): 지수가 아주 낮은 새 캐릭터도 이승 보스의 큰 살이 최대 체력의 약 90%를 안 넘고, 보스 공격은 줄고, 저승은 예전 값 그대로
+        e29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.maxStage = 43; G.refreshStats();
+          const out = {}, mx = () => G.ST.maxHp, w0 = S.world;
+          const fillT = (w, k) => { const L = Math.log10(G.tankPow() / k) - G.tkCls(S.cls, w); G.TANK_REF[w] = [[1, L], [900, L]]; };
+          const rel = () => { const m = G.makeMob(true, 5, 5); return m.atk / (G.mAtkT(G.S.stage) * G.tkClsK() * G.tkPast(G.S.stage)); };
+          S.world = 0; G.setStage(43);
+          fillT(0, 1); out.r1 = rel();
+          fillT(0, 0.06); G.startBoss(); out.i6 = G.tankIdx(43); out.big6 = G.tkBig(G.bossRef) / mx(); G.resetRuntime(); out.e6 = rel() / out.r1;
+          fillT(0, 0.3); out.e30 = rel() / out.r1;
+          fillT(0, 0.8); out.e80 = rel() / out.r1;
+          fillT(0, 0.8); G.startBoss(); out.big80 = G.tkBig(G.bossRef) / mx() * 0.8 / 0.55; G.resetRuntime();
+          out.floors = [G.TANK.bigFloor.slice(), G.TANK.bossFloor.slice()];
+          // 저승: 큰 살 바닥 0.25·보스 안전장치 없음(예전 값)
+          S.world = 1; G.setStage(5); fillT(1, 0.06); G.startBoss(); out.big6h = G.tkBig(G.bossRef) / mx(); G.resetRuntime();
+          const r1h = (() => { fillT(1, 1); return rel(); })(); fillT(1, 0.06); out.e6h = rel() / r1h;
+          S.world = w0; G.TANK_REF.length = 0; G.resetRuntime();
+          return out; }""")
+        check(abs(e29['i6'] - 0.06) < 0.005 and 0.5 < e29['big6'] <= 0.93, f"이승 안전장치: 지수 6%인 용사에게 5지역 보스의 큰 살은 최대 체력의 90% 안팎(55%÷0.6) {e29['i6'], e29['big6']}")
+        check(abs(e29['e6'] - 0.2) < 0.01 and abs(e29['e30'] - 0.6) < 0.01 and abs(e29['e80'] - 1) < 0.01, f"이승 안전장치: 보스 공격 지수 6%→0.2배(최저)·30%→0.6배·80%→그대로 {e29['e6'], e29['e30'], e29['e80']}")
+        check(abs(e29['big80'] - 1) < 0.02, f"이승 안전장치: 지수 80%는 예전처럼 55%÷지수 {e29['big80']}")
+        check(e29['floors'][0][0] == 0.6 and all(x == 0.25 for x in e29['floors'][0][1:]) and e29['floors'][1][0] == 0.5 and all(x == 0 for x in e29['floors'][1][1:]), f"세계별 손잡이: 이승만 켜짐 {e29['floors']}")
+        check(abs(e29['big6h'] - 0.55 / 0.25) < 0.02 and abs(e29['e6h'] - 1) < 0.01, f"저승은 예전 값 그대로(큰 살 55%÷0.25·보스 공격 줄임 없음) {e29['big6h'], e29['e6h']}")
         await t29b.close()
         await ctx29.close()
         # @@END-I
