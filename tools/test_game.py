@@ -1268,7 +1268,7 @@ async def main():
         for _ in range(4): await page.click('#inh .inh-say'); await page.wait_for_timeout(120)
         await page.click('#notiGo'); await page.wait_for_selector('#mTitle:has-text("업데이트 소식")')
         nw2 = await page.evaluate("() => { const G = window.__game; const out = {seen: localStorage.getItem('samhan-note-seen') !== 'old', open: G.inhOpen, list: G.notiList().map(n => n.k)}; G.hideModal(); G.noNoti = true; return out; }")
-        check('할머니' in nw1['who'] and '물의 신화' in nw1['say'] and nw1['chips'] >= 3 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
+        check('할머니' in nw1['who'] and ('물의 신화' in nw1['say'] or '이야기 펫' in nw1['say']) and nw1['chips'] >= 2 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
               f'업데이트 소식: 이야기꾼 할머니가 찾아와 간추려 주고 [자세히]로 소식 창을 연다(기기마다 한 번) {nw1} {nw2}')
         # 자리 비움 → 절전 모드(2-1단계): 10분 동안 안 누르면 30초 예고(누르면 취소) → 저장하고 게임을 멈춤 → 누르면 오프라인 보상과 함께 돌아옴
         af0 = await page.evaluate("() => { const G = window.__game; G.quiet = false; G.closePage(); if (!document.querySelector('#modal').hidden) G.hideModal(); G.afkTest = true; G.setAfk(10); G.addTime(10 * 60 * 1000 + 2000); return G.afkMin; }")
@@ -1525,16 +1525,16 @@ async def main():
         check(tp['mkMoved'] and tp['fg'] and tp['arrived'] and tp['picked'], f'눌러서 움직이기: 장터에서 걸어가고, 사냥터 땅을 누르면 그 칸으로·몬스터를 누르면 그 몬스터를 {tp}')
         # 6-10) 신화 펫·환수: 1부엔 소환에 안 나오고, 부상에 가면 그 땅의 환수(이야기 환수는 빼고)가 소환에 나온다. 보물 동굴·신화 조각. 함께하는 싸움은 늘 자동 기술
         mp = await page.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world; G.quiet = true;
-          S.world = 0; const pool0 = G.mythPetPool().length; S.world = 3; const pool3 = G.mythPetPool().map(i => G.PETS[i].name);
+          S.world = 0; const pool0 = G.mythPetPool().length; S.world = 3; const bk0 = G.PETS.findIndex(p => p.draw === 'baku'), bkLv = S.pets.lv[bk0]; S.pets.lv[bk0] = 0; const pool3 = G.mythPetPool().map(i => G.PETS[i].name); S.pets.lv[bk0] = 1; const pool3own = G.mythPetPool().map(i => G.PETS[i].name); S.pets.lv[bk0] = bkLv;
           S.gems = 1e7; G.petLuck = 400; const r = G.petSummon(1); G.petLuck = null; const got = G.PETS[r[0].i];
           const bk = G.PETS.findIndex(p => p.draw === 'baku'); S.pets.lv[bk] = 0; const gp = G.givePet('baku');
           S.vault = {day:'', n:0}; S.mythShard = 0; const v = G.startVault(); G.raid.boss.hp = 1e-9; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05);
           const shard = S.mythShard; S.mythShard = 30; const cm = G.craftMyth('flute'), shardLeft = S.mythShard;
           S.mode = 'semi'; G.startFight({label:'시험', bossName:'시험 보스', type:'oni', color:'#c83a2a', region:0, party:3, ref:1, g:0}, G.raidParty({party:3, g:0, ref:1}), {hp:1e9, atk:0, aoe:0, time:5});
           const auto = G.coopFight() && G.skAuto(0) && G.skAuto(5); for (let i = 0; i < 200; i++) G.update(0.05); S.mode = 'auto';
-          S.world = w0; return {pool0, pool3, got: got.g, gotName: got.name, gp, baku: S.pets.lv[bk], v, shard, cm: !!cm, shardLeft, auto}; }""")
-        check(mp['pool0'] == 0 and mp['pool3'] == ['뇌수', '아마비에'] and mp['got'] == 5 and mp['gp'] and mp['baku'] == 1,
-              f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 {mp}')
+          S.world = w0; return {pool0, pool3, pool3own, got: got.g, gotName: got.name, gp, baku: S.pets.lv[bk], v, shard, cm: !!cm, shardLeft, auto}; }""")
+        check(mp['pool0'] == 0 and mp['pool3'] == ['뇌수', '아마비에'] and mp['pool3own'] == ['뇌수', '바쿠', '아마비에'] and mp['got'] == 5 and mp['gp'] and mp['baku'] == 1,
+              f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 얻은 뒤부터 소환에도 나온다 {mp}')
         check(mp['v'] and mp['shard'] >= 4 and mp['cm'] and mp['shardLeft'] == 0 and mp['auto'],
               f'보물 동굴: 이기면 신화 조각, 조각 30개로 신화 보물을 만들고, 함께하는 싸움은 반자동이어도 기술이 자동 {mp}')
         # 6-11) 기술 레벨업 미리보기·넋 부름·보스 손컨(붉은 칸·되받기·버팀·큰 살)
@@ -2574,7 +2574,7 @@ async def main():
           out.w = S.world; out.cap = G.towerCap(); out.max = G.TOWER.max;
           out.catch = [!!S.soul.own.munmu, !!S.soul.own.yeongdeung, !!S.soul.own.simcheong, !!S.mount.own.dolphin, S.pets.lv[G.PETS.findIndex(p => p.draw === 'bulgae')] > 0];
           sea = 0; const seen = {}; for (let i = 0; i < 600; i++){ G.soulLuck = (i % 100) / 100 + 0.001; const k = G.soulRoll(); if (G.SL[k].pt === 4){ sea++; seen[k] = 1; } } G.soulLuck = null; out.soul4 = [sea > 0, Object.keys(seen).sort()];
-          pp = {}; for (let i = 0; i < 3000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 5) pp[p.draw] = 1; } out.pet4 = Object.keys(pp).sort();
+          pp = {}; for (let i = 0; i < 3000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 5 && !p.story) pp[p.draw] = 1; } out.pet4 = Object.keys(pp).sort();
           out.parts = [G.PETS.filter(p => G.petPart(p) === 4).length, G.MOUNTS.filter(m => G.mountPart(m) === 4).length, G.SOULS.filter(x => G.soulPart(x) === 4).length];
           S.mount.piece = 999; out.buy = G.buyMount('seaturtle'); out.col = isFinite(G.mountCol()) && G.mountCol() > 0;
           // 그림: 새 펫 다섯·탈것 셋이 오류 없이 그려진다(두 프레임)
@@ -3400,7 +3400,7 @@ async def main():
           out.reg = reg; out.main = S.quest.main; G.mountCatchUp();
           out.own = {eaglet:(S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] || 0) > 0, welephant:!!S.mount.own.welephant, jatayu:!!S.soul.own.jatayu, savitri:!!S.soul.own.savitri, nachiketa:!!S.soul.own.nachiketa};
           out.jambavan = [!!S.soul.own.jambavan, !!S.soul.own.agastya];
-          const pp = {}; for (let i = 0; i < 30000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8) pp[p.draw] = p.part; } out.pet = pp;
+          const pp = {}; for (let i = 0; i < 30000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8 && !p.story) pp[p.draw] = p.part; } out.pet = pp;
           const so = {}; for (let i = 0; i < 900; i++){ G.soulLuck = (i % 100) / 100 + 0.001; const k = G.soulRoll(); if (G.SL[k].pt === 5) so[k] = 1; } G.soulLuck = null; out.soul = Object.keys(so).sort();
           out.av = G.avBoxPool().filter(a => a.w >= 8).map(a => a.k).sort(); out.cap = G.skChCap();
           S.mount.piece = 9999; out.buy = [G.buyMount('camel'), !!S.mount.own.camel, S.mount.piece];
@@ -3414,7 +3414,7 @@ async def main():
         # 3) 5부 끝 용사(세계 10): 모두 챙겨 받고, 치장 23가지가 세계에 맞게 나오고, 영물 치장 틀, 도감 5부 줄
         k3 = await kp.evaluate(r"""(arg) => { const [save, LOAD] = arg; const G = window.__game, S = G.S, out = {}; eval('(' + LOAD + ')')(save); G.mountCatchUp();
           out.own = [(S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] || 0) > 0, !!S.mount.own.welephant, !!S.soul.own.jatayu, !!S.soul.own.savitri, !!S.soul.own.nachiketa];
-          const pp = {}; for (let i = 0; i < 40000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8) pp[p.draw] = 1; } out.pet = Object.keys(pp).sort();
+          const pp = {}; for (let i = 0; i < 40000; i++){ const p = G.PETS[G.rollPet()]; if (p.part >= 8 && !p.story) pp[p.draw] = 1; } out.pet = Object.keys(pp).sort();
           out.av = G.avBoxPool().filter(a => a.w >= 8).map(a => a.k).sort(); out.cap = G.skChCap();
           // 치장: 68~90장 23가지(부위 다섯), 사냥터 드롭은 90장까지(한 줄 값 1.3배, 영물은 안 나옴), 장에 따른 등급 확률
           out.n = [G.SK_LIST.length, G.SK_LIST.filter(x => x.c >= 68).length, new Set(G.SK_LIST.map(x => x.c)).size, G.SK_LIST.filter(x => x.c >= 68).map(x => x.p).reduce((a, p) => (a[p] = (a[p] || 0) + 1, a), {})];

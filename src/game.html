@@ -147,6 +147,7 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .pre-sk.pick.on.rec i::after{color:#7a4a00}
 .pre-chk{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px;color:var(--text-soft)}
 .chip.on{background:var(--gold);color:#2a1a04;border-color:var(--gold)}
+#mpSyn{line-height:1.9}#mpSyn .chip{display:inline-block;padding:0 9px;line-height:1.5;font-size:11.5px;cursor:default;vertical-align:baseline}   /* 글줄 사이에서 알약이 위아래 글자를 덮던 것 */
 .sk.manual{border-color:rgba(159,231,255,.6)}
 .sk.manual.rdy{animation:skrdy 0.9s ease-in-out infinite}
 @keyframes skrdy{50%{box-shadow:0 0 0 1px rgba(159,231,255,.8) inset,0 0 14px rgba(159,231,255,.9)}}
@@ -2837,7 +2838,7 @@ const PET_HP = [10, 16, 25, 38, 55, 80];        // 체력 +%
 const PET_GOLD = [5, 8, 12, 16, 22, 30];        // 엽전·경험치 +%
 const PET_HEAL = [2, 2.5, 3, 4, 5, 6.5];
 const MYTH_PET_P = 0.003, MYTH_PET_PITY = 200;   // 신화 펫: 한 번에 0.3%, 200번 안에 안 나오면 확정(그 부에 들어간 뒤)
-const mythPetPool = () => PETS.map((p, i) => i).filter(i => PETS[i].g === 5 && !PETS[i].story && PETS[i].part <= S.world);         // 5초마다 최대 체력의 %
+const mythPetPool = () => PETS.map((p, i) => i).filter(i => PETS[i].g === 5 && (!PETS[i].story || S.pets.lv[i] > 0) && PETS[i].part <= S.world);   // 이야기 펫은 이야기로 얻은 뒤부터 소환에도 나온다(같은 펫이 나오면 별이 오른다)         // 5초마다 최대 체력의 %
 const petSummonCost = n => n === 10 ? 900 : 100 * n;
 const petUpCost = lv => ({gold:500 * Math.pow(1.25, lv - 1), gems:5 + 2 * (lv - 1)});
 
@@ -4371,9 +4372,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-1', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-2', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
+  ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
+  ['파티 화면 글자 겹침', '[레이드]의 내 파티에서 「켜진 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
   ['#', '물의 신화 업데이트 · 버티는 힘 · 직업마다 맞는 능력 · 레벨 문 수련'],
   ['버티는 힘', '저승부터 5부까지 몬스터가 「그 단계 평균 용사」의 버티는 힘에 맞춰 다시 아프게 때려요(이승은 예전 세기 그대로). 2부부터는 보스도 레이드도 거의 아프지 않았는데, 이제 공격만 키우면 보스 한 방에 쓰러질 수 있어요. [수련] 맨 위 카드에 지금 버티는 힘이 평균의 몇 %인지(위험 · 모자람 · 보통 · 넉넉) 보여요.'],
   ['직업마다 맞는 능력', '직업마다 잘 맞는 능력이 둘씩 생겼어요. 무사 공격력·체력 / 자객 치명 확률·치명 피해 / 술사 기술 피해·재사용 / 도인 공격 속도·체력 / 궁사 치명 피해·공격 속도 / 창객 공격력·휘청(보스 피해). 기술마다 꼬리표가 붙고, 각인·영약·치장·호박석·영물 짐승·수호신·탈것·장신구 옵션을 맞는 능력 쪽으로 고를수록 그 기술이 최대 약 35% 세져요. 엉뚱한 쪽으로 몰면 약해져요.'],
@@ -10149,7 +10153,7 @@ function petSprite(i, f){
 const petImgCache = new Map();
 // 아직 없는 펫을 눌렀을 때의 얻는 길(2026-11-12 본 게임에 먼저 올린 고침: 이야기로만 얻는 바쿠·백택도 '펫 소환으로 얻을 수 있어요'라고 나오던 것). 4·5부의 이야기 펫도 story:true면 같은 안내
 function petHowText(p){
-  if (p.story){ const q = MAIN_Q.find(x => x.pet === p.draw); return q ? `이야기 보상으로만 얻어요: ${q.ch}장 「${q.t}」. 펫 소환에는 나오지 않아요.` : '이야기 보상으로만 얻어요. 펫 소환에는 나오지 않아요.'; }
+  if (p.story){ const q = MAIN_Q.find(x => x.pet === p.draw); return q ? `처음에는 이야기 보상으로만 얻어요: ${q.ch}장 「${q.t}」. 얻은 뒤부터는 펫 소환에도 나와 별을 올릴 수 있어요.` : '처음에는 이야기 보상으로만 얻어요. 얻은 뒤부터는 펫 소환에도 나와 별을 올릴 수 있어요.'; }
   const part = p.part || 1;
   if (part > 1 && S.world < part) return `${WORLD_NAME[part]}에 들어간 뒤부터 펫 소환에 나와요.`;
   return '펫 소환으로 얻을 수 있어요.';
@@ -18583,7 +18587,7 @@ function buildPet(){
         <button class="btn primary" id="petEqBtn" ${own && !eq ? '' : 'disabled'}>${eq ? '데려가는 중' : '데려가기'}</button>
         <button class="buy" id="petUpBtn"><span class="coin"></span><span data-r="g"></span><i class="gem"></i><span data-r="m"></span></button>
       </div>
-      <p class="small">${own ? (p.story ? '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 이야기로 얻는 펫은 소환에 나오지 않아 별이 오르지 않아요.' : '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 같은 펫을 또 뽑으면 별이 올라 효과가 20%씩 세져요.') : petHowText(p)}</p>
+      <p class="small">${own ? (p.story ? '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 이야기로 얻은 펫은 소환에서 또 나오면 별이 올라 효과가 20%씩 세져요.' : '강화는 엽전과 보석이 들어요. 길게 누르면 계속 올라가요. 같은 펫을 또 뽑으면 별이 올라 효과가 20%씩 세져요.') : petHowText(p)}</p>
     </div>`;
   }
   panel.innerHTML = `
