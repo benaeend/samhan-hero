@@ -5,6 +5,7 @@
   sea1 → 남쪽 바다(53~59장) → save_<직업>_sea2.json, sea2 → 깊은 바다(60~67장) → save_<직업>_sea3.json(4부 끝, 5부 시뮬·바다 진 기준의 출발점).
 - 덮어쓰기 예: '{"over":{"SEA2.e0":160,"EXP_K.6":0.03,"gateOff":true}}' — 빌드 없이 수치를 바꿔 본다(tools/test_game.py SIM의 opts). "nosave":true 면 저장을 남기지 않는다.
   "from":"<저장 파일>" 이면 그 저장에서 시작한다(「4부부터 시작」 캐릭터의 진행을 볼 때 — 저장은 남기지 않음).
+- "saveas":"<글자>" 면 끝 저장을 save_<직업>_<OUT>_<글자>.json 으로 남긴다("from"과 함께 써도) — 9-3(레벨 문 수련)을 켠 채 이어 돌릴 때. "nolg":true 면 9-3 새 요소를 시뮬에서 끈다.
 - 빌드된 index.html 을 쓴다(먼저 python3 tools/build.py). 40시간에 실제 2~3분, 코어 하나.
 """
 import asyncio
@@ -24,14 +25,15 @@ start = sys.argv[4] if len(sys.argv) > 4 else 'end'
 W = {'end': 5, 'sea1': 6, 'sea2': 7, 'sea3': 8, 'ind1': 9, 'ind2': 10}[start]          # 이번에 도는 바다·천축(세계 번호)
 OUT = {5: 'sea1', 6: 'sea2', 7: 'sea3', 8: 'ind1', 9: 'ind2', 10: 'ind3'}[W]
 nosave = bool(over.pop('nosave', False))
+saveas = over.pop('saveas', None)   # 저장을 save_<직업>_<OUT>_<글자>.json 으로 남김(기존 저장을 덮지 않고 9-3을 켠 채 이어 돌릴 때)
 SIMD = T.ROOT / 'docs' / 'patch-sea' / 'sim'
 src = over.pop('from', None)   # 다른 저장 파일에서 시작(예: 「4부부터 시작」 캐릭터) — 이때는 저장을 남기지 않는다
 save = Path(src).read_text(encoding='utf-8') if src else (SIMD / f'save_{cls}_{start}.json').read_text(encoding='utf-8')
-nosave = nosave or bool(src)
+nosave = nosave or (bool(src) and not saveas)
 ANCHOR = "if (opts.snapQ && !('q' in snaps)"
 SIM = T.SIM.replace(ANCHOR,
     "if (!('sea' in first) && G.S.world >= opts.seaW) first.sea = Math.round(t / 60);\n"
-    "    if (G.S.quest.main >= opts.stopQ && !G.raid) { snaps.out = JSON.stringify(G.S); first.END = Math.round(t / 60); break; }\n"
+    "    if (G.S.quest.main >= opts.stopQ && !G.raid) { G.S.gold += lgBank.g; G.S.gems += lgBank.e; lgBank.g = lgBank.e = 0; snaps.out = JSON.stringify(G.S); first.END = Math.round(t / 60); break; }\n"
     "    " + ANCHOR)
 assert SIM != T.SIM
 
@@ -48,7 +50,7 @@ async def main():
         opts = {'dt': 0.2, 'marks': marks, 'load': save, 'raidlog': True, 'seaW': W, 'stopQ': stopQ}
         opts.update(over)
         r = await page.evaluate(SIM, [hours * 60, cls, opts])
-        info = await page.evaluate("() => { const G = window.__game, S = G.S; return {n:G.MAIN_Q.length, q:S.quest.main, lv:S.level, st:S.maxStage, job:S.job, w:S.world, atk:G.ST.atk, hp:G.ST.maxHp, pw:G.power(G.ST), mem:S.mem ? S.mem.p : null, aw2:S.aw2 ? [S.aw2.q, !!S.aw2.got] : null}; }")
+        info = await page.evaluate("() => { const G = window.__game, S = G.S; return {n:G.MAIN_Q.length, q:S.quest.main, lv:S.level, st:S.maxStage, job:S.job, w:S.world, atk:G.ST.atk, hp:G.ST.maxHp, pw:G.power(G.ST), lg:S.lg ? S.lg.st : null, gd:[G.guardLv('yongsin'), G.guardLv('eopsin')], mem:S.mem ? S.mem.p : null, aw2:S.aw2 ? [S.aw2.q, !!S.aw2.got] : null}; }")
         await b.close()
     for line in r['log']:
         print(line[:150])
@@ -65,9 +67,13 @@ async def main():
             print(f"  레이드 {x['k']}: {x['dur']}초 {'승' if x['win'] else '패'} (Lv{x['lv']} · {x['st']}단계 · 기준 {x['ref']})")
     end = f.get('END')
     print(f"  끝: {'%.1f시간' % (end / 60) if end else '못 닿음'} · 지금 이야기 {info['q']}/{info['n']}(멈춤 {stopQ}) · Lv{info['lv']} · {info['st']}단계 · 전직 {info['job']} · 전투력 {info['pw']:.3g} · 걸린 시간 {time.time() - t0:.0f}초")
+    lg = info.get('lg')
+    if lg and lg['b'] > 0:   # 물의 신화 9-3: 레벨 문 수련
+        print(f"  레벨 문 {lg['t'] / 3600:.1f}시간(전체의 {lg['t'] / 3600 / max(0.01, (end or hours * 60) / 60) * 100:.0f}%) · 배율 {(lg['b'] + lg['e']) / lg['b']:.3f} · 의뢰 {lg['q']}번 · 향 {lg['i'] / 3600:.1f}시간 · 용왕신 Lv{info['gd'][0]} · 업신 Lv{info['gd'][1]}")
     if 'out' in r['snaps'] and not nosave:
-        (SIMD / f'save_{cls}_{OUT}.json').write_text(r['snaps']['out'], encoding='utf-8')
-        print('  저장:', SIMD / f'save_{cls}_{OUT}.json')
+        outp = SIMD / (f'save_{cls}_{OUT}_{saveas}.json' if saveas else f'save_{cls}_{OUT}.json')
+        outp.write_text(r['snaps']['out'], encoding='utf-8')
+        print('  저장:', outp)
 
 
 asyncio.run(main())
