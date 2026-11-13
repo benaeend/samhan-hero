@@ -1980,9 +1980,10 @@ function seaGrow(opt){
   const gemK = opt.gems == null ? 0.3 : opt.gems, goldK = opt.gold == null ? 0.2 : opt.gold;
   for (let z = 0; z < 6 && S.gems * gemK >= 450; z++){ const sl = NEW_SLOTS.slice().sort((a, b) => S.equip[a] - S.equip[b])[0]; if (!summon(sl, 10)) break; n++; }
   for (const sl of NEW_SLOTS){ mergeAll(sl); equipBest(sl); grindGear(sl, Math.floor(Math.max(0, S.equip[sl]) / 4) - 1); }
-  for (let z = 0; z < 30; z++){ const sl = NEW_SLOTS.slice().sort((a, b) => S.refine[a].lv - S.refine[b].lv)[0], lv = S.refine[sl].lv, c = refineCost(sl, lv);
+  const hardLean = opt.lean === 'hard';   // 9-4 시험: 공격만 올리는 쪽은 투구·신발 재련과 방어 쪽 호박석을 건너뜀
+  for (let z = 0; z < 30; z++){ const sl = (hardLean ? ['shoulder'] : NEW_SLOTS).slice().sort((a, b) => S.refine[a].lv - S.refine[b].lv)[0], lv = S.refine[sl].lv, c = refineCost(sl, lv);
     if (lv >= refineCap(sl) || c.g > S.gold * goldK || c.du > S.dust || !refineTry(sl)) break; n++; }
-  for (const sl of ALL_SLOTS){ let st = ambSt(sl);
+  for (const sl of ALL_SLOTS){ if (hardLean && (sl === 'helm' || sl === 'boots' || sl === 'armor')) continue; let st = ambSt(sl);
     const top = [2, 1, 0].find(x => S.amber.raw[x] > 0);   // 빈 칸이면 가진 것 가운데 가장 좋은 돌, 다 깎은 돌은 더 좋은 등급이 생기면 바꾼다
     if (top != null && (!st || (ambDone(st) && top > st.g))){ ambSet(sl, top); st = ambSt(sl); }
     for (let z = 0; z < 30 && st && !ambDone(st); z++){ if (ambGold(st) > S.gold * goldK) break; const ln = ambBest(st); if (ln < 0 || !ambCarve(sl, ln)) break; n++; } }
@@ -2380,8 +2381,8 @@ function partyBuff(c, lv, who){
     for (const a of mates){ a.shield = Math.max(a.shield || 0, a.maxHp * PB_SH / 100); a.shieldT = 12; }
   }
   if (c === 'doin'){
-    if (!hero.dead) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * PB_HEAL / 100);
-    for (const a of mates) a.hp = Math.min(a.maxHp, a.hp + a.maxHp * PB_HEAL / 100);
+    if (!hero.dead) heroHeal(ST.maxHp * PB_HEAL / 100, 'pb');
+    for (const a of mates) allyHeal(a, a.maxHp * PB_HEAL / 100, 'pb');
   }
   const src = who || hero, nm = CLASSES[c].skills[10];
   addText(`${who ? who.name + ' · ' : ''}${nm}!`, src.x, src.y - (who ? 38 : 46), P.col, who ? 10 : 13, true);
@@ -4507,6 +4508,129 @@ function heroRef(w, s){
   return Math.pow(10, v1 + (v1 - v0) / (s1 - s0) * (s - s1));
 }
 const MOB_TTK = 20;   // 세계별 경험치 배율(레벨이 너무 빨리 오르지 않게)
+/* ================= 버티는 힘(물의 신화 9-4) =================
+   몬스터 공격의 기준을 '그 단계 평균 용사의 버티는 힘'(TANK_REF, 1~5부 열한 세계)으로 삼으려는 장치. 2부부터 예전 표(HERO_REF, 1부만 잼)를 늘여 쓰던 것이
+   용사보다 수십~수백 배 약해져 아무도 안 쓰러지던 것을 고친다. 깊은 상처(회복은 받은 피해의 절반까지)·덤벼들기·일반 레이드 목숨/광폭은 I-2에서.
+   재는 법·맞춘 값은 tools/sim_tank.py, docs/patch-sea/STAGE9_4.md.
+   I-1(지금): 게임 동작은 그대로 — 회복을 heroHeal/allyHeal로 모으고 싸움마다 받은 피해·회복·쓰러짐을 세는 계측기(TM)와 버티는 힘 계산 함수만 둔다.
+   표(TANK_REF)가 비어 있으면(tkHas 거짓) 지수는 0, 예전 방식(tkOnAt 거짓) */
+const TANK_REF = [];   // [세계] = [[단계, log10 버티는 힘(직업 몫 뺌)], …] — tools/sim_tank.py ref (I-1 때는 비어 있음 = 예전 방식)
+const TANK_CLS = {musa:0, jagaek:0, sulsa:0, doin:0, gungsa:0, changgaek:0};   // log10 직업 몫(같은 도구)
+const TANK = {on:true, from:11,                    // from: 이승은 11단계부터(손컨 패턴이 시작하는 곳)
+  k:[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],              // 세계별 몬스터 공격 배율(I-2)
+  clsEq:1, cls:{},
+  mob:0.5, lunge:1.5,
+  wound:0.5, fieldDecay:0.02,
+  bigK:1, past:0.7,
+  susT:20, susMax:0.5,                              // 버티는 힘에 넣는 회복 몫
+  danger:0.7, warn:0.95, ease:1.3,                  // 화면 띠
+  raidLives:3, allyLives:2, allyDown:10, allyUp:0.3, npcHp:{musa:1.3, def:0.85}, healParty:0.25, enrageT:60, enrageK:0.05,
+  fitB:1, offPat:1.3, offPot:0.08, more:false};
+const tkHas = w => !!(TANK_REF[w] && TANK_REF[w].length >= 2);
+const tkOnAt = (w, s) => TANK.on && !(window.__game && window.__game.tankOff) && tkHas(w) && (w > 0 || s >= TANK.from);
+const tkStage = () => raid && raid.norm ? raid.info.ref : S.stage;
+const tkOn = () => tkOnAt(S.world, tkStage());
+function tankRefLog(w, s){   // heroRef와 같은 선형 보간·끝은 연장(log10 값을 돌려줌). 표가 없으면 NaN
+  const T = TANK_REF[w];
+  if (!T || T.length < 2) return NaN;
+  if (s <= T[0][0]) return T[0][1];
+  for (let k = 1; k < T.length; k++) if (s <= T[k][0]){ const [s0, v0] = T[k - 1], [s1, v1] = T[k]; return v0 + (v1 - v0) * (s - s0) / (s1 - s0); }
+  const [s0, v0] = T[T.length - 2], [s1, v1] = T[T.length - 1];
+  return v1 + (v1 - v0) / (s1 - s0) * (s - s1);
+}
+const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) + (TANK_CLS[c] || 0));   // 그 직업 평균 용사의 버티는 힘(표가 없으면 NaN)
+const mAtkT = (s, w = S.world) => Math.pow(10, tankRefLog(w, s)) * TANK.k[w] / (2 * MOB_TTK);   // 직업 몫 없는 기준
+const tkClsK = (c = S.cls) => Math.pow(10, (TANK_CLS[c] || 0) * TANK.clsEq) * (TANK.cls[c] || 1);
+const tkPast = s => s < S.maxStage ? TANK.past : 1;
+// 오래가는 것만(부적·서원·변신·파티 버프처럼 잠깐 켜지는 것 빼고). 회피는 기대값으로
+const takenStatic = () => (1 - petDR() / 100) * (1 - (cls().dr || 0) / 100) * (1 - craftDR() / 100) * (1 - 0.1 * mythSets().mirror) * (1 - rideAb('dr') / 100)
+  * skMul('def') * elMul('def') * seaMul('def') * (S.myth.okdae > 0 ? 0.85 : 1) * (1 - (cls().evade || 0));
+const healPS = () => ST.regen + (eqPet('sup') >= 0 ? petInfo(eqPet('sup')).heal / 500 : 0) + rideAb('heal') / 500;   // 초당(최대 체력 비율). 물약·기술은 넣지 않음
+const tankPow = () => ST.maxHp / Math.max(0.02, takenStatic()) * (1 + Math.min(TANK.susMax, TANK.susT * healPS()));   // 「버티는 힘」
+const tankIdx = (s = tkStage(), w = S.world) => tankPow() / tkRefHp(w, s);   // 「버티는 힘 지수」(1 = 그 단계 평균, 표가 없으면 NaN)
+function tkBand(x){
+  return x < TANK.danger ? {k:'danger', name:'위험', c:'#ff6a6a'} : x < TANK.warn ? {k:'low', name:'모자람', c:'#ffb24a'} : x < TANK.ease ? {k:'ok', name:'보통', c:'#8fe0a0'} : {k:'ease', name:'넉넉', c:'#7fdcff'};
+}
+/* 싸움 계측기 TM(런타임, 저장 안 함): 한 싸움(보스·수문장·레이드·진·타임 보스·…) 또는 사냥터 1분을 한 칸으로 센다.
+   kind: field(사냥터) · boss · gate(수문장) · raid(일반 레이드) · jin · tb · db(1일 보스) · gr(강림) · other */
+let TM = null; const TM_AGG = {};
+const TM_FIELD_SEC = 60;
+function tmStart(kind, ref){
+  if (TM) tmEnd(false, 'next');
+  TM = {kind, w:S.world, s:S.stage, ref:ref == null ? S.stage : ref, t:0, idx:0, dmg:0, sh:0, heal:{}, cap:0, low:0, below:false, minHp:1, falls:0, aFalls:0, aDown:new Set(), aDmg:0, aHeal:0, aCap:0, enr:0};
+  try { if (tkHas(S.world)) TM.idx = tankIdx(TM.ref); } catch (e) { TM.idx = 0; }
+}
+function tmEnd(win, why){
+  const T = TM; if (!T) return;
+  TM = null;
+  if (T.kind === 'field' && T.t < 10) return;   // 보스가 시작돼 잘린 짧은 조각은 안 센다
+  const k = `${T.w}:${T.kind}`, A = TM_AGG[k] || (TM_AGG[k] = {n:0, win:0, falls:0, aFalls:0, aDown:0, dmg:0, sh:0, heal:{}, cap:0, low:0, minHp:0, t:0, why:{}, aDmg:0, aHeal:0, aCap:0, enr:0, idx:0});
+  A.n++; if (win) A.win++;
+  A.falls += T.falls; A.aFalls += T.aFalls; A.aDown += T.aDown.size; A.dmg += T.dmg; A.sh += T.sh; A.cap += T.cap; A.low += T.low; A.minHp += T.minHp; A.t += T.t;
+  A.aDmg += T.aDmg; A.aHeal += T.aHeal; A.aCap += T.aCap; A.enr += T.enr; A.idx += T.idx;
+  for (const h in T.heal) A.heal[h] = (A.heal[h] || 0) + T.heal[h];
+  const y = why || (win ? 'win' : 'lose'); A.why[y] = (A.why[y] || 0) + 1;
+  T.win = !!win; T.whyEnd = y;
+  if (window.__game) window.__game.tmLast = T;
+}
+function tmDmg(dmg, sh){ if (TM){ TM.dmg += dmg; TM.sh += sh; } }
+function tmFall(){ if (TM) TM.falls++; }
+// 매 프레임: 싸움 상태에 맞춰 칸을 열고 닫고(사냥터는 60초마다 끊음), 가장 낮은 체력·30% 아래로 내려간 횟수(35% 위로 올라와야 다시 셈)
+function tmTick(dt){
+  const fight = !!(raid || bossActive || parade || market);
+  if (TM){
+    if ((TM.kind === 'boss' || TM.kind === 'gate') && !bossActive) tmEnd(false, 'abort');
+    else if (TM.kind !== 'boss' && TM.kind !== 'gate' && TM.kind !== 'field' && !raid) tmEnd(false, 'abort');
+    else if (TM.kind === 'field' && (fight || TM.t >= TM_FIELD_SEC)) tmEnd(false, 'cut');
+  }
+  if (!TM){ if (fight) return; tmStart('field'); }
+  const T = TM; T.t += dt;
+  const r = hero.dead ? 0 : hero.hp / Math.max(1, ST.maxHp);
+  if (r < T.minHp) T.minHp = r;
+  if (!T.below && r < 0.3){ T.low++; T.below = true; } else if (T.below && r > 0.35) T.below = false;
+}
+// 용사 회복: 모든 회복은 이리로(src: regen·pot·elixir·level·pet·mount·skill·soul·pb·aw2·ally). I-1은 예전과 똑같이 최대 체력까지 채움. 돌려주는 값 = 실제로 찬 양
+function heroHeal(amt, src){
+  const b = hero.hp; hero.hp = Math.min(ST.maxHp, b + amt);
+  const real = Math.max(0, hero.hp - b);
+  if (TM && real > 0) TM.heal[src] = (TM.heal[src] || 0) + real;
+  return real;
+}
+// 되살아남(불사약·연꽃): 체력을 frac으로
+function heroRevive(frac, src){
+  const b = hero.hp; hero.hp = ST.maxHp * frac;
+  if (TM && hero.hp > b) TM.heal.revive = (TM.heal.revive || 0) + hero.hp - b;
+}
+function allyHeal(a, amt, src){
+  const b = a.hp; a.hp = Math.min(a.maxHp, b + amt);
+  const real = Math.max(0, a.hp - b);
+  if (TM) TM.aHeal += real;
+  return real;
+}
+/* 「같은 재화로 공격만 올린 쌍둥이」(시험 전용, window.__game.tkLean): 체력·방어 쪽에서 뺀 만큼의 값으로 공격력 레벨을 산다.
+   mild = 체력 능력치 -10·방어구/투구/신발 재련 -5 · hard = 체력 -25·체력 회복 30까지·재련 -12·방어 펫 빼기·성주신 레벨을 조왕신에. 계승한 칸은 +15 아래로 안 내림 */
+function tkLean(preset){
+  const P = {mild:{hp:10, reg:null, ref:5, pet:false, guard:false}, hard:{hp:25, reg:30, ref:12, pet:true, guard:true}}[preset];
+  if (!P) return null;
+  const o = {idx0:tankPow(), atk0:ST.atk, hp0:ST.maxHp};
+  const cost = (k, l) => STAT_DEFS[k].cost(l);
+  let refund = 0;
+  const dHp = Math.min(P.hp, S.up.hp);
+  for (let l = S.up.hp - dHp; l < S.up.hp; l++) refund += cost('hp', l);
+  S.up.hp -= dHp;
+  if (P.reg != null && S.up.regen > P.reg){ for (let l = P.reg; l < S.up.regen; l++) refund += cost('regen', l); S.up.regen = P.reg; }
+  let toShoulder = 0;
+  for (const k of ['armor'].concat(seaOpen() ? ['helm', 'boots'] : [])){
+    const r = S.refine[k], d = Math.min(P.ref, r.lv - (r.t ? REFINE_INHERIT : 0));
+    if (d > 0){ r.lv -= d; r.drops = 0; if (k !== 'armor') toShoulder += d; }
+  }
+  if (toShoulder > 0 && seaOpen()){ const r = S.refine.shoulder; r.lv = Math.min(refineCap('shoulder'), r.lv + toShoulder); }
+  if (P.pet) S.petEq.def = -1;
+  if (P.guard && S.guard){ const n = guardLv('seongju'); if (n > 0 && guardOpen(GD.jowang)){ S.guard.lv.jowang = Math.min(GUARD_MAX, guardLv('jowang') + n); S.guard.lv.seongju = 0; S.guard.on = 'jowang'; } }
+  while (refund >= cost('atk', S.up.atk)){ refund -= cost('atk', S.up.atk); S.up.atk++; }
+  refreshStats();
+  return Object.assign(o, {idx1:tankPow(), atk1:ST.atk, hp1:ST.maxHp});
+}
 const mobExp  = s => 2 * Math.pow(CURVE.exp, s - 1) * EXP_K[S.world];
 const expNeed = L => 10 * Math.pow(CURVE.need, Math.min(L, 100) - 1) * Math.pow(CURVE.need2, Math.max(0, Math.min(L, 300) - 100)) * Math.pow(CURVE.need3, Math.max(0, L - 300));
 /* 저승(환생 뒤 세계): 우리 옛 이야기와 불화(시왕도)에 나오는 지옥들 */
@@ -4568,7 +4692,7 @@ function defaultState(){
     skills:{spin:0, bolt:0, roar:0, meteor:0, combo:0, mark:0, jobA:0, jobB:0, jobC:0, jobD:0, party:0, jobE:0, jobF:0, jobG:0, jobH:0},
     gear:Object.fromEntries(ALL_SLOTS.map(k => [k, {count:Array(GEAR_N).fill(0), seen:Array(GEAR_N).fill(false)}])),
     equip:Object.fromEntries(ALL_SLOTS.map(k => [k, -1])),
-    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0, bossAll:0, raidAll:0},
+    rec:{kills:0, bosses:0, summons:0, play:0, raids:0, refines:0, psum:0, maxHit:0, bossAll:0, raidAll:0, falls:0},
     speed:1, mode:'auto', bossAuto:true, dust:40, buyMode:1, lastSave:0,
     name:'', look:defaultLook(),
     refine:Object.fromEntries(ALL_SLOTS.map(k => [k, {lv:0, drops:0, t:0, base:0}])),
@@ -4815,6 +4939,7 @@ function mergeState(d){
       st:{t:nn(st.t, 1e10), b:nn(st.b, 1e7), e:nn(st.e, 1e7), q:ni(st.q, 1e7), i:nn(st.i, 1e10)}}; }
   // @@END-H
   // @@MERGE-I (갈래 I(9-4 버티는 힘)가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
+  out.rec.falls = Math.max(0, Math.floor(+(d.rec && d.rec.falls)) || 0);   // 9-4: 용사가 쓰러진 횟수(모든 곳)
   // @@END-I
   // @@MERGE-J (갈래 J(9-5 직업 적성)가 새로 넣는 저장 칸의 기본값은 이 줄 바로 아래에)
   // @@END-J
@@ -4898,6 +5023,7 @@ function mythSets(){
   return {sword:m.sword > 0 && m.kusa > 0 && m.pangu > 0 ? k : 0, mirror:m.mirror > 0 && m.yata > 0 && m.elixir > 0 ? k : 0, bell:m.bell > 0 && m.maga > 0 && m.sail > 0 ? k : 0};
 }
 function computeStats(up = S.up){
+  const tankK = window.__game && window.__game.tankK || 1;   // 시험에서만: 체력만 곱해 버티는 힘 지수를 바꿔 잼(9-4)
   const powK = window.__game && window.__game.powK || 1;   // 시뮬에서만: 공격력·체력을 함께 곱해 전투력을 그 배로(상위 레이드 클리어율 표)
   const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = fxNow, RB = S.reb.up;
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
@@ -4905,7 +5031,7 @@ function computeStats(up = S.up){
   return {
     atk: powK * 10 * Math.pow(CURVE.statMul, up.atk) * lvMul * (1 + craftMain('w') / 100) * (1 + craftEff('power') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('weapon') / 100) * classAtk() * (1 + refineEff('weapon') / 100) * (1 + S.myth.sword * mythK() / 100) * (1 + (S.myth.kusa || 0) * mythK() / 100) * (1 + (S.myth.pangu || 0) * mythK() / 100) * (1 + (S.myth.vajra || 0) * mythK() / 100) * (1 + 0.2 * MS.sword)
       * (1 + 0.15 * RB.atk) * F.atk * (1 + accP('ring') / 100) * (1 + JOB_BONUS[S.job].atk / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('atk')) / 100) * (1 + guardEff('atk') / 100) * skMul('atk') * setMul('atk') * seedMul('atk') * elMul('atk') * seaMul('atk') * jumpMul('atk'),
-    maxHp: powK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror * mythK() / 100) * (1 + (S.myth.yata || 0) * mythK() / 100) * (1 + (S.myth.elixir || 0) * mythK() / 100) * (1 + (S.myth.okdae || 0) * mythK() / 100) * (1 + (S.myth.lotus || 0) * mythK() / 100) * (1 + 0.2 * MS.mirror)
+    maxHp: powK * tankK * 100 * Math.pow(CURVE.statMul, up.hp) * lvMul * (1 + craftMain('a') / 100) * (1 + 1.5 * craftEff('wall') / 100) * (harmonyOn() ? 1 + HARMONY / 100 : 1) * (1 + gearPct('armor') / 100) * C.hpMul * (1 + refineEff('armor') / 100) * (1 + petHpPct() / 100) * (1 + S.myth.mirror * mythK() / 100) * (1 + (S.myth.yata || 0) * mythK() / 100) * (1 + (S.myth.elixir || 0) * mythK() / 100) * (1 + (S.myth.okdae || 0) * mythK() / 100) * (1 + (S.myth.lotus || 0) * mythK() / 100) * (1 + 0.2 * MS.mirror)
       * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp') * seaMul('hp') * jumpMul('hp'),
     regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K * (1 + (S.myth.amrita || 0) * mythK() / 100),   // 영약 호리병(5부): 저절로 차는 체력 +%
     crit: Math.min(1, crRaw), critOver: crOver,
@@ -5508,7 +5634,7 @@ function drinkHp(k, manual){
   S.inv[k]--; potCd = manual ? 0.8 : 3; sfx('potion');
   if (raid && raid.wipe && raid.wipe.st === 3) raid.wipe.drank = true;   // 전멸기: 회복약을 마셔야 버팀
   const amt = ST.maxHp * h * (1 + rideAb('pot') / 100) * (1 + (S.myth.amrita || 0) * mythK() / 200);   // 영약 호리병: 탕약 회복량 +절반%
-  hero.hp = Math.min(ST.maxHp, hero.hp + amt);
+  heroHeal(amt, k === 'elixir' ? 'elixir' : 'pot');
   addText(k === 'elixir' ? '산삼 탕약!' : '인삼 탕약', hero.x, hero.y - 40, '#8ff0a0', 11, true);
   fx.push({type:'heal', t:0, dur:0.7});
   return true;
@@ -5575,7 +5701,7 @@ function gainExp(x, o){   // o.raw = 레벨 문 새 요소를 더하지 않음(�
   if (S.level > S.best[bk]) S.best[bk] = S.level;
   if (!up) return;
   refreshStats();
-  hero.hp = ST.maxHp;
+  heroHeal(ST.maxHp, 'level');   // 가득
   fx.push({type:'level', t:0, dur:0.8}); sfx('level');
   addText('LEVEL UP', hero.x, hero.y - 34, '#ffe27a', 13);
   if (session) playFx('levelup', {hero:true, sub:`Lv.${S.level}`});
@@ -5763,24 +5889,26 @@ function damageHero(d){
   if (dr > 0) petRt.def.glow = 0.25;
   if (hero.shield > 0){
     const a = Math.min(hero.shield, dmg);
-    hero.shield -= a; dmg -= a;
+    hero.shield -= a; dmg -= a; tmDmg(0, a);
     if (dmg <= 0){ addText('막음', hero.x + Math.random() * 8 - 4, hero.y - 30, '#9fe7ff', 10, true); return; }
   }
+  tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0);
   hero.hp -= dmg; hero.hurt = 0.12;
   addText('-' + fmt(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
 }
 function heroDie(){
   if (S.myth.elixir > 0 && !hero.elixirUsed && (raid || bossActive) && !(raid && raid.info.pvp)){   // 서왕모의 불사약: 싸움마다 한 번
-    hero.elixirUsed = true; hero.hp = ST.maxHp * 0.5; hero.hurt = 0;
+    hero.elixirUsed = true; heroRevive(0.5, 'elixir'); hero.hurt = 0;
     addText('불사약!', hero.x, hero.y - 40, '#ffe08a', 12, true); fx.push({type:'awaken', t:0, dur:0.9, color:'#ffe08a', x:hero.x, y:hero.y - 12}); sfx('awaken');
     return;
   }
   if (S.myth.lotus > 0 && !hero.lotusUsed && (raid || bossActive) && !(raid && raid.info.pvp)){   // 인당수 연꽃(4부): 불사약과 따로, 싸움마다 한 번 더
-    hero.lotusUsed = true; hero.hp = ST.maxHp * 0.4; hero.hurt = 0;
+    hero.lotusUsed = true; heroRevive(0.4, 'lotus'); hero.hurt = 0;
     addText('연꽃!', hero.x, hero.y - 40, '#ffb0d0', 12, true); fx.push({type:'awaken', t:0, dur:0.9, color:'#ffb0d0', x:hero.x, y:hero.y - 12}); sfx('awaken');
     return;
   }
+  S.rec.falls = (S.rec.falls || 0) + 1; tmFall();   // 9-4: 진짜로 쓰러진 횟수(불사약·연꽃 뒤)
   hero.dead = true; hero.deadT = 2.2; hero.stunT = 0; hero.buffT = 0; hero.moving = false; hero.target = null; hero.goal = null; hero.holdT = 0; hero.shield = 0; hero.baguaT = 0; hero.gutT = 0;
   if (raid && (raid.info.pvp || raid.info.tower)){   // 결투·천공의 탑은 혼자 하는 승부라 쓰러지면 바로 짐(2026-11 (43))
     hero.deadT = Infinity; addLog(raid.info.pvp ? '결투에서 쓰러졌어요…' : '탑의 수호자에게 쓰러졌어요…', 'warn'); raidEnd(false); return;
@@ -5827,12 +5955,14 @@ function startBoss(){
   const spot = spawnTile(6) || spawnTile(3) || [13 + FOX, 5 + FOY];
   const b = makeMob(true, spot[0], spot[1]);
   if (bossPityN()){ b.hp = b.maxHp = b.maxHp * bossPityMul(); }   // 도전 기운만큼 약하게
+  tmStart(isGateStage(S.stage) ? 'gate' : 'boss', S.stage);
   mobs.push(b); bossRef = b; bossActive = true; bossTime = BOSS_TIME; hero.elixirUsed = false; hero.lotusUsed = false; aw2Pat0 = patHurt;
   fx.push({type:'poof', t:0, dur:0.5, x:b.x, y:b.y - 10, big:true});
   addLog(`${b.name}${josa(b.name, '이', '가')} 나타났습니다! 30초 안에 쓰러뜨리세요.`, 'warn'); sfx('boss');
   if (window.__game && window.__game.onBoss) window.__game.onBoss('start');
 }
 function bossFail(reason){
+  if (TM && (TM.kind === 'boss' || TM.kind === 'gate')) tmEnd(false, reason === '용사가 쓰러짐' ? '쓰러짐' : '시간');
   bossActive = false; bmeterEnd();
   if (bossRef && !bossRef.dead){ bossRef.dead = true; bossRef.deathT = 0.4; bossRef.fled = true; }
   bossRef = null; S.autoBoss = false;
@@ -5846,6 +5976,7 @@ function bossFail(reason){
     if (have < need) addLog(`이 사냥터 몬스터는 조합 공방 비전 장비 ${need}단계를 갖췄다고 보고 세져요. 지금 가장 낮은 칸이 ${have}단계 — [장비] → [조합 공방]에서 올리면 훨씬 쉬워요.`, 'gain'); }
 }
 function bossWin(){
+  if (TM && (TM.kind === 'boss' || TM.kind === 'gate')) tmEnd(true, 'win');   // (오프라인 자동 도전이 부른 것은 안 셈)
   bmeterEnd();
   if (window.__game && window.__game.onBoss) window.__game.onBoss('win');
   S.bossPity = {k:'', n:0};
@@ -5978,6 +6109,7 @@ function startRaid(i){
   if (raid || !raidReady(i) || !session && !window.__game) return false;
   const info = raidAt(i), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), party = raidParty(info);
   startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:mAtk(ref) * 3, aoe:mAtk(ref) * 2, time:RAID_TIME});   // 파티 버프만큼 단단하게(2026-11 (41))
+  if (TM) TM.kind = 'raid';
   addLog(`${info.label} 토벌 시작! ${RAID_TIME}초 안에 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨려요.`, 'warn');
   return true;
 }
@@ -6015,6 +6147,7 @@ function startFight(info, party, o){
   fx.push({type:'poof', t:0, dur:0.6, x:B.x, y:B.y - 20, big:true});
   raid = {info, boss:B, allies, time:o.time, limit:o.time, ending:false, endT:0, win:false, awk:S.awaken ? {t:12, used:false, show:0} : null, awk2:S.aw2 && S.aw2.got ? {g:0, hand:0, used:false, show:0} : null};
   hero.handT = 0; aw2Pat0 = patHurt;
+  tmStart(info.jin ? 'jin' : info.tb ? 'tb' : info.dboss ? 'db' : info.gr ? 'gr' : 'other', info.ref);   // 9-4 계측(startRaid가 일반 레이드면 'raid'로 고침)
   shake = 0.2; sfx('raid');
   if (currentTab === 'raid') buildTab('raid', true);
 }
@@ -6186,8 +6319,8 @@ function castAwaken2(manual){
     case 'changgaek': A.pierceT = 8; break;                         // 8초 동안 보스가 받는 피해 +30%(모두) — hit의 aw2Pierce
     case 'gungsa': A.markT = 10; B.markT = Math.max(B.markT || 0, 10); B.markP = Math.max(B.markP || 0, markPct(Math.max(1, skLv(5)))); break;   // 10초 동안 보스의 낙인 2배(없으면 「표적 깃발」을 꽂음) — hit의 aw2Mark
     case 'doin':                                                    // 파티 체력 50% 회복, 쓰러진 동료 일으킴(타임 보스에서 목숨을 다 쓴 동료는 못 일으킴)
-      hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * 0.5); addText('+50%', hero.x, hero.y - 40, '#7dff9a', 13, true);
-      for (const a of R.allies){ if (a.down){ if (a.downT === Infinity) continue; a.down = false; a.downT = 0; a.hp = a.maxHp * 0.5; fx.push({type:'poof', t:0, dur:0.4, x:a.x, y:a.y - 8}); } else a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.5); }
+      heroHeal(ST.maxHp * 0.5, 'aw2'); addText('+50%', hero.x, hero.y - 40, '#7dff9a', 13, true);
+      for (const a of R.allies){ if (a.down){ if (a.downT === Infinity) continue; a.down = false; a.downT = 0; a.hp = a.maxHp * 0.5; fx.push({type:'poof', t:0, dur:0.4, x:a.x, y:a.y - 8}); } else allyHeal(a, a.maxHp * 0.5, 'aw2'); }
       break;
   }
   addLog(`초각성기 2 · ${K.name}! (${sec.toFixed(1)}초 몫 · ${K.fx})`, 'gain'); sfx('awaken');
@@ -6571,9 +6704,10 @@ function pickRaidTarget(){
 function damageAlly(a, d){
   let dmg = d * (0.9 + Math.random() * 0.2) * (1 - pbV('musa', 'dr') / 100) * (hero.vowT > 0 ? 1 - (hero.vowP || 20) / 100 : 1) * synTaken(a.cls);   // 위태의 서원: 동료도 받는 피해↓
   if (a.shield > 0){ const ab = Math.min(a.shield, dmg); a.shield -= ab; dmg -= ab; }   // 술사 파티 버프 보호막
+  if (TM) TM.aDmg += Math.min(dmg, Math.max(0, a.hp));
   a.hp -= dmg; a.hurt = 0.12;
   addText('-' + fmt(dmg), a.x, a.y - 30, '#ff8a7a', 9);
-  if (a.hp <= 0){ a.hp = 0; a.down = true; a.downT = 6; a.swing = 0;
+  if (a.hp <= 0){ a.hp = 0; a.down = true; a.downT = 6; a.swing = 0; if (TM){ TM.aFalls++; TM.aDown.add(a); }
     if (raid && raid.info.tb){ raid.deaths = (raid.deaths || 0) + 1; if (raid.deaths >= TB_LIVES){ a.downT = Infinity; for (const b2 of raid.allies) if (b2.down) b2.downT = Infinity; if (hero.dead) hero.deadT = Infinity; } } }
 }
 // 함께하는 동료의 기술·초각성기(2026-11 (17)): 다른 용사의 캐릭터가 기본 공격만 하던 문제를 고침. NPC 동료는 작은 기술만
@@ -6607,7 +6741,7 @@ function healParty(a){
   const [tg, r, mx] = all[0] || [];
   if (!tg || r > 0.85) return;
   const h = mx * 0.25;
-  tg.hp = Math.min(mx, tg.hp + h);
+  if (tg === hero) heroHeal(h, 'ally'); else allyHeal(tg, h, 'ally');
   addText('+' + fmt(h), tg.x, tg.y - 34, '#8ff0a0', 10);
   fx.push({type:'heal', t:0, dur:0.7, x:tg.x, y:tg.y});
   fx.push({type:'pillar', t:0, dur:0.35, x:a.x, y:a.y - 10});
@@ -6882,8 +7016,9 @@ function patHitHero(d, raw){
   if (hero.dead) return;
   if (raw){
     let dmg = d;
-    if (hero.shield > 0){ const a = Math.min(hero.shield, dmg); hero.shield -= a; dmg -= a; }
+    if (hero.shield > 0){ const a = Math.min(hero.shield, dmg); hero.shield -= a; dmg -= a; tmDmg(0, a); }
     if (dmg <= 0){ addText('막음', hero.x, hero.y - 30, '#9fe7ff', 10, true); return; }
+    tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0);
     hero.hp -= dmg; hero.hurt = 0.15; addText('-' + fmt(dmg), hero.x, hero.y - 30, '#ff5a4a', 13, true);
     if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
   } else damageHero(d);
@@ -7072,7 +7207,7 @@ function updateWipe(R, dt){
     return true;
   }
   if (W.st === 3){   // 회복약을 마셔 버티거나, 못 마시면 쓰러진다
-    for (const a of R.allies) if (!a.down && a.potT > 0){ a.potT -= dt; if (a.potT <= 0){ a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.4); addText('탕약', a.x, a.y - 30, '#8ff0a0', 9, true); } }
+    for (const a of R.allies) if (!a.down && a.potT > 0){ a.potT -= dt; if (a.potT <= 0){ allyHeal(a, a.maxHp * 0.4, 'pot'); addText('탕약', a.x, a.y - 30, '#8ff0a0', 9, true); } }
     if (W.t <= 0){
       W.st = 4;
       if (!hero.dead){
@@ -7139,7 +7274,7 @@ function updateRaid(dt){
       if (a.downT <= 0){ a.down = false; a.hp = a.maxHp * 0.5; fx.push({type:'poof', t:0, dur:0.4, x:a.x, y:a.y - 8}); }
       continue;
     }
-    a.hp = Math.min(a.maxHp, a.hp + a.maxHp * 0.01 * dt);
+    allyHeal(a, a.maxHp * 0.01 * dt, 'regen');
     if (B.dead || B.spawnT > 0) continue;
     a.dir = dirOf(B.tx - a.tx, B.ty - a.ty);
     a.atkT -= dt * a.aspd;
@@ -7182,6 +7317,7 @@ function updateRaid(dt){
 function raidEnd(win){
   if (!raid || raid.ending) return;
   bmeterEnd(); fitEnd(raid);
+  tmEnd(win, win ? 'win' : hero.deadT === Infinity ? 'lives' : 'time');
   raid.endHero = hero.dead ? 0 : hero.hp / ST.maxHp; raid.endBoss = raid.boss.dead ? 0 : raid.boss.hp / raid.boss.maxHp;   // 결투: 시간이 다 되면 남은 체력으로
   raid.ending = true; raid.win = win; raid.endT = win ? 1.3 : 0.8;
   { const I = raid.info; if (win && !I.dummy && !I.pvp && !I.haetae && !I.aw2tut && !I.aw2t && patHurt === aw2Pat0) aw2Tick('clean'); }   // 퀘스트 「맞지 않는 발」
@@ -8511,7 +8647,7 @@ function updatePets(dt){
       r.healT = 5;
       if (hero.hp < ST.maxHp){
         const h = ST.maxHp * petInfo(si).heal / 100;
-        hero.hp = Math.min(ST.maxHp, hero.hp + h);
+        heroHeal(h, 'pet');
         addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 11);
         fx.push({type:'heal', t:0, dur:0.7});
       }
@@ -8520,7 +8656,7 @@ function updatePets(dt){
   const mh = rideAb('heal');   // 백록: 5초마다 체력 회복
   if (mh > 0){
     hero.mHealT = (hero.mHealT == null ? 5 : hero.mHealT) - dt;
-    if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; hero.hp = Math.min(ST.maxHp, hero.hp + h); addText('+' + fmt(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
+    if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; heroHeal(h, 'mount'); addText('+' + fmt(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
   }
 }
 function attack(tg){
@@ -8676,7 +8812,7 @@ function doinCast(kind, lv, alive, tg, mul){
   if (kind === 'd_heal'){
     hero.buffT = 8; hero.buffLv = lv;
     const h = ST.maxHp * 0.3;
-    hero.hp = Math.min(ST.maxHp, hero.hp + h);
+    heroHeal(h, 'skill');
     addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 12);
     fx.push({type:'heal', t:0, dur:0.9}); fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
     return true;
@@ -8977,6 +9113,7 @@ function mobInReach(){
 }
 function update(dt){
   gtime += dt; S.rec.play += dt;
+  tmTick(dt);
   if (S.chosen && !raid && !market && !parade && S.mode === 'auto') offTrack(dt);
   if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
   for (const e of fx) e.t += dt;
@@ -9005,7 +9142,7 @@ function update(dt){
   if (hero.vowT > 0) hero.vowT -= dt;
   if (hero.ebbT > 0) hero.ebbT -= dt;
   if (hero.yongT > 0){ hero.yongT -= dt; const hp = (hero.yongP || 3) / 100 * dt;   // 용신 맞이: 나와 동료를 조금씩 회복
-    if (!hero.dead && !(raid && raid.info.pvp)) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * hp); if (raid) for (const a of raid.allies) if (!a.down) a.hp = Math.min(a.maxHp, a.hp + a.maxHp * hp); }
+    if (!hero.dead && !(raid && raid.info.pvp)) heroHeal(ST.maxHp * hp, 'skill'); if (raid) for (const a of raid.allies) if (!a.down) allyHeal(a, a.maxHp * hp, 'skill'); }
   if (hero.dr4T > 0) hero.dr4T -= dt;
   if (hero.invisT > 0) hero.invisT -= dt;
   if (hero.holdT > 0) hero.holdT -= dt;
@@ -9045,7 +9182,7 @@ function update(dt){
   // 용사
   if (hero.dead){ hero.deadT -= dt; if (hero.deadT <= 0) respawn(); }
   else {
-    if (!(raid && wipeBusy(raid))) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * (raid && (raid.info.fit || raid.info.pvp) ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt);   // 전멸기 동안엔 저절로 차지 않음(회복약·회복 기술로만)   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
+    if (!(raid && wipeBusy(raid))) heroHeal(ST.maxHp * (raid && (raid.info.fit || raid.info.pvp) ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt, 'regen');   // 전멸기 동안엔 저절로 차지 않음(회복약·회복 기술로만)   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
     autoPotion(dt);
     updateMove(hero, dt);
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
@@ -9145,7 +9282,7 @@ function update(dt){
   if (cls().aim) updateAim(dt);
   if (!hero.dead && (hero.mp ?? mpMax()) < mpMax()) hero.mp = Math.min(mpMax(), (hero.mp ?? mpMax()) + MP_REGEN * dt);
   for (const c in pbT) if (pbT[c] > 0) pbT[c] -= dt;
-  if (hero.shinT > 0){ hero.shinT -= dt; if (!hero.dead) hero.hp = Math.min(ST.maxHp, hero.hp + ST.maxHp * 0.03 * dt); }
+  if (hero.shinT > 0){ hero.shinT -= dt; if (!hero.dead) heroHeal(ST.maxHp * 0.03 * dt, 'skill'); }
   if (hero.cloneT > 0){
     hero.cloneT -= dt;
     const tg = hero.target && !hero.target.dead ? hero.target : null;
@@ -11898,9 +12035,9 @@ function soulAct(k, manual){
       stg(boss, s.kind === 'bind' ? 25 : 15); break;
     case 'heal': case 'grace': {
       const h = ST.maxHp * v / 100;
-      hero.hp = Math.min(ST.maxHp, hero.hp + h); hero.shield = Math.max(hero.shield, ST.maxHp * v / 200); hero.shieldT = Math.max(hero.shieldT || 0, 8);
+      heroHeal(h, 'soul'); hero.shield = Math.max(hero.shield, ST.maxHp * v / 200); hero.shieldT = Math.max(hero.shieldT || 0, 8);
       addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 11, true);
-      if (raid) for (const a of raid.allies) if (!a.down) a.hp = Math.min(a.maxHp, a.hp + a.maxHp * v / 200);
+      if (raid) for (const a of raid.allies) if (!a.down) allyHeal(a, a.maxHp * v / 200, 'soul');
       if (s.kind === 'grace'){ hero.graceT = 12; hero.graceP = v; }
       if (!fxOff()){ vadd({type:'pillar', x:hero.x, y:hero.y, w:12, col, dur:0.8}); vMotes(hero.x, hero.y - 10, 10, col); }
       break; }
@@ -20831,6 +20968,8 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
   // @@END-H
   // @@HOOK-I (갈래 I의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
+  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
+  Object.defineProperty(window.__game, 'TM', {get:() => TM, configurable:true});
   // @@END-I
   // @@HOOK-J (갈래 J의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
   // @@END-J

@@ -58,11 +58,13 @@ JS_LOAD = r"""
     G.powK = powK; G.hand = hand; G.jinOv = ov; G.refreshStats(); G.resetRuntime();
     S.jin.day = ''; S.jin.fail = {}; S.inv.potion = 9999; S.inv.elixir = 9999; S.inv.mana = 9999;
     const key = G.jinInfo(w, 0).key, n0 = S.jin.win[key] || 0;
+    G.tmLast = null;
     if (!G.startJin(w, 0)) return {err:'start'};
     const R = G.raid, B = R.boss, hp0 = B.maxHp; let el = 0, falls = 0, pots = 0, left = 1;
     for (let k = 0; k < 4000 && G.raid; k++){ G.update(0.05); if (G.raid && !G.raid.ending){ el = R.limit - R.time; falls = R.falls || 0; pots = R.pots || 0; left = Math.max(0, B.hp / hp0); } }
     const win = (S.jin.win[key] || 0) > n0;
-    return {win, el, falls, pots, left:win ? 0 : left};
+    const L = G.tmLast || {};   // 9-4 계측: 동료 쓰러짐(번)·동료 회복 몫(회복 ÷ 받은 피해)
+    return {win, el, falls, pots, left:win ? 0 : left, af:L.aFalls || 0, ah:L.aHeal || 0, ad:L.aDmg || 0, ph:Object.values(L.heal || {}).reduce((a, b) => a + b, 0), pd:L.dmg || 0};
   };
   return {pw:G.power(G.ST), ehp:G.ST.maxHp / Math.max(0.05, G.takenK(true)), rd:G.realDps(), lv:S.level, w:S.world, st:S.maxStage, job:S.job};
 }
@@ -92,9 +94,9 @@ JS_RUN = r"""
   const G = window.__game, out = {};
   window.__reset(); G.powK = 1; G.refreshStats(); const pw1 = G.power(G.ST);
   for (const [hn, hand] of hands) for (const r of rs){
-    const k = r * ov[2] / pw1; let win = 0, el = 0, falls = 0, pots = 0, left = 0;
-    for (let j = 0; j < n; j++){ const f = window.__fight(w, hand, k, ov); if (f.err) return f; win += f.win ? 1 : 0; el += f.el; falls += f.falls; pots += f.pots; left += f.left; }
-    out[hn + ':' + Math.round(r * 100)] = {win:win / n, el:el / n, falls:falls / n, pots:pots / n, left:left / n};
+    const k = r * ov[2] / pw1; let win = 0, el = 0, falls = 0, pots = 0, left = 0, af = 0, ah = 0, ad = 0, ph = 0, pd = 0;
+    for (let j = 0; j < n; j++){ const f = window.__fight(w, hand, k, ov); if (f.err) return f; win += f.win ? 1 : 0; el += f.el; falls += f.falls; pots += f.pots; left += f.left; af += f.af; ah += f.ah; ad += f.ad; ph += f.ph; pd += f.pd; }
+    out[hn + ':' + Math.round(r * 100)] = {win:win / n, el:el / n, falls:falls / n, pots:pots / n, left:left / n, af:af / n, heal:pd > 0 ? ph / pd : 0, aheal:ad > 0 ? ah / ad : 0};
   }
   return out;
 }
@@ -219,6 +221,9 @@ async def main():
                 for h0 in HANDS:
                     det = '  '.join(f"{c}: {res[c][h0 + ':100']['el']:.0f}초 쓰러짐 {res[c][h0 + ':100']['falls']:.1f} 탕약 {res[c][h0 + ':100']['pots']:.1f} 남은 {res[c][h0 + ':100']['left'] * 100:.0f}%" for c in res)
                     print(f'  ({h0}·100%) {det}', flush=True)
+                for h0 in HANDS:   # 9-4 계측: 동료가 쓰러진 횟수와 회복 몫(회복 ÷ 받은 피해)
+                    ext = '  '.join(f"{c}: 동료 쓰러짐 {res[c][h0 + ':100']['af']:.1f} 용사 회복 몫 {res[c][h0 + ':100']['heal']:.2f} 동료 회복 몫 {res[c][h0 + ':100']['aheal']:.2f}" for c in res)
+                    print(f'  ({h0}·100% 계측) {ext}', flush=True)
         await b.close()
 
 asyncio.run(main())
