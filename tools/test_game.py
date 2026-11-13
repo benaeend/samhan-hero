@@ -59,9 +59,9 @@ SIM = r"""
     goldIn += Math.max(0, G.S.gold - g0); gemIn += Math.max(0, G.S.gems - e0);
     const t = i * dt;
     if (opts.raidlog) {
-      if (G.raid && !rl) { const I = G.raid.info, B = G.raid.boss, C = G.CLASSES[G.S.cls]; rl = {t0:t, k:I.key || (I.tb ? 'tb' : I.dboss ? 'db' : I.vault ? 'vault' : I.dummy ? 'dummy' : I.job ? 'job' : 'x'), ref:I.ref, w:G.S.world, lv:G.S.level, st:G.S.maxStage, n0:G.S.rec.raids,
+      if (G.raid && !rl) { const I = G.raid.info, B = G.raid.boss, C = G.CLASSES[G.S.cls]; rl = {t0:t, k:I.key || (I.tb ? 'tb' : I.dboss ? 'db' : I.vault ? 'vault' : I.dummy ? 'dummy' : I.job ? 'job' : 'x'), ref:I.ref, w:G.S.world, lv:G.S.level, st:G.S.maxStage, n0:G.S.rec.raids, jt:I.job || 0,
         awk:G.S.awaken ? Math.round(G.realDps() * (G.S.job >= 4 ? G.AWAKEN_SEC4 : G.AWAKEN_SEC) / B.maxHp * 100) : 0}; }
-      else if (!G.raid && rl) { raids.push(Object.assign(rl, {dur:Math.round(t - rl.t0), win:G.S.rec.raids > rl.n0})); rl = null; }
+      else if (!G.raid && rl) { raids.push(Object.assign(rl, {dur:Math.round(t - rl.t0), win:rl.jt ? G.S.job >= rl.jt || !!G.jobChain : G.S.rec.raids > rl.n0})); rl = null; }
     }
     if (t >= nextShop) {
       nextShop = t + 2;
@@ -133,7 +133,7 @@ SIM = r"""
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
       if (jobPend && !G.raid && !G.jobChain) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
-      if (!G.raid && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4) || G.jobReady(5) || G.jobReady(6)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
+      if (!G.raid && !G.jobChain && !jobPend && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4) || G.jobReady(5) || G.jobReady(6)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
       if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
       if (G.inhPending()) G.inhDo();     // (48) 새 땅에 오면 대장장이에게 바로 계승(지난 땅 재료 → 이 땅 재료, 부상·곤륜은 재련 계승)
       for (let z = 0; z < 5; z++) { const mb = G.SHOP.find(x => x.id === 'matbag'); if (mb.price() > G.S.gold * 0.05 || !G.buyShop('matbag')) break; }   // 재료 꾸러미(엽전의 5% 안쪽이면)

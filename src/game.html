@@ -10029,11 +10029,12 @@ const JOB6_GAP = ['첫 스승이 웃으며 길을 비켜 줬어요. 저승 길�
 let jt6Soul = false, jobChain = false;   // jt6Soul: 이번 시험에서 넋 부름을 이미 썼나 · jobChain: 다음 판으로 넘어가는 중(raid가 잠깐 비는 동안)
 function startJobTrial(tier, step = 0){
   if (raid || (!step && !jobReady(tier))) return false;
+  if (!step && jobChain) return false;   // 다섯 스승의 시험에서 다음 스승을 기다리는 1.6초 동안 다시 시작하면 첫 스승으로 돌아가던 것을 막음(진행 시뮬이 이 틈마다 다시 시작해 술사·창객이 50시간 동안 못 넘었음)
+  jobChain = false;
   const c = S.cls, J = JOBS[c][tier - 1];
   if (tier === 6){
     const T = TRIAL6(c)[step], ref = Math.max(4, S.maxStage - JOB5_REF);
     if (!step) jt6Soul = false;
-    jobChain = false;
     const info = {job:6, step, label:`다섯 스승의 시험 ${step + 1}/5`, bossName:T.name, type:T.type, color:T.color, region:regionIndex(S.stage), party:3, ref, g:2};
     startFight(info, raidParty(Object.assign({}, info, {party:3})), {hp:10 * mHp(ref) / 15 * 1.9 * 40, atk:mAtk(ref) * 2.5, aoe:mAtk(ref) * 1.6, time:RAID_TIME});
     addLog(`${info.label}! ${T.name}${josa(T.name, '을', '를')} ${RAID_TIME}초 안에 이겨요.`, 'warn');
@@ -10071,7 +10072,8 @@ function finishJobTrial(R){
   if (tier === 4 && (R.info.step || 0) < 2){
     const nx = (R.info.step || 0) + 1;
     addLog(`${R.info.bossName}${josa(R.info.bossName, '이', '가')} 길을 비켜 줬어요. 다음 스승이 기다려요! (${nx + 1}/3)`, 'good');
-    after(1.6, () => { if (!raid) startJobTrial(4, nx); });
+    jobChain = true;
+    after(1.6, () => { if (!raid) startJobTrial(4, nx); else jobChain = false; });
     return;
   }
   if (tier === 6 && (R.info.step || 0) < 4){
@@ -20027,7 +20029,7 @@ async function pushCloud(){
 }
 function resetRuntime(){
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
-  bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null;
+  bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null; jobChain = false;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
