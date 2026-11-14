@@ -789,11 +789,36 @@ async def main():
           const before = G.skLv(5); S.reb.n = 1; G.unlockSkills(); const after = G.skLv(5); S.reb.n = rb; G.unlockSkills();
           const atk = [...Array(11).keys()].filter(i => G.skDef(i).atk).length; return {before, after, atk}; }""")
         check(dn['before'] == 0 and dn['after'] > 0 and dn['atk'] == 5, f'도인은 공격 기술이 다섯(도력 일격·팔괘진은 버프 겸 공격)이고, 하늘의 심판은 환생해야 열린다 {dn}')
+        # 6-4a) 사냥 박자 / 레이드 박자(2026-11-14 기술 재사용 개편 1단계): 공격 기술은 사냥에서 짧게, 레이드(허수아비)에서는 예전 재사용 그대로
+        bt = await page.evaluate("""() => { const G = window.__game, S = G.S; G.closePage(); G.setClass('musa'); S.level = 120; G.unlockSkills(); S.skSetMan = true; S.skSet = [0, 1, 2, 3, 4, 5]; S.skManual = {};
+          G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.hero.mp = G.MP_MAX; G.beat = null;
+          const o = {cd:G.SKILLS.slice(0, 8).map(s => s.cd), hcd:[0, 1, 3, 4].map(i => G.skDef(i).hcd), roarH:G.skDef(2).hcd, markH:G.skDef(5).hcd};
+          for (let i = 0; i < 3; i++) G.update(0.05);
+          o.slots = [G.HUNT.slots, G.SK_SLOTS];
+          o.field = G.huntBeat(); o.huntCd = G.skCdOf(0) / G.skCdOf(0, false); o.huntMp = G.skMp(0); o.raidMp0 = G.skMp(0, false);
+          G.skillCd.spin = G.skCdOf(0) / 2; S.dummy.day = ''; S.dummy.n = 0; const pm = S.presetMode; S.presetMode = 'off';
+          o.started = G.startDummy(); G.update(0.05);
+          o.raidBeat = !G.huntBeat(); o.raidCd = G.skCdOf(0); o.spinLeft = +(G.skillCd.spin / G.skCdOf(0)).toFixed(2);
+          o.roarSame = G.skCdOf(2, true) === G.skCdOf(2, false);
+          for (let i = 0; i < 30 && G.mobs.some(m => m.spawnT > 0); i++) G.update(0.05);   // 허수아비가 다 나타난 뒤(나오는 중엔 기술이 안 맞음)
+          G.skillCd.bolt = 0; G.hero.mp = 999; o.cast = G.castNow(1); o.boltCd = +G.skillCd.bolt.toFixed(3); o.boltRaid = +G.skCdOf(1, false).toFixed(3);
+          if (G.raid) G.raid.time = 0.05; for (let i = 0; i < 40 && G.raid; i++) G.update(0.05); try { G.hideModal(); } catch (e) {}
+          S.presetMode = pm; o.backHunt = G.huntBeat(); o.boltAfter = +(G.skillCd.bolt / G.skCdOf(1, true)).toFixed(2);
+          return o; }""")
+        check(bt['cd'] == [6, 10, 24, 20, 14, 28, 18, 32] and bt['hcd'] == [3, 4, 6, 5] and not bt['roarH'] and not bt['markH'],
+              f'레이드 재사용은 예전 그대로(6·10·24·20·14·28·18·32초), 공격 기술만 사냥 재사용(3·4·6·5초)이 있고 버프·약점은 없다 {bt}')
+        check(bt['slots'][0] == bt['slots'][1], f'사냥 박자 보정표(HUNT.w)는 전투 기술 {bt["slots"][0]}칸에서 잰 값 — SK_SLOTS가 {bt["slots"][1]}로 바뀌었으면 HUNT.w·bj를 다시 재고 HUNT.slots를 고칠 것')
+        check(bt['field'] and abs(bt['huntCd'] - 0.5) < 1e-6 and bt['huntMp'] < bt['raidMp0'] and bt['started'] and bt['raidBeat'] and bt['roarSame'],
+              f'사냥터에서는 사냥 박자(재사용·마나가 작음), 허수아비(레이드)에 들어가면 레이드 박자, 버프 기술은 박자와 관계없이 같다 {bt}')
+        check(abs(bt['spinLeft'] - 0.5) < 0.05 and bt['cast'] and bt['boltCd'] == bt['boltRaid'] and bt['backHunt'] and 0 < bt['boltAfter'] <= 1,
+              f'박자가 바뀌면 남은 재사용을 비율로 옮기고(절반 남음 → 절반), 레이드에서 쓴 기술은 레이드 재사용, 싸움이 끝나면 사냥 박자로 돌아온다 {bt}')
         sh = await page.evaluate("""() => { const G = window.__game; G.setClass('sulsa'); G.S.level = 120; G.unlockSkills(); G.skillCd.roar = 0; G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.hero.mp = G.MP_MAX; G.castNow(2);
           return {shield: G.hero.shield / G.ST.maxHp}; }""")
         check(sh['shield'] >= 0.399, f'술사의 마력 보호막이 최대 체력의 40% 이상을 막는다 {sh}')
         await page.click('#tab-skill'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '29_기술_직업특성.png'))
+        sktx = await page.evaluate("() => document.querySelector('#page') ? document.querySelector('#page').textContent : ''")   # 긴 설명은 「?」 말풍선으로 숨겨져 innerText에 안 나옴
+        check('초마다 작게' in sktx and '레이드' in sktx and '두 가지 박자' in sktx, '[기술]에 공격 기술의 사냥·레이드 재사용이 따로 보인다')
         cf = await page.evaluate("""() => { const G = window.__game, S = G.S; const w0 = S.world; S.world = 0; G.setClass('jagaek'); G.refreshStats();   // 이승에서(뒤 땅에서는 이승 조합식이 '계승 조합'이라 확정)
           S.best.s0 = Math.max(S.best.s0, 60); const mk = 'm' + S.world; S.mat[mk] = 200; S.gems = 5000; S.gear.weapon.count[4] += 3; S.gear.weapon.count[8] += 4; S.gear.armor.count[4] += 3;
           const a0 = G.ST.atk, best = G.ENGR_BEST.jagaek.w;
