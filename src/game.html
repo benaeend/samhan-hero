@@ -2058,29 +2058,30 @@ const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map
    버프·약점·파티 버프·도인 준비 기술·팔괘진·5·6차 버프기와 초각성기 1·2는 박자를 나누지 않는다. 박자가 바뀌면 남은 재사용을 남은 몫 비율로 옮긴다(beatSync) */
 /* 사냥 보정 HUNT.w[세계 묶음][직업](이승·저승·천계·부상·곤륜·4부·5부): 사냥 박자 공격 기술이 몹에게 주는 초당 피해 배율(레이드 박자 = 1).
    한 방에 죽는 구간(버려지던 피해가 많음)과 벽 구간(버려지던 피해가 없음)은 같은 배율로 못 맞춰서, 세계마다 저장 표본의 「처치 속도 새÷예전」이 1.00~1.10이 되게 잼(/tmp/cdimpl 방식).
-   c[세계 묶음][직업]: 사냥 재사용 배율 — 한 방에 다 죽는 땅(곤륜·5부 등)은 피해를 깎아도 「자주 쓸어 버리는」 몫만큼 빨라져서 재사용을 늘려 맞춤(huntHcd, 레이드 재사용보다 길어지지 않음).
+   c[세계 묶음][직업]: 사냥 재사용 배율 — 한 방에 다 죽는 땅(곤륜·5부 등)은 피해를 깎아도 「자주 쓸어 버리는」 몫만큼 빨라져서 재사용을 늘려 맞춤(huntHcd). 2026-11-14 장착 10칸으로 다시 잼(/tmp/m10, 기준 = 9a177d6 빌드 8칸의 같은 저장): 늘어난 두 칸만큼 한 방에 죽는 땅이 1.2~2배 빨라져서
+   c가 레이드 재사용을 넘을 수 있게 풀었다(곤륜·4·5부는 c 2~5 → 레이드보다 드물게, 그만큼 크게). 이승 자객은 벽(106단계)에서 느려 w 0.65·c 1.6.
    bj·bc: 단계 보스·수문장 보정(전직 단계별 · 직업) — 버프·약점 기술이 많아질수록(5·6차 버프기) 큰 한 방과 겹치던 몫이 커서 사냥 박자에서 잃는 몫도 큼(bench로 레이드 박자와 초당 피해를 맞춤) */
 const HUNT = {w:[
-  {musa:0.57, jagaek:0.52, sulsa:0.75, doin:0.5, gungsa:0.5, changgaek:0.5},   // 이승
-  {musa:0.73, jagaek:0.79, sulsa:0.71, doin:0.53, gungsa:0.74, changgaek:0.7},   // 저승
-  {musa:0.91, jagaek:0.94, sulsa:0.95, doin:0.99, gungsa:0.9, changgaek:0.67},   // 천계
+  {musa:0.57, jagaek:0.65, sulsa:0.75, doin:0.5, gungsa:0.5, changgaek:0.5},   // 이승
+  {musa:0.67, jagaek:0.76, sulsa:0.7, doin:0.48, gungsa:0.65, changgaek:0.79},   // 저승
+  {musa:0.62, jagaek:0.71, sulsa:0.89, doin:0.99, gungsa:0.78, changgaek:0.96},   // 천계
   {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 부상
   {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 곤륜
-  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6},   // 4부 바다
+  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.74, gungsa:0.55, changgaek:0.6},   // 4부 바다
   {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6}],   // 5부 천축
   c:[
-  {musa:1, jagaek:1.27, sulsa:1, doin:1.68, gungsa:1.28, changgaek:1.5},   // 이승
+  {musa:2.17, jagaek:1.6, sulsa:1.26, doin:2.01, gungsa:1.39, changgaek:1.3},   // 이승
   {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 저승
-  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 천계
-  {musa:1, jagaek:1, sulsa:1, doin:1.47, gungsa:1, changgaek:1.34},   // 부상
-  {musa:3, jagaek:1.78, sulsa:2.44, doin:2.7, gungsa:2.6, changgaek:2.4},   // 곤륜
-  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:3},   // 4부 바다
-  {musa:3, jagaek:3, sulsa:3, doin:2.75, gungsa:3, changgaek:3}],   // 5부 천축 (c[세계 묶음][직업]: 사냥 재사용 배율, 없으면 1)
-  bj:[1, 1.03, 1.2, 1.15, 1.3, 1.55, 1.5], bc:{doin:1.1}, slots:8};   // slots: 이 표를 잰 때의 전투 기술 칸 수(SK_SLOTS가 바뀌면 HUNT.w를 다시 잴 것)
+  {musa:1, jagaek:1, sulsa:1, doin:1.87, gungsa:1, changgaek:1},   // 천계
+  {musa:1.98, jagaek:1.52, sulsa:1.19, doin:1.86, gungsa:2.03, changgaek:1.58},   // 부상
+  {musa:3.99, jagaek:2.34, sulsa:2.86, doin:5, gungsa:2.64, changgaek:2.19},   // 곤륜
+  {musa:2.48, jagaek:2.64, sulsa:3.58, doin:3, gungsa:1.76, changgaek:3.88},   // 4부 바다
+  {musa:3.92, jagaek:4.2, sulsa:4.2, doin:4.38, gungsa:3.64, changgaek:4.3}],   // 5부 천축
+  bj:[1, 1.06, 1.08, 1.03, 1.06, 1.04, 0.86], bc:{doin:1.07}, slots:10};   // slots: 이 표를 잰 때의 전투 기술 칸 수(2026-11-14 10칸으로 다시 잼 — SK_SLOTS가 바뀌면 HUNT.w·c·bj를 다시 잴 것)
 let beatHunt = null, castCtx = null, castFrac = 0;   // beatHunt: 지금 재사용이 맞춰진 박자 · castCtx: 지금 치는 기술의 사냥 보정({dur, f, b}) · castFrac: 「기술 수련」 의뢰 셈(사냥 박자는 hcd÷cd번)
 const huntBeat = () => { const f = window.__game && window.__game.beat; return f ? f === 'hunt' : !raid; };   // 레이드(startFight 싸움)가 아니면 사냥 박자
 const skSplit = i => skDef(i).hcd > 0;   // 박자를 나누는 칸(공격 기술)
-const huntHcd = i => { const d = skDef(i); return d.hcd > 0 ? Math.min(d.cd, d.hcd * huntC()) : 0; };   // 지금 땅의 사냥 재사용(hcd × HUNT.c, 레이드 재사용보다 길어지지 않게)
+const huntHcd = i => { const d = skDef(i); return d.hcd > 0 ? d.hcd * huntC() : 0; };   // 지금 땅의 사냥 재사용(hcd × HUNT.c). 10칸(2026-11-14)부터는 한 방에 다 죽는 땅(곤륜·4·5부)에서 레이드 재사용보다 길어질 수 있다 — 그때 한 방은 그만큼 커진다(r > 1)
 const skBaseCd = (i, hunt = huntBeat()) => { const d = skDef(i); return hunt && d.hcd > 0 ? huntHcd(i) : d.cd; };   // 각인·탈것 등으로 줄기 전 재사용
 const huntW =() => { const w = S.world || 0; return w <= 4 ? w : w <= 7 ? 5 : 6; };   // 세계 → 묶음(5~7 = 4부, 8~ = 5부)
 const huntF = () => (HUNT.w[huntW()] || {})[S.cls] || 1;   // 사냥 박자 몹 보정
@@ -4444,7 +4445,7 @@ const NOTES = [
   ['상위 레이드가 허수아비·보물 동굴·강림 칸 안으로 들어왔어요', '해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없어요. [레이드]의 허수아비·보물 동굴·강림 칸 맨 위에 [허수아비 | 해태 수련]처럼 고르는 칩이 생겼고, 열려 있으면 처음엔 상위가 골라져 있어요.'],
   ['하루에 둘 중 하나만', '한 번이라도 시작하면 다른 쪽은 그날 잠기고(「오늘은 ○○을 했어요」), 내일 다시 풀려요. 이미 쓴 횟수는 그대로예요.'],
   ['#', '11월 14일 · 사냥 기술 박자'],
-  ['사냥에서는 기술이 자주, 작게 나가요', '공격 기술(전직 기술 포함)이 사냥터·단계 보스·수문장에서는 레이드보다 자주(대개 3~10초마다) 작게 나가 쉬지 않고 터져요. 대신 한 방은 작아져서 사냥 빠르기는 예전과 비슷해요(몹이 한 방에 쓰러지는 땅에서는 조금 덜 자주 나가요). 레이드·진·타임 보스처럼 「싸움 시작 창」이 뜨는 싸움에서는 예전과 똑같이 크고 느리게 나가요. [기술]에서 기술마다 「사냥 몇 초 · 레이드 몇 초」를 볼 수 있어요.'],
+  ['사냥에서는 기술이 자주, 작게 나가요', '공격 기술(전직 기술 포함)이 사냥터·단계 보스·수문장에서는 레이드보다 자주(대개 3~10초마다) 작게 나가 쉬지 않고 터져요. 대신 한 방은 작아져서 사냥 빠르기는 예전과 비슷해요(몹이 한 방에 쓰러지는 곤륜·바다·천축에서는 오히려 레이드보다 드물게, 그만큼 크게 나가요. 기술이 10칸으로 늘어도 사냥 빠르기는 예전과 비슷하게 맞췄어요). 레이드·진·타임 보스처럼 「싸움 시작 창」이 뜨는 싸움에서는 예전과 똑같이 크고 느리게 나가요. [기술]에서 기술마다 「사냥 몇 초 · 레이드 몇 초」를 볼 수 있어요.'],
   ['#', '11월 14일 · 엽전 쓰임새 · 기술 10칸'],
   ['체력은 공격력보다 10레벨 낮아도 돼요', '몬스터 세기의 기준인 「평균 용사」를 체력 능력치가 공격력보다 10레벨 낮은 용사로 바꾸고, 그만큼 모든 땅의 몬스터 공격을 낮췄어요. 이제 체력을 공격력만큼 따라 올리지 않아도 버티는 힘이 「보통」으로 나와요(능력치에 쓰는 엽전 가운데 체력 몫이 약 45% → 25%). 체력을 이미 공격력만큼 올린 용사는 그만큼 더 넉넉해져요. [수련]의 「무엇을 올리면 버틸까」도 「공격력보다 10레벨 아래까지」로 알려 줘요.'],
   ['기술 레벨 값이 크게 내려갔어요', '기술 한 레벨 값이 레벨마다 1.9배씩 오르던 것을 1.5배로 낮추고 처음 값도 낮췄어요. 특히 4~6차 전직 기술은 2레벨부터 그 땅 수입 몇만 시간어치가 들던 것이, 이제 몇 분~몇 시간이면 올라요. 장착한 기술을 그 전직의 최대 레벨까지 올려도 그 땅에서 버는 엽전의 10% 안쪽이라, 재련·펫·능력치에 쓸 엽전이 넉넉히 남아요.'],
@@ -17797,7 +17798,7 @@ function buildSkill(){
     for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = (S.skSet || []).includes(i), open = skLearned(i); setText(b, on ? '빼기' : '넣기'); b.disabled = !open; b.classList.toggle('primary', on); }
     for (const r of refs){
       const lv = skLv(r.i), man = skAuto(r.i) ? '' : ' · <b>수동</b>', d = skDef(r.i);
-      const cdt = d.hcd > 0 ? `<b>사냥</b> ${+skCdOf(r.i, true).toFixed(1)}초마다 작게(한 방 ${Math.max(1, Math.round(huntHcd(r.i) / d.cd * 100))}%) · <b>레이드</b> ${+skCdOf(r.i, false).toFixed(1)}초마다 위 피해 그대로 · <span class="mpv">마나 ${skMp(r.i, true)}/${skMp(r.i, false)}</span>${man}`   // 사냥 박자(1단계)
+      const cdt = d.hcd > 0 ? `<b>사냥</b> ${+skCdOf(r.i, true).toFixed(1)}초마다 ${huntHcd(r.i) > d.cd + 1e-9 ? '크게' : '작게'}(한 방 ${Math.max(1, Math.round(huntHcd(r.i) / d.cd * 100))}%) · <b>레이드</b> ${+skCdOf(r.i, false).toFixed(1)}초마다 위 피해 그대로 · <span class="mpv">마나 ${skMp(r.i, true)}/${skMp(r.i, false)}</span>${man}`   // 사냥 박자(1단계)
         : `재사용 ${+skCdOf(r.i).toFixed(1)}초(사냥·레이드 같음) · <span class="mpv">마나 ${skMp(r.i)}</span>${man}`;
       const cap = skCap(r.i);
       setHTML(r.nx, lv && lv < cap ? skillGainHTML(r.i, lv) : lv ? (cap < r.sk.max ? `지금 최대 Lv.${cap} — ${S.job < 4 && 10 + 5 * S.job <= 4 + Math.floor(cumLv() / 6) ? '다음 전직' : '레벨을 올리면'} 더 올릴 수 있어요` : '최대 레벨이에요') : '');
