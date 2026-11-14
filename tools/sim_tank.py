@@ -317,7 +317,7 @@ PARTS = [[0, 1, 2], [3, 4], [5, 6, 7], [8, 9, 10]]   # 직업 몫을 묶는 부(
 def mode_ref(classes):
     """기준표 초안. (2026-11-14 고침) 네 직업이 모두 닿은 단계 칸만 묶고(한 직업만 앞서간 칸이 표를 흔들지 않게), 직업 몫은 부마다 따로 낸다."""
     rows = {}
-    for p in sorted(SIMD.glob('tank_*_off.json')):
+    for p in sorted(list(SIMD.glob('tank_*_off.json')) + list(SIMD.glob('tank_*_off_w0*.json'))):   # _off_w0*: 이승 기준표용 짧은 판(끔, 12시간 — 2026-11-14 밸런스 2차, 같은 직업의 여러 판은 칸마다 평균)
         d = json.loads(p.read_text(encoding='utf-8'))
         if d.get('lean') or d['cls'] not in classes:
             continue
