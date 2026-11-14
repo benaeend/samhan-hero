@@ -53,7 +53,7 @@ SIM = r"""
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
   let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
-  const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
+  const Wt = {atk:1, hp:1.3 * Math.pow(1.09, opts.hpLag ?? ((G.TANK && G.TANK.hpLag) || 0)), crit:1.5, critDmg:1.8, aspd:1.5, regen:3};   // 체력은 공격력보다 TANK.hpLag(10)레벨 아래에 머물게(2026-11-14 엽전 경제)
   const LEAN = opts.lean === 'hard' ? {d:25, r:12} : opts.lean === 'mild' ? {d:10, r:5} : null;   // 9-4: 공격만 올리는 사람(Δ = 체력이 공격력보다 뒤에 머무는 레벨·재련 단계)
   if (LEAN) { Wt.hp *= Math.pow(1.09, LEAN.d); if (opts.lean === 'hard') Wt.regen *= 100; }
   // 재련 퀘스트(「무기를 +5까지 재련」 등)가 걸려 있으면 그 칸 이름 — 값을 먼저 모아 바로 재련한다(2026-11-14 밸런스 2차).
@@ -1710,11 +1710,13 @@ async def main():
           { const dq = JSON.parse(JSON.stringify(old)); dq.world = 3; dq.quest.main = 120; dq.quest.sv = 5; dq.refine.weapon.lv = 15; const mq = G.mergeState(dq); out.sv = [mq.quest.sv, mq.quest.main]; dq.quest.main = 30; out.svFix = G.mergeState(dq).quest.main === G.CROSS_Q; }
           G.skSetFix(); const learned = G.SKILLS.map((_, i) => i).filter(i => G.skLv(i) > 0);
           out.learned = learned.length; out.n = S.skSet.length; out.note = S.skNote; out.man = S.skSetMan; out.v = S.skV; out.rec = S.skSet.join() === G.skPresetFor('mix').join();
-          const x = learned.find(i => !S.skSet.includes(i)), a0 = S.skSet[0]; out.full = G.skToggle(x); out.sw = G.skToggle(x, a0) === true && S.skSet.includes(x) && !S.skSet.includes(a0) && S.skSet.length === 8 && S.skSetMan;
-          G.skToggle(S.skSet[1]); for (let i = 0; i < 20; i++) G.update(0.05); G.skSetFix(); out.stay7 = S.skSet.length === 7;
-          G.skSavePut(0); G.skSetAuto(); out.auto = S.skSet.length === 8 && !S.skSetMan; out.ld = G.skSaveLoad(0) && S.skSet.length === 7 && S.skSetMan; G.skSetAuto();
+          const x = learned.find(i => !S.skSet.includes(i)), a0 = S.skSet[0]; out.full = G.skToggle(x); out.sw = G.skToggle(x, a0) === true && S.skSet.includes(x) && !S.skSet.includes(a0) && S.skSet.length === 10 && S.skSetMan;
+          G.skToggle(S.skSet[1]); for (let i = 0; i < 20; i++) G.update(0.05); G.skSetFix(); out.stay7 = S.skSet.length === 9;
+          G.skSavePut(0); G.skSetAuto(); out.auto = S.skSet.length === 10 && !S.skSetMan; out.ld = G.skSaveLoad(0) && S.skSet.length === 9 && S.skSetMan; G.skSetAuto();
           S.skV = 0; S.skOff = learned.slice(0, 3); S.skSetMan = false; S.skNote = false; G.skSetFix(); out.mig = S.skSetMan && S.skSet.length === learned.length - 3 && !learned.slice(0, 3).some(i => S.skSet.includes(i)) && !S.skNote;
-          G.skSetAuto(); out.bossK = G.skBossK(); out.pre = ['boss', 'party', 'mob'].every(k => G.skPresetFor(k).length === 8) && G.skPresetFor('party')[0] === 10;
+          { const keep = S.skSet.slice(0, 8); S.skSetMan = true; S.skSet = keep.slice(); S.skW = 8; S.skPre = {boss:keep.slice(0, 8)}; S.skSaves = [keep.slice(0, 8), null, null]; G.skSetFix();   // 8칸 시절 저장: 직접 고른 칸·싸움 조합·저장 칸의 빈 두 칸을 추천 순서로 채움
+            out.widen = S.skW === 10 && S.skSet.length === 10 && keep.every((v, k) => S.skSet[k] === v) && S.skPre.boss.length === 10 && S.skSaves[0].length === 10 && G.mergeState({}).skW === 8; }
+          G.skSetAuto(); out.bossK = G.skBossK(); out.pre = ['boss', 'party', 'mob'].every(k => G.skPresetFor(k).length === 10) && G.skPresetFor('party')[0] === 10;
           out.k = [G.SK_SLOTS, G.AWAKEN_SEC, G.AWAKEN_SEC4, G.MP_K, G.RAID_GEM_K, G.TB_GEMS.normal, G.TB_GEMS.hell, G.GR_GEMS, G.VAULT_GEMS, G.SOUL_PITY, G.RAID_MYTH_P, G.MAT_DROP.gate, G.MAT_DROP.raid, G.MAT_DROP.tb, G.MAT_DROP.mob, G.SHARD_SRC.raidP, G.ACC_DROP.gate.ring, G.ACC_DROP.gate.ear, G.vaultShards(), G.WEEK_SHARD, G.NPC_RARE_P];
           // 싸움 중 물약 구매 금지
           out.lock0 = G.potLock(); S.gold = 1e30; S.gems = 1e6; S.raid.tk = 3; S.inv.potion = 3; S.inv.mana = 3; S.inv.elixir = 0; out.low = G.potLowAny();
@@ -1725,7 +1727,7 @@ async def main():
         await tab(sp, 'shop')
         await sp.wait_for_timeout(500)
         s2 = await sp.evaluate("""() => ({lock: !document.querySelector('#shopLock').hidden, dis: document.querySelector('#shb-potion').disabled && document.querySelector('#shb-mana').disabled && document.querySelector('#shb-elixir').disabled, txt: document.querySelector('#shb-potion').textContent,
-          bar: document.querySelectorAll('#skillbar .sk').length, many: document.querySelector('#skillbar').classList.contains('many')})""")
+          bar: document.querySelectorAll('#skillbar .sk').length, many: document.querySelector('#skillbar').classList.contains('many'), lots: document.querySelector('#skillbar').classList.contains('lots')})""")
         await sp.screenshot(path=str(OUT / '26_싸움중_상점잠김.png'))
         s3 = await sp.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; if (G.raid){ G.raid.time = 0; for (let i = 0; i < 300 && G.raid; i++) G.update(0.05); }
           G.PAT.off = false; const out = {lock2: G.potLock(), buy2: G.buyShop('potion')};
@@ -1734,10 +1736,10 @@ async def main():
           G.quiet = false; G.closePage(); return out; }""")
         check(s1['job'] == 4 and s1['jobFix'] == 4 and s1['job3'] == 3, f'4차 전직 저장을 다시 불러와도 4차 그대로이고(예전엔 3차로 내려감), 4차 기술을 익힌 기록이 있으면 되돌린다 {s1["job"]} {s1["jobFix"]} {s1["job3"]}')
         check(s1['sv'] == [9, 120] and s1['svFix'], f'부상에서 재련이 계승(+15)된 저장을 다시 불러와도 이야기가 옛 퀘스트(무기 +20)로 되돌아가지 않고, 되돌아갔던 저장은 건너기 퀘스트까지 되찾는다 {s1["sv"]} {s1["svFix"]}')
-        check(s1['learned'] == 11 and s1['n'] == 8 and s1['note'] and not s1['man'] and s1['v'] == 2 and s1['rec'] and s1['full'] == 'full' and s1['sw'] and s1['stay7'] and s1['auto'] and s1['ld'] and s1['mig']
-              and abs(s1['bossK'] - 1.06) < 1e-9 and s1['pre'] and s2['bar'] == 8 and s2['many'],
-              f'장착 기술 8칸: 예전 저장은 추천 8개로 정리(알림)·뺀 기술은 그대로 옮김, 꽉 차면 무엇을 뺄지 고르기, [빼기]는 유지, 저장 조합, 싸움별 추천 8개, 기술 줄 8칸, 단계 보스 체력 +6%까지 {s1} {s2}')
-        check(s1['k'] == [8, 5, 8, 0.75, 1.2, 100, 200, 180, 90, 50, 0.012, 4, 6, 10, 0.008, 0.3, 0.06, 0.01, 4 + 4, 40, 0.015], f'밸런스 숫자(초각성 5·8초, 마나 0.75배, 레이드 보석·재료·신화 조각·장신구·넋 구슬 천장) {s1["k"]}')
+        check(s1['learned'] == 11 and s1['n'] == 10 and s1['widen'] and s1['note'] and not s1['man'] and s1['v'] == 2 and s1['rec'] and s1['full'] == 'full' and s1['sw'] and s1['stay7'] and s1['auto'] and s1['ld'] and s1['mig']
+              and abs(s1['bossK'] - 1.06) < 1e-9 and s1['pre'] and s2['bar'] == 10 and s2['many'] and s2['lots'],
+              f'장착 기술 10칸: 예전 저장은 추천 10개로 정리(알림)·뺀 기술은 그대로 옮김, 꽉 차면 무엇을 뺄지 고르기, [빼기]는 유지, 저장 조합, 싸움별 추천 10개, 기술 줄 10칸(다섯 개씩 두 줄), 단계 보스 체력 +6%까지 {s1} {s2}')
+        check(s1['k'] == [10, 5, 8, 0.75, 1.2, 100, 200, 180, 90, 50, 0.012, 4, 6, 10, 0.008, 0.3, 0.06, 0.01, 4 + 4, 40, 0.015], f'밸런스 숫자(초각성 5·8초, 마나 0.75배, 레이드 보석·재료·신화 조각·장신구·넋 구슬 천장) {s1["k"]}')
         check(not s1['lock0'] and s1['low'] and s1['buy0'] and s1['raid'] and s1['lock1'] and not s1['buy1'] and s1['same'] and s1['why'] == '싸움 뒤에' and s1['whet'] and s1['npc']
               and s2['lock'] and s2['dis'] and '싸움 뒤에' in s2['txt'] and not s3['lock2'] and s3['buy2'],
               f'싸움이 시작되면 물약(상점 물약 칸·선물·꾸미기 상자)을 살 수 없고 다른 물건은 살 수 있으며, 끝나면 다시 살 수 있다 {s1["lock1"]} {s1["buy1"]} {s2} {s3}')
@@ -1753,7 +1755,7 @@ async def main():
         await sp.click('#prePot')
         await sp.wait_for_timeout(500)
         pg = await sp.evaluate("""() => ({shop: !!document.querySelector('#shb-potion'), modal: document.querySelector('#modal').hidden, raid: !!window.__game.raid})""")
-        check(pn['low'] == 3 and pn['go'] and '8/8' in pn['n'] and pg['shop'] and pg['modal'] and not pg['raid'], f'싸움 전 정비 창에 들고 가는 물약 수가 보이고, 적으면 붉은 글씨 + [사러 가기]로 상점 물약 칸에 간다 {pn} {pg}')
+        check(pn['low'] == 3 and pn['go'] and '10/10' in pn['n'] and pg['shop'] and pg['modal'] and not pg['raid'], f'싸움 전 정비 창에 들고 가는 물약 수가 보이고, 적으면 붉은 글씨 + [사러 가기]로 상점 물약 칸에 간다 {pn} {pg}')
         await tab(sp, 'skill')
         await sp.wait_for_timeout(400)
         await sp.evaluate("""() => { const b = [...document.querySelectorAll('#page [data-eq]')].find(x => x.textContent === '넣기' && !x.disabled); b.scrollIntoView(); b.click(); }""")
@@ -1764,7 +1766,7 @@ async def main():
         await sp.wait_for_timeout(300)
         sw1 = await sp.evaluate("""() => ({set: window.__game.S.skSet.slice(), man: window.__game.S.skSetMan, tag: document.querySelector('#skSetN').textContent, modal: document.querySelector('#modal').hidden})""")
         await sp.screenshot(path=str(OUT / '26d_기술_8칸.png'))
-        check(len(sw1['set']) == 8 and sw1['set'] != sw0 and sw0[0] not in sw1['set'] and sw1['man'] and '8칸 중 8칸' in sw1['tag'] and sw1['modal'], f'[기술]에서 8칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 묻고 바꿔 끼운다 {sw0} {sw1}')
+        check(len(sw1['set']) == 10 and sw1['set'] != sw0 and sw0[0] not in sw1['set'] and sw1['man'] and '10칸 중 10칸' in sw1['tag'] and sw1['modal'], f'[기술]에서 10칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 묻고 바꿔 끼운다 {sw0} {sw1}')
         await sp.evaluate("""() => { const G = window.__game; G.closePage(); G.noSkNote = false; G.S.skNote = true; }""")
         await sp.wait_for_selector('#inh.noti #notiSay', timeout=4000)
         await sp.wait_for_timeout(500); await sp.screenshot(path=str(OUT / '26e_8칸_알림.png'))
@@ -1774,8 +1776,8 @@ async def main():
         await sp.screenshot(path=str(OUT / '26f_8칸_알림_끝.png'))
         await sp.click('#notiGo'); await sp.wait_for_timeout(400)
         n8c = await sp.evaluate("() => ({note: window.__game.S.skNote, open: window.__game.inhOpen, tab: window.__game.currentTab, log: window.__game.S.noti.log.map(x => x.k)})")
-        check('까치' in n8['who'] and '8' in n8['say'] and not n8['btns'] and n8b['btns'] and n8b['sk'] == 8 and not n8c['note'] and not n8c['open'] and n8c['tab'] == 'skill' and n8c['log'] == ['sk8'],
-              f'8개를 넘게 쓰던 예전 저장은 까치가 찾아와 알린다(알림 연출 틀: 말을 눌러 넘기고 [기술 보러 가기]) {n8} {n8b} {n8c}')
+        check('까치' in n8['who'] and '10' in n8['say'] and not n8['btns'] and n8b['btns'] and n8b['sk'] == 10 and not n8c['note'] and not n8c['open'] and n8c['tab'] == 'skill' and n8c['log'] == ['sk8'],
+              f'10개를 넘게 쓰던 예전 저장은 까치가 찾아와 알린다(알림 연출 틀: 말을 눌러 넘기고 [기술 보러 가기]) {n8} {n8b} {n8c}')
         await ctxS.close()
 
         # 9-10) 물의 신화 3단계: 상위 레이드 「진」(세기 고정·권장 전투력·하루 3번·목숨·탕약 한도·지면 -4%·주간 첫 승리·리셋권 제외·알림)과 해태 수련(46장 전엔 숨김)
@@ -2035,8 +2037,8 @@ async def main():
               f"동해 지역 보스 셋과 이야기 속 보스(36단계 물그림자), 9번째 단계는 수문장 {s2['bosses']}")
         check(all(s2['raid'].get(k, {}).get('start') and s2['raid'][k]['first'] and s2['raid'][k]['said'] >= 1 for k in ('d0', 'd1', 'd2')),
               f"동해 레이드 셋(해룡·역신·용왕의 시험)이 그 이야기에서 열리고, 보스가 싸움 앞에 한마디 한다 {s2['raid']}")
-        check(s2['jr'] and s2['jt'] and s2['teacher'] == '문무대왕' and s2['job'] == 5 and s2['sk'][0][0] >= 1 and s2['sk'][1][0] >= 1 and s2['sk'][0][1] == '해룡 승천' and s2['sk'][1][1] == '대왕의 맹세' and s2['mp'] == 120 and s2['cape'] == 'j_musa_5' and len(s2['set']) == 8,
-              f"5차 전직: Lv.505 + 46장 뒤 문무대왕과 겨뤄 해룡장, 기술 둘(해룡 승천·대왕의 맹세)·마나 120·전직 망토, 전투 칸은 여전히 8칸 {s2['job']} {s2['sk']} {s2['mp']} {s2['set']}")
+        check(s2['jr'] and s2['jt'] and s2['teacher'] == '문무대왕' and s2['job'] == 5 and s2['sk'][0][0] >= 1 and s2['sk'][1][0] >= 1 and s2['sk'][0][1] == '해룡 승천' and s2['sk'][1][1] == '대왕의 맹세' and s2['mp'] == 120 and s2['cape'] == 'j_musa_5' and len(s2['set']) == 10,
+              f"5차 전직: Lv.505 + 46장 뒤 문무대왕과 겨뤄 해룡장, 기술 둘(해룡 승천·대왕의 맹세)·마나 120·전직 망토, 전투 칸은 여전히 10칸 {s2['job']} {s2['sk']} {s2['mp']} {s2['set']}")
         check(s2['got'].get('kitQ') == '머리부터 발끝까지' and s2['got'].get('tal', [0, 0])[1] == 40 and s2['got'].get('silk', [0, 0])[1] == 100 and s2['got'].get('okdae', [0, 0])[1] == 80 and s2['title'] == [True, True] or
               (await sp.evaluate("() => { window.__game.autoClear && window.__game.autoClear(); const S = window.__game.S; return !!S.title.own.east && !!S.title.own.sea1 && S.myth.tal === 40 && S.myth.silk === 100 && S.myth.okdae === 80; }")),
               f"4부 신화 보물 셋(처용 탈·세오녀의 비단·용왕의 옥대)은 이야기 보상으로, 별호 「동쪽 바다의 용사」·「용궁의 손님」 {s2['got']} {s2['title']}")
@@ -2048,8 +2050,8 @@ async def main():
             const d0 = G.dmgMeter; G.hero.mp = G.mpMax(); const a = G.castNow(11); for (let i = 0; i < 60; i++) G.update(0.05); const b = G.castNow(12); for (let i = 0; i < 20; i++) G.update(0.05);
             out[c] = {a, b, dmg:G.dmgMeter > d0, names:[G.CLASSES[c].skills[11], G.CLASSES[c].skills[12]], job:G.JOBS[c][4].name, pre:G.skPresetFor('boss').length, has:G.skPresetFor('boss').includes(11) || G.skPresetFor('mix').includes(11)}; }
           S.mode = 'auto'; S.skSetMan = false; G.setClass('musa'); G.refreshStats(); return out; }""")
-        check(all(s3[c]['a'] is True and s3[c]['b'] is True and s3[c]['dmg'] and s3[c]['pre'] == 8 for c in s3) and [s3[c]['job'] for c in ('musa', 'jagaek', 'sulsa', 'doin')] == ['해룡장', '잠영', '조수사', '용신무'],
-              f"네 직업의 5차 기술(광역기·버프기)이 탈 없이 나가고 추천 조합은 8칸 { {c: (s3[c]['a'], s3[c]['b'], s3[c]['names']) for c in s3} }")
+        check(all(s3[c]['a'] is True and s3[c]['b'] is True and s3[c]['dmg'] and s3[c]['pre'] == 10 for c in s3) and [s3[c]['job'] for c in ('musa', 'jagaek', 'sulsa', 'doin')] == ['해룡장', '잠영', '조수사', '용신무'],
+              f"네 직업의 5차 기술(광역기·버프기)이 탈 없이 나가고 추천 조합은 10칸 { {c: (s3[c]['a'], s3[c]['b'], s3[c]['names']) for c in s3} }")
         # 화면: 동해 사냥터 세 지역·보스·여는 연출·노래 장면·전직 화면·여정 지도
         for nm, stg in (('29_동해_대왕암.png', 5), ('29b_동해_산호숲.png', 15), ('29c_동해_용궁뜰.png', 25)):
             await sp.evaluate("(s) => { const G = window.__game; G.closePage(); G.setStage(s); for (let i = 0; i < 160; i++) G.update(0.05); }", stg)
@@ -3423,8 +3425,8 @@ async def main():
               and j3['seq'][0].split(':')[2] == '다섯 스승의 시험 1/5' and j3['seq'][4].split(':')[2] == '다섯 스승의 시험 5/5' and j3['seq'][1].split(':')[1] == '강림도령' and j3['seq'][3].split(':')[3] == 'm4_musa' and j3['seq'][4].split(':')[3] == 'm5_musa',
               f"「다섯 스승의 시험」: 연달아 다섯 판(1차 스승 → 강림도령 → 3차 → 4차 → 5차) {j3['seq']}")
         check(j3['job'] == 6 and not j3['raidLeft'] and j3['chain'] is False and j3['cape'] == 'j_musa_6' and j3['capes'] and j3['mp'] == 140 and j3['learned'] == 15 and j3['lv'][0] >= 1 and j3['lv'][1] >= 1
-              and j3['names'] == ['금강 뇌정', '부동심'] and j3['jobName'] == '금강장' and j3['set'] == 8 and j3['jr'] is False,
-              f"다섯 판을 이기면 6차 전직: 금강장·마나 140·기술 15개(금강 뇌정·부동심)·전직 망토·전투 칸 8칸 {j3['job']} {j3['mp']} {j3['learned']} {j3['names']} {j3['cape']}")
+              and j3['names'] == ['금강 뇌정', '부동심'] and j3['jobName'] == '금강장' and j3['set'] == 10 and j3['jr'] is False,
+              f"다섯 판을 이기면 6차 전직: 금강장·마나 140·기술 15개(금강 뇌정·부동심)·전직 망토·전투 칸 10칸 {j3['job']} {j3['mp']} {j3['learned']} {j3['names']} {j3['cape']}")
         check(abs(j3['atkR'] - (1 + 4.2) / (1 + 3.3)) < 0.03 and abs(j3['hpR'] - 5.2 / 4.3) < 0.03, f"전직 보너스 +420%: 공격력·체력이 5차의 {(5.2 / 4.3):.3f}배 {j3['atkR']:.3f} {j3['hpR']:.3f}")
         if j3['souls'] > 0:
             check(len(j3['soulAt']) == 5 and j3['soulAt'][0][0] is True and all(x[0] is True and x[1] >= 99 for x in j3['soulAt'][1:]),
@@ -4565,7 +4567,7 @@ async def main():
         await fresh(t29b)
         c29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.raid.tk = 3; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp;
-          const fillT = k => { const L = Math.log10(G.tankPow() / k) - G.tkCls(G.S.cls, 0); G.TANK_REF[0] = [[1, L], [900, L]]; };
+          const fillT = k => { const L = Math.log10(G.tankPow() / k) - G.tkCls(G.S.cls, 0) + G.tkLagLog(); G.TANK_REF[0] = [[1, L], [900, L]]; };
           const clrT = () => { G.TANK_REF.length = 0; };
           // c. 표가 비어 있으면 예전 방식
           clrT(); G.tankOff = false; G.setStage(20); S.maxStage = 20;
@@ -4619,7 +4621,7 @@ async def main():
         # 손잡이를 켜면 지수가 아주 낮은 용사도 보스의 큰 살이 최대 체력의 약 90%를 안 넘고 보스 공격이 줄어든다(장치는 남겨 둠)
         e29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.maxStage = 43; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp, w0 = S.world;
-          const fillT = (w, k) => { const L = Math.log10(G.tankPow() / k) - G.tkCls(S.cls, w); G.TANK_REF[w] = [[1, L], [900, L]]; };
+          const fillT = (w, k) => { const L = Math.log10(G.tankPow() / k) - G.tkCls(S.cls, w) + G.tkLagLog(); G.TANK_REF[w] = [[1, L], [900, L]]; };
           const rel = () => { const m = G.makeMob(true, 5, 5); return m.atk / (G.mAtkT(G.S.stage) * G.tkClsK() * G.tkPast(G.S.stage)); };
           S.world = 0; G.setStage(43);
           out.floors = [G.TANK.bigFloor.slice(), G.TANK.bossFloor.slice()];
@@ -4788,7 +4790,7 @@ async def main():
         await apg.evaluate("() => { const G = window.__game; G.hideModal && G.hideModal(); const e = document.querySelector('#inh'); if (e) e.hidden = true; }")
         t9 = await apg.evaluate(r"""(a) => { const [p1, p3] = a, G = window.__game, S = G.S, out = {}; G.quiet = true; G.benchAvg = true;
           const r = sv => { Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(sv)))); S.name = '적성용사'; G.migrateStory(); G.applyWorld(); G.refreshStats(); G.setStage(S.stage); S.inv.mana = 9999; S.inv.potion = 9999; G.aptGraceForce = false; G.aptReset();
-            G.noApt = true; const off = G.bench(30, false).dps; G.noApt = false; G.aptReset(); const on = G.bench(30, false).dps; return on / off; };
+            G.skSetFix(); G.noApt = true; G.aptReset(); G.refreshStats(); const off = G.bench(90, false).dps; G.noApt = false; G.aptReset(); G.refreshStats(); const on = G.bench(90, false).dps; return on / off; };   // (2026-11-14 기술 10칸) 예전 8칸 저장은 첫 refreshStats 때 칸이 넓어져서 판마다 먼저 맞추고, 30초면 재사용 29초 기술이 한 번·두 번으로 갈려(10칸에서 순서가 밀리면 두 번째가 30초를 넘김) 90초로 잰다
           out.p1 = r(p1); out.p3 = r(p3); return out; }""", [apt_p1, apt_p3])
         check(0.92 <= t9['p1'] <= 1.20 and 0.92 <= t9['p3'] <= 1.20, f"1·2부 베타 무사 저장은 적성을 켜도 크게 약해지지 않고(0.92 이상) 많이 세지지도 않는다(1.20 이하 — 무사는 공격력 쪽으로 기울어 있어 조금 오른다) {t9}")
         # 짧은 시뮬(자객 3부 끝 5분): 오류 없이 돌고 무기 각인이 급소, 수호신은 맞는 능력 쪽
