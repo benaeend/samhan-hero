@@ -1681,8 +1681,8 @@ const CLASSES = {
     skills:['불꽃 고리', '벼락', '마력 보호막', '유성우', '얼음 창 세례', '마력 저주', '칠성 낙뢰', '태극 천벌', '식신 행렬', '구천 현뢰', '오행 공명', '밀물 해일', '썰물의 숨', '바다 마시기', '선인의 고요'], awaken:'천화 강림', awaken4:'구천 천화'},
   doin:{name:'도인', desc:'준비 부적을 겹겹이 쌓아 한 방에 터뜨려요', tags:'한방 · 원거리', hpMul:1.1, atkMul:1, spdMul:0.9, critAdd:0, regenAdd:0.003, range:3, skillMul:1,
     role:'한방', traits:['공격 기술은 다섯(천벌 부적 · 도력 일격 · 팔괘진 · 하늘의 심판 · 오방신장). 늘 치명타로 크게 터져요 — 도력 일격·팔괘진은 때리면서 나를 북돋는 「버프 겸 공격」', '나머지는 준비 기술: 봉인(받는 피해↑)·회복·대굿(공격 기술 다시 쓰기)·굿춤, 4차 전직의 오색 보천(공격 기술 피해↑·방패)', '준비 기술을 다 건 뒤 큰 공격 기술을 직접 누르면 게임에서 가장 큰 한 방이 나와요(자동은 그때그때 써요)'],
-    sk:[{kind:'d_atk1', cd:10, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, icon:'pearl', atk:true},
-      {kind:'d_bagua', cd:30, icon:'crit', atk:true}, {kind:'d_atk3', cd:40, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}, {kind:'d_shin', cd:30, icon:'jobC', job:3},
+    sk:[{kind:'d_atk1', cd:10, hcd:4, icon:'bolt', atk:true}, {kind:'d_seal', cd:18, icon:'mark'}, {kind:'d_heal', cd:24, icon:'plus'}, {kind:'d_charge', cd:20, hcd:7, icon:'pearl', atk:true},
+      {kind:'d_bagua', cd:30, icon:'crit', atk:true}, {kind:'d_atk3', cd:40, hcd:10, icon:'meteor', atk:true, unlock:1, reb:1}, {kind:'d_atk2', cd:20, hcd:7, icon:'jobA', atk:true}, {kind:'d_gut', cd:45, icon:'jobB'}, {kind:'d_shin', cd:30, icon:'jobC', job:3},
       {kind:'d_bocheon', cd:40, icon:'jobD', job:4}],   // 도인 공격 기술은 다섯(2026-11 (41), 사용자 요청): 도력 일격·팔괘진이 버프 겸 공격이 되고, 4차 오색 보천은 공격 기술을 키우는 준비 기술로
     order:[7, 10, 12, 14, 9, 8, 1, 2, 4, 3, 11, 13, 0, 6, 5],
     weapon:'부채', armor:'도포', wtype:'fan', base:'#e6e0cc', pants:'#bdb59c', belt:'#b8382f', fx:'#f3d36b', boltFx:'pillar', nukeFx:'pillars', proj:'charm',
@@ -2018,20 +2018,20 @@ const STAT_DEFS = {
 const STAT_ORDER = ['atk', 'hp', 'crit', 'critDmg', 'aspd', 'regen'];
 
 const SKILLS = [
-  {key:'spin',   unlock:5,  cd:6,  base:150,  growth:1.9, max:30},
-  {key:'bolt',   unlock:12, cd:10, base:2000, growth:1.9, max:30},
+  {key:'spin',   unlock:5,  cd:6, hcd:3,  base:150,  growth:1.9, max:30},
+  {key:'bolt',   unlock:12, cd:10, hcd:4, base:2000, growth:1.9, max:30},
   {key:'roar',   unlock:25, cd:24, base:3e4,  growth:1.9, max:30},
-  {key:'meteor', unlock:40, cd:20, base:5e5,  growth:1.9, max:30},
-  {key:'combo',  unlock:60, cd:14, base:5e6,  growth:1.9, max:30},
+  {key:'meteor', unlock:40, cd:20, hcd:6, base:5e5,  growth:1.9, max:30},
+  {key:'combo',  unlock:60, cd:14, hcd:5, base:5e6,  growth:1.9, max:30},
   {key:'mark',   unlock:80, cd:28, base:5e7,  growth:1.9, max:30},
-  {key:'jobA',   unlock:1,  job:1, cd:18, base:2e6, growth:1.9, max:30},   // 1차 전직 기술
-  {key:'jobB',   unlock:1,  job:2, cd:32, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
-  {key:'jobC',   unlock:1,  job:3, cd:26, base:5e10, growth:1.9, max:30},  // 3차 전직 기술(부상)
-  {key:'jobD',   unlock:1,  job:4, cd:40, base:5e12, growth:1.9, max:30},  // 4차 전직 기술(곤륜)
+  {key:'jobA',   unlock:1,  job:1, cd:18, hcd:6, base:2e6, growth:1.9, max:30},   // 1차 전직 기술
+  {key:'jobB',   unlock:1,  job:2, cd:32, hcd:8, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
+  {key:'jobC',   unlock:1,  job:3, cd:26, hcd:8, base:5e10, growth:1.9, max:30},  // 3차 전직 기술(부상)
+  {key:'jobD',   unlock:1,  job:4, cd:40, hcd:10, base:5e12, growth:1.9, max:30},  // 4차 전직 기술(곤륜)
   {key:'party',  unlock:30, cd:40, base:1e5,  growth:1.9, max:30},  // 파티 버프(2026-11 (41), 직업마다 하나: 나와 함께 싸우는 동료 모두)
-  {key:'jobE',   unlock:1,  job:5, cd:34, base:5e14, growth:1.9, max:30},  // 5차 전직 광역기(바다, 물의 신화 5단계)
+  {key:'jobE',   unlock:1,  job:5, cd:34, hcd:9, base:5e14, growth:1.9, max:30},  // 5차 전직 광역기(바다, 물의 신화 5단계)
   {key:'jobF',   unlock:1,  job:5, cd:50, base:5e14, growth:1.9, max:30},  // 5차 전직 버프기
-  {key:'jobG',   unlock:1,  job:6, cd:44, base:5e16, growth:1.9, max:30},  // 6차 전직 광역기(천축, 물의 신화 9단계 나)
+  {key:'jobG',   unlock:1,  job:6, cd:44, hcd:10, base:5e16, growth:1.9, max:30},  // 6차 전직 광역기(천축, 물의 신화 9단계 나)
   {key:'jobH',   unlock:1,  job:6, cd:55, base:5e16, growth:1.9, max:30},  // 6차 전직 버프기
 ];
 // 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
@@ -2040,7 +2040,50 @@ const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'j
 // 한 번에 하나씩, AUTO_GAP초 간격을 두고 써서 앞 기술의 효과를 받은 뒤 다음 기술이 들어간다(도인은 CLASSES.doin.order)
 const SK_AUTO_ORDER = [10, 12, 14, 2, 5, 6, 7, 8, 9, 11, 13, 3, 1, 4, 0], AUTO_GAP = 0.1;   // 파티 버프(10)가 맨 앞
 let autoGap = 0, skReadyT = {};   // skReadyT[기술] = 재사용이 끝난 때(먼저 준비된 기술부터 쓰려고)
-const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key)}); })]));
+const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map((s, i) => { const o = (CLASSES[c].sk || [])[i]; return Object.assign({kind:s.key, icon:s.key}, s, o || {}, {atk:o ? !!o.atk : ATK_KINDS.includes(s.key), hcd:(o ? o.hcd : s.hcd) || 0}); })]));
+/* 사냥 박자(2026-11-14, 기술 재사용 개편 1단계 — 기획 「같은 8칸, 두 가지 박자」): 공격 기술(hcd가 있는 칸)은
+   · 사냥 박자 = 레이드가 아닐 때(사냥터·단계 보스·수문장·백귀야행 같은 몹 떼 행사): hcd초마다 작게
+   · 레이드 박자 = startFight로 시작한 싸움 전부(레이드·진·타임 보스·1일 보스·전직 시험·강림·결투·해태·금고·허수아비·기억·천공의 탑): cd초마다 지금 그대로
+   사냥 한 방 = 레이드 한 방 × r × 보정, r = hcd ÷ cd. 같은 초당 피해(보정 1)면 큰 한 방이 몹 체력을 넘겨 버려지던 피해가 줄어 사냥이 1.4~2.3배 빨라져서
+   몹에게는 huntF()(세계·직업 표 HUNT.w, 아래)로 처치 속도를 예전과 맞추고, 단계 보스·수문장에게는 huntB()로 초당 피해를 레이드 박자와 맞춘다(hit()가 castCtx를 보고).
+   castCtx({dur:r, f, b})는 castSkill이 정하고 after(나눠 치는 기술)·투사체(ctx)가 이어받는다. 덤 효과 시간(1차 약점·2차 공격 버프·분신·묶기)도 × r(켜져 있는 몫은 같게).
+   (처음엔 직업마다 고정 배율 하나였는데 벽 구간에서 사냥이 0.6배가 되어 1부 끝이 40~120% 늦어졌고, 벽에 맞추면 한 방 구간이 1.3~1.5배 빨라져 세계별 표로 바꿈 — --long 두 판)
+   버프·약점·파티 버프·도인 준비 기술·팔괘진·5·6차 버프기와 초각성기 1·2는 박자를 나누지 않는다. 박자가 바뀌면 남은 재사용을 남은 몫 비율로 옮긴다(beatSync) */
+/* 사냥 보정 HUNT.w[세계 묶음][직업](이승·저승·천계·부상·곤륜·4부·5부): 사냥 박자 공격 기술이 몹에게 주는 초당 피해 배율(레이드 박자 = 1).
+   한 방에 죽는 구간(버려지던 피해가 많음)과 벽 구간(버려지던 피해가 없음)은 같은 배율로 못 맞춰서, 세계마다 저장 표본의 「처치 속도 새÷예전」이 1.00~1.10이 되게 잼(/tmp/cdimpl 방식).
+   c[세계 묶음][직업]: 사냥 재사용 배율 — 한 방에 다 죽는 땅(곤륜·5부 등)은 피해를 깎아도 「자주 쓸어 버리는」 몫만큼 빨라져서 재사용을 늘려 맞춤(huntHcd, 레이드 재사용보다 길어지지 않음).
+   bj·bc: 단계 보스·수문장 보정(전직 단계별 · 직업) — 버프·약점 기술이 많아질수록(5·6차 버프기) 큰 한 방과 겹치던 몫이 커서 사냥 박자에서 잃는 몫도 큼(bench로 레이드 박자와 초당 피해를 맞춤) */
+const HUNT = {w:[
+  {musa:0.57, jagaek:0.52, sulsa:0.75, doin:0.5, gungsa:0.5, changgaek:0.5},   // 이승
+  {musa:0.73, jagaek:0.79, sulsa:0.71, doin:0.53, gungsa:0.74, changgaek:0.7},   // 저승
+  {musa:0.91, jagaek:0.94, sulsa:0.95, doin:0.99, gungsa:0.9, changgaek:0.67},   // 천계
+  {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 부상
+  {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 곤륜
+  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6},   // 4부 바다
+  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6}],   // 5부 천축
+  c:[
+  {musa:1, jagaek:1.27, sulsa:1, doin:1.68, gungsa:1.28, changgaek:1.5},   // 이승
+  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 저승
+  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 천계
+  {musa:1, jagaek:1, sulsa:1, doin:1.47, gungsa:1, changgaek:1.34},   // 부상
+  {musa:3, jagaek:1.78, sulsa:2.44, doin:2.7, gungsa:2.6, changgaek:2.4},   // 곤륜
+  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:3},   // 4부 바다
+  {musa:3, jagaek:3, sulsa:3, doin:2.75, gungsa:3, changgaek:3}],   // 5부 천축 (c[세계 묶음][직업]: 사냥 재사용 배율, 없으면 1)
+  bj:[1, 1.03, 1.2, 1.15, 1.3, 1.55, 1.5], bc:{doin:1.1}, slots:8};   // slots: 이 표를 잰 때의 전투 기술 칸 수(SK_SLOTS가 바뀌면 HUNT.w를 다시 잴 것)
+let beatHunt = null, castCtx = null, castFrac = 0;   // beatHunt: 지금 재사용이 맞춰진 박자 · castCtx: 지금 치는 기술의 사냥 보정({dur, f, b}) · castFrac: 「기술 수련」 의뢰 셈(사냥 박자는 hcd÷cd번)
+const huntBeat = () => { const f = window.__game && window.__game.beat; return f ? f === 'hunt' : !raid; };   // 레이드(startFight 싸움)가 아니면 사냥 박자
+const skSplit = i => skDef(i).hcd > 0;   // 박자를 나누는 칸(공격 기술)
+const huntHcd = i => { const d = skDef(i); return d.hcd > 0 ? Math.min(d.cd, d.hcd * huntC()) : 0; };   // 지금 땅의 사냥 재사용(hcd × HUNT.c, 레이드 재사용보다 길어지지 않게)
+const skBaseCd = (i, hunt = huntBeat()) => { const d = skDef(i); return hunt && d.hcd > 0 ? huntHcd(i) : d.cd; };   // 각인·탈것 등으로 줄기 전 재사용
+const huntW =() => { const w = S.world || 0; return w <= 4 ? w : w <= 7 ? 5 : 6; };   // 세계 → 묶음(5~7 = 4부, 8~ = 5부)
+const huntF = () => (HUNT.w[huntW()] || {})[S.cls] || 1;   // 사냥 박자 몹 보정
+const huntC = () => (HUNT.c[huntW()] || {})[S.cls] || 1;   // 사냥 재사용 배율(한 방에 죽는 땅에서 너무 자주 쓸어 버리지 않게)
+const huntB = () => (HUNT.bj[S.job || 0] || 1) * (HUNT.bc[S.cls] || 1);   // 단계 보스·수문장 보정
+function beatSync(){   // 박자가 바뀌면(레이드에 들어가거나 끝나면) 남은 재사용을 비율로 옮긴다: 사냥 6초 중 3초 남음 → 레이드 18초의 절반 9초
+  const hb = huntBeat();
+  if (beatHunt !== null && hb !== beatHunt) for (let i = 0; i < SKILLS.length; i++){ const d = skDef(i), k = SKILLS[i].key; if (d.hcd > 0 && skillCd[k] > 0) skillCd[k] *= hb ? huntHcd(i) / d.cd : d.cd / huntHcd(i); }
+  beatHunt = hb;
+}
 const skDef = i => (CLASS_SK[S.cls] || CLASS_SK.musa)[i];
 // 기술 아이콘 빛깔(2026-11 (43), 사용자 요청: 기술 아이콘 색이 다 똑같음): 칸마다 다른 색. skIc(i)는 아이콘 칸에 붙일 class·style
 const SK_COL = ['#ff9a5a', '#7ac8ff', '#ff6a7a', '#ff8a2a', '#ffd24a', '#c88aff', '#4fe0c8', '#ff7ac8', '#9fe76a', '#bfe0ff', '#7affb0', '#5ad8ff', '#8ab0ff', '#ffe28a', '#c8b0ff'];
@@ -2214,7 +2257,7 @@ const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.75;   // (물의 신화) 8칸: 0.6 �
    저절로 마시고, 기술 줄 위 물약 칸을 누르면 바로 마신다. 값은 크게 내림(인삼 10개 = 몹 40마리 엽전, 감로수 10개 = 30마리) */
 const REGEN_K = 0.5, MANA_POT = 40, MANA_AT = 30, MANA_CD = 4;
 const mpMax = () => MP_MAX + (S && S.job >= 5 ? 20 : 0) + (S && S.job >= 6 ? 20 : 0);   // 최대 마나: 5차 120 · 6차 140(물의 신화)
-const skMp = i => Math.max(1, Math.round(skDef(i).cd * MP_K * (cls().mpK || 1)));   // 궁사는 마나 절반(mpK)
+const skMp = (i, hunt) => Math.max(1, Math.round(skBaseCd(i, hunt) * MP_K * (cls().mpK || 1)));   // 그때 박자의 재사용으로(사냥 박자면 작게 — 초당 마나는 같음)   // 궁사는 마나 절반(mpK)
 const COMBOS = [
   {k:'c1', a:0, b:1, name:'이어 치기', p:10},
   {k:'c2', a:2, b:3, name:'기세 싣기', p:12},
@@ -4377,10 +4420,11 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-5', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
-  ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
+  ['#', '11월 14일 · 사냥 기술 박자 · 이야기 펫 · 파티 화면'],
+  ['사냥에서는 기술이 자주, 작게 나가요', '공격 기술(전직 기술 포함)이 사냥터·단계 보스·수문장에서는 레이드보다 자주(대개 3~10초마다) 작게 나가 쉬지 않고 터져요. 대신 한 방은 작아져서 사냥 빠르기는 예전과 비슷해요(몹이 한 방에 쓰러지는 땅에서는 조금 덜 자주 나가요). 레이드·진·타임 보스처럼 「싸움 시작 창」이 뜨는 싸움에서는 예전과 똑같이 크고 느리게 나가요. [기술]에서 기술마다 「사냥 몇 초 · 레이드 몇 초」를 볼 수 있어요.'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
   ['비밀번호 기억하기', '로그인 창의 「기억하기」를 켜면 아이디와 비밀번호를 이 기기에만 가려서 적어 두고 다음에 채워 줘요. 남이 쓰는 기기에서는 꺼 주세요.'],
   ['레이드 시작 창 글자 겹침', '레이드를 고르면 뜨는 창에서도 「파티 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
@@ -5383,7 +5427,7 @@ let S = titleState();
 let ST = null;
 let mobs = [], texts = [], parts = [], fx = [], projs = [];
 let later = [];   // 게임 시간으로 잠시 뒤에 할 일(여러 번 나눠 치는 기술). 연출·멈춤·빨리 감기에서도 게임 시간에 맞춰 돈다
-const after = (sec, fn) => later.push({t:sec, fn});
+const after = (sec, fn) => later.push({t:sec, fn, ctx:castCtx});   // ctx: 나눠 치는 기술도 사냥 보정(castCtx)을 이어받는다
 const hero = {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, stepDur:STEP_HERO, dir:'down', x:0, y:0, hp:100, dead:false, deadT:0, atkT:0, swing:0, hurt:0,
   engaged:false, target:null, buffT:0, buffLv:1, idleT:0, shield:0, shieldT:0, charge:0, baguaT:0, baguaAdd:0, gutT:0, shinT:0, cloneT:0, cloneAcc:0};
 let bossActive = false, bossRef = null, bossTime = 0, spawnT = 0.5, shake = 0, gtime = 0;
@@ -6254,6 +6298,9 @@ let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정
 function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
+  if (castCtx && castCtx.f && mine && kind === 'skill' && !raw){   // 사냥 박자 보정: 단계 보스·수문장엔 b(초당 피해 = 레이드 박자), 몹엔 f(세계·직업 표 HUNT.w)
+    base *= m.boss ? castCtx.b : castCtx.f;
+  }
   if (m.kubGuard && mine) kubStun(m);   // 쿠베라의 곳간: 야차 문지기는 맞으면 잠깐 기절
   const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
@@ -9135,9 +9182,10 @@ function tryCast(i, lv, manual){
   if ((hero.mp ?? mpMax()) < mp){ if (manual){ addText('마나 부족', hero.x, hero.y - 44, '#7ab8ff', 11, true); sfx('click'); } return false; }
   const cb = comboFor(i), prev = [hero.comboT, hero.comboP];
   if (cb){ hero.comboT = COMBO_T; hero.comboP = cb.p; }   // 연계는 이번 기술부터 받는다
-  const ok = castSkill(i, lv, manual);
+  const ok = castSkill(i, lv, manual), hd = castCtx ? castCtx.dur : 1; castCtx = null;
   if (!ok){ if (cb){ hero.comboT = prev[0]; hero.comboP = prev[1]; } return false; }
-  lastCast = {i, t:gtime}; lgEv('cast'); hero.mp = Math.max(0, (hero.mp ?? mpMax()) - mp);
+  lastCast = {i, t:gtime}; castFrac += hd; if (castFrac >= 1 - 1e-9){ castFrac -= 1; lgEv('cast'); }   // 「기술 수련」: 사냥 박자는 hcd÷cd번으로 셈(레이드 박자 한 번 = 1)
+  hero.mp = Math.max(0, (hero.mp ?? mpMax()) - mp);
   if (cb){ S.rec.combos = (S.rec.combos || 0) + 1; addText(`연계 · ${cb.name}!`, hero.x, hero.y - 48, '#ffe08a', manual ? 14 : 12, true); if (manual) addLog(`연계 「${cb.name}」! ${COMBO_T}초 동안 기술 피해 +${cb.p}%`, 'good'); }
   if (!fxOff()) skillVfx(i, manual);
   return true;
@@ -9147,7 +9195,9 @@ function castSkill(i, lv, manual){
   const alive = mobs.filter(m => !m.dead && m.spawnT <= 0);
   if (!manual && (!alive.length || !hero.engaged)) return false;   // 자동은 싸우고 있을 때만
   if (!alive.length && !SELF_KINDS.includes(kind)) return false;
-  const mul = C.skillMul * atkBuff() * skillMulX() * kindMul(kind) * aptHitMul(i);   // 9-5: 직업 적성(꼬리표 배율, 공격 기술만)
+  const hr = huntBeat() && d.hcd > 0 ? huntHcd(i) / d.cd : 0;   // 사냥 박자: 한 방 = 레이드 한 방 × (hcd ÷ cd) × 보정(hit()에서 몹 huntF · 보스 huntB)
+  castCtx = hr ? {dur:hr, f:huntF(), b:huntB()} : null;   // 몹·보스 보정은 맞는 쪽을 보고 hit()에서
+  const mul = C.skillMul * atkBuff() * skillMulX() * kindMul(kind) * aptHitMul(i) * (hr || 1);   // 9-5: 직업 적성(꼬리표 배율, 공격 기술만)
   const tg = hero.target && !hero.target.dead ? hero.target : alive[0];
   if (kind === 'party') return partyBuff(S.cls, lv, null);
   if (kind.startsWith('d_')) return doinCast(kind, lv, alive, tg, mul);
@@ -9200,10 +9250,10 @@ function castSkill(i, lv, manual){
     fx.push({type:C.nukeFx, t:0, dur:0.9, pts:alive.slice(0, 8).map(m => [m.x, m.y - 6]), seed:Math.random() * 1000});
     shake = i === 7 ? 0.6 : 0.4;
     for (const m of alive){
-      if (i === 6){ m.markT = Math.max(m.markT || 0, 6); m.markP = Math.max(m.markP || 0, 15); }
+      if (i === 6){ m.markT = Math.max(m.markT || 0, 6 * (castCtx ? castCtx.dur : 1)); m.markP = Math.max(m.markP || 0, 15); }
       hit(m, ST.atk * mul * (i === 6 ? jobAPct(lv) : jobBPct(lv)) / 100, 'skill');
     }
-    if (i === 7) hero.jobBuffT = 10;
+    if (i === 7) hero.jobBuffT = 10 * (castCtx ? castCtx.dur : 1);   // 사냥 박자면 지속도 hcd÷cd 비율로
     sfx('awaken');
     return true;
   }
@@ -9305,7 +9355,7 @@ function jobECast(lv, alive, tg, mul){
     return true;
   }
   if (S.cls === 'sulsa'){
-    for (let k = 0; k < 2; k++) after(k * 0.5, () => { shake = Math.max(shake, 0.4); for (const m of live()){ hit(m, atk * P * LATE_K.sulsaE, 'skill'); m.stunT = Math.max(m.stunT || 0, m.raid ? 0.6 : 1.5); } });
+    for (let k = 0; k < 2; k++) after(k * 0.5, () => { shake = Math.max(shake, 0.4); for (const m of live()){ hit(m, atk * P * LATE_K.sulsaE, 'skill'); m.stunT = Math.max(m.stunT || 0, (m.raid ? 0.6 : 1.5) * (castCtx ? castCtx.dur : 1)); } });
     return true;
   }
   if (S.cls === 'gungsa'){   // 파도 가르는 살: 세 갈래가 차례로 모두를 꿰뚫고, 가운데 살은 가장 튼튼한 적(보스)을 한 번 더
@@ -9355,14 +9405,14 @@ function jobGCast(lv, alive, tg, mul){
   }
   if (S.cls === 'sulsa'){   // 바다 마시기: 보이는 적을 잠깐 묶고(자리는 그대로) 한 점으로 끌어모으는 빛, 곧 터뜨림
     const L0 = alive.slice(), cx = L0.reduce((a, m) => a + m.x, 0) / L0.length, cy = L0.reduce((a, m) => a + m.y, 0) / L0.length;
-    for (const m of L0) m.stunT = Math.max(m.stunT || 0, m.raid ? 0.9 : 1.6);
+    for (const m of L0) m.stunT = Math.max(m.stunT || 0, (m.raid ? 0.9 : 1.6) * (castCtx ? castCtx.dur : 1));
     if (!fxOff()){ vadd({type:'implode', x:cx, y:cy - 8, r:60, col:'#8ad0e8', dur:0.9}); vadd({type:'glow', x:cx, y:cy - 8, r:30, col:'#8ad0e8', dur:0.9}); }
     after(0.9, () => { shake = 0.9; fx.push({type:'ring', t:0, dur:0.5, x:cx, y:cy - 6, color:'#8ad0e8', r:40}); fx.push({type:'ring', t:0, dur:0.6, x:cx, y:cy - 6, color:'#ffffff', r:56}); for (const m of live()) hit(m, atk * P * LATE_K.sulsaG, 'skill'); });
     return true;
   }
   if (S.cls === 'doin'){   // 하늘 풍류: 가락이 네 박자로 퍼져 모두를 치고(늘 치명타), 첫 박에 방어를 깎는다(받는 피해 +25%)
     const boc = hero.bocheonT > 0 ? 1 + (hero.bocheonP || 0) / 100 : 1;
-    for (const m of alive){ m.markT = Math.max(m.markT || 0, 10); m.markP = Math.max(m.markP || 0, 25); }
+    for (const m of alive){ m.markT = Math.max(m.markT || 0, 10 * (castCtx ? castCtx.dur : 1)); m.markP = Math.max(m.markP || 0, 25); }
     for (let k = 0; k < 4; k++) after(k * 0.3, () => { fx.push({type:'ring', t:0, dur:0.45, x:hero.x, y:hero.y - 6, color:['#b89ae8', '#ffd24a', '#9fe7ff', '#ff8ad0'][k], r:30 + k * 10}); for (const m of live()) hit(m, atk * boc * P * LATE_K.doinG * (m.boss || m.raid ? LATE_K.doinGB : 1), 'skill', true); });
     return true;
   }
@@ -9377,7 +9427,7 @@ function jobGCast(lv, alive, tg, mul){
   }
   // 무사 금강 뇌정: 번개 창이 떨어져 큰 원 안의 모두를 치고 3초 기절(보스·레이드는 1.2초)
   fx.push({type:'ring', t:0, dur:0.5, x:hero.x, y:hero.y - 6, color:'#6a78e8', r:30});
-  after(0.25, () => { shake = 1; for (const m of live()){ fx.push({type:'pillar', t:0, dur:0.5, x:m.x, y:m.y - 6}); hit(m, atk * P * LATE_K.musaG, 'skill'); m.stunT = Math.max(m.stunT || 0, m.boss || m.raid ? 1.2 : 3); } fx.push({type:'ring', t:0, dur:0.6, x:hero.x, y:hero.y - 6, color:'#ffffff', r:60}); });
+  after(0.25, () => { shake = 1; for (const m of live()){ fx.push({type:'pillar', t:0, dur:0.5, x:m.x, y:m.y - 6}); hit(m, atk * P * LATE_K.musaG, 'skill'); m.stunT = Math.max(m.stunT || 0, (m.boss || m.raid ? 1.2 : 3) * (castCtx ? castCtx.dur : 1)); } fx.push({type:'ring', t:0, dur:0.6, x:hero.x, y:hero.y - 6, color:'#ffffff', r:60}); });
   return true;
 }
 function jobHCast(lv){
@@ -9444,7 +9494,7 @@ function jobCCast(lv, alive, tg, mul){
   fx.push({type:'awaken', t:0, dur:1, color:C.fx, x:hero.x, y:hero.y - 12});
   sfx('awaken');
   if (S.cls === 'jagaek'){   // 깃바람: 둘레의 적을 세 번 휩쓸고, 분신 셋이 12초 함께 싸운다
-    hero.cloneT = 12; hero.cloneLv = lv; hero.cloneAcc = 0;
+    hero.cloneT = 12 * (castCtx ? castCtx.dur : 1); hero.cloneLv = lv; hero.cloneAcc = 0;
     for (let k = 0; k < 3; k++) after(k * 0.11, () => {
       fx.push({type:'ring', t:0, dur:0.3, x:hero.x, y:hero.y - 6, color:'#c8d0ff', r:24 + k * 6});
       for (const m of mobs.filter(m => !m.dead && m.spawnT <= 0)) hit(m, ST.atk * mul * jobCPct(lv) * 0.5 / 100, 'skill');
@@ -9455,7 +9505,7 @@ function jobCCast(lv, alive, tg, mul){
     const t2 = alive.reduce((a, b2) => b2.hp > a.hp ? b2 : a), dmg = ST.atk * mul * jobCPct(lv) * LATE_K.gungsaC / 100;
     hero.aim = 1;
     for (let k = 0; k < 5; k++) after(k * 0.1, () => { const m = t2.dead ? mobs.find(x => !x.dead && x.spawnT <= 0) : t2; if (!m) return;
-      projs.push({kind:'arrow', x:hero.x + (k - 2) * 3, y:hero.y - 14 - (k % 2) * 3, tg:m, trail:[], dmg, hk:'skill', sure:true});
+      projs.push({kind:'arrow', x:hero.x + (k - 2) * 3, y:hero.y - 14 - (k % 2) * 3, tg:m, trail:[], dmg, hk:'skill', sure:true, ctx:castCtx});
       for (const o of mobs) if (o !== m && !o.dead && o.spawnT <= 0) hit(o, dmg * LATE_K.gungsaP, 'skill'); });   // 꿰뚫고 지나간 살이 다른 적도 스친다
     return true;
   }
@@ -9470,7 +9520,7 @@ function jobCCast(lv, alive, tg, mul){
   }
   if (S.cls === 'sulsa'){
     const dmg = ST.atk * mul * jobCPct(lv) * LATE_K.sulsaC / 100;
-    for (let k = 0; k < 12; k++){ const m = alive[k % alive.length]; projs.push({kind:'charm', x:hero.x + (k % 4 - 1.5) * 6, y:hero.y - 18 - (k % 3) * 4, tg:m, trail:[], dmg, hk:'skill'}); }
+    for (let k = 0; k < 12; k++){ const m = alive[k % alive.length]; projs.push({kind:'charm', x:hero.x + (k % 4 - 1.5) * 6, y:hero.y - 18 - (k % 3) * 4, tg:m, trail:[], dmg, hk:'skill', ctx:castCtx}); }
     return true;
   }
   for (let k = 0; k < 8; k++) after(k * 0.09, () => {
@@ -9482,11 +9532,12 @@ function jobCCast(lv, alive, tg, mul){
   return true;
 }
 // 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
-const skCdOf = i => skDef(i).cd * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100) * (1 - synV(S.cls, 'cdr') / 100);   // 파사석(5부): 기술 재사용 -%
+const skCdOf = (i, hunt) => skBaseCd(i, hunt) * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100) * (1 - synV(S.cls, 'cdr') / 100);   // 파사석(5부): 기술 재사용 -%
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
   if (!lv || !skIn(i) || hero.dead || cut || !session && !window.__game) return false;
+  beatSync();
   if (skillCd[key] > 0) return false;
   if (!tryCast(i, lv, true)) return false;
   skillCd[key] = skCdOf(i); hero.handT = AW2.handWin;   // 초각성기 2: 직접 쓴 기술 = 손으로 싸우는 중
@@ -9570,7 +9621,7 @@ function update(dt){
   gtime += dt; S.rec.play += dt;
   tmTick(dt);
   if (S.chosen && !raid && !market && !parade && S.mode === 'auto') offTrack(dt);
-  if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due) L.fn(); } }
+  if (later.length){ const due = []; for (const L of later){ L.t -= dt; if (L.t <= 0) due.push(L); } if (due.length){ later = later.filter(L => L.t > 0); for (const L of due){ castCtx = L.ctx || null; L.fn(); } castCtx = null; } }
   for (const e of fx) e.t += dt;
   fx = fx.filter(e => e.t < e.dur);
   updateVfx(dt);
@@ -9726,7 +9777,7 @@ function update(dt){
     const tx = tg.x, ty = tg.y - (p.toHero ? 14 : mobHeight(tg) * 0.5);
     const d = Math.hypot(tx - p.x, ty - p.y), sp = 190 * dt;
     p.trail.push([p.x, p.y]); if (p.trail.length > 4) p.trail.shift();
-    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic', !!p.sure); }
+    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else { castCtx = p.ctx || null; hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic', !!p.sure); castCtx = null; } }
     else { p.x += (tx - p.x) / d * sp; p.y += (ty - p.y) / d * sp; }
   }
   projs = projs.filter(p => !p.done);
@@ -9758,6 +9809,7 @@ function update(dt){
     if (autoGap > 0) autoGap -= dt;
     if (hero.comboT > 0) hero.comboT -= dt;
     const rdy = [];
+    beatSync();
     for (const i of cls().order || SK_AUTO_ORDER){
       const key = SKILLS[i].key, lv = skLv(i);
       if (!lv || !skIn(i)) continue;   // 전투 칸(8칸)에 낀 기술만
@@ -17100,7 +17152,7 @@ function updateHud(){
     if (r.el.classList.contains('manual') !== man) r.el.classList.toggle('manual', man);
     if (r.el.classList.contains('rdy') !== rdy) r.el.classList.toggle('rdy', rdy);
     setText(r.lk, skLockText(i));
-    const lab = `${skillName(i)}${locked ? ' (잠김)' : man ? ' (수동, 눌러서 쓰기)' : ''}`;
+    const lab = `${skillName(i)}${locked ? ' (잠김)' : man ? ' (수동, 눌러서 쓰기)' : ''}${!locked && skSplit(i) ? (huntBeat() ? ' · 사냥 박자' : ' · 레이드 박자') : ''}`;   // 링(쿨)은 지금 박자의 재사용 기준
     if (r.el.getAttribute('aria-label') !== lab) r.el.setAttribute('aria-label', lab);
     r.cd.style.setProperty('--p', locked ? '0%' : Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100).toFixed(1) + '%');
   });
@@ -17641,7 +17693,7 @@ function buildSkill(){
     <div class="ph"><h2>${cls().name}의 기술</h2><span class="small">${cls().role}</span></div>
     <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}<li id="aptTrait">${aptTraitHTML()}</li></ul></div>
     <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).
-      칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).</p>
+      칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).<br><b>공격 기술은 두 가지 박자</b>로 나가요 — 사냥터·단계 보스·수문장에서는 <b>자주, 작게</b>(사냥 박자), 레이드·진·타임 보스 같은 「싸움 시작 창」이 뜨는 싸움에서는 <b>지금처럼 크게</b>(레이드 박자). 버프·약점 기술과 초각성기는 어디서나 같아요.</p>
     <div class="card" style="margin-top:10px"><div class="ct">사냥(스테이지) 기술 칸<span class="tag" id="skSetN"></span></div>
       <p class="small" style="margin:0 0 8px">싸움에는 익힌 기술 가운데 <b>${SK_SLOTS}개</b>만 들고 가요(초각성기·넋 부름·변신은 따로). 처음에는 <b>추천 조합</b>으로 저절로 골라 주고, <b>[빼기]·[넣기]</b>로 직접 바꿀 수 있어요. ${SK_SLOTS}칸이 찼을 때 [넣기]를 누르면 무엇을 뺄지 물어요. <b>레이드·보스 싸움 조합은 따로</b> — 아래 「레이드별 조합」과 싸움 시작 전 창에서 골라요. 기술 최대 레벨은 <b>전직할 때마다 +5</b>(처음 10 · 1차 15 · 2차 20 · 3차 25 · 4차 30)이고, 레벨이 낮을 때는 레벨에 따라서도 막혀요.</p>
       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="chip" id="skAutoPick"></button></div></div>
@@ -17693,7 +17745,9 @@ function buildSkill(){
     setHTML($('#preList'), ['party', 'boss', 'mob'].map(k => `<div class="pre-h">${FIGHT_KIND_NAME[k]}<span class="tag">${skPreMine(k) ? '내 조합' : '추천'}</span>${skPreMine(k) ? `<button type="button" class="chip" data-prerst="${k}">추천으로</button>` : ''}</div><div class="pre-row">${skRaidSet(k).map(i => `<span class="pre-sk ${skIc(i)}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i></span>`).join('') || '<span class="small">익힌 기술이 없어요</span>'}</div>`).join(''));
     for (const b of panel.querySelectorAll('[data-eq]')){ const i = +b.dataset.eq, on = (S.skSet || []).includes(i), open = skLearned(i); setText(b, on ? '빼기' : '넣기'); b.disabled = !open; b.classList.toggle('primary', on); }
     for (const r of refs){
-      const lv = skLv(r.i), cdt = `재사용 ${+skCdOf(r.i).toFixed(1)}초 · <span class="mpv">마나 ${skMp(r.i)}</span>${skAuto(r.i) ? '' : ' · <b>수동</b>'}`;
+      const lv = skLv(r.i), man = skAuto(r.i) ? '' : ' · <b>수동</b>', d = skDef(r.i);
+      const cdt = d.hcd > 0 ? `<b>사냥</b> ${+skCdOf(r.i, true).toFixed(1)}초마다 작게(한 방 ${Math.max(1, Math.round(huntHcd(r.i) / d.cd * 100))}%) · <b>레이드</b> ${+skCdOf(r.i, false).toFixed(1)}초마다 위 피해 그대로 · <span class="mpv">마나 ${skMp(r.i, true)}/${skMp(r.i, false)}</span>${man}`   // 사냥 박자(1단계)
+        : `재사용 ${+skCdOf(r.i).toFixed(1)}초(사냥·레이드 같음) · <span class="mpv">마나 ${skMp(r.i)}</span>${man}`;
       const cap = skCap(r.i);
       setHTML(r.nx, lv && lv < cap ? skillGainHTML(r.i, lv) : lv ? (cap < r.sk.max ? `지금 최대 Lv.${cap} — ${S.job < 4 && 10 + 5 * S.job <= 4 + Math.floor(cumLv() / 6) ? '다음 전직' : '레벨을 올리면'} 더 올릴 수 있어요` : '최대 레벨이에요') : '');
       if (!lv){
@@ -21474,7 +21528,8 @@ if (location.search.indexOf('simtest') >= 0){
       for (const F of FORMS) for (const d of ['down', 'right', 'up']) out.push(lookPreview(S.cls, L, 3, 3, d, {form:F.k, ear:4, brace:3})); return out; },
     CURVE, fmt, giveGifts, GIFTS, enterChar, saveReg, get online(){ return online; }, pushOnline, get room(){ return room; }, get aud(){ return AUD; }, get REG(){ return REG; }, applyWorld, refreshStats, HELL_REGIONS,
     // 피해 측정: 안 죽는 보스 하나(또는 몬스터 6마리)를 sec초 동안 때린다. 초당 피해·가장 큰 한 방을 돌려준다
-    bench(sec, pack, each){
+    bench(sec, pack, each){   // 기술은 레이드 박자로 잼(예전 값과 같게 — 사냥 박자로 재려면 benchHunt = true)
+      const G = window.__game, bf = G.beat; G.beat = bf || (G.benchHunt ? 'hunt' : 'raid');
       resetRuntime(); mobs = []; projs = []; raid = null;
       Object.assign(hero, {dead:false, hp:ST.maxHp, mp:mpMax(), buffT:0, shield:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, jobBuffT:0, tx:8, ty:8, fx:8, fy:8, moving:false, target:null});
       placeOf(hero);
@@ -21486,7 +21541,7 @@ if (location.search.indexOf('simtest') >= 0){
       dmgMeter = 0; dmgBy = {}; const mh = S.rec.maxHit; S.rec.maxHit = 0;
       for (let t = 0; t < sec; t += 0.05){ update(0.05); if (each) each(t); }
       const out = {dps:dmgMeter / sec, maxHit:S.rec.maxHit, by:Object.fromEntries(Object.entries(dmgBy).map(([k, v]) => [k, v / dmgMeter]))};
-      S.rec.maxHit = Math.max(mh, S.rec.maxHit); bossActive = false; bossRef = null; mobs = []; spawnT = 1;
+      S.rec.maxHit = Math.max(mh, S.rec.maxHit); bossActive = false; bossRef = null; mobs = []; spawnT = 1; G.beat = bf;
       return out;
     },
     setWorld(w){ S.world = w; S.stage = 1; mapCache.clear(); resetRuntime(); applyWorld(); refreshStats(); },
@@ -21514,6 +21569,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.defineProperties(window.__game, {jobChain:{get:() => jobChain, configurable:true}, jt6Soul:{get:() => jt6Soul, set:v => { jt6Soul = v; }, configurable:true}});   // (Object.assign은 getter를 값으로 복사해 버리므로 따로)
   // @@END-A
   // @@HOOK-B (갈래 B의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
+  Object.assign(window.__game, {HUNT, huntW, huntF, huntC, huntHcd, huntB, huntBeat, skBaseCd, skSplit, skCdOf, skMp, beatSync, beat:null, benchHunt:false, SKILLS, SK_SLOTS});   // 사냥 박자(기술 재사용 개편 1단계): beat 'hunt'·'raid'로 박자를 억지로 정할 수 있음
   // @@END-B
   // @@HOOK-C (갈래 C의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip});   // 물의 신화 9단계(5부 물건)
