@@ -4426,6 +4426,7 @@ const NOTES = [
   ['#', '11월 14일 · 사냥 기술 박자 · 이야기 펫 · 파티 화면'],
   ['사냥에서는 기술이 자주, 작게 나가요', '공격 기술(전직 기술 포함)이 사냥터·단계 보스·수문장에서는 레이드보다 자주(대개 3~10초마다) 작게 나가 쉬지 않고 터져요. 대신 한 방은 작아져서 사냥 빠르기는 예전과 비슷해요(몹이 한 방에 쓰러지는 땅에서는 조금 덜 자주 나가요). 레이드·진·타임 보스처럼 「싸움 시작 창」이 뜨는 싸움에서는 예전과 똑같이 크고 느리게 나가요. [기술]에서 기술마다 「사냥 몇 초 · 레이드 몇 초」를 볼 수 있어요.'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
+  ['컴퓨터에서 화면이 옆으로 눕던 것 고침', '컴퓨터 창에서 가로로 바꾸면 화면이 90도 누워 보이던 것을 고쳤어요. 이제 컴퓨터에서는 창 모양(가로로 길면 가로 화면, 세로로 길면 세로 화면)에 알아서 맞춰지고, [화면 돌리기]는 휴대폰·태블릿에서만 화면을 돌려요.'],
   ['비밀번호 기억하기', '로그인 창의 「기억하기」를 켜면 아이디와 비밀번호를 이 기기에만 가려서 적어 두고 다음에 채워 줘요. 남이 쓰는 기기에서는 꺼 주세요.'],
   ['레이드 시작 창 글자 겹침', '레이드를 고르면 뜨는 창에서도 「파티 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
   ['파티 화면 글자 겹침', '[레이드]의 내 파티에서 「켜진 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
@@ -14848,6 +14849,8 @@ let dpr = 1, scale = 1;
 const ORIENT_KEY = KP + 'samhan-orient';
 let orientMode = (() => { try { const v = localStorage.getItem(ORIENT_KEY); return v === 'land' || v === 'port' ? v : 'auto'; } catch (e){ return 'auto'; } })();
 let rotDeg = 0;
+/* 화면을 돌려 보여 주는 건 손가락으로 쓰는 기기(휴대폰·태블릿)만. 컴퓨터 창은 돌려 봐야 옆으로 누울 뿐이라 창 모양(가로로 긴지 세로로 긴지)에 화면이 알아서 맞춰진다(2026-11-14) */
+const canRot = () => !!window.__samhanForceRot || matchMedia('(pointer: coarse)').matches;
 const viewW = () => rotDeg ? innerHeight : innerWidth, viewH = () => rotDeg ? innerWidth : innerHeight;
 function localPt(e, el){
   const r = el.getBoundingClientRect();
@@ -14858,7 +14861,7 @@ function localPt(e, el){
 let typingUnrot = false;   // (44) 돌린 화면에서 글을 치는 동안은 돌림을 잠깐 풂(아이폰 키보드는 돌아가지 않아 글 칸이 옆으로 누워 보였음)
 function applyRot(){
   const W0 = innerWidth, H0 = innerHeight, physLand = W0 > H0;
-  const want = typingUnrot ? 0 : orientMode === 'land' && !physLand ? 90 : orientMode === 'port' && physLand ? -90 : 0;
+  const want = typingUnrot || !canRot() ? 0 : orientMode === 'land' && !physLand ? 90 : orientMode === 'port' && physLand ? -90 : 0;
   const bs = document.body.style;
   if (want !== rotDeg || want){
     rotDeg = want;
@@ -14870,13 +14873,13 @@ function applyRot(){
   document.documentElement.style.setProperty('--vh1', (viewH() / 100) + 'px');
 }
 const isTypeEl = el => !!(el && el.matches && el.matches('textarea, input:not([type]), input[type=text], input[type=search], input[type=password], input[type=number]'));
-document.addEventListener('focusin', e => { if (isTypeEl(e.target) && (rotDeg || orientMode !== 'auto') && !typingUnrot){ typingUnrot = true; applyRot(); resize(); setTimeout(() => { try { e.target.focus({preventScroll:true}); } catch (er) {} }, 60); } });
+document.addEventListener('focusin', e => { if (isTypeEl(e.target) && rotDeg && !typingUnrot){ typingUnrot = true; applyRot(); resize(); setTimeout(() => { try { e.target.focus({preventScroll:true}); } catch (er) {} }, 60); } });
 document.addEventListener('focusout', () => { setTimeout(() => { if (typingUnrot && !isTypeEl(document.activeElement)){ typingUnrot = false; applyRot(); resize(); } }, 120); });
 async function setOrient(mode, gesture){
   orientMode = mode === 'land' || mode === 'port' ? mode : 'auto';
   try { localStorage.setItem(ORIENT_KEY, orientMode); } catch (e) {}
   const so = screen.orientation;
-  if (so && so.lock){
+  if (so && so.lock && canRot()){
     try {
       if (orientMode === 'auto'){ if (so.unlock) so.unlock(); }
       else {
@@ -17315,7 +17318,7 @@ elBig.addEventListener('click', () => {
 $('#newsBtn').addEventListener('click', () => { if (session) showNotes(false); });
 $('#notiBtn').addEventListener('click', e => { e.stopPropagation(); sfx('click'); notiOpenList(); });   // 왼쪽 위 두루마리: 아직 안 본 알림
 // 캐릭터 바꾸기(2026-11 (28), 사용자 요청): 화면 위 아이콘 → 한 번 묻고 저장한 뒤 캐릭터 고르기
-$('#orientBtn').addEventListener('click', () => { const land = !document.body.classList.contains('portrait'); setOrient(land ? 'port' : 'land', true); sfx('click'); addLog(`화면을 ${land ? '세로' : '가로'}로 바꿨어요. [정보]에서 자동(기기 방향 따라)으로 되돌릴 수 있어요.`); });
+$('#orientBtn').addEventListener('click', () => { if (!canRot()){ addLog('컴퓨터에서는 창 모양을 따라가요. 창을 가로로 길게 하면 가로 화면, 세로로 길게 하면 세로 화면이 돼요.'); sfx('click'); return; } const land = !document.body.classList.contains('portrait'); setOrient(land ? 'port' : 'land', true); sfx('click'); addLog(`화면을 ${land ? '세로' : '가로'}로 바꿨어요. [정보]에서 자동(기기 방향 따라)으로 되돌릴 수 있어요.`); });
 $('#charBtn').addEventListener('click', () => {
   if (!session || cut) return;
   showModal('캐릭터 바꾸기', `<p>지금 캐릭터(<b>${esc(S.name)}</b>)를 저장하고 캐릭터 고르기 화면으로 갈까요?${raid ? '<br><span class="small" style="color:#ff8a7a">지금 하는 싸움은 그만두게 돼요.</span>' : ''}</p>`,
@@ -19651,7 +19654,8 @@ function buildRec(){
     <div class="recbtns"><button class="btn" id="lookBtn">꾸미기</button><button class="btn" id="clsBtn">직업 바꾸기</button></div>
     <div class="recbtns" style="margin-top:8px"><button class="btn" id="swBtn">캐릭터 바꾸기</button><button class="btn" id="outBtn">로그아웃</button></div>
     <div class="ph" style="margin-top:16px"><h2>화면 방향</h2><span class="small">휴대폰을 돌리지 않고 바꿔요</span></div>
-    <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
+    ${canRot() ? '' : '<div class="card"><p class="small" style="margin:0">컴퓨터에서는 창 모양을 따라가요. 창을 가로로 길게 늘이면 가로 화면, 세로로 길게 하면 세로 화면이 돼요. (화면 돌리기는 휴대폰·태블릿에서만 화면을 돌려요.)</p></div>'}
+    <div class="card" ${canRot() ? '' : 'hidden'}><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">오른쪽 위 [화면 돌리기] 아이콘으로도 가로·세로를 바로 바꿔요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요(그때는 휴대폰을 그 방향으로 들어 주세요).</p></div>
     <div class="ph" style="margin-top:16px"><h2>채팅 확성기</h2></div>
     <div class="card"><label class="check"><input type="checkbox" id="megaChk"> 용사들이 채팅으로 한 말을 게임 화면 위에 공지 띠로 보여 주기</label>
