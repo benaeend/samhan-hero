@@ -595,8 +595,8 @@ async def main():
         await page.wait_for_selector('#lg-id'); await page.wait_for_timeout(500)
         lg = await page.evaluate("() => ({session: !!window.__game.session, id: document.querySelector('#lg-id').value, pw: document.querySelector('#lg-pw').value, title: document.querySelector('#mTitle').textContent, txt: document.querySelector('#mBody').textContent, tok: Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => k.includes('online'))})")
         await page.screenshot(path=str(OUT / '12_다시열면_로그인.png'))
-        check(not lg['session'] and lg['id'] == 'tester' and lg['pw'] == '' and lg['title'] == '로그인' and '아이디를 기억' in lg['txt'] and lg['tok'] == [],
-              f'다시 열면 늘 로그인 창부터: 아이디는 채워져 있고 비밀번호만 치면 된다(저장된 로그인 표로 바로 들어가지 않음) {lg["session"]} {lg["id"]} {lg["title"]} {lg["tok"]}')
+        check(not lg['session'] and lg['id'] == 'tester' and lg['pw'] == '1234' and lg['title'] == '로그인' and '아이디와 비밀번호를 기억' in lg['txt'] and lg['tok'] == [],
+              f'다시 열면 늘 로그인 창부터: 아이디·비밀번호가 채워져 있다(기억하기, 저장된 로그인 표로 바로 들어가지 않음) {lg["session"]} {lg["id"]} {lg["title"]} {lg["tok"]}')
         await page.fill('#lg-pw', '0000'); await page.click('#modal-btn-0')
         await page.wait_for_timeout(600)
         check('맞지 않아요' in await page.inner_text('#lg-err'), '틀린 비밀번호는 막는다')

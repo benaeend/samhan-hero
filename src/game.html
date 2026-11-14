@@ -147,7 +147,7 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .pre-sk.pick.on.rec i::after{color:#7a4a00}
 .pre-chk{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px;color:var(--text-soft)}
 .chip.on{background:var(--gold);color:#2a1a04;border-color:var(--gold)}
-#mpSyn{line-height:1.9}#mpSyn .chip{display:inline-block;padding:0 9px;line-height:1.5;font-size:11.5px;cursor:default;vertical-align:baseline}   /* 글줄 사이에서 알약이 위아래 글자를 덮던 것 */
+#mpSyn,#synNote{line-height:1.9}#mpSyn .chip,#synNote .chip{display:inline-block;padding:0 9px;line-height:1.5;font-size:11.5px;cursor:default;vertical-align:baseline}   /* 글줄 사이에서 알약이 위아래 글자를 덮던 것 */
 .sk.manual{border-color:rgba(159,231,255,.6)}
 .sk.manual.rdy{animation:skrdy 0.9s ease-in-out infinite}
 @keyframes skrdy{50%{box-shadow:0 0 0 1px rgba(159,231,255,.8) inset,0 0 14px rgba(159,231,255,.9)}}
@@ -4373,11 +4373,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-3', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-4', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
+  ['비밀번호 기억하기', '로그인 창의 「기억하기」를 켜면 아이디와 비밀번호를 이 기기에만 가려서 적어 두고 다음에 채워 줘요. 남이 쓰는 기기에서는 꺼 주세요.'],
+  ['레이드 시작 창 글자 겹침', '레이드를 고르면 뜨는 창에서도 「파티 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
   ['파티 화면 글자 겹침', '[레이드]의 내 파티에서 「켜진 시너지」 이름표가 글자를 덮던 것을 고쳤어요.'],
   ['이승 5지역 보스가 덜 아파요', '이승 5지역(42단계~)에서 새 캐릭터가 보스에게 자꾸 쓰러져 길이 막히던 것을 완화했어요. 버티는 힘이 낮을 때 보스의 큰 살이 체력을 거의 다 깎지 않게 하고, 보스의 평범한 공격도 버티는 힘이 낮을수록 줄여 줘요. 버티는 힘 카드의 안내에는 방어구 등급(소환·합성)과 체력 능력치가 몇 레벨어치 모자란지도 보여요. 살 수 없는 능력치 단추의 엽전은 돌 같은 회색 대신 흐린 금빛으로, 직업 적성의 「−0%」는 「0%」로 보여요.'],
   ['#', '물의 신화 업데이트 · 버티는 힘 · 직업마다 맞는 능력 · 레벨 문 수련'],
@@ -20403,6 +20405,12 @@ function enterSubmits(){
 }
 
 let loginIdFill = '';   // 기억해 둔 아이디(로그인 창에 채워 둠)
+/* 비밀번호 기억(2026-11-14, 주인 요청): 「기억하기」를 켜고 로그인하면 이 기기에만 비밀번호를 적어 두고 다음에 채워 준다.
+   글자를 그냥 두지 않게 한 번 섞어 두지만(눈으로 읽히지 않게) 암호는 아니다 — 남이 쓰는 기기에서는 끄도록 창에 안내한다 */
+const PWMEM_KEY = KP + 'samhan-pwmem';
+const pwScramble = (t, k) => { let o = ''; for (let i = 0; i < t.length; i++) o += String.fromCharCode(t.charCodeAt(i) ^ k.charCodeAt(i % k.length) ^ 23); return o; };
+function pwMemSave(id, pw){ try { if (!id || !pw){ localStorage.removeItem(PWMEM_KEY); return; } localStorage.setItem(PWMEM_KEY, JSON.stringify({id, p:btoa(unescape(encodeURIComponent(pwScramble(pw, id + 'samhan'))))})); } catch (e) {} }
+function pwMemLoad(id){ try { const o = JSON.parse(localStorage.getItem(PWMEM_KEY) || 'null'); if (!o || o.id !== id || !o.p) return ''; return pwScramble(decodeURIComponent(escape(atob(o.p))), id + 'samhan'); } catch (e) { return ''; } }
 function showLogin(mode, msg, idFill){
   modalLock = true;
   const signup = mode === 'signup';
@@ -20418,10 +20426,10 @@ function showLogin(mode, msg, idFill){
       <label>아이디<input type="text" id="lg-id" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="12" placeholder="영문 소문자·숫자 4~12자"></label>
       <label>비밀번호<input type="password" id="lg-pw" autocomplete="${signup ? 'new-password' : 'current-password'}" maxlength="32" placeholder="4자 이상"></label>
       ${signup ? '<label>비밀번호 확인<input type="password" id="lg-pw2" autocomplete="new-password" maxlength="32"></label>' : ''}
-      <label class="check"><input type="checkbox" id="lg-keep" checked>이 기기에 아이디 기억하기</label>
+      <label class="check"><input type="checkbox" id="lg-keep" checked>이 기기에 아이디·비밀번호 기억하기 <span class="small">(남이 쓰는 기기에서는 꺼 주세요)</span></label>
     </div>
     <p class="err" id="lg-err" role="alert">${esc(msg || '')}</p>
-    <p class="small">${!signup && loginIdFill ? '<b>아이디를 기억해 두었어요. 비밀번호만 입력하면 돼요.</b> ' : ''}${note} 비밀번호는 암호처럼 바꾼 값(해시)으로만 저장돼요.</p>
+    <p class="small">${!signup && loginIdFill ? (pwMemLoad(loginIdFill) ? '<b>아이디와 비밀번호를 기억해 두었어요. [게임 시작]만 누르면 돼요.</b> ' : '<b>아이디를 기억해 두었어요. 비밀번호만 입력하면 돼요.</b> ') : ''}${note} 계정에는 비밀번호가 암호처럼 바꾼 값(해시)으로만 저장돼요. 「기억하기」를 켜면 이 기기에만 가려진 채로 적어 둬요.</p>
     ${canInstall() ? '<button class="link" id="lg-install">휴대폰 홈 화면에 앱으로 설치하기</button>' : ''}`;
   setTitle(true);
   showModal(signup ? '새 계정 만들기' : '로그인', html, [{label:signup ? '계정 만들기' : '게임 시작', primary:true, keep:() => { submitLogin(signup); return true; }}], () => {
@@ -20429,7 +20437,7 @@ function showLogin(mode, msg, idFill){
     $('#lg-tab-signup').addEventListener('click', () => showLogin('signup'));
     if ($('#lg-install')) $('#lg-install').addEventListener('click', () => { const m = signup ? 'signup' : 'login'; installAppThen(() => showLogin(m)); });
     enterSubmits();
-    if (!signup && loginIdFill && ID_RE.test(loginIdFill)){ $('#lg-id').value = loginIdFill; const fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches; if (fine) setTimeout(() => { const pw = $('#lg-pw'); if (pw) pw.focus(); }, 30); }
+    if (!signup && loginIdFill && ID_RE.test(loginIdFill)){ $('#lg-id').value = loginIdFill; { const m = pwMemLoad(loginIdFill); if (m) $('#lg-pw').value = m; } const fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches; if (fine) setTimeout(() => { const pw = $('#lg-pw'); if (pw) pw.focus(); }, 30); }
   });
 }
 async function submitLogin(signup){
@@ -20477,6 +20485,7 @@ async function submitLogin(signup){
     }
     curAcc = id;
     REG.keep = keep ? {acc:id} : null;
+    pwMemSave(keep ? id : '', keep ? pw : '');
     saveReg(); writeSession({acc:id});
     if (srv){
       online = {acc:id, token:srv}; saveOnline(keep);
