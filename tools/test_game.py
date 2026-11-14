@@ -941,6 +941,7 @@ async def main():
         # 6-4h) 화면 방향 고르기: 휴대폰을 돌리지 않고 가로·세로를 바꾸고(잠글 수 없으면 화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞는다
         await page.evaluate("() => { const G = window.__game; G.closePage && G.closePage(); const m = document.querySelector('#modal'); if (m && !m.hidden){ const b = document.querySelector('#modal-btn-0'); if (b) b.click(); } G.hero.dead = false; }")
         await page.wait_for_timeout(200)
+        await page.evaluate("() => { window.__samhanForceRot = true; }")   # 손가락 기기인 척(컴퓨터에서는 화면을 안 돌림)
         land0 = await page.evaluate("() => !document.body.classList.contains('portrait')")
         await page.evaluate("(m) => window.__game.setOrient(m, true)", 'port' if land0 else 'land')
         await page.wait_for_timeout(400)
@@ -956,6 +957,11 @@ async def main():
         back = await page.evaluate("() => ({rot: window.__game.rotDeg, land: !document.body.classList.contains('portrait'), mode: window.__game.orientMode})")
         check(orr['rot'] in (90, -90) and orr['portrait'] == land0 and goal == [orr['tx'], orr['ty']] and back['rot'] == 0 and back['land'] == land0 and back['mode'] == 'auto',
               f'화면 방향: 게임 안에서 가로·세로를 바꾸고(화면을 돌려 보여 줌), 돌린 동안에도 누른 칸이 맞고, 자동으로 되돌린다 {orr} {goal} {back}')
+
+        await page.evaluate("() => { window.__samhanForceRot = false; }")
+        dsk = await page.evaluate("() => { const G = window.__game; G.setOrient('land', true); G.setOrient('port', true); const r = {rot: G.rotDeg, btn: getComputedStyle(document.querySelector('#orientBtn')).display}; G.setOrient('auto', true); return r; }")
+        await page.wait_for_timeout(300)
+        check(dsk['rot'] == 0, f'컴퓨터(마우스) 화면에서는 가로·세로를 골라도 화면을 돌리지 않는다 {dsk}')
 
         # 6-4i) 변신(보스 싸움·레이드에서 한 판에 한 번, 30초, 일반 몹 사냥 중엔 못 씀, 효과는 단계 값, 사신은 부상부터 약하게)
         #       기술 최대 레벨(전직)·전투 기술 6칸·연계(콤보)·초각성(실제 보스 피해 몇 초 몫)
