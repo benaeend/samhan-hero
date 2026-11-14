@@ -705,6 +705,8 @@ body.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.82),rgba(20,8,12
 .ctrl{position:absolute;right:8px;bottom:8px;z-index:3;display:grid;grid-template-columns:repeat(5,auto);grid-template-rows:auto auto;gap:6px;padding:0;background:none;border:0;align-items:end}
 .ctrl .skills{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:repeat(6,40px);gap:6px;justify-content:end}
 .ctrl .skills.many{grid-template-columns:repeat(4,40px);gap:6px}   /* 7~8칸 — 네 개씩 두 줄(물의 신화) */
+.ctrl .skills.many.lots{grid-template-columns:repeat(5,40px)}   /* 9~10칸 — 다섯 개씩 두 줄(2026-11-14 장착 10칸) */
+:where(body.short) .ctrl .skills.many.lots{grid-template-columns:repeat(5,38px)}
 /* 물약 칸(2026-11 (43), 사용자 요청): 기술 줄 바로 위, 개수가 보이고 누르면 바로 마심 */
 .ui-top{display:flex;gap:12px;align-items:center;margin-bottom:8px}
 .ui-top img{width:72px;height:68px;image-rendering:pixelated;border-radius:14px;background:radial-gradient(circle at 50% 40%,#2a3554,#10162a 75%);border:1px solid var(--line-2);flex:none}
@@ -942,8 +944,8 @@ body.portrait .qtrack{top:auto;left:8px;width:calc(100% - 16px)}
 body.portrait .log{width:auto;right:8px}
 body.portrait .ctrl{left:8px;right:8px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center}
 body.portrait .ctrl .skills{display:flex;gap:4px}
-body.portrait .ctrl .skills.many{flex-wrap:wrap;flex-basis:100%}body.portrait .ctrl .skills.many .sk{width:38px;height:38px}body.portrait .ctrl .skills.many .sk svg{width:19px;height:19px}
-body.portrait .ctrl .potbar{flex-basis:100%;justify-content:flex-start}
+body.portrait .ctrl .skills.many{flex-wrap:wrap;flex-basis:100%}body.portrait .ctrl .skills.many.lots{display:grid;grid-template-columns:repeat(5,38px);gap:4px;justify-content:start;flex-basis:auto;margin-right:54px}   /* 10칸: 왼쪽부터 다섯 개씩 — 오른쪽 단추 줄([캐릭터 바꾸기])을 덮지 않게 */body.portrait .ctrl .skills.many .sk{width:38px;height:38px}body.portrait .ctrl .skills.many .sk svg{width:19px;height:19px}
+body.portrait .ctrl .potbar{flex-basis:calc(100% - 54px);max-width:calc(100% - 54px);margin-right:54px;justify-content:flex-start}   /* (2026-11-14 기술 10칸) 기술 줄이 두 줄이 되어 물약 줄이 오른쪽 단추 줄 높이까지 올라오므로 그 몫을 비움 */
 body.portrait .ctrl{pointer-events:none}body.portrait .ctrl>:not(.sp){pointer-events:auto}   /* (물의 신화 4단계) 세로 화면이 짧으면 .ctrl 상자가 오른쪽 단추 줄([캐릭터 바꾸기]) 위에 겹친다 — 빈 자리는 누르기를 아래 단추로 흘려보낸다 */
 body.portrait .formb{flex-basis:calc(100% - 54px);max-width:calc(100% - 54px);margin-right:54px;height:34px}   /* (2026-11-12) 세로 화면: 오른쪽 단추 줄의 [캐릭터 바꾸기]를 가리지 않게 변신 칸을 그만큼 짧게 */
 body.portrait .btn-mode{height:30px;font-size:11px;padding:0 8px}
@@ -2017,22 +2019,26 @@ const STAT_DEFS = {
 };
 const STAT_ORDER = ['atk', 'hp', 'crit', 'critDmg', 'aspd', 'regen'];
 
+/* 기술 레벨 값(2026-11-14 엽전 경제, 사용자 요청: 기술 값이 재련·펫·능력치를 막음): 값 = base × growth^(레벨−1).
+   예전 growth 1.9 · base 150 ~ 5e16 이라 Lv30까지 base의 약 1억 4천만 배, 4~6차 전직 기술은 Lv2 값부터 그 땅 시간당 수입의 수만~수십만 배여서 Lv1에 묶였다.
+   growth 1.5(Lv30까지 base의 약 26만 배)로 낮추고 base도 크게 낮춤 — 장착 기술을 그 전직의 최대 레벨까지 올리는 값이 그 구간 엽전 수입의 한 자릿수 %
+   (잰 수입 기준: 이승+저승 약 2% · 천계 약 9% · 부상 약 3% · 곤륜 약 10% · 4·5부 1~3%. 1.6이면 천계 53%·곤륜 100% 넘게라 못 채움 — CLAUDE.md 밸런스 기준) */
 const SKILLS = [
-  {key:'spin',   unlock:5,  cd:6,  base:150,  growth:1.9, max:30},
-  {key:'bolt',   unlock:12, cd:10, base:2000, growth:1.9, max:30},
-  {key:'roar',   unlock:25, cd:24, base:3e4,  growth:1.9, max:30},
-  {key:'meteor', unlock:40, cd:20, base:5e5,  growth:1.9, max:30},
-  {key:'combo',  unlock:60, cd:14, base:5e6,  growth:1.9, max:30},
-  {key:'mark',   unlock:80, cd:28, base:5e7,  growth:1.9, max:30},
-  {key:'jobA',   unlock:1,  job:1, cd:18, base:2e6, growth:1.9, max:30},   // 1차 전직 기술
-  {key:'jobB',   unlock:1,  job:2, cd:32, base:5e9, growth:1.9, max:30},   // 2차 전직 기술
-  {key:'jobC',   unlock:1,  job:3, cd:26, base:5e10, growth:1.9, max:30},  // 3차 전직 기술(부상)
-  {key:'jobD',   unlock:1,  job:4, cd:40, base:5e12, growth:1.9, max:30},  // 4차 전직 기술(곤륜)
-  {key:'party',  unlock:30, cd:40, base:1e5,  growth:1.9, max:30},  // 파티 버프(2026-11 (41), 직업마다 하나: 나와 함께 싸우는 동료 모두)
-  {key:'jobE',   unlock:1,  job:5, cd:34, base:5e14, growth:1.9, max:30},  // 5차 전직 광역기(바다, 물의 신화 5단계)
-  {key:'jobF',   unlock:1,  job:5, cd:50, base:5e14, growth:1.9, max:30},  // 5차 전직 버프기
-  {key:'jobG',   unlock:1,  job:6, cd:44, base:5e16, growth:1.9, max:30},  // 6차 전직 광역기(천축, 물의 신화 9단계 나)
-  {key:'jobH',   unlock:1,  job:6, cd:55, base:5e16, growth:1.9, max:30},  // 6차 전직 버프기
+  {key:'spin',   unlock:5,  cd:6,  base:50,  growth:1.5, max:30},
+  {key:'bolt',   unlock:12, cd:10, base:150, growth:1.5, max:30},
+  {key:'roar',   unlock:25, cd:24, base:500,  growth:1.5, max:30},
+  {key:'meteor', unlock:40, cd:20, base:1500,  growth:1.5, max:30},
+  {key:'combo',  unlock:60, cd:14, base:2500,  growth:1.5, max:30},
+  {key:'mark',   unlock:80, cd:28, base:5000,  growth:1.5, max:30},
+  {key:'jobA',   unlock:1,  job:1, cd:18, base:2500, growth:1.5, max:30},   // 1차 전직 기술
+  {key:'jobB',   unlock:1,  job:2, cd:32, base:1.5e4, growth:1.5, max:30},   // 2차 전직 기술
+  {key:'jobC',   unlock:1,  job:3, cd:26, base:2.5e4, growth:1.5, max:30},  // 3차 전직 기술(부상)
+  {key:'jobD',   unlock:1,  job:4, cd:40, base:2.5e4, growth:1.5, max:30},  // 4차 전직 기술(곤륜)
+  {key:'party',  unlock:30, cd:40, base:1500,  growth:1.5, max:30},  // 파티 버프(2026-11 (41), 직업마다 하나: 나와 함께 싸우는 동료 모두)
+  {key:'jobE',   unlock:1,  job:5, cd:34, base:5e4, growth:1.5, max:30},  // 5차 전직 광역기(바다, 물의 신화 5단계)
+  {key:'jobF',   unlock:1,  job:5, cd:50, base:5e4, growth:1.5, max:30},  // 5차 전직 버프기
+  {key:'jobG',   unlock:1,  job:6, cd:44, base:1e5, growth:1.5, max:30},  // 6차 전직 광역기(천축, 물의 신화 9단계 나)
+  {key:'jobH',   unlock:1,  job:6, cd:55, base:1e5, growth:1.5, max:30},  // 6차 전직 버프기
 ];
 // 직업별 기술 칸 정의(도인은 칸마다 종류·재사용·여는 조건이 다르다). kind = 하는 일, atk = 공격 기술
 const ATK_KINDS = ['spin', 'bolt', 'meteor', 'combo', 'jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobG'], SK_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
@@ -2053,8 +2059,8 @@ const skCap = i => Math.min(SKILLS[i].max, 10 + 5 * (S.job || 0), 4 + Math.floor
 const skLv = i => skOpen(i) ? Math.min(S.skills[SKILLS[i].key] || 0, skCap(i)) : 0;
 /* 전투 기술 칸(2026-11 (40), 사용자 요청: 실제 전투에서는 5~6개만): 익힌 기술 가운데 SK_SLOTS(6)개만 끼워 쓴다(S.skSet = 칸 번호).
    S.skSetMan이 거짓이면(기본) 새 기술을 익힐 때마다 직업·전직 단계별 순서 skPick(SK_PRE.mix)으로 저절로 골라 끼우고, [기술]에서 직접 바꾸면 그 뒤로는 내가 고른 대로 */
-const SK_SLOTS = 8;   // (물의 신화, 확정) 싸움에 들고 가는 기술은 8개까지. (43)의 '익힌 기술 전부(11)'는 기술이 직업마다 15개가 되면 화면도 밸런스도 감당이 안 돼서. 초각성기·넋 부름·변신은 따로
-const skPick = () => skPreList('mix');   // 평소 사냥 조합: 전직 단계마다 보스(0.65)·몹 떼(0.35) 피해로 가장 좋은 8칸(아래 SK_PRE.mix)
+const SK_SLOTS = 10;   // (2026-11-14 엽전 경제, 사용자 요청: 평타로는 몹을 못 잡는 게임이라 8칸이 모자람) 8 → 10. 예전 8칸 저장은 skWiden이 빈 두 칸을 추천 순서로 한 번 채운다. 초각성기·넋 부름·변신은 따로
+const skPick = () => skPreList('mix');   // 평소 사냥 조합: 전직 단계마다 보스(0.65)·몹 떼(0.35) 피해로 가장 좋은 8칸(아래 SK_PRE.mix) + 그 뒤 순서로 9·10번째 칸
 const skLearned = i => skLv(i) > 0;      // 열렸어도 아직 안 배운(레벨 0) 칸은 못 끼움
 /* 전투 칸 S.skSet(8칸): S.skSetMan이 거짓이면(기본 · [추천 조합으로]) 익힌 기술 가운데 추천 순서 skPick 앞에서 8개를 저절로.
    [기술]에서 [빼기]·[넣기]를 하면 직접 고른 것(S.skSetMan)으로 — 그 뒤로는 내가 고른 대로 두고, 새로 익힌 기술만 빈 칸이 있을 때 한 번 저절로 끼운다(S.skKnown = 이미 본 기술).
@@ -2064,10 +2070,20 @@ function skMigrate(){
   if (rest.length > SK_SLOTS){ S.skSetMan = false; S.skNote = true; }
   else if (off.length){ S.skSetMan = true; S.skSet = rest; }
   else S.skSetMan = false;
-  S.skOff = []; S.skKnown = SKILLS.map((_, i) => i).filter(skLearned); S.skV = 2;
+  S.skOff = []; S.skKnown = SKILLS.map((_, i) => i).filter(skLearned); S.skV = 2; S.skW = SK_SLOTS;
+}
+/* 칸 넓히기(2026-11-14, 8 → 10): 저장이 몇 칸 기준인지 S.skW. 더 좁은 칸으로 만든 저장이면 한 번만 —
+   직접 고른 사냥 칸(S.skSetMan)·싸움 종류별로 고른 조합(S.skPre)·조합 저장 칸(S.skSaves)의 빈 칸을 추천 순서로 채운다(고른 기술은 그대로, 뒤에 붙임) */
+function skWiden(){
+  const fill = (L, rec, ok) => { const out = (L || []).slice(0, SK_SLOTS); for (const i of rec) if (out.length < SK_SLOTS && ok(i) && !out.includes(i)) out.push(i); return out; };
+  if (S.skSetMan && Array.isArray(S.skSet)) S.skSet = fill(S.skSet, skPick(), skLearned);
+  if (S.skPre) for (const k of ['boss', 'party', 'mob']) if (Array.isArray(S.skPre[k]) && S.skPre[k].length) S.skPre[k] = fill(S.skPre[k], skPreList(k), skOpen);
+  if (Array.isArray(S.skSaves)) S.skSaves = S.skSaves.map(v => Array.isArray(v) && v.length ? fill(v, skPick(), skOpen) : v);
+  S.skW = SK_SLOTS;
 }
 function skSetFix(){
   if (S.skV !== 2) skMigrate();
+  if ((S.skW || 8) < SK_SLOTS) skWiden();
   if (!Array.isArray(S.skKnown)) S.skKnown = [];
   if (S.skSetMan){
     const set = (S.skSet || []).filter((i, k, a) => skLearned(i) && a.indexOf(i) === k).slice(0, SK_SLOTS);
@@ -4377,9 +4393,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-5', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-7', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 14일 · 엽전 쓰임새 · 기술 10칸'],
+  ['체력은 공격력보다 10레벨 낮아도 돼요', '몬스터 세기의 기준인 「평균 용사」를 체력 능력치가 공격력보다 10레벨 낮은 용사로 바꾸고, 그만큼 모든 땅의 몬스터 공격을 낮췄어요. 이제 체력을 공격력만큼 따라 올리지 않아도 버티는 힘이 「보통」으로 나와요(능력치에 쓰는 엽전 가운데 체력 몫이 약 45% → 25%). 체력을 이미 공격력만큼 올린 용사는 그만큼 더 넉넉해져요. [수련]의 「무엇을 올리면 버틸까」도 「공격력보다 10레벨 아래까지」로 알려 줘요.'],
+  ['기술 레벨 값이 크게 내려갔어요', '기술 한 레벨 값이 레벨마다 1.9배씩 오르던 것을 1.5배로 낮추고 처음 값도 낮췄어요. 특히 4~6차 전직 기술은 2레벨부터 그 땅 수입 몇만 시간어치가 들던 것이, 이제 몇 분~몇 시간이면 올라요. 장착한 기술을 그 전직의 최대 레벨까지 올려도 그 땅에서 버는 엽전의 10% 안쪽이라, 재련·펫·능력치에 쓸 엽전이 넉넉히 남아요.'],
+  ['장착 기술 10칸', '싸움에 들고 가는 기술이 8개에서 10개로 늘었어요(기술 줄은 다섯 개씩 두 줄). 추천 조합을 쓰던 용사는 저절로 10개가 차고, 직접 고른 사냥 칸·레이드별로 고른 조합·저장한 조합은 빈 두 칸을 추천 순서로 한 번 채워 줘요(고른 기술은 그대로).'],
   ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
   ['컴퓨터에서 화면이 옆으로 눕던 것 고침', '컴퓨터 창에서 가로로 바꾸면 화면이 90도 누워 보이던 것을 고쳤어요. 이제 컴퓨터에서는 창 모양(가로로 길면 가로 화면, 세로로 길면 세로 화면)에 알아서 맞춰지고, [화면 돌리기]는 휴대폰·태블릿에서만 화면을 돌려요.'],
@@ -4762,6 +4782,8 @@ const TANK = {on:true, from:11,                    // from: 이승은 11단계�
                                                  // 이승 0.5(같은 응급 처치)도 끔 — 새 표로 새 캐릭터(시뮬 여섯 직업 × 2판, 5시간)의 이승 42~61단계 지수 가운데값 0.76~1.60(가운데 1.12), 주인의 궁사 재현(Lv33·체력 8,508)은 지수 1.02·15분에 보스 3~4번 이기고 안 쓰러짐. 손잡이는 남겨 둠
   bossMin:0.2,
   susT:20, susMax:0.5,                              // 버티는 힘에 넣는 회복 몫
+  hpLag:10,                                         // (2026-11-14 엽전 경제, 사용자 요청: 체력을 공격력만큼 올려야 해서 엽전이 너무 듦) 기준 용사는 체력 능력치가 공격력보다 이만큼 낮다.
+                                                    // TANK_REF는 체력=공격력으로 키운 시뮬에서 잰 표라, 기준·몬스터 공격을 statMul^hpLag(×0.56)만큼 낮춘다(tkLagLog). 능력치에 드는 엽전 가운데 체력 몫 43% → 약 25%
   danger:0.7, warn:0.95, ease:1.3,                  // 화면 띠
   raidLives:3, allyLives:2, allyDown:10, allyUp:0.3, npcHp:{musa:1.3, def:0.85}, healParty:0.25, enrageT:38, enrageK:0.2,
   raidK:1.7,                                        // 일반 레이드 보스 공격 배율(단계 보스의 BOSS_K.atk 자리)
@@ -4783,8 +4805,9 @@ function tankRefLog(w, s){   // heroRef와 같은 선형 보간·끝은 연장(l
   return v1 + (v1 - v0) / (s1 - s0) * (s - s1);
 }
 const tkCls = (c = S.cls, w = S.world) => { const v = TANK_CLS[c]; return (Array.isArray(v) ? v[Math.min(v.length - 1, w)] : v) || 0; };   // 직업 몫(log10) — 부마다 다름(2026-11-14: 4·5부에서 도인이 무사의 1/10까지 벌어져 한 값으로는 못 맞춤)
-const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) + tkCls(c, w));   // 그 직업 평균 용사의 버티는 힘(표가 없으면 NaN)
-const mAtkT = (s, w = S.world) => Math.pow(10, tankRefLog(w, s)) * TANK.k[w] / (2 * MOB_TTK);   // 직업 몫 없는 기준
+const tkLagLog = () => (TANK.hpLag || 0) * Math.log10(CURVE.statMul);   // 기준 용사의 체력 뒤처짐(log10)
+const tkRefHp = (w, s, c = S.cls) => Math.pow(10, tankRefLog(w, s) - tkLagLog() + tkCls(c, w));   // 그 직업 평균 용사의 버티는 힘(표가 없으면 NaN)
+const mAtkT = (s, w = S.world) => Math.pow(10, tankRefLog(w, s) - tkLagLog()) * TANK.k[w] / (2 * MOB_TTK);   // 직업 몫 없는 기준
 const tkClsK = (c = S.cls) => Math.pow(10, tkCls(c) * TANK.clsEq) * (TANK.cls[c] || 1);
 const tkPast = s => s < S.maxStage ? TANK.past : 1;
 const tkBossEase = s => { const f = (TANK.bossFloor || [])[S.world] || 0; if (!f) return 1; const x = tankIdx(s) / f; return x < 1 ? Math.max(TANK.bossMin || 0.2, x) : 1; };   // 일반 단계 보스 안전장치(이승만, 지수 NaN이면 1)
@@ -4929,7 +4952,7 @@ function tkGuardGain(){
 }
 function tkAdvice(){
   const C = [];
-  { const d = S.up.atk - S.up.hp; if (d > 0) C.push({k:'hp', g:Math.pow(CURVE.statMul, d), name:'체력 능력치', detail:`공격력 Lv.${S.up.atk} · 체력 Lv.${S.up.hp} — 약 ${d}레벨어치가 모자라요`, act:'공격력만큼 올리면', go:'능력치 보러 가기'}); }
+  { const d = S.up.atk - (TANK.hpLag || 0) - S.up.hp; if (d > 0) C.push({k:'hp', g:Math.pow(CURVE.statMul, d), name:'체력 능력치', detail:`공격력 Lv.${S.up.atk} · 체력 Lv.${S.up.hp} — 약 ${d}레벨어치가 모자라요`, act:`공격력보다 ${TANK.hpLag || 0}레벨 아래까지 올리면`, go:'능력치 보러 가기'}); }
   { const A = tkArmorGain(); if (A.g > 1) C.push({k:'armor', g:A.g, name:'방어구 재련', detail:`무기 +${A.wl} · 방어구 +${A.al}${seaOpen() ? ' · 투구·신발도' : ''}`, act:'무기만큼 맞추면', go:'재련 보러 가기'}); }
   { const Gr = tkGearGain(); if (Gr && Gr.g > 1) C.push({k:'gear', g:Gr.g, name:'방어구 등급', detail:`지금 ${Gr.cur} → ${Gr.next}`, act:'한 칸 올리면', go:'방어구 보러 가기'}); }   // 2026-11-14: 소환·합성으로 방어구 등급을 올리는 길도 후보에
   { const P = tkPetGain(); if (P && P.g > 1) C.push(P.equip ? {k:'pet', g:P.g, name:'방어 펫', detail:`${PETS[P.i].name}${josa(PETS[P.i].name, '을', '를')} 안 끼웠어요`, act:'끼우면', go:'펫 보러 가기'} : {k:'pet', g:P.g, name:'방어 펫', detail:`공격 펫 Lv.${P.la} · 방어 펫 Lv.${P.ld}`, act:'공격 펫만큼 올리면', go:'펫 보러 가기'}); }
@@ -4997,7 +5020,7 @@ function tkCardUpd(){
     else { t3.hidden = false; setText(t3, `가장 뒤처진 것 · ${A.name} (${A.detail}) — 맞추면 버티는 힘 ×${A.g.toFixed(1)}`); }
     setText(b, A.go); b.dataset.k = A.k; b.hidden = bd.k === 'ease' && (A.even || idx >= 2);
   }
-  if (tw){ const low = show && tankIdx() < TANK.warn, hide = !(low && adv && (adv.k === 'hp' || S.up.hp < S.up.atk - 5)); if (tw.hidden !== hide) tw.hidden = hide; }
+  if (tw){ const low = show && tankIdx() < TANK.warn, hide = !(low && adv && (adv.k === 'hp' || S.up.hp < S.up.atk - (TANK.hpLag || 0) - 5)); if (tw.hidden !== hide) tw.hidden = hide; }
 }
 function tkGuardTagUpd(){
   const tw = $('#gd-seongju .tkw'); if (!tw) return;
@@ -5135,7 +5158,7 @@ function defaultState(){
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}, neck:{g:-1, p:0}, pae:{g:-1, p:0}},
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
-    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
+    craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
@@ -5154,6 +5177,7 @@ function mergeState(d){
   for (const k of ['w', 'a', 'n']){ const c = (d.craft || {})[k] || {}; out.craft[k] = {t:Math.max(0, Math.min(CRAFT_MAX, c.t | 0)), e:engrOf(k, c.e) ? c.e : '', e2:engrOf(k, c.e2) ? c.e2 : '', f:Math.max(0, c.f | 0), el:Math.max(0, Math.min(ENGR_LV_MAX, c.el | 0))}; }
   out.skManual = d.skManual && typeof d.skManual === 'object' ? d.skManual : {};
   { const skl = v => Array.isArray(v) ? v.filter((i, k, a) => Number.isInteger(i) && i >= 0 && i < SKILLS.length && a.indexOf(i) === k) : [];
+    out.skW = Number.isInteger(d.skW) && d.skW > 0 ? Math.min(d.skW, SK_SLOTS) : 8;   // 칸 수 기준(없으면 8칸 시절 저장)
     out.skV = d.skV === 2 ? 2 : 0;   // 2 = 8칸 방식(물의 신화). 예전 저장(익힌 기술 전부 − skOff)은 들어올 때 skMigrate가 옮긴다
     out.skSet = skl(d.skSet).slice(0, SK_SLOTS); out.skSetMan = out.skV === 2 && !!d.skSetMan; out.skOff = out.skV === 2 ? [] : skl(d.skOff); out.skKnown = out.skV === 2 ? skl(d.skKnown) : []; out.skNote = out.skV === 2 && !!d.skNote; }
   out.skPre = {}; if (d.skPre && typeof d.skPre === 'object') for (const k of ['boss', 'party', 'mob']) if (Array.isArray(d.skPre[k])) out.skPre[k] = d.skPre[k].filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS);
@@ -6231,7 +6255,7 @@ const bossHpK = s => BOSS_K.hp[S.world] * (S.world === 2 ? Math.max(HEAVEN_EASE.
 // 익힌 기술을 전부 쓰게 하며(2026-11 (43), 사용자 요청: 6칸 → 전부) 단계 보스 체력을 '적당히' 올림: 익힌 기술이 6개를 넘으면 하나마다 +SK_BOSS_PER.
 // 잰 값(bench, 감로수 넉넉히): 전부 쓰면 6칸보다 보스 피해 1.0~1.5배(대개 1.1~1.3) — 그 절반쯤만 올려 손해 없이 조금 빨라지게. 레이드 칸 콘텐츠·레이드는 그대로
 const SK_BOSS_PER = 0.03;
-const skBossK = () => 1 + SK_BOSS_PER * Math.min(SK_SLOTS - 6, Math.max(0, SKILLS.reduce((n, _, i) => n + (skOpen(i) ? 1 : 0), 0) - 6));   // (물의 신화) 8칸이라 최대 +6%에서 멈춤(예전엔 11개 +15%)
+const skBossK = () => 1 + SK_BOSS_PER * Math.min(2, Math.max(0, SKILLS.reduce((n, _, i) => n + (skOpen(i) ? 1 : 0), 0) - 6));   // (물의 신화) 8칸이라 최대 +6%에서 멈춤(예전엔 11개 +15%)
 const mobScale = m => m.sc || (m.boss ? (S.world >= 1 && !m.raid ? 2.2 : 1.8) : 1);   // 2026-11 (42) 사용자 요청: 보스가 너무 큼(예전 2.6·2)
 function mobHeight(m){ const sp = mobSprite(m.type, m.color, 0, m.boss), sc = mobScale(m); return spH(sp) * sc + (FLOAT[m.type] || 0) * sc; }
 
@@ -6547,7 +6571,7 @@ function startRaid(i){
   const info = raidAt(i), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), party = raidParty(info);
   const tks = tkRaidS(ref), tk = tkOnAt(S.world, tks), past = tk && S.raid.first[info.key] ? TANK.past : 1;   // 9-4: 표가 있으면 보스 공격은 '그 레이드 평균 용사' 기준(mAtkT), 첫 토벌한 레이드는 익숙한 길
   if (tk) for (const a of party){   // NPC 동료 체력 = 그 레이드의 평균 용사(내가 세지든 약하든 같음), 다른 캐릭터 동료는 요약의 버티는 몫(ehp)이 있으면 그것
-    if (a.npc) a.maxHp = Math.pow(10, tankRefLog(S.world, tks)) * (a.cls === 'musa' ? TANK.npcHp.musa : TANK.npcHp.def);
+    if (a.npc) a.maxHp = Math.pow(10, tankRefLog(S.world, tks) - tkLagLog()) * (a.cls === 'musa' ? TANK.npcHp.musa : TANK.npcHp.def);
     else if (a.ehp > 0) a.maxHp = a.ehp;
   }
   startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:(tk ? mAtkT(tks) * past * TANK.raidK : mAtk(ref)) * 3, aoe:(tk ? mAtkT(tks) * past * TANK.raidK : mAtk(ref)) * 2, time:RAID_TIME});   // 파티 버프만큼 단단하게(2026-11 (41))
@@ -13118,7 +13142,7 @@ function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (
   const ov = window.__game && window.__game.jinOv; if (ov) return ov;   // 시뮬(tools/sim_jin.py)에서 기준값을 바꿔 가며 잴 때
   const JW = JIN_W[w], R = RAID_WORLDS.find(x => x.w === w), V = JW.c[S.cls] || (JW.avg || (JW.avg = jinAvg(JW.c))), f = R.n > 1 ? i / (R.n - 1) : 0;
   const v = [0, 1, 2].map(k => Math.pow(10, V.a[k] + (V.b[k] - V.a[k]) * f));
-  return [v[0] * JIN.t0, v[1] * JIN.a0, v[2]];
+  return [v[0] * JIN.t0, v[1] * JIN.a0 / Math.pow(10, tkLagLog()), v[2]];   // 한 방: 잰 EHP는 체력=공격력 용사의 것이라 TANK.hpLag만큼 낮춤(2026-11-14)
 }
 const jinOpen = w => (S.world > w || !!(window.__game && window.__game.jinForce)) && !!JIN_W[w] && !!RAID_WORLDS.find(R => R.w === w);
 const jinAny = () => RAID_WORLDS.some(R => jinOpen(R.w));
@@ -17037,7 +17061,7 @@ function buildSkillbar(){
   skBarKey = S.cls + ':' + list.join(','); skillEls = {};
   $('#skillbar').innerHTML = list.map(i => { const sk = SKILLS[i]; return `<button type="button" class="sk ${skIc(i)}" id="skb-${sk.key}">${SVG[skDef(i).icon]}<span class="cd"></span><span class="mn">수동</span><span class="lk">${skLockText(i)}</span></button>`; }).join('')
     + (list.length ? '' : '<button type="button" class="sk empty" data-skopen aria-label="쓸 기술이 없어요 — [기술]에서 넣기">+</button>');
-  $('#skillbar').classList.toggle('many', list.length > 6);
+  $('#skillbar').classList.toggle('many', list.length > 6); $('#skillbar').classList.toggle('lots', list.length > 8);
   $('#skillbar').querySelectorAll('[data-skopen]').forEach(b => b.addEventListener('click', () => { skillView = 'skill'; buildTab('skill'); }));
   list.forEach(i => {
     const sk = SKILLS[i], el = $('#skb-' + sk.key);
@@ -21538,7 +21562,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
   // @@END-H
   // @@HOOK-I (갈래 I의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로)
-  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, goldbagGold, tkCls, tkFieldEase, tkBossEase, tkRaidS, tkHas, tankRefLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
+  Object.assign(window.__game, {TANK, TANK_REF, TANK_CLS, goldbagGold, tkCls, tkFieldEase, tkBossEase, tkRaidS, tkHas, tankRefLog, tkLagLog, tkRefHp, mAtkT, tkClsK, tkPast, tkOnAt, tkOn, takenStatic, healPS, tankPow, tankIdx, tkBand, heroHeal, allyHeal, heroRevive, tmStart, tmEnd, tmAgg:() => JSON.parse(JSON.stringify(TM_AGG)), tmReset:() => { for (const k in TM_AGG) delete TM_AGG[k]; }, tkLean, petDR, heroRef, MOB_TTK, raidRecPower, raidAt, tankOff:false, tankK:1});
   Object.assign(window.__game, {makeMob, tbFromSummary, tkFx, tkWoundOn, tkWoundAdd, tkWoundTick, tkAdvice, tkGo, tkLine, tkEnrage, tkBig, tkHeroK, tkCardUpd, tkFailNote, tkRaidHTML, tkDot, damageAlly, patHitHero, damageHero, finishRaid, tbHeroHp, showModal, updateHud, respawn, noTank:true});   // 9-4 I-2
   Object.defineProperty(window.__game, 'TM', {get:() => TM, configurable:true});
   // @@END-I
