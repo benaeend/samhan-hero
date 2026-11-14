@@ -2271,7 +2271,7 @@ const COMBO_WIN = 4, COMBO_T = 5, COMBO_P = 0.35;
    그래서 재사용 줄임(도력 각인·탈것)이나 대굿(재사용 초기화)으로 기술을 몰아 쓰면 마나가 먼저 바닥난다 */
 const MP_MAX = 100, MP_REGEN = 5, MP_K = 0.75;   // (물의 신화) 8칸: 0.6 → 0.75 — 8개를 쉬지 않고 쓰면 초당 6쯤 들어 회복 5보다 조금 모자람(모자란 몫은 감로수, 없으면 아래 '먼저 준비된 기술부터' 순서로 조금씩 늦어짐)  //   // MP_K (44) 0.9 → 0.6: 익힌 기술을 모두 쓰게 하자 마나가 크게 모자라 사냥 범위 기술이 굶고 감로수에 엽전이 새서(시뮬 천계 레벨업 1.5배 느려짐). 전부 쓰면 초당 6.6쯤 들어 회복 5보다 조금 모자람   // (2026-11 (43), 사용자 요청: 저절로 너무 빨리 참) 7 → 5. 기술 여섯(+파티 버프)을 쉬지 않고 쓰면 초당 6 가까이 드니, 모자란 몫은 감로수(마나 물약)로(3.5로 했더니 시뮬 레벨업이 1.5배 느려짐)
 /* 물약(2026-11 (43), 사용자 요청: 자동 회복이 너무 빨라 물약을 안 먹음 → 엽전으로 물약을 사서 마시는 구조).
-   체력 자동 회복은 REGEN_K배(예전의 절반), 마나는 초당 5. 인삼 탕약(체력 30% 아래면 40%)·산삼 탕약(위험하면 가득)·감로수(마나 30 아래면 +MANA_POT)를
+   체력 자동 회복은 REGEN_K배(예전의 절반), 마나는 초당 5. 인삼 탕약(체력 30% 아래면 40%, 레이드는 50% 아래)·산삼 탕약(위험하면 가득)·감로수(마나 30 아래면 +MANA_POT)를
    저절로 마시고, 기술 줄 위 물약 칸을 누르면 바로 마신다. 값은 크게 내림(인삼 10개 = 몹 40마리 엽전, 감로수 10개 = 30마리) */
 const REGEN_K = 0.5, MANA_POT = 40, MANA_AT = 30, MANA_CD = 4;
 const mpMax = () => MP_MAX + (S && S.job >= 5 ? 20 : 0) + (S && S.job >= 6 ? 20 : 0);   // 최대 마나: 5차 120 · 6차 140(물의 신화)
@@ -4280,8 +4280,8 @@ const BUFF_ADD = 10 * 60, BUFF_MAX = 60 * 60;
 const goldbagGold = () => mGold(Math.max(1, S.maxStage)) * 300 * Math.max(1, FIELD.rew * gainMul('gold', true));
 const GOLDBAG_GEM = [90, 120, 180, 350, 600, 900, 900, 900, 1300, 1300, 1300];   // 주인 결정 11-13 06:41: 하루 제한 없앰·오름폭 낮춤, 4부 900·5부 1,300 (앞: 90·150·250·600·1,200, 4부 2,000)   // 4부 바다(세계 5~7)는 2,000(주인 결정 11-12: 땅마다 값·하루 10번·4·5부는 더 높게 — 5부는 3,000)
 const SHOP = [
-  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(20, Math.round(mGold(S.maxStage) * 40)), inv:'potion', n:10, max:9999},
-  {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
+  {id:'potion', cat:'potion', icon:'potion', name:'인삼 탕약 10개', desc:'체력이 30% 아래로 떨어지면(레이드에서는 50% 아래) 저절로 마셔 체력을 40% 채워요. 레이드에서는 맞은 피해로 깎이는 깊은 상처도 절반만 쌓여요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(20, Math.round(mGold(S.maxStage) * 40)), inv:'potion', n:10, max:9999},
+  {id:'potion100', cat:'potion', icon:'potion', name:'인삼 탕약 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 체력이 30% 아래(레이드는 50% 아래)면 저절로 마셔 40% 채워요.', cur:'gold', price:() => Math.max(150, Math.round(mGold(S.maxStage) * 300)), inv:'potion', n:100, max:9999},
   {id:'mana', cat:'potion', icon:'mana', name:'감로수 10개', desc:'마나 물약. 마나가 30 아래로 떨어지면 싸우는 동안 저절로 마셔 마나를 40 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요.', cur:'gold', price:() => Math.max(15, Math.round(mGold(S.maxStage) * 30)), inv:'mana', n:10, max:9999},
   {id:'mana100', cat:'potion', icon:'mana', name:'감로수 100개', tag:'묶음', desc:'10개씩 살 때보다 25% 싸요. 마나가 30 아래면 저절로 마셔 40 채워요.', cur:'gold', price:() => Math.max(110, Math.round(mGold(S.maxStage) * 225)), inv:'mana', n:100, max:9999},
   {id:'rreset', cat:'pack', icon:'ticket', name:'레이드 리셋권', tag:'하루 1번', desc:'오늘 쓴 허수아비 수련·백귀야행·보물 동굴·1일 보스·강림 레이드 도전 횟수를 처음으로 되돌리고(이긴 1일 보스·강림도 다시), 토벌패를 가득 채워요. 상위 레이드 「진」의 횟수는 되돌리지 않아요.', cur:'gems', price:() => RRESET_GEMS, daily:1},
@@ -4438,9 +4438,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-8', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-15-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 15일 · 레이드 피해 · 탕약 · 하루 횟수 표시 · 수군 야행'],
+  ['레이드에서 맞는 피해가 줄고 탕약이 제 몫을 해요', '레이드(강림·용왕 강림·타임 보스·1일 보스·시왕·영웅)에서 용사가 맞는 보스 공격이 20% 줄었어요. 자동 탕약은 레이드에서는 체력 50% 아래에서 마시고, 맞은 피해로 깎이는 깊은 상처도 4분의 1만 쌓여요. 사냥터·단계 보스·결투·진·천공의 탑은 그대로예요.'],
+  ['하루 횟수가 「남은 횟수」로 보여요', '「오늘 2 / 3번」처럼 헷갈리던 글을 「오늘 2번 남음」으로 바꿨어요. 다 쓰면 「오늘 다 했어요」, [직업 바꾸기]도 「이번 주 2번 남음」으로 보여요.'],
+  ['수군 야행 횟수가 사라지던 문제를 고쳤어요', '야행 도중에 앱을 잠깐 내렸다 돌아오거나 기록을 불러오면 보상도 없이 횟수만 줄던 문제를 고쳤어요. 이제 앱으로 돌아와도 야행이 이어지고, 판이 끊겨도 잡은 게 없으면 횟수가 돌아오고 잡은 게 있으면 거기까지 보상을 받아요(백귀·아수라·쿠베라의 곳간도 같아요).'],
   ['#', '11월 14일 · 상위 레이드 칸 합치기'],
   ['상위 레이드가 허수아비·보물 동굴·강림 칸 안으로 들어왔어요', '해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없어요. [레이드]의 허수아비·보물 동굴·강림 칸 맨 위에 [허수아비 | 해태 수련]처럼 고르는 칩이 생겼고, 열려 있으면 처음엔 상위가 골라져 있어요.'],
   ['하루에 둘 중 하나만', '한 번이라도 시작하면 다른 쪽은 그날 잠기고(「오늘은 ○○을 했어요」), 내일 다시 풀려요. 이미 쓴 횟수는 그대로예요.'],
@@ -4463,7 +4467,7 @@ const NOTES = [
   ['직업마다 맞는 능력', '직업마다 잘 맞는 능력이 둘씩 생겼어요. 무사 공격력·체력 / 자객 치명 확률·치명 피해 / 술사 기술 피해·재사용 / 도인 공격 속도·체력 / 궁사 치명 피해·공격 속도 / 창객 공격력·휘청(보스 피해). 기술마다 꼬리표가 붙고, 각인·영약·치장·호박석·영물 짐승·수호신·탈것·장신구 옵션을 맞는 능력 쪽으로 고를수록 그 기술이 최대 약 35% 세져요. 엉뚱한 쪽으로 몰면 약해져요.'],
   ['레벨 문 앞 수련', '4·5부에서 이야기가 레벨을 기다리는 동안(레벨 문) 할 일이 생겼어요. [퀘스트] → [수련 의뢰]에서 사냥·기술·손질·겨루기 가운데 하나를 받아 마치면 수련 기운이 쌓여 경험치와 함께 흘러들어요. 하루 5번(엽전·재료) + 보석으로 2번 더, 다 채우면 저절로 마쳐요.'],
   ['무엇을 올리면 버틸까', '버티는 힘은 체력 능력치 · 방어구 재련(4부부터 투구·신발도) · 방어 펫 · 성주신으로 키워요. 카드에 내 공격 쪽과 견줘 가장 뒤처진 것과 [바로 가기]가 나오고, 모자라면 체력 줄·성주신 카드에 「이 단계에서 부족해요」가 붙어요. 단계 보스에게 쓰러지면 기록에도 한 줄 남아요.'],
-  ['깊은 상처 · 큰 살 · 덤벼들기', '받은 피해의 절반은 그 싸움이 끝날 때까지 탕약·회복으로 못 채워요(체력 막대의 어두운 줄, 사냥터에서는 천천히 아물어요). 보스의 큰 살은 평균 용사 체력의 55%로 들어와 버티는 힘이 낮을수록 아프고, 사냥터 요괴는 처음 붙을 때 한 번 덤벼들어요. 버티는 힘이 아주 낮으면 잡몹이 약해져 사냥은 늘 할 수 있어요.'],
+  ['깊은 상처 · 큰 살 · 덤벼들기', '받은 피해의 절반은 그 싸움이 끝날 때까지 탕약·회복으로 못 채워요(체력 막대의 어두운 줄, 사냥터에서는 천천히 아물어요. 레이드에서는 체력 50% 아래에서 탕약을 먹고, 깊은 상처도 절반만 쌓여요). 보스의 큰 살은 평균 용사 체력의 55%로 들어와 버티는 힘이 낮을수록 아프고, 사냥터 요괴는 처음 붙을 때 한 번 덤벼들어요. 버티는 힘이 아주 낮으면 잡몹이 약해져 사냥은 늘 할 수 있어요.'],
   ['파티 레이드', 'NPC 동료는 내 용사가 아니라 「그 레이드 평균 용사」만큼 단단해요. 용사가 세 번 쓰러지면 물러나고(토벌패는 돌려받아요), 동료는 한 번 다시 일어나고 두 번째에는 끝까지 누워요. 38초가 지나면 보스가 광폭해져 갈수록 아파요. 권장 전투력은 내 실제 보스 피해로 다시 셈하고, 레이드 카드에 「버티는 힘 n%」도 보여요.'],
   ['익숙한 길 · 그대로인 곳', '이미 넘은 단계와 첫 토벌한 레이드는 몬스터 공격이 30% 약해 지나온 곳은 다시 깰 수 있어요. 전직 시험·환생의 기억·결투·천공의 탑·태초의 신·허수아비·해태·백귀야행류·보물 동굴류는 그대로예요. 자리를 비운 동안의 보스 자동 도전도 같은 기준으로 셈해요. 무사 파티 버프 「호위 진형」의 받는 피해 감소가 용사 자신에게는 안 걸리던 것도 고쳤어요.'],
   ['예전 캐릭터는 약해지지 않아요', '업데이트 날 가진 옵션의 쏠림은 손해로 치지 않아요. 맞는 능력 쪽으로 바꾸면 세지기만 하고, 더 엇나가게 바꾼 만큼만 줄어요. 처음 14일은 엇나간 쪽 손해가 절반이고, 옵션 숫자 자체는 하나도 안 바뀌었어요.'],
@@ -4821,11 +4825,16 @@ const TANK_CLS = {
    타임 보스·1일 보스·강림: fitB 1과 0.5에서 지수 0.7과 1.0의 승률이 같다(보스가 내 체력 비율로 때리고 탕약이 넉넉하면 거의 안 쓰러짐) → fitB 1 그대로. 시왕 진(권장 100%): 자동 15·평범 50·잘함 89%(9-4 전 24·54·93). 오프라인: offPat 1·OFF_BOSS_X [0.5, 1.0].
    2·3부(무사·도인) -5% · 4부(네 직업) -1% · 5부: 무사 0·술사 -3·도인 +2%. **자객 5부만 못 풀었다**: 켠 판 77.2·79.4·(적성만 끔) 76.6시간 대 끈 판 58.0·(버티는 힘만 끔) 60.1시간 — 한 번도 안 쓰러지는데 젖의 바다·수미산 사냥이 1.4배 느리다.
    5부 k를 1로 낮춘 판은 55.1(시험 덮어쓰기)과 79.4(빌드)로 갈려 원인이 k인지 못 밝힘 → k는 그대로 두고 다음 담당이 본다(scratchpad balfin/res/5_*_jagaek_1.json) */
+/* 레이드 맞는 피해 배율(2026-11-15): 레이드(강림·용왕 강림·타임 보스·1일 보스·시왕·영웅 등)에서 용사가 맞는 보스 기본 공격·땅울림·붉은 칸·강타·큰 살에 곱한다. 결투·진·천공의 탑·사냥터·단계 보스는 그대로.
+   같이 바뀜: 레이드 자동 탕약은 체력 50% 아래에서(그 밖 30%, 진 30%) · 레이드의 깊은 상처 몫 TANK.raidWound 0.25(그 밖 TANK.wound 0.5, 진 그대로) */
+const RAID_HIT_K = 0.8;
+function leftTxt(n, pre = '오늘'){ return (n > 0 ? `${pre} ${n}번 남음` : `${pre} 다 했어요`).trim(); }   // 하루·주 횟수 표시: 앞 숫자는 늘 「남은 횟수」(0이면 다 했어요)
+const raidHitK = () => raid && !raid.info.pvp && !raid.info.tower && !raid.info.jin && !raid.info.job && !raid.info.dummy ? RAID_HIT_K : 1;
 const TANK = {on:true, from:11,                    // from: 이승은 11단계부터(손컨 패턴이 시작하는 곳)
   k:[0.45, 0.6, 0.6, 0.8, 0.8, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25],   // 세계별 몬스터 공격 배율. 이승 0.28 → 0.45(2026-11-14 밸런스 2차): 기준표를 다시 재니 0.28로는 이승 11~101단계 세기가 예전(HERO_REF)의 평균 0.55~0.6배 — 0.45면 평균 0.9~0.96배(띠별: 11~60단계 0.67~0.77 · 61~80단계 1.6~1.7 · 81~101단계 0.8). 평균을 딱 1로 맞추는 값은 0.47~0.51
   clsEq:1, cls:{},
   mob:0.45, lunge:1.2, fieldFloor:0.7,              // fieldFloor: 지수가 이 아래인 용사에게 잡몹은 (지수 ÷ 0.7)배로만 — 예전 저장(지수 0.1~0.3)이 제 사냥터에서 사냥조차 못 하는 일을 막는다(보스는 그대로)
-  wound:0.5, fieldDecay:0.03,
+  wound:0.5, raidWound:0.25, fieldDecay:0.03,
   bigK:1, past:0.7,
   bigFloor:[0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25],   // 세계별 큰 살 지수 바닥(보스 한 방 = 최대 체력×55%÷지수, 지수가 이 아래면 이 값으로 침). 이승은 2026-11-14 아침 응급으로 0.6이었다가(기준표가 부풀어 새 캐릭터 지수 5~25%) 기준표를 다시 재고 0.25로 되돌림
   bossFloor:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],   // 세계별 일반 단계 보스(수문장 포함) 공격 안전장치(0이면 끔): 지수가 이 아래면 보스 공격을 「지수÷이 값」배로(최저 bossMin). 사냥터 잡몹의 fieldFloor와 같은 방식. 레이드·타임 보스·시련은 그대로.
@@ -4921,7 +4930,7 @@ function tkWoundOn(){
 }
 function tkWoundAdd(dmg){   // dmg = 체력에 들어간 피해(보호막 뒤)
   if (!(dmg > 0) || !tkWoundOn()) return;
-  hero.wound = Math.min(Math.max(0, ST.maxHp - 1), (hero.wound || 0) + dmg * TANK.wound);
+  hero.wound = Math.min(Math.max(0, ST.maxHp - 1), (hero.wound || 0) + dmg * (raid && !raid.info.jin ? TANK.raidWound : TANK.wound));
   if (!S.seenCut.wound && (raid || bossActive)){
     S.seenCut.wound = 1; addText('깊은 상처', hero.x, hero.y - 52, '#d06a88', 12, true);
     addLog('깊은 상처: 받은 피해의 절반은 이 싸움이 끝날 때까지 회복으로 못 채워요(체력 막대의 어두운 줄). 사냥터에서는 천천히 아물어요.', 'warn');
@@ -4959,7 +4968,7 @@ function allyHeal(a, amt, src){
 const tkHeroK = () => raid && raid.norm && tkOnAt(S.world, tkRaidS(raid.info.ref)) ? tkClsK() : 1;
 const tkEnrage = R => R && R.norm && tkFx() ? 1 + TANK.enrageK * Math.max(0, R.limit - R.time - TANK.enrageT) : 1;   // 광폭 배율(enrageT초 뒤 1초마다 +enrageK)
 function tkBig(B){   // 큰 살: 기준 버티는 힘의 55%(평균 용사 55%, 지수 0.7이면 약 79%) — 단계 보스·수문장과 일반 레이드만
-  let d = ST.maxHp * PAT.wipePct * tkEnrage(raid);
+  let d = ST.maxHp * PAT.wipePct * tkEnrage(raid) * raidHitK();
   if (tkOn() && (raid ? raid.norm && B === raid.boss : bossActive && B === bossRef)) d *= TANK.bigK / Math.min(4, Math.max((TANK.bigFloor || [])[S.world] || 0.25, tankIdx()));
   return d;
 }
@@ -5860,6 +5869,7 @@ const rebirthReady = () => rebirthCheck().every(c => c.ok);
 const rebirthPts = () => Math.floor(S.level / 10) + Math.floor(S.maxStage / 20);
 function applyWorld(){ document.body.classList.toggle('hell', S.world === 1); document.body.classList.toggle('heaven', S.world === 2); document.body.classList.toggle('busang', S.world === 3); document.body.classList.toggle('kunlun', S.world === 4); document.body.classList.toggle('sea', S.world >= 5 && S.world <= 7); document.body.classList.toggle('india', S.world >= 8); }   // india: 5부 천축(해 질 녘 사프란빛)
 function doRebirth(){
+  paradeAbort();
   if (!rebirthReady()) return null;
   const pts = rebirthPts(), first = S.world === 0;
   S.reb.pts += pts; S.reb.total += pts; S.reb.n++;
@@ -6110,7 +6120,7 @@ let manaCd = 0;
 function autoPotion(dt){
   potCd = Math.max(0, potCd - dt); manaCd = Math.max(0, manaCd - dt);
   autoMana();
-  if (potCd > 0 || hero.dead || hero.hp >= ST.maxHp * 0.3) return;
+  if (potCd > 0 || hero.dead || hero.hp >= ST.maxHp * (raid && !raid.info.pvp && !raid.info.jin ? 0.5 : 0.3)) return;
   if (raid && raid.info.pvp) return;   // 결투는 물약 없이(상대도 못 마심)
   if (raid && raid.wipe && (raid.wipe.st === 1 || raid.wipe.st === 2)) return;   // 전멸기가 다 깎을 때까지 기다렸다 마신다
   const danger = bossActive || !!raid;
@@ -7036,8 +7046,8 @@ const TB_DIFF = {
    (2026-11 (38)부터 체력은 FIT로 맞춤 — 아래 TB_LEAD 근처 설명. hpSec는 예전 값으로 남겨 둠) 공격 = 맞는 용사 최대 체력 × hit(땅울림은 aoe, 방어는 tbHeroHp로 빼고).
    그래서 약한 캐릭터·강한 캐릭터가 섞여도 누구나 똑같이 위협받고, 사람이 많을수록 보스도 단단해진다 */
 const tbHeroHp = () => ST.maxHp / Math.max(0.05, takenK(true)) * (TANK.fitB !== 1 && tkOn() && !(raid && raid.info.pvp) ? Math.pow(Math.max(0.25, Math.min(4, tankIdx(S.maxStage))), TANK.fitB - 1) : 1);   // 9-4: fitB 1 = 그대로, 0.5면 지수 0.7 용사가 한 방을 1.2배로(결투는 늘 그대로)   // 파티 버프(호위 진형)의 받는 피해 줄임은 빼지 않는다(동료가 걸어 준 만큼 덜 맞음)   // 방어로 줄어드는 몫을 미리 되돌려, 맞으면 최대 체력의 그 %가 깎인다
-const bossHit = (B, tg, mul = 1) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() : 1);   // 9-4: 광폭 · 일반 레이드에서 용사가 맞을 땐 내 직업 몫
-const bossAoe = (B, tg) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.aoe : B.aoe) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() : 1);
+const bossHit = (B, tg, mul = 1) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() * raidHitK() : 1);   // 9-4: 광폭 · 일반 레이드에서 용사가 맞을 땐 내 직업 몫
+const bossAoe = (B, tg) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.aoe : B.aoe) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() * raidHitK() : 1);
 function tbWindow(){
   const d = new Date(now()), slot = Math.floor(d.getHours() / 3);
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), slot * 3).getTime();
@@ -7952,12 +7962,29 @@ const PARADE_TRIES = 2, PARADE_TIME = 60, PARADE_MAX = 30, PARADE_HP = 0.55;   /
 const PARADE_MOBS = [['dokkaebi', '#5a8ae0', '외눈 도깨비'], ['ghost', '#d8e8ff', '처녀귀신'], ['fox', '#e8a050', '여우 요괴'], ['bat', '#7a5aa8', '흡혈 박쥐'], ['wisp', '#8ff0ff', '도깨비불'],
   ['agwi', '#a86a4a', '굶주린 아귀'], ['shade', '#3a3a5a', '그림자 요괴'], ['totem', '#a87a4a', '떠도는 장승'], ['raccoon', '#8a6a4a', '둔갑 너구리'], ['frog', '#5fbf4a', '두꺼비 요괴']];
 let parade = null;
+let paradeQuiet = false;   // paradeAbort가 판을 조용히 정산할 때(결과 창 없이)
+/* 야행(백귀·수군·아수라·쿠베라 곳간) 도중에 판이 사라질 때(resetRuntime — 환생·건너기·캐릭터 바꾸기·기록 불러오기·로그아웃)
+   잡은 것이 없으면 그날 횟수를 돌려주고, 하나라도 있으면 거기까지 정산한다(2026-11-15: 예전에는 보상도 횟수 환불도 없이 횟수만 줄었다) */
+function paradeAbort(){
+  const P = parade; if (!P) return;
+  if (P.owner && P.owner !== S){ parade = null; return; }   // 이미 다른 캐릭터·기록으로 바뀐 뒤면 정산할 곳이 없다
+  const k = P.kub ? P.carried : P.kills;
+  if (k > 0 && S.chosen){ paradeQuiet = true; try { finishParade(); } finally { paradeQuiet = false; } addLog('야행이 중간에 끊겨 그때까지 잡은 만큼 보상을 받았어요.', 'good'); return; }
+  if (!P.day || P.day === dummyDay()){
+    if (P.sea) seaDay().sugun = Math.max(0, seaDay().sugun - 1);
+    else if (P.asura) seaDay().asura = Math.max(0, seaDay().asura - 1);
+    else if (P.kub) seaDay().kub = Math.max(0, seaDay().kub - 1);
+    else S.parade.n = Math.max(0, S.parade.n - 1);
+  }
+  parade = null; hero.kubGoal = false; presetDrop();
+  addLog('야행이 중간에 끊겨 오늘 횟수를 돌려받았어요.', 'good');
+}
 function paradeLeft(){ if (S.parade.day !== dummyDay()){ S.parade.day = dummyDay(); S.parade.n = 0; } return PARADE_TRIES - S.parade.n; }
 function startParade(){
   if (parade || raid || bossActive || market || paradeLeft() <= 0 || !session && !window.__game) return false;
   S.parade.n++;
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
-  parade = {t:PARADE_TIME, kills:0, spawnT:0.3};
+  parade = {t:PARADE_TIME, kills:0, spawnT:0.3}; parade.owner = S; parade.day = dummyDay();
   hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); presetTake('mob');
   addLog(`백귀야행! ${PARADE_TIME}초 동안 몰려오는 요괴를 최대한 많이 잡아요.`, 'warn'); sfx('boss'); shake = 0.3;
   if (!fxOff()) fxBanner('백귀야행', '온갖 요괴가 몰려와요!', '#c8a0ff', '34%', 1.6);
@@ -7996,7 +8023,7 @@ function finishParade(){
   S.rec.parades = (S.rec.parades || 0) + 1; recWin(false, true);
   addLog(`백귀야행 끝! 요괴 ${k}마리 · 엽전 +${fmt(gold)} · 보석 +${gems} · 쇳가루 +${dust}${mat ? ` · 재료 +${mat}` : ''}${piece ? ` · 고삐 조각 +${piece}` : ''}`, 'gain'); sfx('win');
   saveLocal();
-  if (!(window.__game && window.__game.quiet)) showModal('백귀야행 · 끝', `<p>요괴 <b>${k}마리</b>를 잡았어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
+  if (!(window.__game && window.__game.quiet) && !paradeQuiet) showModal('백귀야행 · 끝', `<p>요괴 <b>${k}마리</b>를 잡았어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
     <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
     ${mat ? `<li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>` : ''}${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}${grudge ? `<li style="color:#ff8a9a">${grudge}<span>원한 조각</span></li>` : ''}</ul>
     <p class="small" style="margin-top:8px">오늘 ${paradeLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
@@ -8019,7 +8046,7 @@ function startSugun(){
   if (parade || raid || bossActive || market || !sugunOpen() || sugunLeft() <= 0 || !session && !window.__game) return false;
   seaDay().sugun++;
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
-  parade = {sea:true, t:SUGUN.time, kills:0, spawnT:0.3, tideN:0, tide:null, boss:null, bossKill:false};
+  parade = {sea:true, t:SUGUN.time, kills:0, spawnT:0.3, tideN:0, tide:null, boss:null, bossKill:false}; parade.owner = S; parade.day = dummyDay();
   hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); presetTake('mob');
   addLog(`수군 야행! ${SUGUN.time}초 동안 물 위로 올라오는 행렬을 최대한 많이 잡아요. ${SUGUN.tideEvery}초마다 밀물이 들어와요.`, 'warn'); sfx('boss'); shake = 0.3;
   if (!fxOff()) fxBanner('수군 야행', '물귀신 행렬이 올라와요!', '#7fe0ff', '34%', 1.6);
@@ -8082,7 +8109,7 @@ function finishSugun(){
   S.rec.suguns = (S.rec.suguns || 0) + 1; recWin(false, true); refreshStats();
   addLog(`수군 야행 끝! ${k}마리${boss ? '(대장 포함)' : ''} · 엽전 +${fmt(gold)} · 보석 +${gems} · 쇳가루 +${dust}${mat ? ` · 재료 +${mat}` : ''}${piece ? ` · 고삐 조각 +${piece}` : ''}${extra.length ? ' · ' + extra.join(' · ') : ''}`, 'gain'); sfx('win');
   saveLocal();
-  if (!(window.__game && window.__game.quiet)) showModal('수군 야행 · 끝', `<p>물귀신 행렬 <b>${k}마리</b>를 잡았어요!${boss ? ' <b style="color:#7fe0ff">물어귀 대장 격파!</b>' : ' <span class="small">(대장은 놓쳤어요)</span>'}${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
+  if (!(window.__game && window.__game.quiet) && !paradeQuiet) showModal('수군 야행 · 끝', `<p>물귀신 행렬 <b>${k}마리</b>를 잡았어요!${boss ? ' <b style="color:#7fe0ff">물어귀 대장 격파!</b>' : ' <span class="small">(대장은 놓쳤어요)</span>'}${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
     <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
     ${mat ? `<li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>` : ''}${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}${grudge ? `<li style="color:#ff8a9a">${grudge}<span>원한 조각</span></li>` : ''}
     ${extra.map(x => `<li style="color:var(--myth)">${x}<span>대장 보상</span></li>`).join('')}</ul>
@@ -8117,7 +8144,7 @@ function startAsura(){
   if (parade || raid || bossActive || market || !asuraOpen() || asuraLeft() <= 0 || !session && !window.__game) return false;
   seaDay().asura++;
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
-  parade = {asura:true, t:ASURA.time, kills:0, spawnT:0.3, rope:ASURA.start, lastK:0, jerkN:0, boss:null, bossKill:false, lab:() => `아수라 야행${parade.boss && !parade.boss.dead ? ' · 대장!' : ''} · ${Math.max(0, Math.ceil(parade.t))}초`};
+  parade = {asura:true, t:ASURA.time, kills:0, spawnT:0.3, rope:ASURA.start, lastK:0, jerkN:0, boss:null, bossKill:false, lab:() => `아수라 야행${parade.boss && !parade.boss.dead ? ' · 대장!' : ''} · ${Math.max(0, Math.ceil(parade.t))}초`}; parade.owner = S; parade.day = dummyDay();
   hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); presetTake('mob');
   addLog(`아수라 야행! ${ASURA.time}초 동안 요괴를 잡아 밧줄을 내 쪽으로 당겨요. 가만히 있으면 아수라 쪽으로 끌려가요.`, 'warn'); sfx('boss'); shake = 0.3;
   if (!fxOff()) fxBanner('아수라 야행', '밧줄을 당겨요!', '#ff9a5a', '34%', 1.6);
@@ -8165,7 +8192,7 @@ function finishAsura(){
   S.rec.asuras = (S.rec.asuras || 0) + 1; recWin(false, true); refreshStats();
   addLog(`아수라 야행 끝! 밧줄 ${tier}단계(요괴 ${k}마리${boss ? ' · 대장 포함' : ''}) · 엽전 +${fmt(gold)} · 보석 +${gems} · ${MATS[matW()].name} +${mat}${piece ? ` · 고삐 조각 +${piece}` : ''}${extra.length ? ' · ' + extra.join(' · ') : ''}`, 'gain'); sfx('win');
   saveLocal();
-  if (!(window.__game && window.__game.quiet)) showModal('아수라 야행 · 끝', `<p>밧줄이 <b>${tier}단계</b>까지 당겨졌어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''} <span class="small">(요괴 ${k}마리${boss ? ' · 아수라 대장 격파' : ''})</span></p>
+  if (!(window.__game && window.__game.quiet) && !paradeQuiet) showModal('아수라 야행 · 끝', `<p>밧줄이 <b>${tier}단계</b>까지 당겨졌어요!${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''} <span class="small">(요괴 ${k}마리${boss ? ' · 아수라 대장 격파' : ''})</span></p>
     <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${gems}<span>보석</span></li><li style="color:#c8c0b0">${dust}<span>쇳가루</span></li>
     <li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>${piece ? `<li style="color:#c8b0ff">${piece}<span>고삐 조각</span></li>` : ''}${grudge ? `<li style="color:#ff8a9a">${grudge}<span>원한 조각</span></li>` : ''}
     ${extra.map(x => `<li style="color:var(--myth)">${x}<span>${tier}단계 보상</span></li>`).join('')}</ul>
@@ -8199,7 +8226,7 @@ function startKub(){
   if (parade || raid || bossActive || market || !kubOpen() || kubLeft() <= 0 || !session && !window.__game) return false;
   seaDay().kub++;
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.3; m.fled = true; }
-  parade = {kub:true, t:KUB.time, kills:0, carried:0, chests:[], chestT:0.5, guard:null, guardT:0.4, seq:0, lab:() => `쿠베라의 곳간 · ${Math.max(0, Math.ceil(parade.t))}초`};
+  parade = {kub:true, t:KUB.time, kills:0, carried:0, chests:[], chestT:0.5, guard:null, guardT:0.4, seq:0, lab:() => `쿠베라의 곳간 · ${Math.max(0, Math.ceil(parade.t))}초`}; parade.owner = S; parade.day = dummyDay();
   hero.goal = null; hero.holdT = 0; hero.mp = mpMax(); hero.kubGoal = false; presetTake('mob');
   addLog(`쿠베라의 곳간! ${KUB.time}초 동안 솟는 보물 상자에 닿아 최대한 많이 날라요. 야차 문지기는 맞으면 잠깐 기절해요.`, 'warn'); sfx('boss'); shake = 0.3;
   if (!fxOff()) fxBanner('쿠베라의 곳간', '상자를 날라요!', '#ffd24a', '34%', 1.6);
@@ -8273,7 +8300,7 @@ function finishKub(){
   S.rec.kubs = (S.rec.kubs || 0) + 1; recWin(false, true); refreshStats();
   addLog(`쿠베라의 곳간 끝! 상자 ${n}개(${tier ? tier + '단계' : '단계 없음'}) · 엽전 +${fmt(gold)} · ${MATS[matW()].name} +${mat}${extra.length ? ' · ' + extra.join(' · ') : ''}`, 'gain'); sfx('win');
   saveLocal();
-  if (!(window.__game && window.__game.quiet)) showModal('쿠베라의 곳간 · 끝', `<p>보물 상자를 <b>${n}개</b> 날랐어요!${tier ? ` <b>${tier}단계</b>` : ' <span class="small">(1단계까지 ' + KUB.tier[0] + '개)</span>'}${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
+  if (!(window.__game && window.__game.quiet) && !paradeQuiet) showModal('쿠베라의 곳간 · 끝', `<p>보물 상자를 <b>${n}개</b> 날랐어요!${tier ? ` <b>${tier}단계</b>` : ' <span class="small">(1단계까지 ' + KUB.tier[0] + '개)</span>'}${best ? ' <b style="color:var(--gold)">최고 기록!</b>' : ''}</p>
     <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li style="color:${MATS[matW()].color}">${mat}<span>${MATS[matW()].name}</span></li>
     ${extra.map(x => `<li style="color:var(--myth)">${x}</li>`).join('')}</ul>
     <p class="small" style="margin-top:8px">오늘 ${kubLeft()}번 더 할 수 있어요.</p>`, [{label:'확인', primary:true}]);
@@ -13300,7 +13327,7 @@ function finishJin(R){
       ${rw.soul ? `<li style="color:${GRADES[SL[rw.soul.k].g].color}">${SL[rw.soul.k].name}<span>${soulDropText(rw.soul)}</span></li>` : ''}
       ${rw.av ? `<li style="color:var(--gold)">${rw.av.name}<span>진 전용 아바타!</span></li>` : ''}
     </ul>
-    <p class="small" style="margin-top:8px">오늘 진 레이드 ${jinLeft()} / ${JIN.tries}번 남았어요. 레이드마다 주에 한 번 첫 승리 보상을 더 받아요.</p>`, [{label:'확인', primary:true}]);
+    <p class="small" style="margin-top:8px">오늘 진 레이드 <b>${jinLeft()}번</b> 남았어요(하루 ${JIN.tries}번). 레이드마다 주에 한 번 첫 승리 보상을 더 받아요.</p>`, [{label:'확인', primary:true}]);
   return rw;
 }
 // 권장 전투력 줄(레이드 칸·시작 전 창): 내 전투력과 나란히, 네 가지 빛깔
@@ -13317,7 +13344,7 @@ function confirmJin(w, i){
     <div class="rpow jin">${jinPowHTML(w, i)}</div>
     <ul class="jrules"><li>전멸기 · 큰 살 두 번 · 새 패턴 <b>「쫓는 살」</b>(발밑이 세 번 연달아)</li><li><b>자동 피하기가 절반만</b> 통해요 · 붉은 칸·강타에 맞으면 <b>잠깐 기절</b> · 금빛 「!」를 되받으면 보스가 <b>바로 휘청</b></li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지 — 싸움 화면에 <b>「탕약 ${JIN.pots}/${JIN.pots}」</b>로 남은 수가 보여요</li>${pity ? `<li>지난 도전의 기운: 보스 체력 <b>−${pity}%</b></li>` : ''}</ul>
     <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
-    <p class="small" style="margin-top:8px">들어가면 오늘 횟수 1번을 써요(지금 ${jinLeft()} / ${JIN.tries}번, 이기든 지든). 레이드 리셋권으로는 되돌아오지 않아요.</p>
+    <p class="small" style="margin-top:8px">들어가면 오늘 횟수 1번을 써요(지금 ${jinLeft()}번 남음, 이기든 지든). 레이드 리셋권으로는 되돌아오지 않아요.</p>
     ${ask ? presetHTML('party') : potNoteHTML()}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startJin(w, i)) closePage(); presetNext = undefined; }}],
     () => { if (ask) presetWire('party'); else { const pb = $('#prePot'); if (pb) pb.addEventListener('click', () => { sfx('click'); potShopGo(); }); } });
@@ -13428,6 +13455,7 @@ const IND_CROSS = {
     log:'북쪽 끝, 구름을 뚫고 솟은 산 아래 섰어요. 세상 한가운데 「수미산」이에요!', ann:'수미산 아래에 닿았어요!'},
 };
 function doCross(){
+  paradeAbort();
   if (!crossReady()) return false;
   const w = S.world + 1;
   S.world = w; S.stage = 1; S.maxStage = 1; S.kills = 0; S.autoBoss = S.bossAuto !== false; S.deathsHere = 0;
@@ -18271,7 +18299,7 @@ function buildBag(){
 // 가방의 재료·소모품(2026-11 (44), 사용자 요청: 그림과 함께, 누르면 어디에 쓰는지)
 let bagStSig = '';
 const BAG_STACK = [
-  {k:'potion', n:'인삼 탕약', icon:'potion', c:'#ff8a9a', get:() => S.inv.potion || 0, use:'체력이 30% 아래로 떨어지면 저절로 마셔 체력을 40% 채워요. 기술 줄 위 물약 칸을 누르면 바로 마셔요. 레이드 전멸기를 버틸 때도 꼭 있어야 해요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물 · 꾸미기 상자 위로품'},
+  {k:'potion', n:'인삼 탕약', icon:'potion', c:'#ff8a9a', get:() => S.inv.potion || 0, use:'체력이 30% 아래로 떨어지면(레이드에서는 50% 아래) 저절로 마셔 체력을 40% 채워요. 레이드에서는 맞은 피해로 깎이는 깊은 상처도 절반만 쌓여요. 기술 줄 위 물약 칸을 누르면 바로 마셔요. 레이드 전멸기를 버틸 때도 꼭 있어야 해요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물 · 꾸미기 상자 위로품'},
   {k:'mana', n:'감로수', icon:'mana', c:'#7ab8ff', get:() => S.inv.mana || 0, use:'마나 물약. 싸우는 동안 마나가 30 아래면 저절로 마셔 마나를 40 채워요. 물약 칸을 눌러 바로 마실 수도 있어요.', get2:'[상점] → 물약(엽전, 10개·100개 묶음) · 오늘의 선물'},
   {k:'elixir', n:'산삼 탕약', icon:'elixir', c:'#ffd977', get:() => S.inv.elixir || 0, use:'보스·레이드에서 위험하면 인삼 탕약보다 먼저 마셔 체력을 모두 채워요.', get2:'[상점] → 물약(보석)'},
   {k:'whet', n:'숫돌', icon:'whet', c:'#9fe7ff', get:() => S.inv.whet || 0, use:'[장비] → [재련]에서 함께 쓰면 성공 확률이 1.15배가 돼요.', get2:'[상점] → 재료(보석, 10+1 묶음)'},
@@ -19142,7 +19170,7 @@ function buildRaid(){
       grCheck(); chipsUpd();
       if (gHi){ const YB = ygrBoss(), yl = ygrLeft(), yLock = tierLock('ygr'), yok = yl > 0 && !raid && !yLock, yAll = AVATARS.filter(a => a.src === YGR.src), yOwn = yAll.filter(a => S.av.own[a.k]).length, dy = '일월화수목금토';
         setHTML($('#ygrBox'), `<div class="card dcard ${yok ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(YB.type, YB.color)}" alt=""></div><div>
-          <div class="ct">용왕 강림 · ${YB.name}<span class="tag">${yLock ? '오늘 잠김' : seaDay().ygrWon ? '오늘 토벌함' : `오늘 ${yl} / ${YGR.tries}번`}</span></div>
+          <div class="ct">용왕 강림 · ${YB.name}<span class="tag">${yLock ? '오늘 잠김' : seaDay().ygrWon ? '오늘 토벌함' : `${leftTxt(yl)}`}</span></div>
           <p class="story">강림 레이드의 윗단계예요. 요일마다 다른 바다의 용왕이 물 위로 올라와요(함께 싸우는 용사는 강림 레이드와 같아요). 한 방이 더 세고 <b>전멸기가 두 번</b>(체력 70%·35%) 와요 — 회복약을 넉넉히. 이기면 엽전·보석(강림의 2배)·<b>호박석</b>과 <b>아바타</b> 하나(용왕 전용 ${Math.round(YGR.avP * 100)}%, ${YGR.pity}번 안에 꼭).</p>
           <div class="dbweek">${YONGWANG.map((x, i) => `<span class="${i === new Date(now()).getDay() ? 'on' : ''}">${dy[i]} ${x.name.replace(' 용왕', '').replace('네 바다 용왕의 시험', '네 바다').replace('용왕의 수레를 끄는 해룡', '해룡')}</span>`).join('')}</div>
           <div class="dl"><span>용왕 아바타</span><b>${yOwn} / ${yAll.length} · ${yAll.map(a => `<span style="${S.av.own[a.k] ? 'color:var(--gold)' : 'opacity:.55'}">${a.name}</span>`).join(' · ')}</b></div>
@@ -19151,7 +19179,7 @@ function buildRaid(){
       const B = grBoss(), left = grLeft(), party = grParty(), days = '일월화수목금토', open = grOpen(), gLock = tierLock('gr'), ok = open && left > 0 && !raid && !gLock;
       const exAll = AVATARS.filter(a => a.src === GR.src), exOwn = exAll.filter(a => S.av.own[a.k]).length;
       setHTML($('#grBox'), `<div class="card dcard ${ok ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
-        <div class="ct">강림 레이드 · ${B.name}<span class="tag">${!open ? '잠김' : gLock ? '오늘 잠김' : S.gr.won ? '오늘 토벌함' : `오늘 ${left} / ${GR.tries}번`}</span></div>
+        <div class="ct">강림 레이드 · ${B.name}<span class="tag">${!open ? '잠김' : gLock ? '오늘 잠김' : S.gr.won ? '오늘 토벌함' : `${leftTxt(left)}`}</span></div>
         <p class="story">날마다 다른 신장이 내려와요. <b>나 + 다른 용사 ${GR.pick}명</b>이 저절로 모여 함께 싸워요(${online ? '서버의 캐릭터' : '이 기기의 캐릭터'} 가운데, 같은 직업은 나까지 ${GR.cap}명, 모자라면 NPC 동료). 보스 체력은 모인 파티에 맞춰져요. 보스 체력이 반쯤 깎이면 <b>전멸기</b> — 모두 죽기 직전까지 깎이고, <b>회복약이 없으면 쓰러져요</b>. 이기면 <b>아바타</b> 하나(강림 전용 ${Math.round(GR.avP * 100)}%, ${GR.pity}번 안에 꼭).</p>
         <div class="dbweek">${GANGLIM.map((b, i) => `<span class="${i === new Date(now()).getDay() ? 'on' : ''}">${days[i]} ${b.name.split(' ').pop()}</span>`).join('')}</div>
         <div class="dl"><span>함께</span><b>${['나'].concat(party.map(a => `${esc(a.name)}(${CLASSES[a.cls].name}${a.npc ? '·NPC' : ''})`)).join(', ')}</b></div>
@@ -19190,7 +19218,7 @@ function buildRaid(){
       const gp = DB_GP.map((v, g) => `${GRADES[g].name} ${v}%`).join(' · ');
       const week = (dbInd() ? DBOSS_IND : dbSea() ? DBOSS_SEA : DBOSS).map((b, i) => `<span class="${i === dbDay() ? 'on' : ''}">${days[i]} ${b.part === 'all' ? '전설' : b.part === 'any' ? '무작위' : SK_PART[b.part].name}</span>`).join('');
       setHTML($('#dbBox'), `<div class="card dcard ${left > 0 && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
-        <div class="ct">1일 보스 · ${B.name}<span class="tag">${S.dboss.won ? '오늘 토벌함' : `오늘 ${left} / ${DB_TRIES}번`}</span></div>
+        <div class="ct">1일 보스 · ${B.name}<span class="tag">${S.dboss.won ? '오늘 토벌함' : `${leftTxt(left)}`}</span></div>
         <p class="story">${B.d}. 날마다 보스와 <b>치장 부위</b>가 바뀌어요. ${sun ? `<b>일요일</b>엔 이기면 <b>전설 치장</b>(부위 무작위)이 <b>${Math.round(DB_SUN_P * 100)}%</b> 확률로 하나 나와요.` : `이기면 오늘 부위 <b>${SK_PART[part].name}</b> 치장 하나(모든 등급: ${gp}).`} 이기든 지든 하루 한 번 <b>보석 ${fmt(dbGems())}·엽전 ${fmt(dbGold())}</b>을 줘요. ${DB_TIME}초 혼자 싸움 — 그냥 두면 이기고 지는 게 반반이라, 금빛 「!」에 <b>[되받기]</b>, 붉은 칸은 <b>피하기</b>, 휘청일 때 기술을 넣어야 이겨요.</p>
         <div class="dbweek">${week}</div>
         <button class="btn ${left > 0 && !raid ? 'primary' : ''}" data-db="go" ${left > 0 && !raid ? '' : 'disabled'}>${raid ? (raid.info.dboss ? '싸우는 중…' : '다른 싸움 중') : S.dboss.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '1일 보스 도전' : '오늘은 다 했어요(내일 다시)'}</button>
@@ -19235,12 +19263,12 @@ function buildRaid(){
     }));
     return () => {
       const left = vaultLeft(); chipsUpd();
-      if ($('#vLeft')) setText($('#vLeft'), tierLock('vault') ? '오늘 잠김' : `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
+      if ($('#vLeft')) setText($('#vLeft'), tierLock('vault') ? '오늘 잠김' : `${leftTxt(left)}`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
       for (const m of list){ setText(panel.querySelector(`[data-vmc="${m.k}"]`), `지금 +${S.myth[m.k] || 0}% · 만들면 +${mythPower(m, vaultD())}%`); const bt = panel.querySelector(`[data-vm="${m.k}"]`); bt.disabled = S.mythShard < SHARD_COST; }
       if ($('#vGo')){ const b = $('#vGo'), vLock = tierLock('vault'); b.disabled = !!raid || left <= 0 || !!vLock; setText(b, raid ? (raid.info.vault && !raid.info.yv ? '싸우는 중…' : '다른 싸움 중') : vLock ? vLock + '(내일 다시)' : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)'); }
-      if ($('#kubGo')){ const l3 = kubLeft(), b3 = $('#kubGo'); setText($('#kubLeft'), `오늘 ${l3} / ${KUB.tries}번`); setText($('#kubBest'), S.sea2 && S.sea2.kubBest ? `최고 기록 상자 ${S.sea2.kubBest}개` : '');
+      if ($('#kubGo')){ const l3 = kubLeft(), b3 = $('#kubGo'); setText($('#kubLeft'), `${leftTxt(l3)}`); setText($('#kubBest'), S.sea2 && S.sea2.kubBest ? `최고 기록 상자 ${S.sea2.kubBest}개` : '');
         b3.disabled = !!raid || !!parade || l3 <= 0; setText(b3, parade ? (parade.kub ? '곳간 안…' : '다른 싸움 중') : raid ? '다른 싸움 중' : l3 > 0 ? '쿠베라의 곳간 들어가기' : '오늘은 다 했어요(내일 다시)'); }
-      if ($('#yvGo')){ const l2 = yvLeft(), b2 = $('#yvGo'), yLock = tierLock('yv'); setText($('#yvLeft'), yLock ? '오늘 잠김' : `오늘 ${l2} / ${YV.tries}번`); b2.disabled = !!raid || !!yvRun || l2 <= 0 || !!yLock; setText(b2, raid ? (raid.info.yv ? '보물고 안…' : '다른 싸움 중') : yvRun ? '상자를 골라요' : yLock ? yLock + '(내일 다시)' : l2 > 0 ? '용궁 보물고 들어가기' : '오늘은 다 했어요(내일 다시)'); }
+      if ($('#yvGo')){ const l2 = yvLeft(), b2 = $('#yvGo'), yLock = tierLock('yv'); setText($('#yvLeft'), yLock ? '오늘 잠김' : `${leftTxt(l2)}`); b2.disabled = !!raid || !!yvRun || l2 <= 0 || !!yLock; setText(b2, raid ? (raid.info.yv ? '보물고 안…' : '다른 싸움 중') : yvRun ? '상자를 골라요' : yLock ? yLock + '(내일 다시)' : l2 > 0 ? '용궁 보물고 들어가기' : '오늘은 다 했어요(내일 다시)'); }
     };
   }
   if (raidView === 'parade'){
@@ -19265,12 +19293,12 @@ function buildRaid(){
     if ($('#sgGo')) $('#sgGo').addEventListener('click', () => { if (!raid && !parade && sugunLeft() > 0) presetAsk('mob', '수군 야행', () => { if (startSugun()){ closePage(); return true; } }); });
     if ($('#asGo')) $('#asGo').addEventListener('click', () => { if (!raid && !parade && asuraLeft() > 0) presetAsk('mob', '아수라 야행', () => { if (startAsura()){ closePage(); return true; } }); });
     return () => {
-      if ($('#asGo')){ const l3 = asuraLeft(), b3 = $('#asGo'); setText($('#asLeft'), `오늘 ${l3} / ${ASURA.tries}번`); setText($('#asBest'), S.sea2 && S.sea2.asuraBest ? `· 최고 기록 ${S.sea2.asuraBest}단계` : '');
+      if ($('#asGo')){ const l3 = asuraLeft(), b3 = $('#asGo'); setText($('#asLeft'), `${leftTxt(l3)}`); setText($('#asBest'), S.sea2 && S.sea2.asuraBest ? `· 최고 기록 ${S.sea2.asuraBest}단계` : '');
         b3.disabled = !!raid || !!parade || l3 <= 0; setText(b3, parade ? (parade.asura ? '아수라 야행 중…' : '다른 싸움 중') : raid ? '다른 싸움 중' : l3 > 0 ? '아수라 야행 시작' : '오늘은 다 했어요(내일 다시)'); }
-      if ($('#sgGo')){ const l2 = sugunLeft(), b2 = $('#sgGo'); setText($('#sgLeft'), `오늘 ${l2} / ${SUGUN.tries}번`); setText($('#sgBest'), S.sea2 && S.sea2.sugunBest ? `· 최고 기록 ${S.sea2.sugunBest}마리` : '');
+      if ($('#sgGo')){ const l2 = sugunLeft(), b2 = $('#sgGo'); setText($('#sgLeft'), `${leftTxt(l2)}`); setText($('#sgBest'), S.sea2 && S.sea2.sugunBest ? `· 최고 기록 ${S.sea2.sugunBest}마리` : '');
         b2.disabled = !!raid || !!parade || l2 <= 0; setText(b2, parade ? (parade.sea ? '수군 야행 중…' : '백귀야행 중…') : raid ? '다른 싸움 중' : l2 > 0 ? '수군 야행 시작' : '오늘은 다 했어요(내일 다시)'); }
       const left = paradeLeft();
-      setText($('#pLeft'), `오늘 ${left} / ${PARADE_TRIES}번`); setText($('#pBest'), S.parade.best ? `최고 기록 ${S.parade.best}마리` : '');
+      setText($('#pLeft'), `${leftTxt(left)}`); setText($('#pBest'), S.parade.best ? `최고 기록 ${S.parade.best}마리` : '');
       const b = $('#pGo'); b.disabled = !!raid || !!parade || left <= 0; setText(b, parade ? '백귀야행 중…' : raid ? '다른 싸움 중' : left > 0 ? '백귀야행 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
@@ -19288,7 +19316,7 @@ function buildRaid(){
     $('#hGo').addEventListener('click', () => { if (!raid && haetaeLeft() > 0 && !tierLock('haetae')) presetAsk('boss', '해태 수련', () => { if (startHaetae()){ closePage(); return true; } }); });
     return () => {
       const left = haetaeLeft(), T = haetaeTiers(), hLock = tierLock('haetae'); chipsUpd();
-      setText($('#hLeft'), hLock ? '오늘 잠김' : `오늘 ${left} / ${HAETAE.tries}번`);
+      setText($('#hLeft'), hLock ? '오늘 잠김' : `${leftTxt(left)}`);
       setText($('#hBest'), S.haetae.best ? `최고 기록 ${fmt(S.haetae.best)}` : '');
       for (let t = 1; t <= 7; t++){ setText(panel.querySelector(`[data-ht="${t}"]`), `제대로 친 피해 ${fmt(T[t - 1])} 이상`); $('#ht-' + t).classList.toggle('ready', (S.haetae.best || 0) >= T[t - 1]); }
       const b = $('#hGo'); b.disabled = !!raid || left <= 0 || !!hLock; setText(b, raid ? (raid.info.haetae ? '수련 중…' : '다른 싸움 중') : hLock ? hLock + '(내일 다시)' : left > 0 ? '해태 수련 시작' : '오늘은 다 했어요(내일 다시)');
@@ -19308,7 +19336,7 @@ function buildRaid(){
     $('#dGo').addEventListener('click', () => { if (!raid && !tierLock('dummy')) presetAsk('boss', '허수아비 수련', () => { if (startDummy()){ closePage(); return true; } }); });
     return () => {
       const left = dummyLeft(), T = dummyTiers(), dLock = tierLock('dummy'); chipsUpd();
-      setText($('#dLeft'), dLock ? '오늘 잠김' : `오늘 ${left} / ${DUMMY_TRIES}번`);
+      setText($('#dLeft'), dLock ? '오늘 잠김' : `${leftTxt(left)}`);
       setText($('#dBest'), S.dummy.best ? `최고 피해 ${fmt(S.dummy.best)}` : '');
       for (let t = 1; t <= 5; t++){ const el = panel.querySelector(`[data-dt="${t}"]`); setText(el, `피해 ${fmt(T[t - 1])} 이상`); $('#dt-' + t).classList.toggle('ready', (S.dummy.best || 0) >= T[t - 1]); }
       const b = $('#dGo'); b.disabled = !!raid || left <= 0 || !!dLock; setText(b, raid ? (raid.info.dummy ? '수련 중…' : '다른 싸움 중') : dLock ? dLock + '(내일 다시)' : left > 0 ? '허수아비 수련 시작' : '오늘은 다 했어요(내일 다시)');
@@ -19387,7 +19415,7 @@ function buildRaid(){
       if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(tkRaidS(info.ref))}`); }
     });
     const jl = jinLeft();
-    panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} 오늘 ${jl}/${JIN.tries}번`));
+    panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} ${leftTxt(jl)}`));
     panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => {
       const [w, i] = bt.dataset.jin.split(':').map(Number);
       let t, dis = true;
@@ -19633,15 +19661,15 @@ function buildTower(){
     const mile = Object.entries(TOWER_MILE).filter(([f]) => +f <= cap).map(([f, M]) => `<span class="${best >= +f ? 'ok' : ''}">${f}층 ${M.av ? AV[M.av].name : M.mount ? MT[M.mount].name : '태초의 신'}</span>`).join('');
     setHTML($('#twSide'), `<div class="card ${ok ? 'ready' : ''}"><div class="ct">천공의 탑<span class="tag">${best} / ${cap}층</span></div>
         <p class="small" style="margin:0">층마다 세기가 정해진 수호자와 혼자 ${TOWER.time}초. 10층마다 문지기(전멸기). <b>기술 조합·장비는 저절로 바뀌지 않아요</b> — 들어가기 전 정비 창에서 직접 골라요. 지면 하루 도전 횟수를 하나 써요(이기면 안 써요).</p>
-        <div class="dl"><span>오늘 남은 도전</span><b>${open ? `${left} / ${TOWER.tries}` : `Lv.${TOWER.lv}부터`}</b></div>
+        <div class="dl"><span>오늘 남은 도전</span><b>${open ? leftTxt(left, '') : `Lv.${TOWER.lv}부터`}</b></div>
         <button class="btn ${ok ? 'primary' : ''}" data-tw-go ${ok ? '' : 'disabled'}>${!open ? `Lv.${TOWER.lv}에 열려요` : done ? (cap < TOWER.max ? `${cap}층을 모두 올랐어요` : `${cap}층을 모두 올랐어요`) : raid ? '다른 싸움 중' : left <= 0 ? '오늘은 다 했어요(내일 다시)' : `${best + 1}층 정비하고 도전`}</button></div>
       <div class="card"><div class="ct">다음 층</div><ul class="tw-next">${next || `<li>모두 올랐어요${cap < TOWER.max && MAIN_Q.some(q => q.ch >= 46) ? `<br><span class="small">${cap < TOWER.sea ? '301층부터는 4부 동해에 들어서면 — 탑이 물 밑으로 이어져요' : '401층부터는 5부 란카 길에 들어서면 — 탑이 수미산 산길로 이어져요'}</span>` : ''}</li>`}</ul></div>
       <div class="card"><div class="ct">이정표 보상</div><div class="setp">${mile}</div></div>
-      <div class="card ${taechoOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신<span class="tag">${taechoOpen() ? `오늘 ${taechoLeft()} / ${TAECHO.tries}번` : '300층을 오르면'}</span></div>
+      <div class="card ${taechoOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신<span class="tag">${taechoOpen() ? `${leftTxt(taechoLeft())}` : '300층을 오르면'}</span></div>
         <p class="small" style="margin:0">나 + 다른 용사 3명(같은 직업 2명까지). ${TAECHO.time}초, 전멸기 세 번·창세의 빛. 처음 이기면 엔드 아이템 「태초의 씨앗」(공격력·체력 +2단계)·날개 「태초의 날개」·별호 「태초를 넘은 자」, 그리고 주마다 처음 이기면 <b>엔드 상자</b>(전설 장신구 최고 수치·전설 치장·장비 각성 가운데 하나는 꼭).</p>
         ${S.tower.godWin ? `<div class="dl"><span>쓰러뜨린 횟수</span><b>${S.tower.godWin}번${S.tower.seed ? ' · 태초의 씨앗 ✓' : ''}</b></div>` : ''}
         <button class="btn ${taechoOpen() && taechoLeft() > 0 && !raid ? 'primary' : ''}" data-tc-go ${taechoOpen() && taechoLeft() > 0 && !raid ? '' : 'disabled'}>${taechoOpen() ? (taechoLeft() > 0 ? '태초의 신에게 도전' : '오늘은 다 했어요') : '잠김'}</button></div>
-      ${S.world >= 8 ? `<div class="card ${trueOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신 · 참모습<span class="tag">${trueOpen() ? `오늘 ${trueLeft()} / ${TRUEF.tries}번` : '500층을 오르면'}</span></div>
+      ${S.world >= 8 ? `<div class="card ${trueOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신 · 참모습<span class="tag">${trueOpen() ? `${leftTxt(trueLeft())}` : '500층을 오르면'}</span></div>
         <p class="small" style="margin:0">나 + 다른 용사 3명. ${TRUEF.time}초, 전멸기 네 번. 물 모습(붉은 칸이 판 한 줄을 쓸어요)과 불 모습(창세의 빛이 자주 내려와요)을 ${TRUEF.formT}초쯤마다 오가요. 처음 이기면 날개 「물불의 날개」·별호 「참모습을 본 자」, 주마다 처음 이기면 <b>상위 엔드 상자</b>(영물 장비 + 영물 치장 또는 전설 장신구).</p>
         ${S.tower.trueWin ? `<div class="dl"><span>쓰러뜨린 횟수</span><b>${S.tower.trueWin}번</b></div>` : ''}
         <button class="btn ${trueOpen() && trueLeft() > 0 && !raid ? 'primary' : ''}" data-tr-go ${trueOpen() && trueLeft() > 0 && !raid ? '' : 'disabled'}>${trueOpen() ? (trueLeft() > 0 ? '참모습에게 도전' : '오늘은 다 했어요') : '잠김'}</button></div>` : ''}
@@ -19696,7 +19724,7 @@ function buildPvp(){
     const left = pvpLeft(), can = left > 0 && !raid;
     setHTML($('#pvpHead'), `<div class="card ready"><div class="ct">결투 · 1:1<span class="tag">${pvpTier(S.pvp.pt)}</span></div>
         <div class="dl"><span>결투 점수</span><b style="color:var(--gold)">${fmt(S.pvp.pt)}점 (최고 ${fmt(S.pvp.best)})</b></div>
-        <div class="dl"><span>전적</span><b>${S.pvp.win}승 ${S.pvp.lose}패 · 오늘 ${left} / ${PVP.tries}번</b></div>
+        <div class="dl"><span>전적</span><b>${S.pvp.win}승 ${S.pvp.lose}패 · ${leftTxt(left)}</b></div>
         <p class="small" style="margin:0">아래 목록에서 상대를 골라 1:1로 ${PVP.time}초 겨뤄요(시간이 다 되면 체력이 더 남은 쪽이 이겨요). 세기가 같으면 둘 다 ${PVP.t}초쯤에 쓰러질 만큼이라 기술·초각성이 승패를 갈라요. 센 상대를 이기면 점수를 많이 받아요. 점수 구간마다 칭호(무명 → 이름난 → 고수 → 명인 → 천하제일), 1,400·1,600점에는 별호.</p></div>`);
     setText($('#pvN'), `상대 ${cands.length}명${online ? (pvpPool.busy ? ' · 서버에서 받는 중…' : ' · 서버의 용사') : ' · 이 기기의 캐릭터'}`);
     setHTML($('#pvList'), cands.map((o, i) => `<div class="pv-row"><img src="${lookPreview(o.cls, o.look, o.armorG, o.weaponG, 'right')}" alt="" data-uinfo="${i}" style="cursor:pointer">
@@ -19750,7 +19778,7 @@ function buildRec(){
   { const nc = $('#notiLiteChk'); if (nc){ nc.checked = notiLite; nc.addEventListener('change', () => { setNotiLite(nc.checked); sfx('click'); }); } $('#notiReviewBtn').addEventListener('click', () => { sfx('click'); notiReview(); }); }
   panel.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { setOrient(b.dataset.orient, true); panel.querySelectorAll('[data-orient]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.orient === orientMode))); }));
   panel.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => { const h = HOWTO[+b.dataset.how]; playCut(h.shots, {title:'하는 법 · ' + h.t}); }));
-  $('#clsBtn').addEventListener('click', () => chooseClass(true)); setText($('#clsBtn'), `직업 바꾸기 (이번 주 ${clsChgLeft()}/${CLS_CHG.max})`);
+  $('#clsBtn').addEventListener('click', () => chooseClass(true)); setText($('#clsBtn'), `직업 바꾸기 (이번 주 ${clsChgLeft()}번 남음)`);
   $('#swBtn').addEventListener('click', switchChar);
   $('#outBtn').addEventListener('click', () => showModal('로그아웃할까요?', '<p>지금까지의 모험은 저장돼요. 다음에 아이디와 비밀번호로 다시 들어오면 이어서 할 수 있어요.</p>', [{label:'취소'}, {label:'로그아웃', primary:true, fn:logout}]));
   $('#noteBtn').addEventListener('click', () => showNotes(false));
@@ -19783,7 +19811,7 @@ function buildRec(){
     { const b = barrack(), mn = mainCharName(); setText($('#br-n'), b.main ? '본캐' : `다른 캐릭터 ${b.n}명`);
       setText($('#br-main'), mn ? `본캐: ${mn}${isMainChar() ? ' (지금 캐릭터 — 배럭 효과 없음)' : ''}` : '본캐를 지정하지 않았어요(모두 배럭 효과를 받아요)');
       setText($('#brMainBtn'), isMainChar() ? '본캐 해제' : '이 캐릭터를 본캐로');
-      setText($('#clsBtn'), `직업 바꾸기 (이번 주 ${clsChgLeft()}/${CLS_CHG.max})`);
+      setText($('#clsBtn'), `직업 바꾸기 (이번 주 ${clsChgLeft()}번 남음)`);
       setHTML($('#br-txt'), b.main ? '본캐는 배럭 효과를 받지 않아요. 다른 캐릭터(부캐)들이 본캐의 누적 레벨로 배럭 효과를 받아요.' : b.n ? `가장 높은 캐릭터 누적 Lv.${b.top} → 공격력·체력 <b>+${b.stat}%</b> · 엽전 <b>+${b.gain}%</b> · 경험치 <b>+${b.exp}%</b> · 보석 <b>+${b.gem}%</b>`
         : `같은 계정에 캐릭터를 더 만들면 서로 도와요. 다른 캐릭터 가운데 가장 높은 누적 레벨 ${BR.statPer}마다 공격력·체력 +1%(최대 ${BR.statMax}%), 캐릭터 한 명마다 경험치·엽전 +${+(BR.gainBase * BR.per).toFixed(1)}~${BR.gainMax}%·보석은 그 절반.`); }
     setText($('#r-max'), `${stageLabel(S.maxStage)} (${S.maxStage}단계)`);
@@ -20741,6 +20769,7 @@ async function createChar(c0, look, start){
   enterChar(cid, {data:st, fresh:true, imported});
 }
 async function enterChar(cid, opts = {}){
+  paradeAbort();
   const acc = curAcc, A = REG.accounts[acc], ch = A && A.chars.find(c => c.cid === cid);
   if (!ch){ showCharSelect(); return; }
   let data = opts.data || null, t = data ? data.lastSave || 0 : 0;
@@ -20800,6 +20829,7 @@ async function enterChar(cid, opts = {}){
   roomTrack(true);   // 채팅창 「지금 접속 중」에 이 캐릭터로 알림
 }
 function toTitle(){
+  paradeAbort();
   setChat(false);
   raid = null; S = titleState(); ST = null; refreshStats(); resetRuntime(); applySpeedBtn(); applyModeBtns(); mapCache.clear(); applyWorld();
   logEls.forEach(e => e.remove()); logEls = [];
@@ -20813,6 +20843,7 @@ function switchChar(){
   toTitle(); showCharSelect();
 }
 function logout(){
+  paradeAbort();
   saveLocal(); pushCloud();
   if (online){ const tok = online.token, wait = onlineP; online = null; saveOnline(false); wait.finally(() => rpc('samhan_logout', {p_token:tok}).catch(() => {})); }
   session = null; curAcc = null; REG.keep = null;
@@ -21082,6 +21113,7 @@ async function pushCloud(){
   cloudBusy = false;
 }
 function resetRuntime(){
+  paradeAbort();
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null; jobChain = false;
   Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
@@ -21127,6 +21159,7 @@ function offBossOdds(s = S.stage){
   return {x, p:OFF_BOSS_PMAX * Math.max(0, Math.min(1, (x - OFF_BOSS_X[0]) / (OFF_BOSS_X[1] - OFF_BOSS_X[0]))), t:Math.max(3, Math.min(BOSS_TIME, tk, live))};
 }
 function offlineReward(sec){
+  if (parade || raid) return;   // 야행·레이드가 진행 중이면 오프라인 정산을 건너뛴다(판이 사라지던 원인)
   sec = Math.min(sec, OFFLINE_CAP);
   if (sec < 60) return;
   const mk = 1 + rideAb('off') / 100, kps = offlineKps(), st0 = S.stage, lv0 = S.level;

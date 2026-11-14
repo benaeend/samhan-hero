@@ -946,8 +946,8 @@ async def main():
           R.time = 0; for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
           Object.assign(S, JSON.parse(keep)); G.refreshStats(); G.quiet = false;
           return {ok, rise, norm, pct, dk, ctr, want: G.FIT.ctr, baseD}; }""")
-        check(fh['ok'] and fh['rise'] == 0 and abs(fh['norm'] - fh['pct']) < 0.002 and fh['dk'] < 1 and fh['ctr'] >= fh['want'] * 0.9 and fh['baseD'] == 0,
-              f'1일·타임 보스: 방어가 높아도 맞으면 최대 체력의 같은 %, 되받기는 기본 피해 몇 초 몫을 한 번에(기본 피해로는 안 셈), 막대는 거꾸로 안 참 {fh}')
+        check(fh['ok'] and fh['rise'] == 0 and abs(fh['norm'] - fh['pct'] * 0.8) < 0.002 and fh['dk'] < 1 and fh['ctr'] >= fh['want'] * 0.9 and fh['baseD'] == 0,
+              f'1일·타임 보스: 방어가 높아도 맞으면 최대 체력의 같은 %(레이드 맞는 피해 0.8배), 되받기는 기본 피해 몇 초 몫을 한 번에(기본 피해로는 안 셈), 막대는 거꾸로 안 참 {fh}')
 
         # 6-4g3) 남이 보낸 값 막기(constructor 같은 이름·큰 등급·HTML 이름) + 자정을 넘긴 1일 보스는 시작한 날 것으로
         gd = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
@@ -1848,7 +1848,7 @@ async def main():
         await jp.wait_for_timeout(1500)
         await jp.screenshot(path=str(OUT / '27c_진_싸움.png'))
         jf = await jp.evaluate("""() => { const G = window.__game; const r = {page: G.currentTab, label: G.raid.info.label, falls: G.raid.falls, wipes: G.raid.info.wipes.length}; G.quiet = true; G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); G.quiet = false; return r; }""")
-        check('haetae' not in jr['segs'] and 'dummy' in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3/3' in jr['left'] and jr['hint'],
+        check('haetae' not in jr['segs'] and 'dummy' in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3번 남음' in jr['left'] and jr['hint'],
               f'[레이드] 목록: 지나온 땅의 레이드마다 「진」 칸(권장 전투력·내 전투력 빛깔·오늘 횟수), 해태 수련은 따로 칸이 없고(허수아비 칸의 칩, 46장부터) 다음 땅이 있는 땅(곤륜)에는 진 안내가 보인다 {jr}')
         check('진 ·' in jm['title'] and jm['rules'] >= 3 and jm['pot'] and jm['pre'] and '권장 전투력' in jm['pow'] and jf['page'] is None and jf['label'].startswith('진 ·') and jf['falls'] == 0,
               f'진 시작 전 창(규칙·권장 전투력·조합·들고 가는 물약) → [출발]로 싸움이 시작된다 {jm} {jf}')
@@ -2165,7 +2165,7 @@ async def main():
         check(j2['merged'][0] is True and j2['merged'][1] == 0 and j2['merged'][2] == 2 and j2['ref0'][0] >= 1 and j2['est'] == [True, True, 0, True],
               f"예전 저장: 바꾼 횟수 0번으로 시작하고, 재련에 쓴 재화는 계승 뒤 단계까지 평균으로 드는 값으로 친다 {j2['merged']} {j2['ref0']} {j2['est']}")
         check('cls' in j2['notiK'] and '직업 바꾸기' in j2['noti'] and '한 주에 2번' in j2['noti'], f"예전 저장으로 들어오면 길잡이 까치가 바뀐 규칙을 알린다 {j2['notiK']} {j2['noti'][:60]}")
-        # 화면: [정보] → [직업 바꾸기 (이번 주 2/2)] → 직업 고르기 → [다음] → 경고 창(숫자) → [바꾸기]
+        # 화면: [정보] → [직업 바꾸기 (이번 주 2번 남음)] → 직업 고르기 → [다음] → 경고 창(숫자) → [바꾸기]
         await jp.evaluate("() => { const G = window.__game; const b = document.querySelector('#notiLater'); if (b) b.click(); G.noClsNote = true; G.hideModal(); }")
         await tab(jp, 'rec')
         await jp.wait_for_timeout(400)
@@ -2189,7 +2189,7 @@ async def main():
         await jp.evaluate("() => { const sh = document.querySelector('.sheet'); sh.scrollTop = sh.scrollHeight; }")
         await jp.wait_for_timeout(150)
         await jp.screenshot(path=str(OUT / '30d_직업바꾸기_경고창_아래.png'))
-        check('2/2' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 6 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
+        check('2번 남음' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 6 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
               f"[정보]의 단추에 이번 주 남은 횟수가 보이고, 직업 고르기 창이 규칙을 알려 주며 지금 직업 그대로는 넘어가지 않는다 {b0} {m1['left']} {m1b}")
         check('꼭 읽어' in m2['title'] and '2번 → 1번' in m2['left'] and m2['sk'] == m2['nsk'] and m2['nsk'] >= 5 and '계승 +' in m2['rf'] and '계승 +15' in m2['rf'] and m2['spent'] in m2['tb'] and m2['back'] in m2['tb'] and m2['lost'] in m2['tb'] and m2['dust'] in m2['tb']
               and m2['est'] and '되돌릴 수 없어요' in m2['txt'] and m2['btns'] == ['취소', '바꾸기'] and m2['cls'] == 'musa' and m2['fits'],
@@ -2202,8 +2202,8 @@ async def main():
             sub: G.SUB_STATE.refW() >= k.eff0, btn: (document.querySelector('#clsBtn') || {}).textContent || '', atkDown: G.ST.atk < 1e999}; }""")
         await jp.screenshot(path=str(OUT / '30e_직업바꾸기_결과.png'))
         check(j3['open'] and j3['title'] == '직업을 바꿨어요' and '술사' in j3['body'] and j3['cls'] == 'sulsa' and j3['job'] == late['job'] and j3['lv'] == late['level'] and j3['gold']
-              and j3['ref'][1] == 15 and j3['ref'][3] == 15 and j3['ref'][0] == j2['ref0'][0] and j3['ref'][4] and j3['sk'] == 0 and j3['set'] >= 6 and j3['left'] == 1 and not j3['note'] and j3['best'] and j3['sub'] and '1/2' in j3['btn'],
-              f"[바꾸기]: 직업이 바뀌고(레벨·전직은 그대로) 계승한 재련은 +15로(굳힌 효과는 그대로), 기술은 Lv.1, 80%를 돌려받고 단추가 1/2가 된다 {j3['cls']} {j3['ref']} {j3['sk']} {j3['left']} {j3['btn']}")
+              and j3['ref'][1] == 15 and j3['ref'][3] == 15 and j3['ref'][0] == j2['ref0'][0] and j3['ref'][4] and j3['sk'] == 0 and j3['set'] >= 6 and j3['left'] == 1 and not j3['note'] and j3['best'] and j3['sub'] and '1번 남음' in j3['btn'],
+              f"[바꾸기]: 직업이 바뀌고(레벨·전직은 그대로) 계승한 재련은 +15로(굳힌 효과는 그대로), 기술은 Lv.1, 80%를 돌려받고 단추가 「1번 남음」이 된다 {j3['cls']} {j3['ref']} {j3['sk']} {j3['left']} {j3['btn']}")
         # 두 번을 다 쓰면 단추를 눌러도 안내만
         j4 = await jp.evaluate(r"""() => { const G = window.__game; G.hideModal(); G.quiet = true; const ok = !!G.clsChgDo('musa'); G.quiet = false; G.chooseClass(true);
           return {ok, left: G.clsChgLeft(), title: document.querySelector('#mTitle').textContent, txt: document.querySelector('#mBody').textContent, cards: document.querySelectorAll('#mBody .ccard').length}; }""")
@@ -2710,6 +2710,15 @@ async def main():
           out.sg = [!G.parade, (S.rec.suguns || 0) - r0, G.seaDay().sugun, G.sugunLeft(), tides, wet < 8, bossSeen, S.mount.piece - p0 >= G.SUGUN.piece, S.sea2.sugunBest >= 10, Object.values(S.skin.eq).concat(S.skin.inv).some(x => x.g === 5)];
           G.sgLuck = null; G.skRelic = null;
           out.sg2 = G.startSugun(); if (G.parade){ G.parade.t = 0.01; G.update(0.05); } out.sg3 = [G.sugunLeft(), G.startSugun()];
+          // 야행 횟수 보호(2026-11-15): 판이 사라질 때 잡은 게 없으면 횟수 환불, 있으면 정산 · 오프라인 보상은 건너뜀 · 오늘 sugun 0 저장은 남은 2번
+          { const D = G.seaDay(), keep = D.sugun; D.sugun = 0; G.startSugun(); const a0 = G.sugunLeft(); for (let i = 0; i < 10; i++) G.update(0.05); G.resetRuntime();
+            const a1 = [a0, !G.parade, G.sugunLeft()];
+            G.startSugun(); G.parade.kills = 6; const g0 = S.gold, r1 = S.rec.suguns || 0; G.resetRuntime();
+            const a2 = [!G.parade, G.sugunLeft(), S.gold > g0, (S.rec.suguns || 0) - r1];
+            D.sugun = 0; G.startSugun(); const pr = G.parade; G.offlineReward(3600); const a3 = [G.parade === pr && !!pr, G.sugunLeft()];
+            G.resetRuntime(); D.sugun = 0;
+            const m = G.mergeState(JSON.parse(JSON.stringify(Object.assign({}, S, {sea2:{day:D.day, sugun:0}})))); const a4 = [m.sea2.sugun, G.SUGUN.tries - m.sea2.sugun];
+            D.sugun = keep; out.sgAbort = {a1, a2, a3, a4}; }
           // 용궁 보물고: 방 셋(둘째는 함정 방) → 상자 → 끝까지 가면 야광주(운 고정)
           const relicN = () => G.ALL_SLOTS.reduce((t, sl) => t + S.gear[sl].count.slice(20, 24).reduce((a, x) => a + x, 0), 0), rl0 = relicN();
           G.yvBox = 'gear'; G.yvLuck = 1e9; G.vaultLuck = 1e9; out.yvOpen = [G.yvOpen(), G.yvLeft()]; out.yvStart = G.startYv(); const rooms = [];
@@ -2746,6 +2755,9 @@ async def main():
           return out; }""")
         check(u3['sgOpen'] == [True, 2] and u3['sgStart'] and u3['sg'][:4] == [True, 1, 1, 1] and u3['sg'][4] >= 2 and all(u3['sg'][5:]) and u3['sg2'] and u3['sg3'] == [0, False],
               f"수군 야행: 밀물이 두 번 들어오고(잠긴 쪽에서 걸어 나옴) 끝에 대장, 잡으면 고삐 조각·유물 치장(운 고정), 하루 2번 {u3['sgOpen']} {u3['sg']} {u3['sg3']}")
+        sa = u3['sgAbort']
+        check(sa['a1'] == [1, True, 2] and sa['a2'] == [True, 1, True, 1] and sa['a3'] == [True, 1] and sa['a4'] == [0, 2],
+              f"수군 야행 중 판이 사라져도(환생·기록 불러오기 등) 잡은 게 없으면 횟수가 돌아오고 있으면 거기까지 정산되며, 앱 복귀 때 오프라인 보상은 판을 지우지 않고, 오늘 0번 쓴 저장은 남은 2번이다 {sa}")
         check(u3['yvOpen'] == [True, 2] and u3['yvStart'] and u3['yv'][0] == ['문어 문지기', '가시 덫 복어', '광어 창고지기'] and u3['yv'][1] == [False, True, False] and u3['yv'][2:4] == [True, True] and u3['yv'][4] == 3 and u3['yv'][5] == 60 and u3['yv'][6] == 1 and u3['yv'][7] == 1,
               f"용궁 보물고: 방 셋(둘째는 함정 방)을 지나며 상자 셋(장비 상자 → 유물 장비), 끝까지 가면 용궁 야광주(운 고정) {u3['yv']}")
         check(u3['yv2'] and u3['yvLose'] == [True, 0, False], f"용궁 보물고: 지면 거기서 끝, 하루 2번 {u3['yvLose']}")
