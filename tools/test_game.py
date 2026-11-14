@@ -1286,7 +1286,7 @@ async def main():
         for _ in range(4): await page.click('#inh .inh-say'); await page.wait_for_timeout(120)
         await page.click('#notiGo'); await page.wait_for_selector('#mTitle:has-text("업데이트 소식")')
         nw2 = await page.evaluate("() => { const G = window.__game; const out = {seen: localStorage.getItem('samhan-note-seen') !== 'old', open: G.inhOpen, list: G.notiList().map(n => n.k)}; G.hideModal(); G.noNoti = true; return out; }")
-        check('할머니' in nw1['who'] and ('물의 신화' in nw1['say'] or '이야기 펫' in nw1['say']) and nw1['chips'] >= 2 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
+        check('할머니' in nw1['who'] and '새 소식이 생겼단다' in nw1['say'] and nw1['chips'] >= 2 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
               f'업데이트 소식: 이야기꾼 할머니가 찾아와 간추려 주고 [자세히]로 소식 창을 연다(기기마다 한 번) {nw1} {nw2}')
         # 자리 비움 → 절전 모드(2-1단계): 10분 동안 안 누르면 30초 예고(누르면 취소) → 저장하고 게임을 멈춤 → 누르면 오프라인 보상과 함께 돌아옴
         af0 = await page.evaluate("() => { const G = window.__game; G.quiet = false; G.closePage(); if (!document.querySelector('#modal').hidden) G.hideModal(); G.afkTest = true; G.setAfk(10); G.addTime(10 * 60 * 1000 + 2000); return G.afkMin; }")
@@ -1821,8 +1821,8 @@ async def main():
         await jp.wait_for_timeout(1500)
         await jp.screenshot(path=str(OUT / '27c_진_싸움.png'))
         jf = await jp.evaluate("""() => { const G = window.__game; const r = {page: G.currentTab, label: G.raid.info.label, falls: G.raid.falls, wipes: G.raid.info.wipes.length}; G.quiet = true; G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); G.quiet = false; return r; }""")
-        check('haetae' in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3/3' in jr['left'] and jr['hint'],
-              f'[레이드] 목록: 지나온 땅의 레이드마다 「진」 칸(권장 전투력·내 전투력 빛깔·오늘 횟수), 해태 수련 칸은 46장(4부 첫 퀘스트)부터 보이고 다음 땅이 있는 땅(곤륜)에는 진 안내가 보인다 {jr}')
+        check('haetae' not in jr['segs'] and 'dummy' in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3/3' in jr['left'] and jr['hint'],
+              f'[레이드] 목록: 지나온 땅의 레이드마다 「진」 칸(권장 전투력·내 전투력 빛깔·오늘 횟수), 해태 수련은 따로 칸이 없고(허수아비 칸의 칩, 46장부터) 다음 땅이 있는 땅(곤륜)에는 진 안내가 보인다 {jr}')
         check('진 ·' in jm['title'] and jm['rules'] >= 3 and jm['pot'] and jm['pre'] and '권장 전투력' in jm['pow'] and jf['page'] is None and jf['label'].startswith('진 ·') and jf['falls'] == 0,
               f'진 시작 전 창(규칙·권장 전투력·조합·들고 가는 물약) → [출발]로 싸움이 시작된다 {jm} {jf}')
         await jp.evaluate("""() => { const G = window.__game; G.hideModal(); G.closePage(); G.S.noti.seen = {}; G.notiAuto.clear(); G.noJin = false; }""")
@@ -2730,6 +2730,103 @@ async def main():
         check(u3['db'] == [True, 7, True, True], f"1일 보스: 4부 용사에게 짝수 날엔 바다 보스 일곱(그림 있음) {u3['db']}")
         check(u3['re'] == [True, True, True, 60] and u3['shut'][:3] == [False, False, False] and '동해' in u3['shut'][3] and u3['shut'][4:] == [False, False, False],
               f"4부 딸린 콘텐츠: 저장해도 그대로, 3부 용사에게는 모두 닫혀 있다 {u3['re']} {u3['shut']}")
+        # 7-2e) 상위 레이드 합치기: 해태 수련·용궁 보물고·용왕 강림이 허수아비·보물 동굴·강림 칸 안의 칩으로 — 하루에 둘 중 하나만
+        TIER_JS_HEAD = r"""const G = window.__game, S = G.S, out = {}; G.quiet = true; G.wipeOff = true; G.noFork = true; G.hideModal(); G.haetaeForce = true;
+          const fin = () => { if (G.raid){ G.raid.time = 0.05; G.raid.info.fit = null; if (G.raid.boss) G.raid.boss.hp = Math.min(G.raid.boss.hp, 1e300); } for (let i = 0; i < 400 && (G.raid || G.yvRun); i++){ G.update(0.05); G.addTime(50); G.hero.hp = G.ST.maxHp; } };
+          const rst = () => { fin(); S.dummy.day = ''; S.dummy.n = 0; S.haetae.day = ''; S.haetae.n = 0; S.vault.day = ''; S.vault.n = 0; S.gr = {day:'', n:0, won:false, pity:S.gr.pity || 0}; const D = G.seaDay(); D.yv = 0; D.ygr = 0; D.ygrWon = false; };
+          S.inv.potion = 999; S.inv.elixir = 99; S.inv.mana = 999; G.refreshStats(); G.hero.hp = G.ST.maxHp;"""
+        t1 = await up.evaluate("() => {" + TIER_JS_HEAD + r"""
+          const L = () => ['dummy', 'haetae', 'vault', 'yv', 'gr', 'ygr'].map(k => G.tierLock(k));
+          // (1) 해태 수련을 먼저 하면 그날 허수아비는 잠긴다(해태는 남은 횟수대로)
+          rst(); out.fresh = L().every(x => x === '');
+          out.h1 = G.startHaetae(); fin(); out.hLock = G.tierLock('dummy'); out.dNo = G.startDummy(); out.dN = S.dummy.n; out.hOk = G.tierLock('haetae') === '' && G.startHaetae(); fin(); out.hLeft = G.haetaeLeft();
+          G.addTime(86400000); out.freed = G.tierLock('dummy') === ''; out.d1 = G.startDummy(); fin();   // 날이 바뀌면 풀린다 → 허수아비를 하면 이번엔 해태가 잠긴다
+          out.dLock = G.tierLock('haetae'); out.hNo = G.startHaetae(); out.hN = S.haetae.n;
+          // (2) 용궁 보물고 ↔ 보물 동굴
+          rst(); out.y1 = G.startYv(); fin(); out.yLock = G.tierLock('vault'); out.vNo = G.startVault(); out.vN = S.vault.n; out.yvStill = G.yvLeft() === 1 && G.tierLock('yv') === '';
+          G.addTime(86400000); out.v1 = G.startVault(); fin(); out.vLock = G.tierLock('yv'); out.yNo = G.startYv(); out.yN = G.seaDay().yv;
+          // (3) 용왕 강림 ↔ 강림
+          rst(); out.g1 = G.startYgr(); fin(); out.gLock = G.tierLock('gr'); out.gNo = G.startGangrim(); out.gN = S.gr.n;
+          G.addTime(86400000); out.gg1 = G.startGangrim(); fin(); out.ggLock = G.tierLock('ygr'); out.yyNo = G.startYgr(); out.yyN = G.seaDay().ygr;
+          // (4) 예전에 이미 둘 다 쓴 날(둘 다 시작한 기록)은 잠그지 않는다 — 남은 횟수만큼은 계속
+          rst(); G.tierUsed('dummy'); G.tierUsed('haetae'); S.dummy.n = 1; S.haetae.n = 1; out.both = [G.tierLock('dummy'), G.tierLock('haetae')]; out.bothGo = G.startDummy(); fin(); out.bothN = S.dummy.n;
+          // (5) 레벨 문: 하나를 쓰면 잠긴 쪽만 빼고 센다
+          rst(); out.reason = (G.startHaetae(), fin(), G.tierLock('dummy'));
+          rst(); G.haetaeForce = false; return out; }""")
+        check(t1['fresh'] and t1['h1'] and '해태 수련' in t1['hLock'] and not t1['dNo'] and t1['dN'] == 0 and t1['hOk'] and t1['hLeft'] == 1 and t1['freed'] and t1['d1'] and '허수아비' in t1['dLock'] and not t1['hNo'] and t1['hN'] == 0,
+              f"해태 수련 ↔ 허수아비: 먼저 한 쪽만 열려 있고 다른 쪽은 그날 잠기며(해태는 남은 횟수대로 계속), 날이 바뀌면 풀린다 {t1['hLock']} / {t1['dLock']} 허수아비 {t1['dN']} 해태 {t1['hN']}")
+        check(t1['y1'] and '용궁 보물고' in t1['yLock'] and not t1['vNo'] and t1['vN'] == 0 and t1['yvStill'] and t1['v1'] and '보물 동굴' in t1['vLock'] and not t1['yNo'] and t1['yN'] == 0,
+              f"용궁 보물고 ↔ 보물 동굴: 하나를 시작하면 다른 하나는 그날 잠기고, 날이 바뀌면 반대쪽이 열린다 {t1['yLock']} / {t1['vLock']}")
+        check(t1['g1'] and '용왕 강림' in t1['gLock'] and not t1['gNo'] and t1['gN'] == 0 and t1['gg1'] and '강림 레이드' in t1['ggLock'] and not t1['yyNo'] and t1['yyN'] == 0,
+              f"용왕 강림 ↔ 강림: 하나를 시작하면 다른 하나는 그날 잠기고, 날이 바뀌면 반대쪽이 열린다 {t1['gLock']} / {t1['ggLock']}")
+        check(t1['both'] == ['', ''] and t1['bothGo'] and t1['bothN'] == 2 and t1['reason'] == '오늘은 해태 수련을 했어요',
+              f"예전에 둘 다 쓴 날은 잠그지 않고, 잠긴 까닭 글은 「오늘은 해태 수련을 했어요」 {t1['both']} {t1['reason']}")
+        # 화면: 칸 안 칩(기본 = 상위) · 잠금 표시 · 칩이 안 보이는 조건
+        TIER_UI = r"""(arg) => { const [rv, sl] = arg, G = window.__game, S = G.S, q = s => document.querySelector(s), qa = s => [...document.querySelectorAll(s)];
+          G.hideModal(); G.closePage(); G.tierSel = {}; G.buildTab('raid'); q(`[data-rv="${rv}"]`).click();
+          const pr = () => (qa('[data-tier]').find(b => b.getAttribute('aria-pressed') === 'true') || {dataset:{}}).dataset.tier || '';
+          const o = {segs: qa('[data-rv]').map(b => b.dataset.rv), chips: qa('[data-tier]').map(b => b.dataset.tier), def: pr(), ids: ['#dGo', '#hGo', '#vGo', '#yvGo', '#grBox', '#ygrBox'].filter(i => q(i))};
+          const lo = q(`[data-tier="${sl}:lo"]`); if (lo){ lo.click(); o.loPr = pr(); o.loIds = ['#dGo', '#hGo', '#vGo', '#yvGo', '#grBox', '#ygrBox'].filter(i => q(i)); const hi = q(`[data-tier="${sl}:hi"]`); hi.click(); o.hiPr = pr(); }
+          return o; }"""
+        await up.evaluate("() => {" + TIER_JS_HEAD + " rst(); G.haetaeForce = false; }")
+        await up.wait_for_timeout(300)
+        ui = {}
+        for rv, ok_lo, ok_hi in (('dummy', '#dGo', '#hGo'), ('vault', '#vGo', '#yvGo'), ('gr', '#grBox', '#ygrBox')):
+            ui[rv] = await up.evaluate(TIER_UI, [rv, rv])
+            await up.wait_for_timeout(350)
+            await up.screenshot(path=str(OUT / f'43h-tier-{rv}-hi.png'))
+            await up.evaluate("(sl) => { document.querySelector(`[data-tier=\"${sl}:lo\"]`).click(); }", rv)
+            await up.wait_for_timeout(350)
+            await up.screenshot(path=str(OUT / f'43h-tier-{rv}-lo.png'))
+            u = ui[rv]
+            check('haetae' not in u['segs'] and u['chips'] == [f'{rv}:lo', f'{rv}:hi'] and u['def'] == f'{rv}:hi' and ok_hi in u['ids'] and ok_lo not in u['ids'] and u['loPr'] == f'{rv}:lo' and ok_lo in u['loIds'] and ok_hi not in u['loIds'] and u['hiPr'] == f'{rv}:hi',
+                  f"[레이드] → [{ {'dummy':'허수아비','vault':'보물 동굴','gr':'강림'}[rv] }] 칸: [하위 / 상위] 칩이 있고 처음엔 상위가 골라져 있으며 칩을 누르면 그쪽 카드로 바뀐다(별도 해태 보기는 없다) {u}")
+        # 잠금: 해태 수련을 한 날은 허수아비 칩이 잠기고 단추가 막힌다 · 허수아비를 한 날은 기본이 허수아비
+        lk = await up.evaluate("() => {" + TIER_JS_HEAD + r"""
+          const q = s => document.querySelector(s), qa = s => [...document.querySelectorAll(s)], open = (rv, w) => { G.closePage(); G.tierSel = {}; G.buildTab('raid'); q(`[data-rv="${rv}"]`).click(); if (w){ G.tierSel[rv] = w; G.buildTab('raid'); } };
+          const snap = (rv, w) => { open(rv, w); const lockedChips = qa('[data-tk].locked').map(b => b.dataset.tk), pressed = (qa('[data-tier]').find(b => b.getAttribute('aria-pressed') === 'true') || {dataset:{}}).dataset.tier;
+            const go = q('#dGo,#hGo,#vGo,#yvGo,[data-gr],[data-ygr]'); return {lockedChips, pressed, dis: go ? go.disabled : null, txt: go ? go.textContent : ''}; };
+          rst(); G.startHaetae(); fin(); G.buildTab('raid');
+          out.afterH = snap('dummy'); out.afterHlo = snap('dummy', 'lo');   // 기본 = 해태(상위), 허수아비 칩은 잠김·단추 막힘
+          rst(); G.startDummy(); fin(); out.afterD = snap('dummy');       // 허수아비를 했으니 기본이 허수아비(상위가 잠겼으므로)
+          out.afterDhi = snap('dummy', 'hi');
+          rst(); G.startYv(); fin(); out.afterY = snap('vault', 'lo'); rst(); G.startYgr(); fin(); out.afterG = snap('gr', 'lo');
+          // 날이 바뀌면 화면의 잠금도 저절로 풀린다(패널은 안 다시 만들고 글자만 바뀜)
+          G.addTime(86400000);
+          return out; }""")
+        await up.wait_for_timeout(700)
+        lk2 = await up.evaluate("() => ({locked: [...document.querySelectorAll('[data-tk].locked')].map(b => b.dataset.tk), tag: [...document.querySelectorAll('[data-tl]')].map(e => e.textContent).join('')})")
+        await up.screenshot(path=str(OUT / '43h-tier-locked.png'))
+        check(lk['afterH']['lockedChips'] == ['dummy'] and lk['afterH']['pressed'] == 'dummy:hi' and lk['afterHlo']['dis'] is True and '오늘은 해태 수련을 했어요' in lk['afterHlo']['txt'] and lk['afterHlo']['lockedChips'] == ['dummy'],
+              f"해태 수련을 한 날: 허수아비 칩에 「오늘 잠김」, 허수아비 단추는 막히고 까닭이 적힌다(기본 선택은 상위) {lk['afterH']} {lk['afterHlo']}")
+        check(lk['afterD']['lockedChips'] == ['haetae'] and lk['afterD']['pressed'] == 'dummy:lo' and lk['afterDhi']['dis'] is True and '오늘은 허수아비 수련을 했어요' in lk['afterDhi']['txt'],
+              f"허수아비를 한 날: 해태 수련 칩이 잠기고 기본 선택은 허수아비로 바뀐다 {lk['afterD']} {lk['afterDhi']}")
+        check(lk['afterY']['lockedChips'] == ['vault'] and lk['afterY']['dis'] is True and '용궁 보물고' in lk['afterY']['txt'] and lk['afterG']['lockedChips'] == ['gr'] and lk['afterG']['dis'] is True and '용왕 강림' in lk['afterG']['txt'],
+              f"용궁 보물고를 한 날은 보물 동굴이, 용왕 강림을 한 날은 강림이 잠긴다 {lk['afterY']} {lk['afterG']}")
+        check(lk2['locked'] == [] and '잠김' not in lk2['tag'], f"날이 바뀌면 잠금 표시가 저절로 풀린다 {lk2}")
+        # 상위가 안 열렸으면(4부 이야기 전) 칩이 안 보인다
+        nc = await up.evaluate("() => {" + TIER_JS_HEAD + r"""
+          const q = s => document.querySelector(s), qa = s => [...document.querySelectorAll(s)]; G.haetaeForce = false; rst();
+          const qm = S.quest.main; S.quest.main = G.PART3_END - 1; const r = {open: [G.haetaeOpen(), G.yvOpen(), G.ygrOpen()]};
+          for (const rv of ['dummy', 'vault', 'gr']){ G.closePage(); G.tierSel = {}; G.buildTab('raid'); q(`[data-rv="${rv}"]`).click(); r[rv] = [qa('[data-tier]').length, !!q('#dGo,#vGo,#grBox'), !!q('#hGo,#yvGo,#ygrBox')]; }
+          S.quest.main = qm; G.closePage(); return r; }""")
+        check(nc['open'] == [False, False, False] and nc['dummy'] == [0, True, False] and nc['vault'] == [0, True, False] and nc['gr'] == [0, True, False],
+              f"상위가 안 열렸으면(4부 전) 칩이 없고 허수아비·보물 동굴·강림 카드만 보인다 {nc}")
+        # 세로·가로 화면에서 칩 줄이 서로·위아래 줄과 겹치지 않고 옆으로 넘치지 않는다
+        for vw, vh, nm in ((390, 844, '세로'), (844, 390, '가로')):
+            await up.set_viewport_size({'width': vw, 'height': vh})
+            await up.wait_for_timeout(500)
+            for rv in ('dummy', 'vault', 'gr'):
+                lay = await up.evaluate("""(rv) => { const G = window.__game, q = s => document.querySelector(s); G.haetaeForce = true; G.hideModal(); G.closePage(); G.tierSel = {}; G.buildTab('raid'); q(`[data-rv="${rv}"]`).click();
+                  const r = e => { if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; }, pn = q('#panel');
+                  const card = q('.tiernote') && q('.tiernote').nextElementSibling, seg = q('.qseg'), ch = q('.tierchips'), note = q('.tiernote'), chips = [...document.querySelectorAll('.tierchips .chip')].map(r);
+                  G.haetaeForce = false; return {seg: r(seg), ch: r(ch), note: r(note), card: r(card), chips, over: pn.scrollWidth > pn.clientWidth + 1, port: document.body.classList.contains('portrait')}; }""", rv)
+                hit = lambda a, b: bool(a and b and a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3])
+                okc = lay['ch'] and lay['seg'] and lay['note'] and lay['card'] and not hit(lay['seg'], lay['ch']) and not hit(lay['ch'], lay['note']) and not hit(lay['note'], lay['card']) and not hit(lay['chips'][0], lay['chips'][1]) and not lay['over'] and lay['ch'][2] <= vw and lay['ch'][0] >= 0
+                check(okc, f"{nm} 화면 [{rv}] 칸: 칩 줄이 칸 이름 줄·안내 글·카드와 겹치지 않고 옆으로 넘치지 않는다 {lay}")
+            await up.screenshot(path=str(OUT / f'43h-tier-{"portrait" if vw < vh else "land"}.png'))
+        await up.set_viewport_size({'width': 844, 'height': 390})
+        await up.wait_for_timeout(300)
         for rv, nm in (('parade', '43d-sugun-card'), ('vault', '43e-yvault-card'), ('gr', '43f-yongwang-card'), ('tb', '43g-tb-deep')):
             await up.evaluate("(rv) => { const G = window.__game; G.hideModal(); G.buildTab('raid'); const b = document.querySelector(`[data-rv=\"${rv}\"]`); if (b) b.click(); }", rv)
             await up.wait_for_timeout(500)

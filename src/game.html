@@ -772,6 +772,7 @@ body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,
 .qsegb{flex:1;position:relative;border:0;border-radius:10px;padding:8px 6px;background:none;color:var(--text-soft);font-weight:800;font-size:13px;cursor:pointer}
 .qsegb.on{background:linear-gradient(180deg,#ffe07a,#f0b43a);color:#241a04;box-shadow:0 2px 10px rgba(255,204,77,.35)}
 .qsegb .dot{position:absolute;top:4px;right:8px}
+.tierchips{display:flex;gap:6px;margin:0 0 6px;flex-wrap:wrap}.tierchips .chip{padding:6px 14px;font-size:12.5px;font-family:inherit}.tierchips .chip small{font-size:10.5px;font-weight:700;opacity:.8}.tiernote{margin:0 0 10px}
 .qbanner{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:12px 14px;border-radius:16px;margin:0 0 8px;
   background:linear-gradient(120deg,rgba(184,56,47,.35),rgba(30,40,70,.6) 60%),repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 2px,transparent 2px 10px);border:1px solid rgba(255,204,77,.3)}
 .qbanner small{display:block;font-size:10.5px;font-weight:800;color:var(--gold);letter-spacing:.08em}
@@ -4377,9 +4378,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-14-5', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-14-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 14일 · 상위 레이드 칸 합치기'],
+  ['상위 레이드가 허수아비·보물 동굴·강림 칸 안으로 들어왔어요', '해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없어요. [레이드]의 허수아비·보물 동굴·강림 칸 맨 위에 [허수아비 | 해태 수련]처럼 고르는 칩이 생겼고, 열려 있으면 처음엔 상위가 골라져 있어요.'],
+  ['하루에 둘 중 하나만', '한 번이라도 시작하면 다른 쪽은 그날 잠기고(「오늘은 ○○을 했어요」), 내일 다시 풀려요. 이미 쓴 횟수는 그대로예요.'],
   ['#', '11월 14일 · 이야기 펫 · 파티 화면'],
   ['이야기로 얻은 펫도 별이 올라요', '바쿠·백택·불개·아기 독수리 왕은 처음엔 이야기 보상으로만 얻지만, 얻은 뒤부터는 펫 소환에도 나와요. 같은 펫이 나오면 다른 펫처럼 별이 올라 효과가 20%씩 세져요.'],
   ['컴퓨터에서 화면이 옆으로 눕던 것 고침', '컴퓨터 창에서 가로로 바꾸면 화면이 90도 누워 보이던 것을 고쳤어요. 이제 컴퓨터에서는 창 모양(가로로 길면 가로 화면, 세로로 길면 세로 화면)에 알아서 맞춰지고, [화면 돌리기]는 휴대폰·태블릿에서만 화면을 돌려요.'],
@@ -7818,10 +7822,29 @@ const DUMMY_TRIES = 3, DUMMY_TIME = 30, DUMMY_T = [0.8, 2, 3.5, 5.5, 9];   // (4
 // (2026-11 (43), 사용자 요청: 너무 빡빡함) 예전 [2, 5, 10, 20, 40]은 막힌 단계의 보스를 겨우 잡는 용사가 3등급까지만 — 이제 4등급, 조금 앞서면 5등급
 const dummyDay = () => { const t = new Date(now()); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; };
 function dummyLeft(){ if (S.dummy.day !== dummyDay()){ S.dummy.day = dummyDay(); S.dummy.n = 0; } return DUMMY_TRIES - S.dummy.n; }
+/* 상위 레이드 합치기(2026-11, 사용자 확정): 허수아비↔해태 수련 · 보물 동굴↔용궁 보물고 · 강림↔용왕 강림은 [레이드]의 한 칸 안에서 [하위 / 상위] 칩으로 고르고, 하루에 둘 중 하나만 한다.
+   그날 한 번이라도 시작(횟수를 씀)한 쪽이 있으면 다른 쪽은 그날 잠긴다(날이 바뀌면 각 횟수가 0이 되니 저절로 풀림). 이미 지고 이긴 횟수는 그대로 —
+   예전에 둘 다 쓴 날은 둘 다 이미 시작한 것이라 잠그지 않는다(막힌 것 없이 남은 횟수만). 시작 함수가 직접 막아서 화면 밖에서도 새지 않는다. */
+const TIER_SLOTS = {dummy:{lo:{k:'dummy', n:'허수아비'}, hi:{k:'haetae', n:'해태 수련'}}, vault:{lo:{k:'vault', n:'보물 동굴'}, hi:{k:'yv', n:'용궁 보물고'}}, gr:{lo:{k:'gr', n:'강림'}, hi:{k:'ygr', n:'용왕 강림'}}};
+const TIER_NAME = {dummy:'허수아비 수련', haetae:'해태 수련', vault:'보물 동굴', yv:'용궁 보물고', gr:'강림 레이드', ygr:'용왕 강림'};
+const TIER_MATE = {dummy:'haetae', haetae:'dummy', vault:'yv', yv:'vault', gr:'ygr', ygr:'gr'};
+function tierUsed(k){   // 오늘 이 콘텐츠를 한 번이라도 시작했나
+  if (k === 'dummy'){ dummyLeft(); return S.dummy.n > 0; }
+  if (k === 'haetae'){ haetaeLeft(); return S.haetae.n > 0; }
+  if (k === 'vault'){ vaultLeft(); return S.vault.n > 0; }
+  if (k === 'yv') return seaDay().yv > 0;
+  if (k === 'gr'){ grCheck(); return S.gr.n > 0; }
+  if (k === 'ygr') return seaDay().ygr > 0;
+  return false;
+}
+function tierLock(k){   // 오늘 이 콘텐츠를 못 하는 까닭(하고 있거나 할 수 있으면 '')
+  const m = TIER_MATE[k];
+  return m && !tierUsed(k) && tierUsed(m) ? `오늘은 ${TIER_NAME[m]}${josa(TIER_NAME[m], '을', '를')} 했어요` : '';
+}
 const dummyTiers = () => DUMMY_T.map(k => k * mHp(Math.max(1, S.maxStage)) * BOSS_K.hp[Math.max(0, Math.min(4, S.world))]);
 const dummyTier = dmg => dummyTiers().filter(t => dmg >= t).length;
 function startDummy(){
-  if (raid || dummyLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || dummyLeft() <= 0 || tierLock('dummy') || !session && !window.__game) return false;
   S.dummy.n++;
   const info = {dummy:true, label:'허수아비 수련', bossName:'짚 허수아비', type:'scarecrow', color:'#d8b060', region:regionIndex(S.stage), party:1, ref:S.maxStage, g:0};
   startFight(info, [], {hp:1e300, atk:0, aoe:0, time:DUMMY_TIME});
@@ -8226,7 +8249,7 @@ const yvOpen = () => S.world >= 5 && S.quest.main >= PART4A_END;
 const yvLeft = () => YV.tries - seaDay().yv;
 let yvRun = null;   // 진행 중인 보물고 {room, got:[], pending}
 function startYv(){
-  if (raid || parade || market || yvRun || !yvOpen() || yvLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || parade || market || yvRun || !yvOpen() || yvLeft() <= 0 || tierLock('yv') || !session && !window.__game) return false;
   seaDay().yv++; yvRun = {room:0, got:[], pending:false};
   return yvRoom();
 }
@@ -8399,7 +8422,7 @@ const ygrOpen = () => yvOpen();
 const ygrBoss = () => YONGWANG[new Date(now()).getDay()];
 const ygrLeft = () => { const D = seaDay(); return D.ygrWon ? 0 : YGR.tries - D.ygr; };
 function startYgr(){
-  if (raid || parade || market || !ygrOpen() || ygrLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || parade || market || !ygrOpen() || ygrLeft() <= 0 || tierLock('ygr') || !session && !window.__game) return false;
   seaDay().ygr++;
   const B = ygrBoss(), party = grParty();
   const partyDps = realDps() + party.reduce((t, a) => t + a.dps * (a.npc ? 1 : TB_ALLY_SK), 0);
@@ -8493,7 +8516,7 @@ function grParty(){
 }
 function startGangrim(){
   grCheck();
-  if (raid || parade || market || !grOpen() || grLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || parade || market || !grOpen() || grLeft() <= 0 || tierLock('gr') || !session && !window.__game) return false;
   S.gr.n++;
   const B = grBoss(), party = grParty();
   const partyDps = realDps() + party.reduce((t, a) => t + a.dps * (a.npc ? 1 : TB_ALLY_SK), 0);
@@ -8970,7 +8993,7 @@ function vaultLeft(){ if (S.vault.day !== dummyDay()){ S.vault.day = dummyDay();
 const vaultD = () => Math.max(5, Math.round(effStage(Math.max(1, S.maxStage)) * 0.5));
 const vaultShards = () => 4 + Math.min(4, S.world);   // (48) 3+세계 → 5+2×세계 → (물의 신화) 4+세계
 function startVault(){
-  if (raid || vaultLeft() <= 0 || (!session && !window.__game)) return false;
+  if (raid || vaultLeft() <= 0 || tierLock('vault') || (!session && !window.__game)) return false;
   S.vault.n++;
   const s = Math.max(1, S.maxStage - 5);
   const info = {vault:true, label:'보물 동굴', bossName:'보물 이무기', type:'serpent', color:'#e0b03c', region:regionIndex(S.stage), party:1, ref:s, g:0};
@@ -11576,7 +11599,7 @@ function lgExtra(x, o){   // 기본 경험치 x에 더할 몫 — 늘 0 ≤ 몫 
   return add;
 }
 function lgDay(){ const L = S.lg, d = today(); if (L.day !== d){ L.day = d; L.free = 0; L.extra = 0; L.inDay = 0; } return L; }
-const lgRaidOk = () => (raidUnlocked() > 0 && raidTickets() > 0) || dummyLeft() > 0 || paradeLeft() > 0 || vaultLeft() > 0;
+const lgRaidOk = () => (raidUnlocked() > 0 && raidTickets() > 0) || (dummyLeft() > 0 && !tierLock('dummy')) || (haetaeOpen() && haetaeLeft() > 0 && !tierLock('haetae')) || paradeLeft() > 0 || (vaultLeft() > 0 && !tierLock('vault')) || (yvOpen() && yvLeft() > 0 && !tierLock('yv'));   // 하루에 둘 중 하나만인 쌍(허수아비↔해태·보물 동굴↔보물고)은 잠긴 쪽을 세지 않는다
 function lgReqNext(from){ const n = LG.order.length; for (let z = 0; z < n; z++){ const k = LG.order[(from + z) % n]; if (k !== 'raid' || lgRaidOk()) return k; } return 'kill'; }
 function lgReqCost(extra){ lgDay(); return extra ? {gems:Math.round(LG.reqGem * lgGK() * (1 + S.lg.extra))} : {gold:Math.round(mGold(Math.max(1, S.maxStage)) * LG.reqGold), mat:LG.reqMat, mk:'m' + matW()}; }
 function lgReqWhy(extra){   // 못 받는 까닭(받을 수 있으면 '')
@@ -13260,7 +13283,7 @@ const haetaeTiers = () => { const w = haetaeRefW(), base = withWorld(w, () => mH
 const haetaeTier = dmg => haetaeTiers().filter(t => dmg >= t).length;
 const haetaePhase = R => { const t = (R.limit - R.time) % HAETAE.cyc; return t >= HAETAE.horn[0] && t < HAETAE.horn[1] ? 'horn' : t >= HAETAE.eye[0] && t < HAETAE.eye[1] ? 'eye' : ''; };
 function startHaetae(){
-  if (raid || parade || market || !haetaeOpen() || haetaeLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || parade || market || !haetaeOpen() || haetaeLeft() <= 0 || tierLock('haetae') || !session && !window.__game) return false;
   S.haetae.n++;
   const info = {haetae:true, label:'해태 수련', bossName:'돌 해태', type:'haetae', color:'#9aa0a8', region:regionIndex(S.stage), party:1, ref:S.maxStage, g:0, sc:2.6};
   startFight(info, [], {hp:1e300, atk:0, aoe:0, time:HAETAE.time});
@@ -18553,7 +18576,7 @@ notiReg({k:'haetae', pri:45, flag:'noHaetae', who:{name:'돌 해태', cast:'m:ha
   one:'돌 해태: 허수아비 아래 「해태 수련」이 열렸어요', when:() => haetaeOpen(), key:() => '1',
   lines:() => ['…(돌 해태가 눈을 떴어요.) 옳고 그름을 가리는 짐승은 <b>제대로 친 것만</b> 셈한다.',
     '<b>뿔이 빛날 때</b> 친 것은 두 배로, <b>눈이 붉을 때</b> 친 것은 불로 되돌려준다. [구르기]로 물러서라.',
-    `[레이드] → 허수아비 수련 아래 「해태 수련」. 하루 ${HAETAE.tries}번, 등급은 일곱.`],
+    `[레이드] → 허수아비 칸의 「해태 수련」 칩. 하루 ${HAETAE.tries}번, 등급은 일곱. 허수아비와는 하루에 하나만.`],
   go:{label:'해태 수련 보러 가기', fn:() => buildTab('raid')}});
 notiReg({k:'amber', pri:20, flag:'noAmber', who:() => ({name:CARVER.name, img:carverImg}), tag:'새 장비 칸 · 세공', title:'투구 · 어깨 · 신발과 호박석 세공',
   one:() => `${CARVER.name}: 새 장비 칸과 호박석 세공이 열렸어요`, when:() => seaOpen() && !!(S.sea && S.sea.kit), key:() => '1',
@@ -18696,7 +18719,7 @@ function questGo(q){   // 「바로 가기」·퀘스트 누르기: 이 퀘스�
     raidView = 'raid';
     // 마을 부탁의 '레이드'는 [레이드] 칸의 어느 싸움이든 세므로, 이 땅 레이드가 아직 잠겨 있으면(저승·천계 초입 등) 지금 할 수 있는 칸으로(2026-11 (48) 버그: 저승 초입에 잠긴 레이드 목록만 보임)
     if (q.c === 'raids' && raidUnlocked() < 1){
-      raidView = dummyLeft() > 0 ? 'dummy' : paradeLeft() > 0 ? 'parade' : vaultLeft() > 0 ? 'vault' : 'tb';
+      raidView = (dummyLeft() > 0 && !tierLock('dummy')) || (haetaeOpen() && haetaeLeft() > 0 && !tierLock('haetae')) ? 'dummy' : paradeLeft() > 0 ? 'parade' : (vaultLeft() > 0 && !tierLock('vault')) || (yvOpen() && yvLeft() > 0 && !tierLock('yv')) ? 'vault' : 'tb';
       addLog(`이 땅의 레이드는 아직 잠겨 있어요. 허수아비·백귀야행·보물 동굴·타임 보스 가운데 아무거나 해도 부탁이 세어져요.`, 'good');
     }
     return buildTab('raid');
@@ -18986,6 +19009,13 @@ function openReplay(){
 function partyLine(m){ return `${esc(m.name)}(${CLASSES[m.cls].name}${m.npc ? '·NPC' : '·내 캐릭터'})`; }
 // 레이드 화면: 레이드 · 타임 보스 · 허수아비 세 칸. 레이드 카드는 보스 얼굴·권장 전투력·보상·입장 단추
 let raidView = 'raid';
+let tierSel = {};   // 칸마다 사용자가 고른 쪽({dummy:'lo'|'hi', …}) — 안 골랐으면 기본
+const tierOpen = slot => slot === 'dummy' ? haetaeOpen() : slot === 'vault' ? yvOpen() : ygrOpen();
+function tierPick(slot){   // 지금 보이는 쪽: 상위가 열려 있으면 기본은 상위(그날 하위를 이미 해서 상위가 잠겼으면 하위)
+  if (!tierOpen(slot)) return 'lo';
+  const s = tierSel[slot];
+  return s === 'lo' || s === 'hi' ? s : tierLock(TIER_SLOTS[slot].hi.k) ? 'lo' : 'hi';
+}
 const portCache = new Map();
 function bossPortrait(type, color){
   const k = type + color; let u = portCache.get(k);
@@ -19007,35 +19037,47 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비']].concat(haetaeOpen() ? [['haetae', '해태 수련']] : [], [['vault', '보물 동굴'], ['parade', '백귀야행']]);   // 해태 수련은 46장부터(그 전에는 칸이 안 보임)
-  if (raidView === 'haetae' && !haetaeOpen()) raidView = 'raid';
+  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];   // 해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없고 허수아비·보물 동굴·강림 칸 안의 칩으로(열리면 칩이 생김)
+  if (raidView === 'haetae') raidView = 'dummy';   // 옛 보기 이름
+  const chips = slot => {   // 칸 안 [하위 / 상위] 칩(상위가 안 열렸으면 없음)
+    if (!tierOpen(slot)) return '';
+    const T = TIER_SLOTS[slot], pk = tierPick(slot);
+    return `<div class="tierchips" role="group" aria-label="${T.lo.n} 또는 ${T.hi.n}">${['lo', 'hi'].map(w => `<button class="chip${tierLock(T[w].k) ? ' locked' : ''}" data-tier="${slot}:${w}" data-tk="${T[w].k}" aria-pressed="${pk === w}">${T[w].n}<small data-tl="${T[w].k}">${tierLock(T[w].k) ? ' · 오늘 잠김' : ''}</small></button>`).join('')}</div>
+      <p class="small tiernote">하루에 둘 중 하나만 해요. 한 번이라도 시작하면 다른 쪽은 그날 잠기고, 내일 다시 풀려요.</p>`;
+  };
+  const chipsUpd = () => panel.querySelectorAll('[data-tk]').forEach(b => { const why = tierLock(b.dataset.tk); b.classList.toggle('locked', !!why); setText(b.querySelector('[data-tl]'), why ? ' · 오늘 잠김' : ''); });
   const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>` + (['raid', 'gr', 'tb'].includes(raidView) ? '<div id="myPartyBox"></div>' : '');
-  const wireSeg = () => { panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; buildTab('raid'); })); myPartyRender(true); };
+  const wireSeg = () => {
+    panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; tierSel = {}; buildTab('raid'); }));   // 다른 칸을 눌렀다 오면 칩은 다시 기본 선택(상위)부터
+    panel.querySelectorAll('[data-tier]').forEach(b => b.addEventListener('click', () => { const [sl, w] = b.dataset.tier.split(':'); tierSel[sl] = w; buildTab('raid'); }));
+    myPartyRender(true);
+  };
   if (raidView === 'gr'){
-    panel.innerHTML = top + `<div id="grBox"></div><div id="ygrBox" style="margin-top:12px"></div><div id="raidLive2"></div>`;
+    const gHi = tierPick('gr') === 'hi';   // 용왕 강림(상위)이 열려 있으면 기본으로 그쪽
+    panel.innerHTML = top + chips('gr') + (gHi ? `<div id="ygrBox"></div>` : `<div id="grBox"></div>`) + `<div id="raidLive2"></div>`;
     wireSeg(); grFetchPick();
-    $('#ygrBox').addEventListener('click', e => { if (e.target.closest('[data-ygr]') && !raid && ygrOpen() && ygrLeft() > 0) presetAsk('party', '용왕 강림', () => { if (startYgr()){ closePage(); return true; } }); });
-    $('#grBox').addEventListener('click', e => { if (e.target.closest('[data-gr]') && !raid && grOpen() && grLeft() > 0) presetAsk('party', '강림 레이드', () => { if (startGangrim()){ closePage(); return true; } }); });
+    if (gHi) $('#ygrBox').addEventListener('click', e => { if (e.target.closest('[data-ygr]') && !raid && ygrOpen() && ygrLeft() > 0 && !tierLock('ygr')) presetAsk('party', '용왕 강림', () => { if (startYgr()){ closePage(); return true; } }); });
+    else $('#grBox').addEventListener('click', e => { if (e.target.closest('[data-gr]') && !raid && grOpen() && grLeft() > 0 && !tierLock('gr')) presetAsk('party', '강림 레이드', () => { if (startGangrim()){ closePage(); return true; } }); });
     return () => {
-      grCheck();
-      if (ygrOpen()){ const YB = ygrBoss(), yl = ygrLeft(), yok = yl > 0 && !raid, yAll = AVATARS.filter(a => a.src === YGR.src), yOwn = yAll.filter(a => S.av.own[a.k]).length, dy = '일월화수목금토';
+      grCheck(); chipsUpd();
+      if (gHi){ const YB = ygrBoss(), yl = ygrLeft(), yLock = tierLock('ygr'), yok = yl > 0 && !raid && !yLock, yAll = AVATARS.filter(a => a.src === YGR.src), yOwn = yAll.filter(a => S.av.own[a.k]).length, dy = '일월화수목금토';
         setHTML($('#ygrBox'), `<div class="card dcard ${yok ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(YB.type, YB.color)}" alt=""></div><div>
-          <div class="ct">용왕 강림 · ${YB.name}<span class="tag">${seaDay().ygrWon ? '오늘 토벌함' : `오늘 ${yl} / ${YGR.tries}번`}</span></div>
+          <div class="ct">용왕 강림 · ${YB.name}<span class="tag">${yLock ? '오늘 잠김' : seaDay().ygrWon ? '오늘 토벌함' : `오늘 ${yl} / ${YGR.tries}번`}</span></div>
           <p class="story">강림 레이드의 윗단계예요. 요일마다 다른 바다의 용왕이 물 위로 올라와요(함께 싸우는 용사는 강림 레이드와 같아요). 한 방이 더 세고 <b>전멸기가 두 번</b>(체력 70%·35%) 와요 — 회복약을 넉넉히. 이기면 엽전·보석(강림의 2배)·<b>호박석</b>과 <b>아바타</b> 하나(용왕 전용 ${Math.round(YGR.avP * 100)}%, ${YGR.pity}번 안에 꼭).</p>
           <div class="dbweek">${YONGWANG.map((x, i) => `<span class="${i === new Date(now()).getDay() ? 'on' : ''}">${dy[i]} ${x.name.replace(' 용왕', '').replace('네 바다 용왕의 시험', '네 바다').replace('용왕의 수레를 끄는 해룡', '해룡')}</span>`).join('')}</div>
           <div class="dl"><span>용왕 아바타</span><b>${yOwn} / ${yAll.length} · ${yAll.map(a => `<span style="${S.av.own[a.k] ? 'color:var(--gold)' : 'opacity:.55'}">${a.name}</span>`).join(' · ')}</b></div>
-          <button class="btn ${yok ? 'primary' : ''}" data-ygr="go" ${yok ? '' : 'disabled'}>${raid ? (raid.info.ygr ? '싸우는 중…' : '다른 싸움 중') : seaDay().ygrWon ? '오늘은 토벌했어요(내일 다시)' : yl > 0 ? '용왕 강림 입장' : '오늘은 다 했어요(내일 다시)'}</button>
-        </div></div>`); }
-      const B = grBoss(), left = grLeft(), party = grParty(), days = '일월화수목금토', open = grOpen(), ok = open && left > 0 && !raid;
+          <button class="btn ${yok ? 'primary' : ''}" data-ygr="go" ${yok ? '' : 'disabled'}>${raid ? (raid.info.ygr ? '싸우는 중…' : '다른 싸움 중') : yLock ? yLock + '(내일 다시)' : seaDay().ygrWon ? '오늘은 토벌했어요(내일 다시)' : yl > 0 ? '용왕 강림 입장' : '오늘은 다 했어요(내일 다시)'}</button>
+        </div></div>`); return; }
+      const B = grBoss(), left = grLeft(), party = grParty(), days = '일월화수목금토', open = grOpen(), gLock = tierLock('gr'), ok = open && left > 0 && !raid && !gLock;
       const exAll = AVATARS.filter(a => a.src === GR.src), exOwn = exAll.filter(a => S.av.own[a.k]).length;
       setHTML($('#grBox'), `<div class="card dcard ${ok ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
-        <div class="ct">강림 레이드 · ${B.name}<span class="tag">${!open ? '잠김' : S.gr.won ? '오늘 토벌함' : `오늘 ${left} / ${GR.tries}번`}</span></div>
+        <div class="ct">강림 레이드 · ${B.name}<span class="tag">${!open ? '잠김' : gLock ? '오늘 잠김' : S.gr.won ? '오늘 토벌함' : `오늘 ${left} / ${GR.tries}번`}</span></div>
         <p class="story">날마다 다른 신장이 내려와요. <b>나 + 다른 용사 ${GR.pick}명</b>이 저절로 모여 함께 싸워요(${online ? '서버의 캐릭터' : '이 기기의 캐릭터'} 가운데, 같은 직업은 나까지 ${GR.cap}명, 모자라면 NPC 동료). 보스 체력은 모인 파티에 맞춰져요. 보스 체력이 반쯤 깎이면 <b>전멸기</b> — 모두 죽기 직전까지 깎이고, <b>회복약이 없으면 쓰러져요</b>. 이기면 <b>아바타</b> 하나(강림 전용 ${Math.round(GR.avP * 100)}%, ${GR.pity}번 안에 꼭).</p>
         <div class="dbweek">${GANGLIM.map((b, i) => `<span class="${i === new Date(now()).getDay() ? 'on' : ''}">${days[i]} ${b.name.split(' ').pop()}</span>`).join('')}</div>
         <div class="dl"><span>함께</span><b>${['나'].concat(party.map(a => `${esc(a.name)}(${CLASSES[a.cls].name}${a.npc ? '·NPC' : ''})`)).join(', ')}</b></div>
         <div class="dl"><span>강림 아바타</span><b>${exOwn} / ${exAll.length} · ${exAll.map(a => `<span style="${S.av.own[a.k] ? 'color:var(--gold)' : 'opacity:.55'}">${a.name}</span>`).join(' · ')}</b></div>
         <div class="dl"><span>회복약</span><b>인삼 ${fmt(S.inv.potion)} · 산삼 ${fmt(S.inv.elixir)}</b></div>
-        <button class="btn ${ok ? 'primary' : ''}" data-gr="go" ${ok ? '' : 'disabled'}>${!open ? '첫 환생 뒤(저승)부터 열려요' : raid ? (raid.info.gr && !raid.info.ygr ? '싸우는 중…' : '다른 싸움 중') : S.gr.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '강림 레이드 입장' : '오늘은 다 했어요(내일 다시)'}</button>
+        <button class="btn ${ok ? 'primary' : ''}" data-gr="go" ${ok ? '' : 'disabled'}>${!open ? '첫 환생 뒤(저승)부터 열려요' : raid ? (raid.info.gr && !raid.info.ygr ? '싸우는 중…' : '다른 싸움 중') : gLock ? gLock + '(내일 다시)' : S.gr.won ? '오늘은 토벌했어요(내일 다시)' : left > 0 ? '강림 레이드 입장' : '오늘은 다 했어요(내일 다시)'}</button>
       </div></div>`);
     };
   }
@@ -19085,41 +19127,40 @@ function buildRaid(){
     };
   }
   if (raidView === 'vault'){
-    const list = MYTHS.filter(m => !m.story);
-    panel.innerHTML = top + `
+    const list = MYTHS.filter(m => !m.story), vHi = tierPick('vault') === 'hi';   // 용궁 보물고(상위)가 열려 있으면 기본으로 그쪽
+    panel.innerHTML = top + chips('vault') + (vHi ? `
+      <div class="card dcard"><div class="dport"><img src="${bossPortrait('gwangeo', '#b8a070')}" alt=""></div>
+        <div><div class="ct">용궁 보물고<span class="tag" id="yvLeft"></span></div>
+        <p class="story">보물 동굴의 윗단계예요. 방 셋을 차례로 지나요 — <b>문어 문지기</b> → <b>함정 방</b>(붉은 칸이 쉴 새 없이 깔려요) → <b>광어 창고지기</b>. 방을 깰 때마다 <b>상자 하나</b>를 골라요: 호박석(영웅 이상) · 장비(깊은 방일수록 <b style="color:${GRADES[7].color}">유물</b>) · 재물(보석·용궁 진주·고삐 조각). 끝까지 가면 신화 조각과 <b>${Math.round(YV.mythP * 100)}%</b>로 신화 보물 「용궁 야광주」. 하루 ${YV.tries}번, 지면 거기까지 고른 것만 가져가요.</p></div></div>` : `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('serpent', '#e0b03c')}" alt=""></div>
         <div><div class="ct">보물 동굴<span class="tag" id="vLeft"></span></div>
-        <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>·재료 ${MAT_SRC.vault}개·보석과 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 ${SHARD_SRC.vaultLose}개.</p></div></div>
+        <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>·재료 ${MAT_SRC.vault}개·보석과 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 ${SHARD_SRC.vaultLose}개.</p></div></div>`) + `
       <div class="card"><div class="ct">신화 조각 <b id="vShard"></b><span class="small">${SHARD_COST}개로 원하는 신화 보물 하나</span></div>
         <p class="small" style="margin:0 0 6px">만들면 지금 힘에 맞는 값(이 정도: +<b id="vPow"></b> × 종류 배율)이 나와요. 지금 것보다 약하면 가방으로 들어가요.</p>
         <ul class="list">${list.map(m => `<li class="qrow"><div><div class="qn"><span><b style="color:${MYTH_COLOR}">${m.name}</b> <span class="small">${m.stat}</span></span><span class="small" data-vmc="${m.k}"></span></div></div><button class="btn sm" data-vm="${m.k}">만들기</button></li>`).join('')}</ul></div>
       <div id="raidLive"></div>
-      <button class="btn primary big" id="vGo">보물 동굴 들어가기</button>
-      ${yvOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('gwangeo', '#b8a070')}" alt=""></div>
-        <div><div class="ct">용궁 보물고<span class="tag" id="yvLeft"></span></div>
-        <p class="story">보물 동굴의 윗단계예요. 방 셋을 차례로 지나요 — <b>문어 문지기</b> → <b>함정 방</b>(붉은 칸이 쉴 새 없이 깔려요) → <b>광어 창고지기</b>. 방을 깰 때마다 <b>상자 하나</b>를 골라요: 호박석(영웅 이상) · 장비(깊은 방일수록 <b style="color:${GRADES[7].color}">유물</b>) · 재물(보석·용궁 진주·고삐 조각). 끝까지 가면 신화 조각과 <b>${Math.round(YV.mythP * 100)}%</b>로 신화 보물 「용궁 야광주」. 하루 ${YV.tries}번, 지면 거기까지 고른 것만 가져가요.</p></div></div>
-      <button class="btn primary big" id="yvGo">용궁 보물고 들어가기</button>` : ''}${kubOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('yaksha', '#8a8a7a')}" alt=""></div>
+      ${vHi ? `<button class="btn primary big" id="yvGo">용궁 보물고 들어가기</button>` : `<button class="btn primary big" id="vGo">보물 동굴 들어가기</button>`}${kubOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('yaksha', '#8a8a7a')}" alt=""></div>
         <div><div class="ct">쿠베라의 곳간<span class="tag" id="kubLeft"></span></div>
         <p class="story">재물의 신의 곳간을 지키는 <b>야차 문지기</b> 곁에서 ${KUB.time}초 동안 <b>솟는 보물 상자</b>에 닿아 나르는 곳이에요(하루 ${KUB.tries}번). 용사가 저절로 가까운 상자로 걸어가고, 땅을 눌러 움직여도 돼요. 문지기는 쫓아와 때리지만 <b>맞으면 잠깐 기절</b>해요. 나른 수가 <b>${KUB.tier.join('·')}개</b>를 넘을 때마다 1~5단계 — 영물 장비(단계가 높을수록 여러 개)·엽전·천축 향목, 3단계부터 영물 치장 기회, 그리고 <b>${Math.round(KUB.mythP * 100)}%</b>로 곳간 전용 신화 보물 「마르지 않는 금항아리」.</p>
         <p class="small" style="margin:0"><b id="kubBest"></b></p></div></div>
       <button class="btn primary big" id="kubGo">쿠베라의 곳간 들어가기</button>` : ''}`;
     wireSeg();
     if ($('#kubGo')) $('#kubGo').addEventListener('click', () => { if (!raid && !parade && kubLeft() > 0) presetAsk('mob', '쿠베라의 곳간', () => { if (startKub()){ closePage(); return true; } }); });
-    if ($('#yvGo')) $('#yvGo').addEventListener('click', () => { if (!raid && yvLeft() > 0) presetAsk('boss', '용궁 보물고', () => { if (startYv()){ closePage(); return true; } }); });
-    $('#vGo').addEventListener('click', () => { if (!raid && vaultLeft() > 0) presetAsk('boss', '보물 동굴', () => { if (startVault()){ closePage(); return true; } }); });
+    if ($('#yvGo')) $('#yvGo').addEventListener('click', () => { if (!raid && yvLeft() > 0 && !tierLock('yv')) presetAsk('boss', '용궁 보물고', () => { if (startYv()){ closePage(); return true; } }); });
+    if ($('#vGo')) $('#vGo').addEventListener('click', () => { if (!raid && vaultLeft() > 0 && !tierLock('vault')) presetAsk('boss', '보물 동굴', () => { if (startVault()){ closePage(); return true; } }); });
     panel.querySelectorAll('[data-vm]').forEach(b => b.addEventListener('click', () => {
       const M = MYTHS.find(x => x.k === b.dataset.vm), r = craftMyth(b.dataset.vm);
       if (r){ addLog(`신화 조각으로 ${M.name} +${r.p}%를 만들었어요${r.up ? '!' : ' (지금 것이 더 세서 가방으로)'}`, 'gain'); sfx('rare'); playFx('craft', {el:b, ok:true}); }
       refreshPanel();
     }));
     return () => {
-      const left = vaultLeft();
-      setText($('#vLeft'), `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
+      const left = vaultLeft(); chipsUpd();
+      if ($('#vLeft')) setText($('#vLeft'), tierLock('vault') ? '오늘 잠김' : `오늘 ${left} / ${VAULT_TRIES}번`); setText($('#vShard'), `${S.mythShard} / ${SHARD_COST}`); setText($('#vPow'), String(10 + vaultD()));
       for (const m of list){ setText(panel.querySelector(`[data-vmc="${m.k}"]`), `지금 +${S.myth[m.k] || 0}% · 만들면 +${mythPower(m, vaultD())}%`); const bt = panel.querySelector(`[data-vm="${m.k}"]`); bt.disabled = S.mythShard < SHARD_COST; }
-      const b = $('#vGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.vault && !raid.info.yv ? '싸우는 중…' : '다른 싸움 중') : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)');
+      if ($('#vGo')){ const b = $('#vGo'), vLock = tierLock('vault'); b.disabled = !!raid || left <= 0 || !!vLock; setText(b, raid ? (raid.info.vault && !raid.info.yv ? '싸우는 중…' : '다른 싸움 중') : vLock ? vLock + '(내일 다시)' : left > 0 ? '보물 동굴 들어가기' : '오늘은 다 했어요(내일 다시)'); }
       if ($('#kubGo')){ const l3 = kubLeft(), b3 = $('#kubGo'); setText($('#kubLeft'), `오늘 ${l3} / ${KUB.tries}번`); setText($('#kubBest'), S.sea2 && S.sea2.kubBest ? `최고 기록 상자 ${S.sea2.kubBest}개` : '');
         b3.disabled = !!raid || !!parade || l3 <= 0; setText(b3, parade ? (parade.kub ? '곳간 안…' : '다른 싸움 중') : raid ? '다른 싸움 중' : l3 > 0 ? '쿠베라의 곳간 들어가기' : '오늘은 다 했어요(내일 다시)'); }
-      if ($('#yvGo')){ const l2 = yvLeft(), b2 = $('#yvGo'); setText($('#yvLeft'), `오늘 ${l2} / ${YV.tries}번`); b2.disabled = !!raid || !!yvRun || l2 <= 0; setText(b2, raid ? (raid.info.yv ? '보물고 안…' : '다른 싸움 중') : yvRun ? '상자를 골라요' : l2 > 0 ? '용궁 보물고 들어가기' : '오늘은 다 했어요(내일 다시)'); }
+      if ($('#yvGo')){ const l2 = yvLeft(), b2 = $('#yvGo'), yLock = tierLock('yv'); setText($('#yvLeft'), yLock ? '오늘 잠김' : `오늘 ${l2} / ${YV.tries}번`); b2.disabled = !!raid || !!yvRun || l2 <= 0 || !!yLock; setText(b2, raid ? (raid.info.yv ? '보물고 안…' : '다른 싸움 중') : yvRun ? '상자를 골라요' : yLock ? yLock + '(내일 다시)' : l2 > 0 ? '용궁 보물고 들어가기' : '오늘은 다 했어요(내일 다시)'); }
     };
   }
   if (raidView === 'parade'){
@@ -19153,8 +19194,8 @@ function buildRaid(){
       const b = $('#pGo'); b.disabled = !!raid || !!parade || left <= 0; setText(b, parade ? '백귀야행 중…' : raid ? '다른 싸움 중' : left > 0 ? '백귀야행 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
-  if (raidView === 'haetae'){
-    panel.innerHTML = top + `
+  if (raidView === 'dummy' && tierPick('dummy') === 'hi'){   // 허수아비 칸의 상위: 해태 수련(열려 있으면 기본으로 이쪽)
+    panel.innerHTML = top + chips('dummy') + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('haetae', '#9aa0a8')}" alt=""></div>
         <div><div class="ct">해태 수련<span class="tag" id="hLeft"></span></div>
         <p class="story">옳고 그름을 가리는 돌 해태 앞에서 혼자 ${HAETAE.time}초. 해태는 <b>제대로 친 것만</b> 세요. <b>뿔이 빛날 때</b> 친 피해는 <b>${HAETAE.hornMul}배</b>, <b>눈이 붉을 때</b> 치면 세지 않고 <b>불을 되돌려줘요</b> — [구르기]로 물러서요. 넣은 피해만큼 <b>1~7등급</b> 보상(하루 ${HAETAE.tries}번).</p></div></div>
@@ -19164,17 +19205,17 @@ function buildRaid(){
       <div id="raidLive"></div>
       <button class="btn primary big" id="hGo">해태 수련 시작</button>`;
     wireSeg();
-    $('#hGo').addEventListener('click', () => { if (!raid && haetaeLeft() > 0) presetAsk('boss', '해태 수련', () => { if (startHaetae()){ closePage(); return true; } }); });
+    $('#hGo').addEventListener('click', () => { if (!raid && haetaeLeft() > 0 && !tierLock('haetae')) presetAsk('boss', '해태 수련', () => { if (startHaetae()){ closePage(); return true; } }); });
     return () => {
-      const left = haetaeLeft(), T = haetaeTiers();
-      setText($('#hLeft'), `오늘 ${left} / ${HAETAE.tries}번`);
+      const left = haetaeLeft(), T = haetaeTiers(), hLock = tierLock('haetae'); chipsUpd();
+      setText($('#hLeft'), hLock ? '오늘 잠김' : `오늘 ${left} / ${HAETAE.tries}번`);
       setText($('#hBest'), S.haetae.best ? `최고 기록 ${fmt(S.haetae.best)}` : '');
       for (let t = 1; t <= 7; t++){ setText(panel.querySelector(`[data-ht="${t}"]`), `제대로 친 피해 ${fmt(T[t - 1])} 이상`); $('#ht-' + t).classList.toggle('ready', (S.haetae.best || 0) >= T[t - 1]); }
-      const b = $('#hGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.haetae ? '수련 중…' : '다른 싸움 중') : left > 0 ? '해태 수련 시작' : '오늘은 다 했어요(내일 다시)');
+      const b = $('#hGo'); b.disabled = !!raid || left <= 0 || !!hLock; setText(b, raid ? (raid.info.haetae ? '수련 중…' : '다른 싸움 중') : hLock ? hLock + '(내일 다시)' : left > 0 ? '해태 수련 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
   if (raidView === 'dummy'){
-    panel.innerHTML = top + `
+    panel.innerHTML = top + chips('dummy') + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('scarecrow', '#d8b060')}" alt=""></div>
         <div><div class="ct">허수아비 수련<span class="tag" id="dLeft"></span></div>
         <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번). 5등급을 채우면 바로 끝나요.</p></div></div>
@@ -19184,13 +19225,13 @@ function buildRaid(){
       <div id="raidLive"></div>
       <button class="btn primary big" id="dGo">허수아비 수련 시작</button>`;
     wireSeg();
-    $('#dGo').addEventListener('click', () => { if (!raid) presetAsk('boss', '허수아비 수련', () => { if (startDummy()){ closePage(); return true; } }); });
+    $('#dGo').addEventListener('click', () => { if (!raid && !tierLock('dummy')) presetAsk('boss', '허수아비 수련', () => { if (startDummy()){ closePage(); return true; } }); });
     return () => {
-      const left = dummyLeft(), T = dummyTiers();
-      setText($('#dLeft'), `오늘 ${left} / ${DUMMY_TRIES}번`);
+      const left = dummyLeft(), T = dummyTiers(), dLock = tierLock('dummy'); chipsUpd();
+      setText($('#dLeft'), dLock ? '오늘 잠김' : `오늘 ${left} / ${DUMMY_TRIES}번`);
       setText($('#dBest'), S.dummy.best ? `최고 피해 ${fmt(S.dummy.best)}` : '');
       for (let t = 1; t <= 5; t++){ const el = panel.querySelector(`[data-dt="${t}"]`); setText(el, `피해 ${fmt(T[t - 1])} 이상`); $('#dt-' + t).classList.toggle('ready', (S.dummy.best || 0) >= T[t - 1]); }
-      const b = $('#dGo'); b.disabled = !!raid || left <= 0; setText(b, raid ? (raid.info.dummy ? '수련 중…' : '다른 싸움 중') : left > 0 ? '허수아비 수련 시작' : '오늘은 다 했어요(내일 다시)');
+      const b = $('#dGo'); b.disabled = !!raid || left <= 0 || !!dLock; setText(b, raid ? (raid.info.dummy ? '수련 중…' : '다른 싸움 중') : dLock ? dLock + '(내일 다시)' : left > 0 ? '허수아비 수련 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
   const reach = S.world === 0 ? RAID_DEFS.length : S.world <= 2 ? Math.floor(LV_CAP[S.world] / [10, 20, 30][S.world]) : Infinity;   // 그 땅의 레벨 상한으로 닿을 수 있는 레이드 수(이승은 여덟 곳). 그 너머(Lv.110·120에 열림)는 영영 못 여니 목록에 보이지 않게(본 게임에 먼저 올린 고침, 2026-11-12)
@@ -21463,7 +21504,7 @@ if (BETA){
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
-    power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
+    power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     update, buyStat, upgradeSkill, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
