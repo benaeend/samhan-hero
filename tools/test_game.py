@@ -56,6 +56,10 @@ SIM = r"""
   const Wt = {atk:1, hp:1.3, crit:1.5, critDmg:1.8, aspd:1.5, regen:3};
   const LEAN = opts.lean === 'hard' ? {d:25, r:12} : opts.lean === 'mild' ? {d:10, r:5} : null;   // 9-4: 공격만 올리는 사람(Δ = 체력이 공격력보다 뒤에 머무는 레벨·재련 단계)
   if (LEAN) { Wt.hp *= Math.pow(1.09, LEAN.d); if (opts.lean === 'hard') Wt.regen *= 100; }
+  // 재련 퀘스트(「무기를 +5까지 재련」 등)가 걸려 있으면 그 칸 이름 — 값을 먼저 모아 바로 재련한다(2026-11-14 밸런스 2차).
+  // 예전엔 재련 값이 지갑의 25% 이하일 때만 재련했는데 같은 2초에 능력치가 엽전을 다 써서, 이승 41단계에서 40~80분을 서성이다 Lv51·1차 전직 몸으로 5지역에 들어가
+  // 이승 기준표(TANK_REF[0] 42~78단계)가 6~8배 부풀었다. opts.refslow 면 예전 규칙(견주기용)
+  const QR = () => { if (opts.refslow) return null; const q = G.MAIN_Q[G.S.quest.main]; if (!q || (q.k !== 'refineW' && q.k !== 'refineA')) return null; const sl = q.k === 'refineW' ? 'weapon' : 'armor'; return G.questCur(q) < q.n ? sl : null; };
   const tank = [], tseen = new Set(), wsnap = new Set();   // opts.tanklog: 세계·단계에 처음 닿을 때의 버티는 힘
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
@@ -75,9 +79,10 @@ SIM = r"""
       for (let k = 0; k < 20; k++) {
         const capW = G.refineCap('weapon'), capA = G.refineCap('armor'), rw = G.S.refine.weapon.lv, ra = G.S.refine.armor.lv;
         let slot = rw < capW && (rw <= ra + 3 || ra >= capA) ? 'weapon' : 'armor';
+        if (QR() && G.S.refine[QR()].lv < G.refineCap(QR())) slot = QR();   // 재련 퀘스트가 걸려 있으면 그 칸부터
         if (LEAN && slot === 'armor' && ra >= rw - LEAN.r) { if (rw < capW) slot = 'weapon'; else break; }   // 9-4 lean: 방어구는 무기보다 Δ단계 아래에서만
         const lv = G.S.refine[slot].lv;
-        if (lv >= G.refineCap(slot) || G.refineGold(lv) > G.S.gold * 0.25 || G.refineGems(lv) > G.S.gems * 0.5) break;
+        if (lv >= G.refineCap(slot) || G.refineGold(lv) > G.S.gold * (QR() ? 1 : 0.25) || G.refineGems(lv) > G.S.gems * (QR() ? 1 : 0.5)) break;
         G.refineTry(slot);
       }
       if (G.seaOpen() && !opts.nosea) G.seaGrow({lean:opts.lean});   // 물의 신화 4단계: 4부부터 새 장비 칸(투구·어깨·신발) 소환·합성·재련과 호박석 세공(추천 줄)
@@ -145,6 +150,7 @@ SIM = r"""
         const memGr = G.memOpen() && !opts.nomem && G.S.mem.ch !== 'no' ? G.MEM.grudge[2] * (4 - G.S.mem.p[2]) : 0;   // 환생의 기억(천계 갈래)에 쓸 몫도 남긴다
         for (const x of so) { if (G.S.grudge - [10, 30, 60][G.soulBond(x.k)] < keepG + memGr || !G.bondUp(x.k)) break; } }
       for (let g = 0; g < 400; g++) {
+        if (QR() && G.S.gold < G.refineGold(G.S.refine[QR()].lv) * 1.05) break;   // 재련 퀘스트 값을 먼저 모은다(능력치가 엽전을 다 써 버리지 않게)
         let best = null, bs = Infinity;
         for (const k of Object.keys(Wt)) { const b = G.buyInfo(k); if (!b.n) continue; const sc = b.cost * Wt[k]; if (sc < bs) { bs = sc; best = k; } }
         let bsk = null, sc2 = Infinity;
@@ -154,11 +160,17 @@ SIM = r"""
         else break;
       }
       G.S.gold += elRes;
+      // 「공격·방어·지원 펫을 모두」 퀘스트가 걸려 있으면 펫을 한 마리씩 바로 소환해 데려간다(2026-11-14 밸런스 2차).
+      // 예전엔 보석 900개(10마리 소환)가 모일 때까지 기다리고 그마저 세 종류가 안 나오면 또 기다려, 이승 31단계에서 20분~2시간을 서성였다(판마다 운 — 이승 32~41단계 기준이 그만큼 흔들림)
+      if (!opts.refslow) for (let z = 0; z < 30; z++) { const q = G.MAIN_Q[G.S.quest.main]; if (!q || q.k !== 'pets3' || G.questCur(q) >= q.n || !G.petSummon(1)) break; for (const pt of G.PET_TYPE_ORDER) G.petEquipBest(pt); }
       while (G.S.gems >= 450 + 400) {   // 재련·조합에 쓸 보석은 남겨 둔다
         if (G.S.rec.psum * 2 < G.S.rec.summons) { if (G.S.gems < 900) break; G.petSummon(10); }
         else G.summon(Math.random() < 0.5 ? 'weapon' : 'armor', 10);
       }
       for (let q = 0; q < 5; q++) G.claimTrial(q);
+      // 「레이드를 n번」·「○○ 토벌」 퀘스트가 걸려 있는데 토벌패가 없으면 상점에서 산다(하루 3개, 보석 120 — 2026-11-14 밸런스 2차).
+      // 예전엔 패가 차기만 기다려 이승 81단계(「레이드 15번」)에서 한 시간을 서성였고, 그 사이 큰 몸이 82단계 기준(TANK_REF)을 끌어올렸다. opts.refslow 면 예전대로
+      if (!opts.refslow) { const q = G.MAIN_Q[G.S.quest.main]; if (q && (q.k === 'raids' || q.k === 'raidK') && G.questCur(q) < q.n && G.raidUnlocked() > 0 && G.firstReadyRaid() < 0 && G.S.gems >= 240) G.buyShop('ticket'); }
       if (jobPend && !G.raid && !G.jobChain) { if (G.S.job < jobPend[0]) { jobHold = t + 1200; first['JF' + jobPend[0]] = (first['JF' + jobPend[0]] || 0) + 1; } jobPend = null; }   // 전직 시험에 지면 20분 뒤에 다시
       if (!G.raid && !G.jobChain && !jobPend && t >= jobHold && (G.jobReady(1) || G.jobReady(2) || G.jobReady(3) || G.jobReady(4) || G.jobReady(5) || G.jobReady(6)) && G.startJobTrial(G.S.job + 1)) jobPend = [G.S.job + 1];
       if (G.crossReady()) G.doCross();   // 2부: 바다 건너 부상으로
@@ -4475,27 +4487,32 @@ async def main():
           G.tkLean('hard'); const A = G.tkAdvice(); const out = {adv: A ? {k:A.k} : null};
           G.TANK_REF.length = 0; return out; }""")
         check(d29['adv'] is not None, f"무엇을 올리면 버틸까: 공격 쪽만 올린 용사는 조언이 나온다 {d29}")
-        # 이승 안전장치(2026-11-14 밸런스 검토): 지수가 아주 낮은 새 캐릭터도 이승 보스의 큰 살이 최대 체력의 약 90%를 안 넘고, 보스 공격은 줄고, 저승은 예전 값 그대로
+        # 세계별 안전장치 손잡이(2026-11-14): 아침 응급 처치로 이승만 켰다가(bigFloor 0.6·bossFloor 0.5) 밸런스 2차에서 이승 기준표를 다시 재고 껐다 — 기본값은 모든 세계가 같고(큰 살 55%÷0.25·보스 줄임 없음),
+        # 손잡이를 켜면 지수가 아주 낮은 용사도 보스의 큰 살이 최대 체력의 약 90%를 안 넘고 보스 공격이 줄어든다(장치는 남겨 둠)
         e29 = await t29b.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; G.setClass('musa'); S.level = 100; S.chosen = true; S.quest.main = 100; S.maxStage = 43; G.refreshStats();
           const out = {}, mx = () => G.ST.maxHp, w0 = S.world;
           const fillT = (w, k) => { const L = Math.log10(G.tankPow() / k) - G.tkCls(S.cls, w); G.TANK_REF[w] = [[1, L], [900, L]]; };
           const rel = () => { const m = G.makeMob(true, 5, 5); return m.atk / (G.mAtkT(G.S.stage) * G.tkClsK() * G.tkPast(G.S.stage)); };
           S.world = 0; G.setStage(43);
+          out.floors = [G.TANK.bigFloor.slice(), G.TANK.bossFloor.slice()];
           fillT(0, 1); out.r1 = rel();
+          fillT(0, 0.06); G.startBoss(); out.big6d = G.tkBig(G.bossRef) / mx(); G.resetRuntime(); out.e6d = rel() / out.r1;   // 기본값(꺼짐)
+          G.TANK.bigFloor[0] = 0.6; G.TANK.bossFloor[0] = 0.5;   // 손잡이를 켜고
           fillT(0, 0.06); G.startBoss(); out.i6 = G.tankIdx(43); out.big6 = G.tkBig(G.bossRef) / mx(); G.resetRuntime(); out.e6 = rel() / out.r1;
           fillT(0, 0.3); out.e30 = rel() / out.r1;
           fillT(0, 0.8); out.e80 = rel() / out.r1;
           fillT(0, 0.8); G.startBoss(); out.big80 = G.tkBig(G.bossRef) / mx() * 0.8 / 0.55; G.resetRuntime();
-          out.floors = [G.TANK.bigFloor.slice(), G.TANK.bossFloor.slice()];
+          G.TANK.bigFloor[0] = out.floors[0][0]; G.TANK.bossFloor[0] = out.floors[1][0];   // 되돌림
           // 저승: 큰 살 바닥 0.25·보스 안전장치 없음(예전 값)
           S.world = 1; G.setStage(5); fillT(1, 0.06); G.startBoss(); out.big6h = G.tkBig(G.bossRef) / mx(); G.resetRuntime();
           const r1h = (() => { fillT(1, 1); return rel(); })(); fillT(1, 0.06); out.e6h = rel() / r1h;
           S.world = w0; G.TANK_REF.length = 0; G.resetRuntime();
           return out; }""")
-        check(abs(e29['i6'] - 0.06) < 0.005 and 0.5 < e29['big6'] <= 0.93, f"이승 안전장치: 지수 6%인 용사에게 5지역 보스의 큰 살은 최대 체력의 90% 안팎(55%÷0.6) {e29['i6'], e29['big6']}")
-        check(abs(e29['e6'] - 0.2) < 0.01 and abs(e29['e30'] - 0.6) < 0.01 and abs(e29['e80'] - 1) < 0.01, f"이승 안전장치: 보스 공격 지수 6%→0.2배(최저)·30%→0.6배·80%→그대로 {e29['e6'], e29['e30'], e29['e80']}")
-        check(abs(e29['big80'] - 1) < 0.02, f"이승 안전장치: 지수 80%는 예전처럼 55%÷지수 {e29['big80']}")
-        check(e29['floors'][0][0] == 0.6 and all(x == 0.25 for x in e29['floors'][0][1:]) and e29['floors'][1][0] == 0.5 and all(x == 0 for x in e29['floors'][1][1:]), f"세계별 손잡이: 이승만 켜짐 {e29['floors']}")
+        check(abs(e29['i6'] - 0.06) < 0.005 and 0.5 < e29['big6'] <= 0.93, f"안전장치를 켜면: 지수 6%인 용사에게 5지역 보스의 큰 살은 최대 체력의 90% 안팎(55%÷0.6) {e29['i6'], e29['big6']}")
+        check(abs(e29['e6'] - 0.2) < 0.01 and abs(e29['e30'] - 0.6) < 0.01 and abs(e29['e80'] - 1) < 0.01, f"안전장치를 켜면: 보스 공격 지수 6%→0.2배(최저)·30%→0.6배·80%→그대로 {e29['e6'], e29['e30'], e29['e80']}")
+        check(abs(e29['big80'] - 1) < 0.02, f"안전장치를 켜도: 지수 80%는 그대로 55%÷지수 {e29['big80']}")
+        check(all(x == 0.25 for x in e29['floors'][0]) and all(x == 0 for x in e29['floors'][1]), f"세계별 손잡이: 기본값은 모든 세계 꺼짐(이승도 기준표를 다시 잰 뒤 끔) {e29['floors']}")
+        check(abs(e29['big6d'] - 0.55 / 0.25) < 0.02 and abs(e29['e6d'] - 1) < 0.01, f"이승 기본값: 다른 세계와 같음(큰 살 55%÷0.25·보스 공격 줄임 없음) {e29['big6d'], e29['e6d']}")
         check(abs(e29['big6h'] - 0.55 / 0.25) < 0.02 and abs(e29['e6h'] - 1) < 0.01, f"저승은 예전 값 그대로(큰 살 55%÷0.25·보스 공격 줄임 없음) {e29['big6h'], e29['e6h']}")
         await t29b.close()
         await ctx29.close()
