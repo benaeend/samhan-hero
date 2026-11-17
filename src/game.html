@@ -508,7 +508,8 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .amb .av{min-width:18px;text-align:right;color:var(--ac)}
 .amb .aprob{font-size:15px;color:var(--gold)}
 .amb-set{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.amb-msg.ok{color:#8ff0a0}.amb-msg.no{color:#ff9a8a}
+.amb-msg.ok{color:#8ff0a0}
+.mrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}.mrow b{color:var(--g);min-width:34px}.mrow .mn{flex:1;min-width:48px;color:var(--text-soft);font-size:12px}.amb-msg.no{color:#ff9a8a}
 .amb-sums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .amb-sum{display:grid;grid-template-columns:auto 1fr auto;gap:2px 6px;align-items:baseline;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-size:11.5px}
 .amb-sum b{color:#ffc35a}.amb-sum span{color:var(--text-soft)}.amb-sum em{grid-column:1/-1;font-style:normal;color:var(--text-soft)}
@@ -1898,8 +1899,10 @@ function spiritGearDrop(src){
   return {slot, it, isNew:giveItem(slot, it)};
 }
 /* --- 호박석 세공 --- */
-const AMB = {p0:75, step:10, lo:25, hi:75, bad:5, badK:1.5, goldK:[60, 100, 150], tier:[10, 20, 30]};
-const AMB_G = [{name:'희귀', n:6, g:2}, {name:'영웅', n:8, g:3}, {name:'전설', n:10, g:4}];   // 호박석 등급: 줄마다 칸 수, g = GRADES 번호(색)
+const AMB = {p0:75, step:10, lo:25, hi:75, bad:5, badK:1.5, goldK:[60, 100, 150, 220], tier:[10, 20, 30], merge:4, rate:[1, 4, 16, 64], relicP:0.35, relicBack:2};   // merge = 낮은 돌 몇 개로 한 단계 위 하나, rate = 희귀 몇 개와 같은 값
+const AMB_G = [{name:'희귀', n:6, g:2, p0:75, lo:25, hi:75, mul:1}, {name:'영웅', n:8, g:3, p0:75, lo:25, hi:75, mul:1}, {name:'전설', n:10, g:4, p0:75, lo:25, hi:75, mul:1},
+  {name:'유물', n:10, g:7, p0:85, lo:35, hi:85, mul:1.25}];   // 유물(선택·합성으로만): 칸 수는 전설과 같고 시작 확률 85%(35~85)·문양 빛 ×1.25로 효율만 좋음(시뮬 몬테카를로: 문양 빛 합 전설의 약 1.35배)
+const ambFix = x => Math.round(x * 10) / 10;   // 호박석 등급: 줄마다 칸 수, g = GRADES 번호(색)
 const AMB_GOOD = [
   {k:'wave', name:'파도', stat:'atk', t:[6, 14, 25], d:'공격력'},
   {k:'reef', name:'암초', stat:'hp', t:[6, 14, 25], d:'체력'},
@@ -1919,28 +1922,52 @@ const AMB_BAD = [
   {k:'b_move', name:'뻘', stat:'move', d:'이동 속도 감소', bad:true},
 ];
 const AG = Object.fromEntries(AMB_GOOD.concat(AMB_BAD).map(x => [x.k, x]));
-const AMB_DROP = {gate:0.25, raid:0.4, jin:0.5, hero:0.2, legend:0.04};   // 떨어질 확률(수문장·레이드·진) · 그 가운데 영웅·전설일 몫
+const AMB_DROP = {gate:0.25, raid:0.4, jin:0.5, n:2.2};   // 떨어질 확률(수문장·레이드·진) · 한 번에 나오는 희귀 호박석 평균(2개 80%·3개 20%) — 영웅·전설은 합성으로만(예전 영웅 20%·전설 4% 몫을 희귀 4·16개로 바꾼 값)
 const ambSt = slot => (S.amber && S.amber.st && S.amber.st[slot]) || null;
 const ambN = st => AMB_G[st.g].n;
 const ambDone = st => st.u[0] >= ambN(st) && st.u[1] >= ambN(st) && st.u[2] >= ambN(st);
 const ambGold = st => Math.round(mGold(Math.max(1, S.maxStage)) * AMB.goldK[st.g]);
 const ambPen = st => st.v[2] >= AMB.bad ? (st.v[2] - AMB.bad + 1) * AMB.badK : 0;   // 나쁜 문양: 빛 5개부터 −1.5%씩(10개면 −9%)
 function gainAmber(g, n){
-  if (!S.amber) S.amber = {raw:[0, 0, 0], st:{}};
+  if (!S.amber) S.amber = {raw:[0, 0, 0, 0], st:{}};
   n = n == null ? 1 : n; S.amber.raw[g] = Math.min(9999, (S.amber.raw[g] || 0) + n);
   return n;
 }
 function amberDrop(kind, sure){
   if (!seaOpen() || !(sure || Math.random() < (AMB_DROP[kind] || 0))) return null;
-  const r = Math.random(), g = r < AMB_DROP.legend ? 2 : r < AMB_DROP.legend + AMB_DROP.hero ? 1 : 0;
-  gainAmber(g, 1);
-  return {g, name:`${AMB_G[g].name} 호박석`};
+  const n = ambRoll(AMB_DROP.n);
+  gainAmber(0, n);
+  return {g:0, n, name:`희귀 호박석 ${n}개`};
+}
+function ambRoll(x){ const f = Math.floor(x); return f + (Math.random() < x - f ? 1 : 0); }   // 평균이 x인 정수(6.4면 6개 60%·7개 40%)
+// 합성: 같은 등급 4개 → 한 단계 위 1개(확정·무료). 돌려주는 값은 만든 개수(못 하면 0)
+const ambMergeCan = g => seaOpen() && !!S.amber && !!AMB_G[g + 1] && (S.amber.raw[g] || 0) >= AMB.merge;
+function ambMerge(g, times){   // 희귀→영웅→전설은 확정. 전설→유물은 ambRelic(확률)이라 여기서 안 함
+  let n = 0; times = times == null ? 1 : times;
+  if (g >= AMB_G.length - 2) return 0;
+  while (n < times && ambMergeCan(g)){ S.amber.raw[g] -= AMB.merge; S.amber.raw[g + 1] = Math.min(9999, (S.amber.raw[g + 1] || 0) + 1); n++; }
+  if (n) saveLocal();
+  return n;
+}
+// 전설 4개 → 유물 1개를 `AMB.relicP` 확률로, 실패하면 전설 `AMB.relicBack`개를 돌려받는다(선택 사항 — 진행에 필요 없음). 돌려주는 값: null(못 함) · {ok}
+function ambRelic(){
+  const g = AMB_G.length - 2; if (!ambMergeCan(g)) return null;
+  const luck = window.__game && window.__game.ambRelicLuck, ok = luck != null ? !!luck : Math.random() < AMB.relicP;
+  S.amber.raw[g] -= AMB.merge;
+  if (ok) S.amber.raw[g + 1] = Math.min(9999, (S.amber.raw[g + 1] || 0) + 1); else S.amber.raw[g] += AMB.relicBack;
+  saveLocal(); return {ok};
+}
+// 가능한 만큼: 희귀 → 영웅 → 전설까지 이어서(유물은 따로). 돌려주는 값 [등급마다 만든 개수]
+function ambMergeAll(){
+  const made = AMB_G.map(() => 0);
+  for (let g = 0; g < AMB_G.length - 2; g++) made[g + 1] += ambMerge(g, 9999);
+  return made;
 }
 function ambSet(slot, g){   // 그 칸에 새 호박석을 박는다(있던 돌은 사라지고 처음부터)
   if (!seaOpen() || !ALL_SLOTS.includes(slot) || !AMB_G[g] || !(S.amber && S.amber.raw[g] >= 1)) return false;
   S.amber.raw[g]--;
   const P = AMB_GOOD.map(x => x.k); for (let i = P.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
-  S.amber.st[slot] = {g, a:[P[0], P[1]], b:AMB_BAD[Math.floor(Math.random() * AMB_BAD.length)].k, v:[0, 0, 0], u:[0, 0, 0], p:AMB.p0};
+  S.amber.st[slot] = {g, a:[P[0], P[1]], b:AMB_BAD[Math.floor(Math.random() * AMB_BAD.length)].k, v:[0, 0, 0], u:[0, 0, 0], p:AMB_G[g].p0};
   refreshStats(); saveLocal();
   return true;
 }
@@ -1950,7 +1977,7 @@ function ambCarve(slot, line){   // 한 줄 한 칸 깎기. line 0·1 좋은 문
   S.gold -= c;
   const luck = window.__game && window.__game.ambLuck, p0 = st.p, ok = luck != null ? !!luck : Math.random() * 100 < st.p;
   st.u[line]++; if (ok) st.v[line]++;
-  st.p = Math.max(AMB.lo, Math.min(AMB.hi, st.p + (ok ? -AMB.step : AMB.step)));
+  const G9 = AMB_G[st.g]; st.p = Math.max(G9.lo, Math.min(G9.hi, st.p + (ok ? -AMB.step : AMB.step)));
   ev('enh'); refreshStats();
   return {ok, line, p:p0, done:ambDone(st)};
 }
@@ -1960,13 +1987,13 @@ function ambBest(st){
   if (!left(0) && !left(1)) return left(2) ? 2 : -1;
   if (!left(2)) return left(good) ? good : 1 - good;
   if (st.p >= 55) return left(good) ? good : 1 - good;
-  if (st.v[2] >= AMB.bad - 1 && st.p > AMB.lo && left(0) + left(1) > left(2)) return left(good) ? good : 1 - good;   // 나쁜 줄이 터지기 직전이면 가장 낮은 확률에서만 깎는다
+  if (st.v[2] >= AMB.bad - 1 && st.p > AMB_G[st.g].lo && left(0) + left(1) > left(2)) return left(good) ? good : 1 - good;   // 나쁜 줄이 터지기 직전이면 가장 낮은 확률에서만 깎는다
   return 2;
 }
 function ambSum(){
   const L = {}, bad = {}, tier = {};
   if (S.amber) for (const sl of ALL_SLOTS){ const st = ambSt(sl); if (!st) continue;
-    st.a.forEach((k, i) => { L[k] = (L[k] || 0) + st.v[i]; });
+    st.a.forEach((k, i) => { L[k] = (L[k] || 0) + st.v[i] * AMB_G[st.g].mul; });
     const pen = ambPen(st); if (pen) bad[st.b] = (bad[st.b] || 0) + pen; }
   for (const G of AMB_GOOD){ const n = L[G.k] || 0; tier[G.k] = n >= AMB.tier[2] ? 3 : n >= AMB.tier[1] ? 2 : n >= AMB.tier[0] ? 1 : 0; }
   return {L, bad, tier};
@@ -2001,6 +2028,9 @@ function seaGrow(opt){
   const hardLean = opt.lean === 'hard';   // 9-4 시험: 공격만 올리는 쪽은 투구·신발 재련과 방어 쪽 호박석을 건너뜀
   for (let z = 0; z < 30; z++){ const sl = (hardLean ? ['shoulder'] : NEW_SLOTS).slice().sort((a, b) => S.refine[a].lv - S.refine[b].lv)[0], lv = S.refine[sl].lv, c = refineCost(sl, lv);
     if (lv >= refineCap(sl) || c.g > S.gold * goldK || c.du > S.dust || !refineTry(sl)) break; n++; }
+  for (let g = 0; g < AMB_G.length - 2; g++){   // (전설까지만, 유물은 안 만든다) 희귀가 쌓이면 4개씩 합쳐 위 돌로: 빈 칸·다 깎은 낮은 칸에 쓸 몫은 남기고 그 위 남는 것만
+    const need = ALL_SLOTS.filter(sl => { const st = ambSt(sl); return !st || (ambDone(st) && st.g <= g); }).length;
+    ambMerge(g, Math.floor(Math.max(0, S.amber.raw[g] - need) / AMB.merge)); }
   for (const sl of ALL_SLOTS){ if (hardLean && (sl === 'helm' || sl === 'boots' || sl === 'armor')) continue; let st = ambSt(sl);
     const top = [2, 1, 0].find(x => S.amber.raw[x] > 0);   // 빈 칸이면 가진 것 가운데 가장 좋은 돌, 다 깎은 돌은 더 좋은 등급이 생기면 바꾼다
     if (top != null && (!st || (ambDone(st) && top > st.g))){ ambSet(sl, top); st = ambSt(sl);
@@ -4446,6 +4476,10 @@ const NOTES = [
   ['토벌패가 가득 찬 채 버려지지 않게', '입문 레이드는 그 땅에 있는 동안 늘 열려 있고, 세기가 내가 지나온 단계를 따라가요(지나온 단계보다 조금 약하게). 다른 레이드가 레벨·이야기에 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 여기에 쓰면 돼요. 일반 레이드처럼 이기면 토벌패 1개를 쓰고, 지면 돌려받아요.'],
   ['보상', '보석은 지금 열린 가장 높은 레이드의 반복 보상보다 조금 적고, 엽전은 세기를 따라 올라요. 장비·재료도 주고, 땅마다 첫 클리어 보상이 한 번 더 있어요. 신화 보물·장신구 같은 드문 보상은 일반 레이드에만 있어요.'],
   ['이야기의 레이드 횟수에는 세지 않아요', '「레이드를 n번 클리어」·「○○ 레이드를 토벌」 같은 이야기, 환생 시련, 히든 퀘스트, 하루·주간 부탁의 레이드 횟수에는 들어가지 않아요. 이승은 튜토리얼이 Lv.10 첫 레이드로 바로 이끌어서 입문 레이드가 없어요.'],
+  ['#', '11월 17일 · 호박석 합성'],
+  ['호박석 합성 — 낮은 호박석 4개를 모아 위 등급으로(희귀 → 영웅 → 전설, 유물은 선택)', '[장비] → [세공]에 「호박석 합성」 칸이 생겼어요. 같은 등급 호박석 4개를 한 단계 위 1개로 바꿔요(희귀 → 영웅 → 전설은 반드시 성공, 엽전 없음). [가능한 만큼 합성]을 누르면 전설까지 한꺼번에 이어 붙여요.'],
+  ['호박석은 이제 희귀로, 더 넉넉하게 나와요', '수문장·레이드·「진」에서는 희귀 호박석만 한 번에 2~3개씩 나오고, 영웅·전설을 직접 주던 곳(용왕 강림·용궁 보물고·천공의 탑)은 같은 값의 희귀 개수로 바뀌었어요. 모아서 합치면 예전과 같은 가치이고, 가진 호박석과 이미 깎고 있는 돌은 그대로예요.'],
+  ['유물 호박석(선택)', '전설 호박석 4개로 「유물」 호박석(청록빛, 선택)에 도전해요. 성공은 35%이고 실패하면 전설 2개를 돌려받아요(확인 창이 떠요). 칸 수는 전설과 같고 효율이 더 좋아요(시작 성공 확률 85%, 문양 빛 1.25배). 안 만들어도 진행에는 문제없고, 깎던 전설 돌도 그대로 쓸 수 있어요.'],
   ['#', '11월 15일 · 레이드 피해 · 탕약 · 하루 횟수 표시 · 수군 야행'],
   ['레이드에서 맞는 피해가 줄고 탕약이 제 몫을 해요', '레이드(강림·용왕 강림·타임 보스·1일 보스·시왕·영웅)에서 용사가 맞는 보스 공격이 20% 줄었어요. 자동 탕약은 레이드에서는 체력 50% 아래에서 마시고, 맞은 피해로 깎이는 깊은 상처도 4분의 1만 쌓여요. 사냥터·단계 보스·결투·진·천공의 탑은 그대로예요.'],
   ['하루 횟수가 「남은 횟수」로 보여요', '「오늘 2 / 3번」처럼 헷갈리던 글을 「오늘 2번 남음」으로 바꿨어요. 다 쓰면 「오늘 다 했어요」, [직업 바꾸기]도 「이번 주 2번 남음」으로 보여요.'],
@@ -5224,7 +5258,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -5353,8 +5387,8 @@ function mergeState(d){
       const n = AMB_G[x.g].n, good = k2 => hasK(AG, k2) && !AG[k2].bad;
       if (!good(x.a[0]) || !good(x.a[1]) || x.a[0] === x.a[1] || !hasK(AG, x.b) || !AG[x.b].bad) continue;
       const u = [0, 1, 2].map(i2 => int(x.u[i2], 0, n)), v = [0, 1, 2].map(i2 => int(x.v[i2], 0, u[i2]));
-      st[k] = {g:x.g, a:[x.a[0], x.a[1]], b:x.b, v, u, p:int(x.p == null ? AMB.p0 : x.p, AMB.lo, AMB.hi)}; }
-    out.amber = {raw:[0, 1, 2].map(g => int(am.raw && am.raw[g], 0, 9999)), st}; }
+      st[k] = {g:x.g, a:[x.a[0], x.a[1]], b:x.b, v, u, p:int(x.p == null ? AMB_G[x.g].p0 : x.p, AMB_G[x.g].lo, AMB_G[x.g].hi)}; }
+    out.amber = {raw:AMB_G.map((_, g) => int(am.raw && am.raw[g], 0, 9999)), st}; }
   out.sea = {kit:!!(d.sea && d.sea.kit)}; out.helmHide = !!d.helmHide; out.seaPreview = BETA && !!d.seaPreview; out.s6Preview = BETA && !!d.s6Preview;
   if (!CLASSES[out.cls]) out.cls = 'musa';
   for (const k of ['gold', 'gems', 'exp']) if (!isFinite(out[k]) || out[k] < 0) out[k] = 0;
@@ -7209,7 +7243,7 @@ function finishTimeBoss(R){
   gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true); { const n = gainShard(info.diff === 'deep' ? SHARD_SRC.tbHell * 2 : info.diff === 'hell' ? SHARD_SRC.tbHell : SHARD_SRC.tb); if (n) addLog(`신화 조각 +${n}`, 'gain'); }
   const luck = window.__game && window.__game.tbLuck || 1, drops = [], slot = new Date(info.w || now()).getHours() / 3 | 0, SR = TB_REW[slot] || TB_REW[0], spec = [];
   SR.f(info.diff !== 'normal', spec);   // 이 시간대의 특산물
-  if (info.diff === 'deep'){ SR.f(true, spec); const ag = Math.random() < 0.2 ? 2 : 1; gainAmber(ag, 1); spec.push(`${AMB_G[ag].name} 호박석 1`); }   // 심해: 지옥의 2배(특산물 한 번 더) + 호박석
+  if (info.diff === 'deep'){ SR.f(true, spec); const an = ambRoll(AMB_YG); gainAmber(0, an); spec.push(`희귀 호박석 ${an}`); }   // 심해: 지옥의 2배(특산물 한 번 더) + 호박석(예전 영웅 80%·전설 20% = 희귀 6.4개)
   for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck * (spec.accK || 1)){
     let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
     const a = giveAcc(k, g); drops.push(`${GRADES[a.g].name} ${ACC[k].names[a.g]}${a.better ? '' : ' (가방으로)'}`);
@@ -8350,7 +8384,8 @@ const YV_ROOMS = [
   {name:'가시 덫 복어', type:'puffer', color:'#e8763a', room:'둘째 방 · 함정 방', trap:true},
   {name:'광어 창고지기', type:'gwangeo', color:'#b8a070', room:'셋째 방 · 창고'},
 ];
-const YV_BOX = [{k:'amber', name:'호박석 상자', d:'영웅 호박석 하나(셋째 방은 전설도 나와요)'}, {k:'gear', name:'장비 상자', d:'높은 등급 장비 — 방이 깊을수록 유물이 잘 나와요'}, {k:'coin', name:'재물 상자', d:'보석 · 용궁 진주 · 고삐 조각'}];
+const AMB_YG = 6.4;   // 심해 타임 보스·용왕 강림 한 번에 주는 희귀 호박석 평균(예전: 영웅 80%·전설 20%의 값)
+const YV_BOX = [{k:'amber', name:'호박석 상자', d:'희귀 호박석 4개(셋째 방은 가끔 16개)'}, {k:'gear', name:'장비 상자', d:'높은 등급 장비 — 방이 깊을수록 유물이 잘 나와요'}, {k:'coin', name:'재물 상자', d:'보석 · 용궁 진주 · 고삐 조각'}];
 const yvOpen = () => S.world >= 5 && S.quest.main >= PART4A_END;
 const yvLeft = () => YV.tries - seaDay().yv;
 let yvRun = null;   // 진행 중인 보물고 {room, got:[], pending}
@@ -8387,7 +8422,7 @@ function yvPick(k){
   const run = yvRun; if (!run || !run.pending) return false;
   run.pending = false;
   const room = run.room, out = run.got, luck = window.__game && window.__game.yvLuck != null ? window.__game.yvLuck : 1;
-  if (k === 'amber'){ const g = room === 2 && Math.random() < 0.25 * luck ? 2 : 1; gainAmber(g, 1); out.push(`${AMB_G[g].name} 호박석 1`); }
+  if (k === 'amber'){ const n = room === 2 && Math.random() < 0.25 * luck ? 16 : 4; gainAmber(0, n); out.push(`희귀 호박석 ${n}`); }   // 예전: 영웅 1(셋째 방은 25% 전설 1) = 희귀 4 · 16
   else if (k === 'gear'){
     const slot = ALL_SLOTS[(Math.random() * ALL_SLOTS.length) | 0], relic = Math.random() < YV.relic[room] * luck;
     const it = relic ? 20 + (room === 2 && Math.random() < 0.3 ? 1 : 0) : 18 + (Math.random() < 0.5 ? 1 : 0), nw = giveItem(slot, it);
@@ -8560,15 +8595,15 @@ function finishYgr(R){
   if (!cross) D.ygrWon = true;
   recWin(true, true); S.rec.ygr = (S.rec.ygr || 0) + 1; ev('raid');
   const gold = mGold(Math.max(1, S.maxStage)) * YGR.gold * gainMul('gold'), gem = raidGemBase(GR_GEMS * 2); S.gold += gold; S.gems += gem;
-  const mat = gainMat(MAT_SRC.gr * 2, true), sh = gainShard(SHARD_SRC.gr * 2), ag = Math.random() < 0.2 ? 2 : 1; gainAmber(ag, 1);
+  const mat = gainMat(MAT_SRC.gr * 2, true), sh = gainShard(SHARD_SRC.gr * 2), an = ambRoll(AMB_YG); gainAmber(0, an);
   const av = ygrAvatar(); refreshStats(); saveLocal(); sfx('win');
   if (av) announce(`${S.name}님의 파티가 용왕 강림에서 ${av.ex ? '용왕 아바타' : '아바타'} 「${av.a.name}」${josa(av.a.name, '을', '를')} 얻었어요!`);
-  addLog(`용왕 강림 토벌! 엽전 +${fmt(gold)} · 보석 +${fmt(gem)} · ${MATS[matW()].name} +${mat} · 신화 조각 +${sh} · ${AMB_G[ag].name} 호박석 1${av ? ` · 아바타 ${av.a.name}${av.isNew ? '' : `(이미 있어 보석 ${AV_DUP_GEMS})`}` : ''}`, 'gain');
-  if (window.__game && window.__game.quiet) return {win:true, av, gold, amber:ag};
+  addLog(`용왕 강림 토벌! 엽전 +${fmt(gold)} · 보석 +${fmt(gem)} · ${MATS[matW()].name} +${mat} · 신화 조각 +${sh} · 희귀 호박석 ${an}${av ? ` · 아바타 ${av.a.name}${av.isNew ? '' : `(이미 있어 보석 ${AV_DUP_GEMS})`}` : ''}`, 'gain');
+  if (window.__game && window.__game.quiet) return {win:true, av, gold, amber:an};
   showModal('용왕 강림 토벌', `<p><b>${I.bossName}</b>${josa(I.bossName, '을', '를')} ${I.party}명이 함께 물 밑으로 돌려보냈어요!</p>
-    <ul class="rewards">${av ? `<li style="color:${av.ex ? 'var(--myth)' : 'var(--gold)'}">${av.a.name}<span>${av.ex ? '용왕 강림 아바타' : '아바타'}${av.isNew ? ' · 새로 얻음' : ` · 이미 있어 보석 ${AV_DUP_GEMS}`}</span></li>` : ''}<li style="color:${GRADES[AMB_G[ag].g].color}">${AMB_G[ag].name} 호박석<span>1개</span></li><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${fmt(gem)}<span>보석</span></li></ul>
+    <ul class="rewards">${av ? `<li style="color:${av.ex ? 'var(--myth)' : 'var(--gold)'}">${av.a.name}<span>${av.ex ? '용왕 강림 아바타' : '아바타'}${av.isNew ? ' · 새로 얻음' : ` · 이미 있어 보석 ${AV_DUP_GEMS}`}</span></li>` : ''}<li style="color:${GRADES[AMB_G[0].g].color}">희귀 호박석<span>${an}개</span></li><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li><span class="gem"></span>${fmt(gem)}<span>보석</span></li></ul>
     <p class="small" style="margin-top:8px">용왕 아바타는 ${Math.round(YGR.avP * 100)}% 확률(${YGR.pity}번 안에 꼭)로 나와요.</p>`, [{label:'확인', primary:true}]);
-  return {win:true, av, gold, amber:ag};
+  return {win:true, av, gold, amber:an};
 }
 /* ===== 강림 레이드(2026-11 (41), 사용자 요청): 매일 하는 4인 협동 레이드 =====
    나 + 다른 용사 캐릭터 GR.pick(3)명(타임 보스처럼 저절로 모임: 온라인이면 서버의 캐릭터, 아니면 이 기기 캐릭터, 같은 직업은 나까지 GR.cap(2)명, 모자라면 NPC 동료).
@@ -8745,7 +8780,7 @@ function finishTower(R){
       if (it >= 24){ const r = spGive(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)} · 깃든 짐승 ${SPIRITS[r.beast].name}${r.isNew ? ' (새 장비)' : ''}`); }   // 401층부터는 영물(깃든 짐승은 무작위)
       else { const nw = giveItem(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`); }
     }
-    if (f > TOWER.base && f % 10 === 5){ const g = f % 50 === 45 ? 2 : f % 20 === 5 ? 1 : 0; gainAmber(g, 1); out.push(`${AMB_G[g].name} 호박석 1`); }   // 바다 층: 5로 끝나는 층마다 호박석(희귀·영웅 번갈아, 345·395층은 전설)
+    if (f > TOWER.base && f % 10 === 5){ const an = f % 50 === 45 ? 16 : f % 20 === 5 ? 4 : 1; gainAmber(0, an); out.push(`희귀 호박석 ${an}`); }   // 바다 층: 5로 끝나는 층마다 희귀 호박석(1 · 20층마다 4 · 345·395층 16 — 예전 희귀·영웅·전설 1개씩의 값)
     const M = TOWER_MILE[f];
     if (M){
       if (M.av && giveAvatar(M.av, true)) out.push(`날개 「${AV[M.av].name}」`);
@@ -18409,7 +18444,7 @@ const BAG_STACK = [
   {k:'m2', n:'하늘 조각', icon:'crystal', c:'#9fe7ff', get:() => S.mat.m2 || 0, use:'천계·부상·곤륜 재료. [장비] → [조합](비전 장비·각인 강화) · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷) · [수련] → [영약]에 써요.', get2:'천계·부상·곤륜의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 천공의 탑 · 오늘의 할 일 · [상점] → 재료 꾸러미'},
   {k:'m3', n:'용궁 진주', icon:'crystal', c:'#e6f4ff', hide:() => !seaOpen() && !(S.mat.m3 > 0), get:() => S.mat.m3 || 0, use:'바다 재료. [장비] → [조합](비전 장비·각인 강화) · 신화 제작 장비 · 장비 각성 · [수련] → [영약]에 써요. 5부 천축에 가면 대장장이가 천축 향목으로 <b>계승</b>해 줘요.', get2:'바다의 단계 보스·수문장·레이드·타임 보스·몹(가끔). 곤륜까지 모은 재료는 바다에 들어설 때 대장장이가 용궁 진주로 바꿔 줘요.'},
   {k:'m4', n:'천축 향목', icon:'crystal', c:'#d9a05b', hide:() => S.world < 8 && !(S.mat.m4 > 0), get:() => S.mat.m4 || 0, use:'천축 재료. [장비] → [조합](비전 장비 13~15단계·각인 강화) · 신화 제작 장비 · 장비 각성 · [수련] → [영약]에 써요.', get2:'천축의 단계 보스·수문장·레이드·타임 보스·몹(가끔) · 허수아비·백귀야행·보물 동굴·1일 보스·강림 · 오늘의 할 일 · [상점] → 재료 꾸러미. 바다까지 모은 재료는 천축에 들어설 때 대장장이가 천축 향목으로 바꿔 줘요.'},
-  {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw[0] + S.amber.raw[1] + S.amber.raw[2] : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설 — 줄마다 6·8·10칸).', get2:'바다의 수문장·레이드, 상위 레이드 「진」.'},
+  {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw.reduce((x, y) => x + y, 0) : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설·유물 — 줄마다 6·8·10·10칸). 같은 등급 4개는 [합성]으로 한 단계 위 1개가 돼요(전설 → 유물만 확률).', get2:'바다의 수문장·레이드, 상위 레이드 「진」에서 희귀 호박석이 나와요.'},
   {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
   {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
@@ -18712,12 +18747,12 @@ function buildRefine(){
 }
 
 /* --- 호박석 세공(물의 신화 4단계, [장비] → [세공] — 4부부터) --- */
-let ambMsg = null;
+let ambMsg = null, ambMergeMsg = '';
 const ambNew = () => seaOpen() && !!S.amber && S.amber.raw.some(c => c > 0) && ALL_SLOTS.some(sl => !ambSt(sl));   // 박을 돌이 있는데 빈 칸이 있음
 function buildAmber(){
   const A = ambSum(), raw = S.amber.raw, pct = v => (v % 1 ? v.toFixed(1) : v) + '%';
   const sumCell = G => { const n = A.L[G.k] || 0, t = A.tier[G.k], nx = t < 3 ? AMB.tier[t] : 0, sg = G.stat === 'def' || G.stat === 'cdr' ? '−' : '+';
-    return `<div class="amb-sum${t ? ' on' : ''}"><b>${G.name}${aptStarOf(APT_CAT.amb, G.k)}</b><span>${G.d}</span><span class="amb-n">${n}${nx ? '/' + nx : ''}</span><em>${t ? `${t}단 ${sg}${G.t[t - 1]}%${nx ? ` → ${t + 1}단 ${sg}${G.t[t]}%` : ' (최고)'}` : `1단 ${sg}${G.t[0]}%`}</em></div>`; };
+    return `<div class="amb-sum${t ? ' on' : ''}"><b>${G.name}${aptStarOf(APT_CAT.amb, G.k)}</b><span>${G.d}</span><span class="amb-n">${ambFix(n)}${nx ? '/' + nx : ''}</span><em>${t ? `${t}단 ${sg}${G.t[t - 1]}%${nx ? ` → ${t + 1}단 ${sg}${G.t[t]}%` : ' (최고)'}` : `1단 ${sg}${G.t[0]}%`}</em></div>`; };
   const setBtns = (slot, st) => `<div class="amb-set">${AMB_G.map((g, gi) => `<button class="chip" data-aset="${slot}:${gi}" ${raw[gi] > 0 ? '' : 'disabled'} style="--g:${GRADES[g.g].color}">${g.name} 호박석${st ? '으로 바꾸기' : ' 박기'} (${raw[gi]})</button>`).join('')}</div>`;
   const card = slot => { const st = ambSt(slot), head = `<div class="ct"><span class="amb-ic">${SVG[GEAR[slot].icon]}</span><span>${slotName(slot)}</span>`;
     if (!st) return `<div class="card amb" data-amb="${slot}">${head}<span class="tag">빈 자리</span></div><p class="small" style="margin:0 0 6px">호박석을 박으면 좋은 문양 두 줄과 나쁜 문양 한 줄이 생겨요.</p>${setBtns(slot, null)}</div>`;
@@ -18736,7 +18771,12 @@ function buildAmber(){
     <p class="small apt-leg">${aptLegend()}</p>
     <div class="card"><div class="ct">문양 합계<span class="tag">다섯 호박석의 같은 문양 빛 ${AMB.tier.join(' · ')}개에 1 · 2 · 3단</span></div><div class="amb-sums">${AMB_GOOD.map(sumCell).join('')}</div>
       ${badTxt ? `<p class="small" style="margin:6px 0 0;color:#ff9a8a">나쁜 문양: ${badTxt}</p>` : ''}</div>
-    <div class="card"><div class="ct">가진 호박석</div><p class="small" style="margin:0">${AMB_G.map((g, gi) => `<b style="color:${GRADES[g.g].color}">${g.name}</b>(줄마다 ${g.n}칸) ${raw[gi]}개`).join(' · ')}<br>바다의 수문장·레이드, 상위 레이드 「진」에서 나와요. 새 호박석을 박으면 있던 돌은 사라지고 처음부터 깎아요.</p></div>
+    <div class="card amb-merge"><div class="ct">호박석 합성<span class="tag">${AMB.merge}개 → 위 등급 1개</span></div>
+      <p class="small" style="margin:0 0 6px">호박석은 <b>희귀</b>로만 나와요. 같은 등급 ${AMB.merge}개를 모으면 한 단계 위 1개로 <b>반드시</b> 바뀌어요(엽전 없음): 희귀 → 영웅 → <b>전설</b>. 그 위 <b>유물</b>은 선택이에요 — 전설 ${AMB.merge}개로 <b>${Math.round(AMB.relicP * 100)}%</b>만 성공하고 실패하면 전설 ${AMB.relicBack}개를 돌려받아요. 유물은 칸 수는 전설과 같고 <b>효율이 더 좋아요</b>(시작 성공 확률 ${AMB_G[3].p0}%·${AMB_G[3].lo}~${AMB_G[3].hi}%, 문양 빛 ×${AMB_G[3].mul}).</p>
+      ${AMB_G.map((g, gi) => `<div class="mrow" style="--g:${GRADES[g.g].color}"><b>${g.name}</b><span class="mn" data-amn="${gi}">${raw[gi]}개</span>${AMB_G[gi + 1] ? `<button class="btn sm" data-amg="${gi}" ${ambMergeCan(gi) ? '' : 'disabled'}>${gi === AMB_G.length - 2 ? `${AMB.merge}개 → ${AMB_G[gi + 1].name} 1개 (${Math.round(AMB.relicP * 100)}%·실패 시 ${g.name} ${AMB.relicBack}개)` : `${AMB.merge}개 → ${AMB_G[gi + 1].name} 1개`}</button>` : '<span class="small">가장 높은 등급(선택)</span>'}</div>`).join('')}
+      <div style="margin-top:8px"><button class="btn primary" id="ambAll" ${AMB_G.some((_, gi) => gi < AMB_G.length - 2 && ambMergeCan(gi)) ? '' : 'disabled'}>가능한 만큼 합성 (전설까지)</button></div>
+      <p class="small amb-msg ok" id="ambMergeMsg" style="margin:6px 0 0">${ambMergeMsg}</p></div>
+    <div class="card"><div class="ct">가진 호박석</div><p class="small" style="margin:0">${AMB_G.map((g, gi) => `<b style="color:${GRADES[g.g].color}">${g.name}</b>(줄마다 ${g.n}칸) ${raw[gi]}개`).join(' · ')}<br>바다의 수문장·레이드, 상위 레이드 「진」에서 희귀 호박석이 나와요. 새 호박석을 박으면 있던 돌은 사라지고 처음부터 깎아요.</p></div>
     ${ALL_SLOTS.map(card).join('')}`;
   wireGearSeg();
   panel.querySelectorAll('[data-acarve]').forEach(b => b.addEventListener('click', () => { const [sl, i] = b.dataset.acarve.split(':'), st = ambSt(sl), r = ambCarve(sl, +i);
@@ -18744,11 +18784,27 @@ function buildAmber(){
     ambMsg = {slot:sl, ok:r.ok, name:AG[+i < 2 ? st.a[+i] : st.b].name}; sfx(r.ok ? 'refOk' : 'refNo');
     if (r.done) addLog(`${slotName(sl)}의 호박석을 다 깎았어요.`, 'gain');
     buildTab('gear', true); }));
+  const mergeDone = (made, txt) => { ambMergeMsg = txt; if (made) sfx('summon'); addLog(txt, made ? 'gain' : 'warn'); buildTab('gear', true); };
+  const mergeTxt = made => made.map((n, g) => n ? `${AMB_G[g].name} 호박석 ${n}개` : '').filter(Boolean).join(' · ');
+  panel.querySelectorAll('[data-amg]').forEach(b => b.addEventListener('click', () => { const g = +b.dataset.amg;
+    if (g === AMB_G.length - 2){   // 전설 → 유물: 확률이라 확인 창이 꼭 필요
+      showModal('유물 호박석 도전', `<p><b>${AMB_G[g].name}</b> 호박석 ${AMB.merge}개를 넣어 <b>${AMB_G[g + 1].name}</b> 호박석에 도전해요.</p>
+        <p><b>성공 확률 ${Math.round(AMB.relicP * 100)}%</b> · 실패하면 ${AMB_G[g].name} 호박석 ${AMB.relicBack}개를 돌려받아요(${AMB.merge - AMB.relicBack}개를 잃어요).</p>
+        <p class="small">유물은 칸 수가 전설과 같고 <b>효율이 더 좋아요</b>(시작 성공 확률 ${AMB_G[3].p0}%, 문양 빛 ×${AMB_G[3].mul}). 선택 사항이라 안 만들어도 진행에는 문제없고, 깎던 전설 돌도 그대로 쓸 수 있어요.</p>`,
+        [{label:'도전하기', primary:true, fn:() => { const r = ambRelic(); if (!r){ sfx('fail'); return; } mergeDone(r.ok, r.ok ? `유물 합성 성공! 유물 호박석 1개` : `유물 합성 실패… 전설 호박석 ${AMB.relicBack}개를 돌려받았어요`); }}, {label:'그만두기'}]);
+      return; }
+    if (!ambMerge(g)){ sfx('fail'); return; } mergeDone(1, `합성! ${AMB_G[g].name} 호박석 ${AMB.merge}개 → ${AMB_G[g + 1].name} 호박석 1개`); }));
+  const allBtn = panel.querySelector('#ambAll');
+  if (allBtn) allBtn.addEventListener('click', () => { const made = ambMergeAll(), n = made.reduce((a, x) => a + x, 0);
+    if (n) mergeDone(n, `합성! ${mergeTxt(made)}을 만들었어요`); else sfx('fail'); });
   panel.querySelectorAll('[data-aset]').forEach(b => b.addEventListener('click', () => { const [sl, g] = b.dataset.aset.split(':'), st = ambSt(sl);
     const go = () => { if (ambSet(sl, +g)){ ambMsg = null; sfx('summon'); addLog(`${slotName(sl)}에 ${AMB_G[+g].name} 호박석을 박았어요.`, 'gain'); } buildTab('gear', true); };
     if (st && (st.u[0] + st.u[1] + st.u[2] > 0)) showModal('호박석 바꾸기', `<p><b>${slotName(sl)}</b>에 박힌 ${AMB_G[st.g].name} 호박석(빛 ${st.v[0] + st.v[1]}개)은 <b>사라지고</b>, 새 ${AMB_G[+g].name} 호박석을 처음부터 깎아요. 문양도 새로 정해져요.</p>`, [{label:'바꾸기', primary:true, fn:go}, {label:'그만두기'}]);
     else go(); }));
-  return () => { panel.querySelectorAll('[data-acarve]').forEach(b => { const sl = b.dataset.acarve.split(':')[0], st = ambSt(sl); if (st && st.u[+b.dataset.acarve.split(':')[1]] < ambN(st)) b.disabled = S.gold < ambGold(st); }); };
+  return () => { panel.querySelectorAll('[data-amn]').forEach(e => setText(e, `${S.amber.raw[+e.dataset.amn]}개`)); panel.querySelectorAll('[data-amg]').forEach(b => { b.disabled = !ambMergeCan(+b.dataset.amg); });
+    if (allBtn) allBtn.disabled = !AMB_G.some((_, gi) => gi < AMB_G.length - 2 && ambMergeCan(gi));
+    panel.querySelectorAll('[data-aset]').forEach(b => { b.disabled = !(S.amber.raw[+b.dataset.aset.split(':')[1]] > 0); });
+    panel.querySelectorAll('[data-acarve]').forEach(b => { const sl = b.dataset.acarve.split(':')[0], st = ambSt(sl); if (st && st.u[+b.dataset.acarve.split(':')[1]] < ambN(st)) b.disabled = S.gold < ambGold(st); }); };
 }
 // 알림 연출: 바닷가 세공장이(새로 지은 인물)가 새 장비 칸과 호박석 세공을 알린다 — 한 벌을 받은 뒤 한 번
 const CARVER = {name:'바닷가 세공장이 물결', look:{outfit:'#3f8f8a', hair:'#5a3a2a', hat:'flower', skin:0}};
@@ -21788,7 +21844,7 @@ if (location.search.indexOf('simtest') >= 0){
     bagAdd, bagEquip, bagSell, bagSellWorse, mkClean, mkTake, mkGive, mkSources, mkPost, mkList, mkBuy, mkMine, mkCancel, mkClaim, npcOffers, npcBuy, npcRare, npcSlot, npcLeft, NPC_RARE_P, NPC_RARE_GEMS, npcLuck:null, enterMarket, leaveMarket, mkRecv, get market(){ return market; }, MK_NPC, giveAccX:giveAcc,
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, pickSet, inhList, inhDo, inhPending, inhTodo, inhShow, inhRun, inhClose, get inhOpen(){ return inhOpen; }, noInh:true,   // 자동 점검에서는 대장장이가 저절로 나타나지 않게(계승 점검에서만 false)
     refineGen, seaOpen, slotsNow, ALL_SLOTS, NEW_SLOTS, GEAR_N, GEAR, SLOT, slotMain, slotFxText, refineCost, seaKit, seaGearDrop, seaSum, seaGrow, itemG, matW, gearEquipPct, gearName, giveItem,
-    AMB, AMB_G, AMB_GOOD, AMB_BAD, ambSt, ambN, ambDone, ambGold, ambSet, ambCarve, ambBest, ambSum, gainAmber, amberDrop, seaForce:false, ambLuck:null, noAmber:true, noSea:true, noJob5:true, noHaetae:true, levelCap, mainQuest, questCur, migrateStory, curRegion, stageLabel, castSprite, cutBg, skOpen, JOBS, SEA1, SEA1_REGIONS, SEA1_RAIDS, sea1RaidInfo, sea1RaidsOpen, SEA2, SEA3, SEAS, seaRaidInfo, seaRaidsOpen, heroDie, chapterDone, cumLv, CHAPTERS, CONT, CROSS_QW, STORY_SV, EXP_K, STAGE_LV, get PART4A_END(){ return PART4A_END; }, get PART4B_END(){ return PART4B_END; }, get CROSS_Q5(){ return CROSS_Q5; }, get PART3_END(){ return PART3_END; }, JOB5_LV, WORLD_MAX, LV_CAP, WORLD_NAME, jobEPct, mpMax, seaOpenCut, CH_OPEN, qShots, RAID_WORLDS, heroGx, personSprite, GRADES, mergeableSets, gradeOf, inhClose,
+    AMB, AMB_G, AMB_GOOD, AMB_BAD, ambSt, ambN, ambDone, ambGold, ambSet, ambCarve, ambBest, ambSum, gainAmber, amberDrop, ambMerge, ambMergeAll, ambRelic, ambRelicLuck:null, ambMergeCan, ambRoll, seaForce:false, ambLuck:null, noAmber:true, noSea:true, noJob5:true, noHaetae:true, levelCap, mainQuest, questCur, migrateStory, curRegion, stageLabel, castSprite, cutBg, skOpen, JOBS, SEA1, SEA1_REGIONS, SEA1_RAIDS, sea1RaidInfo, sea1RaidsOpen, SEA2, SEA3, SEAS, seaRaidInfo, seaRaidsOpen, heroDie, chapterDone, cumLv, CHAPTERS, CONT, CROSS_QW, STORY_SV, EXP_K, STAGE_LV, get PART4A_END(){ return PART4A_END; }, get PART4B_END(){ return PART4B_END; }, get CROSS_Q5(){ return CROSS_Q5; }, get PART3_END(){ return PART3_END; }, JOB5_LV, WORLD_MAX, LV_CAP, WORLD_NAME, jobEPct, mpMax, seaOpenCut, CH_OPEN, qShots, RAID_WORLDS, heroGx, personSprite, GRADES, mergeableSets, gradeOf, inhClose,
     INH, MAT_DROP, MAT_SRC, SHARD_SRC, gainShard, questGo, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     patSea, patFlow, breathOn, updateBreath, noSeaPat:false,
