@@ -19442,7 +19442,7 @@ function buildRaid(){
         <div><div class="ct">백귀야행<span class="tag" id="pLeft"></span></div>
         <p class="story">밤길에 온갖 요괴가 줄지어 몰려와요! ${PARADE_TIME}초 동안 쉴 새 없이 나타나는 요괴를 최대한 많이 잡아요(하루 ${PARADE_TRIES}번). 잡은 수만큼 <b>엽전·보석·쇳가루·재료</b>${S.world >= 3 ? '·<b>고삐 조각</b>' : ''}을 받아요. 그동안 단계 보스는 안 나오고, 쓰러져도 단계가 내려가지 않아요.</p></div></div>
       <div class="card"><div class="ct">보상<span class="small" id="pBest"></span></div>
-        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · ${MAT_SRC.paradePer}마리마다 재료 1${S.world >= 3 ? ' · 40마리마다 고삐 조각 1' : ''}</p></div>
+        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · ${MAT_SRC.paradePer}마리마다 재료 1${S.world >= 3 ? ` · ${MOUNT_PIECE.paradePer}마리마다 고삐 조각 1` : ''}</p></div>
       <button class="btn primary big" id="pGo">백귀야행 시작</button>
       ${sugunOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('mulgwi', '#2a4a6a')}" alt=""></div>
         <div><div class="ct">수군 야행<span class="tag" id="sgLeft"></span></div>
