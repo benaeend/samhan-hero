@@ -573,6 +573,10 @@ body.portrait .chars.many{grid-template-columns:1fr}
 .char.empty{grid-template-columns:1fr;place-items:center;min-height:50px;border-style:dashed;background:none;color:var(--text-soft);font-weight:700;font-size:13px}
 .char.empty:hover{border-color:rgba(255,204,77,.5);color:var(--gold)}
 .char em.loc{display:block;font-style:normal;font-size:10.5px;color:#ffb347;margin-top:1px}
+.cw{display:flex;gap:6px;align-items:stretch;min-width:0}.cw .char{flex:1;min-width:0}
+.cw .mv{display:flex;flex-direction:column;gap:3px;justify-content:center;flex:none}
+.cw .mvb{width:40px;min-height:38px;flex:1;padding:0;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel-2),var(--panel));color:var(--gold);font-size:14px;font-weight:800;line-height:1;cursor:pointer}
+.cw .mvb:disabled{opacity:.28;cursor:default}.cw .mvb:not(:disabled):hover{border-color:rgba(255,204,77,.5)}
 .linkrow{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
 .link{background:none;border:0;padding:2px 0;color:var(--text-soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:12.5px}
 .link.danger{color:#ff8a9a}
@@ -4481,7 +4485,7 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-17-2', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-17-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 17일 · 세트 개편 · 도감 · 칭호 · 고삐 조각'],
@@ -4491,6 +4495,9 @@ const NOTES = [
   ['세트 도감', '[장비] → [세트]에 「세트 도감」이 생겼어요. 세트마다 맞춘 가장 많은 조각이 남고, 세트 3곳 3조각 → 6곳 → 3곳 5조각 → 6곳 → 10곳마다 아바타 「오방색 갖춤 망토」「갖춤새 도포」, 탈것 「불가사리」「청룡 새끼」(기술 재사용 감소), 무기 기운 「오방 신검의 기운」을 받아요. 이미 맞춰 둔 세트는 들어오자마자 도감에 적혀요.'],
   ['칭호(별호) 등급 — 어려운 별호는 색과 반짝임으로', '도감 보상마다 별호(「갖춤새를 아는 이」~「삼한 갖춤새의 주인」)를 함께 받아요. 별호는 이제 일반·희귀(푸른빛)·영예(보랏빛)·전설(금빛, 반짝이는 별) 네 등급이에요 — 신화·태초·환생·탑 높은 층·도감 끝 같은 어려운 별호가 높은 등급이고, 별호 목록·머리 위·채팅·정보 창에 그 색으로 보여요.'],
   ['고삐 조각이 더 잘 나와요', '부상부터 단계 보스(1개)·수문장(3개)에서도 고삐 조각이 나오고, 레이드(3, 첫 토벌 +4)·타임 보스(4)·백귀야행(25마리마다)도 늘었어요. 탈것 별 올리기 값은 20% 낮췄어요.'],
+  ['#', '11월 17일 · 캐릭터 순서 바꾸기'],
+  ['캐릭터 순서를 바꿀 수 있어요', '캐릭터 고르기 화면에서 캐릭터 카드 오른쪽의 ▲▼로 한 칸씩 위·아래로 옮길 수 있어요. 본캐를 맨 위로 올리고 그다음에 두 번째 본캐를 두세요.'],
+  ['순서는 다른 기기에서도 그대로예요', '정한 순서는 서버에도 저장돼 같은 아이디로 다른 기기에서 들어와도 같아요. 새로 만든 캐릭터는 맨 아래에 붙어요.'],
   ['#', '11월 17일 · 호박석 합성'],
   ['호박석 합성 — 낮은 호박석 4개를 모아 위 등급으로(희귀 → 영웅 → 전설, 유물은 선택)', '[장비] → [세공]에 「호박석 합성」 칸이 생겼어요. 같은 등급 호박석 4개를 한 단계 위 1개로 바꿔요(희귀 → 영웅 → 전설은 반드시 성공, 엽전 없음). [가능한 만큼 합성]을 누르면 전설까지 한꺼번에 이어 붙여요.'],
   ['호박석은 이제 희귀로, 더 넉넉하게 나와요', '수문장·레이드·「진」에서는 희귀 호박석만 한 번에 2~3개씩 나오고, 영웅·전설을 직접 주던 곳(용왕 강림·용궁 보물고·천공의 탑)은 같은 값의 희귀 개수로 바뀌었어요. 모아서 합치면 예전과 같은 가치이고, 가진 호박석과 이미 깎고 있는 돌은 그대로예요.'],
@@ -20826,17 +20833,20 @@ async function submitLogin(signup){
     if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = signup ? '계정 만들기' : '게임 시작'; }
   }
 }
-function showCharSelect(msg){
+function showCharSelect(msg, keepPick){
   modalLock = true; setTitle(true);
   const A = REG.accounts[curAcc];
   if (!A){ showLogin('login'); return; }
   let pick = A.chars.some(c => c.cid === A.lastChar) ? A.lastChar : A.chars.length ? A.chars[0].cid : null;
-  const list = A.chars.map(ch => `<button class="char" data-cid="${esc(ch.cid)}" aria-pressed="${ch.cid === pick}">
+  if (keepPick && A.chars.some(c => c.cid === keepPick)) pick = keepPick;
+  const nCh = A.chars.length;
+  const list = A.chars.map((ch, ci) => `<div class="cw"><button class="char" data-cid="${esc(ch.cid)}" aria-pressed="${ch.cid === pick}">
       <img src="${lookPreview(ch.cls in CLASSES ? ch.cls : 'musa', ch.look, ch.armorG >= 0 ? ch.armorG : -1, ch.weaponG >= 0 ? ch.weaponG : -1)}" alt="">
-      <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>`).join('')
+      <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>${nCh > 1 ? `<span class="mv"><button class="mvb" data-mv="-1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 앞으로 한 칸(위로)"${ci === 0 ? ' disabled' : ''}>▲</button><button class="mvb" data-mv="1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 뒤로 한 칸(아래로)"${ci === nCh - 1 ? ' disabled' : ''}>▼</button></span>` : ''}</div>`).join('')
     + Array.from({length:Math.max(0, MAX_CHARS - A.chars.length)}, (_, i) => `<button class="char empty" data-new="1" aria-label="빈 칸 — 새 캐릭터 만들기">＋ 빈 칸${i ? '' : ' · 새 캐릭터'}</button>`).join('');
   const html = `<p>아이디 <b>${esc(curAcc)}</b>로 들어왔어요. 함께할 캐릭터를 골라요. (한 계정에 ${MAX_CHARS}명까지)</p>
     ${A.chars.length > 1 ? `<p class="small" style="margin:0 0 6px">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석).</p>` : ''}
+    ${nCh > 1 ? '<p class="small" style="margin:0 0 6px">▲▼로 캐릭터 순서를 바꿀 수 있어요. 맨 앞(맨 위·왼쪽)이 본캐 자리예요. 순서는 다른 기기에서도 그대로예요.</p>' : ''}
     ${A.chars.length ? '' : '<p class="small">아직 캐릭터가 없어요. [새 캐릭터]를 눌러 만들어 주세요.</p>'}
     <div class="chars many">${list}</div>
     <p class="err" role="alert" style="color:var(--jade)">${esc(msg || '')}</p>
@@ -20853,10 +20863,67 @@ function showCharSelect(msg){
       });
       card.addEventListener('dblclick', () => enterChar(card.dataset.cid));
     });
-    $('#cs-out').addEventListener('click', () => { curAcc = null; REG.keep = null; saveReg(); writeSession(null); showLogin('login', '', ''); });
+    document.querySelectorAll('#mBody .mvb').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); moveCharUI(b); }));
+    $('#cs-out').addEventListener('click', () => { flushOrder(); curAcc = null; REG.keep = null; saveReg(); writeSession(null); showLogin('login', '', ''); });
     if ($('#cs-del')) $('#cs-del').addEventListener('click', () => { if (pick) confirmDeleteChar(pick); });
     if (betaHook) betaHook();
   });
+}
+/* 캐릭터 순서 바꾸기(2026-11-17): 순서는 A.chars 배열 순서 + 마지막으로 바꾼 시각 A.ordT.
+   서버(SQL 변경 없음)에는 캐릭터마다 요약(summary)에 `ordl`(캐릭터 id 순서)·`ordT`를 같이 적는다 — 가장 최근(ordT가 큰) 순서를 따른다 */
+function moveChar(cid, d){
+  const A = REG.accounts[curAcc];
+  if (!A) return false;
+  const i = A.chars.findIndex(c => c.cid === cid), j = i + d;
+  if (i < 0 || j < 0 || j >= A.chars.length) return false;
+  [A.chars[i], A.chars[j]] = [A.chars[j], A.chars[i]];
+  A.ordT = Math.max(now(), (+A.ordT || 0) + 1); A.t = Math.max(now(), A.ordT); saveReg();
+  pushOrder();
+  return true;
+}
+function moveCharUI(btn){
+  const cid = btn.dataset.cid, d = +btn.dataset.mv, A = REG.accounts[curAcc];
+  if (!moveChar(cid, d) || !A) return;
+  const box = document.querySelector('#mBody .chars');
+  if (!box) return;
+  const wraps = {};
+  box.querySelectorAll('.cw').forEach(w => { wraps[w.querySelector('.char').dataset.cid] = w; });
+  const first = box.querySelector('.char.empty');
+  A.chars.forEach((c, i) => {
+    const w = wraps[c.cid];
+    if (!w) return;
+    box.insertBefore(w, first);
+    const [up, dn] = w.querySelectorAll('.mvb');
+    if (up) up.disabled = i === 0;
+    if (dn) dn.disabled = i === A.chars.length - 1;
+  });
+  const ch = A.chars.find(c => c.cid === cid), i = A.chars.indexOf(ch);
+  const mine = wraps[cid] && wraps[cid].querySelectorAll('.mvb');
+  const nb = mine && (mine[d < 0 ? 0 : 1].disabled ? mine[d < 0 ? 1 : 0] : mine[d < 0 ? 0 : 1]);
+  if (nb && !nb.disabled) nb.focus();
+  const er = document.querySelector('#mBody .err');
+  if (er) er.textContent = `${ch.name}${josa(ch.name, '을', '를')} ${i + 1}번째로 옮겼어요.`;
+}
+let ordTimer = 0;
+function pushOrder(){
+  if (!online) return;
+  clearTimeout(ordTimer); ordTimer = setTimeout(flushOrder, 600);
+}
+// 바꾼 순서를 서버의 캐릭터 요약에 적는다(저장 기록은 건드리지 않음: p_save를 비워 보내면 서버는 요약만 바꾼다)
+async function flushOrder(){
+  if (!ordTimer || !online) return;
+  clearTimeout(ordTimer); ordTimer = 0;
+  const A = REG.accounts[online.acc], tok = online.token;
+  if (!A || !A.ordT) return;
+  for (const ch of A.chars.slice()){
+    if (typeof ch.srvT !== 'number') continue;   // 서버에 아직 없는 캐릭터는 처음 올릴 때 같이 적힌다
+    try { await rpc('samhan_save', {p_token:tok, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:null, p_t:ch.srvT}); }
+    catch (e) { if (e.code === 'bad_token'){ lostOnline(); return; } }
+  }
+}
+function applyOrder(A, ids){
+  const rank = new Map(ids.map((c, i) => [c, i]));
+  A.chars = A.chars.map((c, i) => ({c, i, r:rank.has(c.cid) ? rank.get(c.cid) : 1000 + i})).sort((a, b) => a.r - b.r).map(x => x.c);
 }
 function confirmDeleteChar(cid){
   const A = REG.accounts[curAcc], ch = A && A.chars.find(c => c.cid === cid);
@@ -21086,7 +21153,9 @@ function lostOnline(msg){
 }
 // 캐릭터 요약(목록·레이드 동료용)
 const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level,
-  job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || ''});
+  job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || '', ...ordSum()});
+// 캐릭터 순서를 바꾼 적이 있으면 요약마다 순서(ordl)와 바꾼 시각(ordT)을 같이 적는다(없으면 아무것도 안 붙음 — 서버·옛 화면과 호환)
+const ordSum = () => { const A = online && REG.accounts[online.acc]; return A && A.ordT ? {ordl:A.chars.map(c => c.cid), ordT:A.ordT} : {}; };
 // 다른 용사 요약의 진행도 다듬기(남이 보낸 값이라 범위·키를 막음)
 const sumProg = sm => ({world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
   maxStage:Math.max(1, Math.min(9999, Math.floor(+sm.maxStage) || 1)), job:Math.max(0, Math.min(JOB_MAX, Math.floor(+sm.job) || 0)), reb:Math.max(0, Math.min(2, Math.floor(+sm.reb) || 0)),
@@ -21111,17 +21180,25 @@ async function syncChars(acc){
     if (!loc) A.chars.push(ent);
     else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
   }
+  // 캐릭터 순서: 서버 요약들 가운데 가장 최근에 바꾼 순서(ordT가 큰 것)를 따른다. 이 기기가 더 새것이면 서버에 알린다
+  let ordBest = 0, ordIds = null;
+  for (const it of list){
+    const sm = it && it.summary;
+    if (sm && Array.isArray(sm.ordl) && +sm.ordT > ordBest){ ordBest = +sm.ordT; ordIds = sm.ordl.filter(x => typeof x === 'string').slice(0, 12); }
+  }
+  if (ordIds && ordBest > (+A.ordT || 0)){ applyOrder(A, ordIds); A.ordT = ordBest; }
   const onSrv = new Set(list.map(it => it && it.cid));
   for (const ch of A.chars.slice()){
     if (onSrv.has(ch.cid)){ if (ch.srvErr === 'many') delete ch.srvErr; continue; }
     let save = null;
     try { save = localStorage.getItem(charKey(acc, ch.cid)); } catch (e) {}
     if (!save){ continue; }
-    try { const d = JSON.parse(save); await rpc('samhan_save', {p_token:online.token, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:save, p_t:d.lastSave || 0}); delete ch.srvErr; }
+    try { const d = JSON.parse(save); await rpc('samhan_save', {p_token:online.token, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:save, p_t:d.lastSave || 0}); delete ch.srvErr; ch.srvT = d.lastSave || 0; }
     catch (e) { if (e.code === 'name_taken') ch.srvErr = 'name'; else if (e.code === 'too_many') ch.srvErr = 'many'; else if (e.code === 'bad_token'){ lostOnline(); return; } }
   }
   A.chars = A.chars.slice(0, MAX_CHARS);
   A.t = now(); saveReg();
+  if ((+A.ordT || 0) > ordBest) pushOrder();
 }
 // 지금 캐릭터를 서버에 올린다(1분마다·창을 숨길 때·캐릭터 바꿀 때)
 let onlineBusy = false, onlineP = Promise.resolve(), manyNoted = false;
@@ -21680,7 +21757,7 @@ sfx = function(name){
     case 'click': pluck(o, t, 81, 0.1, 0.06); break;
   }
 };
-document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.btn,.chip,.tab,.seg button,.gbtn,.ccard,.char')) sfx('click'); });
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.btn,.chip,.tab,.seg button,.gbtn,.ccard,.char,.mvb')) sfx('click'); });
 
 /* ================= 시작 ================= */
 let last = performance.now();
@@ -21869,6 +21946,7 @@ if (location.search.indexOf('simtest') >= 0){
     noApt:false, aptForce:null, aptNeutral:null, aptGraceForce:null, noAptNote:true});   // 이미 있는 이름은 덮어써도 같은 것
   Object.assign(window.__game, {skGW, seaSum, seaPct, spdOptRaw, updateAim});   // 9-5 나: 새 옵션 줄·공격 속도 길 점검용
   // @@END-J
+  Object.assign(window.__game, {moveChar, applyOrder, flushOrder, syncChars, showCharSelect});   // 캐릭터 순서 시험
 }
 
 const hot = window.claude && window.claude.hot;

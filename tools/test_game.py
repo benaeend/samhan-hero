@@ -1724,6 +1724,82 @@ async def main():
         check(got['lv'] == 23 and got['st'] == 27 and got['tut'] == -1, f'예전 진행을 이어받는다 {got}')
         await ctxC.close()
 
+        # 9-0) 캐릭터 고르기: ▲▼로 순서 바꾸기(이 기기 저장) · 다시 로그인해도 유지 · 옛 저장(순서 없음) 호환 · 새 캐릭터는 맨 아래 · 지워도 순서 유지
+        ctxO = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        po = await ctxO.new_page()
+        watch(po, errors, 'O ')
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id')
+        await signup(po, 'orderer', '1234', '가온', 'musa')
+        await po.evaluate("""() => { const G = window.__game, A = G.REG.accounts.orderer;
+          A.chars.push({cid:'ordb', name:'나루', cls:'jagaek', level:20, look:{}, armorG:1, weaponG:1}, {cid:'ordc', name:'다솜', cls:'sulsa', level:30, look:{}, armorG:1, weaponG:1});
+          G.showCharSelect(); }""")
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        names = "() => [...document.querySelectorAll('#mBody .char[data-cid] b')].map(b => b.textContent).join()"
+        dis = "() => [...document.querySelectorAll('#mBody .cw')].map(w => [...w.querySelectorAll('.mvb')].map(b => b.disabled ? 1 : 0).join('')).join('/')"
+        check(await po.evaluate(names) == '가온,나루,다솜' and await po.evaluate(dis) == '10/00/01', f'캐릭터 순서: 처음엔 만든 순서, 맨 위는 ▲, 맨 아래는 ▼가 꺼져 있다 {await po.evaluate(names)} {await po.evaluate(dis)}')
+        mvb = await po.evaluate("() => [...document.querySelectorAll('#mBody .mvb')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })")
+        check(all(w >= 36 and h >= 36 for w, h in mvb), f'▲▼ 단추가 손가락으로 누르기 쉬운 크기(36px 이상) {mvb}')
+        ov = await po.evaluate("""() => [...document.querySelectorAll('#mBody .cw')].map(w => { const a = w.querySelector('.char').getBoundingClientRect(), b = w.querySelector('.mv').getBoundingClientRect(), c = w.getBoundingClientRect();
+          return a.right <= b.left + 0.5 && b.right <= c.right + 0.5 && b.height <= c.height + 0.5; })""")
+        check(all(ov), f'▲▼가 카드와 겹치거나 잘리지 않는다 {ov}')
+        await po.click('#mBody .char[data-cid="ordb"]')      # 나루를 고른 채로 순서만 바꿔도 고른 캐릭터는 그대로
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 나루, 가온, 다솜
+        check(await po.evaluate(names) == '나루,가온,다솜' and await po.evaluate(dis) == '10/00/01', f'▲로 한 칸 위로 {await po.evaluate(names)}')
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 나루, 가온
+        check(await po.evaluate(names) == '다솜,나루,가온' and await po.evaluate(dis) == '10/00/01', f'맨 위까지 올리면 ▲가 꺼진다 {await po.evaluate(names)} {await po.evaluate(dis)}')
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 다솜, 나루, 가온 … 순서 확인용으로 한 번 더
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 나루, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 가온, 다솜
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 가온, 나루, 다솜
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 가온, 다솜, 나루
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 가온, 나루, 다솜
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 가온, 다솜, 나루
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 가온, 나루
+        o3 = await po.evaluate("() => ({n: [...document.querySelectorAll('#mBody .char[data-cid] b')].map(b => b.textContent).join(), pick: document.querySelector('#mBody .char[aria-pressed=\"true\"] b').textContent, dis: [...document.querySelectorAll('#mBody .cw')].map(w => [...w.querySelectorAll('.mvb')].map(b => b.disabled ? 1 : 0).join('')).join('/'), msg: document.querySelector('#mBody .err').textContent})")
+        check(o3['n'] == '다솜,가온,나루' and o3['dis'] == '10/00/01' and o3['pick'] == '나루' and '옮겼어요' in o3['msg'], f'여러 번 옮겨도 순서·단추·고른 캐릭터가 맞다 {o3}')
+        await po.screenshot(path=str(OUT / '13b_캐릭터순서_가로.png'))
+        saved = await po.evaluate("() => { const A = JSON.parse(localStorage.getItem('samhan-accounts-v1')).accounts.orderer; return {n: A.chars.map(c => c.cid).join(), t: A.ordT}; }")
+        check(saved['n'].split(',')[0] == 'ordc' and saved['n'].split(',')[2] == 'ordb' and saved['t'] > 0, f'바꾼 순서가 이 기기 계정 목록에 저장된다 {saved}')
+        # 새로고침 → 다시 로그인해도 같은 순서
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id'); await po.fill('#lg-pw', '1234'); await po.click('#modal-btn-0')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루', f'다시 로그인해도 순서가 그대로다 {await po.evaluate(names)}')
+        # 옛 저장(순서 시각 없음)은 지금 순서 그대로
+        await po.evaluate("() => { const R = JSON.parse(localStorage.getItem('samhan-accounts-v1')); delete R.accounts.orderer.ordT; localStorage.setItem('samhan-accounts-v1', JSON.stringify(R)); }")
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id'); await po.fill('#lg-pw', '1234'); await po.click('#modal-btn-0')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루' and await po.evaluate(dis) == '10/00/01', f'순서 기록이 없는 옛 저장은 지금 순서 그대로 이어받는다 {await po.evaluate(names)}')
+        # 새 캐릭터는 맨 아래
+        await create_char(po, '라온', 'doin')
+        await po.evaluate("() => window.__game.showCharSelect()")
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루,라온', f'새 캐릭터는 맨 아래에 붙는다 {await po.evaluate(names)}')
+        # 가운데 캐릭터를 지워도 나머지 순서는 그대로
+        await po.click('#mBody .char[data-cid="ordb"]'); await po.click('#cs-del'); await po.click('#modal-btn-1')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,라온', f'캐릭터를 지워도 나머지 순서가 그대로다 {await po.evaluate(names)}')
+        # 6칸 가득, 폰 세로 화면 캡처
+        await po.evaluate("""() => { const A = window.__game.REG.accounts.orderer;
+          A.chars.push({cid:'orde', name:'바다', cls:'jagaek', level:60, look:{}, armorG:2, weaponG:2, srvErr:'many'}, {cid:'ordf', name:'여덟글자이름', cls:'musa', level:300, look:{}, armorG:2, weaponG:2}, {cid:'ordg', name:'하늘', cls:'doin', level:99, look:{}, armorG:2, weaponG:2});
+          window.__game.showCharSelect(); }""")
+        await po.wait_for_selector('#mBody .mvb')
+        await po.screenshot(path=str(OUT / '13c_캐릭터순서_6칸_가로.png'))
+        await po.set_viewport_size({'width': 390, 'height': 844}); await po.wait_for_timeout(500)
+        await po.evaluate("() => window.__game.showCharSelect()")
+        await po.wait_for_timeout(400)
+        await po.screenshot(path=str(OUT / '13d_캐릭터순서_6칸_세로.png'))
+        pov = await po.evaluate("""() => { const sc = document.querySelector('#mBody'); return [...document.querySelectorAll('#mBody .cw')].map(w => { const a = w.querySelector('.char').getBoundingClientRect(), b = w.querySelector('.mv').getBoundingClientRect(), c = w.getBoundingClientRect(); return a.right <= b.left + 0.5 && b.right <= c.right + 0.5 && b.width >= 36 && w.scrollWidth <= w.clientWidth + 1; }); }""")
+        check(all(pov) and len(pov) == 6, f'폰 세로 화면에서도 ▲▼가 카드와 겹치지 않고 안 잘린다 {pov}')
+        await ctxO.close()
+
+
         # 9-9) 물의 신화 1단계: 밸런스 숫자·싸움 중 물약 구매 금지·장착 기술 8칸·4차 전직 저장·보스 다시 도전 간격
         #       (곤륜 끝 4차 무사 저장 = 베타의 시험용 캐릭터 tools/beta_saves 가운데 레벨이 가장 높은 것)
         late = max((d for d in (json.loads(f.read_text(encoding='utf-8')) for f in sorted((ROOT / 'tools' / 'beta_saves').glob('*.json'))) if not d['save'].get('seaPreview') and d['save'].get('world', 0) <= 4), key=lambda d: d['save'].get('level', 0))['save']   # 4부 미리 보기 캐릭터는 빼고
