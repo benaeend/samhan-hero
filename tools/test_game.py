@@ -216,7 +216,7 @@ SIM = r"""
     if (i % 10 === 0 && G.RAID_WORLDS) {   // 레이드가 막힌 시간(분): T<w>lv 레벨·단계가 모자라 하나도 없음 · T<w>st 레벨은 되는데 이야기가 막아 하나도 없음 · T<w>sp 일부만(다음 것이 이야기에 막힘) · T<w>ok · S<w>:<i> 그 레이드가 이야기에 막힌 시간 · V<w>:<i> 레벨·단계를 기다린 시간
       const w = G.S.world, n = G.RAID_WORLDS[w].n, b = Math.min(n, G.raidUnlockedBase()), u = G.raidUnlocked(), m = dt * 10 / 60, add = k => { first[k] = (first[k] || 0) + m; };
       add('T' + w + (b === 0 ? 'lv' : u === 0 ? 'st' : u < b ? 'sp' : 'ok')); if (u < b) add('S' + w + ':' + u); else if (b < n) add('V' + w + ':' + b);
-      if (!G.raid && G.raidTickets() >= G.TICKET_MAX) add('F' + w);   // 토벌패가 가득 차 버려지는 시간
+      if (!G.raid && G.raidTickets() >= G.TICKET_MAX) { add('F' + w); add('F' + w + (b === 0 ? 'lv' : u === 0 ? 'st' : u < b ? 'sp' : 'ok')); }   // 토벌패가 가득 차 버려지는 시간(왜: lv 레벨·단계 · st 이야기 · sp 일부 이야기 · ok 다 열림)
       if (u > 0) { let all = true; for (let j = 0; j < u; j++) if (!G.S.raid.first[G.raidAt(j).key]) all = false; if (all && G.mGold(G.raidAt(u - 1).ref) < 0.25 * G.mGold(Math.max(1, G.S.maxStage))) add('K' + w); }   // 열린 곳을 다 깼고 가장 높은 곳도 지금 단계 엽전 가치의 25% 아래(쓸 가치가 낮음)
     }
     if (i % 10 === 0) { mark('R' + G.S.world + ':' + G.raidUnlocked(), t); if (G.entryRaidOpen) mark('E' + G.S.world + ':' + (G.entryRaidOpen() ? 1 : 0), t); if (G.S.entry && G.S.entry.first[G.S.world]) mark('X' + G.S.world + ':1', t); }   // 입문 레이드(2026-11-17): 세계별로 레이드가 몇 곳 열렸나·입문 레이드 열림·토벌 수가 처음 닿은 시각
@@ -272,7 +272,7 @@ def long_table(cls, first):
             tl.append(f'{w}: 레벨{first.get(f"T{w}lv", 0):.0f}m 이야기{first.get(f"T{w}st", 0):.0f}m 일부{first.get(f"T{w}sp", 0):.0f}m /{tot:.0f}m')
     if tl:
         print('        레이드 막힘 ' + ' · '.join(tl))
-    fl = [f'{w}: 가득{first.get(f"F{w}", 0):.0f}m 약함{first.get(f"K{w}", 0):.0f}m' for w in range(11) if first.get(f'F{w}') or first.get(f'K{w}')]
+    fl = [f'{w}: 가득{first.get(f"F{w}", 0):.0f}m(레벨{first.get(f"F{w}lv", 0):.0f}·이야기{first.get(f"F{w}st", 0) + first.get(f"F{w}sp", 0):.0f}·열림{first.get(f"F{w}ok", 0):.0f}) 약함{first.get(f"K{w}", 0):.0f}m' for w in range(11) if first.get(f'F{w}') or first.get(f'K{w}')]
     if fl:
         print('        토벌패 ' + ' · '.join(fl))
 
