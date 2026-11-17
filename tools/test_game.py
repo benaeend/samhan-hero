@@ -1971,7 +1971,7 @@ async def main():
           out.relic = [top <= 19, noUp, isNew, S.equip.weapon, gw, G.GRADES[gw].name, G.gearName('weapon', 20).startsWith('용궁'), G.gearEquipPct(20) > G.gearEquipPct(19), G.gearEquipPct(20) < G.gearEquipPct(19) * 1.35, S.gear.weapon.count[21], G.gradeOf(20), G.itemG(24), G.GRADES[8].name];
           const dr = G.seaGearDrop('raid'), ad = G.amberDrop('jin', true); out.drop = [!!dr && G.ALL_SLOTS.includes(dr.slot) && dr.it >= 16, !!ad && ad.name.includes('호박석')];
           // 호박석: 박기 → 깎기(성공 −10%·실패 +10%, 25~75%) → 다 깎으면 굳음
-          S.amber.raw = [2, 0, 1]; S.amber.st = {}; S.gold = 1e30;
+          S.amber.raw = [2, 0, 1, 0]; S.amber.st = {}; S.gold = 1e30;
           out.set = [G.ambSet('weapon', 1), G.ambSet('weapon', 2), S.amber.raw.join(',')]; const st = G.ambSt('weapon'), g0 = S.gold = G.ambGold(st) * 1000;
           G.ambLuck = 1; const r1 = G.ambCarve('weapon', 0); const p1 = st.p; G.ambLuck = 0; const r2 = G.ambCarve('weapon', 2), p2 = st.p; G.ambCarve('weapon', 2); const p3 = st.p;
           out.carve = [st.a.length === 2 && st.a[0] !== st.a[1], G.ambN(st), r1.ok, st.v[0], p1, r2.ok, st.v[2], st.u[2], p2, p3, S.gold < g0];
@@ -1985,22 +1985,22 @@ async def main():
           S.amber.st = {weapon:mk(0, 4)}; const b4 = +(atkOf() / a0).toFixed(4); S.amber.st = {weapon:mk(0, 5)}; const b5 = +(atkOf() / a0).toFixed(4); S.amber.st = {weapon:mk(0, 10)}; const b10 = +(atkOf() / a0).toFixed(4);
           out.tiers = tiers; out.badk = [b4, b5, b10]; out.sumT = G.ambSum().tier.wave;
           // 진: 4부부터 주간 첫 승리에 호박석, 장비는 다섯 칸 가운데
-          S.amber.st = {}; S.amber.raw = [0, 0, 0]; S.jin.day = ''; S.jin.wk = {}; S.inv.potion = 50; G.refreshStats();
-          G.startJin(3, 7); if (G.raid){ G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); } out.jin = S.amber.raw[0] + S.amber.raw[1] + S.amber.raw[2];
+          S.amber.st = {}; S.amber.raw = [0, 0, 0, 0]; S.jin.day = ''; S.jin.wk = {}; S.inv.potion = 50; G.refreshStats();
+          G.startJin(3, 7); if (G.raid){ G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); } out.jin = S.amber.raw[0] + S.amber.raw[1] + S.amber.raw[2] + S.amber.raw[3];
           // 시뮬 성장: 새 칸 소환·합성·재련과 호박석 깎기를 알아서
-          S.amber.raw = [5, 0, 0]; S.gems = 1e5; S.gold = 1e300; S.dust = 1e9; let gn = 0; for (let k = 0; k < 30; k++) gn += G.seaGrow({gems:1, gold:1});
+          S.amber.raw = [5, 0, 0, 0]; S.gems = 1e5; S.gold = 1e300; S.dust = 1e9; let gn = 0; for (let k = 0; k < 30; k++) gn += G.seaGrow({gems:1, gold:1});
           out.grow = [gn > 50, G.NEW_SLOTS.every(k => S.refine[k].lv >= 16), G.NEW_SLOTS.every(k => S.equip[k] > 8), G.ALL_SLOTS.every(k => G.ambSt(k) && G.ambDone(G.ambSt(k))), G.power(G.ST) > 0];
-          S.gold = 1e30; S.amber.raw = [3, 2, 1]; S.amber.st.boots = null; delete S.amber.st.boots; G.quiet = false; return out; }""", late)
-        check(e1['merged'] == [True, 28, True, '0,0,0', False, 0] and e1['clean'] == [-1, -1, 25, 4, '5,0,9999', '4,3,2', 25, 'helm'],
+          S.gold = 1e30; S.amber.raw = [3, 2, 1, 0]; S.amber.st.boots = null; delete S.amber.st.boots; G.quiet = false; return out; }""", late)
+        check(e1['merged'] == [True, 28, True, '0,0,0,0', False, 0] and e1['clean'] == [-1, -1, 25, 4, '5,0,9999,0', '4,3,2', 25, 'helm'],
               f'새 장비 칸: 예전 저장에 투구·어깨·신발·호박석 칸이 빈 채로 채워지고(장비 번호 28칸), 이상한 값은 다듬는다 {e1["merged"]} {e1["clean"]}')
         check(e1['closed'] == [False, 2, 2, 2, False, False, False, None, None, None, 0, None, 1],
               f'4부 전에는 새 칸·세공·유물·용궁 진주가 모두 닫혀 있다 {e1["closed"]}')
         check(e1['open'][:5] == [True, 5, 3, 3, True] and e1['open'][5] == 1 and e1['open'][6] == 1 and e1['open'][7]
-              and set(e1['rows']) >= {'mat', 'refine', 'kit'} and e1['inh'] == [0, True, 3, 15, True, 0, '8,8,8', '3,0,0', True, False, False] and e1['matGain'] == 5 and e1['kitUp'] == [True, True, True, True, True],
+              and set(e1['rows']) >= {'mat', 'refine', 'kit'} and e1['inh'] == [0, True, 3, 15, True, 0, '8,8,8', '3,0,0,0', True, False, False] and e1['matGain'] == 5 and e1['kitUp'] == [True, True, True, True, True],
               f'3차 계승: 열리기만 해서는 능력치·공명이 그대로, 대장장이가 재료를 용궁 진주로 1:1·재련을 효과 그대로 +15부터·새 칸 한 벌(희귀 I)과 호박석 3개 {e1["open"]} {e1["rows"]} {e1["inh"]}')
         check(e1['refine'] == [True, True, 10, 25, True, True, True] and e1['relic'] == [True, 0, True, 20, 7, '유물', True, True, True, 1, 4, 8, '영물'] and e1['drop'] == [True, True],
               f'새 칸 재련(지금 땅 엽전 기준)·유물 등급(소환·전설 합성으로는 안 나오고 유물끼리만 합성, 남에게 보내는 등급은 전설 그대로) {e1["refine"]} {e1["relic"]} {e1["drop"]}')
-        check(e1['set'] == [False, True, '2,0,0'] and e1['carve'] == [True, 10, True, 1, 65, False, 0, 2, 75, 75, True] and e1['carve2'][0] == 10 and e1['carve2'][1] is None and e1['carve2'][2] == 25 and e1['carve2'][3] is None and e1['carve2'][4] == 2
+        check(e1['set'] == [False, True, '2,0,0,0'] and e1['carve'] == [True, 10, True, 1, 65, False, 0, 2, 75, 75, True] and e1['carve2'][0] == 10 and e1['carve2'][1] is None and e1['carve2'][2] == 25 and e1['carve2'][3] is None and e1['carve2'][4] == 2
               and e1['best'] == [1, False] and e1['done'][0] and e1['done'][1] == '10,10,10',
               f'호박석 세공: 가진 돌만 박고, 성공하면 다음 확률 -10%·실패하면 +10%(25~75%), 줄이 차거나 엽전이 없으면 못 깎고, 추천은 확률이 높을 때 좋은 줄·낮을 때 나쁜 줄 {e1["set"]} {e1["carve"]} {e1["carve2"]} {e1["best"]} {e1["done"]}')
         check(e1['tiers'] == [1, 1.06, 1.14, 1.25] and e1['badk'] == [1, 0.985, 0.91] and e1['sumT'] == 0 and e1['jin'] >= 1 and e1['grow'] == [True, True, True, True, True],
@@ -2031,6 +2031,61 @@ async def main():
         check(all(er['cards']) and '신발' in er['nm'] and '투구의 힘' in er['eff'], f'[재련]에 다섯 칸이 모두 보인다 {er}')
         check(ea['cards'] == 5 and ea['sums'] == 10 and '빈 자리' in ea['empty'] and ea['set'] and ea['v'] == 1 and '성공' in ea['msg'] and ea['dots'] == 1 and '65' in ea['prob'] and ea['rec'] == 1,
               f'[세공] 화면: 다섯 칸·문양 합계 열, 호박석을 박고 깎으면 빛이 들어오고 다음 확률이 내려가며 추천 줄이 보인다 {ea}')
+        # 호박석 합성: 같은 등급 4개 → 위 1개(확정·무료), 부족하면 거부, 전설 → 유물은 확인 창, 옛 3칸 저장, 일반 드롭은 희귀만, 유물 호박석 박기
+        await ep.evaluate("""() => { const G = window.__game; G.S.amber.raw = [9, 0, 0, 0]; G.S.amber.st = {}; }""")
+        await ep.click('#seg-helm'); await ep.wait_for_timeout(150); await ep.click('#seg-amber'); await ep.wait_for_timeout(300)
+        await ep.click('[data-amg="0"]'); await ep.wait_for_timeout(150)
+        m1 = await ep.evaluate("""() => { const G = window.__game, S = G.S; return {raw: S.amber.raw.join(','), btn: document.querySelector('[data-amg="0"]').disabled, cnt: document.querySelector('[data-amn="1"]').textContent, msg: document.querySelector('#ambMergeMsg').textContent}; }""")
+        await ep.click('[data-amg="0"]'); await ep.wait_for_timeout(150)
+        m2 = await ep.evaluate("""() => { const G = window.__game, S = G.S, raw1 = S.amber.raw.join(','), btn = document.querySelector('[data-amg="0"]').disabled, no = G.ambMerge(0); return {raw1, btn, no, raw: S.amber.raw.join(','), gold: S.gold}; }""")
+        await ep.evaluate("""() => { const G = window.__game; G.S.amber.raw = [17, 5, 4, 0]; }""")
+        await ep.click('#seg-helm'); await ep.wait_for_timeout(150); await ep.click('#seg-amber'); await ep.wait_for_timeout(300)
+        await ep.click('#ambAll'); await ep.wait_for_timeout(250)
+        m3 = await ep.evaluate("""() => { const G = window.__game; return {raw: G.S.amber.raw.join(','), modal: !document.querySelector('#modal').hidden, allOff: document.querySelector('#ambAll').disabled}; }""")
+        await ep.click('[data-amg="2"]'); await ep.wait_for_timeout(250)
+        m4 = await ep.evaluate("""() => ({raw: window.__game.S.amber.raw.join(','), modal: !document.querySelector('#modal').hidden, txt: document.querySelector('#mBody').textContent, btn: document.querySelector('[data-amg="2"]').textContent})""")
+        await ep.screenshot(path=str(OUT / '28e_호박석_유물_확인창.png'))
+        await ep.click('#modal-btn-1'); await ep.wait_for_timeout(200)
+        m5 = await ep.evaluate("""() => ({raw: window.__game.S.amber.raw.join(','), hid: document.querySelector('#modal').hidden})""")
+        await ep.evaluate("() => { window.__game.ambRelicLuck = 0; }")
+        await ep.click('[data-amg="2"]'); await ep.wait_for_timeout(200); await ep.click('#modal-btn-0'); await ep.wait_for_timeout(250)
+        m6 = await ep.evaluate("""() => ({raw: window.__game.S.amber.raw.join(','), msg: document.querySelector('#ambMergeMsg').textContent})""")
+        await ep.evaluate("() => { window.__game.ambRelicLuck = 1; }")
+        await ep.click('[data-amg="2"]'); await ep.wait_for_timeout(200); await ep.click('#modal-btn-0'); await ep.wait_for_timeout(250)
+        m7 = await ep.evaluate("""() => { const G = window.__game; G.ambRelicLuck = null; return {raw: G.S.amber.raw.join(','), msg: document.querySelector('#ambMergeMsg').textContent, none: G.ambRelic()}; }""")
+        check(m1['raw'] == '5,1,0,0' and not m1['btn'] and m1['cnt'] == '1개' and '합성' in m1['msg'] and m2['raw1'] == '1,2,0,0' and m2['btn'] and m2['no'] == 0 and m2['raw'] == '1,2,0,0' and m2['gold'] > 0,
+              f'호박석 합성: 희귀 4개 → 영웅 1개(엽전 없이), 모자라면 단추가 꺼지고 합성도 거부 {m1} {m2}')
+        check(m3['raw'] == '1,1,6,0' and not m3['modal'],
+              f'[가능한 만큼 합성]은 희귀 → 영웅 → 전설까지만 이어 붙이고 유물은 만들지 않는다 {m3}')
+        check(m4['modal'] and m4['raw'] == '1,1,6,0' and '35%' in m4['txt'] and '2개를 돌려' in m4['txt'] and '전설과 같고' in m4['txt'] and '35%' in m4['btn'] and m5['raw'] == '1,1,6,0' and m5['hid']
+              and m6['raw'] == '1,1,4,0' and '실패' in m6['msg'] and m7['raw'] == '1,1,0,1' and '성공' in m7['msg'] and m7['none'] is None,
+              f'전설 → 유물은 확인 창(확률 35%·실패 시 전설 2개 환급·칸 수 같음 설명)을 거치고, 그만두면 그대로, 실패하면 4개 중 2개만 돌려받고, 성공하면 유물 1개 {m4["raw"]} {m5} {m6} {m7}')
+        mv = await ep.evaluate("""() => { const G = window.__game, S = G.S, out = {}; G.noFork = true;
+          S.amber.raw = [0, 0, 0, 2]; S.amber.st = {}; out.set = [G.ambSet('weapon', 3), S.amber.raw.join(','), S.amber.st.weapon.g, G.ambN(S.amber.st.weapon), G.AMB_G[3].name, G.GRADES[G.AMB_G[3].g].name, G.ambGold(S.amber.st.weapon) / (G.ambGold({g:2}) || 1)];
+          const rs = S.amber.st.weapon; out.relic = [rs.p, G.ambN(rs) === G.ambN({g:2}), (() => { rs.a = ['wave', 'reef']; rs.v = [8, 0, 0]; rs.u = [8, 0, 0]; return G.ambSum().L.wave; })(), (() => { S.gold = 1e30; rs.u = [0, 0, 0]; rs.v = [0, 0, 0]; rs.p = 40; G.ambLuck = 1; G.ambCarve('weapon', 0); G.ambLuck = null; return [rs.p]; })()];
+          S.amber.st = {}; S.amber.raw = [0, 0, 8, 0]; S.gems = 1e5; S.gold = 1e30; G.seaGrow({gems:1, gold:1}); out.simRelic = S.amber.raw[3];
+          S.amber.st = {}; S.amber.raw = [0, 0, 0, 0]; const dr = []; for (let k = 0; k < 400; k++){ const a = G.amberDrop('jin', true); dr.push(a.g + ':' + a.n); } out.dropSet = [...new Set(dr)].sort().join(','); out.dropAvg = S.amber.raw[0] / 400; out.dropHi = S.amber.raw[1] + S.amber.raw[2] + S.amber.raw[3];
+          const old = JSON.parse(JSON.stringify(S)); old.amber = {raw:[7, 2, 1], st:{}}; const m = G.mergeState(old); out.old = [m.amber.raw.join(','), m.amber.raw.length];
+          out.garb = G.mergeState(Object.assign(JSON.parse(JSON.stringify(S)), {amber:{raw:[1, 2, 3, 'x', 9]}})).amber.raw.join(',');
+          S.amber.raw = [0, 0, 0, 1]; S.amber.st = {}; out.st3 = [G.ambSet('armor', 3), !!G.ambSt('armor'), G.mergeState(JSON.parse(JSON.stringify(S))).amber.st.armor.g];
+          S.amber.raw = [0, 0, 0, 0]; S.amber.st = {}; return out; }""")
+        check(mv['set'][:6] == [True, '0,0,0,1', 3, 10, '유물', '유물'] and mv['set'][6] > 1.4 and mv['relic'][0] == 85 and mv['relic'][1] and mv['relic'][2] == 10 and mv['simRelic'] == 0 and mv['relic'][3] == [35] and mv['dropSet'] == '0:2,0:3' and 2.1 < mv['dropAvg'] < 2.3 and mv['dropHi'] == 0 and mv['old'] == ['7,2,1,0', 4] and mv['garb'] == '1,2,3,0' and mv['st3'] == [True, True, 3],
+              f'일반 드롭은 희귀만(2개 80%·3개 20% = 평균 2.2), 옛 3칸 저장은 4칸으로 이어받고, 유물 호박석은 전설과 같은 10칸·시작 85%·빛 ×1.25(8개 → 10)이고 35~85%로 오르내리며 저장에서도 유지, 시뮬 용사는 유물을 안 만든다 {mv}')
+        await ep.evaluate("""() => { const G = window.__game, S = G.S; S.amber.raw = [9, 5, 4, 1]; S.amber.st = {}; }""")
+        for vw, vh, nm in ((390, 640, '세로'), (844, 390, '가로')):
+            await ep.set_viewport_size({'width': vw, 'height': vh}); await ep.wait_for_timeout(500)
+            await ep.click('#seg-helm'); await ep.wait_for_timeout(150); await ep.click('#seg-amber'); await ep.wait_for_timeout(300)
+            await ep.evaluate("() => { document.querySelector('.amb-merge').scrollIntoView(); }"); await ep.wait_for_timeout(250)
+            ov = await ep.evaluate("""() => { const card = document.querySelector('.amb-merge'), bad = []; const items = [...card.querySelectorAll('.mrow > *, #ambAll')].map(e => [e, e.getBoundingClientRect()]).filter(x => x[1].width > 0);
+              for (let i = 0; i < items.length; i++){ const a = items[i][1]; if (a.right > innerWidth + 1 || a.left < -1) bad.push('밖:' + items[i][0].textContent.slice(0, 8)); for (let j = i + 1; j < items.length; j++){ const b = items[j][1]; if (items[i][0].parentElement === items[j][0].parentElement && !(a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1)) bad.push(items[i][0].textContent.slice(0, 8) + '/' + items[j][0].textContent.slice(0, 8)); } }
+              const sets = [...document.querySelectorAll('[data-aset]')].map(b => b.getBoundingClientRect()), setBad = sets.some((a, i) => sets.some((b, j) => j > i && !(a.right <= b.left + 1 || b.right <= a.left + 1 || a.bottom <= b.top + 1 || b.bottom <= a.top + 1)) || a.right > innerWidth + 1);
+              return {bad, rows: card.querySelectorAll('.mrow').length, setBad, sets: sets.length}; }""")
+            await ep.screenshot(path=str(OUT / f'28e_호박석_합성_{nm}.png'))
+            await ep.evaluate("() => { document.querySelector('[data-aset]').scrollIntoView(); }"); await ep.wait_for_timeout(200)
+            await ep.screenshot(path=str(OUT / f'28e_호박석_박기_{nm}.png'))
+            check(not ov['bad'] and ov['rows'] == 4 and not ov['setBad'] and ov['sets'] == 20, f'합성 칸·돌 고르기 단추가 {nm} 화면에서 겹치거나 밖으로 나가지 않는다(희귀·영웅·전설·유물 네 줄) {ov}')
+        await ep.set_viewport_size({'width': 844, 'height': 390}); await ep.wait_for_timeout(400)
+        await ep.evaluate("""() => { const G = window.__game; G.S.amber.raw = [0, 0, 0, 0]; G.S.amber.st = {}; }""")
         await ep.evaluate("""() => { const G = window.__game; G.closePage(); }""")
         await ep.wait_for_timeout(600)
         await ep.screenshot(path=str(OUT / '28d_용사_새장비.png'))
@@ -2725,7 +2780,7 @@ async def main():
           // 저장 보호 4의 되찾기: 400층인데 용마·날개가 없으면 다시 준다
           delete S.mount.own.yongma; delete S.av.own.w_fin; G.mountCatchUp(); out.back = [!!S.mount.own.yongma, !!S.av.own.w_fin];
           return out; }""")
-        check(tw2['best'] == 301 and tw2['b305'] == 305 and sum(tw2['amb']) == 1 and tw2['b350'] == 350 and tw2['fin'] and tw2['b400'] == 400 and tw2['yong'] and tw2['more'] is False and tw2['artOk'] and tw2['re'] == [400, True, True] and tw2['back'] == [True, True],
+        check(tw2['best'] == 301 and tw2['b305'] == 305 and sum(tw2['amb']) == 4 and tw2['b350'] == 350 and tw2['fin'] and tw2['b400'] == 400 and tw2['yong'] and tw2['more'] is False and tw2['artOk'] and tw2['re'] == [400, True, True] and tw2['back'] == [True, True],
               f"탑: 301·305(호박석)·350(지느러미 날개)·400층(용마)을 오르고 저장·되찾기가 맞다 {tw2}")
         # 7-2b: 4부 치장 22가지(46~67장)·유물 치장·아바타 여덟·세트 둘·용궁 조합식(10~12단계)
         u2 = await up.evaluate(r"""(lateS) => { const G = window.__game, S = G.S, out = {}; const keep = JSON.parse(JSON.stringify(S));
@@ -3814,7 +3869,7 @@ async def main():
               f"5부 용사: 탑이 500층까지(401층 = 란카 길 → 젖의 바다 → 수미산 띠) {w2['cap']} {w2['ws']}")
         check({'ravana', 'kumbha', 'rahu', 'mara', 'asura', 'king4'} <= set(w2['types']) and not ({'tiger', 'oni', 'dokkaebi'} & set(w2['types'])), f"401~500층 보스는 5부 몬스터가 돌아가며 나온다 {w2['types']}")
         check(w2['start'] is True and w2['info'] and w2['info'][0] == 401 and w2['info'][1] == '천공의 탑 401층' and w2['info'][3] and w2['b401'] == 401, f"5부 용사는 401층에 도전하고 이긴다 {w2['info']} {w2['b401']}")
-        check(w2['b405'] == 405 and sum(w2['amb']) == 1 and w2['gate'] == [True, True] and w2['b410'] == 410 and w2['sp'] == 1 and w2['sp2'] == 2 and '호박석' in w2['rw'][0] and '영물' in w2['rw'][1] and '영물' in w2['rw'][3],
+        check(w2['b405'] == 405 and sum(w2['amb']) == 4 and w2['gate'] == [True, True] and w2['b410'] == 410 and w2['sp'] == 1 and w2['sp2'] == 2 and '호박석' in w2['rw'][0] and '영물' in w2['rw'][1] and '영물' in w2['rw'][3],
               f"5로 끝나는 층은 호박석, 10층마다 문지기(전멸기)와 영물 장비 하나(깃든 짐승 무작위) {w2['amb']} {w2['sp']} {w2['sp2']} {w2['b420']} {w2['rw'][:2]}")
         check(w2['b450'] == 450 and w2['eagle'] and w2['b500'] == 500 and w2['horse'] and w2['title'] and w2['more'] is False and w2['artOk'] and w2['re'] == [500, True, True, True] and w2['back'] == [True, True]
               and '독수리 왕의 날개' in w2['rw'][2] and '하늘 말' in w2['rw'][4] and '수미를 오른 자' in w2['rw'][4],
@@ -4481,7 +4536,7 @@ async def main():
           S.lg = {pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}; S.gems = 1e9;
           const c1 = G.lgIncCost(); const g0 = S.gems; out.gem1 = G.lgIncLight('gem'); out.gemPaid = g0 - S.gems === c1; out.gemSec = S.lg.inc;
           const c2 = G.lgIncCost(); out.c2 = c2 / c1; out.gem2 = G.lgIncLight('gem'); out.gem3 = G.lgIncWhy('gem');
-          S.lg.inc = 0; S.lg.inDay = 0; S.amber.raw = [3, 3, 3]; out.amb = [0, 1, 2].map(g => { const r0 = S.amber.raw[g], i0 = S.lg.inc; G.lgIncLight(g); return [r0 - S.amber.raw[g], S.lg.inc - i0]; });
+          S.lg.inc = 0; S.lg.inDay = 0; S.amber.raw = [3, 3, 3, 0]; out.amb = [0, 1, 2].map(g => { const r0 = S.amber.raw[g], i0 = S.lg.inc; G.lgIncLight(g); return [r0 - S.amber.raw[g], S.lg.inc - i0]; });
           S.lg.inc = 43200 - 1000; out.over = G.lgIncWhy(0); S.lg.inc = 0;
           S.mem = {ch:'yes', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0}; const pc = [G.lgIncPct()];
           S.mem.p = [4, 0, 0]; pc.push(G.lgIncPct()); S.mem.p = [4, 4, 0]; pc.push(G.lgIncPct()); S.mem.p = [4, 4, 4]; pc.push(G.lgIncPct()); S.mem.fin = true; pc.push(G.lgIncPct()); out.pc = pc.join();
@@ -4490,7 +4545,7 @@ async def main():
           S.level = G.MAIN_Q[lqi].n; const i1 = S.lg.inc = 100; for (let i = 0; i < 20; i++){ G.hero.dead = false; G.hero.hp = G.ST.maxHp; G.update(1); } out.still = S.lg.inc === 100; S.level = G.MAIN_Q[lqi].n - 5;
           S.guard.lv.yongsin = 0; S.lg.pend = 0; S.lg.inc = 0; const a0 = G.lgExtra(1000, {off:true, inF:0}); S.lg.inc = 1800; const fr = G.lgIncOff(3600); out.fr = [fr, S.lg.inc];
           const a1 = G.lgExtra(1000, {off:true, inF:fr}); out.offMore = a1 > a0;
-          S.amber.raw = [8, 0, 0]; S.amber.st = {}; out.nsl = G.slotsNow().length; out.spare = G.lgAmbSpare(0); const sl = G.slotsNow()[0]; S.amber.st[sl] = {g:0, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare2 = G.lgAmbSpare(0); S.amber.st[sl] = {g:2, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare3 = G.lgAmbSpare(0);
+          S.amber.raw = [8, 0, 0, 0]; S.amber.st = {}; out.nsl = G.slotsNow().length; out.spare = G.lgAmbSpare(0); const sl = G.slotsNow()[0]; S.amber.st[sl] = {g:0, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare2 = G.lgAmbSpare(0); S.amber.st[sl] = {g:2, a:[0, 1], b:0, u:[0, 0, 0], v:[0, 0, 0]}; out.spare3 = G.lgAmbSpare(0);
           S.amber.st = {}; return out; }""")
         check(f['gem1'] and f['gemPaid'] and f['gemSec'] == 7200 and f['c2'] == 1.5 and f['gem2'] and '2번' in f['gem3'], f"보석 향: 값 지불·2시간·두 번째는 1.5배·하루 2번까지 {f['gemSec']} {f['c2']} {f['gem3']}")
         check(f['amb'] == [[1, 1800], [1, 7200], [1, 21600]], f"호박석 향: 하나씩 쓰고 30분·2·6시간 {f['amb']}")
@@ -4519,7 +4574,7 @@ async def main():
         await lq.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); G.hideModal(); const lqi = G.MAIN_Q.findIndex(q => q.k === 'l5'); G.setWorld(5); S.quest.main = lqi; S.level = G.MAIN_Q[lqi].n - 5;
           S.gold = 1e60; S.gems = 1e9; S.mat.m3 = 500; S.guard.lv.yongsin = 4; G.guardSet('yongsin'); S.mem = {ch:'yes', p:[4, 2, 0], paid:[true, true, false], fin:false, orbs:0};
           S.lg = {pend:0.24, day:'', free:2, extra:0, inDay:0, seq:1, req:{k:'kill', n:500, c:180, sw:0}, auto:false, inc:8000, st:{t:7200, b:12.4, e:1.9, q:4, i:3000}};
-          S.amber.raw = [3, 1, 0]; G.refreshStats(); }""")
+          S.amber.raw = [3, 1, 0, 0]; G.refreshStats(); }""")
         await tab(lq, 'quest')
         await lq.click('[data-qv="lg"]')
         await lq.wait_for_timeout(500)
@@ -4889,7 +4944,7 @@ async def main():
         # j) 새 옵션 줄(9-5 나): 호박석 돛·물수리, 영약 공격 속도·치명 확률
         await apg.evaluate(APT_LOAD, apt_gun)
         tj = await apg.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; const sl = G.ALL_SLOTS[0];
-          S.amber.raw = [999, 999, 999]; const seen = {}; for (let z = 0; z < 200; z++){ G.ambSet(sl, 2); const st = G.S.amber.st[sl]; for (const k of st.a) seen[k] = (seen[k] || 0) + 1; }
+          S.amber.raw = [999, 999, 999, 999]; const seen = {}; for (let z = 0; z < 200; z++){ G.ambSet(sl, 2); const st = G.S.amber.st[sl]; for (const k of st.a) seen[k] = (seen[k] || 0) + 1; }
           out.seen = [seen.mast || 0, seen.osprey || 0, Object.keys(seen).length];
           S.amber.st = {}; S.elix = {o:{}, offer:null, qi:0}; G.refreshStats(); G.aptReset();
           const base = {spd:G.seaSum().spd, crit:G.seaSum().crit, opt:G.spdOpt(), aspd:G.ST.aspd, cr:G.ST.crit + G.ST.critOver};
