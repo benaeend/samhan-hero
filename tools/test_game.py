@@ -52,7 +52,7 @@ SIM = r"""
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
-  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
+  let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], entPend = null, entHold = 0, goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
   const Wt = {atk:1, hp:1.3 * Math.pow(1.09, opts.hpLag ?? ((G.TANK && G.TANK.hpLag) || 0)), crit:1.5, critDmg:1.8, aspd:1.5, regen:3};   // 체력은 공격력보다 TANK.hpLag(10)레벨 아래에 머물게(2026-11-14 엽전 경제)
   const LEAN = opts.lean === 'hard' ? {d:25, r:12} : opts.lean === 'mild' ? {d:10, r:5} : null;   // 9-4: 공격만 올리는 사람(Δ = 체력이 공격력보다 뒤에 머무는 레벨·재련 단계)
   if (LEAN) { Wt.hp *= Math.pow(1.09, LEAN.d); if (opts.lean === 'hard') Wt.regen *= 100; }
@@ -200,15 +200,26 @@ SIM = r"""
         // 실패하면 30분 동안은 그보다 낮은 레이드를 돌고, 첫 클리어 보상이 남은 레이드를 먼저 한다
         if (raidPend && G.S.rec.raids === raidPend[0]) raidHold = [raidPend[1], t + 1800];
         raidPend = null;
+        if (entPend != null) { if ((G.entrySt().wins || 0) === entPend) entHold = t + 1800; entPend = null; }
         let r = G.firstReadyRaid();
         if (r >= 0 && t < raidHold[1]) r = Math.min(r, raidHold[0] - 1);
-        for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g', 'b', 'k', 'd', 'n', 'x', 'r', 'c', 'u'][G.S.world] + j]) { r = j; break; }
-        if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
+        let uncl = false; for (let j = r; j >= 0; j--) if (!G.S.raid.first[['', 'h', 'g', 'b', 'k', 'd', 'n', 'x', 'r', 'c', 'u'][G.S.world] + j]) { r = j; uncl = true; break; }
+        // 입문 레이드(2026-11-17): 일반 레이드가 없거나(안 열림·이야기 문), 열린 곳을 다 깼고 입문 레이드가 더 셀(엽전이 더 많을) 때 토벌패를 거기에. 지면 30분 쉼
+        const eGo = !opts.noentry && G.entryReady && t >= entHold && G.entryReady() && (r < 0 || !uncl && G.entryInfo().ref > G.raidAt(r).ref);
+        if (eGo) { if (G.startEntry()) entPend = G.entrySt().wins || 0; }
+        else if (r >= 0 && G.startRaid(r)) raidPend = [G.S.rec.raids, r];
       }
     }
     // 보스 다시 도전은 게임의 [보스 자동]에 맡긴다(예전엔 여기서 60초마다 억지로 도전시켰음 — 물의 신화: 도전 기운이 다 찬 뒤엔 간격이 벌어짐)
     if (opts.tanklog) { const tk = G.S.world + ':' + G.S.stage; if (!tseen.has(tk)) { tseen.add(tk); tank.push([G.S.world, G.S.stage, Math.round(t / 60), +Math.log10(G.tankPow()).toFixed(3), G.S.up.hp, G.S.up.atk, G.S.refine.armor.lv, G.S.refine.weapon.lv, G.petDR(), G.guardLv('seongju')]); } }
     if (opts.snapW && !G.raid && !G.bossActive) for (const [sw, ss] of opts.snapW) { const kk = 'w' + sw + 's' + ss; if (!wsnap.has(kk) && G.S.world === sw && G.S.stage >= ss) { wsnap.add(kk); snaps[kk] = JSON.stringify(G.S); } }   // 9-4: 그 세계·단계에 처음 닿은 저장
+    if (i % 10 === 0 && G.RAID_WORLDS) {   // 레이드가 막힌 시간(분): T<w>lv 레벨·단계가 모자라 하나도 없음 · T<w>st 레벨은 되는데 이야기가 막아 하나도 없음 · T<w>sp 일부만(다음 것이 이야기에 막힘) · T<w>ok · S<w>:<i> 그 레이드가 이야기에 막힌 시간 · V<w>:<i> 레벨·단계를 기다린 시간
+      const w = G.S.world, n = G.RAID_WORLDS[w].n, b = Math.min(n, G.raidUnlockedBase()), u = G.raidUnlocked(), m = dt * 10 / 60, add = k => { first[k] = (first[k] || 0) + m; };
+      add('T' + w + (b === 0 ? 'lv' : u === 0 ? 'st' : u < b ? 'sp' : 'ok')); if (u < b) add('S' + w + ':' + u); else if (b < n) add('V' + w + ':' + b);
+      if (!G.raid && G.raidTickets() >= G.TICKET_MAX) add('F' + w);   // 토벌패가 가득 차 버려지는 시간
+      if (u > 0) { let all = true; for (let j = 0; j < u; j++) if (!G.S.raid.first[G.raidAt(j).key]) all = false; if (all && G.mGold(G.raidAt(u - 1).ref) < 0.25 * G.mGold(Math.max(1, G.S.maxStage))) add('K' + w); }   // 열린 곳을 다 깼고 가장 높은 곳도 지금 단계 엽전 가치의 25% 아래(쓸 가치가 낮음)
+    }
+    if (i % 10 === 0) { mark('R' + G.S.world + ':' + G.raidUnlocked(), t); if (G.entryRaidOpen) mark('E' + G.S.world + ':' + (G.entryRaidOpen() ? 1 : 0), t); if (G.S.entry && G.S.entry.first[G.S.world]) mark('X' + G.S.world + ':1', t); }   // 입문 레이드(2026-11-17): 세계별로 레이드가 몇 곳 열렸나·입문 레이드 열림·토벌 수가 처음 닿은 시각
     mark(G.S.world + ':' + G.S.stage, t); mark('L' + G.S.world + ':' + G.S.level, t); if (G.S.job) mark('J' + G.S.job, t); for (const k of ['w', 'a', 'n']) if (G.S.craft[k].t) mark('C' + k + G.S.craft[k].t, t); if (G.S.quest.hid) mark('H' + G.S.quest.hid, t);
     for (let q = 0; q <= G.S.quest.main; q++) mark('Q' + q, t);
     if (G.S.aw2.q) mark('A' + G.S.aw2.q, t); { const mn = G.S.mem.p[0] + G.S.mem.p[1] + G.S.mem.p[2]; if (mn) mark('M' + mn, t); }
@@ -244,6 +255,26 @@ def long_table(cls, first):
     print(f'        전직 1차:{h(first.get("J1"))} 2차:{h(first.get("J2"))} 3차:{h(first.get("J3"))} 4차:{h(first.get("J4"))} · 히든 시작:{h(first.get("H1"))}')
     print('        레벨 ' + ' '.join(f'{ {"L0": "이승", "L1": "저승", "L2": "천계", "L3": "부상", "L4": "곤륜"}[k]}{v}:{h(first.get(f"{k}:{v}"))}' for k, v in LONG_L))
     print('        이야기 ' + ' '.join(f'{q}:{h(first.get(f"Q{q}"))}' for q in LONG_Q))
+    # 입문 레이드(2026-11-17): 세계에 들어선 뒤 레이드를 하나도 못 하던 시간(들어선 시각 → 첫 일반 레이드가 열린 시각) · 입문 레이드 첫 토벌
+    wl = []
+    for w in range(11):
+        t0 = first.get(f'{w}:1')
+        if t0 is None:
+            continue
+        r1, x1 = first.get(f'R{w}:1'), first.get(f'X{w}:1')
+        wl.append(f'{w}:{h(t0)}→{h(r1)}' + (f'({(r1 - t0)}m)' if r1 is not None else '') + (f' 입문{h(x1)}' if x1 is not None else ''))
+    if wl:
+        print('        레이드 대기 ' + ' '.join(wl))
+    tl = []
+    for w in range(11):
+        tot = sum(first.get(f'T{w}{k}', 0) for k in ('lv', 'st', 'sp', 'ok'))
+        if tot:
+            tl.append(f'{w}: 레벨{first.get(f"T{w}lv", 0):.0f}m 이야기{first.get(f"T{w}st", 0):.0f}m 일부{first.get(f"T{w}sp", 0):.0f}m /{tot:.0f}m')
+    if tl:
+        print('        레이드 막힘 ' + ' · '.join(tl))
+    fl = [f'{w}: 가득{first.get(f"F{w}", 0):.0f}m 약함{first.get(f"K{w}", 0):.0f}m' for w in range(11) if first.get(f'F{w}') or first.get(f'K{w}')]
+    if fl:
+        print('        토벌패 ' + ' · '.join(fl))
 
 
 # claude.ai 아티팩트의 계정 저장소(window.claude db)를 흉내 낸다. 문서는 window.__store 에 쌓인다.
@@ -361,12 +392,14 @@ async def run_long():
             ctx = await browser.new_context()
             page = await ctx.new_page()
             await fresh(page)
-            r = await page.evaluate(SIM, [hours * 60, c, {'dt': 0.2, 'marks': marks, 'curve': curve}])
+            r = await page.evaluate(SIM, [hours * 60, c, {'dt': 0.2, 'marks': marks, 'curve': curve, 'noentry': bool(os.environ.get('SIM_NOENTRY'))}])
             await ctx.close()
             return c, r
         for c, r in await asyncio.gather(*[one(c) for c in classes]):
             print('\n'.join(r['log']))
             long_table(c, r['first'])
+            if os.environ.get('SIM_DUMP'):
+                Path(os.environ['SIM_DUMP'] + f'_{c}.json').write_text(json.dumps(r['first']))
         await browser.close()
 
 
@@ -658,6 +691,27 @@ async def main():
             await page.evaluate(f"() => window.__game.setStage({st})")
             await page.wait_for_timeout(1500)
             await (await page.query_selector('#scene')).screenshot(path=str(OUT / f'17_저승{i + 1}.png'))
+        # 6-2a) 입문 레이드(2026-11-17): 저승에 막 들어선 용사(Lv.1·1단계)도 레이드 하나는 바로 할 수 있다 — 토벌패·이야기 레이드 횟수와 따로
+        er0 = await page.evaluate("""() => { const G = window.__game, S = G.S; window.__erKeep = {level:S.level, stage:S.stage, maxStage:S.maxStage, s1:S.best.s1, tk:S.raid.tk}; S.level = 1; S.stage = 1; S.maxStage = 1; S.best.s1 = 1; G.setStage(1); S.raid.tk = 3; S.entry = {day:'', n:0, wins:0, first:{}}; G.refreshStats();
+          return {base: G.raidUnlocked(), open: G.entryRaidOpen(), w0: G.entryRaidOpen(0), ref: G.entryInfo().ref, ready: G.entryReady()}; }""")
+        check(er0['base'] == 0 and er0['open'] and not er0['w0'] and er0['ref'] == 1 and er0['ready'], f'저승에 막 들어서면 일반 레이드는 닫혀 있어도 입문 레이드는 열려 있다(이승은 없음) {er0}')
+        await page.click('#tab-raid'); await page.click('[data-rv="raid"]'); await page.wait_for_timeout(300)
+        eb = await page.evaluate("() => { const b = document.querySelector('#raid-entry .btn'); return b ? {t: b.textContent, dis: b.disabled, first: document.querySelector('.rlist .rcard').id} : null; }")
+        check(eb and eb['t'] == '입장' and not eb['dis'] and eb['first'] == 'raid-entry', f'[레이드] 목록 맨 앞에 입문 레이드 칸이 있고 입장할 수 있다 {eb}')
+        await page.screenshot(path=str(OUT / '17b_입문레이드.png'), full_page=True)
+        await page.click('#raid-entry .btn'); await page.wait_for_selector('#modal-btn-1'); await page.click('#modal-btn-1')
+        er1 = await page.evaluate("""() => { const G = window.__game, S = G.S, g0 = S.gems, r0 = S.rec.raids, h0 = S.rec.hraids || 0, tk0 = S.raid.tk, started = !!(G.raid && G.raid.info.entry);
+          for (let i = 0; i < 3000 && G.raid; i++) G.update(0.05);
+          return {started, gems: S.gems - g0, first: !!S.entry.first[1], wins: S.entry.wins, raids: S.rec.raids - r0, hraids: (S.rec.hraids || 0) - h0, tk: S.raid.tk - tk0, key: !!S.raid.first.e1 || !!S.raid.first['']}; }""")
+        check(er1['started'] and er1['first'] and er1['gems'] > 0 and er1['wins'] == 1 and er1['raids'] == 0 and er1['hraids'] == 0 and er1['tk'] == -1 and not er1['key'],
+              f'입문 레이드를 깨면 보상·첫 클리어를 받고 토벌패 1개를 쓴다(이야기 레이드 횟수·저승 레이드 횟수·첫 토벌 기록은 그대로) {er1}')
+        er2 = await page.evaluate("""() => { const G = window.__game, S = G.S; S.best.s1 = 30; S.maxStage = 30; const a = G.entryInfo().ref; S.best.s1 = 200; S.maxStage = 200; const b = G.entryInfo().ref;
+          S.level = 200; const gTop = G.entryInfo().gems, top = G.RAID_WORLDS[1].info(Math.min(10, G.raidUnlocked()) - 1).gems;
+          S.raid.tk = 0; S.raid.tkT = G.now(); const empty = G.entryReady(), go = G.startEntry();
+          const K = window.__erKeep; S.level = K.level; S.maxStage = K.maxStage; S.best.s1 = K.s1; S.raid.tk = K.tk; G.setStage(K.stage); G.refreshStats();
+          return {a, b, gTop, top, empty, go}; }""")
+        check(er2['a'] == 24 and er2['b'] == 160 and er2['gTop'] == round(er2['top'] * 0.8) and not er2['empty'] and not er2['go'],
+              f'입문 레이드 세기는 지나온 단계 × 0.8로 용사를 따라가고, 보석은 열린 가장 높은 레이드 반복 보석 × 0.8, 토벌패가 없으면 못 들어간다 {er2}')
         hr = await page.evaluate("""() => { const G = window.__game; G.S.level = 60; G.S.awaken = true; G.S.raid.tk = 3; const ok = G.startRaid(0);
           const B = G.raid.boss; B.hp = B.maxHp = Math.max(B.hp, G.ST.atk * G.ST.aspd * 30);   // 너무 빨리 끝나지 않게(초각성은 12초 뒤에 쓴다)
           let cast = false; for (let i = 0; i < 2400 && G.raid; i++){ G.update(0.05); if (G.raid && G.raid.awk && G.raid.awk.used) cast = true; } return {ok, cast, h0: !!G.S.raid.first.h0}; }""")

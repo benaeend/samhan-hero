@@ -4438,9 +4438,14 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-15-1', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-17-4', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 17일 · 새 지역에 들어가자마자 바로 도는 입문 레이드'],
+  ['새 땅에 들어서면 입문 레이드가 바로 열려요', '저승·천계·부상·곤륜·동해·남쪽 바다·깊은 바다·란카 길·젖의 바다·수미산에 처음 들어서면, 다른 레이드가 열리기 전에도 [레이드] 목록 맨 앞의 「입문 레이드」를 바로 할 수 있어요. 길목을 막고 나그네를 시험하는 두억시니가 땅마다 기다려요.'],
+  ['토벌패가 가득 찬 채 버려지지 않게', '입문 레이드는 그 땅에 있는 동안 늘 열려 있고, 세기가 내가 지나온 단계를 따라가요(지나온 단계보다 조금 약하게). 다른 레이드가 레벨·이야기에 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 여기에 쓰면 돼요. 일반 레이드처럼 이기면 토벌패 1개를 쓰고, 지면 돌려받아요.'],
+  ['보상', '보석은 지금 열린 가장 높은 레이드의 반복 보상보다 조금 적고, 엽전은 세기를 따라 올라요. 장비·재료도 주고, 땅마다 첫 클리어 보상이 한 번 더 있어요. 신화 보물·장신구 같은 드문 보상은 일반 레이드에만 있어요.'],
+  ['이야기의 레이드 횟수에는 세지 않아요', '「레이드를 n번 클리어」·「○○ 레이드를 토벌」 같은 이야기, 환생 시련, 히든 퀘스트, 하루·주간 부탁의 레이드 횟수에는 들어가지 않아요. 이승은 튜토리얼이 Lv.10 첫 레이드로 바로 이끌어서 입문 레이드가 없어요.'],
   ['#', '11월 15일 · 레이드 피해 · 탕약 · 하루 횟수 표시 · 수군 야행'],
   ['레이드에서 맞는 피해가 줄고 탕약이 제 몫을 해요', '레이드(강림·용왕 강림·타임 보스·1일 보스·시왕·영웅)에서 용사가 맞는 보스 공격이 20% 줄었어요. 자동 탕약은 레이드에서는 체력 50% 아래에서 마시고, 맞은 피해로 깎이는 깊은 상처도 4분의 1만 쌓여요. 사냥터·단계 보스·결투·진·천공의 탑은 그대로예요.'],
   ['하루 횟수가 「남은 횟수」로 보여요', '「오늘 2 / 3번」처럼 헷갈리던 글을 「오늘 2번 남음」으로 바꿨어요. 다 쓰면 「오늘 다 했어요」, [직업 바꾸기]도 「이번 주 2번 남음」으로 보여요.'],
@@ -5359,6 +5364,7 @@ function mergeState(d){
   if (out.speed !== 2) out.speed = 1;
   out.dust = Math.max(0, d.dust == null ? 40 : +d.dust || 0);
   out.dummy = Object.assign({day:'', n:0, best:0}, d.dummy || {});
+  { const e = d.entry || {}; out.entry = {wins:Math.max(0, Math.floor(+e.wins) || 0), first:Object.assign({}, e.first)}; }   // 입문 레이드(2026-11-17)
   out.sub = {act:Object.assign({}, (d.sub || {}).act), done:Object.assign({}, (d.sub || {}).done)};
   for (const k in out.sub.act){ const a = out.sub.act[k]; if (!a || typeof a !== 'object') delete out.sub.act[k]; }
   out.off = {kps:Math.min(OFF_KPS_MAX, Math.max(0, +(d.off && d.off.kps) || 0)), acc:Math.max(0, +(d.off && d.off.acc) || 0)};
@@ -9149,6 +9155,7 @@ function finishRaid(){
   if (info.job){ finishJobTrial(R); return; }
   if (info.jin){ finishJin(R); return; }
   if (info.haetae){ finishHaetae(R); return; }
+  if (info.entry){ finishEntry(R); return; }
   if (R.win){
     const rw = raidReward(info);
     addLog(`${info.label} 토벌 성공! 보석 +${rw.gems}`, 'gain'); sfx('win');
@@ -13211,6 +13218,84 @@ const RAID_WORLDS = [
   {w:7, n:SEA3_RAIDS.length, at:SEAS[7].at, info:i => seaRaidInfo(7, i), key:i => 'x' + i},
   ...[8, 9, 10].map(w => ({w, n:SEAS[w].raids.length, at:SEAS[w].at, info:i => seaRaidInfo(w, i), key:i => SEAS[w].key + i}))];   // 8~10: 5부 천축(란카 길 r · 젖의 바다 c · 수미산 u)   // every: 그 땅 단계 몇 개마다 하나씩 열리나(부상부터)
 function raidPartCount(p){ let a = 0, b = 0; for (const R of RAID_WORLDS) if (partOfW(R.w) === p){ b += R.n; for (let i = 0; i < R.n; i++) if (S.raid.first[R.key(i)]) a++; } return b ? [a, b] : null; }
+/* ================= 입문 레이드(2026-11-17, 사용자 요청: 새 땅에 들어서면 첫 레이드가 열릴 때까지 레이드를 못 하고, 그 뒤에도 이야기·레벨에 막혀 토벌패가 3/3으로 가득 찬 채 버려짐) =================
+   새 세계(저승 ~ 수미산)에 들어서자마자 열리고 그 세계에 있는 동안 늘 열려 있는 레이드 하나 — 토벌패를 쓸 곳이 언제나 하나는 있게.
+   보스는 땅마다 길목을 막고 나그네를 시험하는 '두억시니'(옛이야기의 도깨비붙이, 새 그림 duoksini, 이름·색만 땅마다).
+   · 세기 ref = 그 세계 최고 단계 × ENTRY.k(저승·천계), 부상부터는 최고 단계보다 세기 ENTRY.e만큼 아래(단계로 e ÷ r) — 늘 '이미 지나온 단계'보다 조금 아래라 언제 들어가도 깰 수 있고, 용사가 단계를 올리면 따라 세진다(엽전 보상도 따라 오름).
+   · 일반 레이드처럼 토벌패 1개(이기면 씀, 지면 돌려받음). 보상: 보석 = 지금 열린 일반 레이드 가운데 가장 높은 곳의 반복 보석 × ENTRY.gem(아직 없으면 첫 레이드),
+     세계마다 첫 토벌 한 번은 첫 레이드 첫 보상 × ENTRY.first, 엽전 mGold(ref)×60, 재료, 장비 하나(같은 레이드 등급, 첫 토벌은 둘). 신화·장신구·넋·호박석 같은 드문 것은 없음(일반 레이드가 할 몫).
+   · 이야기 조건(raids·raidK)·환생 시련(이승 레이드 8곳)·히든 퀘스트(저승 레이드 횟수)·하루/주간 부탁·진·부별 토벌 수에는 세지 않는다(기록은 S.entry 따로, S.raid.first·rec.raids·ev('raid')를 건드리지 않음).
+   · 이승(세계 0)은 없다: 튜토리얼이 Lv.10 첫 레이드로 이끌고(몇 분), 이승의 「레이드 n번」 이야기와 헷갈리지 않게 */
+const ENTRY = {k:0.8, e:8, gem:0.8, first:0.5};   // k: 저승·천계는 지나온 단계 × k, e: 부상부터는 지나온 단계보다 세기(contE) e만큼 아래(자객이 바다 끝 단계 × 0.8에서 졌음)
+const ENTRY_RAIDS = {
+  1:{name:'저승 들머리', boss:'저승 길목 두억시니', color:'#6a4a9a'},
+  2:{name:'구름 들머리', boss:'구름다리 두억시니', color:'#c8cce8'},
+  3:{name:'뱃길 들머리', boss:'뱃길 두억시니', color:'#3a6a5a'},
+  4:{name:'모랫길 들머리', boss:'모랫길 두억시니', color:'#c8a060'},
+  5:{name:'물마루 들머리', boss:'물마루 두억시니', color:'#2a7ab0'},
+  6:{name:'바람길 들머리', boss:'바람길 두억시니', color:'#6a8aa8'},
+  7:{name:'물 밑 들머리', boss:'깊은 물 두억시니', color:'#2a3a5a'},
+  8:{name:'숲길 들머리', boss:'숲길 두억시니', color:'#5a7a4a'},
+  9:{name:'젖빛 들머리', boss:'젖빛 두억시니', color:'#e8e0c8'},
+  10:{name:'산길 들머리', boss:'산길 두억시니', color:'#6a6a5a'},
+};
+const entrySt = () => S.entry || (S.entry = {wins:0, first:{}});
+const entryRaidOpen = (w = S.world) => !!ENTRY_RAIDS[w] && !!RAID_WORLDS[w];
+function entryInfo(w = S.world){
+  const d = ENTRY_RAIDS[w], R = RAID_WORLDS[w], r0 = R.info(0), u = w === S.world ? Math.min(R.n, raidUnlocked()) : 0, top = u > 0 ? R.info(u - 1) : r0;
+  const best = Math.max(1, (S.best && S.best['s' + w]) || 0, w === S.world ? S.maxStage || 1 : 1), ref = Math.max(1, CONT[w] ? best - Math.ceil(ENTRY.e / CONT[w].r) : Math.floor(best * ENTRY.k));   // 부상부터는 단계마다 세기가 조금씩(r)만 올라 '세기 e만큼 아래'로
+  return {name:d.name, boss:d.boss, color:d.color, type:'duoksini', region:0, i:-1, key:'', entry:true, ew:w, round:0, req:1, ref, party:r0.party, g:top.g,
+    label:'입문 레이드 · ' + d.name, bossName:d.boss, gems:Math.round(top.gems * ENTRY.gem), firstGems:Math.round(r0.firstGems * ENTRY.first),
+    say:['여기서부터는 새 땅이다. 길을 지나려면 나를 넘어 봐라!', '흐흐… 제법이구나. 이 땅에서도 잘 버티겠다!']};
+}
+const entryReady = () => entryRaidOpen() && !raid && raidTickets() > 0;
+function startEntry(){
+  if (!entryReady() || !session && !window.__game) return false;
+  const info = entryInfo(), ref = info.ref, eff = (1 + 0.45 * (info.party - 1)) * (info.party > RAID_PARTY_MAX ? 0.7 : 1), party = raidParty(info);
+  const tks = tkRaidS(ref), tk = tkOnAt(S.world, tks);
+  if (tk) for (const a of party){ if (a.npc) a.maxHp = Math.pow(10, tankRefLog(S.world, tks) - tkLagLog()) * (a.cls === 'musa' ? TANK.npcHp.musa : TANK.npcHp.def); else if (a.ehp > 0) a.maxHp = a.ehp; }
+  startFight(info, party, {hp:10 * mHp(ref) / 15 * eff * 40 * pbRaidK(party), atk:(tk ? mAtkT(tks) * TANK.raidK : mAtk(ref)) * 3, aoe:(tk ? mAtkT(tks) * TANK.raidK : mAtk(ref)) * 2, time:RAID_TIME});
+  raid.norm = true;
+  if (TM) TM.kind = 'raid';
+  addLog(`${info.label} 시작! ${RAID_TIME}초 안에 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨려요.`, 'warn');
+  return true;
+}
+function entryReward(info){
+  const E = entrySt(), first = !E.first[info.ew];
+  const gems = Math.round((info.gems + (first ? info.firstGems : 0)) * gemMul() * RAID_GEM_K), gold = mGold(info.ref) * 60 * gainMul('gold');
+  const items = [];
+  const roll = () => { let r = Math.random(), t = 0; for (; t < 3; t++){ if (r < TIER_P[t]) break; r -= TIER_P[t]; } return t; };
+  for (let k = first ? 2 : 1; k > 0; k--) items.push({slot:Math.random() < 0.5 ? 'weapon' : 'armor', it:info.g * 4 + roll()});
+  for (const r of items) r.isNew = giveItem(r.slot, r.it);
+  S.gems += gems; S.gold += gold;
+  const mat = gainMat(MAT_DROP.raid, true);
+  E.first[info.ew] = true; E.wins = (E.wins || 0) + 1; recWin(true, true);
+  if (raidTickets() >= TICKET_MAX) S.raid.tkT = now();
+  S.raid.tk = Math.max(0, S.raid.tk - 1);
+  refreshStats();
+  return {gems, gold, items, first, mat};
+}
+function finishEntry(R){
+  const info = R.info;
+  if (!R.win){
+    addLog(`${info.label} 실패… 토벌패는 돌려받았어요. 조금 더 사냥하고 다시 도전해요.`, 'warn'); sfx('fail');
+    if (!(window.__game && window.__game.quiet)) showModal('입문 레이드 실패', `<p>${RAID_TIME}초 안에 <b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 쓰러뜨리지 못했어요. 토벌패는 돌려받았어요.</p><p class="small">입문 레이드의 세기는 이 땅에서 지나온 단계를 따라가요. 능력치·장비를 조금 더 키우면 쉬워져요.</p>`, [{label:'확인', primary:true}]);
+    return;
+  }
+  const rw = entryReward(info);
+  addLog(`${info.label} 토벌 성공! 보석 +${rw.gems}`, 'gain'); sfx('win');
+  saveLocal();
+  if (window.__game && window.__game.quiet) return;
+  showModal(`토벌 성공 · ${info.label}`, `
+    <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 길을 비켜 줬어요! ${rw.first ? '<b>첫 클리어 보상</b>도 함께 받았어요.' : ''}</p>
+    <ul class="rewards">
+      <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
+      <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
+      <li style="color:${MATS[matW()].color}">${fmt(rw.mat)}<span>${MATS[matW()].name} (조합 재료)</span></li>
+      ${rw.items.map(r => `<li style="color:${GRADES[itemG(r.it)].color}">${gearName(r.slot, r.it)}<span>${GRADES[itemG(r.it)].name} ${GEAR[r.slot].label}${r.isNew ? ' · 새 장비' : ''}</span></li>`).join('')}
+    </ul>
+    <p class="small" style="margin-top:8px">토벌패 1개를 썼어요(남은 토벌패 ${raidTickets()}/${TICKET_MAX}). 이야기의 레이드 횟수에는 세지 않아요.</p>`, [{label:'확인', primary:true}]);
+}
 /* ================= 상위 레이드 「진(眞)」(물의 신화 3단계, PLAN 「상위 레이드와 클리어율」) =================
    지나온 땅의 레이드마다 상위 단계 하나. 그 땅의 다음 세계에 들어서면 열린다(S.world > w, 그 땅에서 일반을 못 깼어도 진으로 도전할 수 있고 이기면 일반 토벌 기록도 채움).
    · 세기는 레이드마다 정해져 있다(내 힘을 따라 세지지 않음): JIN_W[w].c[직업] = {a, b} — 그 땅 첫·마지막 레이드의 [보스 체력, 한 방, 권장 전투력](log10).
@@ -13534,6 +13619,20 @@ Object.assign(MOB_HD, {
     if (boss){ angry(16, 16 + y, 1.25); angry(27, 16 + y, 1.25); } else { bigEye(16, 16 + y, 1.15); bigEye(27, 16 + y, 1.15); }
     E(21.5, 23.5 + y, 2.6, 1.8, d); E(21.5, 23.5 + y, 1.2, 0.8, '#1d1420');
     RR(13, 2 + y, 20, 6, 2, '#1d2430'); RR(16, 0 + y, 14, 4, 2, '#2a3444'); RR(6, 4 + y, 8, 2.2, 1, '#1d2430'); RR(32, 4 + y, 8, 2.2, 1, '#1d2430'); }],
+  duoksini:[42, 46, (g, f, c, boss) => { const {E, Pl, RR, blob, bigEye, angry} = hdKit(g), d = darken(c, 0.35), l = mix(c, '#ffffff', 0.35), hr = darken(c, 0.6), y = f ? -1 : 0, w = f ? 2 : 0;   // 입문 레이드의 두억시니(길목을 막는 도깨비붙이): 외뿔·더벅머리·엄니·몽둥이
+    RR(13, 37, 7, 9 - (f ? 1 : 0), 3, d); RR(23, 37, 7, 9 - (f ? 0 : 1), 3, d);
+    blob(21, 28 + y, 15, 12, c); E(19, 31 + y, 8.5, 7, l);
+    RR(9, 33 + y, 24, 3.4, 1.4, '#7a2a2a'); E(21, 34.6 + y, 2.4, 2.4, '#ffd24a');
+    Pl([[8, 13 + y], [6, 6 + y], [11, 9 + y], [13, 2 + y], [17, 7 + y], [21, 1 + y], [25, 7 + y], [30, 3 + y], [31, 10 + y], [35, 9 + y], [33, 17 + y], [8, 17 + y]], hr);
+    blob(20, 15 + y, 12.5, 10.5, c);
+    Pl([[19, 6 + y], [21.5, -2 + y], [24, 6 + y]], '#f0e2a8'); Pl([[21.5, -2 + y], [24, 6 + y], [22.5, 6 + y]], '#c8b070');
+    Pl([[9, 9 + y], [13, 5 + y], [15, 10 + y]], hr); Pl([[26, 9 + y], [30, 6 + y], [31, 12 + y]], hr);
+    if (boss){ angry(15, 14 + y, 1.15, '#ffe27a'); angry(24, 14 + y, 1.15, '#ffe27a'); } else { bigEye(15, 14 + y, 0.9); bigEye(24, 14 + y, 0.9); }
+    E(19.5, 21 + y, 5.5, 2.6, '#2a1418'); Pl([[15.5, 20 + y], [16.8, 16.6 + y], [18, 20.4 + y]], '#fff8e8'); Pl([[21, 20.4 + y], [22.2, 16.6 + y], [23.5, 20 + y]], '#fff8e8');
+    E(7, 26 + y, 4, 4.6, c);
+    Pl([[2, 30 + y - w], [6, 4 + y - w], [11, 3 + y - w], [9.5, 30 + y - w]], '#8a5a34'); Pl([[6, 4 + y - w], [11, 3 + y - w], [10.4, 10 + y - w], [6.4, 11 + y - w]], '#6a4224');
+    for (const [x, yy] of [[6, 7], [9.6, 9], [7.4, 14], [9.2, 18]]) E(x, yy + y - w, 1, 1, '#d8c8a0');
+    E(6.5, 27 + y, 3.4, 2.8, c); }],
   spray:[40, 44, (g, f, c) => { const {E, Pl, angry} = hdKit(g), d = darken(c, 0.4), w = '#ffffff', y = f ? -2 : 0;
     Pl([[6, 42], [10, 22 + y], [16, 8 + y], [26, 2 + y], [20, 12 + y], [30, 10 + y], [36, 20 + y], [34, 42]], mix(c, '#2a7ab8', 0.55));
     Pl([[10, 42], [13, 24 + y], [18, 12 + y], [24, 7 + y], [22, 16 + y], [29, 15 + y], [32, 24 + y], [31, 42]], c);
@@ -19359,6 +19458,18 @@ function buildRaid(){
       <button class="btn rgo" data-i="${i}"></button>
     </div>`);
   }
+  // 입문 레이드(2026-11-17): 새 땅에 들어서자마자 열려 있는 한 곳 — 목록 맨 앞, 토벌패 대신 하루 횟수
+  const eCard = !entryRaidOpen() ? '' : (info => { const efirst = !entrySt().first[S.world];
+    return `<div class="rcard entry" id="raid-entry" data-part="${cpart}" data-pk="e${S.world}" data-pn="0">
+      <div class="rport"><img src="${bossPortrait(info.type, info.color)}" alt=""></div>
+      <div class="rbody">
+        <div class="rtop"><b>${info.label}</b><span class="rstate ${efirst ? 'new' : 'done'}">${efirst ? '첫 클리어 보상!' : '토벌함 ✓'}</span></div>
+        <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티 · 늘 열림 · 세기가 나를 따라감</div>
+        <div class="rpow" data-rp="entry"></div>
+        <div class="rchips"><span class="rchip rc-gem">보석 ${info.gems}${efirst ? ` +${info.firstGems}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[info.g].name} 장비</span>${efirst ? '<span class="rchip rc-myth">첫 클리어 장비 +1</span>' : ''}</div>
+      </div>
+      <button class="btn rgo" data-e="1"></button>
+    </div>`; })(entryInfo());
   // 지나온 땅의 레이드(부별 탭): 상위 단계 「진」(물의 신화 3단계) — 레이드마다 한 칸, 권장 전투력·내 전투력·주간 첫 승리 보상
   jinCheck();
   const past = RAID_WORLDS.filter(R => R.w < S.world).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length, jOn = jinOpen(R.w);
@@ -19384,12 +19495,14 @@ function buildRaid(){
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
     <div id="raidLive"></div>
     ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
-    <div class="rlist">${cards.join('')}</div></div>
+    ${eCard ? `<p class="small" style="margin:0 0 8px"><b>입문 레이드</b>는 이 땅에 들어서자마자 열리고 늘 열려 있어요. 세기는 내가 지나온 단계를 따라가서, 다른 레이드가 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 쓰기 좋아요. 이야기의 레이드 횟수에는 세지 않아요.</p>` : ''}
+    <div class="rlist">${eCard}${cards.join('')}</div></div>
     ${past}`;
   wireSeg();
   partWire('raid', {own:k => !!S.raid.first[k], count:raidPartCount, filt:false, fresh:false});
   panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => bt.addEventListener('click', () => confirmRaid(+bt.dataset.i)));
   panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => bt.addEventListener('click', () => { const [w, i] = bt.dataset.jin.split(':').map(Number); confirmJin(w, i); }));
+  { const eb = panel.querySelector('.rcard .btn[data-e]'); if (eb) eb.addEventListener('click', confirmEntry); }
   return () => {
     const live = $('#raidLive');
     if (raid){
@@ -19414,6 +19527,11 @@ function buildRaid(){
       const rp = panel.querySelector(`[data-rp="${i}"]`);
       if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(tkRaidS(info.ref))}`); }
     });
+    { const eb = panel.querySelector('.rcard .btn[data-e]');   // 입문 레이드 칸(토벌패는 일반 레이드와 함께 씀)
+      if (eb){ let t, dis = true;
+        if (raid) t = raid.info.entry ? '토벌 중' : '다른 싸움 중'; else if (tk <= 0) t = `토벌패 ${fmtTime(left / 1000)}`; else { t = '입장'; dis = false; }
+        setText(eb, t); eb.disabled = dis; eb.classList.toggle('primary', !dis); $('#raid-entry').classList.toggle('ready', !dis);
+        const rp = panel.querySelector('[data-rp="entry"]'); if (rp){ const info = entryInfo(), rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>`); } } }
     const jl = jinLeft();
     panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} ${leftTxt(jl)}`));
     panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => {
@@ -19426,6 +19544,17 @@ function buildRaid(){
       const rp = panel.querySelector(`[data-jp="${w}:${i}"]`); if (rp) setHTML(rp, jinPowHTML(w, i, pw));
     });
   };
+}
+function confirmEntry(){
+  if (!entryReady()) return;
+  const info = entryInfo(), party = raidParty(info);
+  showModal(info.label, `
+    <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 새 땅의 길목을 막고 있어요. ${partyOf(info)}인 파티로 자동 전투를 해요.</p>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <p class="small" style="margin-top:8px">세기는 이 땅에서 지나온 단계를 따라가요(지금 ${info.ref}단계 세기). 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개). 이야기의 레이드 횟수에는 세지 않아요.</p>
+    ${S.presetMode === 'ask' || !S.presetMode ? presetHTML('party') : ''}`,
+    [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (S.presetMode === 'ask' || !S.presetMode) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startEntry()) buildTab('raid'); presetNext = undefined; }}],
+    () => { if (S.presetMode === 'ask' || !S.presetMode) presetWire('party'); });
 }
 function confirmRaid(i){
   if (!raidReady(i) || raid) return;
@@ -21704,6 +21833,9 @@ if (location.search.indexOf('simtest') >= 0){
     noApt:false, aptForce:null, aptNeutral:null, aptGraceForce:null, noAptNote:true});   // 이미 있는 이름은 덮어써도 같은 것
   Object.assign(window.__game, {skGW, seaSum, seaPct, spdOptRaw, updateAim});   // 9-5 나: 새 옵션 줄·공격 속도 길 점검용
   // @@END-J
+  // @@HOOK-ENTRY 입문 레이드(2026-11-17)
+  Object.assign(window.__game, {ENTRY, ENTRY_RAIDS, entrySt, entryRaidOpen, entryInfo, entryReady, startEntry, entryReward, confirmEntry, RAID_WORLDS, raidAt, raidTickets, mGold, TICKET_MAX});
+  // @@END-ENTRY
 }
 
 const hot = window.claude && window.claude.hot;
