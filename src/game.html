@@ -223,6 +223,9 @@ body.cmp #page .partbar{margin:5px 0 5px;padding:3px}body.cmp #page .ptab{paddin
 .tchip b{font-size:12.5px;color:var(--text-soft)}.tchip small{font-size:10.5px}.tchip i{font-style:normal;font-size:10px;opacity:.8}
 .tchip.own{cursor:pointer;border-color:rgba(255,204,77,.45)}.tchip.own b{color:var(--gold)}
 .tchip.on{background:linear-gradient(180deg,rgba(255,214,102,.22),rgba(255,170,40,.1));box-shadow:0 0 12px -3px rgba(255,204,77,.6)}
+.tchip .trn{font-style:normal;font-size:9.5px;font-weight:800;opacity:.9}.tchip:not(.own) .ttl,.tchip:not(.own) .trn{opacity:.6}
+.tchip b.trk1{color:var(--tr1)}.tchip b.trk2{color:var(--tr2)}.tchip b.trk3{color:transparent}.tchip:not(.own) b.trk3{animation:none}
+.tchip.own[data-rank="2"]{border-color:rgba(201,155,255,.6)}.tchip.own[data-rank="3"]{border-color:rgba(255,200,58,.75);box-shadow:0 0 10px -3px rgba(255,200,58,.7)}
 .shtag{font-size:10.5px;font-weight:900;color:#2a1a00;background:linear-gradient(180deg,#ffe08a,#f5a524);border-radius:999px;padding:1px 7px;box-shadow:0 0 10px rgba(255,204,77,.45)}
 .nx{font-size:11.5px;color:var(--text-soft);margin-top:3px;font-variant-numeric:tabular-nums}
 .nx b{color:var(--text);font-weight:800}
@@ -477,7 +480,7 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .cm.hook{cursor:pointer;border-color:rgba(255,204,77,.55)!important;background:rgba(255,204,77,.1)!important}
 .cm .sqtag{font-style:normal;font-size:10px;font-weight:900;color:#241a04;background:var(--gold);border-radius:999px;padding:1px 6px;margin-left:6px;white-space:nowrap}
 .cm{line-height:1.4;word-break:break-all;align-self:flex-start;max-width:86%;padding:6px 11px;border-radius:14px 14px 14px 4px;background:var(--panel-2);border:1px solid var(--line)}
-.cm b{display:block;font-size:11px;font-weight:800;margin-bottom:1px}
+.cm b{display:block;font-size:11px;font-weight:800;margin-bottom:1px}.cm .ctt{font-size:10px;margin-right:2px}
 .cm.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:linear-gradient(180deg,rgba(255,204,77,.22),rgba(245,165,36,.14));border-color:rgba(255,204,77,.35)}
 .cm.me b{color:var(--gold)}
 .cm.player b{color:var(--sky)}
@@ -570,6 +573,10 @@ body.portrait .chars.many{grid-template-columns:1fr}
 .char.empty{grid-template-columns:1fr;place-items:center;min-height:50px;border-style:dashed;background:none;color:var(--text-soft);font-weight:700;font-size:13px}
 .char.empty:hover{border-color:rgba(255,204,77,.5);color:var(--gold)}
 .char em.loc{display:block;font-style:normal;font-size:10.5px;color:#ffb347;margin-top:1px}
+.cw{display:flex;gap:6px;align-items:stretch;min-width:0}.cw .char{flex:1;min-width:0}
+.cw .mv{display:flex;flex-direction:column;gap:3px;justify-content:center;flex:none}
+.cw .mvb{width:40px;min-height:38px;flex:1;padding:0;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel-2),var(--panel));color:var(--gold);font-size:14px;font-weight:800;line-height:1;cursor:pointer}
+.cw .mvb:disabled{opacity:.28;cursor:default}.cw .mvb:not(:disabled):hover{border-color:rgba(255,204,77,.5)}
 .linkrow{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
 .link{background:none;border:0;padding:2px 0;color:var(--text-soft);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:12.5px}
 .link.danger{color:#ff8a9a}
@@ -1243,7 +1250,17 @@ body.portrait .tw-art{position:static;max-width:240px;margin:0 auto}
 .setfx{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 10px;font-size:11.5px;color:var(--text-soft)}
 .setfx li.on{color:var(--gold)}
 .setfx b{font-weight:800}
+.sdlist{grid-template-columns:1fr;gap:6px}.sdlist li{display:flex;align-items:center;gap:8px}.sdlist .sdtx{flex:1;min-width:0;overflow-wrap:anywhere}.sdlist .chip,.sdlist .tag{flex:none}
+/* 별호 등급(2026-11-17): 일반 · 희귀 · 영예 · 전설(금빛 + 반짝 별) */
+:root{--tr0:#d8d2c4;--tr1:#7cc4ff;--tr2:#c99bff;--tr3a:#fff3b0;--tr3b:#ffc83a;--tr3c:#ff9a2a}
+.ttl{font-weight:800;overflow-wrap:anywhere}.trk0{color:var(--tr0)}.trk1{color:var(--tr1)}.trk2{color:var(--tr2);text-shadow:0 0 6px rgba(201,155,255,.55)}
+.trk3{background:linear-gradient(100deg,var(--tr3c),var(--tr3b) 35%,var(--tr3a) 50%,var(--tr3b) 65%,var(--tr3c));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:trkShine 3s linear infinite;position:relative}
+.trk3::after{content:'✦';position:relative;margin-left:2px;font-size:.8em;color:var(--tr3a);-webkit-text-fill-color:var(--tr3a);animation:trkStar 1.6s ease-in-out infinite;display:inline-block}
+.trk2::after{content:'◆';margin-left:2px;font-size:.6em;vertical-align:.15em;color:var(--tr2)}
+@keyframes trkShine{to{background-position:-200% 0}}@keyframes trkStar{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.trk3,.trk3::after{animation:none}}
 body:not(.portrait) #setList{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0 10px}
+body:not(.portrait) #setList .sdcard{grid-column:1/-1}#setList > .card{align-self:start}
 .me-side .card{margin:0;padding:10px 12px}
 .me-r{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.07)}
 .me-r span{color:var(--text-soft)}
@@ -4468,7 +4485,7 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-17-4', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-17-7', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 17일 · 새 지역에 들어가자마자 바로 도는 입문 레이드'],
@@ -4476,6 +4493,17 @@ const NOTES = [
   ['토벌패가 가득 찬 채 버려지지 않게', '입문 레이드는 그 땅에 있는 동안 늘 열려 있고, 세기가 내가 지나온 단계를 따라가요(지나온 단계보다 조금 약하게). 다른 레이드가 레벨·이야기에 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 여기에 쓰면 돼요. 일반 레이드처럼 이기면 토벌패 1개를 쓰고, 지면 돌려받아요.'],
   ['보상', '보석은 지금 열린 가장 높은 레이드의 반복 보상보다 조금 적고, 엽전은 세기를 따라 올라요. 장비·재료도 주고, 땅마다 첫 클리어 보상이 한 번 더 있어요. 신화 보물·장신구 같은 드문 보상은 일반 레이드에만 있어요.'],
   ['이야기의 레이드 횟수에는 세지 않아요', '「레이드를 n번 클리어」·「○○ 레이드를 토벌」 같은 이야기, 환생 시련, 히든 퀘스트, 하루·주간 부탁의 레이드 횟수에는 들어가지 않아요. 이승은 튜토리얼이 Lv.10 첫 레이드로 바로 이끌어서 입문 레이드가 없어요.'],
+
+  ['#', '11월 17일 · 세트 개편 · 도감 · 칭호 · 고삐 조각'],
+  ['세트 조각에서 탈것이 빠졌어요', '세트마다 탈것 조각을 이야기에서 얻는 신화 보물·펫으로 바꿨어요(곤륜 신선의 조합: 기린 → 서왕모의 불사약, 란카의 조합: 방울 낙타 → 아기 독수리 왕 등). 이제 어떤 탈것을 타든 세트와 상관없어요 — 기린을 타고도 세트를 끝까지 맞출 수 있어요.'],
+  ['가지고만 있으면 세요', '변신·넋·신화 보물·펫 조각은 끼거나 모시지 않아도 가지고 있으면 세요. 아바타는 칸마다 하나라 지금처럼 입은 것만 세요. [이 세트로]는 가진 아바타를 바로 입혀 줘요.'],
+  ['세트 옵션이 여러 가지로', '세트마다 성격이 달라요: 치명타 피해·기술 재사용 감소·경험치가 새로 들어갔어요(재사용 감소 세트는 해모수·곤륜·해녀·수미 넷, 5세트에서 5~10%). 세트를 맞추기 쉬워진 만큼 4·5세트 수치는 조금 낮췄어요.'],
+  ['세트 도감', '[장비] → [세트]에 「세트 도감」이 생겼어요. 세트마다 맞춘 가장 많은 조각이 남고, 세트 3곳 3조각 → 6곳 → 3곳 5조각 → 6곳 → 10곳마다 아바타 「오방색 갖춤 망토」「갖춤새 도포」, 탈것 「불가사리」「청룡 새끼」(기술 재사용 감소), 무기 기운 「오방 신검의 기운」을 받아요. 이미 맞춰 둔 세트는 들어오자마자 도감에 적혀요.'],
+  ['칭호(별호) 등급 — 어려운 별호는 색과 반짝임으로', '도감 보상마다 별호(「갖춤새를 아는 이」~「삼한 갖춤새의 주인」)를 함께 받아요. 별호는 이제 일반·희귀(푸른빛)·영예(보랏빛)·전설(금빛, 반짝이는 별) 네 등급이에요 — 신화·태초·환생·탑 높은 층·도감 끝 같은 어려운 별호가 높은 등급이고, 별호 목록·머리 위·채팅·정보 창에 그 색으로 보여요.'],
+  ['고삐 조각이 더 잘 나와요', '부상부터 단계 보스(1개)·수문장(3개)에서도 고삐 조각이 나오고, 레이드(3, 첫 토벌 +4)·타임 보스(4)·백귀야행(25마리마다)도 늘었어요. 탈것 별 올리기 값은 20% 낮췄어요.'],
+  ['#', '11월 17일 · 캐릭터 순서 바꾸기'],
+  ['캐릭터 순서를 바꿀 수 있어요', '캐릭터 고르기 화면에서 캐릭터 카드 오른쪽의 ▲▼로 한 칸씩 위·아래로 옮길 수 있어요. 본캐를 맨 위로 올리고 그다음에 두 번째 본캐를 두세요.'],
+  ['순서는 다른 기기에서도 그대로예요', '정한 순서는 서버에도 저장돼 같은 아이디로 다른 기기에서 들어와도 같아요. 새로 만든 캐릭터는 맨 아래에 붙어요.'],
   ['#', '11월 17일 · 호박석 합성'],
   ['호박석 합성 — 낮은 호박석 4개를 모아 위 등급으로(희귀 → 영웅 → 전설, 유물은 선택)', '[장비] → [세공]에 「호박석 합성」 칸이 생겼어요. 같은 등급 호박석 4개를 한 단계 위 1개로 바꿔요(희귀 → 영웅 → 전설은 반드시 성공, 엽전 없음). [가능한 만큼 합성]을 누르면 전설까지 한꺼번에 이어 붙여요.'],
   ['호박석은 이제 희귀로, 더 넉넉하게 나와요', '수문장·레이드·「진」에서는 희귀 호박석만 한 번에 2~3개씩 나오고, 영웅·전설을 직접 주던 곳(용왕 강림·용궁 보물고·천공의 탑)은 같은 값의 희귀 개수로 바뀌었어요. 모아서 합치면 예전과 같은 가치이고, 가진 호박석과 이미 깎고 있는 돌은 그대로예요.'],
@@ -4646,7 +4674,7 @@ const SEASON1_NOTES = [
   ['#', '2026-11-11 · 기술 모두 쓰기 · 레이드 칸 쉽게 · 세트 고르기 · 기기 바꿔 이어 하기'],
   ['기술 모두 쓰기', '6칸 제한 없이 익힌 기술을 모두 써요. 쓰기 싫은 기술만 [기술]에서 [빼기](뺀 기술이 다시 끼워지던 버그도 고침). 기술 하나의 마나는 0.6배로 낮췄고, 익힌 기술이 6개를 넘으면 하나마다 단계 보스 체력 +3%.'],
   ['레이드 칸 쉽게', '허수아비 등급 기준 낮춤(5등급도 닿게) · 백귀야행 요괴 체력 0.55배·더 많이 · 타임 보스·1일 보스·강림은 기본 공격만으로도 제한 시간 안에 · 보물 동굴 이무기 체력 0.55배.'],
-  ['세트 고르기', '[장비] → [세트]의 [이 세트로]: 그 세트를 켜고 가진 아바타·탈것·변신을 바로 맞춰요.'],
+  ['세트 고르기', '[장비] → [세트]의 [이 세트로]: 그 세트를 켜고 가진 아바타를 바로 입혀요. 변신·넋·신화 보물·펫은 가지고만 있으면 세요.'],
   ['그 밖', '「천마」 천계 레벨 240 → 225 · 오늘의 할 일·주간 「재련·강화」에 펫·기술·각인 강화·탈것 별·각성도 셈 · PC에서 키우고 휴대폰으로 오면 예전 진행으로 보이던 버그 고침(다른 기기의 새 기록을 불러옴).'],
   ['#', '2026-11-10 · 물약 · 결투 다듬기 · 보스 도전 기운 · 허수아비·백귀야행 · 탑 세기'],
   ['물약', '체력 자동 회복은 절반, 마나는 초당 7 → 5로 줄이고 물약 값을 크게 내렸어요. 인삼 탕약(10개·100개 묶음)·새 마나 물약 「감로수」(마나 30 아래면 +40)·산삼 탕약(보석 6). 기술 줄 위 물약 칸에 개수가 보이고, 누르면 바로 마셔요.'],
@@ -5258,7 +5286,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -5432,6 +5460,9 @@ function mergeState(d){
   { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2 = {day:typeof x.day === 'string' ? x.day : '', sugun:n0(x.sugun), yv:n0(x.yv), ygr:n0(x.ygr), ygrWon:!!x.ygrWon, ygrPity:n0(x.ygrPity), sugunBest:n0(x.sugunBest)}; }   // 물의 신화 7-2
   out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
+  { const sd = d.setDex && typeof d.setDex === 'object' ? d.setDex : {}; out.setDex = {best:{}, got:{}};   // 세트 도감(2026-11-17): 예전 저장은 비어 있다가 지금 갖춤새로 바로 채워짐(소급)
+    if (sd.best) for (const T of SETS){ const n = Math.floor(+sd.best[T.k]) || 0; if (n > 0) out.setDex.best[T.k] = Math.min(5, n); }
+    if (sd.got) for (let i = 0; i < SD_TIERS.length; i++) if (sd.got[i]) out.setDex.got[i] = true; }
   out.title = {own:{}, eq:''}; for (const t of TITLES) if (ti.own && ti.own[t.k]) out.title.own[t.k] = true; if (out.title.own[ti.eq]) out.title.eq = ti.eq;
   out.fork = {}; for (const f of FORKS){ const v = d.fork && d.fork[f.k]; if (v === 0 || v === 1) out.fork[f.k] = v; }
   out.grudge = Math.max(0, Math.min(1e6, Math.floor(+d.grudge) || 0));
@@ -5590,7 +5621,7 @@ function computeStats(up = S.up){
       * (1 + 0.15 * RB.hp) * F.hp * (1 + accP('brace') / 100) * (1 + JOB_BONUS[S.job].hp / 100) * (1 + avColPct() / 100) * (1 + mountCol() / 100) * (1 + rideAb('hp') / 100) * (1 + soulCol() / 100) * (1 + barrack().stat / 100) * (1 + (titleCol() + titleEff('hp')) / 100) * (1 + guardEff('hp') / 100) * skMul('hp') * setMul('hp') * seedMul('hp') * elMul('hp') * seaMul('hp') * jumpMul('hp'),
     regen: (0.01 + 0.0002 * up.regen + C.regenAdd + craftEff('life') / 100) * REGEN_K * (1 + (S.myth.amrita || 0) * mythK() / 100),   // 영약 호리병(5부): 저절로 차는 체력 +%
     crit: Math.min(1, crRaw), critOver: crOver,
-    critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell * mythK() / 100 + (S.myth.maga || 0) * mythK() / 100 + (S.myth.sail || 0) * mythK() / 100 + (S.myth.silk || 0) * mythK() / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg'),
+    critDmg: (1.5 + 2 * crOver + (titleEff('critDmg') + guardEff('critDmg')) / 100 + 0.05 * up.critDmg + S.myth.bell * mythK() / 100 + (S.myth.maga || 0) * mythK() / 100 + (S.myth.sail || 0) * mythK() / 100 + (S.myth.silk || 0) * mythK() / 100 + 0.3 * MS.bell + 0.05 * RB.eye + accP('ear') / 100 + craftEff('vital') / 100) * skMul('cdmg') * elMul('cdmg') * seaMul('cdmg') * setMul('cdmg'),
     aspd: (1 + 0.02 * up.aspd) * C.spdMul * (1 + 0.03 * RB.spd) * F.spd * (1 + accP('brace') / 1000) * (1 + craftEff('swift') / 100) * seaMul('spd') * elMul('spd'),
   };
 }
@@ -5633,7 +5664,7 @@ function statValue(k, st){
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
 const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -6552,7 +6583,7 @@ function bossWin(){
   if (wasGate && S.world >= 5){ const sg = S.world >= 8 ? spiritGearDrop('gate') : seaGearDrop('gate'), am = amberDrop('gate');   // 바다 수문장: 새 칸 장비(가끔 유물)·호박석 / 5부 수문장: 유물(가끔 영물)
     if (sg) addLog(`${gearName(sg.slot, sg.it)}${josa(gearName(sg.slot, sg.it), '을', '를')} 얻었어요(${GRADES[itemG(sg.it)].name} ${GEAR[sg.slot].label}${sg.beast != null ? ` · 깃든 짐승 ${SPIRITS[sg.beast].name}` : ''}${sg.isNew ? ' · 새 장비' : ''}).`, 'gain');
     if (am) addLog(`${am.name || '호박석'}${josa(am.name || '호박석', '을', '를')} 건졌어요. [장비] → [세공]에서 깎아요.`, 'gain'); }
-  gainGrudge(wasGate ? GRUDGE.gate : GRUDGE.boss, true);
+  gainGrudge(wasGate ? GRUDGE.gate : GRUDGE.boss, true); gainPiece(wasGate ? MOUNT_PIECE.gate : MOUNT_PIECE.boss, true);   // 고삐 조각도 원한 조각처럼(2026-11-17, 부상부터)
   bossGearDrop();
   gainMat(wasGate ? MAT_DROP.gate : MAT_DROP.boss); if (wasGate && gainShard(SHARD_SRC.gate)) addLog(`신화 조각 +${SHARD_SRC.gate}`, 'gain');
   S.stage++; S.maxStage = Math.max(S.maxStage, S.stage); S.kills = 0; S.deathsHere = 0;
@@ -8056,7 +8087,7 @@ function finishParade(){
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   spawnT = 1.2;
   const gold = mGold(Math.max(1, S.stage)) * k * 3 * gainMul('gold'), gems = Math.round(Math.floor(k / 2) * gemMul() * RAID_GEM_K), dust = k * (1 + S.world);
-  const mat = Math.floor(k / MAT_SRC.paradePer), piece = S.world >= 3 ? Math.floor(k / 40) : 0;
+  const mat = Math.floor(k / MAT_SRC.paradePer), piece = S.world >= 3 ? Math.floor(k / MOUNT_PIECE.paradePer) : 0;
   S.gold += gold; S.gems += gems; S.dust += dust; if (mat) gainMat(mat, true); if (piece) gainPiece(piece, true);
   const grudge = gainGrudge(k / GRUDGE.paradePer, true);
   const best = k > (S.parade.best || 0); if (best) S.parade.best = k;
@@ -9651,7 +9682,7 @@ function jobCCast(lv, alive, tg, mul){
   return true;
 }
 // 기술 재사용 시간(노리개 '도력' 각인으로 줄어든다)
-const skCdOf = (i, hunt) => skBaseCd(i, hunt) * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100) * (1 - synV(S.cls, 'cdr') / 100);   // 파사석(5부): 기술 재사용 -%
+const skCdOf = (i, hunt) => skBaseCd(i, hunt) * (1 - craftEff('cdr') / 100) * (1 - rideAb('cdr') / 100) * (1 - seaPct('cdr') / 100) * (1 - Math.min(40, (S.myth.pasa || 0) * mythK()) / 100) * (1 - synV(S.cls, 'cdr') / 100) * (1 - setSum().cdr / 100) * (1 - titleEff('cdr') / 100);   // 파사석(5부): 기술 재사용 -% · 세트·별호 쿨감(2026-11-17, 서로 곱함)
 // 기술 칸을 눌러 바로 쓰기
 function castNow(i){
   const key = SKILLS[i].key, lv = skLv(i);
@@ -11034,6 +11065,9 @@ const AVATARS = [
   {k:'w_cloud', type:'wing', name:'구름 깃 날개', wingC:['#c8d8f0', '#dfe8f8', '#eef4ff', '#ffffff'], src:'천공의 탑 50층'},
   {k:'w_phoenix', type:'wing', name:'봉황 날개', wingC:['#c8302a', '#ff6a3a', '#ffa040', '#ffe08a'], src:'천공의 탑 150층'},
   {k:'w_galaxy', type:'wing', name:'은하수 날개', wingC:['#23265a', '#3a3a9a', '#7a6aff', '#d8d0ff'], star:true, src:'천공의 탑 250층', pt:3},
+  // 세트 도감 보상(2026-11-17): 상자에는 안 나오고 [장비] → [세트] → 「세트 도감」에서만
+  {k:'p_obang', type:'cape', name:'오방색 갖춤 망토', capeC:'#2a5ab8', star:true, src:'세트 도감', pt:1},
+  {k:'c_dogam', type:'char', name:'갖춤새 도포', outfit:'#e8e0c8', deco:'sash', src:'세트 도감', pt:1},
   {k:'w_taecho', type:'wing', name:'태초의 날개', wingC:['#e8c860', '#ffe08a', '#fff6d8', '#9ff0e8'], star:true, src:'태초의 신', pt:3},
   {k:'w_fin', type:'wing', name:'지느러미 날개', wingC:['#1f6a8a', '#3aa8c8', '#8fe0f0', '#e8fbff'], star:true, src:'천공의 탑 350층', pt:4},   // 물의 신화 7-2
   // 5부 천축(물의 신화 9-24): 날개는 바깥 겹이 첫 색(깃 끝) · 안쪽이 마지막 색
@@ -11230,7 +11264,7 @@ function skClean(d){   // 저장에서 온 치장 다듬기
 }
 /* ================= 탈것(2부 부상부터) =================
    타면 걷는 속도가 빨라지고 고유 능력이 켜진다(하나만 탈 수 있음). 가진 탈것마다 공격력·체력 +(등급별 모음 효과).
-   별(고삐 조각으로 올림, 최대 5)마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상·곤륜 레이드·타임 보스·허수아비에서 */
+   별(고삐 조각으로 올림, 최대 5)마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상부터 단계 보스·수문장·레이드·타임 보스·백귀야행·허수아비에서 */
 const MOUNT_G = [{name:'일반', pct:1.5, color:'#c8c0b0'}, {name:'고급', pct:3, color:'#7fdc7f'}, {name:'희귀', pct:4.5, color:'#6ab8ff'}, {name:'전설', pct:7.5, color:'#c08bff'}, {name:'신화', pct:12, color:'#ffb347'}, {name:'유물', pct:16, color:'#3fbf9a'}, {name:'영물', pct:20, color:'#f1d6a6'}];   // (5번 유물: 4부 용마) 모음 효과 %(2026-11 (42) 검토: 곤륜 저장에서 공격력 몫이 0.9%뿐이라 1.5배로. 예전 1·2·3·5·8)
 const MOUNTS = [
   {k:'donkey', name:'당나귀', g:0, spd:10, ab:{gold:10}, src:'stable', d:'고집은 세도 짐은 잘 날라요.'},
@@ -11251,12 +11285,17 @@ const MOUNTS = [
   {k:'yongma', name:'용마', g:5, spd:65, ab:{skill:15, boss:12, cdr:8}, src:'tower', from:'천공의 탑 400층', pt:4, d:'못에서 솟아올랐다는 비늘 돋친 말. 물 위도 땅처럼 달려요.'},
   {k:'skyhorse', name:'하늘 말', g:6, spd:70, ab:{skill:18, boss:15, cdr:10}, src:'tower', from:'천공의 탑 500층', pt:5, d:'바다를 휘저을 때 솟아오른 일곱 머리의 흰 말.', fly:true},
   // 5부 천축(물의 신화 9단계): 방울 낙타 = 고삐 조각 · 젖빛 흰 코끼리 = 80장 이야기
+  // 세트 도감 보상(2026-11-17): 기술 재사용 감소를 기린 말고도 — 불가사리(쇠를 먹는 옛이야기 짐승)·청룡 새끼(동쪽 하늘의 사신)
+  {k:'bulgasari', name:'불가사리', g:4, spd:50, ab:{cdr:8, skill:10}, src:'dex', from:'세트 도감 2단계', pt:2, d:'바늘 하나를 먹고 시작해 쇠붙이란 쇠붙이를 다 먹고 집채만큼 자랐다는 짐승. 갖춤새를 갖춘 용사를 알아봐요.'},
+  {k:'cheongryong', name:'청룡 새끼', g:5, spd:60, ab:{cdr:10, boss:10, skill:8}, src:'dex', from:'세트 도감 4단계', pt:2, d:'동쪽 하늘을 지키는 청룡의 어린 새끼. 여섯 벌 갖춤새의 빛을 따라 내려왔어요.', fly:true},
   {k:'camel', name:'방울 낙타', g:4, spd:50, ab:{off:20, gold:14}, src:'piece', cost:220, pt:5, d:'목방울 소리로 모래바람 속에서도 길을 잃지 않는 사막의 낙타.'},
   {k:'welephant', name:'젖빛 흰 코끼리', g:4, spd:50, ab:{hp:18, heal:3, dr:12}, src:'story', from:'80장 이야기', pt:5, d:'젖의 바다에서 큰 흰 코끼리를 따라 함께 솟은 어린 흰 코끼리, 제 발로 용사 곁에 와 섰어요.'},
 ];
 const MT = Object.fromEntries(MOUNTS.map(m => [m.k, m]));
-const MOUNT_STAR_MAX = 5, MOUNT_GEMS = 15000, MOUNT_PIECE = {busang:1, kunlun:2, first:2, tb:3};
-const mountStarCost = m => Math.ceil([5, 10, 15, 20, 30][S.mount.star[m.k] || 0] * (2 + m.g) / 2);   // 다음 별에 드는 고삐 조각
+// 고삐 조각 공급(2026-11-17, 사용자 요청: 원한 조각은 잘 모이는데 고삐 조각은 너무 안 모임): 원한 조각처럼 단계 보스·수문장에서도 나오고(boss·gate) 레이드·타임 보스·백귀야행 몫을 늘림,
+// 별 값은 예전 [5, 10, 15, 20, 30]에서 낮춤 — 탈것 하나(별 다섯 또는 사기)에 걸리는 날이 넋 하나(결이야기 세 마디)와 비슷하게. 예전 {busang:1, kunlun:2, first:2, tb:3}, 백귀야행 40마리마다 1
+const MOUNT_STAR_MAX = 5, MOUNT_GEMS = 15000, MOUNT_PIECE = {busang:3, kunlun:3, first:4, tb:4, boss:1, gate:3, paradePer:25}, MOUNT_STAR = [4, 8, 12, 16, 24];
+const mountStarCost = m => Math.ceil(MOUNT_STAR[S.mount.star[m.k] || 0] * (2 + m.g) / 2);   // 다음 별에 드는 고삐 조각
 const mountStableGold = () => Math.round(mGold(Math.max(1, S.maxStage)) * 1500);
 const mountOpen = () => S.world >= 3 || MOUNTS.some(m => S.mount.own[m.k]);   // 천공의 탑에서 먼저 얻으면 그때부터
 const mountK = k => 1 + 0.2 * (S.mount.star[k] || 0);
@@ -11430,6 +11469,8 @@ const MOUNT_HD = {
   seaturtle:(g, f) => mountTurtle(g, f, {c:'#4a7a5a', skin:'#a8b878', moss:'#7ac86a'}),
   camel:(g, f) => mountQuad(g, f, {c:'#d4ac72', belly:'#f0dcb0', mane:'#8a6a44', muzzle:'#ecd8ac', head:'camel', humps:true, tail:'tuft', saddle:'#1f8fa0', trim:'#e0b03c', hoof:'#6a4a2a'}),
   welephant:(g, f) => mountQuad(g, f, {c:'#f2efe6', belly:'#fffaf0', ear:'#f4c8c8', head:'elephant', legW:6.6, tail:'tuft', mane:'#cfc8b8', saddle:'#7ab8d8', trim:'#ffe08a', hoof:'#d8cfbc'}),
+  bulgasari:(g, f) => mountQuad(g, f, {c:'#6a7380', belly:'#aab4c0', mane:'#3a4048', muzzle:'#8a94a0', head:'elephant', legW:6.2, scales:'#4a525c', tail:'tuft', saddle:'#c83a2a', trim:'#e0b03c', hoof:'#2a3038'}),
+  cheongryong:(g, f) => mountDragon(g, f, {c:'#2a6ac8', belly:'#dcecff', mane:'#9fe7ff', wing:'#6ab0f0', horn:'#ffe08a', saddle:'#e0b03c'}),
   skyhorse:(g, f) => mountQuad(g, f, {c:'#fbfaf6', belly:'#ffffff', mane:'#bfe8ff', muzzle:'#e8e2da', tail:'horse', saddle:'#3a6ad0', trim:'#ffe08a', glow:'#e8f6ff', hoof:'#ffe08a', heads6:true}),
   yongma:(g, f) => mountQuad(g, f, {c:'#2f8f8a', belly:'#c8f0e0', mane:'#8ff0ff', scales:'#1f6a6a', horn:'#ffe08a', tail:'horse', saddle:'#e0b03c', trim:'#ffffff', glow:'#8ff0ff', hoof:'#1f5a6a'}),
 };
@@ -11525,9 +11566,24 @@ const TITLES = [
   {k:'dex3', name:'곤륜의 수집가', need:'3부 도감을 모두 모아요', prog:() => dexProg(3), eff:{boss:8, critDmg:10}},
   {k:'dex4', name:'바다의 수집가', need:'4부 도감을 모두 모아요', prog:() => dexProg(4), eff:{atk:8, hp:8, boss:6}},   // 물의 신화 7-2
   {k:'dex5', name:'천축의 수집가', need:'5부 도감을 모두 모아요', prog:() => dexProg(5), eff:{atk:10, hp:10, boss:8}},   // 물의 신화 9단계
+  // 세트 도감(2026-11-17): 도감 보상을 받을 때 함께. 이름은 옛 옷차림 말(갖춤새·온갖춤)과 오방색에서
+  {k:'sd1', name:'갖춤새를 아는 이', need:'세트 도감 1단계 보상 받기(세트 3곳 3조각)', prog:() => [sdGot(0) ? 1 : 0, 1], eff:{atk:3, hp:3}},
+  {k:'sd2', name:'오방을 두른 이', need:'세트 도감 2단계 보상 받기(세트 6곳 3조각)', prog:() => [sdGot(1) ? 1 : 0, 1], eff:{atk:4, hp:4, cdr:1}},
+  {k:'sd3', name:'세 벌 온갖춤', need:'세트 도감 3단계 보상 받기(세트 3곳 5조각)', prog:() => [sdGot(2) ? 1 : 0, 1], eff:{atk:5, hp:5, cdr:2}},
+  {k:'sd4', name:'여섯 벌 갑주의 주인', need:'세트 도감 4단계 보상 받기(세트 6곳 5조각)', prog:() => [sdGot(3) ? 1 : 0, 1], eff:{atk:6, hp:6, cdr:3}},
+  {k:'sd5', name:'삼한 갖춤새의 주인', need:'세트 도감 마지막 단계 보상 받기(세트 10곳 5조각)', prog:() => [sdGot(4) ? 1 : 0, 1], eff:{atk:8, hp:8, cdr:4}},
 ];
+// 별호 등급(2026-11-17, 사용자 요청: 어려운 별호는 색과 반짝임으로): 0 일반 · 1 희귀(푸른빛) · 2 영예(보랏빛) · 3 전설(금빛 + 반짝 별). 기준은 걸리는 시간·조건의 어려움
+const TITLE_RANK = {step:0, hunt1:0, event:0, smith:0, helper:0, sea:0, pet:0,
+  hunt2:1, boss1:1, raid1:1, counter:1, reb1:1, soul:1, west:1, east:1, india:1, f_snowA:1, f_snowB:1, f_towerA:1, f_towerB:1, f_yamaA:1, f_yamaB:1, sd1:1, sd2:1,
+  myth:2, reb2:2, legend:2, three:2, sea1:2, sea2:2, ind1:2, ind2:2, pvp1:2, tower:2, haetae7:2, memNo:2, dex1:2, dex2:2, sd3:2, sd4:2,
+  taecho:3, sumeru:3, trueform:3, pvp2:3, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
+const TITLE_RANKS = [{n:'일반', c:'trk0'}, {n:'희귀', c:'trk1'}, {n:'영예', c:'trk2'}, {n:'전설', c:'trk3'}];
+for (const t of TITLES) t.rank = TITLE_RANK[t.k] || 0;
+const trk = k => (TT[k] && TT[k].rank) || 0;
+const titleSpan = (k, br = true) => TT[k] ? `<span class="ttl ${TITLE_RANKS[trk(k)].c}" title="${TITLE_RANKS[trk(k)].n} 별호">${br ? '「' : ''}${esc(TT[k].name)}${br ? '」' : ''}</span>` : '';
 const TT = Object.fromEntries(TITLES.map(t => [t.k, t]));
-const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해'};
+const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해', cdr:'기술 재사용 감소'};
 const titleEffText = t => Object.entries(t.eff).map(([k, v]) => `${TITLE_EFF[k]} +${v}%`).join(' · ');
 const titleN = () => TITLES.filter(t => S.title.own[t.k]).length;
 const titleShown = () => TITLES.filter(t => S.title.own[t.k] || !(t.hide && t.hide()));   // 아직 열리지 않은 콘텐츠의 별호는 목록에서 숨긴다(환생의 기억)
@@ -11555,76 +11611,88 @@ const ascMul = slot => ascOn(slot) ? ASC[ascLv(slot)].mul : 1;
 const gearG = slot => { const it = S.equip[slot]; if (it >= 20) return itemG(it); const g = gradeOf(it); return ascOn(slot) ? ASC[ascLv(slot)].g : g; };   // 그림·이름 색에 쓰는 등급(0~6)
 /* ===== 장비 공명·세트(2026-11 (42), 사용자 요청: 기본 무기·갑옷의 역할이 너무 작다 — 좋은 무기·갑옷을 껴야 다른 것들이 제 힘을 낸다) =====
    ① 공명 gearRes: 낀 무기·갑옷 등급(일반~태초, 신화·태초 각성 포함)의 평균으로 장신구·치장·변신·탈것(능력·모음)·아바타 도감 효과에 곱한다. 전설 = 1배, 영웅 0.93, 신화 각성 1.1, 태초 1.2
-   ② 세트 SETS: 무기·갑옷 등급 + 아바타(입은 것)·탈것(탄 것)·장신구·변신(착용)·천공의 탑 층을 함께 갖추면 단계 값(SE) 효과. 무기·갑옷 둘 다 맞아야 켜진다 */
+   ② 세트 SETS: 무기·갑옷 등급 + 아바타(입은 것)·탈것·변신·넋(가진 것 — 2026-11-17 세트 도감화)·장신구·천공의 탑 층을 함께 갖추면 단계 값(SE) 효과. 무기·갑옷 둘 다 맞아야 켜진다 */
 const RES_G = [0.75, 0.8, 0.86, 0.93, 1, 1.1, 1.2, 1.3, 1.4];   // 전설 = 1배(시뮬로 재 보니 영웅 기준이면 1부가 15% 빨라짐), 신화 각성 1.1·태초 1.2
 // 물의 신화 4단계: 4부부터는 다섯 칸 평균. 다만 새 세 칸은 무기·방어구 평균보다 낮으면 그 평균으로 센다(바다에 들어설 때 공명이 깎이지 않게 — 높으면 올라간다)
 const gearRes = () => { const b = ((S.equip.weapon >= 0 ? RES_G[gearG('weapon')] : 0.75) + (S.equip.armor >= 0 ? RES_G[gearG('armor')] : 0.75)) / 2; if (!seaOpen()) return b;
   return (b * 2 + NEW_SLOTS.reduce((a, k) => a + Math.max(b, S.equip[k] >= 0 ? RES_G[gearG(k)] : 0), 0)) / 5; };
+// 2026-11-17 세트 개편(사용자 요청): ① 탈것 조각을 모두 빼고(탈것은 세트와 따로 — 이동·능력과 세트 도감 보상 탈것만) 신화 보물·펫·변신 등 그 시기에 확정으로 얻는 것으로 바꿈
+// ② 변신·넋·신화 보물·펫은 '가진 것'으로 셈(착용·모심 아니어도), 아바타만 입은 것 ③ 옵션 종류를 늘림 — 치명타 피해(cdmg, 단계 값)·기술 재사용 감소(cdr, %)·경험치(exp, %)
+// 예전 탈것 조각: 제천대성 산군 범 → 여의주 · 곤륜 기린 → 서왕모의 불사약 · 천공 운룡 → 사일궁 · 태초 천마 → 오색 돌 · 해녀 곰새기 → 세오녀의 비단 · 용궁 큰 거북 → 용왕의 옥대 · 란카 방울 낙타 → 펫 아기 독수리 왕 · 수미 젖빛 코끼리 → 영약 호리병
 const SETS = [
   {k:'jumong', name:'주몽의 조합', d:'활 잘 쏘는 고구려 시조의 차림', p:[{t:'weapon', g:3}, {t:'armor', g:3}, {t:'av', k:'c_gaema'}, {t:'acc', k:'ring', g:3}, {t:'form', k:'baekho'}],
-    fx:{2:{atk:0.15}, 3:{boss:0.4}, 4:{atk:0.4, hp:0.4}, 5:{crit:5}}},
+    fx:{2:{atk:0.15}, 3:{boss:0.4}, 4:{atk:0.4, cdmg:0.4}, 5:{crit:5, boss:0.2}}},
   {k:'yuhwa', name:'유화의 조합', d:'물의 신 하백의 딸, 주몽의 어머니', p:[{t:'weapon', g:3}, {t:'armor', g:3}, {t:'av', k:'c_seonnyeo'}, {t:'acc', k:'ear', g:3}, {t:'form', k:'jujak'}],
-    fx:{2:{hp:0.2}, 3:{skill:0.4}, 4:{atk:0.4}, 5:{skill:0.5}}},
+    fx:{2:{hp:0.2}, 3:{skill:0.4}, 4:{atk:0.4, exp:5}, 5:{skill:0.5, hp:0.3}}},
   {k:'haemosu', name:'해모수의 조합', d:'오룡거를 타고 내려온 하늘의 아들', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'av', k:'p_dragon'}, {t:'acc', k:'brace', g:4}, {t:'form', k:'cheong'}],
-    fx:{2:{atk:0.25, hp:0.25}, 3:{boss:0.6}, 4:{atk:0.6}, 5:{skill:0.6, crit:6}}},
+    fx:{2:{atk:0.25, hp:0.25}, 3:{boss:0.6}, 4:{atk:0.6}, 5:{skill:0.4, crit:6, cdr:5}}},
   {k:'saja', name:'저승차사의 조합', d:'저승의 문을 지키는 차사의 차림', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'av', k:'c_saja'}, {t:'acc', k:'ring', g:4}, {t:'form', k:'hyeonmu'}],
-    fx:{2:{hp:0.3}, 3:{atk:0.5}, 4:{boss:0.6}, 5:{atk:0.6, hp:0.6}}},
-  {k:'daeseong', name:'제천대성의 조합', d:'하늘과 맞선 원숭이 대왕의 금갑', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'av', k:'c_daeseong'}, {t:'av', k:'q_gold'}, {t:'mount', k:'beom'}],
-    fx:{2:{atk:0.3}, 3:{crit:5}, 4:{boss:0.7}, 5:{atk:0.8}}},
+    fx:{2:{hp:0.3}, 3:{atk:0.5}, 4:{boss:0.6, exp:6}, 5:{atk:0.6, hp:0.6}}},
+  {k:'daeseong', name:'제천대성의 조합', d:'하늘과 맞선 원숭이 대왕의 금갑', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'av', k:'c_daeseong'}, {t:'av', k:'q_gold'}, {t:'myth', k:'pearl'}],
+    fx:{2:{atk:0.3}, 3:{crit:5}, 4:{boss:0.5, cdmg:0.4}, 5:{atk:0.8}}},
   {k:'busang', name:'해 뜨는 섬의 조합', d:'구라마산 날개 신령의 깃옷', p:[{t:'weapon', g:5}, {t:'armor', g:5}, {t:'av', k:'c_tengu'}, {t:'form', k:'tengu'}, {t:'acc', k:'neck', g:3}],
-    fx:{2:{atk:0.3, hp:0.3}, 3:{skill:0.7}, 4:{boss:0.8}, 5:{atk:0.9}}},
-  {k:'kunlun', name:'곤륜 신선의 조합', d:'서쪽 하늘 신선들의 운무', p:[{t:'weapon', g:5}, {t:'armor', g:5}, {t:'av', k:'p_kunlun'}, {t:'form', k:'hwang'}, {t:'mount', k:'girin'}],
-    fx:{2:{atk:0.35, hp:0.35}, 3:{boss:0.9}, 4:{skill:0.9}, 5:{atk:1, crit:6}}},
-  {k:'cheongong', name:'천공의 조합', d:'천공의 탑을 오른 이의 차림', p:[{t:'weapon', g:5}, {t:'armor', g:5}, {t:'av', k:'w_cloud'}, {t:'mount', k:'unryong'}, {t:'tower', f:150}],
-    fx:{2:{atk:0.35, hp:0.35}, 3:{boss:1}, 4:{atk:1}, 5:{skill:1, crit:8}}},
-  {k:'taecho', name:'태초의 조합', d:'태초의 신을 넘은 이의 빛', p:[{t:'weapon', g:6}, {t:'armor', g:6}, {t:'av', k:'w_taecho'}, {t:'mount', k:'cheonma'}, {t:'tower', f:300}],
-    fx:{2:{atk:0.5, hp:0.5}, 3:{boss:1.2}, 4:{atk:1.2, hp:1.2}, 5:{skill:1.2, crit:10}}},
+    fx:{2:{atk:0.3, hp:0.3}, 3:{skill:0.7}, 4:{boss:0.8}, 5:{atk:0.7, cdmg:0.4}}},
+  {k:'kunlun', name:'곤륜 신선의 조합', d:'서쪽 하늘 신선들의 운무와 서왕모의 약', p:[{t:'weapon', g:5}, {t:'armor', g:5}, {t:'av', k:'p_kunlun'}, {t:'form', k:'hwang'}, {t:'myth', k:'elixir'}],
+    fx:{2:{atk:0.35, hp:0.35}, 3:{boss:0.9}, 4:{skill:0.9}, 5:{atk:0.7, crit:6, cdr:8}}},
+  {k:'cheongong', name:'천공의 조합', d:'천공의 탑을 오른 이의 차림, 하늘의 해를 겨눈 활', p:[{t:'weapon', g:5}, {t:'armor', g:5}, {t:'av', k:'w_cloud'}, {t:'myth', k:'sail'}, {t:'tower', f:150}],
+    fx:{2:{atk:0.35, hp:0.35}, 3:{boss:1}, 4:{atk:0.8, exp:8}, 5:{skill:1, crit:8}}},
+  {k:'taecho', name:'태초의 조합', d:'태초의 신을 넘은 이의 빛, 하늘을 기운 오색 돌', p:[{t:'weapon', g:6}, {t:'armor', g:6}, {t:'av', k:'w_taecho'}, {t:'myth', k:'ose'}, {t:'tower', f:300}],
+    fx:{2:{atk:0.5, hp:0.5}, 3:{boss:1.2}, 4:{atk:1.2, cdmg:1}, 5:{skill:1.2, crit:10}}},
   // 4부 바다(물의 신화 7-2): 새 장비 칸(투구·신발)이 조각에 들어간다
-  {k:'haenyeo', w:5, name:'해녀의 조합', d:'숨비소리로 깊은 바다를 여는 해녀의 차림', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'boots', g:4}, {t:'av', k:'c_haenyeo'}, {t:'mount', k:'dolphin'}],
-    fx:{2:{hp:0.5}, 3:{skill:1.2}, 4:{atk:1.1, hp:1.1}, 5:{boss:1.3, crit:8}}},
-  {k:'yonggung', w:5, name:'용궁의 조합', d:'동해 용왕을 모시는 용궁 벼슬아치의 차림', p:[{t:'weapon', g:7}, {t:'armor', g:7}, {t:'helm', g:4}, {t:'av', k:'c_yonggung'}, {t:'mount', k:'seaturtle'}],
-    fx:{2:{atk:0.55, hp:0.55}, 3:{boss:1.3}, 4:{atk:1.3, hp:1.3}, 5:{skill:1.3, crit:10}}},
-  // 5부 천축(물의 신화 9-25): 영물 무기·갑옷이 중심이고, 천축의 아바타·탈것·넋이 조각. 효과는 4부 세트의 한 계단 위(w = 세계 8부터 보임)
-  {k:'lanka', w:8, name:'란카의 조합', d:'황금 성 란카의 주인을 겨누는 이의 갑주', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_lanka'}, {t:'mount', k:'camel'}, {t:'soul', k:'jatayu'}],
-    fx:{2:{atk:0.65, hp:0.65}, 3:{boss:1.5}, 4:{atk:1.5, hp:1.5}, 5:{skill:1.5, crit:12}}},
-  {k:'sumeru', w:8, name:'수미의 조합', d:'세계의 한가운데 수미산을 오른 이의 하늘옷', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_sumeru'}, {t:'mount', k:'welephant'}, {t:'soul', k:'savitri'}],
-    fx:{2:{atk:0.7, hp:0.7}, 3:{skill:1.6}, 4:{atk:1.6, hp:1.6}, 5:{boss:1.7, crit:12}}},
+  {k:'haenyeo', w:5, name:'해녀의 조합', d:'숨비소리로 깊은 바다를 여는 해녀의 차림과 세오녀의 비단', p:[{t:'weapon', g:4}, {t:'armor', g:4}, {t:'boots', g:4}, {t:'av', k:'c_haenyeo'}, {t:'myth', k:'silk'}],
+    fx:{2:{hp:0.5}, 3:{skill:1.2}, 4:{atk:1.1, exp:8}, 5:{boss:1.1, crit:8, cdr:6}}},
+  {k:'yonggung', w:5, name:'용궁의 조합', d:'동해 용왕을 모시는 용궁 벼슬아치의 차림', p:[{t:'weapon', g:7}, {t:'armor', g:7}, {t:'helm', g:4}, {t:'av', k:'c_yonggung'}, {t:'myth', k:'okdae'}],
+    fx:{2:{atk:0.55, hp:0.55}, 3:{boss:1.3}, 4:{atk:1.3, hp:1.3}, 5:{skill:1.3, crit:6, cdmg:0.6}}},
+  // 5부 천축(물의 신화 9-25): 영물 무기·갑옷이 중심. 효과는 4부 세트의 한 계단 위(w = 세계 8부터 보임)
+  {k:'lanka', w:8, name:'란카의 조합', d:'황금 성 란카의 주인을 겨누는 이의 갑주', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_lanka'}, {t:'pet', d:'eaglet'}, {t:'soul', k:'jatayu'}],
+    fx:{2:{atk:0.65, hp:0.65}, 3:{boss:1.5}, 4:{atk:1.5, cdmg:1.2}, 5:{skill:1.5, crit:12, exp:6}}},
+  {k:'sumeru', w:8, name:'수미의 조합', d:'세계의 한가운데 수미산을 오른 이의 하늘옷', p:[{t:'weapon', g:8}, {t:'armor', g:8}, {t:'av', k:'c_sumeru'}, {t:'myth', k:'amrita'}, {t:'soul', k:'savitri'}],
+    fx:{2:{atk:0.7, hp:0.7}, 3:{skill:1.6}, 4:{atk:1.6, hp:1.6}, 5:{boss:1.5, crit:8, cdr:10}}},
 ];
 const setShown = T => !T.w || S.world >= T.w || (T.w <= 5 && seaOpen());   // 4부 세트(해녀·용궁 w:5)는 바다부터 — 예전엔 3부 용사도 전설 무기·갑옷만 끼면 해녀 2세트가 저절로 켜졌음
-const SET_STAT = {atk:'공격력', hp:'체력', boss:'보스 피해', skill:'기술 피해', crit:'치명타 확률'};
+const SET_STAT = {atk:'공격력', hp:'체력', boss:'보스 피해', skill:'기술 피해', cdmg:'치명타 피해', crit:'치명타 확률', cdr:'기술 재사용 감소', exp:'경험치'};
+const SET_PCT = {crit:1, cdr:1, exp:1};   // %로 보이는 옵션(나머지는 '몇 단계만큼')
+const setFxText = o => Object.entries(o || {}).map(([t, v]) => SET_PCT[t] ? `${SET_STAT[t]} ${t === 'cdr' ? '-' : '+'}${v}%` : `${SET_STAT[t]} +${v}단계`).join(' · ');
+const petByDraw = d => PETS.findIndex(x => x.draw === d);
 function setPieceOk(P){
   if (hasK(GEAR, P.t)) return (!GEAR[P.t].sea || seaOpen()) && S.equip[P.t] >= 0 && gearG(P.t) >= P.g;
-  if (P.t === 'av'){ const a = AV[P.k]; return !!(a && S.av.own[P.k] && S.av[a.type] === P.k); }
-  if (P.t === 'mount') return S.mount.ride === P.k && !!S.mount.own[P.k];
+  if (P.t === 'av'){ const a = AV[P.k]; return !!(a && S.av.own[P.k] && S.av[a.type] === P.k); }   // 아바타는 칸마다 하나라 입은 것
   if (P.t === 'acc') return S.acc[P.k].g >= P.g;
-  if (P.t === 'form') return S.form.eq === P.k && !!S.form.own[P.k];
+  // 세트 도감화(2026-11-17, 사용자 요청): 변신·넋·신화 보물·펫은 '가진 것'으로 센다
+  if (P.t === 'form') return !!S.form.own[P.k];
   if (P.t === 'tower') return (S.tower && S.tower.best || 0) >= P.f;
-  if (P.t === 'soul') return !!S.soul.own[P.k] && S.soul.eq.includes(P.k);
+  if (P.t === 'soul') return !!S.soul.own[P.k];
+  if (P.t === 'myth') return (S.myth[P.k] || 0) > 0;
+  if (P.t === 'pet'){ const i = petByDraw(P.d); return i >= 0 && S.pets.lv[i] > 0; }
   return false;
 }
 function setPieceName(P){
   if (hasK(GEAR, P.t)) return `${GRADES[P.g].name} 이상 ${slotName(P.t)}`;
-  if (P.t === 'av') return `${AV[P.k] ? AV[P.k].name : P.k}(${(AV_TYPES.find(x => AV[P.k] && x[0] === AV[P.k].type) || ['', '아바타'])[1]})`;
-  if (P.t === 'mount') return `탈것 ${MT[P.k] ? MT[P.k].name : P.k}`;
+  if (P.t === 'av') return `${AV[P.k] ? AV[P.k].name : P.k}(${(AV_TYPES.find(x => AV[P.k] && x[0] === AV[P.k].type) || ['', '아바타'])[1]} 입기)`;
   if (P.t === 'acc') return `${GRADES[P.g].name} 이상 ${ACC[P.k].name}`;
-  if (P.t === 'form') return `변신 ${FM[P.k] ? FM[P.k].name : P.k}`;
+  if (P.t === 'form') return `변신 ${FM[P.k] ? FM[P.k].name : P.k} 보유`;
   if (P.t === 'tower') return `천공의 탑 ${P.f}층`;
-  if (P.t === 'soul') return `넋 ${SL[P.k] ? SL[P.k].name : P.k}`;
+  if (P.t === 'soul') return `넋 ${SL[P.k] ? SL[P.k].name : P.k} 보유`;
+  if (P.t === 'myth'){ const m = MYTHS.find(x => x.k === P.k); return `신화 보물 ${m ? m.name : P.k} 보유`; }
+  if (P.t === 'pet'){ const i = petByDraw(P.d); return `펫 ${i >= 0 ? PETS[i].name : P.d} 보유`; }
   return '';
 }
 const setCount = T => setPieceOk(T.p[0]) && setPieceOk(T.p[1]) ? T.p.filter(setPieceOk).length : 0;   // 무기·갑옷이 맞아야 센다
 let setCache = null;
 function setSum(){
   if (setCache) return setCache;
-  const o = {atk:0, hp:0, boss:0, skill:0, crit:0, on:[]};
+  const o = {atk:0, hp:0, boss:0, skill:0, crit:0, cdmg:0, cdr:0, exp:0, on:[]};
   let best = null, bn = 1;   // 세트는 하나만 켜진다: 내가 고른 세트(S.setPick, 2조각 이상일 때) 아니면 가장 많이 맞춘 것(같으면 뒤의 더 센 세트)
   const pk = S.setPick && SETS.find(T => T.k === S.setPick && setShown(T)), pn = pk ? setCount(pk) : 0;   // 아직 안 간 부의 세트는 켜지지 않는다(setShown)
+  sdTick();   // 세트 도감: 세트마다 맞춘 가장 많은 조각을 적어 둠
   if (pk && pn >= 2){ best = pk; bn = pn; }
   else for (const T of SETS){ if (!setShown(T)) continue; const n = setCount(T); if (n >= 2 && n >= bn){ best = T; bn = n; } }
   if (best){ o.on.push([best.k, bn]); for (let k = 2; k <= bn; k++) for (const [t, v] of Object.entries(best.fx[k] || {})) o[t] += v; }
+  if (sdGot(SD_WEAPON)){ o.atk += SD_WFX.atk; o.skill += SD_WFX.skill; }   // 세트 도감 마지막 보상 「오방 신검의 기운」(세트와 따로 늘 켜짐)
+  o.cdr = Math.min(15, o.cdr);
   return setCache = o;
 }
-// 세트 고르기(2026-11 (43), 사용자 요청): 그 세트를 켜고, 가진 조각(아바타·탈것·변신)은 바로 입히기/태우기/착용. 무기·갑옷·장신구는 등급이라 직접 맞춰야 함
+// 세트 고르기(2026-11 (43), 사용자 요청): 그 세트를 켜고, 가진 아바타는 바로 입힌다. 변신·넋·신화 보물·펫은 가지고만 있으면 세므로 바꾸지 않음. 무기·갑옷·장신구는 등급이라 직접 맞춰야 함
 function pickSet(k){
   const T = SETS.find(x => x.k === k);
   if (!k || !T){ S.setPick = ''; setCache = null; refreshStats(); return ''; }
@@ -11633,12 +11701,39 @@ function pickSet(k){
   for (const P of T.p){
     if (setPieceOk(P)) continue;
     if (P.t === 'av' && S.av.own[P.k] && AV[P.k]){ S.av[AV[P.k].type] = P.k; done.push(AV[P.k].name); }
-    else if (P.t === 'mount' && S.mount.own[P.k]){ S.mount.ride = P.k; done.push(MT[P.k] ? MT[P.k].name : P.k); }
-    else if (P.t === 'form' && S.form.own[P.k]){ S.form.eq = P.k; done.push(FM[P.k] ? FM[P.k].name : P.k); }
-    else if (P.t === 'soul' && S.soul.own[P.k]){ const at = S.soul.eq.findIndex((x, i) => !x && i < soulSlots()), sl = at >= 0 ? at : 0; if (equipSoul(P.k, sl)) done.push(SL[P.k] ? SL[P.k].name : P.k); }
   }
   setCache = null; petCache.clear(); petImgCache.clear(); prevCache.clear(); refreshStats();
   return done.join(' · ');
+}
+/* ===== 세트 도감(2026-11-17, 사용자 요청): 세트를 모으면 받는 특별한 탈것·아바타·무기 기운과 별호 =====
+   세트마다 지금까지 맞춘 가장 많은 조각(S.setDex.best)을 적어 두고(무기·갑옷이 맞아야 셈), 단계마다 [장비] → [세트] → 「세트 도감」에서 받는다.
+   기술 재사용 감소는 기린 같은 보통 탈것이 아니라 도감 탈것(불가사리·청룡 새끼)에 싣고, 세트 쿨감·탈것 쿨감·별호 쿨감은 서로 곱한다(skCdOf) */
+const SD_TIERS = [
+  {n:3, c:3, av:'p_obang', title:'sd1', name:'세 갈래 갖춤새'},
+  {n:3, c:6, mount:'bulgasari', title:'sd2', name:'여섯 갈래 갖춤새'},
+  {n:5, c:3, av:'c_dogam', title:'sd3', name:'세 벌 온갖춤'},
+  {n:5, c:6, mount:'cheongryong', title:'sd4', name:'여섯 벌 온갖춤'},
+  {n:5, c:10, weapon:true, title:'sd5', name:'열 벌 온갖춤'},
+];
+const SD_WEAPON = 4, SD_WFX = {atk:1, skill:0.6};
+const sdSt = () => S.setDex || (S.setDex = {best:{}, got:{}});
+const sdGot = i => !!(S.setDex && S.setDex.got && S.setDex.got[i]);
+function sdTick(){
+  const D = sdSt();
+  for (const T of SETS){ if (!setShown(T)) continue; const n = setCount(T); if (n > (D.best[T.k] || 0)) D.best[T.k] = n; }
+}
+const sdCount = n => SETS.filter(T => (sdSt().best[T.k] || 0) >= n).length;
+const sdReady = i => !sdGot(i) && sdCount(SD_TIERS[i].n) >= SD_TIERS[i].c;
+const sdNew = () => SD_TIERS.some((x, i) => sdReady(i));
+const sdRewardText = D => D.av ? `아바타 「${AV[D.av].name}」` : D.mount ? `탈것 「${MT[D.mount].name}」(${mountAbText(MT[D.mount])})` : `무기 기운 「오방 신검의 기운」(공격력 +${SD_WFX.atk}단계 · 기술 피해 +${SD_WFX.skill}단계, 늘 켜짐)`;
+function sdClaim(i){
+  const D = SD_TIERS[i]; if (!D || !sdReady(i)) return false;
+  sdSt().got[i] = true;
+  if (D.av) giveAvatar(D.av, true);
+  if (D.mount) giveMount(D.mount, true);
+  setCache = null; titleCheck(); refreshStats(); saveLocal();
+  addLog(`세트 도감 「${D.name}」 보상: ${sdRewardText(D)} · 별호 「${TT[D.title].name}」`, 'good');
+  return true;
 }
 const setMul = t => { const [G, A] = SK_GW[Math.max(0, Math.min(4, S.world))], v = setSum()[t] || 0; return t === 'hp' ? Math.pow(A, v) : Math.pow(G, v); };
 function ascNeed(slot){
@@ -15822,7 +15917,7 @@ function drawTexts(){
   if (session && !hero.dead && hero.tagY != null && !cut){
     const hx = (hero.x - camX) * scale, hy = (hero.tagY - camY) * scale - 2;
     nameTag(S.name, hx, hy, {color:'#fff6d8'});
-    const tt = TT[S.title.eq]; if (tt && S.title.own[tt.k]){ ctx.font = '900 10px SamhanSans, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#1a1006'; const ty = hy - 25; ctx.strokeText(`「${tt.name}」`, hx, ty); ctx.fillStyle = '#ffd24a'; ctx.fillText(`「${tt.name}」`, hx, ty); }
+    const tt = TT[S.title.eq]; if (tt && S.title.own[tt.k]){ ctx.font = '900 10px SamhanSans, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#1a1006'; const ty = hy - 25; ctx.strokeText(`「${tt.name}」`, hx, ty); ttFill(ctx, tt, hx, ty); }
     ctx.textAlign = 'left'; }
   if (!cut && !market && raid && raid.boss.pvpLook && !raid.boss.dead) nameTag(raid.boss.pvpLook.name, (raid.boss.x - camX) * scale, (raid.boss.y - 33 - camY) * scale, {bg:'rgba(120,34,34,.9)', line:'rgba(255,150,130,.85)', color:'#fff0ec', size:9.5});   // 결투 상대 이름
   if (!cut && !market && raid) for (const a of raid.allies) if (!a.down && a.x != null) nameTag(a.name, (a.x - camX) * scale, (a.y - 33 - camY) * scale, a.npc ? {bg:'rgba(60,60,72,.82)', line:'rgba(200,200,210,.6)', color:'#e8e8ee', size:9} : {bg:'rgba(40,96,60,.86)', line:'rgba(150,240,180,.8)', color:'#f0fff4', size:9.5});   // 함께 싸우는 다른 용사 캐릭터의 이름(2026-11 (42), 사용자 요청)
@@ -16208,7 +16303,8 @@ function addChat(kind, name, text, extra){
     const li = document.createElement('li');
     li.className = 'cm ' + kind;
     const b = document.createElement('b'); b.textContent = kind === 'sys' ? '[알림]' : name;
-    li.appendChild(b); li.appendChild(document.createTextNode(' ' + text));
+    li.appendChild(b);
+    if (extra && extra.tt && TT[extra.tt]){ const t = document.createElement('span'); t.className = 'ttl ctt ' + TITLE_RANKS[trk(extra.tt)].c; t.textContent = TT[extra.tt].name; li.appendChild(document.createTextNode(' ')); li.appendChild(t); }   li.appendChild(document.createTextNode(' ' + text));   // 별호(2026-11-17, 등급 색)
     if (m.sq){ li.classList.add('hook'); li.dataset.sq = m.sq; const tg = document.createElement('i'); tg.className = 'sqtag'; tg.textContent = '부탁 ▶'; li.appendChild(tg); }
     const atEnd = ul.scrollTop + ul.clientHeight >= ul.scrollHeight - 30;
     ul.appendChild(li);
@@ -16268,9 +16364,10 @@ function sendChat(raw){
   if (!text || !session) return false;
   if (performance.now() - chatSendT < 1200){ addChat('sys', '알림', '조금 천천히 말해 주세요.'); return false; }
   chatSendT = performance.now();
-  addChat('me', S.name, text);
+  const myTt = TT[S.title.eq] && S.title.own[S.title.eq] ? S.title.eq : '';
+  addChat('me', S.name, text, {tt:myTt});
   heroSay = {text, t:4};
-  if (room) room.emit('chat', {n:S.name, t:text, c:S.cls}).catch(e => { if (e && e.code === 'not_permitted') addChat('sys', '알림', '이 창에서는 다른 사람에게 보낼 수 없어요. 주민들만 들어요.'); });
+  if (room) room.emit('chat', {n:S.name, t:text, c:S.cls, tt:myTt}).catch(e => { if (e && e.code === 'not_permitted') addChat('sys', '알림', '이 창에서는 다른 사람에게 보낼 수 없어요. 주민들만 들어요.'); });
   // 주민이 가끔 대꾸한다
   const rule = NPC_REPLY.find(([re]) => re.test(text));
   if (rule || Math.random() < 0.35){
@@ -16302,7 +16399,7 @@ async function bootRoom(){
       const text = cleanChat(typeof d.t === 'string' ? d.t : '');
       if (!text) return;
       const name = cleanChat(typeof d.n === 'string' ? d.n : '').slice(0, 8) || '나그네';
-      addChat('player', name + (msg.guest ? '(손님)' : msg.isMe ? '(내 다른 창)' : ''), text);
+      addChat('player', name + (msg.guest ? '(손님)' : msg.isMe ? '(내 다른 창)' : ''), text, {tt:typeof d.tt === 'string' && hasK(TT, d.tt) ? d.tt : ''});   // 별호 키는 표에 있는 것만(글자는 내 표에서)
     }, () => { room = null; });
     r.onPeers(ch => { const ps = Array.isArray(ch && ch.peers) ? ch.peers : []; roomPeers = ps.length;
       roomList = ps.map(p => p && typeof p === 'object' ? {n:cleanChat(String(p.n || p.name || '')).slice(0, 8), c:hasK(CLASSES, p.c) ? p.c : '', l:Math.max(0, Math.floor(+p.l) || 0), w:Math.max(0, Math.min(4, Math.floor(+p.w) || 0)), me:!!p.me} : null).filter(p => p && p.n);
@@ -17987,21 +18084,41 @@ let gearSlot = 'weapon', gearSel = -1;
 // 세트·공명(2026-11 (42))
 function buildSet(){
   panel.innerHTML = `${gearSegHTML()}<div class="ph"><h2>장비 세트 · 공명</h2><span class="small" id="resTag"></span></div>
-    <p class="hint">무기·갑옷이 중심이에요. 낀 무기·갑옷의 등급이 높을수록 <b>장비 공명</b>으로 장신구·치장·변신·탈것·아바타 효과가 커지고(전설 1배 · 신화 각성 1.1배 · 태초 1.2배, 낮으면 줄어요 — 영웅 0.93배), 정해진 무기·갑옷 등급과 함께 아바타(입은 것)·탈것(탄 것)·장신구·변신(착용)을 맞추면 <b>세트 효과</b>가 켜져요. 세트는 <b>무기·갑옷 둘 다</b> 맞아야 켜지고, 맞춘 개수(2~5)만큼 효과가 쌓여요. 한 번에 <b>하나</b>(가장 많이 맞춘 세트)만 켜져요. 효과는 '몇 단계만큼'이라 어느 땅에서나 비슷하게 세요.</p>
+    <p class="hint">무기·갑옷이 중심이에요. 낀 무기·갑옷의 등급이 높을수록 <b>장비 공명</b>으로 장신구·치장·변신·탈것·아바타 효과가 커지고(전설 1배 · 신화 각성 1.1배 · 태초 1.2배, 낮으면 줄어요 — 영웅 0.93배), 정해진 무기·갑옷 등급과 함께 아바타(입은 것)·장신구·천공의 탑 층, 그리고 <b>가지고만 있으면 되는</b> 변신·넋·신화 보물·펫을 맞추면 <b>세트 효과</b>가 켜져요. 세트는 <b>무기·갑옷 둘 다</b> 맞아야 켜지고, 맞춘 개수(2~5)만큼 효과가 쌓여요. 한 번에 <b>하나</b>(가장 많이 맞춘 세트)만 켜져요. 효과는 '몇 단계만큼'이라 어느 땅에서나 비슷하게 세요.</p>
     <div id="setList"></div>`;
   wireGearSeg();
-  $('#setList').addEventListener('click', e => { const b = e.target.closest('[data-setpick]'); if (!b) return; const k = b.dataset.setpick, w = pickSet(k); sfx('click');
+  $('#setList').addEventListener('click', e => { const sc = e.target.closest('[data-sdclaim]'); if (sc){ if (sdClaim(+sc.dataset.sdclaim)) sfx('win'); refreshPanel(); return; }
+    const b = e.target.closest('[data-setpick]'); if (!b) return; const k = b.dataset.setpick, w = pickSet(k); sfx('click');
     addLog(k ? `${SETS.find(T => T.k === k).name}${josa(SETS.find(T => T.k === k).name, '을', '를')} 골랐어요.${w ? ' 가진 조각을 바로 맞췄어요: ' + w : ''}` : '세트를 자동(가장 많이 맞춘 것)으로 돌렸어요.', 'gain'); refreshPanel(); });
   return () => {
     setText($('#resTag'), `공명 ×${gearRes().toFixed(2)}`);
-    setHTML($('#setList'), `<div class="card"><div class="ct">켤 세트<span class="tag">${S.setPick ? '내가 고름' : '자동'}</span></div><p class="small" style="margin:0 0 6px">세트는 하나만 켜져요. 아래 [이 세트로]를 누르면 그 세트를 켜고 가진 아바타·탈것·변신을 바로 맞춰 줘요(무기·갑옷·장신구는 등급이라 직접). 고른 세트가 2조각이 안 되면 가장 많이 맞춘 세트가 켜져요.</p><button class="chip" data-setpick="" aria-pressed="${!S.setPick}">자동(가장 많이 맞춘 것)</button></div>` + SETS.filter(setShown).map(T => { const n = setCount(T), core = setPieceOk(T.p[0]) && setPieceOk(T.p[1]);
-      const fx = [2, 3, 4, 5].map(k => `<li class="${n >= k ? 'on' : ''}"><b>${k}세트</b> ${Object.entries(T.fx[k] || {}).map(([t, v]) => t === 'crit' ? `${SET_STAT[t]} +${v}%` : `${SET_STAT[t]} +${v}단계`).join(' · ')}</li>`).join('');
+    setHTML($('#setList'), `<div class="card"><div class="ct">켤 세트<span class="tag">${S.setPick ? '내가 고름' : '자동'}</span></div><p class="small" style="margin:0 0 6px">세트는 하나만 켜져요. 아래 [이 세트로]를 누르면 그 세트를 켜고 가진 아바타를 바로 입혀 줘요(변신·넋·신화 보물·펫은 가지고만 있으면 되고, 무기·갑옷·장신구는 등급이라 직접). 고른 세트가 2조각이 안 되면 가장 많이 맞춘 세트가 켜져요.</p><button class="chip" data-setpick="" aria-pressed="${!S.setPick}">자동(가장 많이 맞춘 것)</button></div>` + sdCardHTML() + SETS.filter(setShown).map(T => { const n = setCount(T), core = setPieceOk(T.p[0]) && setPieceOk(T.p[1]);
+      const fx = [2, 3, 4, 5].map(k => `<li class="${n >= k ? 'on' : ''}"><b>${k}세트</b> ${setFxText(T.fx[k])}</li>`).join('');
       const act = setSum().on.some(([k]) => k === T.k);
       return `<div class="card setc ${act ? 'ready' : ''}"><div class="ct">${T.name}<span class="tag">${act ? `${n}세트 켜짐` : n >= 2 ? `${n}세트(다른 세트가 켜짐)` : core ? '1조각 더' : '무기·갑옷부터'}</span><button class="chip" data-setpick="${T.k}" aria-pressed="${S.setPick === T.k}" style="margin-left:auto">${S.setPick === T.k ? '고른 세트' : '이 세트로'}</button></div>
         <p class="small" style="margin:0">${T.d}</p>
         <div class="setp">${T.p.map(P => `<span class="${setPieceOk(P) ? 'ok' : ''}">${setPieceOk(P) ? '✓ ' : ''}${esc(setPieceName(P))}</span>`).join('')}</div>
         <ul class="setfx">${fx}</ul></div>`; }).join(''));
   };
+}
+// 세트 도감 칸(2026-11-17): 단계마다 조건·보상·별호와 [받기]
+function sdCardHTML(){
+  const rows = SD_TIERS.map((D, i) => { const have = Math.min(D.c, sdCount(D.n)), got = sdGot(i), rd = sdReady(i);
+    return `<li class="${got ? 'on' : ''}"><div class="sdtx"><b>${i + 1}단계</b> 세트 ${D.c}곳을 ${D.n}조각 이상 <span class="small">(${have}/${D.c})</span><br><span class="small">${sdRewardText(D)} · 별호 ${titleSpan(D.title)}</span></div>
+      ${got ? '<span class="tag">받음</span>' : `<button class="chip" data-sdclaim="${i}" ${rd ? '' : 'disabled'}>${rd ? '받기' : '모으는 중'}</button>`}</li>`; }).join('');
+  return `<div class="card sdcard"><div class="ct">세트 도감<span class="tag">${SD_TIERS.filter((x, i) => sdGot(i)).length}/${SD_TIERS.length}</span></div>
+    <p class="small" style="margin:0 0 6px">세트마다 지금까지 맞춘 가장 많은 조각이 도감에 남아요(지금 켜진 세트가 아니어도). 단계를 채우면 특별한 탈것·아바타·무기 기운과 별호를 받아요.</p><ul class="setfx sdlist">${rows}</ul></div>`;
+}
+// 별호 머리 위 글자(2026-11-17): 등급마다 색 — 영예는 보랏빛, 전설은 금빛 그라데이션 + 작은 별이 반짝(움직임 줄이기면 멈춘 별)
+function ttFill(ctx, tt, x, y){
+  const r = tt.rank || 0, txt = `「${tt.name}」`, w = ctx.measureText(txt).width;
+  if (r >= 3){ const g = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0); g.addColorStop(0, '#ff9a2a'); g.addColorStop(0.5, '#fff3b0'); g.addColorStop(1, '#ffc83a'); ctx.fillStyle = g; }
+  else ctx.fillStyle = ['#ffd24a', '#7cc4ff', '#c99bff'][r];
+  ctx.fillText(txt, x, y);
+  if (r >= 2){ const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, t = performance.now() / 1000;
+    for (let i = 0; i < (r >= 3 ? 2 : 1); i++){ const a = still ? 0.9 : 0.35 + 0.65 * Math.abs(Math.sin(t * 2.2 + i * 1.7)), sx = x + (i ? -1 : 1) * (w / 2 + 3), sz = (r >= 3 ? 3 : 2.2) * (0.7 + 0.3 * a);
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = r >= 3 ? '#fff6c8' : '#e2c8ff'; ctx.beginPath(); ctx.moveTo(sx, y - sz * 1.6); ctx.lineTo(sx + sz * 0.45, y - sz * 0.45); ctx.lineTo(sx + sz * 1.6, y); ctx.lineTo(sx + sz * 0.45, y + sz * 0.45);
+      ctx.lineTo(sx, y + sz * 1.6); ctx.lineTo(sx - sz * 0.45, y + sz * 0.45); ctx.lineTo(sx - sz * 1.6, y); ctx.lineTo(sx - sz * 0.45, y - sz * 0.45); ctx.closePath(); ctx.fill(); ctx.restore(); } }
 }
 function gearSegHTML(){
   return `<div class="seg six" role="group" aria-label="장비 종류">
@@ -18017,7 +18134,7 @@ function gearSegHTML(){
       <button id="seg-mount" aria-pressed="${gearSlot === 'mount'}">탈것${mountNew() ? ' •' : ''}</button>
       <button id="seg-craft" aria-pressed="${gearSlot === 'craft'}">조합${craftReady() ? ' •' : ''}</button>
       <button id="seg-skin" aria-pressed="${gearSlot === 'skin'}">치장</button>
-      <button id="seg-set" aria-pressed="${gearSlot === 'set'}">세트${setSum().on.length ? ' •' : ''}</button>
+      <button id="seg-set" aria-pressed="${gearSlot === 'set'}">세트${setSum().on.length || sdNew() ? ' •' : ''}</button>
     </div>`;
 }
 function wireGearSeg(){
@@ -18294,7 +18411,7 @@ const mountNew = () => mountOpen() && MOUNTS.some(m => S.mount.own[m.k] ? (S.mou
 function buildMount(){
   panel.innerHTML = `${gearSegHTML()}
     <div class="ph" style="margin-top:10px"><h2>탈것</h2><span class="small">모음 효과 공격력·체력 <b id="mtCol"></b> · 고삐 조각 <b id="mtPiece"></b></span></div>
-    <p class="hint">${mountOpen() ? '타면 걷는 속도가 빨라지고 <b>고유 능력</b>이 켜져요(한 번에 하나). 가진 탈것마다 공격력·체력이 올라요(일반 1%·고급 2%·희귀 3%·전설 5%·신화 8%). 별 하나마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상·곤륜 레이드, 타임 보스, 허수아비 4등급 이상에서 얻어요.' : '2부 부상으로 건너가면 <b>마구간</b>이 열려요. 탈것은 이야기·마구간·고삐 조각으로 얻어요.'}</p>
+    <p class="hint">${mountOpen() ? '타면 걷는 속도가 빨라지고 <b>고유 능력</b>이 켜져요(한 번에 하나). 가진 탈것마다 공격력·체력이 올라요(일반 1%·고급 2%·희귀 3%·전설 5%·신화 8%). 별 하나마다 고유 능력·모음 효과 +20%. 고삐 조각은 부상부터 단계 보스·수문장·레이드·타임 보스·백귀야행, 허수아비 4등급 이상에서 얻어요. 탈것은 세트 조각이 아니에요 — 세트를 모으면 받는 「세트 도감」 탈것(불가사리·청룡 새끼)이 있어요.' : '2부 부상으로 건너가면 <b>마구간</b>이 열려요. 탈것은 이야기·마구간·고삐 조각으로 얻어요.'}</p>
     <p class="small apt-leg">${aptLegend()}</p>
     ${partBarHTML()}
     <div class="classes mounts">${MOUNTS.map(m => `<div class="ccard" id="mt-${m.k}" data-part="${mountPart(m)}" data-pk="${m.k}" data-g="${m.g}" style="cursor:default;--g:${MOUNT_G[m.g].color}">
@@ -18447,7 +18564,7 @@ const BAG_STACK = [
   {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw.reduce((x, y) => x + y, 0) : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설·유물 — 줄마다 6·8·10·10칸). 같은 등급 4개는 [합성]으로 한 단계 위 1개가 돼요(전설 → 유물만 확률).', get2:'바다의 수문장·레이드, 상위 레이드 「진」에서 희귀 호박석이 나와요.'},
   {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 원하는 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
-  {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
+  {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
 // 재료 말풍선(2026-11 (48), 사용자 요청): 재료 이름을 누르면 어디에 쓰고(어느 메뉴) 어디서 얻는지. data-mtip="m0|m1|m2|mat(지금 세계 재료)|shard|grudge|dust|piece|…"
 const STK = Object.fromEntries(BAG_STACK.map(x => [x.k, x]));
@@ -19432,7 +19549,7 @@ function buildRaid(){
         <div><div class="ct">백귀야행<span class="tag" id="pLeft"></span></div>
         <p class="story">밤길에 온갖 요괴가 줄지어 몰려와요! ${PARADE_TIME}초 동안 쉴 새 없이 나타나는 요괴를 최대한 많이 잡아요(하루 ${PARADE_TRIES}번). 잡은 수만큼 <b>엽전·보석·쇳가루·재료</b>${S.world >= 3 ? '·<b>고삐 조각</b>' : ''}을 받아요. 그동안 단계 보스는 안 나오고, 쓰러져도 단계가 내려가지 않아요.</p></div></div>
       <div class="card"><div class="ct">보상<span class="small" id="pBest"></span></div>
-        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · ${MAT_SRC.paradePer}마리마다 재료 1${S.world >= 3 ? ' · 40마리마다 고삐 조각 1' : ''}</p></div>
+        <p class="small" style="margin:0">요괴 한 마리마다 엽전(몬스터 3마리분)·쇳가루 ${1 + S.world} · 2마리마다 보석 1 · ${MAT_SRC.paradePer}마리마다 재료 1${S.world >= 3 ? ` · ${MOUNT_PIECE.paradePer}마리마다 고삐 조각 1` : ''}</p></div>
       <button class="btn primary big" id="pGo">백귀야행 시작</button>
       ${sugunOpen() ? `<div class="card dcard" style="margin-top:14px"><div class="dport"><img src="${bossPortrait('mulgwi', '#2a4a6a')}" alt=""></div>
         <div><div class="ct">수군 야행<span class="tag" id="sgLeft"></span></div>
@@ -19701,14 +19818,14 @@ function buildMe(){
     const k = meKey(); if (k === key) return; key = k;
     const L = meSlots(), ex = Object.assign(heroEx(), {form:''}), st = ST;
     const fig = lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), 'down', ex);
-    const tt = TT[S.title.eq] && S.title.own[S.title.eq] ? TT[S.title.eq].name : '';
+    const tt = TT[S.title.eq] && S.title.own[S.title.eq] ? S.title.eq : '';
     const row = (a, b) => `<div class="me-r"><span>${a}</span><b>${b}</b></div>`;
     const myth = MYTHS.filter(m => (S.myth[m.k] || 0) > 0);
     setHTML($('#meBox'), `<div class="me">
       <div class="me-board">
         <div class="me-top">${L.top.map(meSlot).join('')}</div>
         <div class="me-col">${L.left.map(meSlot).join('')}</div>
-        <div class="me-fig">${tt ? `<div class="me-tt">「${esc(tt)}」</div>` : ''}<img src="${fig}" alt="내 용사"><div class="me-nm">${esc(S.name || '나')}</div><div class="me-sub">Lv.${S.level} · ${esc(jobName())} · ${WORLD_NAME[S.world] || ''}</div></div>
+        <div class="me-fig">${tt ? `<div class="me-tt">${titleSpan(tt)}</div>` : ''}<img src="${fig}" alt="내 용사"><div class="me-nm">${esc(S.name || '나')}</div><div class="me-sub">Lv.${S.level} · ${esc(jobName())} · ${WORLD_NAME[S.world] || ''}</div></div>
         <div class="me-col">${L.right.map(meSlot).join('')}</div>
         <div class="me-bot"><span class="me-lab">치장</span>${L.bot.map(meSlot).join('')}</div>
       </div>
@@ -19882,7 +19999,7 @@ function showUserInfo(o, basic){
   const gname = g => g >= 0 ? `<span style="color:${GRADES[g].color}">${GRADES[g].name}</span>` : '-';
   const full = !o.npc && (o.q > 0 || o.tw > 0);   // 예전 요약(진행도 없음)·그림자 결투자는 자세한 진행도 없이
   const html = `<div class="ui-top"><img src="${lookPreview(o.cls, o.look, o.armorG || 0, o.weaponG || 0, 'down')}" alt="">
-      <div><b class="ui-nm">${esc(o.name)}</b>${o.tt && TT[o.tt] ? `<span class="ui-tt">「${esc(TT[o.tt].name)}」</span>` : ''}
+      <div><b class="ui-nm">${esc(o.name)}</b>${o.tt && TT[o.tt] ? `<span class="ui-tt">${titleSpan(o.tt)}</span>` : ''}
         <div class="small">${esc(o.job ? jobName(o.cls, o.job) : C.name)} · Lv.${o.level || '?'}${o.cum ? ` · 누적 Lv.${fmt(o.cum)}` : ''}${o.reb ? ` · 환생 ${o.reb}번` : ''}</div>
         <div class="small">${o.npc ? '그림자 결투자 · 연습 상대' : WORLD_NAME[w] + (full ? ` · 최고 ${stageLabelW(w, o.maxStage)}` : '')}</div></div></div>
     ${full ? `<div class="ui-sec">이야기 진행 <b>${fmt(q)} / ${MAIN_Q.length}</b>${ch ? ` · ${esc(ch)}` : ''}</div>${bar(q, MAIN_Q.length, 'linear-gradient(90deg,#ffd24a,#ff9a3a)')}
@@ -19988,7 +20105,7 @@ function buildRec(){
       const sig = TS.map(t => t.k + (S.title.own[t.k] ? 1 : 0) + (S.title.eq === t.k ? 2 : 0)).join('');
       const tg = $('#ti-grid'); if (tg && tg._sig !== sig){ tg._sig = sig;
         tg.innerHTML = TS.map(t => { const own = !!S.title.own[t.k], on = S.title.eq === t.k, [v, n] = t.prog();
-          return `<button class="tchip${own ? ' own' : ''}${on ? ' on' : ''}" data-tk="${t.k}" ${own ? '' : 'disabled'}><b>${t.name}</b><small>${titleEffText(t)}</small><i>${own ? (on ? '다는 중' : '달기') : `${t.need} · ${fmt(Math.min(v, n))}/${fmt(n)}`}</i></button>`; }).join('');
+          return `<button class="tchip${own ? ' own' : ''}${on ? ' on' : ''}" data-tk="${t.k}" data-rank="${t.rank || 0}" ${own ? '' : 'disabled'}><b class="ttl ${TITLE_RANKS[t.rank || 0].c}">${t.name}</b><em class="trn ${TITLE_RANKS[t.rank || 0].c}">${TITLE_RANKS[t.rank || 0].n}</em><small>${titleEffText(t)}</small><i>${own ? (on ? '다는 중' : '달기') : `${t.need} · ${fmt(Math.min(v, n))}/${fmt(n)}`}</i></button>`; }).join('');
         tg.querySelectorAll('[data-tk]').forEach(bt => bt.addEventListener('click', () => { const k = bt.dataset.tk; if (!S.title.own[k]) return; S.title.eq = S.title.eq === k ? '' : k; refreshStats(); saveLocal(); sfx('click'); refreshPanel(); })); } }
     { const cp = curPart(), ps = dexParts();   // 도감: 부별 모음 현황
       setHTML($('#dexBox'), `<table class="dext"><thead><tr><th></th>${DEX.map(D => `<th>${D.n}</th>`).join('')}<th>합계</th></tr></thead><tbody>${ps.map(p => { const lock = p > cp, c = dexCount(p), sm = dexSum(p), T = TT['dex' + p], done = sm[0] >= sm[1];
@@ -20267,8 +20384,8 @@ function partClick(e){
 /* 도감([정보]): 부마다 펫·탈것·아바타·치장·넋 구슬을 얼마나 모았는지. 부 하나를 다 모으면 별호(TITLES dex1~) */
 const DEX = [
   {n:'펫', list:() => PETS.map((p, i) => [petPart(p), S.pets.lv[i] > 0])},
-  {n:'탈것', list:() => MOUNTS.map(m => [mountPart(m), !!S.mount.own[m.k]])},
-  {n:'아바타', list:() => AVATARS.filter(a => !a.job || a.cls === S.cls).map(a => [avPart(a), !!S.av.own[a.k]])},
+  {n:'탈것', list:() => MOUNTS.filter(m => m.src !== 'dex').map(m => [mountPart(m), !!S.mount.own[m.k]])},   // 세트 도감 보상(2026-11-17)은 부 도감에 넣지 않음
+  {n:'아바타', list:() => AVATARS.filter(a => (!a.job || a.cls === S.cls) && a.src !== '세트 도감').map(a => [avPart(a), !!S.av.own[a.k]])},
   {n:'치장', list:() => SK_LIST.map(x => [partOfCh(x.c), !!S.skin.found[x.c]])},
   {n:'넋 구슬', list:() => SOULS.map(x => [soulPart(x), !!S.soul.own[x.k]])},
 ];
@@ -20846,17 +20963,20 @@ async function submitLogin(signup){
     if (btn && btn.isConnected){ btn.disabled = false; btn.textContent = signup ? '계정 만들기' : '게임 시작'; }
   }
 }
-function showCharSelect(msg){
+function showCharSelect(msg, keepPick){
   modalLock = true; setTitle(true);
   const A = REG.accounts[curAcc];
   if (!A){ showLogin('login'); return; }
   let pick = A.chars.some(c => c.cid === A.lastChar) ? A.lastChar : A.chars.length ? A.chars[0].cid : null;
-  const list = A.chars.map(ch => `<button class="char" data-cid="${esc(ch.cid)}" aria-pressed="${ch.cid === pick}">
+  if (keepPick && A.chars.some(c => c.cid === keepPick)) pick = keepPick;
+  const nCh = A.chars.length;
+  const list = A.chars.map((ch, ci) => `<div class="cw"><button class="char" data-cid="${esc(ch.cid)}" aria-pressed="${ch.cid === pick}">
       <img src="${lookPreview(ch.cls in CLASSES ? ch.cls : 'musa', ch.look, ch.armorG >= 0 ? ch.armorG : -1, ch.weaponG >= 0 ? ch.weaponG : -1)}" alt="">
-      <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>`).join('')
+      <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>${nCh > 1 ? `<span class="mv"><button class="mvb" data-mv="-1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 앞으로 한 칸(위로)"${ci === 0 ? ' disabled' : ''}>▲</button><button class="mvb" data-mv="1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 뒤로 한 칸(아래로)"${ci === nCh - 1 ? ' disabled' : ''}>▼</button></span>` : ''}</div>`).join('')
     + Array.from({length:Math.max(0, MAX_CHARS - A.chars.length)}, (_, i) => `<button class="char empty" data-new="1" aria-label="빈 칸 — 새 캐릭터 만들기">＋ 빈 칸${i ? '' : ' · 새 캐릭터'}</button>`).join('');
   const html = `<p>아이디 <b>${esc(curAcc)}</b>로 들어왔어요. 함께할 캐릭터를 골라요. (한 계정에 ${MAX_CHARS}명까지)</p>
     ${A.chars.length > 1 ? `<p class="small" style="margin:0 0 6px">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석).</p>` : ''}
+    ${nCh > 1 ? '<p class="small" style="margin:0 0 6px">▲▼로 캐릭터 순서를 바꿀 수 있어요. 맨 앞(맨 위·왼쪽)이 본캐 자리예요. 순서는 다른 기기에서도 그대로예요.</p>' : ''}
     ${A.chars.length ? '' : '<p class="small">아직 캐릭터가 없어요. [새 캐릭터]를 눌러 만들어 주세요.</p>'}
     <div class="chars many">${list}</div>
     <p class="err" role="alert" style="color:var(--jade)">${esc(msg || '')}</p>
@@ -20873,10 +20993,67 @@ function showCharSelect(msg){
       });
       card.addEventListener('dblclick', () => enterChar(card.dataset.cid));
     });
-    $('#cs-out').addEventListener('click', () => { curAcc = null; REG.keep = null; saveReg(); writeSession(null); showLogin('login', '', ''); });
+    document.querySelectorAll('#mBody .mvb').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); moveCharUI(b); }));
+    $('#cs-out').addEventListener('click', () => { flushOrder(); curAcc = null; REG.keep = null; saveReg(); writeSession(null); showLogin('login', '', ''); });
     if ($('#cs-del')) $('#cs-del').addEventListener('click', () => { if (pick) confirmDeleteChar(pick); });
     if (betaHook) betaHook();
   });
+}
+/* 캐릭터 순서 바꾸기(2026-11-17): 순서는 A.chars 배열 순서 + 마지막으로 바꾼 시각 A.ordT.
+   서버(SQL 변경 없음)에는 캐릭터마다 요약(summary)에 `ordl`(캐릭터 id 순서)·`ordT`를 같이 적는다 — 가장 최근(ordT가 큰) 순서를 따른다 */
+function moveChar(cid, d){
+  const A = REG.accounts[curAcc];
+  if (!A) return false;
+  const i = A.chars.findIndex(c => c.cid === cid), j = i + d;
+  if (i < 0 || j < 0 || j >= A.chars.length) return false;
+  [A.chars[i], A.chars[j]] = [A.chars[j], A.chars[i]];
+  A.ordT = Math.max(now(), (+A.ordT || 0) + 1); A.t = Math.max(now(), A.ordT); saveReg();
+  pushOrder();
+  return true;
+}
+function moveCharUI(btn){
+  const cid = btn.dataset.cid, d = +btn.dataset.mv, A = REG.accounts[curAcc];
+  if (!moveChar(cid, d) || !A) return;
+  const box = document.querySelector('#mBody .chars');
+  if (!box) return;
+  const wraps = {};
+  box.querySelectorAll('.cw').forEach(w => { wraps[w.querySelector('.char').dataset.cid] = w; });
+  const first = box.querySelector('.char.empty');
+  A.chars.forEach((c, i) => {
+    const w = wraps[c.cid];
+    if (!w) return;
+    box.insertBefore(w, first);
+    const [up, dn] = w.querySelectorAll('.mvb');
+    if (up) up.disabled = i === 0;
+    if (dn) dn.disabled = i === A.chars.length - 1;
+  });
+  const ch = A.chars.find(c => c.cid === cid), i = A.chars.indexOf(ch);
+  const mine = wraps[cid] && wraps[cid].querySelectorAll('.mvb');
+  const nb = mine && (mine[d < 0 ? 0 : 1].disabled ? mine[d < 0 ? 1 : 0] : mine[d < 0 ? 0 : 1]);
+  if (nb && !nb.disabled) nb.focus();
+  const er = document.querySelector('#mBody .err');
+  if (er) er.textContent = `${ch.name}${josa(ch.name, '을', '를')} ${i + 1}번째로 옮겼어요.`;
+}
+let ordTimer = 0;
+function pushOrder(){
+  if (!online) return;
+  clearTimeout(ordTimer); ordTimer = setTimeout(flushOrder, 600);
+}
+// 바꾼 순서를 서버의 캐릭터 요약에 적는다(저장 기록은 건드리지 않음: p_save를 비워 보내면 서버는 요약만 바꾼다)
+async function flushOrder(){
+  if (!ordTimer || !online) return;
+  clearTimeout(ordTimer); ordTimer = 0;
+  const A = REG.accounts[online.acc], tok = online.token;
+  if (!A || !A.ordT) return;
+  for (const ch of A.chars.slice()){
+    if (typeof ch.srvT !== 'number') continue;   // 서버에 아직 없는 캐릭터는 처음 올릴 때 같이 적힌다
+    try { await rpc('samhan_save', {p_token:tok, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:null, p_t:ch.srvT}); }
+    catch (e) { if (e.code === 'bad_token'){ lostOnline(); return; } }
+  }
+}
+function applyOrder(A, ids){
+  const rank = new Map(ids.map((c, i) => [c, i]));
+  A.chars = A.chars.map((c, i) => ({c, i, r:rank.has(c.cid) ? rank.get(c.cid) : 1000 + i})).sort((a, b) => a.r - b.r).map(x => x.c);
 }
 function confirmDeleteChar(cid){
   const A = REG.accounts[curAcc], ch = A && A.chars.find(c => c.cid === cid);
@@ -21106,7 +21283,9 @@ function lostOnline(msg){
 }
 // 캐릭터 요약(목록·레이드 동료용)
 const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level,
-  job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || ''});
+  job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || '', ...ordSum()});
+// 캐릭터 순서를 바꾼 적이 있으면 요약마다 순서(ordl)와 바꾼 시각(ordT)을 같이 적는다(없으면 아무것도 안 붙음 — 서버·옛 화면과 호환)
+const ordSum = () => { const A = online && REG.accounts[online.acc]; return A && A.ordT ? {ordl:A.chars.map(c => c.cid), ordT:A.ordT} : {}; };
 // 다른 용사 요약의 진행도 다듬기(남이 보낸 값이라 범위·키를 막음)
 const sumProg = sm => ({world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
   maxStage:Math.max(1, Math.min(9999, Math.floor(+sm.maxStage) || 1)), job:Math.max(0, Math.min(JOB_MAX, Math.floor(+sm.job) || 0)), reb:Math.max(0, Math.min(2, Math.floor(+sm.reb) || 0)),
@@ -21131,17 +21310,25 @@ async function syncChars(acc){
     if (!loc) A.chars.push(ent);
     else { loc.srvT = ent.srvT; if ((ent.t || 0) > (loc.t || 0)) Object.assign(loc, ent); }
   }
+  // 캐릭터 순서: 서버 요약들 가운데 가장 최근에 바꾼 순서(ordT가 큰 것)를 따른다. 이 기기가 더 새것이면 서버에 알린다
+  let ordBest = 0, ordIds = null;
+  for (const it of list){
+    const sm = it && it.summary;
+    if (sm && Array.isArray(sm.ordl) && +sm.ordT > ordBest){ ordBest = +sm.ordT; ordIds = sm.ordl.filter(x => typeof x === 'string').slice(0, 12); }
+  }
+  if (ordIds && ordBest > (+A.ordT || 0)){ applyOrder(A, ordIds); A.ordT = ordBest; }
   const onSrv = new Set(list.map(it => it && it.cid));
   for (const ch of A.chars.slice()){
     if (onSrv.has(ch.cid)){ if (ch.srvErr === 'many') delete ch.srvErr; continue; }
     let save = null;
     try { save = localStorage.getItem(charKey(acc, ch.cid)); } catch (e) {}
     if (!save){ continue; }
-    try { const d = JSON.parse(save); await rpc('samhan_save', {p_token:online.token, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:save, p_t:d.lastSave || 0}); delete ch.srvErr; }
+    try { const d = JSON.parse(save); await rpc('samhan_save', {p_token:online.token, p_cid:ch.cid, p_name:ch.name, p_summary:charSummary(ch), p_save:save, p_t:d.lastSave || 0}); delete ch.srvErr; ch.srvT = d.lastSave || 0; }
     catch (e) { if (e.code === 'name_taken') ch.srvErr = 'name'; else if (e.code === 'too_many') ch.srvErr = 'many'; else if (e.code === 'bad_token'){ lostOnline(); return; } }
   }
   A.chars = A.chars.slice(0, MAX_CHARS);
   A.t = now(); saveReg();
+  if ((+A.ordT || 0) > ordBest) pushOrder();
 }
 // 지금 캐릭터를 서버에 올린다(1분마다·창을 숨길 때·캐릭터 바꿀 때)
 let onlineBusy = false, onlineP = Promise.resolve(), manyNoted = false;
@@ -21700,7 +21887,7 @@ sfx = function(name){
     case 'click': pluck(o, t, 81, 0.1, 0.06); break;
   }
 };
-document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.btn,.chip,.tab,.seg button,.gbtn,.ccard,.char')) sfx('click'); });
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('.btn,.chip,.tab,.seg button,.gbtn,.ccard,.char,.mvb')) sfx('click'); });
 
 /* ================= 시작 ================= */
 let last = performance.now();
@@ -21846,7 +22033,7 @@ if (location.search.indexOf('simtest') >= 0){
     refineGen, seaOpen, slotsNow, ALL_SLOTS, NEW_SLOTS, GEAR_N, GEAR, SLOT, slotMain, slotFxText, refineCost, seaKit, seaGearDrop, seaSum, seaGrow, itemG, matW, gearEquipPct, gearName, giveItem,
     AMB, AMB_G, AMB_GOOD, AMB_BAD, ambSt, ambN, ambDone, ambGold, ambSet, ambCarve, ambBest, ambSum, gainAmber, amberDrop, ambMerge, ambMergeAll, ambRelic, ambRelicLuck:null, ambMergeCan, ambRoll, seaForce:false, ambLuck:null, noAmber:true, noSea:true, noJob5:true, noHaetae:true, levelCap, mainQuest, questCur, migrateStory, curRegion, stageLabel, castSprite, cutBg, skOpen, JOBS, SEA1, SEA1_REGIONS, SEA1_RAIDS, sea1RaidInfo, sea1RaidsOpen, SEA2, SEA3, SEAS, seaRaidInfo, seaRaidsOpen, heroDie, chapterDone, cumLv, CHAPTERS, CONT, CROSS_QW, STORY_SV, EXP_K, STAGE_LV, get PART4A_END(){ return PART4A_END; }, get PART4B_END(){ return PART4B_END; }, get CROSS_Q5(){ return CROSS_Q5; }, get PART3_END(){ return PART3_END; }, JOB5_LV, WORLD_MAX, LV_CAP, WORLD_NAME, jobEPct, mpMax, seaOpenCut, CH_OPEN, qShots, RAID_WORLDS, heroGx, personSprite, GRADES, mergeableSets, gradeOf, inhClose,
     INH, MAT_DROP, MAT_SRC, SHARD_SRC, gainShard, questGo, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
-    MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
+    MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountStarCost, mountBuyCost, MOUNT_PIECE, MOUNT_STAR, SD_TIERS, SD_WFX, sdClaim, sdReady, sdCount, sdGot, sdTick, TITLE_RANK, TITLE_RANKS, titleSpan, setFxText, SET_STAT, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     patSea, patFlow, breathOn, updateBreath, noSeaPat:false,
     YONGWANG, YGR, startYgr, finishYgr, ygrOpen, ygrLeft, ygrAvatar,
     SUGUN, startSugun, finishSugun, sugunOpen, sugunLeft, seaDay, seaSoulRoll, sgLuck:null, cutCheck, YV, YV_ROOMS, startYv, yvPick, yvOpen, yvLeft, get yvRun(){ return yvRun; }, yvBox:null, yvLuck:null, DBOSS_SEA, dbSea, PART4A_END, PART4B_END, PART4_END, PART5A_END, PART5B_END, MYTHS, skCdOf, mythReqText, questProg, IND1, IND2, IND3, IND_CROSS, indOpen, SEAS, mythK, VAJRA_BOLT, YAMA_SAY, yamaSay, cutVars, STORY_SV, SV_END, HAETAE,
@@ -21892,6 +22079,7 @@ if (location.search.indexOf('simtest') >= 0){
   // @@HOOK-ENTRY 입문 레이드(2026-11-17)
   Object.assign(window.__game, {ENTRY, ENTRY_RAIDS, entrySt, entryRaidOpen, entryInfo, entryReady, startEntry, entryReward, confirmEntry, RAID_WORLDS, raidAt, raidTickets, mGold, TICKET_MAX});
   // @@END-ENTRY
+  Object.assign(window.__game, {moveChar, applyOrder, flushOrder, syncChars, showCharSelect});   // 캐릭터 순서 시험
 }
 
 const hot = window.claude && window.claude.hot;

@@ -482,6 +482,53 @@ async def main():
             check(kk is True and '다른 기기에서 접속' in ttlB and lvAfter == lvBefore and kf is False,
                   f'다른 기기가 접속하면 먼저 켜진 기기는 멈추고 저장하지 않는다 {kk} {ttlB} {lvBefore} {lvAfter} {kf}')
             await B.screenshot(path=str(OUT / '34_온라인_접속끊김.png'))
+            # 캐릭터 순서(2026-11-17): 서버 SQL은 그대로, 캐릭터 요약(summary)의 ordl·ordT로 다른 기기에도 같은 순서. 가장 최근에 바꾼 쪽을 따른다
+            names_js = "() => [...document.querySelectorAll('#mBody .char[data-cid] b')].map(b => b.textContent).join()"
+            ctxP, P = await device(api)
+            await tg.signup(P, 'order1', 'pass1234', '첫째', 'musa')
+            for nm, cl in (('둘째', 'jagaek'), ('셋째', 'sulsa')):
+                await P.evaluate('() => window.__game.pushOnline()'); await P.wait_for_timeout(500)
+                await P.evaluate('() => window.__game.switchChar()')
+                await P.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+                await tg.create_char(P, nm, cl)
+            await P.evaluate('() => window.__game.pushOnline()'); await P.wait_for_timeout(500)
+            await P.evaluate('() => window.__game.switchChar()')
+            await P.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            check(await P.evaluate(names_js) == '첫째,둘째,셋째', f'순서: 처음엔 만든 순서(새 캐릭터는 맨 아래) {await P.evaluate(names_js)}')
+            before = db("select name, save_t, md5(save) from samhan_chars where acc = 'order1' order by name")
+            cid3 = db("select cid from samhan_chars where name = '셋째'")[0][0]
+            await P.click(f'#mBody .mvb[data-cid="{cid3}"][data-mv="-1"]'); await P.click(f'#mBody .mvb[data-cid="{cid3}"][data-mv="-1"]')
+            await P.wait_for_timeout(2500)
+            after = db("select name, save_t, md5(save) from samhan_chars where acc = 'order1' order by name")
+            ordl = db("select name, summary->'ordl', (summary->>'ordT')::bigint from samhan_chars where acc = 'order1' order by name")
+            check(await P.evaluate(names_js) == '셋째,첫째,둘째' and before == after, f'순서를 바꿔도 서버의 저장 기록(save·save_t)은 그대로다 {before} {after}')
+            check(len(ordl) == 3 and len({json.dumps(r[1]) for r in ordl}) == 1 and len({r[2] for r in ordl}) == 1 and ordl[0][2] > 0, f'서버의 캐릭터마다 같은 순서(ordl·ordT)가 적힌다 {ordl}')
+            await P.screenshot(path=str(OUT / '35_온라인_캐릭터순서.png'))
+            # 다른 기기에서 같은 아이디로 로그인해도 같은 순서
+            ctxQ, Q = await device(api)
+            await Q.click('#lg-tab-login'); await Q.fill('#lg-id', 'order1'); await Q.fill('#lg-pw', 'pass1234'); await Q.click('#modal-btn-0')
+            await Q.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            check(await Q.evaluate(names_js) == '셋째,첫째,둘째', f'다른 기기에서도 같은 순서로 나온다 {await Q.evaluate(names_js)}')
+            # 그 기기에서 다시 바꾸면(더 최근) 처음 기기도 그 순서를 따른다
+            cid2 = db("select cid from samhan_chars where name = '둘째'")[0][0]
+            await Q.wait_for_timeout(50)
+            await Q.click(f'#mBody .mvb[data-cid="{cid2}"][data-mv="-1"]'); await Q.wait_for_timeout(2000)
+            await P.evaluate('() => window.__game.REG.accounts.order1 && 0')
+            await P.goto(url); await P.wait_for_selector('#lg-id'); await P.click('#lg-tab-login'); await P.fill('#lg-id', 'order1'); await P.fill('#lg-pw', 'pass1234'); await P.click('#modal-btn-0')
+            await P.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            check(await P.evaluate(names_js) == '셋째,둘째,첫째', f'가장 최근에 바꾼 순서를 따른다(P가 다시 로그인) {await P.evaluate(names_js)}')
+            # 이 기기에서 오프라인으로 더 새 순서를 만들었다면 서버가 그 순서로 바뀐다
+            await P.evaluate("""async () => { const G = window.__game, A = G.REG.accounts.order1; A.chars.reverse(); A.ordT = Date.now() + 60000; await G.syncChars('order1'); }""")
+            await P.wait_for_timeout(2500)
+            srvFirst = db("select summary->'ordl'->>0 from samhan_chars where name = '첫째'")
+            cid1 = db("select cid from samhan_chars where name = '첫째'")[0][0]
+            check(srvFirst == [(cid1,)], f'이 기기의 순서가 더 새것이면 서버에 알린다(맨 앞이 첫째) {srvFirst}')
+            # 서버가 순서 정보를 모르는 옛 요약이면(없음) 오류 없이 이 기기 순서를 유지
+            dbx("update samhan_chars set summary = summary - 'ordl' - 'ordT' where acc = 'order1'")
+            await P.evaluate("""async () => { const A = window.__game.REG.accounts.order1; A.ordT = 0; await window.__game.syncChars('order1'); }""")
+            await P.evaluate("() => window.__game.showCharSelect()"); await P.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            check(await P.evaluate(names_js) == '첫째,둘째,셋째', f'서버에 순서 정보가 없으면 이 기기 순서를 그대로 둔다 {await P.evaluate(names_js)}')
+            await ctxP.close(); await ctxQ.close()
             await browser.close()
         web.shutdown(); rpc_srv.shutdown()
     finally:

@@ -52,6 +52,9 @@ SIM = r"""
   const dt = opts.dt || 0.05, steps = Math.round(minutes * 60 / dt);
   const marks = new Set((opts.marks || [5, 10, 20, 30]).map(m => Math.round(m * 60 / dt)));
   const log = [], first = {}, snaps = {};
+  let setNext = 0;
+  const inc = {};   // 세계마다 들어온 원한 조각·고삐 조각(쓴 것과 상관없이 들어온 몫)과 머문 시간(초) — 2026-11-17 고삐 조각 공급 재기
+  const incAdd = (gr, pc, sec) => { const o = inc[G.S.world] || (inc[G.S.world] = {gr:0, pc:0, t:0}); o.gr += Math.max(0, gr); o.pc += Math.max(0, pc); o.t += sec; };
   let jobPend = null, jobHold = 0, nextShop = 0, nextRetry = 60, raidPend = null, raidHold = [0, 0], entPend = null, entHold = 0, goldIn = 0, gemIn = 0, memPend = null, memHold = 0, aw2Hold = 0, aw2T0 = null; const memBank = {g:0, e:0}; const lgBank = {g:0, e:0}; let lgG0 = 0, lgE0 = 0;   // 물의 신화 9-3: 레벨 문 새 요소에 따로 모은 엽전·보석
   const Wt = {atk:1, hp:1.3 * Math.pow(1.09, opts.hpLag ?? ((G.TANK && G.TANK.hpLag) || 0)), crit:1.5, critDmg:1.8, aspd:1.5, regen:3};   // 체력은 공격력보다 TANK.hpLag(10)레벨 아래에 머물게(2026-11-14 엽전 경제)
   const LEAN = opts.lean === 'hard' ? {d:25, r:12} : opts.lean === 'mild' ? {d:10, r:5} : null;   // 9-4: 공격만 올리는 사람(Δ = 체력이 공격력보다 뒤에 머무는 레벨·재련 단계)
@@ -64,8 +67,9 @@ SIM = r"""
   const mark = (k, t) => { if (!(k in first)) first[k] = Math.round(t / 60); };
   const raids = []; let rl = null;   // opts.raidlog: 레이드마다 걸린 시간·이김·초각성 한 방이 보스 체력의 몇 %
   for (let i = 1; i <= steps; i++) {
-    const g0 = G.S.gold, e0 = G.S.gems;
+    const g0 = G.S.gold, e0 = G.S.gems, gr0 = G.S.grudge || 0, pc0 = G.S.mount.piece;
     G.update(dt); G.addTime(dt * 1000);
+    incAdd((G.S.grudge || 0) - gr0, G.S.mount.piece - pc0, dt);
     goldIn += Math.max(0, G.S.gold - g0); gemIn += Math.max(0, G.S.gems - e0);
     const t = i * dt;
     if (opts.raidlog) {
@@ -75,7 +79,22 @@ SIM = r"""
     }
     if (t >= nextShop) {
       nextShop = t + 2;
-      const e1 = G.S.gems; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1);
+      { const e1 = G.S.gems, gr1 = G.S.grudge || 0, pc1 = G.S.mount.piece; G.claimAll(); gemIn += Math.max(0, G.S.gems - e1); incAdd((G.S.grudge || 0) - gr1, G.S.mount.piece - pc1, 0); }
+      // 고삐 조각(2026-11-17): 조각으로 사는 탈것이 갈 수 있는 부에 있으면 먼저 모아 사고, 없으면 별을 올린다(타는 것 먼저, 그다음 싼 것). opts.nomount 면 안 씀(예전 시뮬)
+      if (!opts.nomount && G.S.world >= 3) {
+        const want = G.MOUNTS.find(m => m.src === 'piece' && !G.S.mount.own[m.k] && G.mountPart(m) <= G.partOfW(G.S.world));
+        if (want) G.buyMount(want.k);
+        else for (let z = 0; z < 20; z++) { const own = G.MOUNTS.filter(m => G.S.mount.own[m.k] && (G.S.mount.star[m.k] || 0) < 5);
+          own.sort((a, b) => (b.k === G.S.mount.ride) - (a.k === G.S.mount.ride) || G.mountStarCost(a) - G.mountStarCost(b));
+          if (!own.length || !G.mountStarUp(own[0].k)) break; }
+      }
+      // 세트(2026-11-17): 10분마다 가진 아바타까지 치면 가장 많이 맞는 세트를 [이 세트로] 고르고, 도감에 덜 적힌 세트는 잠깐 입어 적어 둔다(사람이 도감을 채우듯). opts.noset 이면 예전처럼 자동만
+      if (G.SD_TIERS && !opts.noset && t >= setNext) { setNext = t + 600;
+        const pot = T => { const ok = P => P.t === 'av' ? !!G.S.av.own[P.k] : G.setPieceOk(P); return ok(T.p[0]) && ok(T.p[1]) ? T.p.filter(ok).length : 0; };
+        const shown = G.SETS.filter(G.setShown); let bk = '', bn = 1;
+        for (const T of shown) { const n = pot(T); if (n > (G.S.setDex.best[T.k] || 0) && n >= 3) G.pickSet(T.k); if (n >= 2 && n >= bn) { bk = T.k; bn = n; } }
+        if (bk) G.pickSet(bk); else if (G.S.setPick) G.pickSet(''); }
+      if (G.SD_TIERS) for (let z = 0; z < G.SD_TIERS.length; z++) G.sdClaim(z);   // 세트 도감 보상(2026-11-17): 되면 바로 받음
       for (let k = 0; k < 20; k++) {
         const capW = G.refineCap('weapon'), capA = G.refineCap('armor'), rw = G.S.refine.weapon.lv, ra = G.S.refine.armor.lv;
         let slot = rw < capW && (rw <= ra + 3 || ra >= capA) ? 'weapon' : 'armor';
@@ -231,7 +250,7 @@ SIM = r"""
       + `번 엽전 ${G.fmt(goldIn)}·보석 ${G.fmt(gemIn)}`
       + (G.seaOpen() ? `, 새 칸 ${G.NEW_SLOTS.map(k => `${G.S.equip[k]}(+${G.S.refine[k].lv})`).join('/')}, 호박석 빛 ${Object.values(G.ambSum().L).reduce((a, b) => a + b, 0)}, 바다 몫 공×${G.seaSum().atk.toFixed(2)}·체×${G.seaSum().hp.toFixed(2)}·받는 피해×${G.seaSum().def.toFixed(2)}` : '') + `, 쓰러짐 ${G.S.rec.falls}`);
   }
-  return {log, first, snaps, raids, tank, tm:opts.tmlog ? G.tmAgg() : null};
+  return {log, first, snaps, raids, tank, inc, tm:opts.tmlog ? G.tmAgg() : null};
 }
 """
 
@@ -275,6 +294,15 @@ def long_table(cls, first):
     fl = [f'{w}: 가득{first.get(f"F{w}", 0):.0f}m(레벨{first.get(f"F{w}lv", 0):.0f}·이야기{first.get(f"F{w}st", 0) + first.get(f"F{w}sp", 0):.0f}·열림{first.get(f"F{w}ok", 0):.0f}) 약함{first.get(f"K{w}", 0):.0f}m' for w in range(11) if first.get(f'F{w}') or first.get(f'K{w}')]
     if fl:
         print('        토벌패 ' + ' · '.join(fl))
+
+
+def inc_table(cls, inc):
+    """세계마다 시간당 원한 조각·고삐 조각(사냥·레이드·퀘스트 — 시뮬은 타임 보스·허수아비·백귀야행을 안 함)"""
+    if not inc:
+        return
+    print(f'        [{cls}] 시간당 들어온 조각 ' + ' · '.join(
+        f'세계{w} {o["t"] / 3600:.1f}h 원한 {o["gr"] / max(1e-9, o["t"] / 3600):.1f} 고삐 {o["pc"] / max(1e-9, o["t"] / 3600):.1f}'
+        for w, o in sorted(inc.items(), key=lambda x: int(x[0])) if int(w) >= 3 and o['t'] > 60))
 
 
 # claude.ai 아티팩트의 계정 저장소(window.claude db)를 흉내 낸다. 문서는 window.__store 에 쌓인다.
@@ -400,6 +428,7 @@ async def run_long():
             long_table(c, r['first'])
             if os.environ.get('SIM_DUMP'):
                 Path(os.environ['SIM_DUMP'] + f'_{c}.json').write_text(json.dumps(r['first']))
+            inc_table(c, r.get('inc'))
         await browser.close()
 
 
@@ -1726,7 +1755,7 @@ async def main():
         room = await pb.evaluate('() => ({sent: window.__emitted, html: document.querySelector("#chatList").innerHTML, who: document.querySelector("#chatWho").textContent})')
         chats = [m for m in room['sent'] if m[0] == 'chat']   # 타임 보스 시간이면 'tb' 참가 알림도 함께 나간다
         check(len(chats) == 1 and chats[0][1]['t'] == '같이 레이드 가요', f'claude.ai에서는 채팅이 다른 사람에게 나간다 {room["sent"]}')
-        check('바람돌이' in room['html'] and '&lt;b&gt;' in room['html'], '다른 사람의 채팅이 들어오고, 글자로만 보인다')
+        check('바람돌이' in room['html'] and '&lt;b&gt;' in room['html'], f'다른 사람의 채팅이 들어오고, 글자로만 보인다 {room["html"][-400:]}')
         await pb.screenshot(path=str(OUT / '21_채팅_여럿.png'))
         await ctxB.close()
 
@@ -1748,6 +1777,82 @@ async def main():
         got = await pc.evaluate('() => ({lv: window.__game.S.level, st: window.__game.S.maxStage, tut: window.__game.S.quest.tut})')
         check(got['lv'] == 23 and got['st'] == 27 and got['tut'] == -1, f'예전 진행을 이어받는다 {got}')
         await ctxC.close()
+
+        # 9-0) 캐릭터 고르기: ▲▼로 순서 바꾸기(이 기기 저장) · 다시 로그인해도 유지 · 옛 저장(순서 없음) 호환 · 새 캐릭터는 맨 아래 · 지워도 순서 유지
+        ctxO = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        po = await ctxO.new_page()
+        watch(po, errors, 'O ')
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id')
+        await signup(po, 'orderer', '1234', '가온', 'musa')
+        await po.evaluate("""() => { const G = window.__game, A = G.REG.accounts.orderer;
+          A.chars.push({cid:'ordb', name:'나루', cls:'jagaek', level:20, look:{}, armorG:1, weaponG:1}, {cid:'ordc', name:'다솜', cls:'sulsa', level:30, look:{}, armorG:1, weaponG:1});
+          G.showCharSelect(); }""")
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        names = "() => [...document.querySelectorAll('#mBody .char[data-cid] b')].map(b => b.textContent).join()"
+        dis = "() => [...document.querySelectorAll('#mBody .cw')].map(w => [...w.querySelectorAll('.mvb')].map(b => b.disabled ? 1 : 0).join('')).join('/')"
+        check(await po.evaluate(names) == '가온,나루,다솜' and await po.evaluate(dis) == '10/00/01', f'캐릭터 순서: 처음엔 만든 순서, 맨 위는 ▲, 맨 아래는 ▼가 꺼져 있다 {await po.evaluate(names)} {await po.evaluate(dis)}')
+        mvb = await po.evaluate("() => [...document.querySelectorAll('#mBody .mvb')].map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })")
+        check(all(w >= 36 and h >= 36 for w, h in mvb), f'▲▼ 단추가 손가락으로 누르기 쉬운 크기(36px 이상) {mvb}')
+        ov = await po.evaluate("""() => [...document.querySelectorAll('#mBody .cw')].map(w => { const a = w.querySelector('.char').getBoundingClientRect(), b = w.querySelector('.mv').getBoundingClientRect(), c = w.getBoundingClientRect();
+          return a.right <= b.left + 0.5 && b.right <= c.right + 0.5 && b.height <= c.height + 0.5; })""")
+        check(all(ov), f'▲▼가 카드와 겹치거나 잘리지 않는다 {ov}')
+        await po.click('#mBody .char[data-cid="ordb"]')      # 나루를 고른 채로 순서만 바꿔도 고른 캐릭터는 그대로
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 나루, 가온, 다솜
+        check(await po.evaluate(names) == '나루,가온,다솜' and await po.evaluate(dis) == '10/00/01', f'▲로 한 칸 위로 {await po.evaluate(names)}')
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 나루, 가온
+        check(await po.evaluate(names) == '다솜,나루,가온' and await po.evaluate(dis) == '10/00/01', f'맨 위까지 올리면 ▲가 꺼진다 {await po.evaluate(names)} {await po.evaluate(dis)}')
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 다솜, 나루, 가온 … 순서 확인용으로 한 번 더
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 나루, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 다솜, 가온
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="1"]')     # 다솜 ▼ → 나루, 가온, 다솜
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 가온, 나루, 다솜
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="1"]')     # 나루 ▼ → 가온, 다솜, 나루
+        await po.click('#mBody .mvb[data-cid="ordb"][data-mv="-1"]')    # 나루 ▲ → 가온, 나루, 다솜
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 가온, 다솜, 나루
+        await po.click('#mBody .mvb[data-cid="ordc"][data-mv="-1"]')    # 다솜 ▲ → 다솜, 가온, 나루
+        o3 = await po.evaluate("() => ({n: [...document.querySelectorAll('#mBody .char[data-cid] b')].map(b => b.textContent).join(), pick: document.querySelector('#mBody .char[aria-pressed=\"true\"] b').textContent, dis: [...document.querySelectorAll('#mBody .cw')].map(w => [...w.querySelectorAll('.mvb')].map(b => b.disabled ? 1 : 0).join('')).join('/'), msg: document.querySelector('#mBody .err').textContent})")
+        check(o3['n'] == '다솜,가온,나루' and o3['dis'] == '10/00/01' and o3['pick'] == '나루' and '옮겼어요' in o3['msg'], f'여러 번 옮겨도 순서·단추·고른 캐릭터가 맞다 {o3}')
+        await po.screenshot(path=str(OUT / '13b_캐릭터순서_가로.png'))
+        saved = await po.evaluate("() => { const A = JSON.parse(localStorage.getItem('samhan-accounts-v1')).accounts.orderer; return {n: A.chars.map(c => c.cid).join(), t: A.ordT}; }")
+        check(saved['n'].split(',')[0] == 'ordc' and saved['n'].split(',')[2] == 'ordb' and saved['t'] > 0, f'바꾼 순서가 이 기기 계정 목록에 저장된다 {saved}')
+        # 새로고침 → 다시 로그인해도 같은 순서
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id'); await po.fill('#lg-pw', '1234'); await po.click('#modal-btn-0')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루', f'다시 로그인해도 순서가 그대로다 {await po.evaluate(names)}')
+        # 옛 저장(순서 시각 없음)은 지금 순서 그대로
+        await po.evaluate("() => { const R = JSON.parse(localStorage.getItem('samhan-accounts-v1')); delete R.accounts.orderer.ordT; localStorage.setItem('samhan-accounts-v1', JSON.stringify(R)); }")
+        await po.goto(URL)
+        await po.wait_for_selector('#lg-id'); await po.fill('#lg-pw', '1234'); await po.click('#modal-btn-0')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루' and await po.evaluate(dis) == '10/00/01', f'순서 기록이 없는 옛 저장은 지금 순서 그대로 이어받는다 {await po.evaluate(names)}')
+        # 새 캐릭터는 맨 아래
+        await create_char(po, '라온', 'doin')
+        await po.evaluate("() => window.__game.showCharSelect()")
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,나루,라온', f'새 캐릭터는 맨 아래에 붙는다 {await po.evaluate(names)}')
+        # 가운데 캐릭터를 지워도 나머지 순서는 그대로
+        await po.click('#mBody .char[data-cid="ordb"]'); await po.click('#cs-del'); await po.click('#modal-btn-1')
+        await po.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+        check(await po.evaluate(names) == '다솜,가온,라온', f'캐릭터를 지워도 나머지 순서가 그대로다 {await po.evaluate(names)}')
+        # 6칸 가득, 폰 세로 화면 캡처
+        await po.evaluate("""() => { const A = window.__game.REG.accounts.orderer;
+          A.chars.push({cid:'orde', name:'바다', cls:'jagaek', level:60, look:{}, armorG:2, weaponG:2, srvErr:'many'}, {cid:'ordf', name:'여덟글자이름', cls:'musa', level:300, look:{}, armorG:2, weaponG:2}, {cid:'ordg', name:'하늘', cls:'doin', level:99, look:{}, armorG:2, weaponG:2});
+          window.__game.showCharSelect(); }""")
+        await po.wait_for_selector('#mBody .mvb')
+        await po.screenshot(path=str(OUT / '13c_캐릭터순서_6칸_가로.png'))
+        await po.set_viewport_size({'width': 390, 'height': 844}); await po.wait_for_timeout(500)
+        await po.evaluate("() => window.__game.showCharSelect()")
+        await po.wait_for_timeout(400)
+        await po.screenshot(path=str(OUT / '13d_캐릭터순서_6칸_세로.png'))
+        pov = await po.evaluate("""() => { const sc = document.querySelector('#mBody'); return [...document.querySelectorAll('#mBody .cw')].map(w => { const a = w.querySelector('.char').getBoundingClientRect(), b = w.querySelector('.mv').getBoundingClientRect(), c = w.getBoundingClientRect(); return a.right <= b.left + 0.5 && b.right <= c.right + 0.5 && b.width >= 36 && w.scrollWidth <= w.clientWidth + 1; }); }""")
+        check(all(pov) and len(pov) == 6, f'폰 세로 화면에서도 ▲▼가 카드와 겹치지 않고 안 잘린다 {pov}')
+        await ctxO.close()
+
 
         # 9-9) 물의 신화 1단계: 밸런스 숫자·싸움 중 물약 구매 금지·장착 기술 8칸·4차 전직 저장·보스 다시 도전 간격
         #       (곤륜 끝 4차 무사 저장 = 베타의 시험용 캐릭터 tools/beta_saves 가운데 레벨이 가장 높은 것)
@@ -4073,18 +4178,84 @@ async def main():
           for (const k of ['weapon', 'armor']){ S.gear[k].count[24] = 1; S.gear[k].seen[24] = true; S.equip[k] = 24; } G.refreshStats();
           const T = G.SETS.find(t => t.k === 'lanka'), U = G.SETS.find(t => t.k === 'sumeru');
           out.core = [G.setCount(T), G.setCount(U)];
-          S.av.own.c_lanka = 1; S.av.own.c_sumeru = 1; S.av.char = 'c_lanka'; S.mount.own.camel = 1; S.mount.own.welephant = 1; S.mount.ride = 'camel'; S.soul.own.jatayu = 1; S.soul.own.savitri = 1; S.soul.eq = ['jatayu', '']; G.refreshStats();
+          S.av.own.c_lanka = 1; S.av.own.c_sumeru = 1; S.av.char = 'c_lanka'; S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] = 1; S.myth.amrita = 1; S.mount.ride = ''; S.soul.own.jatayu = 1; S.soul.own.savitri = 1; S.soul.eq = ['jatayu', '']; G.refreshStats();
           out.lanka = [G.setCount(T), G.setCount(U)]; S.setPick = 'lanka'; G.refreshStats(); const s = G.setSum(); out.sum = [s.on.join(':'), s.atk, s.hp, s.boss, s.skill, s.crit];
           out.names = T.p.map(G.setPieceName).join(' / ');
-          // 수미로 갈아타기(가진 아바타·탈것·넋을 바로 맞춤)
+          // 수미로 갈아타기(가진 아바타를 바로 입힘 — 넋·신화 보물·펫은 2026-11-17부터 가지고만 있으면 세므로 그대로)
           const w = G.pickSet('sumeru'); out.pick = [w, S.av.char, S.mount.ride, S.soul.eq.join(',')]; G.refreshStats(); const s2 = G.setSum(); out.sum2 = [s2.on.join(':'), s2.atk, s2.boss, s2.skill, s2.crit];
           // 무기가 영물이 아니면 세트가 꺼진다
           S.equip.weapon = 21; G.refreshStats(); out.off = [G.setCount(U), G.setSum().on.some(([k]) => k === 'sumeru')];
-          S.equip.weapon = 24; G.refreshStats(); S.setPick = ''; G.refreshStats(); return out; }""")
-        check(s6['shown'] == 'lanka,sumeru' and s6['core'] == [2, 2] and s6['lanka'] == [5, 2] and s6['sum'] == ['lanka,5', 0.65 + 1.5, 0.65 + 1.5, 1.5, 1.5, 12],
-              f"세트 「란카」: 영물 무기·갑옷 + 란카 갑옷·방울 낙타·자타유 넋 5조각이 맞으면 5세트 효과가 켜진다 {s6['core']} {s6['lanka']} {s6['sum']} {s6['names']}")
-        check(s6['pick'][1] == 'c_sumeru' and s6['pick'][2] == 'welephant' and 'savitri' in s6['pick'][3] and s6['sum2'][0] == 'sumeru,5' and s6['sum2'][4] == 12 and s6['off'][0] == 0 and not s6['off'][1],
-              f"세트 「수미」: [이 세트로]가 가진 아바타·탈것·넋을 바로 맞추고, 영물이 아니면 꺼진다 {s6['pick']} {s6['sum2']} {s6['off']}")
+          S.equip.weapon = 24; G.refreshStats(); S.setPick = ''; G.refreshStats();
+          const fx = (X, n) => { const o = {atk:0, hp:0, boss:0, skill:0, crit:0}; for (let k = 2; k <= n; k++) for (const [t, v] of Object.entries(X.fx[k] || {})) o[t] += v; return [o.atk, o.hp, o.boss, o.skill, o.crit]; };
+          out.want = fx(T, 5); out.want2 = fx(U, 5); return out; }""")
+        check(s6['shown'] == 'lanka,sumeru' and s6['core'] == [2, 2] and s6['lanka'] == [5, 4] and s6['sum'][0] == 'lanka,5' and all(abs(a - b) < 1e-9 for a, b in zip(s6['sum'][1:], s6['want'])),
+              f"세트 「란카」: 영물 무기·갑옷 + 란카 갑옷·펫 아기 독수리 왕·자타유 넋 5조각이 맞으면 5세트 효과가 켜진다 {s6['core']} {s6['lanka']} {s6['sum']} {s6['names']}")
+        check(s6['pick'][1] == 'c_sumeru' and s6['pick'][2] == '' and s6['pick'][3] == 'jatayu,' and s6['sum2'][0] == 'sumeru,5' and s6['sum2'][4] == s6['want2'][4] and s6['off'][0] == 0 and not s6['off'][1],
+              f"세트 「수미」: [이 세트로]가 가진 아바타만 입히고(신화 보물·넋은 그대로 — 가지고만 있어도 셈) 5세트, 영물이 아니면 꺼진다 {s6['pick']} {s6['sum2']} {s6['off']}")
+        # --- 세트 개편(2026-11-17): 탈것은 세트에서 빠지고, 변신·넋·신화 보물·펫은 가진 것으로, 아바타는 입은 것으로 센다 · 옵션 다양화 · 세트 도감 · 고삐 조각 공급
+        s7 = await sp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, keep = JSON.stringify(S); G.quiet = true; S.world = 9;
+          out.noMount = G.SETS.every(T => T.p.every(P => P.t !== 'mount'));
+          out.kinds = [...new Set(G.SETS.flatMap(T => Object.values(T.fx).flatMap(o => Object.keys(o))))].sort().join(',');
+          out.cdrSets = G.SETS.filter(T => Object.values(T.fx).some(o => o.cdr)).map(T => T.k + ':' + Object.values(T.fx).reduce((a, o) => a + (o.cdr || 0), 0));
+          out.uniq = G.SETS.every(T => new Set(T.p.map(P => JSON.stringify(P))).size === 5);
+          const K = G.SETS.find(t => t.k === 'kunlun'), L = G.SETS.find(t => t.k === 'lanka');
+          G.giveAvatar('p_kunlun', true); G.equipAvatar('p_kunlun'); S.form.own.hwang = true; S.form.own.cheong = true; S.form.eq = 'cheong'; S.myth.elixir = 1;
+          S.mount.own.girin = true; S.mount.ride = 'girin'; G.refreshStats();
+          out.kGirin = G.setCount(K);                                         // 기린을 타든 말든 세트와 상관없음, 황룡은 가지고만(청룡을 낌) → 5
+          S.mount.ride = ''; G.refreshStats(); out.kNone = G.setCount(K);
+          delete S.form.own.hwang; S.form.eq = 'cheong'; G.refreshStats(); out.kNoForm = G.setCount(K);   // 황룡이 없으면 4
+          S.form.own.hwang = true; S.myth.elixir = 0; G.refreshStats(); out.kNoMyth = G.setCount(K); S.myth.elixir = 1;   // 불사약이 없으면 4
+          const ei = G.PETS.findIndex(p => p.draw === 'eaglet');
+          S.av.own.c_lanka = 1; S.av.char = 'c_lanka'; S.soul.own.jatayu = 1; S.soul.eq = ['', '']; S.pets.lv[ei] = 1; G.refreshStats();
+          out.lFull = G.setCount(L);                                          // 펫 보유 · 자타유 보유(안 모심) → 5
+          S.av.char = ''; G.refreshStats(); out.lNoAv = G.setCount(L);         // 아바타는 입어야 → 4
+          S.pets.lv[ei] = 0; G.refreshStats(); out.lNoPet = G.setCount(L);     // 펫이 없으면 3
+          S.pets.lv[ei] = 1; S.setPick = ''; S.mount.ride = 'girin'; const w = G.pickSet('lanka'); G.refreshStats();
+          out.pick = [w, S.av.char, S.mount.ride, S.form.eq, S.soul.eq.join(','), G.setCount(L), G.setSum().on.join(':')];
+          out.names = L.p.map(G.setPieceName).join(' / ') + ' / ' + K.p.map(G.setPieceName).join(' / ');
+          // 새 옵션이 실제로 들어가는지: 수미 5세트(쿨감 10%) · 란카 5세트(경험치 6% · 치명타 피해)
+          const U = G.SETS.find(t => t.k === 'sumeru'); S.av.own.c_sumeru = 1; S.myth.amrita = 1; S.soul.own.savitri = 1;
+          S.setPick = ''; S.mount.ride = ''; G.pickSet('jumong'); G.refreshStats(); out.base = G.setSum().on.join(':'); const cd0 = G.skCdOf(0), ex0 = G.gainMul('exp', true), cr0 = G.ST.critDmg;
+          G.pickSet('sumeru'); G.refreshStats(); out.cdr = +(1 - G.skCdOf(0) / cd0).toFixed(4); out.sumOn = G.setSum().on.join(':');
+          G.pickSet('lanka'); G.refreshStats(); out.exp = +(G.gainMul('exp', true) - ex0).toFixed(4); out.lOn = [G.setSum().on.join(':'), G.setSum().exp, out.base, ex0]; out.cdmgUp = G.ST.critDmg > cr0;
+          // 세트 도감: 기록·받기·소급·별호
+          S.setDex = {best:{}, got:{}}; S.title.own = {}; G.setSum && G.refreshStats();
+          for (const T of G.SETS.filter(G.setShown)) S.setDex.best[T.k] = 5;   // 13곳을 다 채운 용사(시험)
+          out.ready = G.SD_TIERS.map((x, i) => G.sdReady(i));
+          const m0 = Object.keys(S.mount.own).length; out.claims = G.SD_TIERS.map((x, i) => G.sdClaim(i)); out.again = G.sdClaim(0);
+          out.dexMounts = ['bulgasari', 'cheongryong'].map(k => !!S.mount.own[k]); out.dexAv = ['p_obang', 'c_dogam'].map(k => !!S.av.own[k]);
+          out.titles = ['sd1', 'sd2', 'sd3', 'sd4', 'sd5'].map(k => !!S.title.own[k]); out.wfx = [G.setSum().atk, G.setSum().skill];
+          G.pickSet('sumeru'); S.title.eq = 'sd5'; S.mount.ride = ''; G.rideMount('cheongryong'); G.refreshStats(); out.cdRide = +(1 - G.skCdOf(0) / cd0).toFixed(4);
+          // 예전 저장(세트 도감 없음)을 불러와도 깨지지 않고, 지금 갖춤새가 도감에 바로 적힘
+          const old = JSON.parse(keep); delete old.setDex; const m = G.mergeState(old); out.merged = !!(m.setDex && m.setDex.best && m.setDex.got);
+          // 별호 등급
+          out.rank = {step:G.TITLE_RANK.step || 0, myth:G.TITLE_RANK.myth, taecho:G.TITLE_RANK.taecho, sd5:G.TITLE_RANK.sd5, sd1:G.TITLE_RANK.sd1};
+          out.span = G.titleSpan('sd5'); out.span0 = G.titleSpan('step');
+          // 고삐 조각: 부상부터 단계 보스 1·수문장 3, 천계에서는 안 나옴. 별 값은 낮아짐
+          S.mount.piece = 0; S.world = 3; S.stage = 5; S.maxStage = Math.max(S.maxStage, 5); G.bossWin(); out.pBoss = S.mount.piece;
+          S.mount.piece = 0; S.stage = 9; G.bossWin(); out.pGate = S.mount.piece;
+          S.mount.piece = 0; S.world = 2; S.stage = 5; G.bossWin(); out.pHeaven = S.mount.piece;
+          out.mp = G.MOUNT_PIECE; out.star = G.MOUNT_STAR; S.mount.star.girin = 0; out.cost = G.mountStarCost(G.MOUNTS.find(m => m.k === 'girin'));
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); return out; }""")
+        check(s7['noMount'] and s7['uniq'] and set(s7['kinds'].split(',')) >= {'cdmg', 'cdr', 'exp', 'atk', 'boss', 'skill', 'crit'} and 3 <= len(s7['cdrSets']) <= 4 and all(int(x.split(':')[1]) <= 10 for x in s7['cdrSets']),
+              f"세트 개편: 탈것 조각이 없고 조각이 겹치지 않으며, 옵션에 치명타 피해·쿨감·경험치가 섞이고 쿨감 세트는 서너 개(5세트 10% 이하) {s7['kinds']} {s7['cdrSets']}")
+        check(s7['kGirin'] == 5 and s7['kNone'] == 5 and s7['kNoForm'] == 4 and s7['kNoMyth'] == 4,
+              f"곤륜 세트: 탈것과 상관없이 망토·황룡(가지고만)·불사약(가지고만)으로 5조각 {s7['kGirin']} {s7['kNone']} {s7['kNoForm']} {s7['kNoMyth']}")
+        check(s7['lFull'] == 5 and s7['lNoAv'] == 4 and s7['lNoPet'] == 3,
+              f"란카 세트: 펫 아기 독수리 왕·넋 자타유는 가지면(모시지 않아도) 세고, 아바타는 입어야 센다 {s7['lFull']} {s7['lNoAv']} {s7['lNoPet']}")
+        check(s7['pick'][1] == 'c_lanka' and s7['pick'][2] == 'girin' and s7['pick'][4] == ',' and s7['pick'][5] == 5 and s7['pick'][6] == 'lanka,5'
+              and '아기 독수리 왕 보유' in s7['names'] and '자타유 보유' in s7['names'] and '입기' in s7['names'] and '불사약 보유' in s7['names'],
+              f"[이 세트로]는 아바타만 입히고 탈것(기린 그대로)·넋은 건드리지 않는다 · 조각 이름에 '보유'·'입기' {s7['pick']} {s7['names']}")
+        check(s7['sumOn'] == 'sumeru,5' and abs(s7['cdr'] - 0.10) < 0.002 and s7['exp'] > 0.059 and s7['cdmgUp'],
+              f"새 세트 옵션이 실제로 반영: 수미 5세트 기술 재사용 -10% · 란카 5세트 경험치 +6%·치명타 피해 {s7.get('lOn')} {s7['cdr']} {s7['exp']} {s7['cdmgUp']}")
+        check(all(s7['ready']) and all(s7['claims']) and not s7['again'] and all(s7['dexMounts']) and all(s7['dexAv']) and all(s7['titles']) and s7['wfx'][0] >= 1 and s7['merged'],
+              f"세트 도감: 다섯 단계 보상(아바타 둘·탈것 둘·무기 기운)과 별호를 받고 두 번은 못 받으며, 예전 저장도 불러진다 {s7['ready']} {s7['claims']} {s7['dexMounts']} {s7['dexAv']} {s7['titles']} {s7['wfx']}")
+        check(0.2 < s7['cdRide'] < 0.32,
+              f"쿨감은 곱해서 과하지 않다: 수미 세트 10% × 청룡 새끼 10%(공명 1.4배) × 별호 4% → 합쳐 약 {s7['cdRide']}")
+        check(s7['rank']['step'] == 0 and s7['rank']['sd1'] == 1 and s7['rank']['myth'] == 2 and s7['rank']['taecho'] == 3 and s7['rank']['sd5'] == 3 and 'trk3' in s7['span'] and 'trk0' in s7['span0'],
+              f"별호 등급: 일반·희귀·영예·전설로 나뉘고 표시 꾸밈(trk0~3)이 붙는다 {s7['rank']} {s7['span']}")
+        check(s7['pBoss'] == s7['mp']['boss'] >= 1 and s7['pGate'] == s7['mp']['gate'] >= 2 and s7['pHeaven'] == 0 and s7['star'][0] < 5 and s7['cost'] == s7['star'][0] * 3,
+              f"고삐 조각: 부상부터 단계 보스·수문장에서 나오고(1부 천계에선 안 나옴), 별 값이 예전보다 낮다 {s7['pBoss']} {s7['pGate']} {s7['pHeaven']} {s7['mp']} {s7['star']} {s7['cost']}")
         # --- 화면: [장비] 영물 칸·깃든 짐승 줄 / 용사 그림 / 조합 공방 13단계 / 세트 카드
         await sp.evaluate(LOAD25, ind25b)
         await sp.evaluate(r"""() => { const G = window.__game, S = G.S; G.quiet = false; G.noInh = true; G.inhDo(); S.world = 10; G.spBeastForce = null;
@@ -4106,13 +4277,51 @@ async def main():
         check(u1['on'] == '1' and '공작 1칸' in u1['line'] and '코끼리 2칸' in u1['line'], f"[장비]에서 같은 칸에 가진 다른 짐승(공작)을 눌러 바꿔 끼운다 {u1}")
         await sp.click('#seg-set')
         await sp.wait_for_timeout(300)
-        await sp.evaluate("() => { const G = window.__game, S = G.S; S.av.own.c_lanka = 1; S.av.char = 'c_lanka'; S.mount.own.camel = 1; S.mount.ride = 'camel'; S.soul.own.jatayu = 1; S.soul.eq = ['jatayu', '']; S.spirit.eq.weapon = 0; S.setPick = 'lanka'; G.refreshStats(); G.refreshPanel(); }")
+        await sp.evaluate("() => { const G = window.__game, S = G.S; S.av.own.c_lanka = 1; S.av.char = 'c_lanka'; S.pets.lv[G.PETS.findIndex(p => p.draw === 'eaglet')] = 1; S.soul.own.jatayu = 1; S.soul.eq = ['jatayu', '']; S.spirit.eq.weapon = 0; S.setPick = 'lanka'; G.refreshStats(); G.refreshPanel(); }")
         await sp.wait_for_timeout(500)
         await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('란카의 조합')); if (c) c.scrollIntoView({block:'start'}); }")
         await sp.wait_for_timeout(300)
         await sp.screenshot(path=str(OUT / '9-25b_세트_란카.png'))
         u2 = await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('란카의 조합')); return c ? {txt: c.textContent, ok: c.querySelectorAll('.setp .ok').length} : null; }")
         check(u2 and u2['ok'] == 5 and '5세트' in u2['txt'] and '켜짐' in u2['txt'], f"[세트] 화면에 란카의 조합 카드가 5조각 모두 켜진 채 보인다 {u2 and u2['ok']}")
+        # 세트 개편(2026-11-17): 안내 글·세트 도감 칸, 기린을 타고 있어도 곤륜 카드(망토·황룡·불사약)가 5조각, 별호 목록의 등급 꾸밈
+        await sp.evaluate("() => { const G = window.__game, S = G.S; G.giveAvatar('p_kunlun', true); G.equipAvatar('p_kunlun'); S.form.own.hwang = true; S.myth.elixir = 1; S.mount.own.girin = true; S.mount.ride = 'girin'; S.setPick = 'kunlun'; G.refreshStats(); G.refreshPanel(); }")
+        await sp.wait_for_timeout(500)
+        await sp.evaluate("() => { document.querySelector('#page .hint').scrollIntoView({block:'start'}); }")
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25s1_세트_안내_도감.png'))
+        await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('곤륜 신선의 조합')); if (c) c.scrollIntoView({block:'start'}); }")
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25s2_세트_곤륜.png'))
+        ud3 = await sp.evaluate("() => { const c = [...document.querySelectorAll('#setList .setc')].find(e => e.textContent.includes('곤륜 신선의 조합')); const h = document.querySelector('#page .hint'), sd = document.querySelector('#setList .sdcard'); return {ok: c ? c.querySelectorAll('.setp .ok').length : -1, txt: c ? c.textContent : '', hint: h ? h.textContent : '', sd: sd ? sd.textContent : '', sdBtn: sd ? sd.querySelectorAll('[data-sdclaim]').length : 0, ride: window.__game.S.mount.ride}; }")
+        check(ud3['ok'] == 5 and '켜짐' in ud3['txt'] and '불사약 보유' in ud3['txt'] and '기린' not in ud3['txt'] and '가지고만' in ud3['hint'] and '탄 것' not in ud3['hint'] and '신화 보물' in ud3['hint'] and ud3['ride'] == 'girin' and '세트 도감' in ud3['sd'] and ud3['sdBtn'] >= 1,
+              f"[세트] 화면: 기린을 탄 채 곤륜 5조각이 켜지고(탈것 조각 없음), 안내 글이 새 규칙, 세트 도감 칸이 보인다 {ud3['ok']} {ud3['ride']} {ud3['sd'][:80]}")
+        # 세트 도감 받기(화면) → 별호 목록의 등급 색
+        await sp.evaluate("() => { const G = window.__game, S = G.S; for (const T of G.SETS) S.setDex.best[T.k] = 5; G.refreshPanel(); }")
+        await sp.wait_for_timeout(300)
+        await sp.evaluate("() => { document.querySelector('#setList .sdcard').scrollIntoView({block:'start'}); }")
+        await sp.click('#setList [data-sdclaim="0"]')
+        await sp.wait_for_timeout(300)
+        await sp.screenshot(path=str(OUT / '9-25s3_세트_도감_받기.png'))
+        ud4 = await sp.evaluate("() => { const G = window.__game, S = G.S; for (let i = 1; i < 5; i++) G.sdClaim(i); S.title.eq = 'sd5'; G.refreshStats(); return {got: Object.keys(S.setDex.got).length, av: !!S.av.own.p_obang, tt: ['sd1','sd2','sd3','sd4','sd5'].every(k => S.title.own[k])}; }")
+        check(ud4['got'] == 5 and ud4['av'] and ud4['tt'], f"세트 도감: 화면 [받기]로 1단계 보상(오방색 갖춤 망토)과 별호를 받는다 {ud4}")
+        # 별호 등급 꾸밈: 목록(등급 글자·색) · 머리 위 · 채팅
+        await sp.evaluate("() => { const G = window.__game, S = G.S; S.title.own.myth = true; S.title.own.hunt1 = true; S.title.own.reb1 = true; G.refreshStats(); }")
+        await tab(sp, 'rec')
+        await sp.wait_for_timeout(500)
+        await sp.evaluate("() => { const g = document.querySelector('#ti-grid'); if (g) g.scrollIntoView({block:'start'}); }")
+        await sp.wait_for_timeout(400)
+        await sp.screenshot(path=str(OUT / '9-25s4_별호_등급.png'))
+        tl = await sp.evaluate("() => { const q = s => [...document.querySelectorAll(s)]; const over = q('#ti-grid .tchip').filter(b => b.scrollWidth > b.clientWidth + 1).length; return {r3: q('#ti-grid .tchip b.trk3').length, r2: q('#ti-grid .tchip b.trk2').length, r1: q('#ti-grid .tchip b.trk1').length, r0: q('#ti-grid .tchip b.trk0').length, lbl: q('#ti-grid .trn').map(e => e.textContent).filter((v, i, a) => a.indexOf(v) === i).sort().join(','), over}; }")
+        check(tl['r3'] >= 5 and tl['r2'] >= 5 and tl['r1'] >= 5 and tl['r0'] >= 3 and tl['lbl'] == '영예,일반,전설,희귀' and tl['over'] == 0,
+              f"별호 목록: 일반·희귀·영예·전설 색 꾸밈과 등급 글자가 붙고 칸을 넘치지 않는다 {tl}")
+        await sp.evaluate("() => { const G = window.__game; G.closePage && G.closePage(); G.addChat('me', G.S.name, '도감 다 모았어요', {tt:G.S.title.eq}); G.addChat('player', '이웃 용사', '축하해요!', {tt:'myth'}); }")
+        await sp.wait_for_timeout(700)
+        await sp.screenshot(path=str(OUT / '9-25s5_머리위_별호_전설.png'))
+        ch = await sp.evaluate("() => [...document.querySelectorAll('#chatList .ctt')].slice(-2).map(e => e.className)")
+        check(len(ch) == 2 and 'trk3' in ch[0] and 'trk2' in ch[1], f"채팅 이름 옆에 별호가 등급 색으로 붙는다(내 전설 · 남의 영예) {ch}")
+        await tab(sp, 'gear')
+        await sp.wait_for_timeout(300)
         await sp.click('#seg-craft')
         await sp.evaluate("() => { const G = window.__game, S = G.S; S.craft.w.t = 12; S.craft.w.e = 'power'; S.craft.a.t = 12; S.craft.a.e = 'wall'; S.craft.n.t = 12; S.craft.n.e = 'cdr'; S.mat.m4 = 2600; S.best.s8 = 5; S.best.s9 = 5; S.best.s10 = 5; S.gear.weapon.count[25] = 1; G.refreshStats(); G.refreshPanel(); }")
         await sp.wait_for_timeout(600)
