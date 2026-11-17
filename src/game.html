@@ -814,14 +814,14 @@ body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,
 .rport{position:relative;width:64px;height:64px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 70%,rgba(255,90,58,.35),rgba(20,24,40,.9));border:1px solid rgba(255,140,100,.35)}
 .rport img{width:100%;height:100%;image-rendering:pixelated;display:block}
 .rlock{position:absolute;right:3px;bottom:2px;font-size:14px}
-.rbody{min-width:0;display:grid;gap:3px}
+.rbody{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:3px}
 .rtop{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .rtop b{font-size:14px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rstate{font-size:10.5px;font-weight:800;color:var(--text-soft);white-space:nowrap}
 .rstate.new{color:#241a04;background:var(--gold);border-radius:999px;padding:1px 7px}
 .rstate.done{color:#8ff0c4}
 .rsub{font-size:11.5px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rpow{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:var(--text-soft)}
+.rpow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;font-size:11px;color:var(--text-soft)}
 .rpow .ok{color:#8ff0c4;font-weight:800}.rpow .bad{color:#ff8a8a;font-weight:800}
 /* 상위 레이드 「진」: 권장 전투력 네 가지 빛깔(모자람·딱 맞음·넉넉함·압도적) */
 .jt-low{color:#ff8a8a;font-weight:800}.jt-fit{color:#ffd96a;font-weight:800}.jt-good{color:#8ff0c4;font-weight:800}.jt-over{color:#9fd0ff;font-weight:800}
@@ -19519,7 +19519,7 @@ function buildRaid(){
     return `<div class="rcard entry" id="raid-entry" data-part="${cpart}" data-pk="e${S.world}" data-pn="0">
       <div class="rport"><img src="${bossPortrait(info.type, info.color)}" alt=""></div>
       <div class="rbody">
-        <div class="rtop"><b>${info.label}</b><span class="rstate ${efirst ? 'new' : 'done'}">${efirst ? '첫 클리어 보상!' : '토벌함 ✓'}</span></div>
+        <div class="rtop"><b>입문 · ${info.name}</b><span class="rstate ${efirst ? 'new' : 'done'}">${efirst ? '첫 클리어 보상!' : '토벌함 ✓'}</span></div>
         <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티 · 늘 열림 · 세기가 나를 따라감</div>
         <div class="rpow" data-rp="entry"></div>
         <div class="rchips"><span class="rchip rc-gem">보석 ${info.gems}${efirst ? ` +${info.firstGems}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[info.g].name} 장비</span>${efirst ? '<span class="rchip rc-myth">첫 클리어 장비 +1</span>' : ''}</div>
