@@ -4976,6 +4976,63 @@ async def main():
         check(abs(e29['big6h'] - 0.55 / 0.25) < 0.02 and abs(e29['e6h'] - 1) < 0.01, f"저승은 예전 값 그대로(큰 살 55%÷0.25·보스 공격 줄임 없음) {e29['big6h'], e29['e6h']}")
         await t29b.close()
         await ctx29.close()
+        # 9-29c) 궁사는 멀리서 쏘면 덜 맞아요(2026-11-18): 화살 맞은 몬스터는 붙은 뒤 첫 공격 건너뜀(몬스터마다 한 번) · 다른 직업·레이드 보스는 그대로 · 레이드 대상 가중치
+        ctx29c = await browser.new_context(viewport={'width': 844, 'height': 390})
+        t29c = await ctx29c.new_page()
+        watch(t29c, errors, '9-29c ')
+        await fresh(t29c)
+        c29c = await t29c.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.TANK.on = true; S.level = 100; S.chosen = true; S.quest.main = 100;
+          const out = {};
+          const mx = () => G.ST.maxHp;
+          // 붙은 몹 하나를 만들어 update 한 번에 맞는지 본다(첫 닿음 = 덤벼들기)
+          const touch = (cls, mark) => {
+            G.setClass(cls); G.refreshStats(); G.resetRuntime(); G.setStage(20); G.hero.hp = mx(); G.hero.dead = false;
+            const m = G.makeMob(false, G.hero.tx + 1, G.hero.ty); m.spawnT = 0; m.hp = m.maxHp = 1e18; m.hit1 = false; m.atk = mx() * 0.1; G.mobs.push(m);
+            if (mark) G.arrowMark({kind:'arrow'}, m);
+            const hp0 = G.hero.hp; G.update(0.05);
+            const first = G.hero.hp < hp0 - 1; const hp1 = G.hero.hp;
+            m.atkT = 0; G.update(0.05);   // 두 번째 공격 차례
+            return {first, second: G.hero.hp < hp1 - 1, arrowed: !!m.arrowed, used: !!m.arrowUsed, hit1: m.hit1};
+          };
+          out.plain = touch('gungsa', false);         // 화살 안 맞음: 덤벼들기 맞음
+          out.arrow = touch('gungsa', true);          // 화살 맞음: 첫 공격 건너뜀, 그 다음은 맞음
+          out.musa = touch('musa', false);            // 다른 직업: 그대로
+          // 다른 투사체(부적·불)·이미 붙은 뒤·레이드 보스는 표시 안 함
+          G.setClass('gungsa'); const mA = {}, mB = {touched:true}, mC = {raid:true};
+          G.arrowMark({kind:'charm'}, mA); G.arrowMark({kind:'arrow'}, mB); G.arrowMark({kind:'arrow'}, mC); G.arrowMark({kind:'arrow', toHero:true}, {});
+          out.marks = [!!mA.arrowed, !!mB.arrowed, !!mC.arrowed];
+          // 단계 보스(처음부터 hit1 참)도 화살을 맞았으면 첫 일반 공격을 건너뜀
+          G.setClass('gungsa'); G.refreshStats(); G.resetRuntime(); G.setStage(20); G.hero.hp = mx(); G.hero.dead = false;
+          const bm = G.makeMob(true, G.hero.tx + 1, G.hero.ty); bm.spawnT = 0; bm.hp = bm.maxHp = 1e18; bm.atk = mx() * 0.1; G.mobs.push(bm); G.arrowMark({kind:'arrow'}, bm);
+          bm.atkT = 0; const hb0 = G.hero.hp; G.update(0.05); const bfirst = G.hero.hp < hb0 - 1; bm.atkT = 0; const hb1 = G.hero.hp; G.update(0.05);
+          out.boss = {first: bfirst, second: G.hero.hp < hb1 - 1};
+          // 레이드 대상: 궁사가 보스와 4칸 이상이면 덜 뽑힘
+          G.setClass('gungsa'); G.refreshStats(); G.resetRuntime(); G.setStage(20); S.maxStage = 20; G.startRaid(5);
+          const R = G.raid; out.hasRaid = !!R; out.allies = R ? R.allies.length : 0;
+          if (R){
+            const share = () => { let h = 0; for (let k = 0; k < 6000; k++) if (G.pickRaidTarget() === G.hero) h++; return h / 6000; };
+            out.far = Math.abs(G.hero.tx - R.boss.tx) + Math.abs(G.hero.ty - R.boss.ty);
+            out.wFar = G.archerFar(G.hero, 'gungsa'); out.shFar = share();
+            G.hero.tx = R.boss.tx - 2; G.hero.ty = R.boss.ty; out.wNear = G.archerFar(G.hero, 'gungsa'); out.shNear = share();
+            out.wMusa = G.archerFar(G.hero, 'musa');
+            G.hero.tx = R.boss.tx - 6; out.wFar2 = G.archerFar(G.hero, 'gungsa');
+          }
+          out.arch = [G.ARCHER.far, G.ARCHER.pick];
+          G.resetRuntime();
+          return out; }""")
+        check(c29c['plain']['first'] and c29c['plain']['second'] and not c29c['plain']['arrowed'], f"궁사: 화살을 안 맞은 몹은 붙자마자 덤벼들고 그 뒤도 때림 {c29c['plain']}")
+        check((not c29c['arrow']['first']) and c29c['arrow']['second'] and c29c['arrow']['used'] and c29c['arrow']['hit1'], f"궁사: 화살 맞으며 온 몹은 첫 공격(덤벼들기)을 건너뛰고 두 번째부터 때림 {c29c['arrow']}")
+        check(c29c['musa']['first'] and c29c['musa']['second'], f"다른 직업(무사): 덤벼들기 그대로 {c29c['musa']}")
+        check(c29c['marks'] == [False, False, False], f"표시는 화살만·붙기 전만·레이드 보스 제외 {c29c['marks']}")
+        check((not c29c['boss']['first']) and c29c['boss']['second'], f"단계 보스: 화살 맞았으면 첫 일반 공격만 건너뜀 {c29c['boss']}")
+        if c29c['hasRaid'] and c29c['allies'] >= 1:
+            check(c29c['far'] >= c29c['arch'][0] and abs(c29c['wFar'] - c29c['arch'][1]) < 1e-9 and c29c['wNear'] == 1 and c29c['wMusa'] == 1 and abs(c29c['wFar2'] - c29c['arch'][1]) < 1e-9,
+                  f"레이드: 궁사가 보스와 {c29c['arch'][0]}칸 이상이면 대상 가중치 ×{c29c['arch'][1]} · 가까우면·다른 직업이면 1 {c29c['far'], c29c['wFar'], c29c['wNear'], c29c['wMusa']}")
+            check(c29c['shFar'] < c29c['shNear'] * 0.85, f"레이드: 멀리 선 궁사는 일반 공격 대상으로 덜 뽑힘 {c29c['shFar']:.3f} < {c29c['shNear']:.3f}")
+        else:
+            check(False, f"레이드가 안 열림 {c29c}")
+        await t29c.close()
+        await ctx29c.close()
         # @@END-I
         # @@TEST-J (갈래 J(9-5)의 자동 점검 대목은 이 줄 바로 아래에)
         # 9-30) 물의 신화 9-5단계 가: 직업 적성(맞는 능력) — 표·고르게=1·맞춤/엇나감·피해에 걸림·버프 그대로·각인 한 번 무료·저장·화면·알림
