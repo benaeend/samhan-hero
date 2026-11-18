@@ -69,3 +69,18 @@ async def main():
         print('오류', errs)
         await b.close()
 asyncio.run(main())
+
+# GIF: 주먹/발차기 연속 동작(남·여)
+async def gifs():
+    from PIL import Image
+    import io
+    async with async_playwright() as p:
+        b = await p.chromium.launch(); pg = await b.new_page(); await pg.goto(URL); await pg.wait_for_timeout(1200)
+        for name, sx, br, fs in [('주먹_남', 'm', 1, [0, 6, 3, 3, 0]), ('주먹_여', 'f', 1, [0, 6, 3, 3, 0]), ('발차기_남', 'm', 2, [0, 5, 4, 4, 0]), ('발차기_여', 'f', 2, [0, 5, 4, 4, 0])]:
+            ims = []
+            for f in fs:
+                u = await pg.evaluate("([sx, br, f]) => { const sp = window.__game.personSprite('musa', {outfit:'auto', hair:'#241c26', hat:'class', skin:0}, -1, -1, 'right', f, false, {gwon:{sx, br}}); const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#2b3a4e'; g.fillRect(0, 0, 256, 256); g.imageSmoothingEnabled = false; g.drawImage(sp, 0, 0, 256, 256); return c.toDataURL(); }", [sx, br, f])
+                ims.append(Image.open(io.BytesIO(base64.b64decode(u.split(',')[1]))).convert('RGB'))
+            ims[0].save(OUT / f'4_연속_{name}.gif', save_all=True, append_images=ims[1:], duration=[260, 220, 180, 260, 300], loop=0)
+        await b.close()
+asyncio.run(gifs())
