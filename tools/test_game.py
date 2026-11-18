@@ -1663,6 +1663,30 @@ async def main():
               f'신화 펫: 1부엔 안 나오고, 부상에서는 그 땅의 환수가 소환에 나오며 이야기 환수(바쿠)는 이야기 보상으로 얻은 뒤부터 소환에도 나온다 {mp}')
         check(mp['v'] and mp['shard'] >= 4 and mp['cm'] and mp['shardLeft'] == 0 and mp['auto'],
               f'보물 동굴: 이기면 신화 조각, 조각 30개로 신화 보물을 만들고, 함께하는 싸움은 반자동이어도 기술이 자동 {mp}')
+        # 6-10b) 보물 동굴 신화 제작 화면: 지금 것이 더 세거나 같으면 회색 안내 + 확인 창(취소하면 조각 그대로, 만들기면 30개 쓰고 가방으로), 더 높으면 확인 창 없이 바로 만들어짐
+        VM_UI = r"""async (arg) => { const [mode] = arg, G = window.__game, S = G.S, q = s => document.querySelector(s), w = ms => new Promise(r => setTimeout(r, ms));
+          G.quiet = true; G.hideModal(); G.closePage(); G.buildTab('raid'); q('[data-rv="vault"]').click(); await w(350);
+          const base = G.mythPower(G.MYTHS.find(m => m.k === 'flute'), G.vaultD());
+          S.myth.flute = mode === 'weak' ? base + 50 : mode === 'same' ? base : 0; S.mythShard = 60; S.bag = S.bag || [];
+          await w(350);
+          const row = q('[data-vmc="flute"]'), o = {txt: row.textContent, gray: row.style.color};
+          const bagN = () => (S.bag || []).filter(it => it.t === 'myth' && it.k === 'flute').length;
+          const b0 = bagN(); q('[data-vm="flute"]').click(); await w(100);
+          o.modal = !q('#modal').hidden; o.mtxt = q('#mBody').textContent;
+          if (o.modal){ q('#modal-btn-0').click(); await w(100); o.shardCancel = S.mythShard; o.bagCancel = bagN() - b0; o.curCancel = S.myth.flute;
+            q('[data-vm="flute"]').click(); await w(100); q('#modal-btn-1').click(); await w(100); }
+          o.shardEnd = S.mythShard; o.bagEnd = bagN() - b0; o.curEnd = S.myth.flute; o.base = base; return o; }"""
+        for mode in ('weak', 'same', 'up'):
+            vm = await page.evaluate(VM_UI, [mode])
+            await page.wait_for_timeout(200)
+            if mode == 'weak':
+                await page.screenshot(path=str(OUT / '6-10b_신화제작_약함.png'))
+            if mode == 'weak' or mode == 'same':
+                check(vm['modal'] and '지금 것이 더 세요' in vm['mtxt'] and '더 세서 가방으로 가요' in vm['txt'] and vm['gray'] != '' and vm['shardCancel'] == 60 and vm['bagCancel'] == 0 and vm['shardEnd'] == 30 and vm['bagEnd'] == 1 and vm['curEnd'] == vm['curCancel'],
+                      f'신화 제작({mode}): 지금 것이 더 세거나 같으면 회색 안내·확인 창, 취소하면 조각 그대로, 만들기를 누르면 30개 쓰고 가방으로(낀 값 그대로) {vm}')
+            else:
+                check(not vm['modal'] and '더 세서' not in vm['txt'] and vm['gray'] == '' and vm['shardEnd'] == 30 and vm['curEnd'] == vm['base'],
+                      f'신화 제작(up): 더 높게 만들어질 땐 확인 창 없이 바로 만들어지고 안내는 회색이 아님 {vm}')
         # 6-11) 기술 레벨업 미리보기·넋 부름·보스 손컨(붉은 칸·되받기·버팀·큰 살)
         so = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), H = Object.assign({}, G.HAND); G.quiet = true;
           const g1 = G.skillGain(0, 1).g, gMax = G.SKILLS.every((sk, i) => G.skillGain(i, 5).g > 0);
