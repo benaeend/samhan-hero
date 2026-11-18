@@ -4287,7 +4287,7 @@ const qShots = q => q.cs || (q.c ? [q.c] : []);   // 이야기 퀘스트의 연�
 const HELL_END_Q = MAIN_Q.findIndex(q => q.t === '다시 고구려로') + 1;
 const DAILY = [
   {key:'kill', name:'몬스터 300마리 잡기', goal:300, gems:30},
-  {key:'boss', name:'보스 5번 물리치기', goal:5, gems:30},
+  {key:'boss', name:'보스 5번 물리치기(레이드 보스 포함)', goal:5, gems:30},
   {key:'summon', name:'장비·펫 10번 소환하기', goal:10, gems:30},
   {key:'up', name:'능력치 1번 올리기', goal:1, gems:20},
   {key:'refine', name:'재련·강화 1번 하기', goal:1, gems:20},   // (43, 사용자 요청: 재련을 다 올리면 못 함) 펫·기술·각인 강화·탈것 별·장비 각성도 셈(ev 'enh')
@@ -4299,7 +4299,7 @@ const DAILY_OF = {kill:'kill', boss:'boss', gsummon:'summon', psummon:'summon', 
    보석은 세계가 뒤일수록 WEEK_K배, 할 일마다 덤(ex)도 준다 */
 const WEEKLY = [
   {key:'kill', name:'몬스터 5,000마리 잡기', goal:5000, gems:400, ex:'dust'},
-  {key:'boss', name:'보스 40번 물리치기', goal:40, gems:400, ex:'mat'},
+  {key:'boss', name:'보스 40번 물리치기(레이드 보스 포함)', goal:40, gems:400, ex:'mat'},
   {key:'raid', name:'레이드 10번 클리어', goal:10, gems:500, ex:'shard'},
   {key:'tb', name:'타임 보스 3번 쓰러뜨리기', goal:3, gems:600, ex:'shard2'},
   {key:'parade', name:'백귀야행 3번 막기', goal:3, gems:400, ex:'grudge'},
@@ -4485,9 +4485,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-18-5', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-19-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 19일 · 레이드 보스도 「보스 물리치기」로 세요'],
+  ['레이드·타임 보스를 잡아도 보스 퀘스트가 올라요', '하루·주간 「보스 물리치기」가 이제 사냥터 단계 보스뿐 아니라 레이드 보스와 타임 보스를 이겨도 올라가요. 단계 보스는 한 번 깨면 다시 못 잡아서, 막힌 사람은 하루 5번을 못 채우던 문제를 고쳤어요.'],
+  ['이름과 횟수', '퀘스트 이름 뒤에 「(레이드 보스 포함)」이 붙어요. 일일 5번·주간 40번 횟수와 보상은 그대로예요. 레이드 1번은 「레이드 클리어」와 「보스 물리치기」에 함께 올라가요.'],
+
   ['#', '11월 18일 · 버프 표시가 겹치지 않아요'],
   ['부적 버프 칩이 제자리를 찾았어요', '경험·엽전·방어·속도·공격 같은 부적 남은 시간 칩이 이제 단계 이름과 보스 막대 바로 아래 가운데에 나와요. 예전처럼 단계 이름이나 「보스 대기」 막대를 가리지 않고, 글자도 안 잘려요.'],
   ['많이 먹어도 줄을 바꿔 보여요', '부적을 다섯 가지까지 먹어 칩이 많아지면 화면 폭에 맞춰 다음 줄로 넘어가요. 한 가지만 먹었을 때는 작은 칩 하나만 가운데에 떠요. 세로·가로 화면 모두 같아요. 부적 효과와 시간은 그대로예요.'],
@@ -5903,6 +5907,9 @@ function ev(type, n = 1){
   if (dk){ dailyCheck(); Q.dp[dk] = (Q.dp[dk] || 0) + n; }
   const wk = WEEK_OF[type];
   if (wk && S.week){ weekCheck(); S.week.wp[wk] = (S.week.wp[wk] || 0) + n; }
+  if (type === 'raid' || type === 'tb'){   // 레이드·타임 보스도 '보스 물리치기'로 센다(단계 보스는 한 번 깨면 다시 못 잡아 막힌 사람이 못 채웠음)
+    dailyCheck(); Q.dp.boss = (Q.dp.boss || 0) + n;
+    if (S.week){ weekCheck(); S.week.wp.boss = (S.week.wp.boss || 0) + n; } }
   if (Q.tut >= 0 && Q.tut < TUT.length && TUT[Q.tut].ev === type){
     Q.tutN += n;
     if (Q.tutN >= TUT[Q.tut].n) tutAdvance();
