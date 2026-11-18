@@ -7299,8 +7299,8 @@ function finishTimeBoss(R){
 
 function pickRaidTarget(){
   const pool = [];
-  if (!hero.dead) pool.push([hero, S.cls === 'musa' ? 3 : 1.5]);
-  for (const a of raid.allies) if (!a.down) pool.push([a, a.cls === 'musa' ? 3 : 1]);
+  if (!hero.dead) pool.push([hero, (S.cls === 'musa' ? 3 : 1.5) * archerFar(hero, S.cls)]);
+  for (const a of raid.allies) if (!a.down) pool.push([a, (a.cls === 'musa' ? 3 : 1) * archerFar(a, a.cls)]);
   let tot = pool.reduce((s, p) => s + p[1], 0), r = Math.random() * tot;
   for (const [e, w] of pool){ if (r < w) return e; r -= w; }
   return null;
@@ -9314,6 +9314,22 @@ function updatePets(dt){
     if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; heroHeal(h, 'mount'); addText('+' + fmt(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
   }
 }
+// 궁사는 멀리서 쏘면 덜 맞아요(2026-11-18, 주인 승인 「수정안 나」). ① 화살을 맞으며 다가온 사냥터 몬스터는 붙은 뒤 첫 공격(덤벼들기)을 건너뜀(몬스터마다 한 번) ② 레이드에서 보스와 `far`칸 이상 떨어진 궁사는 보스 일반 공격 대상으로 덜 뽑힘.
+// 레이드 보스(`raid`)는 ①에서 뺀다: 보스는 안 걸어오고 거리와 상관없이 대상을 뽑아서 「붙은 뒤 첫 공격」이 없다(②가 그 몫).
+const ARCHER = {far:4, pick:0.65};
+function arrowMark(p, tg){
+  if (p.kind !== 'arrow' || p.toHero || !tg || tg.raid || tg.touched || tg.arrowed) return;
+  tg.arrowed = true;
+}
+function arrowSkip(m){
+  if (!m.arrowed || m.arrowUsed) return false;
+  m.arrowUsed = true; if (!fxOff()) addText('주춤!', m.x, m.y - mobHeight(m) - 8, '#cfe8ff', 9);
+  return true;
+}
+function archerFar(e, cl){
+  if (cl !== 'gungsa' || !raid || !raid.boss || e.dead) return 1;
+  return Math.abs(e.tx - raid.boss.tx) + Math.abs(e.ty - raid.boss.ty) >= ARCHER.far ? ARCHER.pick : 1;
+}
 function attack(tg){
   const C = cls();
   hero.swing = 0.2; hero.atkT = 1;
@@ -9903,12 +9919,14 @@ function update(dt){
       const aggro = !hero.dead && (m.boss || m.aggro || man <= 5);
       if (aggro && man === 1){
         m.dir = dirOf(dx, dy);
+        m.touched = true;   // 붙었다(이 뒤에 맞은 화살은 「덜 맞기」에 안 센다)
         if (!m.hit1){   // 9-4 덤벼들기: 사냥터 요괴는 처음 붙는 순간 한 대(빨리 잡아도 붙은 요괴 수만큼은 맞는다)
           m.hit1 = true; m.atkT = 1.3;
-          if (m.atk > 0){ m.lunge = 0.2; damageHero(m.atk * TANK.lunge); gapRiposte(m); }
+          if (arrowSkip(m)){ /* 궁사의 화살을 맞으며 다가왔다: 덤벼들기를 건너뜀 */ }
+          else if (m.atk > 0){ m.lunge = 0.2; damageHero(m.atk * TANK.lunge); gapRiposte(m); }
         } else {
           m.atkT -= dt;
-          if (m.atkT <= 0){ m.atkT = m.boss ? 1.5 : 1.3; m.lunge = 0.2; damageHero(m.atk); gapRiposte(m); }
+          if (m.atkT <= 0){ m.atkT = m.boss ? 1.5 : 1.3; if (!arrowSkip(m)){ m.lunge = 0.2; damageHero(m.atk); gapRiposte(m); } }
         }
       } else {
         m.thinkT -= dt;
@@ -9930,7 +9948,7 @@ function update(dt){
     const tx = tg.x, ty = tg.y - (p.toHero ? 14 : mobHeight(tg) * 0.5);
     const d = Math.hypot(tx - p.x, ty - p.y), sp = 190 * dt;
     p.trail.push([p.x, p.y]); if (p.trail.length > 4) p.trail.shift();
-    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else { castCtx = p.ctx || null; hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic', !!p.sure); castCtx = null; } }
+    if (d <= sp + 2){ p.done = true; if (p.toHero) damageHero(p.dmg); else { castCtx = p.ctx || null; hit(tg, p.dmg != null ? p.dmg : ST.atk * atkBuff(), p.hk || 'basic', !!p.sure); castCtx = null; arrowMark(p, tg); } }
     else { p.x += (tx - p.x) / d * sp; p.y += (ty - p.y) / d * sp; }
   }
   projs = projs.filter(p => !p.done);
@@ -21995,7 +22013,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
-    update, buyStat, upgradeSkill, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
+    update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
