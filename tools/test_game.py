@@ -5374,6 +5374,27 @@ async def main():
                 await bp.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
                 await bp.click('#cs-beta')
                 await bp.wait_for_selector('#mTitle:has-text("시험용 캐릭터")')
+        # 부적 버프 칩(2026-11-18): 버프 0·1·5개일 때 세로·가로 모두 단계 이름·보스 막대·단추와 겹치지 않는다
+        for vw, vh, nm in ((390, 844, '세로'), (844, 390, '가로')):
+            ctxBf = await browser.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=2)
+            bf = await ctxBf.new_page()
+            watch(bf, errors, f'버프{nm} ')
+            await fresh(bf)
+            await signup(bf, 'bufftest', 'abcd', '버프용사')
+            await bf.wait_for_timeout(600)
+            for nb in (0, 1, 5):
+                bfr = await bf.evaluate("""(nb) => { const G = window.__game, S = G.S; G.quiet = true; const ks = Object.keys(G.BUFFS);
+                  ks.forEach((k, i) => { S.buff[k] = i < nb ? 47 * 60 : 0; }); G.update(0.05); G.render();
+                  const cr = document.querySelector('#cv, canvas').getBoundingClientRect(), R = G.ovRects, ov = (a, b) => !(a[2] <= b[0] || b[2] <= a[0] || a[3] <= b[1] || b[3] <= a[1]);
+                  const off = [cr.left, cr.top], abs = r => r ? [r[0] + off[0], r[1] + off[1], r[2] + off[0], r[3] + off[1]] : null;
+                  const buff = abs(R.buff), stage = abs(R.stage), boss = abs(R.boss);
+                  const btns = [...document.querySelectorAll('button, .topr, .log, #chatBtn, #mapBtn')].filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && getComputedStyle(e).display !== 'none' && getComputedStyle(e).visibility !== 'hidden' && b.bottom <= cr.top + G.ovBot + 40; }).map(e => { const b = e.getBoundingClientRect(); return [e.id || e.className, [b.left, b.top, b.right, b.bottom]]; });
+                  const hits = buff ? btns.filter(x => ov(buff, x[1])).map(x => x[0]) : [];
+                  return {n: buff ? 1 : 0, buff, stage: !!stage, boss: !!boss, hitStage: !!(buff && stage && ov(buff, stage)), hitBoss: !!(buff && boss && ov(buff, boss)), hits, inside: !buff || (buff[0] >= 0 && buff[2] <= innerWidth), top: buff ? buff[1] >= stage[3] : true, ovBot: G.ovBot}; }""", nb)
+                await bf.wait_for_timeout(150)
+                await bf.screenshot(path=str(OUT / f'96_buff_{nm}_{nb}.png'))
+                check(bfr['n'] == (1 if nb else 0) and not bfr['hitStage'] and not bfr['hitBoss'] and not bfr['hits'] and bfr['inside'] and bfr['top'], f'{nm} 화면 버프 {nb}개: 버프 칩이 단계 이름·보스 막대·단추와 겹치지 않고 화면 안에 있다 {bfr}')
+            await ctxBf.close()
         await ctxB.close()
         srv.shutdown()
 
