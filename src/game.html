@@ -9319,9 +9319,9 @@ function updatePets(dt){
 }
 // 궁사는 멀리서 쏘면 덜 맞아요(2026-11-18, 주인 승인 「수정안 나」). ① 화살을 맞으며 다가온 사냥터 몬스터는 붙은 뒤 첫 공격(덤벼들기)을 건너뜀(몬스터마다 한 번) ② 레이드에서 보스와 `far`칸 이상 떨어진 궁사는 보스 일반 공격 대상으로 덜 뽑힘.
 // 레이드 보스(`raid`)는 ①에서 뺀다: 보스는 안 걸어오고 거리와 상관없이 대상을 뽑아서 「붙은 뒤 첫 공격」이 없다(②가 그 몫).
-const ARCHER = {far:4, pick:0.65};
+const ARCHER = {far:4, pick:0.65, skip:true};   // skip: 화살 맞은 몹의 첫 공격 건너뜀 켬(시험에서 끌 수 있게)
 function arrowMark(p, tg){
-  if (p.kind !== 'arrow' || p.toHero || !tg || tg.raid || tg.touched || tg.arrowed) return;
+  if (!ARCHER.skip || p.kind !== 'arrow' || p.toHero || !tg || tg.raid || tg.touched || tg.arrowed) return;
   tg.arrowed = true;
 }
 function arrowSkip(m){
