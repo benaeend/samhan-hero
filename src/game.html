@@ -10084,6 +10084,7 @@ function flipCanvas(src){
 }
 
 function drawChibi(g, c, view, f, col, look){
+  if (col.gwon) return drawGwon(g, view, f, col, look);   // 권사 시안(새 옵션 플래그 — 없으면 기존 그림 그대로)
   const L = CLASSES[c], back = view === 'back', atk = f === 3;
   look = look || defaultLook();
   const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
@@ -10366,6 +10367,173 @@ function drawChibi(g, c, view, f, col, look){
   }
 }
 
+/* ================= 권사(시안) — 맨손 권법 직업 그림 =================
+   수박(手搏) 같은 맨손 무예를 익힌 수련자. col.gwon = {sx:'m'|'f', br:0 기본 | 1 주먹(맞받아치는 주먹) | 2 발(멈추지 않는 발)}
+   프레임: 0 서기 · 1·2 걷기 · 3 주먹 내지르기 · 4 발차기 · 5 발차기 준비(무릎 들기) · 6 주먹 준비(당기기)
+   발 기준점(32, 60)은 그대로: 받치는 다리는 제자리, 몸통만 살짝 기울여 위로 민다. drawChibi가 col.gwon이 있을 때만 이쪽으로 넘어온다 */
+function drawGwon(g, view, f, col, look){
+  const gw = col.gwon, fem = gw.sx === 'f', br = gw.br | 0, back = view === 'back';
+  look = look || defaultLook();
+  const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
+  const O = col.outfit, OD = darken(O, 0.24), OL = mix(O, '#ffffff', 0.2);
+  const PT = fem ? '#6a5a7a' : '#5e5a74', PTD = darken(PT, 0.2), SH = fem ? '#4a2a3a' : '#2e2018';
+  const SKT = '#7a3a5a', SKTD = darken(SKT, 0.22), CR = '#efe6d0', CRD = darken(CR, 0.2), RED = '#d8433a', BLU = '#3a8ad8';
+  const WR = br === 1 ? RED : CR, AW = br === 2 ? BLU : CR;   // 손목 감개 / 발목 감개
+  const E = (x, y, rx, ry, cl, rot = 0) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
+  const Pl = (pts, cl) => { g.fillStyle = cl; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
+  const RR = (x, y, w, h, r, cl) => { g.fillStyle = cl; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const LN = (x1, y1, x2, y2, w, cl, cap = 'round') => { g.strokeStyle = cl; g.lineWidth = w; g.lineCap = cap; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  const walk = f === 1 || f === 2, pun = f === 3, kick = f === 4, cham = f === 5, wind = f === 6;
+  const by = walk ? -1 : kick ? -1.5 : cham ? -0.6 : 0, sway = f === 1 ? 1 : f === 2 ? -1 : 0;
+  const lean = kick ? -0.15 : cham ? -0.05 : pun ? 0.09 : wind ? -0.07 : 0, shx = pun ? 1.2 : kick ? -0.4 : 0;
+  const hx = 32, hy = 24 + by;
+  const lf = f === 1 ? -2 : f === 2 ? 1 : 0, rf = f === 2 ? -2 : f === 1 ? 1 : 0;
+
+  // ── 다리(받치는 다리는 제자리 — 발 기준점)
+  const lw = fem ? 5.2 : 6.6, lx = fem ? 26 : 25.4, rx = fem ? 33.6 : 32.6;
+  const legL = () => { RR(lx, 49 + lf * 0.5, lw, 9 - lf * 0.4, 2, PT); RR(lx - 0.2, 55.2 + lf * 0.4, lw + 0.4, 2, 0.8, AW); E(28.6, 58.6 + lf * 0.4, fem ? 3.4 : 3.7, 2, SH); E(30.6, 58 + lf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
+  const legR = () => { RR(rx, 49 + rf * 0.5, lw, 9 - rf * 0.4, 2, PTD); RR(rx - 0.2, 55.2 + rf * 0.4, lw + 0.4, 2, 0.8, darken(AW, 0.1)); E(35.6, 58.6 + rf * 0.4, fem ? 3.4 : 3.7, 2, darken(SH, 0.1)); E(37.4, 58 + rf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
+  legL();
+  let kickTip = null;
+  if (kick || cham){
+    const lw2 = fem ? 5.4 : 6.4;
+    if (kick){   // 앞다리를 짧게 곧게 뻗는다: 엉덩이 → 발끝(54, 44.5)
+      const hip = [35.6, 49.6], ank = [49.2, 46], dx = ank[0] - hip[0], dy = ank[1] - hip[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, ang = Math.atan2(dy, dx);
+      LN(hip[0], hip[1], ank[0], ank[1], lw2, PTD);
+      LN(hip[0], hip[1] - 1.2, ank[0] - 3, ank[1] - 1, lw2 * 0.45, mix(PTD, '#ffffff', 0.12));
+      LN(ank[0] - ux * 1.2, ank[1] - uy * 1.2, ank[0] + ux * 0.9, ank[1] + uy * 0.9, lw2 + 0.5, AW, 'butt');
+      E(ank[0] + ux * 3.6 + 0.2, ank[1] + uy * 3.6 + 0.4, 4.4, 3, darken(SH, 0.1), ang); E(ank[0] + ux * 5.6, ank[1] + uy * 5.6 - 0.4, 1.6, 1.4, mix(SH, '#ffffff', 0.45), ang);
+      kickTip = [ank[0] + ux * 6.6, ank[1] + uy * 6.6, ang];
+    } else {     // 준비: 무릎을 앞으로 들어 올리고 정강이는 아래로
+      const hip = [35.6, 49.6], kn = [43.4, 47.6], an = [41.2, 54.6];
+      LN(hip[0], hip[1], kn[0], kn[1], lw2, PTD); LN(kn[0], kn[1], an[0], an[1], lw2 - 0.4, PTD); E(kn[0], kn[1], lw2 / 2 + 0.2, lw2 / 2, PTD);
+      LN(an[0] - 0.3, an[1] - 1.8, an[0] + 0.1, an[1] - 0.2, lw2, AW, 'butt');
+      E(an[0] + 1.6, an[1] + 2.2, 3.5, 2.3, darken(SH, 0.1), 0.25);
+    }
+  } else legR();
+
+  // ── 몸통(발은 그대로, 위쪽만 기울인다)
+  g.save(); g.translate(32 + shx, 52); g.rotate(lean); g.translate(-32, -52);
+  // 뒤쪽에 걸리는 것: 여캐 땋은 머리(앞모습은 몸 왼쪽 뒤, 뒷모습은 등 가운데에서 따로)
+  const braid = (bx, by0, ex, ey) => {
+    g.lineCap = 'round'; g.strokeStyle = HRD; g.lineWidth = 5; g.beginPath(); g.moveTo(bx, by0); g.quadraticCurveTo((bx + ex) / 2 - 3, (by0 + ey) / 2, ex, ey); g.stroke();
+    g.strokeStyle = HR; g.lineWidth = 3.4; g.beginPath(); g.moveTo(bx, by0); g.quadraticCurveTo((bx + ex) / 2 - 3, (by0 + ey) / 2, ex, ey); g.stroke();
+    for (let k = 1; k <= 4; k++){ const t = k / 5, px = (1 - t) * (1 - t) * bx + 2 * t * (1 - t) * ((bx + ex) / 2 - 3) + t * t * ex, py = (1 - t) * (1 - t) * by0 + 2 * t * (1 - t) * ((by0 + ey) / 2) + t * t * ey; E(px, py, 1.3, 0.7, HRD, 0.5); }
+    Pl([[ex - 1.8, ey - 1], [ex + 1.8, ey - 1], [ex + 2.6 + sway * 0.5, ey + 3.4], [ex - 2.6 + sway * 0.5, ey + 3.4]], RED); RR(ex - 2, ey - 1.4, 4, 1.5, 0.6, '#a8302a');
+  };
+  if (fem && !back) braid(hx - 9.4, hy + 5, hx - 16.4 + sway, 49 + by * 0.5);
+  // 뒷모습에서 앞팔(보이지 않게 몸 뒤): 먼저 그림
+  const sleeve = back ? OD : O;
+  const arm = (sx, sy, ex, ey, fx, fy, front) => {
+    const OLN = '#1d1420';   // 팔이 몸통 색에 묻히지 않게 먼저 어두운 테를 두른다
+    LN(sx, sy, ex, ey, (fem ? 4.6 : 5.2) + 1.8, OLN); LN(ex, ey, fx, fy, (fem ? 4.3 : 4.8) + 1.6, OLN);
+    LN(sx, sy, ex, ey, fem ? 4.6 : 5.2, front ? OL : O);
+    const wx = ex + (fx - ex) * 0.62, wy = ey + (fy - ey) * 0.62;
+    LN(ex, ey, wx, wy, fem ? 3.7 : 4.2, SK);
+    LN(ex + (fx - ex) * 0.4, ey + (fy - ey) * 0.4, fx + (ex - fx) * 0.12, fy + (ey - fy) * 0.12, fem ? 4.3 : 4.8, front ? WR : darken(WR, 0.12), 'butt');
+    E(fx + (fx - ex) * 0.12, fy + (fy - ey) * 0.12, fem ? 3 : 3.4, fem ? 2.7 : 3, front ? SK : SKD);
+    const a = Math.atan2(fy - ey, fx - ex), kx = fx + (fx - ex) * 0.12 + Math.cos(a) * 1.6, ky = fy + (fy - ey) * 0.12 + Math.sin(a) * 1.6;
+    for (const o of [-1.1, 1.1]) E(kx + Math.cos(a + 1.57) * o, ky + Math.sin(a + 1.57) * o, 0.45, 0.45, darken(SK, 0.3));   // 주먹 마디
+  };
+  // 팔 자세 [뒤쪽 팔(보는 사람 왼쪽): 어깨 팔꿈치 주먹], [앞쪽 팔(오른쪽)]
+  const dyb = back ? -2.4 : 0;
+  let BA, FA;
+  if (pun){ BA = [23, 40 + by, 19.6, 46, 24.6, 45.4]; FA = [41, 40 + by, 46.4, 40 + by + dyb * 0.3, 51.2, 39.6 + by + dyb]; }
+  else if (wind){ BA = [23, 40 + by, 24.6, 46, 31, 41.6 + by]; FA = [41, 40 + by, 46.4, 44.6, 40.4, 47]; }
+  else if (kick){ BA = [23, 40 + by, 17.4, 41, 12.6, 37 + by]; FA = [41, 40 + by, 45.6, 44.4, 44.2, 39.6 + by]; }
+  else if (cham){ BA = [23, 40 + by, 19.4, 46.4, 23, 41 + by]; FA = [41, 40 + by, 44.6, 46.4, 42.4, 40.6 + by]; }
+  else { const s1 = f === 1 ? 1.4 : f === 2 ? -1.4 : 0;
+    BA = [23, 40 + by, 19.6, 46.6, 23 - s1 * 0.3, 41.6 + by + s1]; FA = [41, 40 + by, 44.6, 46.6, 42.4 + s1 * 0.3, 41.2 + by - s1]; }
+  if (back) arm(...FA, true);
+
+  // ── 몸통 옷
+  const BOT = fem ? 44.2 : 49.6;
+  if (!fem){
+    Pl([[22.2, 37 + by], [41.8, 37 + by], [43.6, BOT], [20.4, BOT]], O);
+    Pl([[33, 37 + by], [41.8, 37 + by], [43.6, BOT], [35, BOT]], OD);
+    Pl([[20.4, BOT], [43.6, BOT], [43.4, BOT - 2.2], [20.6, BOT - 2.2]], OD);
+  } else {
+    Pl([[24.2, 37 + by], [39.8, 37 + by], [41, BOT], [23, BOT]], O);
+    Pl([[33, 37 + by], [39.8, 37 + by], [41, BOT], [34.6, BOT]], OD);
+  }
+  if (!back){
+    Pl([[26, 37 + by], [32, 44.4 + by * 0.4], [38, 37 + by], [35.5, 37 + by], [32, 41.8 + by], [28.5, 37 + by]], '#efe9da');   // 동정·깃
+    Pl([[27.6, 37.6 + by], [28.6, 37 + by], [36.4, 45.4], [35.4, 46]], darken(O, 0.35));                                          // 여민 자리
+  } else { RR(26.4, 36.6 + by, 11.2, 2.2, 1, OL); }
+  if (fem){   // 치마(무릎 위 활동복 치마) + 말기 + 고름
+    const kk = kick ? 1 : 0;
+    Pl([[23.2, 44.2], [40.8, 44.2], [kk ? 49 : 45, kk ? 50 : 52.2], [kk ? 41 : 44, 53.2], [19.4, 52.8]], SKT);
+    Pl([[33.6, 44.2], [40.8, 44.2], [kk ? 49 : 45, kk ? 50 : 52.2], [kk ? 41 : 44, 53.2], [35, 53]], SKTD);
+    for (const x of [26, 31, 36]) LN(x, 46.4, x + (x - 32) * 0.6, 52, 0.7, SKTD);
+    RR(19.6, 51.4, 24.4, 1.7, 0.7, mix(SKT, CR, 0.55)); RR(23, 43.2, 18, 2.2, 0.9, CR);
+    if (!back){ Pl([[31, 41 + by], [33.2, 41 + by], [34.8, 49.6], [32.6, 50]], RED); E(30.4, 41 + by, 2, 1.3, RED, -0.4); E(34, 41 + by, 2, 1.3, RED, 0.4); E(32.2, 41.2 + by, 0.9, 0.9, '#a8302a'); }
+  } else {   // 띠(허리에 두른 넓은 띠) + 매듭
+    RR(20.2, 45 + by * 0.4, 23.6, 3.6, 1.4, CR); RR(20.2, 47 + by * 0.4, 23.6, 1.6, 0.7, CRD);
+    const kx = back ? 32 : 39.4;
+    E(kx, 46.9 + by * 0.4, 2.2, 2.1, CR); E(kx - 0.5, 46.4 + by * 0.4, 0.9, 0.7, '#ffffff');
+    Pl([[kx - 1.4, 48.2], [kx + 0.8, 48.2], [kx + 1 + sway * 0.5, 53.6], [kx - 1.8 + sway * 0.5, 53.2]], CR); Pl([[kx + 0.2, 48.2], [kx + 2.6, 48.6], [kx + 4.4 - sway * 0.5, 52.8], [kx + 2, 53.2]], CRD);
+  }
+  if (back && fem) braid(hx + 1.2, hy + 9, hx + 1.8 + sway * 0.8, 51 + by * 0.5);
+
+  // ── 뒤쪽 팔 + 어깨 받이(주먹 갈래: 붉은 어깨 받이)
+  if (!back) arm(...BA, false); else arm(...BA, false);
+  if (br === 1){ for (const sx of [23, 41]){ const w = fem ? 3.8 : 4.6; E(sx, 38.4 + by, w, 2.9, '#a8302a'); E(sx, 38 + by, w - 0.5, 2.4, RED); E(sx - 1.2, 37 + by, 1.8, 0.9, mix(RED, '#ffffff', 0.5)); } }
+
+  // ── 머리
+  if (!back){
+    E(hx - 1, hy - 1, 14, 12.6, HR);
+    E(hx + 2, hy + 3, fem ? 10.2 : 10.6, fem ? 9.2 : 9.6, SK);
+    E(hx - 7.4, hy + 4, 2.2, 2.8, SK); E(hx - 7.2, hy + 4.2, 1, 1.5, SKD);
+    E(hx + 1, hy - 5, 12.4, 6.6, HR);
+    for (const [x, d] of [[-8, 4], [-3, 5], [2, 4.4], [7, 3.6], [11, 2.6]]) Pl([[hx + x - 3, hy - 4], [hx + x + 3, hy - 4], [hx + x + 0.6, hy - 4 + (fem ? d + 1 : d)]], HR);
+    if (fem){ Pl([[hx + 9, hy - 3], [hx + 12.4, hy - 1], [hx + 12.2, hy + 7.4], [hx + 10, hy + 7.6]], HR); }   // 옆머리(볼 옆으로 내려옴)
+    E(hx - 3, hy - 8, 4, 1.6, HRL);
+    const ey = hy + 4, ew = fem ? 2.4 : 2.2, eh = fem ? 3.3 : 3.1;
+    E(hx + 6.2, ey, ew, eh, EYE); E(hx - 1.4, ey, ew - 0.3, eh - 0.2, EYE);
+    E(hx + 6.9, ey - 1.2, 1, 1, '#ffffff'); E(hx - 0.8, ey - 1.2, 0.9, 0.9, '#ffffff'); E(hx + 5.6, ey + 1.6, 0.6, 0.6, '#6a5a8a');
+    if (fem){ Pl([[hx + 8.2, ey - 2.2], [hx + 10.2, ey - 3.2], [hx + 9.2, ey - 1.2]], EYE); Pl([[hx - 3, ey - 2.2], [hx - 4.8, ey - 3], [hx - 3.8, ey - 1]], EYE); }
+    else { LN(hx + 3.8, ey - 3.8, hx + 8.6, ey - 3.2, 1.5, HRD); LN(hx - 3.6, ey - 3.6, hx + 0.4, ey - 3.4, 1.4, HRD); }   // 굵은 눈썹
+    E(hx + 8.4, hy + 7.6, 2, 1.1, mix(SK, '#ff7a7a', fem ? 0.45 : 0.3)); E(hx - 3.2, hy + 7.6, 1.6, 1, mix(SK, '#ff7a7a', fem ? 0.4 : 0.25));
+    if (pun || kick) E(hx + 3.4, hy + 8.6, 1.5, 1.1, '#7a3a3a'); else E(hx + 3.4, hy + 8.4, 1.3, 0.7, '#b0584a');   // 기합 넣을 땐 입을 벌림
+  } else {
+    E(hx, hy, 14, 12.8, HR); E(hx + 3, hy + 4, 10, 7, HRD); E(hx - 3, hy - 4, 6, 3, HRL);
+  }
+  // 머리 모양: 남=상투, 여=작은 쪽(비녀)
+  if (!fem){ E(hx - 1, hy - 12.6, 3.6, 3.2, HR); E(hx - 2, hy - 13.6, 1.4, 1, HRL); RR(hx - 4, hy - 10.8, 6, 1.6, 0.8, CRD); }
+  else { E(hx - 1.4, hy - 12.2, 4.8, 3.8, HR); E(hx - 2.6, hy - 13.4, 1.8, 1.1, HRL); RR(hx - 7.4, hy - 12.8, 11, 1.2, 0.6, '#e2c26b'); E(hx + 3.8, hy - 12.2, 1.2, 1.2, RED); }
+  // 이마 두건(권사 표시: 수련자의 머리띠) — 눈썹 위쪽 이마에 매어 끝자락이 뒤로 날린다
+  const bt = fem ? 2.4 : 3.2, bB = hy - 3.4;
+  Pl([[hx - 13.2, bB - bt + 1.6], [hx + 13, bB - bt - 1], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], CR);
+  Pl([[hx - 13.2, bB + 0.4], [hx + 13.2, bB - 2], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], CRD);
+  { const kx = back ? hx + 4 : hx - 13, lk = pun || kick ? 2 : 0;
+    Pl([[kx, bB - 1.2], [kx - 6.6 - lk, bB + 4 + sway], [kx - 4.2 - lk, bB + 5.4 + sway], [kx + 1, bB + 1]], br === 1 ? RED : br === 2 ? BLU : CR);
+    Pl([[kx, bB - 0.4], [kx - 8.6 - lk, bB + 1.4 + sway], [kx - 7.4 - lk, bB + 3 + sway], [kx + 1, bB + 1.2]], darken(br === 1 ? RED : br === 2 ? BLU : CR, 0.2)); }
+
+  // ── 앞쪽 팔(앞모습) + 어깨 받이 위에
+  if (!back) arm(...FA, true);
+  // ── 효과: 주먹 끝 충격 / 발끝 충격 파동
+  if (pun){
+    const fxp = FA[4] + 4.4, fyp = FA[5] - (back ? 0.5 : 0), pc = br === 1 ? '#ff8a5a' : '#ffffff';
+    const star = [];
+    for (let i = 0; i < 10; i++){ const a = i / 10 * Math.PI * 2 + 0.2, r = i % 2 ? 3 : 6.2; star.push([fxp + Math.cos(a) * r, fyp + Math.sin(a) * r * 0.9]); }
+    Pl(star, br === 1 ? '#d8433a' : '#ffb84a'); Pl(star.map(([x, y]) => [fxp + (x - fxp) * 0.68, fyp + (y - fyp) * 0.68]), pc); E(fxp, fyp, 2, 2, '#fff2b0');
+    for (const dy of [-5.4, 5.8]) LN(FA[2] - 3, FA[3] + dy * 0.6, FA[2] + 3, FA[3] + dy * 0.6 + (dy > 0 ? 0.6 : -0.6), 1.2, '#ffffff');   // 속도선
+  }
+  if (kick && kickTip){
+    const [tx, ty, ang] = kickTip, wc = br === 2 ? '#bfe6ff' : '#ffffff';
+    g.lineCap = 'round';
+    for (let k = 0; k < 3; k++){ g.strokeStyle = k === 0 ? '#ffffff' : wc; g.lineWidth = 2.1 - k * 0.4; g.beginPath(); g.arc(tx - 3 - k * 1.9, ty, 3.6 + k * 1.9, -0.9, 0.9); g.stroke(); }
+    E(tx - 0.4, ty, 1.7, 1.7, '#ffe28a');
+  }
+  g.restore();
+  // ── 발 갈래: 푸른 바람(발목 둘레 바람 줄기) — 몸 기울기와 상관없이 발 가까이
+  if (br === 2){
+    g.lineCap = 'round'; g.strokeStyle = '#bfe6ff'; g.lineWidth = 1.5;
+    const s2 = walk ? 3 : kick || cham ? 2 : 0;
+    for (const [x0, y0, len] of [[22, 55.6, 7 + s2], [24, 52.6, 5 + s2], [21, 58, 5 + s2]]){ g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 - len * 0.5, y0 - 1.6 + sway * 0.6, x0 - len, y0 + 0.4); g.stroke(); }
+  }
+}
+
 // 사람(용사·동료) 색: 옷을 '기본'으로 두면 방어구 등급색이 섞이고, 직접 고른 색이면 허리띠가 등급색이 된다
 function personColors(c, look, armorG, weaponG, ex){
   const L = CLASSES[c], custom = look && look.outfit && look.outfit !== 'auto';
@@ -10375,16 +10543,17 @@ function personColors(c, look, armorG, weaponG, ex){
   const form = ex && ex.form || '';
   const cos = ex && ex.costume && AV[ex.costume], cape = ex && ex.cape && AV[ex.cape];
   if (cos) outfit = cos.outfit;
+  if (ex && ex.gwon && !custom && !cos) outfit = '#d2802f';   // 권사 시안: 직업 색(주황빛 황토)
   if (form){ const F = FORMS.find(x => x.k === form); if (F) outfit = mix(outfit, F.color, 0.45); }
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1,
-    job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
+    gwon:ex && ex.gwon || null, job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
 }
 const spriteCache = new Map();
 // dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
-  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : ''].join('|');
+  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', col.gwon ? col.gwon.sx + col.gwon.br : ''].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
     const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
@@ -10400,7 +10569,7 @@ function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
 }
 const gradeOf = i => i >= 0 ? Math.min(4, Math.floor(i / 4)) : -1;   // 0~4(유물·영물도 4 — 다른 기기·예전 판에 보내는 값이라 그대로 둔다. 제 등급은 itemG·gearG)
 const heroGx = () => seaOpen() ? {h:S.helmHide || S.equip.helm < 0 ? -1 : gearG('helm'), s:S.equip.shoulder >= 0 ? gearG('shoulder') : -1, b:S.equip.boots >= 0 ? gearG('boots') : -1} : null;   // 투구·어깨·신발 등급(4부부터)
-const heroEx = () => ({form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing, sk:skinLook(), gx:heroGx()});
+const heroEx = () => ({gwon:window.__gwonProto || null, form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing, sk:skinLook(), gx:heroGx()});
 const heroSprite = (c, dir, f, white) => personSprite(c, S.look, gearG('armor'), gearG('weapon'), dir, f, white, heroEx());
 
 const petCache = new Map();
@@ -15342,7 +15511,9 @@ function drawMwAura(x, y, A){
 function drawEntityHero(){
   const C = S.cls;
   let f = 0;
-  if (hero.swing > 0) f = 3;
+  const GP = window.__gwonProto;   // 권사 시안 시험용(없으면 null)
+  if (hero.swing > 0) f = GP && GP.br === 2 ? 4 : 3;
+  else if (GP && !hero.moving && hero.target && hero.atkT > 0 && hero.atkT < 0.18) f = GP.br === 2 ? 5 : 6;
   else if (hero.moving) f = hero.mt < 0.5 ? 1 : 2;
   const sp = heroSprite(C, hero.dir, f, hero.hurt > 0);
   const bob = !hero.moving && hero.swing <= 0 && Math.floor(gtime * 1.6) % 2 ? 1 : 0;
@@ -22062,7 +22233,7 @@ if (location.search.indexOf('simtest') >= 0){
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get ovRects(){ return ovRects; }, BUFFS, get S_(){ return S; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
-    addTime(ms){ clockSkew += ms; }, quiet:false,
+    personSprite, addTime(ms){ clockSkew += ms; }, quiet:false,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
