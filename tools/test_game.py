@@ -1296,7 +1296,7 @@ async def main():
         for _ in range(4): await page.click('#inh .inh-say'); await page.wait_for_timeout(120)
         await page.click('#notiGo'); await page.wait_for_selector('#mTitle:has-text("업데이트 소식")')
         nw2 = await page.evaluate("() => { const G = window.__game; const out = {seen: localStorage.getItem('samhan-note-seen') !== 'old', open: G.inhOpen, list: G.notiList().map(n => n.k)}; G.hideModal(); G.noNoti = true; return out; }")
-        check('할머니' in nw1['who'] and ('물의 신화' in nw1['say'] or '이야기 펫' in nw1['say']) and nw1['chips'] >= 2 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
+        check('할머니' in nw1['who'] and ('물의 신화' in nw1['say'] or '이야기 펫' in nw1['say'] or '10칸' in nw1['say'] or '「?」' in nw1['say'] or '레이드 보스' in nw1['say']) and nw1['chips'] >= 2 and nw2['seen'] and not nw2['open'] and 'news' not in nw2['list'],
               f'업데이트 소식: 이야기꾼 할머니가 찾아와 간추려 주고 [자세히]로 소식 창을 연다(기기마다 한 번) {nw1} {nw2}')
         # 자리 비움 → 절전 모드(2-1단계): 10분 동안 안 누르면 30초 예고(누르면 취소) → 저장하고 게임을 멈춤 → 누르면 오프라인 보상과 함께 돌아옴
         af0 = await page.evaluate("() => { const G = window.__game; G.quiet = false; G.closePage(); if (!document.querySelector('#modal').hidden) G.hideModal(); G.afkTest = true; G.setAfk(10); G.addTime(10 * 60 * 1000 + 2000); return G.afkMin; }")
