@@ -560,12 +560,14 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .char img{width:50px;height:46px;image-rendering:pixelated;border-radius:10px;background:radial-gradient(circle at 50% 40%,var(--panel-3),var(--bg))}
 .char b{font-size:15.5px;display:block;font-weight:800}
 .char span span{font-size:11.5px;color:var(--text-soft)}
-/* 캐릭터 6칸(물의 신화 2단계): 넷부터는 두 줄로, 빈 칸은 점선 */
+/* 캐릭터 10칸(물의 신화 2단계: 4→6, 그다음 →10): 넷부터는 두 줄로, 빈 칸은 점선 */
 .chars.many{grid-template-columns:repeat(2,minmax(0,1fr))}
 .sheet:has(.chars.many){width:min(620px,100%)}
 .chars.many .char{grid-template-columns:44px 1fr;gap:9px;padding:7px 9px}.chars.many .char.empty{grid-template-columns:1fr}
 .chars.many .char img{width:44px;height:42px}.chars.many .char b{font-size:14.5px}.chars.many .char span span{font-size:11px;display:block;line-height:1.35}
 body.portrait .chars.many{grid-template-columns:1fr}
+.chars.many{max-height:min(50vh,420px);overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}   /* 10칸: 칸이 많으면 목록만 스크롤(세로 화면은 한 줄씩) */
+body.portrait .chars.many .char{padding:6px 9px}body.portrait .chars.many .char.empty{min-height:40px}
 .char.empty{grid-template-columns:1fr;place-items:center;min-height:50px;border-style:dashed;background:none;color:var(--text-soft);font-weight:700;font-size:13px}
 .char.empty:hover{border-color:rgba(255,204,77,.5);color:var(--gold)}
 .char em.loc{display:block;font-style:normal;font-size:10.5px;color:#ffb347;margin-top:1px}
@@ -1566,7 +1568,8 @@ const SAVE_KEY = KP + 'samhan-hero-v1';          // 예전(계정 없던 때) �
 const ACC_KEY = KP + 'samhan-accounts-v1';       // 이 기기의 계정·캐릭터 목록
 const SESSION_KEY = KP + 'samhan-session';       // 로그인 유지를 끈 경우 탭이 열려 있는 동안만 기억
 const charKey = (acc, cid) => `${SAVE_KEY}:${acc}:${cid}`;
-const MAX_CHARS = 6;   // 물의 신화 2단계: 4 → 6칸(서버 setup.sql의 samhan_save도 6으로. 서버가 아직 4칸이면 5·6번째는 이 기기에만 저장 — srvErr 'many')
+const MAX_CHARS = 10;   // 물의 신화 2단계: 4 → 6칸, 그다음 6 → 10칸(서버 setup.sql의 samhan_save도 10으로. 서버가 아직 예전 칸 수면 그 뒤 캐릭터는 이 기기에만 저장 — srvErr 'many')
+const BR_SLOTS = 6;   // 배럭 효과는 예전처럼 앞 6칸(다른 캐릭터 5명)까지만 셈 — 7~10번째 칸은 더 올리지 않음
 const STEP_HERO = 0.2;
 const GEM_DROP = 0.06;                       // 잡몹 한 마리가 보석을 떨굴 확률
 let clockSkew = 0;                          // 테스트에서 시간을 빨리 돌릴 때만 쓴다
@@ -5440,8 +5443,10 @@ function barrack(){
   if (brCache) return brCache;
   const A = session && REG && REG.accounts && REG.accounts[session.acc];
   if (isMainChar()) return (brCache = {n:0, top:0, stat:0, gain:0, exp:0, gem:0, main:true});   // 본캐는 배럭 효과를 받지 않는다(2026-11 (42), 사용자 요청)
-  const others = A && Array.isArray(A.chars) ? A.chars.filter(c => c.cid !== session.cid) : [];
   const cum = c => Math.max(0, Math.floor(+c.cum || +c.level || 0));
+  // 앞 6칸 가운데 나를 뺀 캐릭터만 센다(6칸 계정은 예전과 같고, 7~10번째 칸은 더하지 않음). 내가 7번째 이후면 앞 6칸 중 가장 약한 하나를 빼 다른 캐릭터 5명까지만
+  let others = A && Array.isArray(A.chars) ? A.chars.slice(0, BR_SLOTS).filter(c => c.cid !== session.cid) : [];
+  if (others.length > BR_SLOTS - 1) others = others.slice().sort((a, b) => cum(b) - cum(a)).slice(0, BR_SLOTS - 1);
   const top = others.reduce((m, c) => Math.max(m, cum(c)), 0);
   const gain = Math.round(others.reduce((t, c) => t + Math.min(BR.gainMax, (BR.gainBase + Math.floor(cum(c) / 100)) * BR.per), 0));
   return (brCache = {n:others.length, top, stat:Math.min(BR.statMax, Math.floor(top / BR.statPer)), gain, exp:Math.round(gain * BR.expK), gem:Math.floor(gain / 2)});
@@ -20518,7 +20523,7 @@ function showCharSelect(msg){
       <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>`).join('')
     + Array.from({length:Math.max(0, MAX_CHARS - A.chars.length)}, (_, i) => `<button class="char empty" data-new="1" aria-label="빈 칸 — 새 캐릭터 만들기">＋ 빈 칸${i ? '' : ' · 새 캐릭터'}</button>`).join('');
   const html = `<p>아이디 <b>${esc(curAcc)}</b>로 들어왔어요. 함께할 캐릭터를 골라요. (한 계정에 ${MAX_CHARS}명까지)</p>
-    ${A.chars.length > 1 ? `<p class="small" style="margin:0 0 6px">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석).</p>` : ''}
+    ${A.chars.length > 1 ? `<p class="small" style="margin:0 0 6px">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석). 앞 6칸까지만 세요.</p>` : ''}
     ${A.chars.length ? '' : '<p class="small">아직 캐릭터가 없어요. [새 캐릭터]를 눌러 만들어 주세요.</p>'}
     <div class="chars many">${list}</div>
     <p class="err" role="alert" style="color:var(--jade)">${esc(msg || '')}</p>
