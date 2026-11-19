@@ -1467,6 +1467,29 @@ async def main():
           A.set.bgm = bg; A.set.sfx = sf; G.audHold(); delete document.hidden; return out; }""")
         check(au.get('none') or (au['a'] == 'running' and au['hid'] == 'suspended' and au['back'] == 'running' and au['mute'] == 'suspended' and au['on'] == 'running'),
               f'소리 장치: 화면이 가려지면 멈추고 돌아오면 이어지며, 배경음·효과음을 둘 다 끄면 멈춘다 {au}')
+        # 상태판 초당 10번(절전 그리기 4단계) + [기록]의 「그리기 방식」 설정(5단계)
+        hd = await page.evaluate("""async () => { const G = window.__game; G.quiet = true; const m0 = G.drawMode; const w = ms => new Promise(r => setTimeout(r, ms));
+          const raf0 = window.requestAnimationFrame; window.requestAnimationFrame = () => 0; const out = {};
+          const el = document.querySelector('#hpfill'); out.found = !!el; let T = performance.now() + 1000;
+          for (const mode of ['off', 'on']){
+            G.setDrawMode(mode); await w(160); G.hero.hp = G.ST.maxHp * 0.5; G.loop(T += 50); const a = el.style.width;
+            G.hero.hp = G.ST.maxHp * 0.2; G.loop(T += 50); const b = el.style.width; await w(160); G.hero.hp = G.ST.maxHp * 0.2; G.loop(T += 50); const c = el.style.width; out[mode] = [a, b, c];
+          }
+          G.setDrawMode(m0); window.__game.loop(performance.now()); window.requestAnimationFrame = raf0; raf0.call(window, G.loop); return out; }""")
+        check(hd['found'] and hd['off'][0] != hd['off'][1] and hd['on'][0] == hd['on'][1] and hd['on'][2] != hd['on'][1],
+              f'상태판: 「부드럽게」는 그릴 때마다 바뀌고 「절전」은 0.1초 안에는 그대로였다가 0.1초가 지나면 바뀐다 {hd}')
+        await tab(page, 'rec'); await page.wait_for_timeout(300)
+        ds0 = await page.evaluate("() => ({n: document.querySelectorAll('[data-draw]').length, on: [...document.querySelectorAll('[data-draw]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.draw), cur: window.__game.drawMode})")
+        await page.locator('[data-draw="on"]').scroll_into_view_if_needed()
+        await page.click('[data-draw="on"]'); await page.wait_for_timeout(150)
+        ds1 = await page.evaluate("() => ({cur: window.__game.drawMode, lite: document.body.classList.contains('lite'), on: [...document.querySelectorAll('[data-draw]')].filter(b => b.getAttribute('aria-pressed') === 'true').map(b => b.dataset.draw), note: document.querySelector('#drawNote').textContent})")
+        await page.screenshot(path=str(OUT / '7a_그리기방식_절전.png'))
+        await page.click('[data-draw="off"]'); await page.wait_for_timeout(150)
+        ds2 = await page.evaluate("() => ({cur: window.__game.drawMode, lite: document.body.classList.contains('lite'), note: document.querySelector('#drawNote').textContent})")
+        await page.screenshot(path=str(OUT / '7b_그리기방식_부드럽게.png'))
+        await page.evaluate("() => { window.__game.closePage(); localStorage.removeItem('samhan-lite'); }")
+        check(ds0['n'] == 3 and ds0['on'] == [ds0['cur']] and ds1['cur'] == 'on' and ds1['lite'] and ds1['on'] == ['on'] and '30장' in ds1['note'] and ds2['cur'] == 'off' and not ds2['lite'] and '60장' in ds2['note'],
+              f'[기록] 그리기 방식: 부드럽게·자동·절전 세 칸이 있고 누르면 바로 바뀌며 설명 글도 따라 바뀐다 {ds0} {ds1} {ds2}')
         check(nt1['smith'] and not nt1['noti'] and not nt2['open'] and nt2['btn'] and nt2['cnt'] == '2' and nt2['list'] == ['inh', 'sk8'],
               f'알림 연출 틀: 알릴 것이 여럿이면 중요한 것(계승) 하나만 저절로 찾아오고 나머지는 왼쪽 위 두루마리에 모인다 {nt1} {nt2}')
         check(not nt3['open'] and not nt3['note'] and nt3['log'][0] == 'sk8' and nt3['list'] == ['inh'], f'알림 연출 틀: 두루마리에서 골라 보면 본 것으로 적히고 목록에서 빠진다(계승은 할 때까지 남음) {nt3}')

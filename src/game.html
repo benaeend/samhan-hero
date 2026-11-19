@@ -4504,9 +4504,14 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-19-2', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-19-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 19일 · 열과 배터리를 아껴요'],
+  ['[기록]에 「그리기 방식」이 생겼어요', '부드럽게 · 자동 · 절전 중에 골라요. 자동은 사냥할 때만 움직임을 초당 30장으로 줄이고, 레이드·보스·연출은 그대로 60장이에요. 절전은 늘 30장이에요. 둘 다 장면 위에 떠 있는 반투명 판 뒤의 흐림을 빼서(판을 조금 진하게) 휴대폰이 덜 뜨거워져요. 휴대폰은 처음에 「자동」, 컴퓨터는 「부드럽게」예요. 이 기기에만 저장돼요.'],
+  ['안 보이는 것은 그리지 않아요', '가로 화면에서 메뉴가 장면을 다 덮었을 때, 로그인 화면 뒤, 앱이 가려졌을 때는 뒤 장면을 그리지 않고 소리 장치도 쉬어요. 사냥은 그대로 계속되고 메뉴를 닫으면 바로 최신 모습으로 돌아와요. 체력·쿨타임 칸도 초당 10번만 새로 칠해요(기술 「쓸 수 있음」 표시는 그대로 바로 바뀌어요).'],
+  ['게임 속도와 전투는 그대로예요', '이제 게임은 어떤 기기에서나 같은 박자(1/60초)로 진행돼서, 화면이 느린 기기에서 사냥이 더뎌지던 일이 없어졌어요. 처치 수·엽전·경험치·오프라인 보상은 예전과 같아요. 그리는 장수만 줄고 계산은 줄지 않아요.'],
+
   ['#', '11월 19일 · 설명은 「?」로, 캐릭터는 10칸으로'],
   ['설명이 「?」 말풍선으로 모였어요', '화면 곳곳에 길게 깔려 있던 설명 글을 제목 옆 작은 「?」 단추로 옮겼어요. 누르면 그 자리에 말풍선이 뜨고, 다시 누르거나 다른 곳을 누르면 닫혀요. 카드에는 핵심 숫자와 상태만 남아 훨씬 깔끔해요(확률 공개표는 그대로 보여요).'],
   ['캐릭터 10칸', '한 계정에 캐릭터를 10명까지 만들 수 있어요(예전 6명). 배럭 효과는 예전처럼 앞 6칸(다른 캐릭터 5명)까지만 세서 7~10번째 칸은 보너스를 더 올리지 않아요. 기존 계정의 보너스는 그대로예요.'],
@@ -17523,7 +17528,13 @@ const BOSS_RETRY_MAX = 600;
 const bossRetryT = () => { const n = bossPityN() - Math.round(BOSS_PITY.max / BOSS_PITY.per); return n <= 0 ? BOSS_RETRY : Math.min(BOSS_RETRY_MAX, BOSS_RETRY * Math.pow(2, n)); };
 const waitText = sec => sec >= 90 ? `${Math.floor(sec / 60)}분${sec % 60 >= 1 ? ' ' + Math.floor(sec % 60) + '초' : ''}` : `${Math.max(1, Math.ceil(sec))}초`;
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
+/* 상태판 갱신: 「부드럽게」는 그릴 때마다, 「자동」·「절전」은 0.1초(초당 10번)에 한 번 — 막대·숫자·쿨타임 그늘·고리는 매 프레임 바꿔 봐야 눈에 안 띄는데 그때마다 그 조각을 다시 칠하기 때문.
+   기술 단추의 「쓸 수 있음(rdy)·마나 모자람(nomp)」 표시는 누르는 느낌과 이어져 있어 그리는 프레임마다 그대로 바꾼다. 게임 진행에는 아무 영향이 없다 */
+let hudT = 0;
 function updateHud(){
+  let slow = false;
+  if (drawMode !== 'off'){ const tn = performance.now(); if (tn - hudT < 100) slow = true; else hudT = tn; }
+  if (slow){ updateSkBar(true); return; }
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
   setText(elCp, fmt(power(ST)));
   setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems)); setText(elDustTop, fmt(S.dust));
@@ -17539,8 +17550,11 @@ function updateHud(){
   const showBoss = S.kills >= FIELD.kills && !S.autoBoss && !bossActive && !raid && bossGate().ok;
   if (elBoss.hidden === showBoss) elBoss.hidden = !showBoss;
   if (showBoss) setText(elBoss, S.bossAuto ? `보스 도전 · ${waitText(bossRetryT() - bossRetry)} 뒤 자동` : '보스 도전!');
-  if (skBarKey !== S.cls + ':' + skBarList().join(',')) buildSkillbar();
   updateActBtns();
+  updateSkBar(false);
+}
+function updateSkBar(slow){
+  if (skBarKey !== S.cls + ':' + skBarList().join(',')) buildSkillbar();
   skBarList().forEach(i => {
     const sk = SKILLS[i], r = skillEls[sk.key]; if (!r) return;
     const lv = skLv(i), locked = !lv, man = !locked && !skAuto(i), nomp = !locked && (hero.mp ?? mpMax()) < skMp(i), rdy = man && !nomp && !(skillCd[sk.key] > 0);
@@ -17548,10 +17562,11 @@ function updateHud(){
     if (r.el.classList.contains('locked') !== locked) r.el.classList.toggle('locked', locked);
     if (r.el.classList.contains('manual') !== man) r.el.classList.toggle('manual', man);
     if (r.el.classList.contains('rdy') !== rdy) r.el.classList.toggle('rdy', rdy);
+    if (slow) return;
     setText(r.lk, skLockText(i));
     const lab = `${skillName(i)}${locked ? ' (잠김)' : man ? ' (수동, 눌러서 쓰기)' : ''}${!locked && skSplit(i) ? (huntBeat() ? ' · 사냥 박자' : ' · 레이드 박자') : ''}`;   // 링(쿨)은 지금 박자의 재사용 기준
     if (r.el.getAttribute('aria-label') !== lab) r.el.setAttribute('aria-label', lab);
-    r.cd.style.setProperty('--p', locked ? '0%' : Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100).toFixed(1) + '%');
+    { const pv = locked ? '0%' : (drawMode === 'off' ? Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100).toFixed(1) : Math.round(Math.min(100, (skillCd[sk.key] || 0) / skCdOf(i) * 100))) + '%'; if (r.cd.style.getPropertyValue('--p') !== pv) r.cd.style.setProperty('--p', pv); }   // 절전 그리기에선 1% 단위로, 같으면 안 씀
   });
 }
 
@@ -20160,6 +20175,9 @@ function buildRec(){
     <div class="ph" style="margin-top:16px"><h2>자리 비움 → 절전 모드 ${helpTip('오래 안 누르면 저장하고 쉬어요')}</h2></div>
     <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${AFK.opts.map(m => `<button class="chip" data-afk="${m}" aria-pressed="${afkMin === m}">${m ? m + '분' : '끄기'}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">화면을 이 시간 동안 누르지 않으면 <b>${AFK.warn}초 예고</b> 뒤 바로 저장하고 화면을 어둡게 해 게임을 멈춰요(배터리 아끼기). 그때부터는 <b>오프라인 보상</b>이 쌓이고, 화면을 누르면 보상과 함께 돌아와요. 레이드·타임 보스·이야기 연출 중에는 끝난 뒤에 들어가요.</p></div>
+    <div class="ph" style="margin-top:16px"><h2>그리기 방식 ${helpTip('절전은 움직임을 초당 30장으로 줄이고 반투명 판 뒤 흐림을 빼서 열과 배터리를 아껴요. 자동은 사냥만 30장이고 레이드·보스·연출은 60장 그대로예요. 게임 속도·전투·보상은 어느 쪽이든 똑같아요. 이 기기에만 저장돼요.')}</h2></div>
+    <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['off', '부드럽게'], ['auto', '자동'], ['on', '절전']].map(([k, n]) => `<button class="chip" data-draw="${k}" aria-pressed="${drawMode === k}">${n}</button>`).join('')}</div>
+      <p class="small" style="margin:6px 0 0" id="drawNote">${drawNoteText()}</p></div>
     <div class="ph" style="margin-top:16px"><h2>알림 ${helpTip('새 콘텐츠가 열리면 알리는 인물이 찾아와요')}</h2></div>
     <div class="card"><label class="check"><input type="checkbox" id="notiLiteChk"> 알림 연출 줄이기 (인물이 찾아오는 대신 한 줄 띠로만)</label>
       <p class="small" style="margin:6px 0 8px">한가할 때(싸움·이야기 연출이 아닐 때) 한 번에 하나만 찾아오고, 나머지는 왼쪽 위 <b>두루마리</b>에 모여요. 지난 알림은 여기서 다시 볼 수 있어요.</p>
@@ -20177,6 +20195,7 @@ function buildRec(){
   $('#brMainBtn').addEventListener('click', () => { if (!session) return; const on = !isMainChar(); if (on) showModal('본캐 지정', `<p><b>${esc(S.name)}</b>${josa(S.name, '을', '를')} 본캐로 정할까요?</p><p class="small">본캐는 <b>배럭 효과를 받지 않아요</b>(공격력·체력·엽전·경험치·보석). 다른 캐릭터들은 그대로 받아요. 언제든 해제할 수 있어요.</p>`, [{label:'취소'}, {label:'본캐로 지정', primary:true, fn:() => { setMainChar(true); refreshPanel(); }}]); else { setMainChar(false); refreshPanel(); } });
   { const mc = $('#megaChk'); if (mc){ mc.checked = megaOn; mc.addEventListener('change', () => { setMega(mc.checked); sfx('click'); }); } }
   panel.querySelectorAll('[data-afk]').forEach(b => b.addEventListener('click', () => { setAfk(+b.dataset.afk); sfx('click'); panel.querySelectorAll('[data-afk]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.afk === afkMin))); addLog(afkMin ? `${afkMin}분 동안 누르지 않으면 절전 모드로 들어가요.` : '자리 비움 절전 모드를 껐어요.', 'good'); }));
+  panel.querySelectorAll('[data-draw]').forEach(b => b.addEventListener('click', () => { setDrawMode(b.dataset.draw); sfx('click'); panel.querySelectorAll('[data-draw]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.draw === drawMode))); setText($('#drawNote'), drawNoteText()); }));
   { const nc = $('#notiLiteChk'); if (nc){ nc.checked = notiLite; nc.addEventListener('change', () => { setNotiLite(nc.checked); sfx('click'); }); } $('#notiReviewBtn').addEventListener('click', () => { sfx('click'); notiReview(); }); }
   panel.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { setOrient(b.dataset.orient, true); panel.querySelectorAll('[data-orient]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.orient === orientMode))); }));
   panel.querySelectorAll('[data-how]').forEach(b => b.addEventListener('click', () => { const h = HOWTO[+b.dataset.how]; playCut(h.shots, {title:'하는 법 · ' + h.t}); }));
@@ -21761,6 +21780,7 @@ const DRAWM = {key:KP + 'samhan-lite', opts:['off', 'auto', 'on']};
 let drawMode = 'off';
 try { drawMode = matchMedia('(pointer: coarse)').matches ? 'auto' : 'off'; } catch (e) {}
 try { const v = localStorage.getItem(DRAWM.key); if (v && DRAWM.opts.includes(v)) drawMode = v; } catch (e) {}
+function drawNoteText(){ return drawMode === 'on' ? '늘 초당 30장으로 그려요. 열과 배터리를 가장 아껴요.' : drawMode === 'auto' ? '사냥은 초당 30장, 레이드·보스·연출은 60장으로 그려요.' : '늘 초당 60장, 반투명 판 뒤도 흐리게 보여요. 가장 부드러워요.'; }
 function applyDrawMode(){ document.body.classList.toggle('lite', drawMode !== 'off'); }
 function setDrawMode(m){ drawMode = DRAWM.opts.includes(m) ? m : 'off'; try { localStorage.setItem(DRAWM.key, drawMode); } catch (e) {} applyDrawMode(); }
 applyDrawMode();
