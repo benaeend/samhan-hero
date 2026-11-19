@@ -3297,6 +3297,7 @@ const AW2_SK = {
   doin:{name:'일만 넋 대굿', fx:'파티 체력 50% 회복 · 쓰러진 동료 일으킴'},
   gungsa:{name:'한 화살 만 리', fx:'10초 동안 보스의 낙인(받는 피해 증가)이 2배'},
   changgaek:{name:'바다 꿰는 창', fx:'8초 동안 보스의 방어를 꿰뚫어 모두가 주는 피해 +30%'},
+  gwon:{name:'만권 일격', fx:'8초 동안 보스의 버팀을 무너뜨려 모두가 주는 피해 +30%'},
 };
 // 환생의 기억: 갈래 셋 × 퀘스트 넷. orbs = 퀘스트 하나의 윤회 구슬(두 번의 환생으로 얻는 양이 40개라 그만큼 — 8 + 12 + 12 + 마무리 8), cap = 다 마치면 늘어나는 능력 상한
 const MEM = {ch:53, endCh:90, total:40, fin:8, orbs:[2, 3, 3], cap:{spd:5, eye:10}, goldK:40000, gems:[0, 3000, 6000], mat:[150, 250, 350], grudge:[0, 0, 20], tgt:45, time:60, hit:0.04, aoe:0.03, col:'#6ad8ff'};
@@ -7009,7 +7010,7 @@ function castAwaken2(manual){
     case 'musa': A.weakT = 8; break;                                // 8초 동안 보스가 주는 피해 -30%(bossHit·bossAoe)
     case 'jagaek': A.critT = 8; break;                              // 8초 동안 모든 공격 치명타(hit)
     case 'sulsa': B.stunT = Math.max(B.stunT || 0, 4); break;       // 보스 4초 멈춤
-    case 'changgaek': A.pierceT = 8; break;                         // 8초 동안 보스가 받는 피해 +30%(모두) — hit의 aw2Pierce
+    case 'changgaek': case 'gwon': A.pierceT = 8; break;            // 8초 동안 보스가 받는 피해 +30%(모두) — hit의 aw2Pierce (권사 「만권 일격」도 같은 효과)
     case 'gungsa': A.markT = 10; B.markT = Math.max(B.markT || 0, 10); B.markP = Math.max(B.markP || 0, markPct(Math.max(1, skLv(5)))); break;   // 10초 동안 보스의 낙인 2배(없으면 「표적 깃발」을 꽂음) — hit의 aw2Mark
     case 'doin':                                                    // 파티 체력 50% 회복, 쓰러진 동료 일으킴(타임 보스에서 목숨을 다 쓴 동료는 못 일으킴)
       heroHeal(ST.maxHp * 0.5, 'aw2'); addText('+50%', hero.x, hero.y - 40, '#7dff9a', 13, true);
@@ -22548,6 +22549,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
+    heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
     update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },

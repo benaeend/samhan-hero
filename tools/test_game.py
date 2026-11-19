@@ -34,6 +34,7 @@ SIM = r"""
   G.quiet = true;
   if (opts.tankoff) G.tankOff = true;   // 9-4: 버티는 힘 장치를 끈 예전 방식(같은 코드에서 견주는 기준, I-1은 늘 같음)
   G.setClass(cls);
+  if (cls === 'gwon') G.S.gwonBr = opts.gbr === 2 ? 2 : 1;   // 권사: 1차 전직에서 고를 길(1 주먹 · 2 발)
   if (opts.curve) Object.assign(G.CURVE, opts.curve);
   if (opts.busang) Object.assign(G.BUSANG, opts.busang);
   if (opts.expk) G.EXP_K[3] = opts.expk;
@@ -410,7 +411,7 @@ async def run_long():
     k = sys.argv.index('--long')
     hours = float(sys.argv[k + 1])
     rest = sys.argv[k + 2:]
-    classes = [a for a in rest if not a.startswith('{')] or ['musa', 'jagaek', 'sulsa', 'doin']
+    classes = [a for a in rest if not a.startswith('{')] or ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'gwon']   # 권사는 gwon(주먹 길) · gwon2(발 길)
     curve = next((json.loads(a) for a in rest if a.startswith('{')), None)
     marks = [m for m in (60, 240, 720, 1440, 2880, 4320, 5760, 7200, 8640, 10080, 11520, 12960, 14400, 15840) if m <= hours * 60]
     async with async_playwright() as p:
@@ -420,7 +421,7 @@ async def run_long():
             ctx = await browser.new_context()
             page = await ctx.new_page()
             await fresh(page)
-            r = await page.evaluate(SIM, [hours * 60, c, {'dt': 0.2, 'marks': marks, 'curve': curve, 'noentry': bool(os.environ.get('SIM_NOENTRY'))}])
+            r = await page.evaluate(SIM, [hours * 60, 'gwon' if c.startswith('gwon') else c, {'gbr': 2 if c == 'gwon2' else 1, 'dt': 0.2, 'marks': marks, 'curve': curve, 'noentry': bool(os.environ.get('SIM_NOENTRY'))}])
             await ctx.close()
             return c, r
         for c, r in await asyncio.gather(*[one(c) for c in classes]):
@@ -3414,6 +3415,111 @@ async def main():
         await cp.screenshot(path=str(OUT / '45c-changgaek-skills.png'))
         await ctxC.close()
 
+        # 9-24) 권사(2026-11-19): 맨손 무술 직업 — 만들기(남/여) · 사냥 · 기술 15칸 · 전직 두 갈래(주먹/발) · 맞받아치기·두 번 차기 · 저장·직업 바꾸기
+        ctxW = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        wp = await ctxW.new_page()
+        watch(wp, errors, '권사 ')
+        await fresh(wp)
+        await signup(wp, 'gwontest', 'abcd', '권사용사', cls='gwon')
+        w1 = await wp.evaluate(r"""(arg) => { const [save] = arg; const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.PAT.off = true; G.wipeOff = true;
+  const run = (sec, f) => { for (let i = 0; i < sec * 20; i++){ G.update(0.05); G.addTime(50); if (f && f(i)) break; } };
+  out.cls = [S.cls, G.CLASS_ORDER.length, G.CLASS_ORDER[6], G.CLASSES.gwon.skills.length, S.gwonBr, G.gwonBr()];
+  // 사냥: 처음 캐릭터로 1분 — 몹을 잡는다(마을 어귀)
+  const k0 = S.kills; run(60); out.kills = S.kills - k0 > 3 || S.stage > 1;
+  // 꾸미기: 권사만 남/여 칸이 보이고, 고르면 그림이 바뀌고 저장된다. 다른 직업 그림은 그대로
+  G.openLookEditor(); { const row = document.querySelector('#lk-sexrow'); out.sexRow = [!!row, !!row && !row.hidden]; const i0 = document.querySelector('#lk-img').src;
+    document.querySelector('.lookwrap [data-sex="f"]').click(); out.sexImg = i0 !== document.querySelector('#lk-img').src; document.querySelector('#modal-btn-1').click(); }
+  out.sexSaved = S.look.sex;
+  const spM = () => G.heroSprite('musa', 'right', 0).toDataURL(), spG = () => G.heroSprite('gwon', 'right', 0).toDataURL();
+  const gf = spG(); delete S.look.sex; const gm = spG(); S.look.sex = 'f';
+  const m1 = spM(); delete S.look.sex; const m0 = spM();
+  out.sprite = [gf !== gm, m1 === m0];
+  G.setClass('musa'); G.openLookEditor(); out.musaRow = [document.querySelector('#lk-sexrow') ? document.querySelector('#lk-sexrow').hidden : null]; G.hideModal(); G.setClass('gwon');
+  // 예전 저장(무사)은 갈래 0으로
+  const old = G.mergeState(JSON.parse(JSON.stringify(save))); out.old = [old.gwonBr, old.cls];
+  const bad = G.mergeState(Object.assign(JSON.parse(JSON.stringify(save)), {gwonBr:7})); out.bad = bad.gwonBr;
+  out.branch = {};
+  for (const br of [1, 2]){
+    Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '권사용사'; G.setClass('gwon'); S.gwonBr = br; S.job = 6; S.mode = 'semi'; S.skManual = {}; S.inv.mana = 9999; G.unlockSkills(); G.refreshStats();
+    const B = {names:G.CLASSES.gwon.skills.slice(6, 8), range:G.heroRange(), br:G.gwonBr()};
+    const cast = {};
+    for (const set of [[0, 1, 2, 3, 4, 5, 6, 7], [5, 6, 7, 8, 9, 10, 11, 12], [8, 9, 10, 11, 12, 13, 14, 0]]){
+      S.skSet = set.slice(); S.skSetMan = true; S.skOff = G.SKILLS.map((_, i) => i).filter(i => !set.includes(i));
+      G.bench(8, false, t => { const k = Math.round(t / 0.05); if (k >= 12 && k % 6 === 0){ const i = set[(k - 12) / 6]; if (i != null && !cast[i]){ G.hero.mp = 999; cast[i] = G.castNow(i); } } });
+    }
+    B.cast = G.SKILLS.map((_, i) => !!cast[i]);
+    B.desc = G.SKILLS.map((_, i) => { const d = G.skillDesc(i, 5), g = G.skillGain(i, 5); return typeof d === 'string' && d.length > 8 && !/undefined|NaN/.test(d) && g && isFinite(g.g); });
+    // 전직 1~5차(고른 길의 이름·스승·망토)
+    S.mode = 'auto'; S.job = 0; S.av.cape = ''; for (const k of ['jobA', 'jobB', 'jobC', 'jobD', 'jobE', 'jobF']) S.skills[k] = 0; S.gwonBr = br; G.refreshStats();
+    const jobs = [];
+    for (let tier = 1; tier <= 5; tier++){
+      const names = [], types = [];
+      const st = G.startJobTrial(tier, tier === 2 ? 1 : 0);
+      run(60, () => { const R = G.raid; if (R){ if (!names.includes(R.info.bossName)){ names.push(R.info.bossName); types.push(R.info.type); } const Bs = R.boss; if (Bs && !Bs.dead && Bs.spawnT <= 0 && Bs.hp > 1) Bs.hp = 1; } return S.job >= tier && !G.raid; });
+      jobs.push({st, names, name:G.jobName(), job:S.job, cape:S.av.cape, sprite:types.every(t => String(G.bossPortrait(t, '#888888')).startsWith('data:image'))});
+    }
+    B.jobs = jobs; B.after = [S.gwonBr, G.gwonBr()];
+    // 저장했다가 다시 불러와도 그대로(남/여도)
+    S.look.sex = 'f'; const re = G.mergeState(JSON.parse(JSON.stringify(S))); B.re = [re.cls, re.job, re.gwonBr, re.look.sex]; delete S.look.sex;
+    out.branch[br] = B;
+  }
+  // 주먹: 맞는 순간 되받아치기 + 기세(최대 5), 마무리 일격은 세 번째마다
+  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); G.setClass('gwon'); S.gwonBr = 1; S.job = 1; S.mode = 'auto'; G.refreshStats();
+  const ft = {};
+  G.bench(3, false, t => { const k = Math.round(t / 0.05), H = G.hero, m = G.mobs.find(x => !x.dead); if (!m) return; m.spawnT = 0;
+    if (k === 1){ G.ST.crit = -10; H.atkT = 999; m.hp = m.maxHp = 1e9; H.cntCd = 0; H.ki = 0; H.kiT = 0; const h0 = m.hp; H.shield = 0; G.damageHero(1); ft.c1 = [H.ki, H.cntCd > 0, m.hp < h0, G.kiMul() > 1]; H.shield = 0; G.damageHero(1); ft.c2 = H.ki; }
+    if (k === 30){ H.cntCd = 0; H.shield = 0; G.damageHero(1); ft.c3 = H.ki; for (let z = 0; z < 8; z++){ H.cntCd = 0; H.shield = 0; G.damageHero(1); } ft.cmax = H.ki; }
+    if (k === 40){ H.gN = 0; G.fxList.length = 0; for (let z = 0; z < 3; z++) G.gwonAttack(m); ft.fin = G.fxList.filter(f => f.type === 'fist').map(f => !!f.big); } });
+  out.fist = ft;
+  // 발: 한 번에 두 번 차기(파란 파동 둘) · 움직인 직후 첫 공격은 「파고들기」 · 공격·걷는 속도 +
+  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); G.setClass('gwon'); S.gwonBr = 2; S.job = 1; S.mode = 'auto'; G.refreshStats();
+  const st1 = G.heroStep(); const ft2 = {};
+  G.bench(4, false, t => { const H = G.hero, m = G.mobs.find(x => !x.dead); if (!m) return; m.spawnT = 0; H.atkT = 999; G.ST.crit = -10; const HP = G.ST.atk * 1e7; m.maxHp = Math.max(m.maxHp, HP);
+    const s = ft2.s | 0;
+    if (s === 0){ m.hp = HP; G.fxList.length = 0; H.gN = 0; H.gMv = 0; G.gwonAttack(m); ft2.n0 = G.fxList.filter(f => f.type === 'kick').length; ft2.s = 1; ft2.t1 = t; }
+    else if (s === 1 && t - ft2.t1 > 0.12){ ft2.n1 = G.fxList.filter(f => f.type === 'kick').length; ft2.s = 2; ft2.t1 = t; }
+    else if (s === 2 && t - ft2.t1 > 0.3){ m.hp = HP; H.gMv = 0.8; H.gN = 0; G.gwonAttack(m); ft2.dash = [H.gMv === 0]; ft2.s = 3; ft2.t1 = t; }
+    else if (s === 3 && t - ft2.t1 > 0.3){ ft2.d1 = HP - m.hp; m.hp = HP; H.gMv = 0; H.gN = 0; G.gwonAttack(m); ft2.s = 4; ft2.t1 = t; }
+    else if (s === 4 && t - ft2.t1 > 0.3){ ft2.d0 = HP - m.hp; ft2.s = 5; } });
+  S.gwonBr = 1; const st0 = G.heroStep(); S.gwonBr = 2;
+  out.foot = {n:[ft2.n0, ft2.n1], dash:ft2.dash, ratio:ft2.d0 > 0 ? ft2.d1 / ft2.d0 : 0, spd:[G.footSpd() > 1, st1 < st0]};
+  // 직업 바꾸기: 전직한 권사는 「권사」 길만 바꿀 수 있다(주먹 → 발)
+  S.gwonBr = 1; S.job = 3; S.clsChg = null; const r1 = G.clsChgDo('gwon', 2); out.chg = [!!r1, S.gwonBr, S.cls, S.job];
+  S.job = 0; S.clsChg = null; out.chg0 = G.clsChgDo('gwon', 2);   // 전직 전에는 같은 직업으로 안 바뀜
+  G.PAT.off = false; G.wipeOff = false; G.hideModal();
+  return out; }""", [sea3c])
+        check(w1['cls'] == ['gwon', 7, 'gwon', 15, 0, 0] and w1['kills'], f"권사: 직업 목록에 보이고(일곱 직업) 새 캐릭터는 갈래 없음 · 기술 이름 15칸 · 사냥 {w1['cls']} {w1['kills']}")
+        check(w1['sexRow'] == [True, True] and w1['sexImg'] and w1['sexSaved'] == 'f' and w1['sprite'] == [True, True] and w1['musaRow'] == [True],
+              f"권사: 꾸미기에 남/여 칸(권사만) · 고르면 그림이 바뀌고 저장 · 다른 직업 그림은 그대로 {w1['sexRow']} {w1['sexImg']} {w1['sexSaved']} {w1['sprite']} {w1['musaRow']}")
+        check(w1['old'] == [0, 'musa'] and w1['bad'] == 0, f"권사: 예전 저장은 갈래 0, 이상한 값도 0 {w1['old']} {w1['bad']}")
+        for br, nm, jn, tn, cp in ((1, ['벽력 일권', '금강 쇠주먹'], ['맞주먹', '금강수', '천수권', '파천권', '해일권'], ['타이마노 케하야', '용궁의 주먹 장수'], '주먹'), (2, ['번개 곁차기', '풍신 비각'], ['곁발', '비각객', '풍신각', '비천각', '파랑각'], ['노미노 스쿠네', '용궁의 발 장수'], '발')):
+            B = w1['branch'][str(br)]
+            check(all(B['cast']) and all(B['desc']) and B['names'] == nm and B['range'] == 1 and B['br'] == br, f"권사({cp} 길): 기술 15칸이 모두 나가고 설명·미리보기가 나온다 · 전직 기술 이름 {B['names']} {B['cast']} {B['desc']}")
+            J = B['jobs']
+            check([j['name'] for j in J] == jn and [j['job'] for j in J] == [1, 2, 3, 4, 5] and all(j['st'] and j['sprite'] for j in J) and J[0]['names'] == ['늙은 수박꾼'] and J[2]['names'] == [tn[0]] and J[4]['names'] == [tn[1]] and J[1]['names'] == ['강림도령']
+                  and J[4]['cape'] == 'j_gwon_5' and B['after'] == [br, br] and B['re'] == ['gwon', 5, br, 'f'],
+                  f"권사({cp} 길) 전직 1~5차: 이름·스승(늙은 수박꾼·강림도령·{tn[0]}·세 스승·{tn[1]})·망토, 저장하고 불러와도 그대로(남/여 포함) {[(j['names'], j['name']) for j in J]} {B['after']} {B['re']}")
+        F = w1['fist']
+        check(F['c1'] == [1, True, True, True] and F['c2'] == 1 and F['c3'] == 2 and F['cmax'] == 5 and F['fin'] == [False, False, True], f"권사 주먹 길: 맞으면 되받아치고(1초에 한 번) 기세가 쌓이고(최대 5) 세 번째 기본 공격은 마무리 일격 {F}")
+        T = w1['foot']
+        check(T['n'][0] == 1 and T['n'][1] >= 2 and T['dash'] == [True] and 1.3 < T['ratio'] < 2.6 and T['spd'] == [True, True], f"권사 발 길: 한 번에 두 번 차기 · 움직인 직후 첫 공격 파고들기(피해가 더 큼) · 공격·걷는 속도 {T}")
+        check(w1['chg'] == [True, 2, 'gwon', 3] and w1['chg0'] is None, f"권사: 직업 바꾸기에서 전직한 권사가 「권사」를 다시 골라 길만 바꾼다(전직 단계 그대로), 전직 전에는 같은 직업으로 안 바뀐다 {w1['chg']} {w1['chg0']}")
+        gsheet = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, Z = 3, W = 64 * Z;
+  const cv = document.createElement('canvas'); cv.width = W * 7; cv.height = W * 4; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#4a5a4e'; g.fillRect(0, 0, cv.width, cv.height);
+  [['m', 1, 0], ['m', 1, 3], ['f', 1, 3], ['m', 2, 4], ['f', 2, 4], ['m', 0, 1], ['f', 0, 0]].forEach(([sx, br, f], i) => { [['right', f], ['up', f]].forEach(([d, ff], r) => { const sp = G.personSprite('gwon', {outfit:'auto', hair:'#241c26', hat:'class', skin:0, sex:sx}, 2, 2, d, ff, false, {gbr:br, job:br ? 1 : 0}); g.drawImage(sp, i * W, r * W, W, W); }); });
+  ['m_gwon', 'm3_gwon', 'm5_gwon', 'm4_gwon'].forEach((t, i) => { for (const f of [0, 1]){ const sp = G.mobSprite(t, '', f, true); g.drawImage(sp, (i * 2 + f) * W * 7 / 8, 2 * W, W, W); } });
+  ['kehaya', 'sukune', 'xingtian', 'kuafu', 'gwonjang1', 'gwonjang2', 'bhima'].forEach((k, i) => { const d = G.castSprite(k, 0, 'right'); g.drawImage(d.sp, i * W, 3 * W, W, W); });
+  return cv.toDataURL(); }""")
+        (OUT / '46-gwon-sheet.png').write_bytes(base64.b64decode(gsheet.split(',')[1]))   # 권사 모습(남/여 · 기본/주먹/발 · 서기/주먹/발차기 · 앞·뒤) + 스승·연출 인물
+        await wp.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); G.closePage && G.closePage(); G.setClass('gwon'); S.gwonBr = 2; S.job = 1; S.mode = 'auto'; G.resetRuntime(); G.setStage(S.stage); }")
+        await wp.wait_for_timeout(4000)
+        await wp.screenshot(path=str(OUT / '46b-gwon-hunt.png'))
+        await wp.evaluate("() => { const G = window.__game; G.hideModal(); G.buildTab('skill', true); }")
+        await wp.wait_for_timeout(500)
+        await wp.screenshot(path=str(OUT / '46c-gwon-skills.png'))
+        await ctxW.close()
+
         # 9-19) 물의 신화 8단계: 새 직업으로 처음부터 — 캐릭터 만들기 창(여섯 직업)에서 궁사·창객을 골라 만들고 마을 어귀에서 사냥한다. 만든 계정은 그 직업을 연 것으로 친다
         for cls9, nm9, uid9 in (('gungsa', '새궁사', 'newgung'), ('changgaek', '새창객', 'newchang')):
             ctxN = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
@@ -5481,9 +5587,9 @@ async def main():
             ctx = await browser.new_context(viewport={'width': 844, 'height': 390})
             page = await ctx.new_page()
             watch(page, errors, 'sim ')
-            for c in ['musa', 'jagaek', 'sulsa', 'doin']:
+            for c in ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'gwon', 'gwon2']:   # gwon = 권사 주먹 길 · gwon2 = 발 길
                 await fresh(page)
-                for line in (await page.evaluate(SIM, [30, c]))['log']:
+                for line in (await page.evaluate(SIM, [30, 'gwon' if c.startswith('gwon') else c, {'gbr': 2 if c == 'gwon2' else 1}]))['log']:
                     print(line)
             await ctx.close()
         await browser.close()
