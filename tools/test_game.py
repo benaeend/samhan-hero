@@ -2406,7 +2406,7 @@ async def main():
         await ap.click('#mBtns button:nth-child(3)')
         await ap.wait_for_timeout(400)
         m4 = await ap.evaluate("() => [document.querySelector('#mTitle').textContent, [...document.querySelectorAll('#mBtns button')].map(b => b.textContent), window.__game.S.mem.ch]")
-        check(m4[0] == '정말 떠올리지 않을까요?' and m4[1] == ['돌아가기', '떠올리지 않는다'] and m4[2] == '', f"「떠올리지 않는다」는 한 번 더 확인한다 {m4}")
+        check(m4[0] == '정말 떠올리지 않을 건가요?' and m4[1] == ['돌아가기', '떠올리지 않는다'] and m4[2] == '', f"「떠올리지 않는다」는 한 번 더 확인한다 {m4}")
         await ap.click('#mBtns button:nth-child(2)')
         await ap.wait_for_timeout(300)
         m5 = await ap.evaluate("() => { const G = window.__game, S = G.S; const r = [S.mem.ch, !!S.title.own.memNo, G.memStart(), G.memPick('yes')]; return r; }")
