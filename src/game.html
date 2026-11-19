@@ -914,6 +914,9 @@ i.dust{display:inline-block;width:12px;height:12px;border-radius:3px;background:
 .jm-info .chs span.s-now{color:#fff;background:rgba(216,58,58,.25);border-color:rgba(216,58,58,.6)}
 @media (prefers-reduced-motion:reduce){.jm-hero,.jm-tags i.s-now{animation:none}}
 .page[hidden]{display:none}
+/* 절전 화면 밑에서는 계속 반짝이는 효과(보스 단추 등)를 멈춘다 */
+body.sleeping *{animation-play-state:paused}
+body.sleeping .sleep,body.sleeping .sleep *{animation-play-state:running}
 @keyframes pagein{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .page-head{display:flex;align-items:center;gap:8px;padding:10px 14px 10px calc(14px + env(safe-area-inset-left));border-bottom:1px solid var(--line-2);
   background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.01));box-shadow:0 6px 18px rgba(0,0,0,.25)}
@@ -17236,8 +17239,10 @@ function buildPotBar(){
   el.addEventListener('click', e => { const b = e.target.closest('[data-pot]'); if (!b) return; if (drinkPot(b.dataset.pot)){ updatePotBar(); } else sfx('click'); });
 }
 let ctrlHv = -1;
+let ctrlHt = 0;
 function updatePotBar(){
-  if (document.body.classList.contains('portrait')){ const c = document.querySelector('.ctrl'), h = c ? c.offsetHeight : 0; if (h !== ctrlHv){ ctrlHv = h; document.body.style.setProperty('--ctrlH', h + 'px'); } }
+  const tN = performance.now();
+  if (tN - ctrlHt > 200 && document.body.classList.contains('portrait')){ ctrlHt = tN; const c = document.querySelector('.ctrl'), h = c ? c.offsetHeight : 0; if (h !== ctrlHv){ ctrlHv = h; document.body.style.setProperty('--ctrlH', h + 'px'); } }   // 높이 읽기는 배치 계산을 강제하므로 0.2초에 한 번만
   for (const [k] of POTS){
     const b = $('#pot-' + k); if (!b) continue;
     const n = S.inv[k] || 0, cd = k === 'mana' ? manaCd / MANA_CD : potCd / 3;
@@ -21111,6 +21116,7 @@ function offBossLine(bt){
 }
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
+  audHold();   // 화면이 가려지면 소리 장치도 쉬게 한다(돌아오면 이어서)
   if (sleepAt) return;   // 절전 모드: 이미 저장했고, 돌아올 때 절전에 든 시각부터 한 번에 셈한다
   if (document.hidden){ hiddenAt = now(); saveLocal(); pushCloud(); }
   else {
@@ -21180,7 +21186,7 @@ async function sleepWake(){
   const away = Math.max(0, (now() - sleepAt) / 1000);
   sleepAt = 0; afkLast = now(); last = performance.now();
   const el = $('#sleep'); if (el) el.hidden = true; document.body.classList.remove('sleeping');
-  try { if (AUD.ctx && AUD.ctx.state === 'suspended') AUD.ctx.resume(); } catch (e) {}
+  audHold();
   if (!room) bootRoom().then(() => roomTrack(true)).catch(() => {}); else roomTrack(true);
   let took = false;
   try { if (online && session) took = await takeRemote(); } catch (e) {}   // 그사이 다른 기기에서 이어 했으면 그 기록을 불러옴
@@ -21218,14 +21224,21 @@ const AUD_KEY = KP + 'samhan-audio';
 const AUD = {ctx:null, master:null, bgm:null, fx:null, noise:null, track:'', next:0, step:0, phrase:[], deg:0, lastHit:0, set:{bgm:true, sfx:true, bv:0.5, sv:0.7}};
 try { Object.assign(AUD.set, JSON.parse(localStorage.getItem(AUD_KEY) || '{}')); } catch (e) {}
 function audSave(){ try { localStorage.setItem(AUD_KEY, JSON.stringify(AUD.set)); } catch (e) {} audApply(); }
+/* 소리 장치 쉬기: 화면이 가려졌거나 절전 중이거나 배경음·효과음을 둘 다 껐으면 멈추고, 아니면 이어 켠다 */
+function audHold(){
+  const c = AUD.ctx; if (!c) return;
+  const want = !(document.hidden || sleepAt || (!AUD.set.bgm && !AUD.set.sfx));
+  try { if (!want && c.state === 'running') c.suspend(); else if (want && c.state === 'suspended') c.resume(); } catch (e) {}
+}
 function audApply(){
   if (!AUD.ctx) return;
   const t = AUD.ctx.currentTime;
   AUD.bgm.gain.setTargetAtTime(AUD.set.bgm ? AUD.set.bv * 0.55 : 0, t, 0.2);
   AUD.fx.gain.setTargetAtTime(AUD.set.sfx ? AUD.set.sv * 0.8 : 0, t, 0.05);
+  audHold();
 }
 function audInit(){
-  if (AUD.ctx) { if (AUD.ctx.state === 'suspended') AUD.ctx.resume(); return; }
+  if (AUD.ctx) { audHold(); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   const c = AUD.ctx = new AC();
@@ -21382,6 +21395,15 @@ document.addEventListener('click', e => { if (e.target.closest && e.target.close
 
 /* ================= 시작 ================= */
 let last = performance.now();
+/* 장면이 다른 화면에 완전히 가려져 있으면 그리기만 건너뛴다(게임 진행 update는 그대로 돈다): 가로 화면에서 메뉴 페이지가 열려 있을 때, 로그인(타이틀) 화면 뒤.
+   닫히면 바로 다음 프레임에 다시 그린다. 세로 화면은 메뉴가 장면 아래에 붙어 장면이 보이므로 제외 */
+let titleEl = null;
+function sceneCovered(){
+  if (document.hidden) return true;
+  if (!titleEl) titleEl = document.getElementById('title');
+  if (titleEl && !titleEl.hidden) return true;
+  return !!(currentTab && !$('#page').hidden && !document.body.classList.contains('portrait'));
+}
 function loop(ts){
   if (sleepAt){ last = ts; requestAnimationFrame(loop); return; }   // 절전 모드: 게임 진행도 그리기도 멈춤
   let dt = (ts - last) / 1000; last = ts;
@@ -21395,7 +21417,8 @@ function loop(ts){
   }
   if (session && dt > 0){ tickBuffs(dt); npcChatter(dt); }
   if (heroSay){ heroSay.t -= dt; if (heroSay.t <= 0) heroSay = null; }
-  render(); updateHud();
+  if (sceneCovered()) updateCam(); else render();   // 가려진 장면은 그리지 않는다(게임 진행은 그대로)
+  updateHud();
   requestAnimationFrame(loop);
 }
 function start(hotData){
