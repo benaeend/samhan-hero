@@ -496,6 +496,22 @@ async def main():
         await page.screenshot(path=str(OUT / '38_설명말풍선.png'))
         await page.mouse.click(5, 300); await page.wait_for_timeout(150)
         tip2 = await page.evaluate("() => !!document.querySelector('#tipB')")
+        # 공용 helpTip(2026-11 p2-help): 글은 textContent로(HTML 안 먹음), 손 닿는 칸 28px 이상, 갱신에도 안 닫힘, Esc·같은 단추·바깥으로 닫힘, 한 번에 하나, 화면 안
+        await page.evaluate("() => window.__game.buildTab('rec')"); await page.wait_for_timeout(300)
+        ht = await page.evaluate("""async () => {
+          const q = document.querySelectorAll('#panel .qmark'); const r = {n: q.length};
+          const bx = q[0].getBoundingClientRect(); r.hit = Math.min(bx.width, bx.height) + 10;
+          q[0].scrollIntoView({block:'center'}); q[0].click(); await new Promise(x => setTimeout(x, 700));
+          r.open = document.querySelectorAll('#tipB').length; r.aria = q[0].getAttribute('aria-label');
+          const b = document.querySelector('#tipB').getBoundingClientRect(), p = document.querySelector('#panel').getBoundingClientRect();
+          r.inside = b.left >= p.left - 1 && b.right <= p.right + 1;
+          if (q[1]){ q[1].scrollIntoView({block:'center'}); q[1].click(); await new Promise(x => setTimeout(x, 100)); r.one = document.querySelectorAll('#tipB').length; }
+          document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})); r.esc = document.querySelectorAll('#tipB').length;
+          const d = document.createElement('div'); d.innerHTML = '<button class="qmark" data-tip="<img src=x onerror=window.__xss=1>안전">?</button>'; document.querySelector('#panel').appendChild(d);
+          d.firstChild.click(); await new Promise(x => setTimeout(x, 100)); r.xss = !!window.__xss; r.safe = (document.querySelector('#tipB') || {}).textContent; d.remove(); document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
+          return r; }""")
+        check(ht['n'] >= 3 and ht['hit'] >= 28 and ht['open'] == 1 and ht['aria'] and ht['inside'] and ht.get('one', 1) == 1 and ht['esc'] == 0 and not ht['xss'] and '<img' in (ht['safe'] or ''),
+              f'「?」 도우미: 터치 28px 이상·갱신해도 안 닫힘·한 번에 하나·화면 안·Esc로 닫힘·글은 HTML로 안 읽음 {ht}')
         await page.evaluate("() => window.__game.closePage()")
         check(mv and me['t'] == '내 정보' and me['n'] >= 20 and me['more'] and me2 == '내 정보', f'[더보기] 판·내 정보(왼쪽 위 상태창을 눌러도 열림) {me} {me2}')
         check(qn >= 1 and tip > 20 and not tip2, f'긴 설명은 ?를 누르면 말풍선으로, 다른 곳을 누르면 닫힘 (?{qn}개, 글자 {tip})')
