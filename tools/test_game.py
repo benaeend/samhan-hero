@@ -402,7 +402,7 @@ async def main():
         await page.click('#modal-btn-0')
         await page.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
         slots = await page.evaluate("() => ({empty: document.querySelectorAll('#mBody .char.empty').length, max: window.__game.MAX_CHARS, txt: document.querySelector('#mBody').textContent})")
-        check(slots['empty'] == 6 and slots['max'] == 6 and '6명까지' in slots['txt'], f'캐릭터 고르기: 한 계정 6칸(빈 칸 여섯)이 보인다 {slots["empty"]} {slots["max"]}')
+        check(slots['empty'] == 10 and slots['max'] == 10 and '10명까지' in slots['txt'], f'캐릭터 고르기: 한 계정 10칸(빈 칸 열)이 보인다 {slots["empty"]} {slots["max"]}')
         await page.screenshot(path=str(OUT / '1b_캐릭터6칸.png'))
         await page.click('#mBody .char.empty')      # 빈 칸을 눌러도 새 캐릭터 만들기
         await page.wait_for_selector('#cc-name')
@@ -1394,8 +1394,10 @@ async def main():
           const A = G.REG.accounts[G.session.acc], n0 = A.chars.length; G.refreshStats(); const atk0 = G.ST.atk, g0 = G.barrack().gain;
           A.chars.push({cid:'zz_test', name:'배럭', cls:'doin', level:400, cum:700, world:3}); G.refreshStats();
           const br = G.barrack(), atkUp = G.ST.atk / atk0;
+          const keepCh = A.chars.slice(); A.chars = A.chars.filter(c => c.cid === G.session.cid || c.cid === 'zz_test');   // 나 + 시험 캐릭터만 앞 칸에 두고 센다
           for (let i = 0; i < 4; i++) A.chars.push({cid:'zz_test' + i, name:'배럭' + i, cls:'doin', level:400, cum:900, world:4}); G.refreshStats(); const br6 = G.barrack().gain;   // 6칸: 다른 캐릭터 5명
-          A.chars = A.chars.filter(c => !c.cid.startsWith('zz_test')); G.refreshStats();
+          for (let i = 0; i < 4; i++) A.chars.push({cid:'zz_test1' + i, name:'칸' + i, cls:'doin', level:400, cum:900, world:4}); G.refreshStats(); const br10 = G.barrack().gain;   // 10칸: 7~10번째는 더하지 않는다
+          A.chars = keepCh; A.chars = A.chars.filter(c => !c.cid.startsWith('zz_test')); G.refreshStats();
           S.world = 0; S.level = 100; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(100) * 10);
           const bank = S.expBank; S.world = 1; S.level = 1; const up = G.useExpBank(); const bankAfter = S.expBank, lvAfter = S.level;
           S.world = 0; S.level = 1; S.quest.main = 0; const g1 = G.stageGate(), b1 = G.bossGate(25).ok, b2 = G.bossGate(3).ok;
@@ -1403,10 +1405,11 @@ async def main():
           S.world = 1; S.level = 200; S.raid.first = {}; S.quest.main = G.MAIN_Q.findIndex(q => q.key === 'h0'); const rOpen = [G.raidUnlockedBase(), G.raidUnlocked()];
           S.quest.main = G.MAIN_Q.length + 3; const free = G.stageGate();
           Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.refreshStats(); G.gateOff = true;
-          return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, br6: br6 - g0, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
+          return {whet, paid, n0, stat: br.stat, gain: br.gain - g0, br6, br10, atkUp: +atkUp.toFixed(3), bank: +bank.toFixed(2), up, bankAfter, lvAfter, g1, b1, b2, lvGate, rOpen, free: free === Infinity}; }""")
         check(nw['whet'] == 11 and nw['paid'] == 250, f'상점: 숫돌 10+1 묶음은 250보석에 11개 {nw}')
         check(nw['stat'] == 14 and abs(nw['atkUp'] - 1.14) < 0.02 and 6 <= nw['gain'] <= 7, f'배럭 효과: 다른 캐릭터(누적 Lv700)가 있으면 공격력·체력 +14%(50레벨마다 1%), 엽전·경험치 +6%(한 명당 몫 0.7배) {nw}')
         check(34 <= nw['br6'] <= 36, f'배럭 효과(캐릭터 6칸): 다른 캐릭터 5명이 모두 높아도 엽전 +35%까지(예전 4칸 최대 30%의 +20% 안쪽) {nw["br6"]}')
+        check(nw['br10'] == nw['br6'], f'배럭 효과(캐릭터 10칸): 7~10번째 칸 캐릭터는 더 올리지 않는다(6칸일 때와 같다) {nw["br10"]} {nw["br6"]}')
         check(9.5 <= nw['bank'] <= 10.5 and nw['up'] >= 2 and nw['bankAfter'] == 0, f'만렙 경험치: 만렙에서 버려지던 경험치를 모아 두고 환생 뒤 30%를 레벨로 돌려준다 {nw}')
         check(nw['g1'] == 21 and not nw['b1'] and nw['b2'] and nw['lvGate'] and nw['rOpen'] == [10, 1] and nw['free'],
               f'이야기·레벨 문: 단계 보스는 이야기 진행과 레벨에 맞춰, 저승 레이드는 그 레이드 퀘스트에 닿아야 열린다 {nw}')
