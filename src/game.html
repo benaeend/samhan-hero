@@ -1146,6 +1146,8 @@ body.in-market .noti-btn{display:none}
 /* ================= 가로 화면 새 배치(2026-11 (13)) =================
    아래 아이콘 메뉴 줄 · 오른쪽 끝 큰 보스 단추 · 위 재화 줄 · 오른쪽 미니맵 · 왼쪽 위 얼굴 카드와 펫 얼굴 · 왼쪽 아래 채팅. 세로 화면은 예전 배치 */
 .dusti{width:12px;height:12px;flex:none;display:inline-block;border-radius:3px 6px 3px 6px;background:linear-gradient(135deg,#f2efe8,#a8a29a 55%,#5e5a54);box-shadow:0 0 5px rgba(220,214,200,.4)}
+.piecei.transi{border-color:#b9a8ff;box-shadow:0 0 6px rgba(185,168,255,.6)}
+.buy.trans{display:inline-flex;align-items:center;gap:5px}
 .piecei{width:13px;height:13px;flex:none;display:inline-block;border-radius:50%;border:3px solid #c8b0ff;box-sizing:border-box;box-shadow:0 0 6px rgba(169,139,255,.6)}
 .hud .face,.hud-pets,.bigboss,.mini canvas,.mini span{display:none}
 .mini{border:1px solid var(--line-2);background:rgba(8,12,22,.72);color:var(--text);cursor:pointer;padding:0;position:absolute;z-index:3}
@@ -1453,6 +1455,7 @@ body.portrait:has(#soulBtn:not([hidden])):has(#aw2Btn:not([hidden])) .log{right:
       <div class="cur" aria-label="보석"><span class="gem"></span><span id="gems">0</span></div>
       <div class="cur" aria-label="쇳가루" id="curDust"><span class="dusti"></span><span id="dustTop">0</span></div>
       <div class="cur" aria-label="고삐 조각" id="curPiece" hidden><span class="piecei"></span><span id="pieceTop">0</span></div>
+      <div class="cur" aria-label="초월의 조각" id="curTrans" hidden><span class="piecei transi"></span><span id="transTop">0</span></div>
       <button class="btn-chat sbtn always" id="orientBtn" aria-label="화면 돌리기(가로·세로)" title="화면 돌리기(가로·세로)"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 2h7a2 2 0 0 1 2 2v5h-2V4H7v16h7v-3h2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm11 9h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-3v-2h2v-5h-2zm-1-8a6 6 0 0 1 5 5l1.5-1.2.9 1.4L21 10l-2.2-3.1 1.4-.9.9 1.2A4 4 0 0 0 17 5z"/></svg></button>
       <button class="btn-chat sbtn always" id="charBtn" aria-label="캐릭터 바꾸기" title="캐릭터 바꾸기"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM3 19c0-3.3 2.7-6 6-6s6 2.7 6 6v1H3zM15 5h4V3l3 3-3 3V7h-4zm7 10h-4v2l-3-3 3-3v2h4z"/></svg></button>
       <button class="btn-chat sbtn" id="mkBtn" aria-label="장터"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 4h18l1 5a3 3 0 0 1-5 2 3 3 0 0 1-5 0 3 3 0 0 1-5 0 3 3 0 0 1-5-2zm2 8.6V21h14v-8.4a5 5 0 0 1-2 .4v4H7v-4a5 5 0 0 1-2-.4z"/></svg></button>
@@ -4280,7 +4283,7 @@ const MAIN_Q = [
   {ch:90, t:'마을 어귀', s:'레벨 599를 달성해요.', k:'l10', n:599, gems:216000,
     cs:[['tapship', 'hero,kkachi,wukong', 'sparkle', [['', '바닷가에는 돌탑을 실은 배가 기다리고 있었어요. 먼 옛날 한 공주가 동쪽으로 타고 간 그 뱃길을 따라, 배는 동쪽으로 동쪽으로 갔어요.'], ['손오공', '나는 화과산에서 내린다. 원숭이 녀석들한테 들려줄 얘기가 산더미다. 하누만 얘기는 좀 줄여서 해야지.'], ['까치', '오공 님, 또 봐요! 복숭아 익으면 불러 주세요!']]],
       ['village', 'hero,kkachi', 'light', [['', '느티나무 하나, 초가지붕 몇 채, 낮은 돌담. 마을 어귀는 떠나던 날 그대로였어요.'], ['까치', '{name}님… 여기예요. 우리가 처음 만난 데.']]]]},
-  {ch:90, t:'끝없는 신화', s:'레벨 600(5부 만렙)에 닿아요.', k:'l10', n:600, gems:230000,
+  {ch:90, t:'끝없는 신화', s:'레벨 600에 닿아요.', k:'l10', n:600, gems:230000,
     cs:[['village', 'hero,kkachi', 'light', [['', '삼한 땅의 작은 마을 어귀. 좋은 소식을 전한다는 까치가 한 젊은이를 찾아왔던, 바로 그 자리예요.'], ['까치', '여기서 제가 그랬죠. 「요괴를 물리치고 하늘 문을 다시 닫아 주세요!」 하고요.'], ['나', '나는 그랬지. 「내가… 할 수 있을까?」']]],
       ['sky', 'hero,kkachi', 'sparkle', [['', '용사는 고개를 들었어요. 금이 갔던 하늘 문 자리, 꿰맨 자국 한가운데에 나뭇가지 한 무더기가 얹혀 있었어요.'], ['까치', '어… 저거, 까치집이에요! 누가 하늘 문에 집을 지었어요!']]],
       ['sky', 'm:chaos:#fff2c8,hero,kkachi', 'light', [['', '둥지 곁에 빛도 그림자도 아닌 것이 앉아 있었어요.'], ['태초의 신', '다리를 놓는 새들이 지었다. 금이 갔던 자리가 가장 튼튼하다면서. 나는 말리지 않았다.'], ['태초의 신', '하늘의 신화, 물의 신화. 그리고 네가 들고 돌아온 것. 이제 내가 더 낼 시련은 없다.']]],
@@ -4367,6 +4370,17 @@ const SHOP = [
   {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개·감로수 5개.', cur:'free', price:() => 0, daily:1},
 ];
 const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'], ['pack', '꾸러미']];
+/* 초월의 조각(만렙 700 패치): 수미산 이야기(600)를 마친 용사에게 열리는 재화. 얻는 곳 = 끝없는 신화 5번째부터 · 오름 보상(Lv.610부터 10레벨마다) · 주간 상자.
+   쓰는 곳은 아직 임시(이미 상점에 있는 물건 5종). 나중에 「초월의 경지」 소모 재료를 살 때는 TRANS_SHOP에 줄만 더한다(open = 열리는 조건) */
+const TRANS = {lvFrom:600, lvStep:10, lvGive:10, questGive:1, weekGive:5, max:99999, color:'#b9a8ff', realmLv:700};
+const TRANS_SHOP = [   // {id, name, icon, cost(조각), week(주 한도), desc, give(), pot(물약이 나오는 물건), open?()}
+  {id:'t_elixir', name:'산삼 탕약 묶음', icon:'elixir', cost:1, week:10, pot:true, desc:'산삼 탕약 11개.', give:() => { S.inv.elixir = Math.min(999, S.inv.elixir + 11); }},
+  {id:'t_whet', name:'숫돌 묶음', icon:'whet', cost:2, week:5, desc:'숫돌 11개.', give:() => { S.inv.whet = Math.min(999, S.inv.whet + 11); }},
+  {id:'t_ticket', name:'토벌패', icon:'ticket', cost:1, week:7, desc:'레이드에 들어갈 때 쓰는 패 1개.', give:() => { S.raid.tk++; }},
+  {id:'t_mat', name:'재료 꾸러미', icon:'crystal', cost:1, week:10, desc:'지금 땅의 재료 10개.', give:() => gainMat(MAT_SRC.shop, true)},
+  {id:'t_box', name:'꾸미기 상자', icon:'gift', cost:10, week:1, pot:true, desc:'꾸미기 상자를 한 번 열어요(보석 값은 조각이 대신 내요).', give:() => openAvatarBoxFree()},
+  // 다음 패치: {id:'t_xxx', name:'(초월의 경지 소모 재료)', icon:'…', cost:…, week:…, desc:'…', open:() => S.trans.lv >= …, give:() => …}
+];
 
 /* ================= 신화 보물 =================
    퀘스트 보상을 받을 때 낮은 확률로 나온다. 효과 크기는 그 퀘스트의 난이도(D)를 따른다. 이름은 우리 옛 신화에서 따옴 */
@@ -4503,7 +4517,7 @@ function giveGifts(){
     setTimeout(() => { if ($('#modal').hidden) showModal('운영 보상', `<p>${esc(g.why)}${josa(g.why, '으로', '로')} <b>보석 ${fmt(g.gems)}개</b>를 드렸어요. 불편을 드려 죄송해요.</p>`, [{label:'확인', primary:true}]); }, 1500);
   }
 }
-const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
+const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
 const NOTE_VER = '2026-11-19-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
@@ -4872,7 +4886,7 @@ const FLOAT = {bat:8, ghost:3, wisp:6, jelly:6, puffer:4, spray:4};
 /* 성장 곡선(단계·레벨마다 곱해지는 배율). 2026-11 재조정: 숫자가 '조·경'까지 치솟지 않게 낮추고,
    몬스터 체력이 능력치보다 빨리 커져서 초반은 금방 밀리고 중반부터 오래 방치해야 넘는 벽이 생기게 했다 */
 const HEAVEN_K = 1.5;   // 천계 몬스터 체력 배율(2차 전직만큼 세게, 밸런스용)
-const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.02, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005};
+const CURVE = {hp:1.14, hp2:1.07, knee:50, hellG:1.02, heavenG:1.03, atk:1.085, gold:1.065, exp:1.075, need:1.11, need2:1.04, need3:1.02, need4:1.02, statMul:1.06, statCost:1.09, lv:1.02, lv2:1.005, lv3:1.005};   // need4·lv3 = 이야기 끝(Lv.600) 뒤 601~700 구간의 필요 경험치·레벨 효과(만렙 700 패치, 값은 지금 식과 같음)
 const mobHp   = s => 20 * Math.pow(CURVE.hp, s - 1) * Math.pow(CURVE.hp2, Math.max(0, s - CURVE.knee));
 const mobGold = s => 3 * Math.pow(CURVE.gold, s - 1);
 const EXP_K = [0.12, 0.4, 0.62, 2.8, 1.25, 0.058, 0.0213, 0.0235, 0.0101, 0.0112, 0.0089];   // [8~10] 5부 천축(란카 길·젖의 바다·수미산, 물의 신화 9단계): 한 세계 무사 약 23시간 · 자객 약 31시간(가운데 약 27시간, 5부 통틀어 약 80시간) — tools/sim_sea4.py … sea3·ind1·ind2. 물때 몫(sun 10)이 경험치의 90% 넘게라 직업 차이는 경험치 보너스(수호신·영약·별호) 차이에서 난다   // [5] 동해(물의 신화 5단계): 레벨 16개(500 → 516)를 약 20시간에 — 4부 진행 시뮬(tools/sim_sea4.py)로 맞춤
@@ -5254,7 +5268,7 @@ function tkLean(preset){
   return Object.assign(o, {idx1:tankPow(), atk1:ST.atk, hp1:ST.maxHp});
 }
 const mobExp  = s => 2 * Math.pow(CURVE.exp, s - 1) * EXP_K[S.world];
-const expNeed = L => 10 * Math.pow(CURVE.need, Math.min(L, 100) - 1) * Math.pow(CURVE.need2, Math.max(0, Math.min(L, 300) - 100)) * Math.pow(CURVE.need3, Math.max(0, L - 300));
+const expNeed = L => 10 * Math.pow(CURVE.need, Math.min(L, 100) - 1) * Math.pow(CURVE.need2, Math.max(0, Math.min(L, 300) - 100)) * Math.pow(CURVE.need3, Math.max(0, Math.min(L, LV_STORY) - 300)) * Math.pow(CURVE.need4, Math.max(0, L - LV_STORY));
 /* 저승(환생 뒤 세계): 우리 옛 이야기와 불화(시왕도)에 나오는 지옥들 */
 const HELL_REGIONS = [
   {name:'도산지옥', theme:'blade', mobs:[['agwi', '#8a9a7a', '아귀'], ['horsehead', '#6a5a4a', '마두 옥졸']], bossIdx:1, boss:'칼산 옥졸장', bossColor:'#3a3036'},
@@ -5265,7 +5279,8 @@ const HELL_REGIONS = [
   {name:'흑암지옥', theme:'dark', mobs:[['shade', '#3a2c4a', '어둑 원혼'], ['agwi', '#6a5a7a', '굶주린 아귀']], bossIdx:0, boss:'흑암 대왕', bossColor:'#1a1424'},
 ];
 const HELL_OFF = 30;                         // 저승 1단계 = 이승 31단계만큼 센 몬스터
-const LV_CAP = [100, 200, 300, 400, 500, 516, 533, 550, 566, 583, 600];    // 이승·저승·천계·부상·곤륜·동해(4부 첫째 바다) 레벨 상한(부상부터는 레벨을 이어 간다)
+const LV_STORY = 600;   // 수미산 이야기가 끝나는 레벨(그 뒤 700까지는 이야기 밖 구간)
+const LV_CAP = [100, 200, 300, 400, 500, 516, 533, 550, 566, 583, 700];    // 이승·저승·천계·부상·곤륜·동해(4부 첫째 바다) 레벨 상한(부상부터는 레벨을 이어 간다). 수미산은 이야기 끝 600 뒤 700까지(만렙 700 패치)
 const WORLD_NAME = ['이승', '저승', '천계', '부상', '곤륜', '동해', '남쪽 바다', '깊은 바다', '란카 길', '젖의 바다', '수미산'];   // 8~10: 5부 천축(물의 신화 9단계)   // 6·7: 4부 둘째·셋째 바다(물의 신화 7단계)
 const WORLD_MAX = LV_CAP.length - 1;   // 지금 게임에 들어 있는 마지막 세계(새 세계를 더하면 LV_CAP·WORLD_NAME·EXP_K·BOSS_K·GATE_MARGIN·STAGE_LV·regionsOf·spanOf·raidAt·mergeState를 함께 늘린다)
 const levelCap = () => LV_CAP[S.world] || 100;
@@ -5334,7 +5349,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, buy:{wk:'', got:{}}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -5505,6 +5520,9 @@ function mergeState(d){
     const b = Math.min(BOND_MAX, Math.max(0, Math.floor(+(so.bond && so.bond[sl.k])) || 0)); if (b) out.soul.bond[sl.k] = b; }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
+  { const t = d.trans && typeof d.trans === 'object' ? d.trans : {}, n0 = (v, mx) => Math.min(mx, Math.max(0, Math.floor(+v) || 0)), by = t.buy && typeof t.buy === 'object' ? t.buy : {}, got = {};   // 초월의 조각·경지(만렙 700 패치): 예전 저장은 없음 → 기본값
+    if (by.got && typeof by.got === 'object') for (const it of TRANS_SHOP){ const g = n0(by.got[it.id], it.week); if (g) got[it.id] = g; }
+    out.trans = {shard:n0(t.shard, TRANS.max), total:n0(t.total, 99999999), lvGot:n0(t.lvGot, 10), lv:n0(t.lv, 9999), exp:Math.max(0, isFinite(+t.exp) ? +t.exp : 0), buy:{wk:typeof by.wk === 'string' ? by.wk : '', got}}; }
   { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2 = {day:typeof x.day === 'string' ? x.day : '', sugun:n0(x.sugun), yv:n0(x.yv), ygr:n0(x.ygr), ygrWon:!!x.ygrWon, ygrPity:n0(x.ygrPity), sugunBest:n0(x.sugunBest)}; }   // 물의 신화 7-2
   out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
@@ -5661,7 +5679,7 @@ function mythSets(){
 function computeStats(up = S.up){
   const tankK = window.__game && window.__game.tankK || 1;   // 시험에서만: 체력만 곱해 버티는 힘 지수를 바꿔 잼(9-4)
   const powK = window.__game && window.__game.powK || 1;   // 시뮬에서만: 공격력·체력을 함께 곱해 전투력을 그 배로(상위 레이드 클리어율 표)
-  const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, S.level - 100)), F = fxNow, RB = S.reb.up;
+  const MS = mythSets(), C = cls(), lvMul = Math.pow(CURVE.lv, Math.min(S.level, 100) - 1) * Math.pow(CURVE.lv2, Math.max(0, Math.min(S.level, LV_STORY) - 100)) * Math.pow(CURVE.lv3, Math.max(0, S.level - LV_STORY)), F = fxNow, RB = S.reb.up;
   // 치명타 확률은 100%까지, 넘친 만큼은 치명타 피해로(1% → +2%) 바뀐다(2026-11 (20), 플레이어 건의: 예전엔 90%에서 막혀 버려졌음)
   const crRaw = 0.05 + 0.005 * up.crit + C.critAdd + 0.01 * RB.eye + F.crit + 0.05 * MS.bell + rideAb('crit') / 100 + setSum().crit / 100 + seaPct('crit') / 100 + elPct('crit') / 100, crOver = Math.max(0, crRaw - 1);
   return {
@@ -5922,6 +5940,7 @@ function claimWeekAll(){
   S.gems += AV_BOX; const box = openAvatarBox(); if (box && box.a) out.push(`꾸미기 상자: ${box.a.name}${box.isNew ? '(새것!)' : '(겹침)'}`); else if (box) out.push('꾸미기 상자: 위로품');
   if (skinOpen()){ const r = skinDrop(null, true, 1, 2); if (r) out.push(`치장: ${skName(r.it)}`); }   // 치장 하나: 등급을 두 번 굴려 좋은 쪽, 고급 이상
   if (S.world >= 3){ gainPiece(WEEK_PIECE, true); out.push(`고삐 조각 ${WEEK_PIECE}`); }
+  if (transOpen()){ gainTrans(TRANS.weekGive, true); out.push(`초월의 조각 ${TRANS.weekGive}`); }
   addLog(`주간 퀘스트를 모두 마쳤어요! ${out.join(' · ')}`, 'gain'); announce(`${S.name}님이 이번 주 주간 퀘스트를 모두 마쳤어요!`);
   questLuck(questDiff({all:true}));
   saveLocal();
@@ -6024,7 +6043,7 @@ function mainQuest(){
   const i = S.quest.main;
   if (i < MAIN_Q.length) return Object.assign({i}, MAIN_Q[i]);
   const k = i - MAIN_Q.length + 1, last = MAIN_Q[MAIN_Q.length - 1];
-  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'마을 어귀로 돌아온 뒤에도 신화는 끝나지 않아요. 수미산에서 더 높이 올라가요.', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k};
+  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'마을 어귀로 돌아온 뒤에도 신화는 끝나지 않아요. 수미산에서 더 높이 올라가요(Lv.700 · 269단계까지).', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k, ...(k >= 5 ? {gems:500, ts:TRANS.questGive} : {})};
 }
 const awakenOk = () => S.reb.n >= 1 && S.best.l1 >= 60 && !!S.raid.first.h2;
 function questCur(q){
@@ -6142,7 +6161,8 @@ function claimMain(){
   if (questCur(q) < q.n) return false;
   S.gems += q.gems; S.quest.main++;
   storyReward(q);
-  addLog(`퀘스트 완료: ${q.t} (보석 +${q.gems})`, 'gain');
+  if (q.ts) gainTrans(q.ts, true);
+  addLog(`퀘스트 완료: ${q.t} (보석 +${q.gems}${q.ts ? ` · 초월의 조각 +${q.ts}` : ''})`, 'gain');
   ev('qclaim'); sfx('quest');
   questLuck(questDiff(q));
   const nq = mainQuest(), newCh = nq.ch >= 0 && nq.ch !== q.ch ? nq.ch : -1;
@@ -6328,6 +6348,62 @@ function useExpBank(){
   if (S.level > lv0) addLog(`만렙에서 모아 둔 경험치(${Math.round(BANK_RATE * 100)}%)로 단숨에 ${S.level - lv0}레벨을 올렸어요!`, 'gain');
   return S.level - lv0;
 }
+/* 만렙 700 패치: 상한이 오르면 「만렙에서 모아 둔 경험치」가 있는데 레벨이 상한 아래인 용사가 생긴다(Lv.600에서 모으던 용사).
+   그 모음을 지금 규칙(30%·최대 30레벨) 그대로 접속할 때 한 번 레벨로 바꾼다. 바꾸면 모음이 0이라 깃발 없이도 두 번 일어나지 않는다. 다른 땅(젖의 바다 등)의 모음은 조건에 안 걸려 그대로 남는다 */
+function capRaiseFix(){
+  if ((S.expBank || 0) * BANK_RATE < 0.05 || S.level >= levelCap()) return 0;
+  const lv0 = S.level, up = useExpBank();
+  if (up > 0){ addLog(`레벨 상한이 ${levelCap()}으로 올라, 만렙에서 모아 둔 경험치로 ${up}레벨을 올렸어요! (Lv.${lv0} → Lv.${S.level})`, 'good'); saveLocal(); }
+  return up;
+}
+/* 초월의 조각 */
+const transOpen = () => S.world === WORLD_MAX && S.quest.main >= MAIN_Q.length;   // 수미산에서 5부 이야기를 마침
+const transShopOn = () => transOpen() || S.trans.shard > 0;
+function gainTrans(n, quiet){
+  n = Math.floor(n); if (n <= 0) return 0;
+  const T = S.trans, add = Math.min(n, TRANS.max - T.shard);
+  T.shard += Math.max(0, add); T.total += n;
+  if (!quiet) addLog(`초월의 조각 +${n}`, 'gain');
+  return n;
+}
+// 오름 보상: Lv.610·620·…·700에 닿을 때마다(모음 전환으로 한 번에 여러 번 넘어도 빠짐없이) 조각
+function transLvCheck(){
+  if (S.world !== WORLD_MAX) return;
+  const T = S.trans;
+  while (T.lvGot < (TRANS.realmLv - TRANS.lvFrom) / TRANS.lvStep && S.level >= TRANS.lvFrom + TRANS.lvStep * (T.lvGot + 1)){
+    T.lvGot++;
+    gainTrans(TRANS.lvGive, true);
+    const at = TRANS.lvFrom + TRANS.lvStep * T.lvGot;
+    addLog(`오름 보상: Lv.${at} — 초월의 조각 +${TRANS.lvGive}`, 'good');
+    if (T.lvGot === 1 || at >= TRANS.realmLv) announce(`${S.name}님이 레벨 ${at}에 닿았어요!`);
+  }
+}
+function transWeekCheck(){ const T = S.trans, k = weekKey(); if (T.buy.wk !== k) T.buy = {wk:k, got:{}}; }
+function transShopState(it){
+  transWeekCheck();
+  const got = S.trans.buy.got[it.id] || 0;
+  if (potLock() && it.pot) return {ok:false, why:'싸움 뒤에', lock:true};
+  if (got >= it.week) return {ok:false, why:'이번 주 다 샀어요', got};
+  if (S.trans.shard < it.cost) return {ok:false, got};
+  return {ok:true, got};
+}
+function openAvatarBoxFree(){
+  S.gems += AV_BOX; const r = openAvatarBox(); if (!r) return;
+  if (!(window.__game && window.__game.quiet)) showModal('꾸미기 상자', r.miss
+    ? `<p>아쉬워요! 위로품 <b>인삼 탕약 10개</b>가 나왔어요.</p><p class="small">새 옷·망토 확정까지 ${Math.max(0, AV_PITY - S.avPity)}번 남았어요.</p>`
+    : `<p>${r.pity ? '<b style="color:var(--gold)">천장 확정!</b> ' : ''}<b>${r.a.name}</b>${r.isNew ? ' — 새 아바타예요! [장비] → [아바타]에서 입혀 보세요.' : ` — 이미 있어서 보석 ${AV_DUP_GEMS}개로 바꿨어요.`}</p>`, [{label:'확인', primary:true}]);
+}
+function buyTrans(id){
+  const it = TRANS_SHOP.find(x => x.id === id);
+  if (!it || (it.open && !it.open())) return false;
+  const st = transShopState(it);
+  if (!st.ok) return false;
+  S.trans.shard -= it.cost; S.trans.buy.got[id] = st.got + 1;
+  it.give();
+  addLog(`초월의 조각 ${it.cost}개로 ${it.name}${josa(it.name, '을', '를')} 샀어요.`, 'gain');
+  sfx('quest'); saveLocal(); refreshPanel();
+  return true;
+}
 function gainExp(x, o){   // o.raw = 레벨 문 새 요소를 더하지 않음(만렙 모음) · o.off/o.inF = 오프라인
   if (!(o && o.raw)) x += lgExtra(x, o);
   const cap = levelCap();
@@ -6347,6 +6423,8 @@ function gainExp(x, o){   // o.raw = 레벨 문 새 요소를 더하지 않음(�
   if (session) playFx('levelup', {hero:true, sub:`Lv.${S.level}`});
   addLog(S.level >= cap ? `레벨 ${S.level}! ${WORLD_NAME[S.world]}의 만렙에 닿았어요.` : `레벨 ${S.level}에 올랐어요!`, 'good');
   if (S.level >= cap) announce(`${S.name}님이 ${WORLD_NAME[S.world]} 만렙 ${cap}에 닿았어요!`);
+  if (S.world === WORLD_MAX && S.level >= cap) addLog('초월의 경지가 곧 열려요. 지금부터 모은 경험치는 「모음」에 쌓여요.', 'good');
+  transLvCheck();
   const step = [10, 20, 30][S.world];
   if (step && Math.floor(S.level / step) > Math.floor(lv0 / step)){
     const ri = Math.floor(S.level / step) - 1, info = raidAt(ri);
@@ -17539,6 +17617,7 @@ function updateHud(){
   setText(elCp, fmt(power(ST)));
   setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems)); setText(elDustTop, fmt(S.dust));
   const pc = S.world >= 3 || S.mount.piece > 0; if (elCurPiece.hidden === pc) elCurPiece.hidden = !pc; if (pc) setText(elPieceTop, fmt(S.mount.piece));
+  { const tc = transShopOn(); if (elCurTrans.hidden === tc) elCurTrans.hidden = !tc; if (tc) setText(elTransTop, fmt(S.trans.shard)); }
   updateFace(); updatePetFaces(); updateBigBoss(); updatePotBar();
   if (currentTab){ setText($('#pgGold'), fmt(S.gold)); setText($('#pgGems'), fmt(S.gems)); }
   const hr = Math.max(0, hero.hp / ST.maxHp);
@@ -17663,7 +17742,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* --- 가로 화면 새 배치(2026-11 (13)): 얼굴 카드·펫 얼굴·재화 줄·미니맵·큰 보스 단추 --- */
-const elFace = $('#hudFace'), elPets = $('#hudPets'), elBig = $('#bigBoss'), elDustTop = $('#dustTop'), elPieceTop = $('#pieceTop'), elCurPiece = $('#curPiece');
+const elFace = $('#hudFace'), elPets = $('#hudPets'), elBig = $('#bigBoss'), elDustTop = $('#dustTop'), elPieceTop = $('#pieceTop'), elCurPiece = $('#curPiece'), elTransTop = $('#transTop'), elCurTrans = $('#curTrans');
 let faceKey = '', petFaceKey = '';
 function updateFace(){
   const aG = gearG('armor'), wG = gearG('weapon'), ex = {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing};
@@ -17766,8 +17845,8 @@ function drawMini(){
 /* --- 수련 --- */
 let growView = 'stats';
 const growSegHTML = () => `<div class="seg" role="group" aria-label="수련 보기" style="margin-bottom:10px">
-  <button id="gv-stats" aria-pressed="${growView === 'stats'}">능력치</button><button id="gv-guard" aria-pressed="${growView === 'guard'}">수호신${guardNew() ? ' •' : ''}</button><button id="gv-job" aria-pressed="${growView === 'job'}">전직${S.job ? ` · ${S.job}차` : ''}</button><button id="gv-reb" aria-pressed="${growView === 'reb'}">환생${S.reb.n ? ` · ${S.reb.n}회` : ''}</button>${elOpenW() ? `<button id="gv-elix" aria-pressed="${growView === 'elix'}">영약${S.elix && S.elix.offer ? ' •' : ''}</button>` : ''}</div>`;
-function wireGrowSeg(){ for (const v of ['stats', 'guard', 'job', 'reb', 'elix']){ const b = $('#gv-' + v); if (b) b.addEventListener('click', () => { growView = v; buildTab('grow', true); }); } }
+  <button id="gv-stats" aria-pressed="${growView === 'stats'}">능력치</button><button id="gv-guard" aria-pressed="${growView === 'guard'}">수호신${guardNew() ? ' •' : ''}</button><button id="gv-job" aria-pressed="${growView === 'job'}">전직${S.job ? ` · ${S.job}차` : ''}</button><button id="gv-reb" aria-pressed="${growView === 'reb'}">환생${S.reb.n ? ` · ${S.reb.n}회` : ''}</button>${elOpenW() ? `<button id="gv-elix" aria-pressed="${growView === 'elix'}">영약${S.elix && S.elix.offer ? ' •' : ''}</button>` : ''}${transOpen() ? `<button id="gv-trans" aria-pressed="${growView === 'trans'}">초월</button>` : ''}</div>`;
+function wireGrowSeg(){ for (const v of ['stats', 'guard', 'job', 'reb', 'elix', 'trans']){ const b = $('#gv-' + v); if (b) b.addEventListener('click', () => { growView = v; buildTab('grow', true); }); } }
 function buildJob(){
   const c = S.cls, J = JOBS[c];
   const card = (tier) => {
@@ -17910,7 +17989,39 @@ function aptCardUpd(){
   panel.querySelectorAll('.apt-star').forEach(el => { el.hidden = !aptMain().includes(APT_STAT[el.dataset.st]); });
 }
 function aptGo(go){ if (go === 'elix' || go === 'guard'){ growView = go; buildTab('grow'); } else { gearSlot = go === 'spirit' ? 'weapon' : go; buildTab('gear'); } }
+/* 초월의 경지(틀): 이름·조건·저장 칸·잠김 카드만. 효과는 아직 없다 — 경험치는 지금처럼 「모음」에 쌓인다. 길게 누르는 단추 없음 */
+function buildTrans(){
+  const nSteps = (TRANS.realmLv - TRANS.lvFrom) / TRANS.lvStep;
+  panel.innerHTML = `${growSegHTML()}
+    <div class="ph"><h2>초월의 경지</h2><span class="small">초월의 조각 <b style="color:${TRANS.color}" id="trShard">0</b></span></div>
+    <p class="hint">수미산 이야기 끝(Lv.${TRANS.lvFrom}) 뒤에 열리는 길이에요. <b>Lv.${TRANS.realmLv}</b>에 닿으면 경지가 열려요.</p>
+    <div class="card" id="trLock"><div class="ct">초월의 경지<span class="tag" id="trTag"></span></div>
+      <div style="height:9px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;margin:6px 0"><i id="trBar" style="display:block;height:100%;width:0;background:${TRANS.color}"></i></div>
+      <p class="small" style="margin:0" id="trMsg"></p></div>
+    <div class="card"><div class="ct">오름 보상<span class="tag">초월의 조각 +${TRANS.lvGive}씩</span></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px">${Array.from({length:nSteps}, (_, i) => `<div data-r="st${i}" style="padding:6px 0;border-radius:10px;text-align:center;font-weight:800;font-size:12px;border:1px solid var(--line)">Lv.${TRANS.lvFrom + TRANS.lvStep * (i + 1)}<br><small data-r="s${i}"></small></div>`).join('')}</div>
+      <p class="small" style="margin-bottom:0">10레벨을 오를 때마다 한 번씩 받아요. 한꺼번에 여러 레벨이 올라도 빠짐없이 받아요.</p></div>
+    <div class="card"><div class="ct">조각 쓰는 곳</div>
+      <p class="small" style="margin:0 0 8px">지금은 [상점] → [조각]에서 몇 가지 물건으로 바꿀 수 있어요. 경지가 열리면 경지 재료를 사는 데도 써요.</p>
+      <button class="btn" id="trShop">상점 [조각]으로 가기</button></div>
+    <div class="card"><div class="ct">모은 경험치<span class="tag" id="trBank"></span></div>
+      <p class="small" style="margin:0" id="trBankMsg"></p></div>`;
+  wireGrowSeg();
+  $('#trShop').addEventListener('click', () => { shopCat = 'trans'; buildTab('shop'); });
+  return () => {
+    const T = S.trans, lv = S.world === WORLD_MAX ? S.level : 0, from = TRANS.lvFrom, to = TRANS.realmLv, open = transRealmOpen();
+    setText($('#trShard'), fmt(T.shard));
+    setText($('#trTag'), open ? '열림 · 준비 중' : '잠김');
+    $('#trBar').style.width = Math.max(0, Math.min(100, (lv - from) / (to - from) * 100)).toFixed(1) + '%';
+    setText($('#trMsg'), open ? 'Lv.700에 닿았어요! 경지의 효과는 곧 열려요(준비 중).' : `Lv.${to}에 닿으면 열려요. 지금 Lv.${lv} (남은 레벨 ${Math.max(0, to - lv)})`);
+    for (let i = 0; i < nSteps; i++){ const got = i < T.lvGot, el = $(`[data-r=s${i}]`), box = $(`[data-r=st${i}]`); setText(el, got ? '받음' : '·'); if (box) box.style.cssText = `padding:6px 0;border-radius:10px;text-align:center;font-weight:800;font-size:12px;border:1px solid ${got ? TRANS.color : 'var(--line)'};color:${got ? TRANS.color : 'inherit'}`; }
+    setText($('#trBank'), open ? `모음 ${(S.expBank || 0).toFixed(1)}` : '');
+    setText($('#trBankMsg'), open ? '모은 경험치는 경지가 열리면 쓰여요(준비 중). 그때까지 모음에 쌓아 둬요.' : 'Lv.700에 닿은 뒤 번 경험치는 「모음」에 쌓여요.');
+  };
+}
+const transRealmOpen = () => S.world === WORLD_MAX && S.level >= LV_CAP[WORLD_MAX];
 function buildGrow(){
+  if (growView === 'trans'){ if (transOpen()) return buildTrans(); growView = 'stats'; }
   if (growView === 'guard') return buildGuard();
   if (growView === 'elix'){ if (elOpenW()) return buildElix(); growView = 'stats'; }
   if (growView === 'reb') return buildReb();
@@ -18667,6 +18778,7 @@ const BAG_STACK = [
   {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw.reduce((x, y) => x + y, 0) : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설·유물 — 줄마다 6·8·10·10칸). 같은 등급 4개는 [합성]으로 한 단계 위 1개가 돼요(전설 → 유물만 확률).', get2:'바다의 수문장·레이드, 상위 레이드 「진」에서 희귀 호박석이 나와요.'},
   {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
+  {k:'trans', n:'초월의 조각', icon:'shard', c:'#b9a8ff', hide:() => !transShopOn(), get:() => S.trans.shard, use:'[상점] → [조각]에서 물건으로 바꿔요. 초월의 경지가 열리면 경지 재료를 사는 데도 써요.', get2:'끝없는 신화(5번째부터) · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자'},
   {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
 // 재료 말풍선(2026-11 (48), 사용자 요청): 재료 이름을 누르면 어디에 쓰고(어느 메뉴) 어디서 얻는지. data-mtip="m0|m1|m2|mat(지금 세계 재료)|shard|grudge|dust|piece|…"
@@ -18849,20 +18961,48 @@ function shopItemText(it){
   if (it.buff){ const b = BUFFS[it.buff]; return {name:b.name, desc:`${b.desc} · 10분 (또 사면 늘어나요, 최대 60분)`}; }
   return {name:it.name, desc:it.desc};
 }
+function buildShopTrans(){
+  const items = TRANS_SHOP.filter(it => !it.open || it.open());
+  panel.innerHTML = `
+    <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
+    <p class="hint">초월의 조각으로 사는 물건이에요. 물건마다 <b>일주일에 살 수 있는 횟수</b>가 정해져 있고, 월요일에 새로 채워져요. 조각은 끝없는 신화 · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자에서 얻어요.</p>
+    <p class="small" id="shopLock" hidden style="margin:0 0 8px;color:#ff8a7a;font-weight:700">지금은 싸우는 중이라 이 물건은 살 수 없어요. ${POT_LOCK_MSG}.</p>
+    <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
+    <ul class="list">${items.map(it => `<li class="row" id="tsh-${it.id}"><div class="ic">${SVG[it.icon]}</div>
+        <div><div class="nm">${it.name}<span class="on" data-r="on"></span></div><div class="val">${it.desc}</div></div>
+        <button class="buy trans" id="tshb-${it.id}"><span class="piecei transi"></span><span data-r="p"></span></button></li>`).join('')}</ul>`;
+  wireShopCats();
+  const refs = items.map(it => { const btn = $('#tshb-' + it.id); btn.addEventListener('click', () => buyTrans(it.id)); return {it, btn, on:$('#tsh-' + it.id).querySelector('[data-r=on]'), p:btn.querySelector('[data-r=p]')}; });
+  return () => {
+    setHTML($('#bag'), `초월의 조각 <b style="color:${TRANS.color}">${fmt(S.trans.shard)}</b>`);
+    { const sl = $('#shopLock'); if (sl) sl.hidden = !(potLock() && items.some(it => it.pot)); }
+    for (const r of refs){
+      const st = transShopState(r.it);
+      setText(r.on, `이번 주 ${Math.max(0, r.it.week - st.got)}번 남음`);
+      setHTML(r.p, st.why && !st.ok ? st.why : String(r.it.cost));
+      r.btn.disabled = !st.ok;
+    }
+  };
+}
+const shopCatsList = () => SHOP_CATS.concat(transShopOn() ? [['trans', '조각']] : []);
+const shopCatsHTML = () => shopCatsList().map(([k, n]) => `<button class="chip" data-c="${k}" aria-pressed="${k === shopCat}">${n}</button>`).join('');
+const wireShopCats = () => panel.querySelectorAll('.shop-cats .chip').forEach(bt => bt.addEventListener('click', () => { shopCat = bt.dataset.c; buildTab('shop', true); }));
 function buildShop(){
+  if (shopCat === 'trans' && !transShopOn()) shopCat = 'potion';
+  if (shopCat === 'trans') return buildShopTrans();
   const items = SHOP.filter(it => it.cat === shopCat);
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
     <p class="hint">물약은 위험할 때 저절로 마셔요. 부적은 싸우는 동안에만 시간이 줄어요. <b style="color:var(--gold)">10+1</b> 묶음은 10개 값에 11개를 줘요. 레이드·타임 보스·천공의 탑 같은 <b>싸움이 시작되면 물약은 살 수 없어요</b>(들고 간 물약은 마실 수 있어요). 미리 챙겨 가세요!</p>
     <p class="small" id="shopLock" hidden style="margin:0 0 8px;color:#ff8a7a;font-weight:700">지금은 싸우는 중이라 물약을 살 수 없어요. ${POT_LOCK_MSG}.</p>
-    <div class="shop-cats mode" role="group" aria-label="상점 분류">${SHOP_CATS.map(([k, n]) => `<button class="chip" data-c="${k}" aria-pressed="${k === shopCat}">${n}</button>`).join('')}</div>
+    <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
     <ul class="list">${items.map(it => {
       const t = shopItemText(it), bc = it.buff ? BUFFS[it.buff].color : '';
       return `<li class="row" id="sh-${it.id}"><div class="ic${it.buff ? ' buffc' : ''}" ${bc ? `style="--bc:${bc}"` : ''}>${SVG[it.icon]}</div>
         <div><div class="nm">${t.name}${it.tag ? `<span class="shtag">${it.tag}</span>` : ''}<span class="on" data-r="on"></span></div><div class="val">${t.desc}</div></div>
         <button class="buy${it.cur === 'gems' ? ' gemc' : it.cur === 'free' ? ' free' : ''}" id="shb-${it.id}">${it.cur === 'gold' ? '<span class="coin"></span>' : it.cur === 'gems' ? '<i class="gem"></i>' : ''}<span data-r="p"></span></button></li>`;
     }).join('')}</ul>`;
-  panel.querySelectorAll('.shop-cats .chip').forEach(bt => bt.addEventListener('click', () => { shopCat = bt.dataset.c; buildTab('shop', true); }));
+  wireShopCats();
   const refs = items.map(it => {
     const row = $('#sh-' + it.id), btn = $('#shb-' + it.id);
     const buy = () => {
@@ -19214,7 +19354,7 @@ function questGo(q){   // 「바로 가기」·퀘스트 누르기: 이 퀘스�
   closePage();
 }
 function questRewHTML(q){
-  const ch = [`<span class="rchip rc-gem">보석 ${fmt(q.gems)}</span>`];
+  const ch = [`<span class="rchip rc-gem">보석 ${fmt(q.gems)}</span>`].concat(q.ts ? [`<span class="rchip">초월의 조각 ${q.ts}</span>`] : []);
   if (q.myth){ const m = MYTHS.find(x => x.k === q.myth); if (m) ch.push(`<span class="rchip rc-myth">${m.name}</span>`); }
   if (q.av){ const a = AVATARS.find(x => x.k === q.av); if (a) ch.push(`<span class="rchip rc-av">${a.name}</span>`); }
   if (q.mount) ch.push(`<span class="rchip rc-mount">탈것</span>`);
@@ -21305,6 +21445,7 @@ async function enterChar(cid, opts = {}){
   closePage();
   addLog(`${S.name}님, ${stageLabel(S.stage)}에 들어섰어요.`, 'good');
   if (opts.imported) addLog('예전 모험을 이어받았어요.', 'good');
+  capRaiseFix();
   if (kfix){ addLog(`곤륜 기록을 되찾았어요: 곤륜 ${S.maxStage}단계 · Lv.${S.level}(예전에 다시 들어오면 이승으로 바뀌던 문제를 고쳤어요)`, 'good'); saveLocal(); }
   if (opts.fresh && !opts.imported && !jumpOn()) setTimeout(() => playCut(PROLOGUE, {title:'프롤로그'}), 300);   // 「4부부터 시작」은 updateJump가 「지난 이야기」부터
   chatMsgs = []; $('#chatList').innerHTML = ''; chatUnread = 0; npcT = 8;
@@ -22158,6 +22299,7 @@ if (BETA){
 
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
+    TRANS, TRANS_SHOP, transOpen, gainTrans, transLvCheck, buyTrans, transShopState, capRaiseFix, LV_STORY, buildTrans, get SAVE_BUILD_(){ return SAVE_BUILD; },
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
     power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
