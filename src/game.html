@@ -4504,9 +4504,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-19-3', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-19-5', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 19일 · 수미산 진 레이드'],
+  ['수미산에도 「진」이 열려요', '마지막 땅 수미산의 이야기를 끝내면(89장 「천마의 본모습」까지 마치거나 수미산 4-10 보스를 물리치면) 사천왕의 문 · 마라의 군대 · 마라, 세 곳에 상위 단계 「진」이 열려요. 다음 땅이 없어서 이야기의 끝이 열쇠예요. 아직 닫혀 있을 땐 [레이드]에 「이야기를 끝내면 열려요」 안내(「?」)가 보여요.'],
+  ['규칙과 보상은 다른 땅과 같아요', '하루 3번(모든 진을 합쳐) · 레이드마다 주에 한 번 첫 승리 보상 · 전멸기와 「쫓는 살」 · 세 번째 쓰러지면 끝 · 탕약은 한 판에 10개까지. 보석·전설 장비·신화 조각·진 전용 아바타도 그대로예요. 세기는 이야기를 막 끝낸 용사에 맞춰져 있고, 권장 전투력에 딱 맞을 땐 손으로 피하고 되받아야 쉬워져요. 여섯 직업 모두 같은 눈높이로 맞췄어요.'],
   ['#', '11월 19일 · 열과 배터리를 아껴요'],
   ['[기록]에 「그리기 방식」이 생겼어요', '부드럽게 · 자동 · 절전 중에 골라요. 자동은 사냥할 때만 움직임을 초당 30장으로 줄이고, 레이드·보스·연출은 그대로 60장이에요. 절전은 늘 30장이에요. 둘 다 장면 위에 떠 있는 반투명 판 뒤의 흐림을 빼서(판을 조금 진하게) 휴대폰이 덜 뜨거워져요. 휴대폰은 처음에 「자동」, 컴퓨터는 「부드럽게」예요. 이 기기에만 저장돼요.'],
   ['안 보이는 것은 그리지 않아요', '가로 화면에서 메뉴가 장면을 다 덮었을 때, 로그인 화면 뒤, 앱이 가려졌을 때는 뒤 장면을 그리지 않고 소리 장치도 쉬어요. 사냥은 그대로 계속되고 메뉴를 닫으면 바로 최신 모습으로 돌아와요. 체력·쿨타임 칸도 초당 10번만 새로 칠해요(기술 「쓸 수 있음」 표시는 그대로 바로 바뀌어요).'],
@@ -13529,6 +13532,7 @@ const JIN_W = [
   {c:{musa:{a:[23.075, 19.893, 20.798], b:[24.110, 20.625, 21.460]}, jagaek:{a:[22.965, 19.734, 20.317], b:[24.453, 20.537, 21.110]}, sulsa:{a:[23.446, 19.234, 20.226], b:[24.980, 19.902, 21.489]}, doin:{a:[23.068, 18.540, 19.835], b:[23.981, 19.374, 20.728]}, gungsa:{a:[23.233, 19.527, 20.559], b:[24.669, 20.198, 21.286]}, changgaek:{a:[24.056, 19.188, 20.868], b:[25.090, 19.940, 21.679]}}},   // 깊은 바다 진: 4부 끝(란카 길 들머리) → 란카 길 끝
   {c:{musa:{a:[24.098, 20.625, 21.460], b:[24.795, 21.106, 22.189]}, jagaek:{a:[24.466, 20.537, 21.110], b:[25.282, 20.853, 21.843]}, sulsa:{a:[24.964, 19.902, 21.489], b:[25.596, 20.271, 22.105]}, doin:{a:[23.966, 19.374, 20.728], b:[24.827, 19.634, 21.384]}, gungsa:{a:[24.679, 20.198, 21.286], b:[25.985, 20.482, 22.494]}, changgaek:{a:[25.071, 19.940, 21.679], b:[25.807, 20.206, 22.316]}}},   // 란카 길 진: 란카 길 끝(젖의 바다 들머리) → 젖의 바다 끝
   {c:{musa:{a:[24.799, 21.106, 22.189], b:[26.261, 21.716, 22.848]}, jagaek:{a:[25.295, 20.853, 21.843], b:[26.159, 21.511, 22.411]}, sulsa:{a:[25.596, 20.271, 22.105], b:[26.831, 21.131, 23.015]}, doin:{a:[24.831, 19.634, 21.384], b:[25.911, 20.221, 22.053]}, gungsa:{a:[25.983, 20.482, 22.494], b:[27.149, 21.213, 23.298]}, changgaek:{a:[25.802, 20.206, 22.316], b:[26.740, 20.835, 23.037]}}},   // 젖의 바다 진: 젖의 바다 끝(수미산 들머리) → 수미산 끝(5부 끝). 수미산 진은 다음 세계가 없어 열리지 않는다
+  {c:{musa:{a:[26.352, 21.752, 22.923], b:[26.652, 22.052, 23.223]}, jagaek:{a:[26.127, 21.487, 22.401], b:[26.427, 21.787, 22.701]}, sulsa:{a:[26.820, 21.167, 23.073], b:[27.120, 21.467, 23.373]}, doin:{a:[26.103, 20.197, 22.044], b:[26.403, 20.497, 22.344]}, gungsa:{a:[27.216, 21.250, 23.371], b:[27.516, 21.550, 23.671]}, changgaek:{a:[26.889, 20.872, 23.112], b:[27.189, 21.172, 23.412]}}},   // 수미산 진: 이야기 끝(Lv600, 저장 ind3) → +0.3(log10) — 다음 땅이 없어 b는 끝난 뒤 더 큰 용사. D0는 젖의 바다 진과 클리어율이 비슷하도록 −0.072(보스 체력 85→72초 분량, 2026-11-19, tools/sim_jin.py measure 10·table 10)
 ];
 const jinAvg = C => { const L = Object.values(C); if (!L.length) return {a:[0, 0, 0], b:[0, 0, 0]}; const m = f => [0, 1, 2].map(k => L.reduce((t, x) => t + f(x)[k], 0) / L.length); return {a:m(x => x.a), b:m(x => x.b)}; };
 function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (log10 아님, 실제 값)
@@ -13537,7 +13541,11 @@ function jinBase(w, i){   // [보스 체력, 보스 한 방, 권장 전투력] (
   const v = [0, 1, 2].map(k => Math.pow(10, V.a[k] + (V.b[k] - V.a[k]) * f));
   return [v[0] * JIN.t0, v[1] * JIN.a0 / Math.pow(10, tkLagLog()), v[2]];   // 한 방: 잰 EHP는 체력=공격력 용사의 것이라 TANK.hpLag만큼 낮춤(2026-11-14)
 }
-const jinOpen = w => (S.world > w || !!(window.__game && window.__game.jinForce)) && !!JIN_W[w] && !!RAID_WORLDS.find(R => R.w === w);
+/* 마지막 땅(다음 땅이 없는 수미산, 2026-11-19): 다음 세계에 들어서는 것으로는 못 여니 '이야기 끝'으로 연다 — 89장 「천마의 본모습」까지 마쳤거나(MAIN_Q에서 90장 앞까지) 수미산 4-10 보스를 물리친 뒤(41단계에 닿음).
+   6부 같은 새 땅이 생기면 S.world > w 로도 열린다(아래 첫 조건). */
+const JIN_LAST_Q = MAIN_Q.findIndex(q => q.ch >= 90);
+const JIN_LAST = {10: () => S.quest.main >= JIN_LAST_Q || (S.best.s10 || 0) >= 41};
+const jinOpen = w => (S.world > w || (!!JIN_LAST[w] && S.world >= w && JIN_LAST[w]()) || !!(window.__game && window.__game.jinForce)) && !!JIN_W[w] && !!RAID_WORLDS.find(R => R.w === w);
 const jinAny = () => RAID_WORLDS.some(R => jinOpen(R.w));
 const jinRec = (w, i) => jinBase(w, i)[2];
 const JIN_TIER = [[0.9, 'low', '모자람'], [1.15, 'fit', '딱 맞음'], [1.8, 'good', '넉넉함'], [Infinity, 'over', '압도적']];
@@ -13651,7 +13659,7 @@ function jinShadowImg(w){
   g.globalCompositeOperation = 'destination-over'; const gr = g.createRadialGradient(32, 40, 4, 32, 40, 30); gr.addColorStop(0, 'rgba(255,70,90,.55)'); gr.addColorStop(1, 'rgba(255,70,90,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
   return jinShadowCache[w] = c.toDataURL();
 }
-const jinNewW = () => { for (let w = S.world - 1; w >= 0; w--) if (jinOpen(w)) return w; return -1; };
+const jinNewW = () => { for (let w = S.world; w >= 0; w--) if (jinOpen(w)) return w; return -1; };
 notiReg({k:'jin', pri:40, flag:'noJin', who:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w); return {name:`${R.info(R.n - 1).bossName}의 그림자`, img:() => jinShadowImg(w)}; }, tag:'상위 레이드', title:() => `진(眞) · ${WORLD_NAME[Math.max(0, jinNewW())]} 레이드`,
   one:() => `${WORLD_NAME[Math.max(0, jinNewW())]} 레이드의 상위 단계 「진」이 열렸어요`, when:() => jinNewW() >= 0, key:() => 'w' + jinNewW(),
   lines:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w); return [`…{name}. <b>다시 와라.</b> 그때의 나는 참모습이 아니었다.`,
@@ -19760,13 +19768,13 @@ function buildRaid(){
     </div>`; })(entryInfo());
   // 지나온 땅의 레이드(부별 탭): 상위 단계 「진」(물의 신화 3단계) — 레이드마다 한 칸, 권장 전투력·내 전투력·주간 첫 승리 보상
   jinCheck();
-  const past = RAID_WORLDS.filter(R => R.w < S.world).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length, jOn = jinOpen(R.w);
+  const past = RAID_WORLDS.filter(R => R.w < S.world || (R.w === S.world && jinOpen(R.w))).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length, jOn = jinOpen(R.w);
     if (!jOn) return `<div data-psec><h3 class="sub">${WORLD_NAME[R.w]} 레이드 <span class="small" style="font-weight:600">지나온 땅 · ${done}/${R.n} 토벌</span></h3><div class="rlist rpast">${L.map(info => { const ok = !!S.raid.first[info.key];
       return `<div class="rcard past${ok ? ' done' : ''}" data-part="${partOfW(R.w)}" data-pk="${info.key}"><div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""></div>
         <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`;
     const jdone = L.filter(x => S.jin.win['j' + x.key]).length;
     return `<div data-psec><div class="ph"><h2>${WORLD_NAME[R.w]} 레이드 · 진(眞)</h2><span class="tkbadge jin-left"></span></div>
-      <p class="hint">지나온 땅 ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
+      <p class="hint">${R.w < S.world ? '지나온 땅' : '이야기를 마친 땅'} ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
       <div class="rlist">${L.map((b0, i) => { const info = jinInfo(R.w, i), wk = !S.jin.wk[info.key], n = S.jin.win[info.key] || 0, pity = Math.round(jinPity(info.key) * 100);
         return `<div class="rcard jin" id="jin-${R.w}-${i}" data-part="${partOfW(R.w)}" data-pk="${b0.key}">
           <div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""><span class="jmark">眞</span></div>
@@ -19782,6 +19790,7 @@ function buildRaid(){
     <div data-psec><div class="ph"><h2>${WORLD_NAME[S.world]} 레이드</h2><span class="tkbadge" id="tkInfo"></span></div>
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개를 쓰고(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
     <div id="raidLive"></div>
+    ${JIN_LAST[S.world] && !jinOpen(S.world) ? `<p class="small" id="jinLock" style="margin:0 0 8px"><b>「진(眞)」</b> · 이 땅 레이드의 상위 단계는 <b>이야기를 끝내면 열려요</b> ${helpTip(`${WORLD_NAME[S.world]} 이야기를 끝내면(89장 「천마의 본모습」까지 마치거나 4-10 보스를 물리치면) 이 땅 레이드 ${RAID_WORLDS.find(R => R.w === S.world).n}곳에 상위 단계 「진」이 열려요. 더 이어지는 땅이 없어서 이야기의 끝이 열쇠예요.`, '진 레이드 열리는 때')}</p>` : ''}
     ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
     ${eCard ? `<p class="small" style="margin:0 0 8px"><b>입문 레이드</b>는 이 땅에 들어서자마자 열리고 늘 열려 있어요. 세기는 내가 지나온 단계를 따라가서, 다른 레이드가 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 쓰기 좋아요. 이야기의 레이드 횟수에는 세지 않아요.</p>` : ''}
     <div class="rlist">${eCard}${cards.join('')}</div></div>
