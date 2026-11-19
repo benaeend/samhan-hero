@@ -171,8 +171,10 @@ button.sk{padding:0;font:inherit;cursor:pointer;touch-action:manipulation;-webki
 .ph h2::before{content:"";width:4px;height:18px;border-radius:2px;background:linear-gradient(180deg,#ffe08a,var(--gold-2));box-shadow:0 0 8px var(--glow)}
 .hint{font-size:12.5px;color:var(--text-soft);margin:2px 0 10px}
 .qhide{display:none!important}
-.qmark{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,204,77,.7);background:rgba(255,204,77,.12);color:var(--gold);font:inherit;font-size:12px;font-weight:900;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;vertical-align:middle;margin-left:4px}
+.qmark{position:relative;flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,204,77,.7);background:rgba(255,204,77,.12);color:var(--gold);font:inherit;font-size:12px;font-weight:900;line-height:1;display:inline-grid;place-items:center;cursor:pointer;padding:0;vertical-align:middle;margin-left:4px}
 .qmark:hover{background:rgba(255,204,77,.28)}
+.qmark::after{content:"";position:absolute;inset:-5px}   /* 눈에 보이는 건 20px, 손이 닿는 칸은 30px(모바일 최소 28px) */
+.qmark.qline::after{inset:-4px -3px}
 .qmark.qline{width:auto;height:22px;border-radius:999px;padding:0 9px;font-size:11px;margin:0 0 6px;display:inline-flex;align-items:center}
 .page .panel{position:relative}
 .tipb{position:absolute;z-index:40;padding:10px 12px;border-radius:14px;background:#1b2238;border:1px solid rgba(255,204,77,.55);color:var(--text);font-size:12.5px;line-height:1.55;box-shadow:0 10px 26px rgba(0,0,0,.6);animation:tipIn .14s ease-out}
@@ -17415,7 +17417,7 @@ function buildGuard(){
 // 물의 신화 9-5: 직업 적성 화면 도우미
 const APT_STAT_VALS = Object.values(APT_STAT);
 const aptTagText = i => { const d = skDef(i), t = aptTagOf(i); return d.atk ? `${aptName(t)} ${aptX(aptHitMul(i))}` : `${aptName(t)} · 버프`; };
-const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} — 기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(Math.max(...aptMain().map(a => APT.upA[a] ?? APT.up)) * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%). 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
+const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} ${helpTip(`기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(Math.max(...aptMain().map(a => APT.upA[a] ?? APT.up)) * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%).`)} — 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
 function aptWhereList(){
   const M = aptMain(), mine = (map, k) => Object.keys(aptOne(map, k)).some(a => M.includes(a)), R = [];
   R.push(['각인', CRAFT_SLOTS.map(c => { const it = S.craft[c.k], E = it.t && it.e ? engrOf(c.k, it.e) : null; return `${c.name.replace('비전 ', '')} ${E ? E.name + (mine(APT_CAT.craft, E.k) ? '★' : '') : '없음'}`; }).join(' · '), 'craft']);
@@ -17430,7 +17432,7 @@ function aptWhereList(){
 }
 const aptCardHTML = () => `<div class="card" id="aptCard"><div class="ct">직업 적성 · ${esc(cls().name)}<span class="tag">맞는 능력 ${aptMain().map(a => aptName(a)).join(' · ')}</span></div>
   ${aptMain().map(ab => `<div class="apt-row" data-ab="${ab}"><span class="apt-n">${aptName(ab)}</span><span class="apt-bar"><i></i></span><b class="apt-v"></b><span class="apt-x"></span></div>`).join('')}
-  <p class="small" id="aptExp" style="margin:6px 0 0">각인·영약·치장·호박석·영물 짐승·수호신 모심·탈것·장신구에서 맞는 능력 쪽을 고를수록 적성이 올라 그 꼬리표 기술이 세져요. 고르게 나눠 가지면 0, 다른 능력에 몰면 내려가요. 옵션 숫자는 그대로 들어가요.</p>
+  <p class="small" id="aptExp" data-help style="margin:6px 0 0">각인·영약·치장·호박석·영물 짐승·수호신 모심·탈것·장신구에서 맞는 능력 쪽을 고를수록 적성이 올라 그 꼬리표 기술이 세져요. 고르게 나눠 가지면 0, 다른 능력에 몰면 내려가요. 옵션 숫자는 그대로 들어가요.</p>
   <details class="apt-where"><summary>어디서 올리나요</summary><div id="aptWhere"></div></details>
   <p class="small" id="aptGrace" hidden style="margin:6px 0 0;color:#9fe7ff"></p></div>`;
 function aptCardUpd(){
@@ -17462,7 +17464,7 @@ function buildGrow(){
         <div><div class="nm">${STAT_DEFS[k].name}<span class="l" data-r="lv"></span>${k === 'hp' ? '<span class="tkw" data-r="tk" hidden>이 단계에서 부족해요</span>' : ''}${APT_STAT[k] ? `<span class="apt-star" data-st="${k}" hidden>★ 맞는 능력</span>` : ''}</div><div class="val" data-r="val"></div></div>
         <button class="buy" id="buy-${k}"><span class="coin"></span><span data-r="cost"></span></button></li>`).join('')}
     </ul>
-    <p class="small" id="aptStatNote">${!aptMain().some(a => APT_STAT_VALS.includes(a)) ? `${esc(cls().name)}의 맞는 능력(${aptMain().map(a => aptName(a)).join('·')})은 능력치가 아니라 각인·영약·호박석·탈것에서 올려요.` : '★는 이 직업 기술이 기대는 능력이에요. 능력치 숫자는 직업마다 같고, 적성은 장비 옵션에서 올라요.'}</p>`;
+    <p class="small" id="aptStatNote" data-help>${!aptMain().some(a => APT_STAT_VALS.includes(a)) ? `${esc(cls().name)}의 맞는 능력(${aptMain().map(a => aptName(a)).join('·')})은 능력치가 아니라 각인·영약·호박석·탈것에서 올려요.` : '★는 이 직업 기술이 기대는 능력이에요. 능력치 숫자는 직업마다 같고, 적성은 장비 옵션에서 올라요.'}</p>`;
   wireGrowSeg();
   $('#aptCard').addEventListener('click', e => { const b = e.target.closest('[data-ago]'); if (b) aptGo(b.dataset.ago); });
   $('#tkGoBtn').addEventListener('click', e => tkGo(e.currentTarget.dataset.k));
@@ -18091,7 +18093,7 @@ function buildSkin(){
       · 한 단계마다 몬스터 체력 ×${Gw}, 공격 ×${Aw}(지금 땅)</p>
     <h3 class="sub">끼운 치장</h3><div class="skgrid">${SK_PARTS.map(part).join('')}${sum.n === SK_PARTS.length ? `<div class="skcard set" style="--g:${skGr(sum.minG).color}"><div class="skh"><b>다섯 부위</b><span>가장 낮은 등급 ${skGr(sum.minG).name}</span></div><ul class="skl"><li>공격력·체력 +${sum.set}단계</li></ul></div>` : `<div class="skcard set"><div class="skh"><b>다섯 부위</b><span>모두 채우면</span></div><ul class="skl">${SK_GRADES.map((G, g) => `<li style="color:${skGr(g).color}">${skGr(g).name}: 공격력·체력 +${G.set}단계</li>`).join('')}</ul></div>`}</div>
     ${partBarHTML()}
-    <div class="ph" style="margin-top:12px"><h3 class="sub" style="margin:0">보관함</h3><span class="small">${S.skin.inv.length} / ${SK_INV} · 눌러서 끼거나 장터에 올려요 · 넘치면 가장 약한 것이 보석이 돼요</span></div>
+    <div class="ph" style="margin-top:12px"><h3 class="sub" style="margin:0">보관함 ${helpTip('눌러서 끼거나 장터에 올려요 · 넘치면 가장 약한 것이 보석이 돼요')}</h3><span class="small">${S.skin.inv.length} / ${SK_INV}</span></div>
     <div class="dbtns" style="margin:6px 0 8px"><button class="btn" id="skSell">끼운 것보다 약한 것 모두 보석으로</button></div>
     <div class="bgrid">${invHTML || '<p class="small">아직 없어요.</p>'}</div>
     <h3 class="sub">치장 모음 (${Object.keys(S.skin.found).length} / ${SK_LIST.length})</h3><div class="skcol">${coll}</div>`;
@@ -18134,8 +18136,8 @@ function buildBag(){
     <p class="hint">수문장·타임 보스·오프라인에서 나온 장신구·신화 보물 가운데 지금 낀 것보다 약한 것과, 바꿔 낀 옛것이 여기 모여요. 눌러서 끼거나 상인에게 팔거나 장터에 올려요. <b>↑</b>는 지금 것보다 좋은 물건이에요.</p>
     ${partBarHTML()}
     <div class="bgrid" id="bagGrid"></div>
-    <h3 class="sub">재료 · 소모품 <span class="small" style="font-weight:600">눌러서 쓰임새 보기</span></h3><div class="stkgrid" id="bagStack"></div>
-    <p class="small" id="bagGear"></p>`;
+    <h3 class="sub">재료 · 소모품 ${helpTip('눌러서 쓰임새 보기')}</h3><div class="stkgrid" id="bagStack"></div>
+    <p class="small" id="bagGear"></p><p class="small" data-help>[장비]에서 합성하거나 [재련]에서 갈아 쇳가루로(기본 장비는 장터에서 거래하지 않아요).</p>`;
   $('#toMarket').addEventListener('click', () => { closePage(); enterMarket(); });
   $('#mkPageBtn').addEventListener('click', () => { mkView = 'buy'; buildTab('market'); });
   partWire('bag', {num:'n', fresh:false, ownChip:false, sort:true, kinds:[['acc', '장신구'], ['myth', '신화 보물']]});
@@ -18158,7 +18160,7 @@ function buildBag(){
     if (false){ const st = [['쇳가루', S.dust, '#c8c0b0'], ['고삐 조각', S.mount.piece, '#c8b0ff'], ...MATS.map(M => [M.name, S.mat[M.k] || 0, M.color]), ['인삼 탕약', S.inv.potion, '#8ff0a0'], ['산삼 탕약', S.inv.elixir, '#ffd977'], ['감로수', S.inv.mana || 0, '#7ab8ff'], ['숫돌', S.inv.whet, '#9fe7ff'], ['토벌패', raidTickets(), '#ffcc4d']];
     setHTML($('#bagStack'), st.map(([n, v, c]) => `<span style="color:${c}">${n} <b>${fmt(Math.floor(v))}</b></span>`).join('')); }
     const spare = ['weapon', 'armor'].reduce((a, s) => a + S.gear[s].count.reduce((x, c, i) => x + Math.max(0, c - (S.equip[s] === i ? 1 : 0)), 0), 0);
-    setText($('#bagGear'), `남는 장비 조각 ${fmt(spare)}개 — [장비]에서 합성하거나 [재련]에서 갈아 쇳가루로(기본 장비는 장터에서 거래하지 않아요).`);
+    setText($('#bagGear'), `남는 장비 조각 ${fmt(spare)}개`);
   };
 }
 
@@ -18421,7 +18423,7 @@ function buildRefine(){
     <p class="hint" style="margin-top:8px">엽전과 쇳가루로 무기·방어구를 벼려요. 높은 단계일수록 실패하면 <b>한 단계 떨어지거나</b>(+11부터, +10·+15·+20에서는 안 떨어짐) <b>부서져 +15·+20으로 돌아갈</b> 수 있어요(+17부터).</p>
     <p class="hint">${S.refine.weapon.t ? `부상·곤륜에 건널 때마다 대장장이가 무기·방어구를 <b>계승</b>해 줘요(지금 ${S.refine.weapon.t}차). 그때까지 쌓은 재련 효과는 그대로 굳히고 +${REFINE_INHERIT}부터 다시 벼려요. 성공 확률은 1부의 ${Math.round(REFINE_T_RATE * 100)}%예요.` : `<b>재련 한도</b>: 무기는 이승에서 +25까지. 방어구는 이승 +${REFINE_CAP_A[0]} → 저승 +${REFINE_CAP_A[1]} → 천계 +${REFINE_CAP_A[2]}. 부상·곤륜으로 건너가면 대장장이가 계승해 줘서 +${REFINE_INHERIT}부터 다시 벼려요(효과는 그대로).`}</p>
     ${S.world >= 3 && ['weapon', 'armor'].some(k => (S.refine[k].t || 0) < refineGen()) ? `<div class="card" style="border-color:var(--gold)"><div class="ct">재련 계승<button class="btn sm primary" id="rfInh" style="margin-left:auto">대장장이 부르기</button></div><p class="small" style="margin:0">${WORLD_NAME[S.world]}에 왔으니 대장장이가 재련을 <b>계승</b>해 줄 수 있어요. 지금 효과는 그대로 두고 +${REFINE_INHERIT}부터 +${REFINE_MAX}까지 다시 벼려 더 세져요.</p></div>` : ''}
-    <div class="card grind"><div class="ct">쇳가루 <b id="dustN"></b><span class="small">재련 한 번에 쇳가루가 들어요</span></div>
+    <div class="card grind"><div class="ct">쇳가루 <b id="dustN"></b>${helpTip('재련 한 번에 쇳가루가 들어요')}</div>
       <p class="small" style="margin:0">단계 보스가 떨군 기본 장비·소환으로 모은 남는 장비를 갈면 쇳가루가 나와요. 끼고 있는 장비, 지금 등급보다 높은 장비, <b>조합 공방 다음 단계에 드는 장비</b>는 남겨요.</p>
       <button class="btn primary" id="grindBtn">남는 장비 갈기</button></div>
     <label class="whet card"><input type="checkbox" id="whetChk" ${S.useWhet ? 'checked' : ''}><span id="whetTxt"></span></label>
@@ -19087,7 +19089,7 @@ function buildRaid(){
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('serpent', '#e0b03c')}" alt=""></div>
         <div><div class="ct">보물 동굴<span class="tag" id="vLeft"></span></div>
         <p class="story">신화 보물을 지키는 <b>보물 이무기</b>와 혼자 싸워요(${VAULT_TIME}초, 하루 ${VAULT_TRIES}번). 이기면 <b>신화 조각 ${vaultShards()}개</b>·재료 ${MAT_SRC.vault}개·보석과 <b>${Math.round(VAULT_MYTH_P * 100)}%</b> 확률로 신화 보물! 지면 조각 ${SHARD_SRC.vaultLose}개.</p></div></div>
-      <div class="card"><div class="ct">신화 조각 <b id="vShard"></b><span class="small">${SHARD_COST}개로 원하는 신화 보물 하나</span></div>
+      <div class="card"><div class="ct">신화 조각 <b id="vShard"></b>${helpTip(`${SHARD_COST}개로 원하는 신화 보물 하나`)}</div>
         <p class="small" style="margin:0 0 6px">만들면 지금 힘에 맞는 값(이 정도: +<b id="vPow"></b> × 종류 배율)이 나와요. 지금 것보다 약하면 가방으로 들어가요.</p>
         <ul class="list">${list.map(m => `<li class="qrow"><div><div class="qn"><span><b style="color:${MYTH_COLOR}">${m.name}</b> <span class="small">${m.stat}</span></span><span class="small" data-vmc="${m.k}"></span></div></div><button class="btn sm" data-vm="${m.k}">만들기</button></li>`).join('')}</ul></div>
       <div id="raidLive"></div>
@@ -19592,20 +19594,20 @@ function buildRec(){
     <div class="card brk"><div class="ct">배럭 효과 <span class="tag" id="br-n"></span></div><p class="small" id="br-txt" style="margin:4px 0 0"></p>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="small" id="br-main"></span><button class="chip" id="brMainBtn"></button></div></div>
     <div class="card"><div class="ct">별호 <span class="tag" id="ti-n"></span></div><p class="small" style="margin:2px 0 6px">이룬 일에 따라 얻어요. 하나를 달면 이름표 위에 보이고 그 효과가 붙어요. 가진 별호마다 공격력·체력 +${TITLE_COL}%.</p><div class="tgrid" id="ti-grid"></div></div>
-    <div class="ph" style="margin-top:16px"><h2>도감</h2><span class="small">부마다 모은 것 · 부 하나를 다 모으면 별호</span></div>
+    <div class="ph" style="margin-top:16px"><h2>도감 ${helpTip('부마다 모은 것 · 부 하나를 다 모으면 별호')}</h2></div>
     <div class="card"><div class="dex" id="dexBox"></div><p class="small" style="margin:6px 0 0">펫·탈것·아바타·치장·넋 구슬 화면 맨 위의 <b>부별 탭</b>(전체 · 1부 · 2부 · 3부)으로 부마다 나눠 볼 수 있어요. 아직 안 간 부는 잠겨 있어요.</p></div>
     <div class="recbtns"><button class="btn" id="lookBtn">꾸미기</button><button class="btn" id="clsBtn">직업 바꾸기</button></div>
     <div class="recbtns" style="margin-top:8px"><button class="btn" id="swBtn">캐릭터 바꾸기</button><button class="btn" id="outBtn">로그아웃</button></div>
-    <div class="ph" style="margin-top:16px"><h2>화면 방향</h2><span class="small">휴대폰을 돌리지 않고 바꿔요</span></div>
+    <div class="ph" style="margin-top:16px"><h2>화면 방향 ${helpTip('휴대폰을 돌리지 않고 바꿔요')}</h2></div>
     <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">오른쪽 위 [화면 돌리기] 아이콘으로도 가로·세로를 바로 바꿔요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요(그때는 휴대폰을 그 방향으로 들어 주세요).</p></div>
     <div class="ph" style="margin-top:16px"><h2>채팅 확성기</h2></div>
     <div class="card"><label class="check"><input type="checkbox" id="megaChk"> 용사들이 채팅으로 한 말을 게임 화면 위에 공지 띠로 보여 주기</label>
       <p class="small" style="margin:6px 0 0">내가 한 말과 다른 용사가 한 말이 확성기처럼 화면 위 가운데에 잠깐 떠요. 주민(마을) 수다와 알림은 채팅창에만 나와요.</p></div>
-    <div class="ph" style="margin-top:16px"><h2>자리 비움 → 절전 모드</h2><span class="small">오래 안 누르면 저장하고 쉬어요</span></div>
+    <div class="ph" style="margin-top:16px"><h2>자리 비움 → 절전 모드 ${helpTip('오래 안 누르면 저장하고 쉬어요')}</h2></div>
     <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${AFK.opts.map(m => `<button class="chip" data-afk="${m}" aria-pressed="${afkMin === m}">${m ? m + '분' : '끄기'}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">화면을 이 시간 동안 누르지 않으면 <b>${AFK.warn}초 예고</b> 뒤 바로 저장하고 화면을 어둡게 해 게임을 멈춰요(배터리 아끼기). 그때부터는 <b>오프라인 보상</b>이 쌓이고, 화면을 누르면 보상과 함께 돌아와요. 레이드·타임 보스·이야기 연출 중에는 끝난 뒤에 들어가요.</p></div>
-    <div class="ph" style="margin-top:16px"><h2>알림</h2><span class="small">새 콘텐츠가 열리면 알리는 인물이 찾아와요</span></div>
+    <div class="ph" style="margin-top:16px"><h2>알림 ${helpTip('새 콘텐츠가 열리면 알리는 인물이 찾아와요')}</h2></div>
     <div class="card"><label class="check"><input type="checkbox" id="notiLiteChk"> 알림 연출 줄이기 (인물이 찾아오는 대신 한 줄 띠로만)</label>
       <p class="small" style="margin:6px 0 8px">한가할 때(싸움·이야기 연출이 아닐 때) 한 번에 하나만 찾아오고, 나머지는 왼쪽 위 <b>두루마리</b>에 모여요. 지난 알림은 여기서 다시 볼 수 있어요.</p>
       <button class="btn" id="notiReviewBtn">알림 다시 보기</button></div>
@@ -19614,7 +19616,7 @@ function buildRec(){
       <label class="check"><input type="checkbox" id="snBgm"> 배경음악 (국악풍)</label><input type="range" id="snBv" min="0" max="1" step="0.05" aria-label="배경음악 크기">
       <label class="check"><input type="checkbox" id="snSfx"> 효과음</label><input type="range" id="snSv" min="0" max="1" step="0.05" aria-label="효과음 크기">
     </div>
-    <div class="ph" style="margin-top:16px"><h2>하는 법</h2><span class="small">누르면 까치가 연출로 보여 줘요</span></div>
+    <div class="ph" style="margin-top:16px"><h2>하는 법 ${helpTip('누르면 까치가 연출로 보여 줘요')}</h2></div>
     <div class="hgrid">${HOWTO.map((h, k) => `<button class="hbtn" data-how="${k}"><span class="hic">${h.ic}</span><b>${h.t}</b><small>${h.d}</small></button>`).join('')}</div>
     <div class="recbtns"><button class="btn" id="tutBtn">튜토리얼 다시 보기</button><button class="btn" id="noteBtn">업데이트 소식</button><button class="btn" id="s1Btn">시즌 1 개발 내용</button><button class="btn" id="errBtn">오류 기록</button></div>
     <div class="recbtns" style="margin-top:8px">${canInstall() ? '<button class="btn primary" id="appBtn">앱으로 설치</button>' : ''}<button class="btn danger" id="resetBtn">처음부터 다시</button></div>`;
@@ -19943,15 +19945,20 @@ let currentTab = null, refresher = null;
 /* 설명 말풍선(2026-11 (41), 사용자 요청: 펼치기·접기가 조잡함): 긴 안내 글(.hint·.story·긴 .small)은 숨기고 「?」 단추를 붙인다.
    카드 제목(.ct)·페이지 제목(.ph) 옆에 붙이고, 붙일 곳이 없으면 그 자리에 작은 [? 설명]. 누르면 말풍선으로 보여 주고 다른 곳을 누르면 닫힌다.
    이야기 퀘스트 본문처럼 id가 있는 글은 그대로 */
+/* 공용 도우미 helpTip(글): 제목 옆에 붙이는 「?」 단추 HTML. 글은 textContent로만 보여 줘서(HTML 안 먹음) 안전하다.
+   글에 굵은 글씨가 필요하면 기존 foldHints처럼 p.hint 글을 그대로 쓴다. 누르면 showTip이 말풍선을 연다 */
+const helpTip = (text, label) => `<button type="button" class="qmark" data-tip="${esc(String(text))}" aria-label="${esc(label || '설명 보기')}">?</button>`;
 function foldHints(root){
   if (!root) return;
-  for (const el of root.querySelectorAll('p.hint:not(.fz), p.story:not(.fz):not([id]), p.small:not(.fz):not([id])')){
+  for (const el of root.querySelectorAll('p.hint:not(.fz), p.story:not(.fz):not([id]), p.small:not(.fz):not([id]):not(.keep), p[data-help]:not(.fz)')){
     el.classList.add('fz');
-    const t = el.textContent.trim(), lim = el.classList.contains('hint') ? 50 : el.classList.contains('story') ? 70 : 140;
+    const t = el.textContent.trim(), lim = el.classList.contains('hint') ? 18 : el.classList.contains('story') ? 40 : 44;
     if (t.length < lim) continue;
     el.classList.add('qhide');
-    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'qmark'; bt.textContent = '?'; bt.setAttribute('aria-label', '설명 보기'); bt._tip = el;
     const card = el.closest('.card'), head = card && card.querySelector('.ct'), prev = el.previousElementSibling;
+    const mark = head && head.querySelector('.qmark') || prev && prev.matches('.ph') && prev.querySelector('.qmark');
+    if (mark){ mark._tips = (mark._tips || [mark._tip || {innerHTML: esc(mark.dataset.tip || '')}]).concat(el); continue; }   // 한 카드에 설명이 둘이면 한 말풍선에 이어서
+    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'qmark'; bt.textContent = '?'; bt.setAttribute('aria-label', '설명 보기'); bt._tip = el;
     if (head && !head.querySelector('.qmark')) head.appendChild(bt);
     else if (prev && prev.matches('.ph') && !prev.querySelector('.qmark')) (prev.querySelector('h2') || prev).appendChild(bt);
     else { bt.classList.add('qline'); bt.textContent = '? 설명'; el.before(bt); }
@@ -19963,7 +19970,10 @@ function showTip(bt){
   if (tipFor === bt){ hideTip(); return; }
   hideTip(); tipFor = bt;
   const b = document.createElement('div'); b.id = 'tipB'; b.className = 'tipb'; b.setAttribute('role', 'tooltip');
-  b.innerHTML = bt._tip.innerHTML; panel.appendChild(b);
+  if (bt._tips) b.innerHTML = bt._tips.map(x => x.innerHTML).join('<br><br>');
+  else if (bt.dataset && bt.dataset.tip != null && !bt._tip) b.textContent = bt.dataset.tip;   // helpTip: 글자만(HTML 안 먹음)
+  else b.innerHTML = bt._tip.innerHTML;
+  panel.appendChild(b);
   let x = 0, y = 0, e = bt;   // 패널 안 좌표(offset 사슬이라 화면을 돌려도 맞음)
   while (e && e !== panel){ x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; if (e && e !== panel && !panel.contains(e)){ x -= panel.offsetLeft; y -= panel.offsetTop; break; } }
   const w = Math.min(340, panel.clientWidth - 20); b.style.width = w + 'px';
@@ -19972,6 +19982,7 @@ function showTip(bt){
   b.style.setProperty('--ax', Math.max(14, Math.min(w - 14, x + bt.offsetWidth / 2 - left)) + 'px');
   sfx('click');
 }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && tipFor){ hideTip(); e.stopPropagation(); } }, true);
 panel.addEventListener('click', e => { const q = e.target.closest('.qmark'); if (q){ e.stopPropagation(); e.preventDefault(); showTip(q); return; }
   const m = e.target.closest('[data-mtip]'); if (m && !m.closest('button')){ const h = matTipHTML(m.dataset.mtip); if (h){ e.stopPropagation(); m._tip = {innerHTML:h}; showTip(m); return; } }
   if (!e.target.closest('#tipB')) hideTip(); });
