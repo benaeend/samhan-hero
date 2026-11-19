@@ -1707,8 +1707,10 @@ const ROMAN = ['I', 'II', 'III', 'IV'];
 const GWON_SK1 = ['맴돌이 차기', '정권 지르기', '기합 일성', '태산 내려찍기', '권각 연환', '혈 짚기', '벽력 일권', '금강 쇠주먹', '천수 난타', '개산 장타', '동문 기합', '파도 부수기', '물 밟는 걸음', '천지 난권', '태산 같은 숨'];
 const GWON_SK2 = ['맴돌이 차기', '정권 지르기', '기합 일성', '태산 내려찍기', '권각 연환', '혈 짚기', '번개 곁차기', '풍신 비각', '천수 난타', '개산 장타', '동문 기합', '파도 부수기', '물 밟는 걸음', '천지 난권', '태산 같은 숨'];
 // 권사의 전직 갈래: 0 아직 전직 전 · 1 주먹(맞받아치는 주먹) · 2 발(멈추지 않는 발). S가 만들어지기 전(불러올 때)에 읽혀도 0
-const gwonBr = () => { try { return S.cls === 'gwon' && S.job >= 1 ? (S.gwonBr === 2 ? 2 : 1) : 0; } catch (e) { return 0; } };
-const GB = (a, b) => gwonBr() === 2 ? b : a;   // 갈래별 이름·글: GB('주먹 쪽', '발 쪽')
+// gwonSel = 고른 길(1 주먹 · 2 발 — 고르기 전·권사가 아니면 1, 이름·글에만 씀) / gwonBr = 전투·그림에 걸리는 갈래(전직 전이면 0)
+const gwonSel = () => { try { return S.cls === 'gwon' && S.gwonBr === 2 ? 2 : 1; } catch (e) { return 1; } };
+const gwonBr = () => { try { return S.cls === 'gwon' && S.job >= 1 ? gwonSel() : 0; } catch (e) { return 0; } };
+const GB = (a, b) => gwonSel() === 2 ? b : a;   // 갈래별 이름·글: GB('주먹 쪽', '발 쪽')
 const CLASSES = {
   musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'균형 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0.003, range:1, skillMul:1.1, dr:10,
     role:'균형', traits:['체력이 높고 받는 피해 -10%, 체력 회복도 조금 더 빨라요', '여럿을 베는 기술·한 적을 노리는 기술·힘을 북돋는 기술을 고루 써요', '레이드에서는 보스의 눈길을 끌어 동료를 지켜요'],
@@ -1750,7 +1752,7 @@ const CLASSES = {
     fist:true,
     role:'맨손 무술', traits:['「연권」: 기본 공격 세 번째마다 몸을 실은 마무리 일격이 나가요. 박자가 빨라서 쉬지 않고 맞붙어요', 'Lv.50 1차 전직에서 한 길을 골라요. 「주먹」은 맞은 직후 되받아치며 기세를 쌓고, 「발」은 쉬지 않고 옮겨 다니며 두 번씩 차요', '무기가 없어서 장비 칸의 「무기」는 손목 감개(권갑)예요. 재련·소환은 다른 직업과 똑같아요'],
     weapon:'권갑', armor:'무복', wtype:'none', base:'#d2802f', pants:'#5e5a74', belt:'#efe6d0', fx:'#ffb84a', boltFx:'cross', nukeFx:'slashes', proj:null,
-    get skills(){ return gwonBr() === 2 ? GWON_SK2 : GWON_SK1; },   // 7·8번째(1차·2차 전직 기술)부터 갈래마다 이름이 달라요(주먹 / 발). 아직 전직 전이면 주먹 쪽 이름
+    get skills(){ return gwonSel() === 2 ? GWON_SK2 : GWON_SK1; },   // 7·8번째(1차·2차 전직 기술)부터 갈래마다 이름이 달라요(주먹 / 발). 아직 전직 전이면 주먹 쪽 이름
     awaken:'일권 파천', awaken4:'천지 진동'},
 };
 // CLASS_ORDER = 플레이어에게 보이는 직업(타이틀·직업 고르기·직업 바꾸기 창). CLASS_ALL = 게임에 들어 있는 모든 직업(표·전직 망토 아바타처럼 '빠지면 안 되는' 곳).
@@ -2730,6 +2732,7 @@ function skillDesc(i, l){
   if (d.kind === 'd_gut') return `준비: 공격 기술 재사용 시간을 모두 없애고 12초 동안 공격력 +${fmt(dGutAtk(l))}%`;
   if (d.kind === 'd_shin') return `준비: ${LATE_K.shinT}초 동안 공격 속도 +30%·공격력 +${fmt(dShinAtk(l))}%, 1초마다 체력 3% 회복`;
   if (d.kind === 'jobE'){
+    if (S.cls === 'gwon') return `파도를 부수는 힘이 판을 가로질러 보이는 적 모두를 3번, 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.musaE * sm))}%씩`;
     if (S.cls === 'jagaek') return `물속으로 사라져(1.4초 동안 맞지 않음) 보이는 적 모두의 뒤에서 한 번씩 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.jagaekE * sm))}%, 모두 치명타`;
     if (S.cls === 'sulsa') return `밀물이 두 번 밀려와 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.sulsaE * sm))}%씩, 떠밀린 적은 1.5초 묶임(레이드 보스 0.6초)`;
     if (S.cls === 'doin') return `탈을 쓰고 춤추며 보이는 적 모두에게 6번, 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.doinE * sm))}%씩 · <b>늘 치명타</b>(잡귀를 쫓는 춤이라 보스에게는 ${Math.round(LATE_K.doinEB * 100)}%만)`;
@@ -2738,6 +2741,7 @@ function skillDesc(i, l){
     return `용이 판을 가로질러 보이는 적 모두를 3번, 공격력의 ${fmt(Math.round(jobEPct(l) * LATE_K.musaE * sm))}%씩`;
   }
   if (d.kind === 'jobF'){
+    if (S.cls === 'gwon') return `15초 동안 물 위를 걷듯 가벼워져 받는 피해 -${fmt(oathDr(l))}%, 맞을 때마다 공격력 +${oathAtk(l).toFixed(1)}%(${OATH_N}번까지)`;
     if (S.cls === 'jagaek') return `10초 동안 치명타 피해 +${fmt(sumbiCd(l))}%, 구르기 재사용 절반`;
     if (S.cls === 'sulsa') return `15초 동안 기술에 드는 마나 절반, 기술 피해 +${fmt(ebbSk(l))}%`;
     if (S.cls === 'doin') return `준비: 15초 동안 나와 동료가 1초마다 체력 ${yongHeal(l).toFixed(1)}% 회복, 도력을 채워 다음 큰 공격 기술 <b>두 번</b>에 실어요`;
@@ -2747,6 +2751,7 @@ function skillDesc(i, l){
   }
   if (d.kind === 'jobG'){
     const P6 = k => fmt(Math.round(jobGPct(l) * LATE_K[k] * sm));
+    if (S.cls === 'gwon') return `천지를 흔드는 주먹질이 큰 원 안의 보이는 적 모두에게 공격력의 ${P6('musaG')}%, 3초 동안 기절(보스·레이드는 1.2초)`;
     if (S.cls === 'jagaek') return `그림자 여덟이 흩어져 보이는 적 모두를 8번, 공격력의 ${P6('jagaekG')}%씩 · <b>늘 치명타</b>(1.4초 동안 맞지 않음)`;
     if (S.cls === 'sulsa') return `보이는 적을 잠깐 묶고(레이드 보스 0.9초) 한 점으로 끌어모으는 빛이 모였다가 터져 모두에게 공격력의 ${P6('sulsaG')}%`;
     if (S.cls === 'doin') return `가락이 네 박자로 퍼져 보이는 적 모두에게 공격력의 ${P6('doinG')}%씩 · <b>늘 치명타</b>(보스에게는 ${Math.round(LATE_K.doinGB * 100)}%만), 첫 박에 적의 방어를 깎아요(받는 피해 +25%, 10초)`;
@@ -2755,6 +2760,7 @@ function skillDesc(i, l){
     return `번개 창이 떨어져 큰 원 안의 보이는 적 모두에게 공격력의 ${P6('musaG')}%, 3초 동안 기절(보스·레이드는 1.2초)`;
   }
   if (d.kind === 'jobH'){
+    if (S.cls === 'gwon') return `12초 동안 태산처럼 버텨 휘청이지 않고(기절하지 않음) 공격력 +${fmt(budongAtk(l))}%`;
     if (S.cls === 'jagaek') return `12초 동안 낙인 찍힌 적에게 주는 피해 +${fmt(darkPct(l))}%(보이는 적에게 약한 낙인도 새겨요)`;
     if (S.cls === 'sulsa') return `12초 동안 기술 재사용이 ${fmt(hushCd(l))}% 빨리 흐르고, 최대 체력의 ${fmt(hushShield(l))}%를 막는 보호막`;
     if (S.cls === 'doin') return `준비: 12초 동안 기술의 치명타 피해가 ${fmt(incenseCd(l))}% 더 커져요`;
@@ -2763,6 +2769,7 @@ function skillDesc(i, l){
     return `12초 동안 휘청이지 않고(기절하지 않음) 공격력 +${fmt(budongAtk(l))}%`;
   }
   if (d.kind === 'jobD'){
+    if (S.cls === 'gwon') return `땅을 가르는 장타: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
     if (S.cls === 'jagaek') return `2초 동안 모습을 감추고(맞지 않음) 보이는 적 모두를 12번 연달아 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.jagaekD * sm))}%씩, 모두 치명타`;
     if (S.cls === 'sulsa') return `우레 아홉 줄기가 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.sulsaD * sm))}%씩, 마지막 줄기는 보이는 적 모두`;
     if (S.cls === 'gungsa') return `화살 아홉 발을 가장 튼튼한 적부터 공격력의 ${fmt(Math.round(jobDPct(l) * LATE_K.gungsaD * sm))}%씩(<b>늘 치명타</b>), 꿰뚫고 지나가며 다른 적도 맞아요. 마지막 발은 보이는 적 모두 치명타`;
@@ -2770,12 +2777,15 @@ function skillDesc(i, l){
     return `하늘과 땅을 가르는 일격: 보이는 적 모두 공격력의 ${fmt(Math.round(jobDPct(l) * sm))}%(보스는 2배), 10초 동안 받는 피해 -30%`;
   }
   if (d.kind === 'jobC'){
+    if (S.cls === 'gwon') return `주먹과 발이 비처럼 쏟아져 보이는 적 모두에게 8번, 공격력의 ${fmt(Math.round(jobCPct(l) * sm))}%씩`;
     if (S.cls === 'jagaek') return `깃털 분신 셋이 12초 동안 함께 싸워요(분신 하나가 칠 때마다 공격력의 ${Math.round(LATE_K.cloneMob * 100 * (1 + 0.03 * (l - 1)))}%, 보스에게는 ${Math.round(LATE_K.clone * 100 * (1 + 0.03 * (l - 1)))}%, 치명타 그대로)`;
     if (S.cls === 'sulsa') return `종이 식신 12장이 날아가 하나에 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.sulsaC * sm))}%`;
     if (S.cls === 'gungsa') return `가장 튼튼한 적에게 화살 다섯 발, 한 발에 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.gungsaC * sm))}%(<b>늘 치명타</b>), 꿰뚫고 지나가며 다른 적도 맞아요 · 조준이 가득 차요`;
     if (S.cls === 'changgaek') return `창을 크게 6번 휘둘러 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobCPct(l) * LATE_K.changC * sm))}%씩, 붙어 있던 몬스터는 한 칸 밀려나 비틀거려요`;
     return `바람 칼날이 8번 휘몰아쳐 보이는 적 모두에게 공격력의 ${fmt(Math.round(jobCPct(l) * sm))}%씩`;
   }
+  if (S.cls === 'gwon' && i === 6) return `${GB('벼락 같은 일권', '번개 같은 곁차기')}으로 보이는 적 모두에게 공격력의 ${Math.round(jobAPct(l) * sm)}% 피해 + 6초 동안 받는 피해 +15%`;
+  if (S.cls === 'gwon' && i === 7) return `${GB('쇠 같은 주먹', '바람 같은 비각')}으로 보이는 적 모두에게 공격력의 ${Math.round(jobBPct(l) * sm)}% 피해, 10초 동안 내 공격력 +30%${gwonSel() === 2 ? '·공격 속도 +20%' : ''}`;
   const am = d.atk && C.aoeMul && ['spin', 'meteor', 'jobA', 'jobB'].includes(d.kind) ? C.aoeMul : d.atk && C.oneMul && ['bolt', 'combo'].includes(d.kind) ? C.oneMul : 1;
   if (am !== 1) return skillDescBase(i, l, sm * am);
   if (i === 2 && C.aim) return `8초 동안 공격 속도 +${roarSpd(l)}%, 공격력 +${roarAtk(l)}%, 조준이 바로 절반 차고 3배 빨리 차요`;
@@ -5730,8 +5740,17 @@ function statValue(k, st){
     case 'regen': return (st.regen * 100).toFixed(1) + '%/초';
   }
 }
-const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
-const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
+/* ===== 권사 `gwon` (2026-11-19) — 「연권」·주먹 갈래(맞받아치는 주먹, 기세)·발 갈래(두 번 차기, 보법) =====
+   연권: 기본 공격 세 번째마다 몸을 실은 마무리 일격(FIST.fin배). 박자는 맨손이라 빨라서 spdMul 1.1.
+   주먹(S.gwonBr 1): 맞으면 바로 되받아침(gwonCounter, FIST.cd초에 한 번, 기본 공격 FIST.counter배) + 「기세」(맞받을 때마다 +1, FIST.kiT초, 최대 FIST.kiMax — 공격력 +FIST.kiAtk%씩).
+   발(S.gwonBr 2): 기본 공격이 두 번 차기(한 번 FOOT.each배), 움직인 직후(0.8초 안) 첫 공격은 「파고들기」 FOOT.dash배, 공격 속도 +FOOT.spd·걷는 속도 +FOOT.mv(「보법」). 2차 기술 「풍신 비각」은 공격 속도도 +20%.
+   전직 전(0)에는 주먹·발을 번갈아 내지르는 평범한 연권만. 수치는 tools/test_game.py --sim · --long 으로 잼(docs/report gwon_balance) */
+const FIST = {fin:1.5, counter:2.0, cd:1.0, kiT:6, kiMax:5, kiAtk:4};
+const FOOT = {each:0.6, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
+const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
+const footSpd = () => gwonBr() === 2 ? (1 + FOOT.spd) * (hero.jobBuffT > 0 ? FOOT.jobB : 1) : 1;
+const atkBuff = () => pbAtk() * kiMul() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
+const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1) * footSpd();
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
@@ -6558,6 +6577,7 @@ function damageHero(d){
   hero.hp -= dmg; hero.hurt = 0.12;
   addText('-' + fmt(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
+  else if (cls().fist && gwonBr() === 1) gwonCounter();
 }
 function heroDie(){
   if (S.myth.elixir > 0 && !hero.elixirUsed && (raid || bossActive) && !(raid && raid.info.pvp)){   // 서왕모의 불사약: 싸움마다 한 번
@@ -9402,9 +9422,39 @@ function archerFar(e, cl){
   if (cl !== 'gungsa' || !raid || !raid.boss || e.dead) return 1;
   return Math.abs(e.tx - raid.boss.tx) + Math.abs(e.ty - raid.boss.ty) >= ARCHER.far ? ARCHER.pick : 1;
 }
+function gwonAttack(tg){   // 권사의 기본 공격(위 FIST·FOOT)
+  const br = gwonBr();
+  hero.gN = (hero.gN | 0) + 1;
+  const fin = hero.gN % 3 === 0, m = atkBuff() * (fin ? FIST.fin : 1);
+  if (br === 0) hero.gAlt = !hero.gAlt;   // 전직 전엔 주먹·발 번갈아(그림 프레임)
+  const px = tg.x, py = tg.y - mobHeight(tg) * 0.5;
+  if (br === 2){
+    const dash = hero.gMv > 0; hero.gMv = 0;
+    if (dash) addText('파고들기', hero.x, hero.y - 40, '#9fe7ff', 9, true);
+    fx.push({type:'kick', t:0, dur:0.22, x:px, y:py, dir:hero.dir, big:fin || dash});
+    hit(tg, ST.atk * m * FOOT.each * (dash ? FOOT.dash : 1), 'basic');
+    after(0.1, () => { if (tg.dead || hero.dead) return; fx.push({type:'kick', t:0, dur:0.2, x:px, y:py, dir:hero.dir, big:fin}); hit(tg, ST.atk * m * FOOT.each, 'basic'); });
+  } else {
+    fx.push({type:'fist', t:0, dur:fin ? 0.3 : 0.2, x:px, y:py, big:fin, br});
+    hit(tg, ST.atk * m, 'basic');
+    if (fin){ shake = Math.max(shake, 0.08); addText('연권!', hero.x, hero.y - 40, '#ffb84a', 9, true); }
+  }
+}
+function gwonCounter(){   // 주먹 갈래: 맞은 순간 되받아치기 + 기세
+  if (hero.dead || hero.cntCd > 0 || hero.stunT > 0) return;
+  let tg = raid && raid.boss && !raid.boss.dead ? raid.boss : null;
+  if (!tg){ const al = mobs.filter(x => !x.dead && x.spawnT <= 0); tg = hero.target && !hero.target.dead ? hero.target : al.reduce((a, c2) => !a || Math.hypot(c2.x - hero.x, c2.y - hero.y) < Math.hypot(a.x - hero.x, a.y - hero.y) ? c2 : a, null); }
+  if (!tg) return;
+  hero.cntCd = FIST.cd; hero.swing = 0.2;
+  hero.kiT = FIST.kiT; hero.ki = Math.min(FIST.kiMax, (hero.ki || 0) + 1);
+  fx.push({type:'fist', t:0, dur:0.3, x:tg.x, y:tg.y - mobHeight(tg) * 0.5, big:true, br:1});
+  addText(`맞받아치기! 기세 ${hero.ki}`, hero.x, hero.y - 44, '#ff9a6a', 9, true);
+  hit(tg, ST.atk * atkBuff() * FIST.counter, 'basic');
+}
 function attack(tg){
   const C = cls();
   hero.swing = 0.2; hero.atkT = 1;
+  if (C.fist) return gwonAttack(tg);
   if (!C.proj){
     fx.push({type:'slash', t:0, dur:0.16, x:hero.x, y:hero.y - 8, dir:hero.dir, color:C.fx});
     hit(tg, ST.atk * atkBuff(), 'basic');
@@ -9887,6 +9937,9 @@ function update(dt){
   if (hero.incT > 0) hero.incT -= dt;
   if (hero.eyeT > 0) hero.eyeT -= dt;
   if (hero.vowT > 0) hero.vowT -= dt;
+  if (hero.kiT > 0) hero.kiT -= dt;
+  if (hero.cntCd > 0) hero.cntCd -= dt;
+  if (hero.gMv > 0) hero.gMv -= dt;
   if (hero.ebbT > 0) hero.ebbT -= dt;
   if (hero.yongT > 0){ hero.yongT -= dt; const hp = (hero.yongP || 3) / 100 * dt;   // 용신 맞이: 나와 동료를 조금씩 회복
     if (!hero.dead && !(raid && raid.info.pvp)) heroHeal(ST.maxHp * hp, 'skill'); if (raid) for (const a of raid.allies) if (!a.down) allyHeal(a, a.maxHp * hp, 'skill'); }
@@ -9932,6 +9985,7 @@ function update(dt){
     if (!(raid && wipeBusy(raid))) heroHeal(ST.maxHp * (raid && (raid.info.fit || raid.info.pvp) ? Math.min(ST.regen, FIT.regen) : ST.regen) * dt, 'regen');   // 전멸기 동안엔 저절로 차지 않음(회복약·회복 기술로만)   // 타임 보스·1일 보스는 체력 회복도 누구나 비슷하게
     tkWoundTick(dt); autoPotion(dt);
     updateMove(hero, dt);
+    if (hero.moving) hero.gMv = 0.8;   // 권사 발 갈래: 움직인 직후 첫 공격이 「파고들기」
     hero.atkT = Math.max(0, hero.atkT - dt * ST.aspd * spdBuff());
     if (hero.stunT > 0) hero.stunT -= dt;
     if (!hero.moving && hero.goal && !(hero.stunT > 0)){   // 누른 칸으로 걷기(사냥보다 먼저)
@@ -10431,11 +10485,17 @@ function drawChibi(g, c, view, f, col, look){
 function drawGwon(g, view, f, col, look){
   const fem = !!look && look.sex === 'f', br = col.gbr | 0, back = view === 'back';
   look = look || defaultLook();
+  const aG = col.aG == null ? -1 : col.aG, wG = col.wG == null ? -1 : col.wG, fm = col.form || '', GX = col.gx || null;
+  const trim = aG >= 0 ? GRADES[aG].color : '#9a9a9a', capeC = aG >= 0 ? darken(GRADES[aG].color, 0.45) : '#5a2a2a';
+  const hat = GX && GX.h >= 0 ? 'helmet' : look.hat === 'class' ? 'gwon' : look.hat;
   const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
   const O = col.outfit, OD = darken(O, 0.24), OL = mix(O, '#ffffff', 0.2);
   const PT = fem ? '#6a5a7a' : '#5e5a74', PTD = darken(PT, 0.2), SH = fem ? '#4a2a3a' : '#2e2018';
   const SKT = '#7a3a5a', SKTD = darken(SKT, 0.22), CR = '#efe6d0', CRD = darken(CR, 0.2), RED = '#d8433a', BLU = '#3a8ad8';
+  const BRC = br === 1 ? RED : br === 2 ? BLU : null;   // 갈래 색(주먹 붉은색 · 발 푸른색)
   const WR = br === 1 ? RED : CR, AW = br === 2 ? BLU : CR;   // 손목 감개 / 발목 감개
+  const BELTC = BRC || CR, BELTD = darken(BELTC, 0.2), SLV = mix(O, '#fff5e0', 0.4), SLVD = mix(O, '#fff5e0', 0.22);   // 띠 · 소매(몸통 색과 구별되게 밝게)
+  const SHOE = br === 2 ? '#2a4a8a' : SH;
   const E = (x, y, rx, ry, cl, rot = 0) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
   const Pl = (pts, cl) => { g.fillStyle = cl; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
   const RR = (x, y, w, h, r, cl) => { g.fillStyle = cl; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
@@ -10446,12 +10506,33 @@ function drawGwon(g, view, f, col, look){
   const hx = 32, hy = 24 + by;
   const lf = f === 1 ? -2 : f === 2 ? 1 : 0, rf = f === 2 ? -2 : f === 1 ? 1 : 0;
 
+  // ── 몸 뒤: 망토·날개·등껍질·꼬리(drawChibi와 같은 그림)
+  const by0 = by, sway0 = sway;
+  const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
+  if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
+  const FLK = FORM_LOOK[fm] || {}, WG = FLK.wings || col.wing;   // 변신 날개가 없으면 날개 아바타
+  if (WG){
+    const u = f % 2 ? -1 : 0, sc = FLK.small ? 0.68 : 1;
+    for (const s of [-1, 1]){
+      const bx = 32 + s * 7, W2 = WG.map((cl, i) => [cl, i * 3]);
+      for (const [cl, k] of W2) Pl([[bx, 40 + by], [bx + s * (20 - k) * sc, 40 - (18 - k * 0.6) * sc + u], [bx + s * (22 - k) * sc, 40 - (7 - k * 0.5) * sc + u], [bx + s * (14 - k * 0.6) * sc, 46 + by]], cl);
+      if (!FLK.wings && col.wingStar) for (let k = 0; k < 3; k++) E(bx + s * (8 + k * 4), 30 + k * 3 + u, 0.9, 0.9, '#fff6c0');
+    }
+  }
+  if (FLK.tails){   // 여우 꼬리(몸 뒤로 부채처럼)
+    const tx = back ? 40 : 24, d = back ? 1 : -1;
+    for (let i = 0; i < FLK.tails; i++){ const a = -0.75 + i * 0.5 + sway * 0.06, cx = tx + d * Math.cos(a) * 9, cy = 45 + Math.sin(a) * 8 + by;
+      E(cx, cy, 7, 3.4, FLK.fox[0], d * a); E(cx + d * Math.cos(a) * 5, cy + Math.sin(a) * 3.6, 2.8, 2.1, FLK.fox[1], d * a); }
+  }
+  if (FLK.shell && !back){ E(32, 45 + by, 15, 11, '#2f6a52'); E(32, 45 + by, 13, 9, '#3f8a68'); }
+  if (FLK.tiger){ const tx = back ? 40 : 21; Pl([[tx, 50], [tx - 9 * (back ? -1 : 1), 44 + sway], [tx - 11 * (back ? -1 : 1), 40 + sway], [tx - 8 * (back ? -1 : 1), 41 + sway], [tx - 6 * (back ? -1 : 1), 47], [tx + 1, 52]], '#f0f0f4');
+    E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
+
   // ── 다리(받치는 다리는 제자리 — 발 기준점)
   const lw = fem ? 5.2 : 6.6, lx = fem ? 26 : 25.4, rx = fem ? 33.6 : 32.6;
-  const legL = () => { RR(lx, 49 + lf * 0.5, lw, 9 - lf * 0.4, 2, PT); RR(lx - 0.2, 55.2 + lf * 0.4, lw + 0.4, 2, 0.8, AW); E(28.6, 58.6 + lf * 0.4, fem ? 3.4 : 3.7, 2, SH); E(30.6, 58 + lf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
-  const legR = () => { RR(rx, 49 + rf * 0.5, lw, 9 - rf * 0.4, 2, PTD); RR(rx - 0.2, 55.2 + rf * 0.4, lw + 0.4, 2, 0.8, darken(AW, 0.1)); E(35.6, 58.6 + rf * 0.4, fem ? 3.4 : 3.7, 2, darken(SH, 0.1)); E(37.4, 58 + rf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
+  const legL = () => { RR(lx, 49 + lf * 0.5, lw, 9 - lf * 0.4, 2, PT); RR(lx - 0.2, br === 2 ? 53.4 + lf * 0.4 : 55.2 + lf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, AW); E(28.6, 58.6 + lf * 0.4, fem ? 3.4 : 3.7, 2, SHOE); E(30.6, 58 + lf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
+  const legR = () => { RR(rx, 49 + rf * 0.5, lw, 9 - rf * 0.4, 2, PTD); RR(rx - 0.2, br === 2 ? 53.4 + rf * 0.4 : 55.2 + rf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, darken(AW, 0.1)); E(35.6, 58.6 + rf * 0.4, fem ? 3.4 : 3.7, 2, darken(SHOE, 0.1)); E(37.4, 58 + rf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
   legL();
-  let kickTip = null;
   if (kick || cham){
     const lw2 = fem ? 5.4 : 6.4;
     if (kick){   // 앞다리를 짧게 곧게 뻗는다: 엉덩이 → 발끝(54, 44.5)
@@ -10459,13 +10540,12 @@ function drawGwon(g, view, f, col, look){
       LN(hip[0], hip[1], ank[0], ank[1], lw2, PTD);
       LN(hip[0], hip[1] - 1.2, ank[0] - 3, ank[1] - 1, lw2 * 0.45, mix(PTD, '#ffffff', 0.12));
       LN(ank[0] - ux * 1.2, ank[1] - uy * 1.2, ank[0] + ux * 0.9, ank[1] + uy * 0.9, lw2 + 0.5, AW, 'butt');
-      E(ank[0] + ux * 3.6 + 0.2, ank[1] + uy * 3.6 + 0.4, 4.4, 3, darken(SH, 0.1), ang); E(ank[0] + ux * 5.6, ank[1] + uy * 5.6 - 0.4, 1.6, 1.4, mix(SH, '#ffffff', 0.45), ang);
-      kickTip = [ank[0] + ux * 6.6, ank[1] + uy * 6.6, ang];
+      E(ank[0] + ux * 3.6 + 0.2, ank[1] + uy * 3.6 + 0.4, 4.4, 3, darken(SHOE, 0.1), ang); E(ank[0] + ux * 5.6, ank[1] + uy * 5.6 - 0.4, 1.6, 1.4, mix(SH, '#ffffff', 0.45), ang);
     } else {     // 준비: 무릎을 앞으로 들어 올리고 정강이는 아래로
       const hip = [35.6, 49.6], kn = [43.4, 47.6], an = [41.2, 54.6];
       LN(hip[0], hip[1], kn[0], kn[1], lw2, PTD); LN(kn[0], kn[1], an[0], an[1], lw2 - 0.4, PTD); E(kn[0], kn[1], lw2 / 2 + 0.2, lw2 / 2, PTD);
       LN(an[0] - 0.3, an[1] - 1.8, an[0] + 0.1, an[1] - 0.2, lw2, AW, 'butt');
-      E(an[0] + 1.6, an[1] + 2.2, 3.5, 2.3, darken(SH, 0.1), 0.25);
+      E(an[0] + 1.6, an[1] + 2.2, 3.5, 2.3, darken(SHOE, 0.1), 0.25);
     }
   } else legR();
 
@@ -10484,11 +10564,13 @@ function drawGwon(g, view, f, col, look){
   const arm = (sx, sy, ex, ey, fx, fy, front) => {
     const OLN = '#1d1420';   // 팔이 몸통 색에 묻히지 않게 먼저 어두운 테를 두른다
     LN(sx, sy, ex, ey, (fem ? 4.6 : 5.2) + 1.8, OLN); LN(ex, ey, fx, fy, (fem ? 4.3 : 4.8) + 1.6, OLN);
-    LN(sx, sy, ex, ey, fem ? 4.6 : 5.2, front ? OL : O);
+    LN(sx, sy, ex, ey, fem ? 4.6 : 5.2, front ? SLV : SLVD);
     const wx = ex + (fx - ex) * 0.62, wy = ey + (fy - ey) * 0.62;
     LN(ex, ey, wx, wy, fem ? 3.7 : 4.2, SK);
     LN(ex + (fx - ex) * 0.4, ey + (fy - ey) * 0.4, fx + (ex - fx) * 0.12, fy + (ey - fy) * 0.12, fem ? 4.3 : 4.8, front ? WR : darken(WR, 0.12), 'butt');
-    E(fx + (fx - ex) * 0.12, fy + (fy - ey) * 0.12, fem ? 3 : 3.4, fem ? 2.7 : 3, front ? SK : SKD);
+    E(fx + (fx - ex) * 0.12, fy + (fy - ey) * 0.12, fem ? 3 : 3.4, fem ? 2.7 : 3, br === 1 ? (front ? RED : '#a8302a') : front ? SK : SKD);   // 주먹 갈래는 붉은 장갑
+    if (front && col.brace >= 0) LN(ex + (fx - ex) * 0.2, ey + (fy - ey) * 0.2, ex + (fx - ex) * 0.34, ey + (fy - ey) * 0.34, 3.6, GRADES[col.brace].color, 'butt');
+    if (wG >= 2) E(ex + (fx - ex) * 0.62, ey + (fy - ey) * 0.62, 1.1, 1.1, GRADES[wG].color);   // 권갑 등급 보석
     const a = Math.atan2(fy - ey, fx - ex), kx = fx + (fx - ex) * 0.12 + Math.cos(a) * 1.6, ky = fy + (fy - ey) * 0.12 + Math.sin(a) * 1.6;
     for (const o of [-1.1, 1.1]) E(kx + Math.cos(a + 1.57) * o, ky + Math.sin(a + 1.57) * o, 0.45, 0.45, darken(SK, 0.3));   // 주먹 마디
   };
@@ -10517,6 +10599,8 @@ function drawGwon(g, view, f, col, look){
     Pl([[26, 37 + by], [32, 44.4 + by * 0.4], [38, 37 + by], [35.5, 37 + by], [32, 41.8 + by], [28.5, 37 + by]], '#efe9da');   // 동정·깃
     Pl([[27.6, 37.6 + by], [28.6, 37 + by], [36.4, 45.4], [35.4, 46]], darken(O, 0.35));                                          // 여민 자리
   } else { RR(26.4, 36.6 + by, 11.2, 2.2, 1, OL); }
+  if (!back && aG >= 1) Pl([[26, 37 + by], [27.4, 37 + by], [32, 43.4 + by], [32, 44.6 + by]], trim);
+  if (!back && aG >= 4){ E(32, 46.1 + by * 0.5, 2.2, 2, '#ffd84a'); E(31.4, 45.4 + by * 0.5, 0.8, 0.7, '#ffffff'); }
   if (fem){   // 치마(무릎 위 활동복 치마) + 말기 + 고름
     const kk = kick ? 1 : 0;
     Pl([[23.2, 44.2], [40.8, 44.2], [kk ? 49 : 45, kk ? 50 : 52.2], [kk ? 41 : 44, 53.2], [19.4, 52.8]], SKT);
@@ -10525,22 +10609,31 @@ function drawGwon(g, view, f, col, look){
     RR(19.6, 51.4, 24.4, 1.7, 0.7, mix(SKT, CR, 0.55)); RR(23, 43.2, 18, 2.2, 0.9, CR);
     if (!back){ Pl([[31, 41 + by], [33.2, 41 + by], [34.8, 49.6], [32.6, 50]], RED); E(30.4, 41 + by, 2, 1.3, RED, -0.4); E(34, 41 + by, 2, 1.3, RED, 0.4); E(32.2, 41.2 + by, 0.9, 0.9, '#a8302a'); }
   } else {   // 띠(허리에 두른 넓은 띠) + 매듭
-    RR(20.2, 45 + by * 0.4, 23.6, 3.6, 1.4, CR); RR(20.2, 47 + by * 0.4, 23.6, 1.6, 0.7, CRD);
+    RR(20.2, 45 + by * 0.4, 23.6, 3.6, 1.4, BELTC); RR(20.2, 47 + by * 0.4, 23.6, 1.6, 0.7, BELTD);
     const kx = back ? 32 : 39.4;
-    E(kx, 46.9 + by * 0.4, 2.2, 2.1, CR); E(kx - 0.5, 46.4 + by * 0.4, 0.9, 0.7, '#ffffff');
-    Pl([[kx - 1.4, 48.2], [kx + 0.8, 48.2], [kx + 1 + sway * 0.5, 53.6], [kx - 1.8 + sway * 0.5, 53.2]], CR); Pl([[kx + 0.2, 48.2], [kx + 2.6, 48.6], [kx + 4.4 - sway * 0.5, 52.8], [kx + 2, 53.2]], CRD);
+    E(kx, 46.9 + by * 0.4, 2.2, 2.1, BELTC); E(kx - 0.5, 46.4 + by * 0.4, 0.9, 0.7, '#ffffff');
+    Pl([[kx - 1.4, 48.2], [kx + 0.8, 48.2], [kx + 1 + sway * 0.5, 53.6], [kx - 1.8 + sway * 0.5, 53.2]], BELTC); Pl([[kx + 0.2, 48.2], [kx + 2.6, 48.6], [kx + 4.4 - sway * 0.5, 52.8], [kx + 2, 53.2]], BELTD);
   }
   if (back && fem) braid(hx + 1.2, hy + 9, hx + 1.8 + sway * 0.8, 51 + by * 0.5);
+  if (back && cc){ Pl([[22, 37 + by], [42, 37 + by], [46, 56], [18, 56]], cc); Pl([[18, 56], [46, 56], [45.6, 54], [18.4, 54]], ctr); Pl([[23, 37 + by], [41, 37 + by], [41.4, 39 + by], [22.6, 39 + by]], ctr);
+    if (col.capeStar) for (const [x, y] of [[26, 44], [37, 47], [31, 51], [40, 41]]) E(x, y + by * 0.5, 0.9, 0.9, '#ffe28a'); }
+  if (back && FLK.shell){ E(32, 45 + by, 13, 10, '#2f6a52'); for (const [x, y] of [[27, 42], [37, 42], [32, 47], [26, 49], [38, 49]]) E(x, y + by, 3, 2.4, '#1e4a38'); E(32, 41 + by, 9, 2, '#5a9a7a'); }
+
+
 
   // ── 뒤쪽 팔 + 어깨 받이(주먹 갈래: 붉은 어깨 받이)
   if (!back) arm(...BA, false); else arm(...BA, false);
-  if (br === 1){ for (const sx of [23, 41]){ const w = fem ? 3.8 : 4.6; E(sx, 38.4 + by, w, 2.9, '#a8302a'); E(sx, 38 + by, w - 0.5, 2.4, RED); E(sx - 1.2, 37 + by, 1.8, 0.9, mix(RED, '#ffffff', 0.5)); } }
+  if (GX ? GX.s >= 0 : aG >= 2){ const tr2 = GX ? GRADES[GX.s].color : trim, big = GX && GX.s >= 3 ? 0.7 : 0;
+    E(23, 38.4 + by, 4.6 + big, 3 + big * 0.5, tr2); E(41, 38.4 + by, 4.6 + big, 3 + big * 0.5, tr2); E(22, 37.6 + by, 2.2, 1.2, mix(tr2, '#ffffff', 0.45)); E(40, 37.6 + by, 2.2, 1.2, mix(tr2, '#ffffff', 0.45));
+    if (GX && GX.s >= 4){ E(23, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); E(41, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); } }
+  else if (br === 1){ for (const sx of [23, 41]){ const w = fem ? 3.8 : 4.6; E(sx, 38.4 + by, w, 2.9, '#a8302a'); E(sx, 38 + by, w - 0.5, 2.4, RED); E(sx - 1.2, 37 + by, 1.8, 0.9, mix(RED, '#ffffff', 0.5)); } }
 
   // ── 머리
   if (!back){
     E(hx - 1, hy - 1, 14, 12.6, HR);
     E(hx + 2, hy + 3, fem ? 10.2 : 10.6, fem ? 9.2 : 9.6, SK);
     E(hx - 7.4, hy + 4, 2.2, 2.8, SK); E(hx - 7.2, hy + 4.2, 1, 1.5, SKD);
+    if (col.ear >= 0) E(hx - 7.4, hy + 7.6, 1.2, 1.2, GRADES[col.ear].color);
     E(hx + 1, hy - 5, 12.4, 6.6, HR);
     for (const [x, d] of [[-8, 4], [-3, 5], [2, 4.4], [7, 3.6], [11, 2.6]]) Pl([[hx + x - 3, hy - 4], [hx + x + 3, hy - 4], [hx + x + 0.6, hy - 4 + (fem ? d + 1 : d)]], HR);
     if (fem){ Pl([[hx + 9, hy - 3], [hx + 12.4, hy - 1], [hx + 12.2, hy + 7.4], [hx + 10, hy + 7.6]], HR); }   // 옆머리(볼 옆으로 내려옴)
@@ -10555,33 +10648,92 @@ function drawGwon(g, view, f, col, look){
   } else {
     E(hx, hy, 14, 12.8, HR); E(hx + 3, hy + 4, 10, 7, HRD); E(hx - 3, hy - 4, 6, 3, HRL);
   }
-  // 머리 모양: 남=상투, 여=작은 쪽(비녀)
-  if (!fem){ E(hx - 1, hy - 12.6, 3.6, 3.2, HR); E(hx - 2, hy - 13.6, 1.4, 1, HRL); RR(hx - 4, hy - 10.8, 6, 1.6, 0.8, CRD); }
+  if (look.beard && !back && !fem){ Pl([[hx - 3, hy + 9], [hx + 9, hy + 8.4], [hx + 6, hy + 16], [hx + 2, hy + 17], [hx - 1, hy + 14]], HR); Pl([[hx + 1, hy + 8.6], [hx + 6, hy + 8.4], [hx + 3.4, hy + 9.6]], darken(HR, 0.3)); }
+  // 머리 모양: 남=상투, 여=작은 쪽(비녀) — 얼굴을 가리는 머리 장식(복면·갓·투구·면류관·삿갓·묶은 머리)이면 안 그림
+  if (['jagaek', 'sulsa', 'helmet', 'mcrown', 'gungsa', 'changgaek'].includes(hat)){ /* 머리 장식이 대신 */ }
+  else if (!fem){ E(hx - 1, hy - 12.6, 3.6, 3.2, HR); E(hx - 2, hy - 13.6, 1.4, 1, HRL); RR(hx - 4, hy - 10.8, 6, 1.6, 0.8, CRD); }
   else { E(hx - 1.4, hy - 12.2, 4.8, 3.8, HR); E(hx - 2.6, hy - 13.4, 1.8, 1.1, HRL); RR(hx - 7.4, hy - 12.8, 11, 1.2, 0.6, '#e2c26b'); E(hx + 3.8, hy - 12.2, 1.2, 1.2, RED); }
+  if (hat === 'gwon'){
   // 이마 두건(권사 표시: 수련자의 머리띠) — 눈썹 위쪽 이마에 매어 끝자락이 뒤로 날린다
   const bt = fem ? 2.4 : 3.2, bB = hy - 3.4;
-  Pl([[hx - 13.2, bB - bt + 1.6], [hx + 13, bB - bt - 1], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], CR);
-  Pl([[hx - 13.2, bB + 0.4], [hx + 13.2, bB - 2], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], CRD);
+  Pl([[hx - 13.2, bB - bt + 1.6], [hx + 13, bB - bt - 1], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], BRC || CR);
+  Pl([[hx - 13.2, bB + 0.4], [hx + 13.2, bB - 2], [hx + 13.2, bB - 1], [hx - 13.2, bB + 1.6]], darken(BRC || CR, 0.2));
   { const kx = back ? hx + 4 : hx - 13, lk = pun || kick ? 2 : 0;
     Pl([[kx, bB - 1.2], [kx - 6.6 - lk, bB + 4 + sway], [kx - 4.2 - lk, bB + 5.4 + sway], [kx + 1, bB + 1]], br === 1 ? RED : br === 2 ? BLU : CR);
     Pl([[kx, bB - 0.4], [kx - 8.6 - lk, bB + 1.4 + sway], [kx - 7.4 - lk, bB + 3 + sway], [kx + 1, bB + 1.2]], darken(br === 1 ? RED : br === 2 ? BLU : CR, 0.2)); }
+  }
+  // ── 머리 장식(drawChibi와 같은 그림 — 권사 두건 `gwon`은 위에서 따로)
+  if (hat === 'gwon'){ /* 위의 수련 두건 */ }
+  else if (hat === 'musa'){
+    const B = '#d8433a';
+    Pl([[hx - 13.6, hy - 2.4], [hx + 13.4, hy - 4.6], [hx + 13.6, hy - 1.4], [hx - 13.6, hy + 0.8]], B);
+    const kx = back ? hx + 4 : hx - 13;
+    Pl([[kx, hy - 1.6], [kx - 6, hy + 4 + sway], [kx - 4, hy + 5 + sway], [kx + 1, hy]], B); Pl([[kx, hy - 1], [kx - 8, hy + 1 + sway], [kx - 7, hy + 2.6 + sway], [kx + 1, hy + 0.6]], darken(B, 0.2));
+  } else if (hat === 'jagaek'){
+    const K = '#2c2638', KL = '#3e3650';
+    if (!back){ E(hx, hy - 1, 14.6, 13.4, K); E(hx + 2.6, hy + 3.4, 9, 4.4, SK); Pl([[hx - 7, hy + 6.4], [hx + 13, hy + 5.2], [hx + 12, hy + 12], [hx - 6, hy + 12]], K); E(hx - 4, hy - 7, 4, 2, KL);
+      E(hx + 6.2, hy + 3.6, 1.9, 2.2, EYE); E(hx - 1.2, hy + 3.6, 1.6, 2.1, EYE); E(hx + 6.8, hy + 2.8, 0.8, 0.8, '#ffffff'); }
+    else { E(hx, hy, 14.6, 13.4, K); E(hx - 4, hy - 6, 4, 2, KL); Pl([[hx - 4, hy + 10], [hx - 10, hy + 18 + sway], [hx - 6, hy + 18 + sway], [hx - 1, hy + 11]], K); }
+  } else if (hat === 'sulsa'){
+    const K = '#16131c', KL = '#3a3444';
+    E(hx, hy - 7.4, 21, 4.6, K); E(hx - 4, hy - 8.4, 9, 1.4, KL);
+    RR(hx - 6.6, hy - 20, 13.2, 13, 4, K); RR(hx - 5, hy - 18.6, 3.4, 9, 1.6, KL);
+    RR(hx - 6.6, hy - 10.6, 13.2, 2, 1, '#4a3f58');
+    if (!back){ for (let i = 0; i < 4; i++) E(hx - 9 + i * 0.8, hy + 2 + i * 3, 0.8, 0.8, '#c98a8a'); }
+  } else if (hat === 'gungsa'){   // 삿갓(대오리로 엮은 넓은 고깔 갓) + 턱끈
+    const K = '#c8a868', KD = '#9a7a44', KL = '#e6d09a';
+    Pl([[hx - 18.4, hy - 3.2], [hx + 18.4, hy - 5.2], [hx + 1.4, hy - 19.6], [hx - 1.4, hy - 19.4]], K);
+    Pl([[hx + 1.4, hy - 19.6], [hx + 18.4, hy - 5.2], [hx + 9, hy - 4.6]], KD);
+    Pl([[hx - 18.4, hy - 3.2], [hx + 18.4, hy - 5.2], [hx + 18, hy - 3.6], [hx - 18, hy - 1.6]], KD);
+    for (const k of [-11, -5, 4]) { g.strokeStyle = KL; g.lineWidth = 0.6; g.beginPath(); g.moveTo(hx, hy - 19); g.lineTo(hx + k, hy - 3.8 - k * 0.05); g.stroke(); }
+    E(hx, hy - 19.4, 1.5, 1.2, KD);
+    if (!back){ g.strokeStyle = '#8a2b2b'; g.lineWidth = 0.8; g.beginPath(); g.moveTo(hx - 9.4, hy - 2.6); g.lineTo(hx - 7, hy + 10.4); g.stroke(); }
+  } else if (hat === 'changgaek'){   // 높이 묶은 머리(말총) + 붉은 끈: 앞모습은 꼬리가 머리 뒤(왼쪽)로 길게 늘어지고, 뒷모습은 뒤통수 가운데로 내려온다
+    if (!back){
+      Pl([[hx - 4, hy - 15.4], [hx - 12, hy - 14.6], [hx - 18.6, hy - 7 + sway * 0.4], [hx - 20.4, hy + 4 + sway], [hx - 17.6, hy + 13.4 + sway], [hx - 14.8, hy + 4 + sway * 0.6], [hx - 13.6, hy - 5], [hx - 7, hy - 10.6]], HR);
+      Pl([[hx - 6, hy - 14.4], [hx - 12, hy - 13.4], [hx - 17, hy - 6.4 + sway * 0.4], [hx - 18.4, hy + 2 + sway], [hx - 16.6, hy - 5], [hx - 11.4, hy - 11.6]], HRL);
+      E(hx - 3, hy - 13.2, 3.6, 3, HR); E(hx - 3.8, hy - 14.2, 1.4, 1, HRL);
+      RR(hx - 6.4, hy - 11.8, 6.4, 1.9, 0.8, '#d8433a'); Pl([[hx - 6, hy - 11.4], [hx - 11, hy - 8.6 + sway * 0.6], [hx - 10, hy - 7 + sway * 0.6], [hx - 5.6, hy - 9.8]], '#b8332c');
+    } else {
+      E(hx + 1, hy - 13.2, 3.6, 3, HR); E(hx + 0.2, hy - 14.2, 1.4, 1, HRL);
+      Pl([[hx - 2.4, hy - 11], [hx + 4.4, hy - 11], [hx + 6 + sway * 0.5, hy + 6], [hx + 3 + sway, hy + 16], [hx - 1 + sway * 0.5, hy + 6]], HRD);
+      Pl([[hx - 0.6, hy - 10], [hx + 1.4, hy - 10], [hx + 2.4 + sway * 0.5, hy + 5], [hx + 1 + sway * 0.5, hy + 5]], HRL);
+      RR(hx - 2.6, hy - 11.8, 7.2, 1.9, 0.8, '#d8433a'); Pl([[hx + 4, hy - 11.4], [hx + 9, hy - 8.6 + sway * 0.6], [hx + 8, hy - 7 + sway * 0.6], [hx + 3.6, hy - 9.8]], '#b8332c');
+    }
+  } else if (hat === 'doin'){
+    RR(hx - 5, hy - 19, 9, 8, 2.4, '#f2efe6'); RR(hx - 5, hy - 13.4, 9, 2, 0.8, '#b8382f'); E(hx - 1, hy - 19.4, 2, 1.6, '#f2efe6');
+  } else if (hat === 'helmet'){
+    const hc = GX && GX.h >= 0 ? GRADES[GX.h].color : '', Hm = hc ? darken(hc, 0.55) : '#4a4a5a', Hl = hc ? mix(hc, '#ffffff', 0.12) : '#7a7a8c';
+    E(hx, hy - 4, 14.6, 10, Hm); RR(hx - 15, hy - 3, 30, 3.4, 1.4, Hl); E(hx - 4, hy - 9, 5, 2, Hl);
+    if (!back){ RR(hx - 14, hy - 1, 4, 10, 2, Hm); } else { RR(hx - 13, hy, 26, 10, 3, Hm); }
+    Pl([[hx - 1, hy - 13], [hx + 1, hy - 13], [hx + 3, hy - 24], [hx - 3, hy - 22]], hc && GX.h >= 3 ? hc : '#d8433a'); E(hx, hy - 13.4, 2, 1.4, '#ffd24a');
+  } else if (hat === 'mcrown'){
+    RR(hx - 9, hy - 14, 18, 6, 1.6, '#16131c'); RR(hx - 15, hy - 17, 30, 3.4, 1.2, '#16131c'); RR(hx - 9, hy - 9.4, 18, 1.6, 0.6, '#ffd24a');
+    if (!back) for (let x = -12; x <= 12; x += 3) for (let k = 0; k < 3; k++) E(hx + x, hy - 12 + k * 2.6, 0.8, 0.8, k % 2 ? '#e83a4a' : '#9fe7ff');
+  } else if (hat === 'fillet'){
+    for (const s of [-1, 1]){ E(hx + s * 13, hy + 1, 3.6, 4.4, darken(HR, 0.1)); E(hx + s * 13, hy + 1.4, 1.8, 2.4, '#f0c8a0'); }
+    RR(hx - 13.4, hy - 6.4, 26.8, 2.8, 1.4, '#ffd24a'); E(hx, hy - 5, 2.4, 2.4, '#ffd24a'); E(hx - 0.6, hy - 5.6, 0.8, 0.8, '#ffffff');
+    g.strokeStyle = HR; g.lineWidth = 2.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(back ? 40 : 22, 49); g.quadraticCurveTo(back ? 52 : 10, 46 + sway, back ? 48 : 14, 34 + sway); g.stroke();
+  } else if (hat === 'flower'){
+    const fx2 = back ? hx + 9 : hx - 9, fy2 = hy - 6;
+    for (let i = 0; i < 5; i++){ const a = i * 1.257; E(fx2 + Math.cos(a) * 2.4, fy2 + Math.sin(a) * 2.4, 1.8, 1.8, '#ff8ab0'); }
+    E(fx2, fy2, 1.4, 1.4, '#ffd84a');
+  }
+  // ── 변신: 머리 장식
+  if (FLK.crest){ Pl([[hx - 2, hy - 13], [hx - 4, hy - 24], [hx + 1, hy - 17], [hx + 5, hy - 23], [hx + 3, hy - 13]], FLK.crest[0]); E(hx, hy - 14, 3, 1.8, FLK.crest[1]); }
+  if (FLK.horns && !FLK.cone){ for (const s of [-1, 1]){ const x0 = hx + s * 6; Pl([[x0 - 1.4, hy - 9], [x0 + 1.4, hy - 9], [x0 + s * 5, hy - 21], [x0 + s * 3, hy - 15]], FLK.horns[0]); Pl([[x0 + s * 3, hy - 15], [x0 + s * 7, hy - 17], [x0 + s * 4, hy - 13]], FLK.horns[1]); } }
+  if (FLK.cone){ for (const s of [-1, 1]){ const x0 = hx + s * 5; Pl([[x0 - 2, hy - 9], [x0 + 2, hy - 9], [x0 + s * 2.5, hy - 18]], FLK.horns[0]); Pl([[x0 - 2, hy - 9], [x0 + 2, hy - 9], [x0 + s * 0.6, hy - 11.5]], FLK.horns[1]); } }
+  if (FLK.fox){ for (const s of [-1, 1]){ const x0 = hx + s * 9; Pl([[x0 - 3.4, hy - 8], [x0 + 3.4, hy - 8], [x0 + s * 1.6, hy - 19]], FLK.fox[0]); Pl([[x0 - 1.6, hy - 9], [x0 + 1.6, hy - 9], [x0 + s * 1, hy - 15.5]], '#f6c8b8'); } }
+  if (FLK.tokin){ RR(hx - 3.6, hy - 17.5, 7.2, 5, 2, '#1e1e2a'); E(hx, hy - 18.4, 2.2, 1.6, '#d8433a'); }
+  if (FLK.tiger){
+    E(hx, hy - 4, 14.8, 9.4, '#f0f0f4'); for (const s of [-1, 1]){ E(hx + s * 10, hy - 12, 3.6, 3.6, '#f0f0f4'); E(hx + s * 10, hy - 11.6, 1.8, 1.8, '#f3a0b0'); }
+    for (const x of [-6, 0, 6]) Pl([[hx + x - 1, hy - 12.6], [hx + x + 1, hy - 12.6], [hx + x + 0.4, hy - 6]], '#22202c');
+    if (!back){ E(hx + 6.2, hy + 4.2, 1.9, 2.7, EYE); E(hx - 1.2, hy + 4.2, 1.6, 2.5, EYE); E(hx + 6.8, hy + 3.2, 0.8, 0.8, '#ffffff'); }
+  }
 
   // ── 앞쪽 팔(앞모습) + 어깨 받이 위에
   if (!back) arm(...FA, true);
-  // ── 효과: 주먹 끝 충격 / 발끝 충격 파동
-  if (pun){
-    const fxp = FA[4] + 4.4, fyp = FA[5] - (back ? 0.5 : 0), pc = br === 1 ? '#ff8a5a' : '#ffffff';
-    const star = [];
-    for (let i = 0; i < 10; i++){ const a = i / 10 * Math.PI * 2 + 0.2, r = i % 2 ? 3 : 6.2; star.push([fxp + Math.cos(a) * r, fyp + Math.sin(a) * r * 0.9]); }
-    Pl(star, br === 1 ? '#d8433a' : '#ffb84a'); Pl(star.map(([x, y]) => [fxp + (x - fxp) * 0.68, fyp + (y - fyp) * 0.68]), pc); E(fxp, fyp, 2, 2, '#fff2b0');
-    for (const dy of [-5.4, 5.8]) LN(FA[2] - 3, FA[3] + dy * 0.6, FA[2] + 3, FA[3] + dy * 0.6 + (dy > 0 ? 0.6 : -0.6), 1.2, '#ffffff');   // 속도선
-  }
-  if (kick && kickTip){
-    const [tx, ty, ang] = kickTip, wc = br === 2 ? '#bfe6ff' : '#ffffff';
-    g.lineCap = 'round';
-    for (let k = 0; k < 3; k++){ g.strokeStyle = k === 0 ? '#ffffff' : wc; g.lineWidth = 2.1 - k * 0.4; g.beginPath(); g.arc(tx - 3 - k * 1.9, ty, 3.6 + k * 1.9, -0.9, 0.9); g.stroke(); }
-    E(tx - 0.4, ty, 1.7, 1.7, '#ffe28a');
-  }
+  // (충격 별·발 파동은 몸 그림 밖에서 fx로 따로 그림 — 'fist'·'kick', 그림 칸에 잘리지 않게)
   g.restore();
   // ── 발 갈래: 푸른 바람(발목 둘레 바람 줄기) — 몸 기울기와 상관없이 발 가까이
   if (br === 2){
@@ -11574,7 +11726,7 @@ const mountN = () => MOUNTS.filter(m => S.mount.own[m.k]).length;
 function mountCol(){ let p = 0; for (const m of MOUNTS) if (S.mount.own[m.k]) p += MOUNT_G[m.g].pct * mountK(m.k); return p * lateCol() * gearRes(); }   // 모음 효과 %
 const rideM = () => S.mount.ride && S.mount.own[S.mount.ride] ? MT[S.mount.ride] : null;
 const rideAb = k => { const m = rideM(); return m && m.ab[k] ? m.ab[k] * mountK(m.k) * gearRes() : 0; };
-const heroStep = () => { const m = rideM(); return STEP_HERO / (m ? 1 + m.spd / 100 : 1) / seaMul('move') / (1 + pbV('changgaek', 'mv') / 100); };   // 길동무(창객 파티 버프): 걷는 속도
+const heroStep = () => { const m = rideM(); return STEP_HERO / (m ? 1 + m.spd / 100 : 1) / seaMul('move') / (1 + pbV('changgaek', 'mv') / 100) / (gwonBr() === 2 ? 1 + FOOT.mv : 1); };   // 길동무(창객 파티 버프): 걷는 속도
 const MOUNT_AB = {gold:'엽전 +%', exp:'경험치 +%', hp:'체력 +%', boss:'보스 피해 +%', off:'오프라인 보상 +%', crit:'치명타 확률 +%', heal:'5초마다 체력 %', pot:'탕약 회복 +%', skill:'기술 피해 +%', dr:'받는 피해 -%', cdr:'기술 재사용 -%'};
 const mountAbText = (m, k = 1) => Object.entries(m.ab).map(([a, v]) => MOUNT_AB[a].replace('%', (Math.round(v * k * 10) / 10) + '%')).join(' · ');
 function giveMount(k, quiet){
@@ -15777,6 +15929,15 @@ function drawFx(e){
       parc(cx, cy, 10, a - 1.3 + k * 0.6, a + 1.3, col); parc(cx, cy, 9, a - 1.0 + k * 0.6, a + 1.0, col);
       if (S.cls === 'jagaek') parc(cx, cy, 7, a + 1.0, a - 0.6, '#e0607a');
       break; }
+    case 'fist': {   // 권사 주먹: 맞은 자리에 터지는 충격 별(마무리·맞받아치기는 크게, 붉은 빛)
+      const r = (e.big ? 7 : 4) + k * (e.big ? 9 : 5), c1 = e.br === 1 ? '#ff6a4a' : '#ffb84a';
+      for (let i = 0; i < 8; i++){ const a = i * Math.PI / 4 + 0.3; pline(e.x + Math.cos(a) * r * 0.45, e.y + Math.sin(a) * r * 0.45, e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, i % 2 ? '#fff6c0' : c1); }
+      if (k < 0.5) parc(e.x, e.y, r * 0.5, 0, Math.PI * 2, '#ffffff', r * 0.3);
+      break; }
+    case 'kick': {   // 권사 발: 발끝에서 번지는 파란 파동(몸 그림 밖에서 따로 그림)
+      const a = DIRANG[e.dir], r = (e.big ? 9 : 6) + k * 6;
+      for (let j = 0; j < 3; j++) parc(e.x, e.y, r - j * 2.4, a - 0.9 + j * 0.1, a + 0.9 - j * 0.1, j ? '#9fd8ff' : '#ffffff');
+      break; }
     case 'hit': {
       const r = 2 + k * 5;
       for (let i = 0; i < 4; i++){ const a = i * Math.PI / 2 + 0.6; P(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, 1, 1, '#fff6c0'); }
@@ -17992,7 +18153,8 @@ function buildJob(){
       ${tier === 4 && !got ? `<p class="small">곤륜에서 레벨 ${JOB4_LV}을 넘기고 이야기 ${j.ch}장 「오색 돌」을 마치면 <b>세 스승의 시험</b>(1차 스승 → 강림도령 → 3차 스승, 연달아 세 판)을 봐요. 스승은 ${j.teacher}.</p>` : ''}
       ${tier === 5 && !got ? `<p class="small">동해에서 레벨 ${JOB5_LV}를 넘기고 이야기 ${j.ch}장 「마지막 시련」을 마치면 바다의 스승 ${j.teacher}${josa(j.teacher, '과', '와')} 겨룰 수 있어요.</p>` : ''}
       ${tier === 6 && !got ? `<p class="small">란카 길에서 레벨 ${JOB6_LV}를 넘기고 이야기 ${j.ch}장 「돌탑을 실은 배」를 마치면 <b>다섯 스승의 시험</b>(1차 스승 → 강림도령 → 3차 → 4차 → 5차 스승, 연달아 다섯 판)을 봐요. 모두 넘으면 ${j.teacher}께서 이름을 내려 줘요.</p>` : ''}
-      ${got ? '' : `<button class="btn primary" data-tier="${tier}">${secret ? '???' : (tier === 1 ? '스승과' : tier === 3 || tier === 5 ? j.teacher + josa(j.teacher, '과', '와') : tier === 4 ? '세 스승의 시험' : tier === 6 ? '다섯 스승의 시험' : '강림도령과') + (tier === 4 || tier === 6 ? '' : ' 겨루기(전직 시험)')}</button>`}
+      ${tier === 1 && c === 'gwon' && !got ? `<p class="small"><b>주먹 길 「맞주먹」</b> — 맞는 순간 되받아치고 「기세」가 쌓여요. 맞서서 버티는 길.<br><b>발 길 「곁발」</b> — 멈추지 않고 옮겨 다니며 한 번에 두 번씩 차요. 파고드는 길.<br>어느 길이든 같은 스승과 겨루고, 고른 길은 전직 뒤에도 이어져요(나중에 [직업 바꾸기]에서 다시 고를 수 있어요).</p>` : ''}
+      ${tier === 1 && c === 'gwon' && !got ? `<div class="chips"><button class="btn primary" data-tier="1" data-br="1">주먹 길 — 스승과 겨루기</button><button class="btn primary" data-tier="1" data-br="2">발 길 — 스승과 겨루기</button></div>` : got ? '' : `<button class="btn primary" data-tier="${tier}">${secret ? '???' : (tier === 1 ? '스승과' : tier === 3 || tier === 5 ? j.teacher + josa(j.teacher, '과', '와') : tier === 4 ? '세 스승의 시험' : tier === 6 ? '다섯 스승의 시험' : '강림도령과') + (tier === 4 || tier === 6 ? '' : ' 겨루기(전직 시험)')}</button>`}
     </div>`;
   };
   panel.innerHTML = `${growSegHTML()}
@@ -18000,7 +18162,8 @@ function buildJob(){
     <p class="hint">전직 시험은 동료 둘과 함께 ${RAID_TIME}초 안에 스승을 이기면 통과예요. 지면 몇 번이든 다시 도전할 수 있어요. 직업을 바꿔도 전직 단계는 남아요.</p>
     ${card(1)}${card(2)}${S.world >= 3 || S.job >= 2 ? card(3) : ''}${S.world >= 4 || S.job >= 3 ? card(4) : ''}${S.world >= 5 || S.job >= 4 && crossReady() ? card(5) : ''}${S.world >= 8 || S.job >= 6 ? card(6) : ''}`;
   wireGrowSeg();
-  panel.querySelectorAll('[data-tier]').forEach(bt => bt.addEventListener('click', () => { if (!raid) presetAsk('boss', '전직 시험', () => { if (startJobTrial(+bt.dataset.tier)){ buildTab('grow', true); return true; } }); }));
+  panel.querySelectorAll('[data-tier]').forEach(bt => bt.addEventListener('click', () => { if (!raid) presetAsk('boss', '전직 시험', () => { if (bt.dataset.br && jobReady(1)) S.gwonBr = +bt.dataset.br === 2 ? 2 : 1;   // 권사: 고른 길을 시험 전에 적어 둠(이름·스승 그림이 그 길을 따름)
+      if (startJobTrial(+bt.dataset.tier)){ buildTab('grow', true); return true; } }); }));
   return () => {
     panel.querySelectorAll('[data-tier]').forEach(bt => { const t = +bt.dataset.tier, ok = jobReady(t) && !raid; bt.disabled = !ok; bt.classList.toggle('primary', ok);
       if (raid && raid.info.job === t) setText(bt, '시험 중…'); });
@@ -20929,7 +21092,7 @@ function updateDots(){
 const prevCache = new Map();
 function lookPreview(c, look, aG, wG, dir = 'down', ex){
   look = cleanLook(look);
-  const key = [c, look.outfit, look.hair, look.hat, look.skin, aG, wG, dir, ex ? [ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape, ex.wing || '', ex.sk ? JSON.stringify(ex.sk) : '', ex.gx ? JSON.stringify(ex.gx) : ''].join(',') : ''].join('|');
+  const key = [c, look.outfit, look.hair, look.hat, look.skin, look.sex || '', aG, wG, dir, ex ? ex.gbr + ';' + [ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape, ex.wing || '', ex.sk ? JSON.stringify(ex.sk) : '', ex.gx ? JSON.stringify(ex.gx) : ''].join(',') : ''].join('|');
   let u = prevCache.get(key);
   if (!u){
     const sp = personSprite(c, look, aG, wG, dir, 0, false, ex);
@@ -21006,13 +21169,14 @@ function clsChgPlan(){
   return {sk, rf, spent:{gold, gems, dust}, back:{gold:f(gold), gems:f(gems), dust:f(dust)}};
 }
 // 실제로 바꾼다. 돌려주는 값: 그때의 계산(clsChgPlan) 또는 null(못 바꿈)
-function clsChgDo(c){
-  if (!hasK(CLASSES, c) || c === S.cls || !S.chosen || clsChgBusy() || clsChgLeft() < 1 || !clsOpened(c)) return null;
+function clsChgDo(c, br){
+  if (!hasK(CLASSES, c) || (c === S.cls && !(c === 'gwon' && gwonRepick())) || !S.chosen || clsChgBusy() || clsChgLeft() < 1 || !clsOpened(c)) return null;
   const P = clsChgPlan();
   for (const k of ALL_SLOTS){ const r = S.refine[k]; if (!r) continue; refBestNote(k); r.lv = Math.min(r.lv, refStart(r)); r.drops = 0; r.sp = {g:0, gm:0, du:0}; }
   for (const sk of SKILLS) if ((S.skills[sk.key] || 0) > 1) S.skills[sk.key] = 1;
   S.gold += P.back.gold; S.gems += P.back.gems; S.dust += P.back.dust;
   clsChgWeek().n++; S.clsNote = false;
+  if (c === 'gwon') S.gwonBr = br === 2 ? 2 : br === 1 ? 1 : S.gwonBr === 2 ? 2 : 1;   // 권사: 고른 길(안 고르면 전에 고른 길, 처음이면 주먹)
   setClass(c); unlockSkills(); refreshStats(); hero.hp = ST.maxHp;
   const got = [P.back.gold ? `엽전 ${fmt(P.back.gold)}` : '', P.back.gems ? `보석 ${fmt(P.back.gems)}` : '', P.back.dust ? `쇳가루 ${fmt(P.back.dust)}` : ''].filter(Boolean);
   addLog(`직업을 바꿨어요. 기술은 Lv.1, 재련은 처음으로 돌아갔어요.${got.length ? ` 돌려받은 재화: ${got.join(' · ')}.` : ''} (이번 주 남은 횟수 ${clsChgLeft()}번)`, 'gain');
@@ -21029,7 +21193,7 @@ function clsChgOpen(){
   const html = `<p>직업 바꾸기는 <b>한 주에 ${CLS_CHG.max}번</b>까지예요. <b class="cc-left" id="clsLeft">이번 주 남은 횟수 ${left}번</b></p>
     <p class="small cc-warn">바꾸면 <b>기술 레벨</b>과 <b>재련</b>(모든 장비 칸)이 처음으로 돌아가고, 거기에 쓴 재화는 <b>${pct}%만</b> 돌려받아요. 다음 창에서 숫자로 보여 드려요.</p>
     ${classCardsHTML(pick, c => !clsOpened(c))}<p class="small cc-hint" id="clsHint">지금 직업은 ${esc(cls().name)}${josa(cls().name, '이에요', '예요')}. 바꿀 직업을 골라 주세요.</p>`;
-  showModal('직업 바꾸기', html, [{label:'취소'}, {label:'다음', primary:true, keep:() => { if (pick !== S.cls) return false; const h = $('#clsHint'); if (h){ h.textContent = `지금 직업이 ${cls().name}${josa(cls().name, '이에요', '예요')}. 다른 직업을 골라 주세요.`; h.classList.add('on'); } return true; }, fn:() => clsChgAsk(pick)}],
+  showModal('직업 바꾸기', html, [{label:'취소'}, {label:'다음', primary:true, keep:() => { if (pick !== S.cls || (pick === 'gwon' && gwonRepick())) return false; const h = $('#clsHint'); if (h){ h.textContent = `지금 직업이 ${cls().name}${josa(cls().name, '이에요', '예요')}. 다른 직업을 골라 주세요.`; h.classList.add('on'); } return true; }, fn:() => clsChgAsk(pick)}],
     () => wireClassCards((c, locked) => { const h0 = $('#clsHint'); if (locked){ if (h0){ h0.textContent = `${CLASSES[c].name}${josa(CLASSES[c].name, '은', '는')} 새 직업이에요. 이 계정에서 ${CLASSES[c].name} 캐릭터를 한 번이라도 만든 뒤에 바꿀 수 있어요([캐릭터 바꾸기] → 새 캐릭터).`; h0.classList.add('on'); } return; } pick = c; const h = $('#clsHint'); if (h){ h.textContent = c === S.cls ? `지금 직업이에요.` : `${CLASSES[c].name}${josa(CLASSES[c].name, '으로', '로')} 바꿔요. [다음]을 누르면 무엇이 달라지는지 보여 드려요.`; h.classList.remove('on'); } }));
 }
 // 직업 바꾸기 경고의 「맞는 능력」 한 줄(9-5): 적성은 직업과 상관없으므로 지금 가진 옵션으로 새 직업의 맞는 능력이 얼마나 맞는지 그대로 보여 준다
@@ -21040,8 +21204,9 @@ function aptCcHTML(c){
   const w = nw.map(ab => nm(ab, c)).join(' · '), nn = CLASSES[c].name;
   return `<b>${esc(nn)}</b>${josa(nn, '은', '는')} <b>${w}</b>${josa(nm(nw[1], c), '이', '가')} 맞아요 — 지금 가진 옵션으로는 적성 ${join(nw, c)}(지금 ${esc(cls().name)}: ${join(old)}).${ch.length ? ` 각인 추천도 ${ch.map(x => x.t).join(' · ')}${josa(ch[ch.length - 1].n, '으로', '로')} 바뀌어요.` : ''}`;
 }
+const gwonRepick = () => S.cls === 'gwon' && S.job >= 1;   // 권사가 직업 바꾸기 창에서 「권사」를 다시 골라 갈래(주먹/발)만 바꿀 수 있음(한 주 횟수·기술 처음으로 같은 규칙)
 function clsChgAsk(c){
-  if (!hasK(CLASSES, c) || c === S.cls || !clsOpened(c)) return;
+  if (!hasK(CLASSES, c) || (c === S.cls && !(c === 'gwon' && gwonRepick())) || !clsOpened(c)) return;
   if (clsChgBusy() || clsChgLeft() < 1){ clsChgOpen(); return; }
   const P = clsChgPlan(), left = clsChgLeft(), pct = Math.round(CLS_CHG.back * 100);
   const row = (name, sp, bk) => sp > 0 ? `<tr><th>${name}</th><td>${fmt(sp)}</td><td class="bk">+${fmt(bk)}</td><td class="ls">−${fmt(sp - bk)}</td></tr>` : '';
@@ -21059,13 +21224,16 @@ function clsChgAsk(c){
     <div class="cc-box"><div class="cc-t">돌려받는 재화 ${pct}% · 사라지는 재화 ${100 - pct}%</div>
       ${any ? `<table class="cc-tb" id="ccTb"><tr><th></th><th>쓴 것</th><th>돌려받음</th><th>사라짐</th></tr>${row('엽전', P.spent.gold, P.back.gold)}${row('보석', P.spent.gems, P.back.gems)}${row('쇳가루', P.spent.dust, P.back.dust)}</table>
       <p class="small" style="margin:6px 0 0">기술에 쓴 엽전, 재련에 쓴 엽전·보석·쇳가루예요. 돌려받은 재화로 다시 올려야 해요.${P.rf.some(x => x.est) ? '<br>이번 업데이트 전에 올린 재련은 쓴 양을 세어 두지 않아서, 공개된 확률대로 그 단계까지 <b>평균으로 드는 값</b>으로 쳤어요.' : ''}</p>` : '<p class="small" id="ccTb" style="margin:0">기술·재련에 쓴 재화가 없어서 돌려받을 것도, 사라질 것도 없어요.</p>'}</div>
+    ${c === 'gwon' && (gwonRepick() || S.job >= 1) ? `<div class="cc-box"><div class="cc-t">권사의 길</div><div class="chips" id="ccBr"><button class="chip" data-br="1" aria-pressed="${gwonSel() === 1}">주먹 길 · 맞주먹</button><button class="chip" data-br="2" aria-pressed="${gwonSel() === 2}">발 길 · 곁발</button></div><p class="small" style="margin:6px 0 0">전직 단계는 그대로이고, 전직 이름·기술 이름·전투 방식이 고른 길로 바뀌어요.</p></div>` : ''}
     <p class="small" id="ccApt">${aptCcHTML(c)}</p>
     <p class="small">그대로 남는 것: 레벨 · 전직 단계 · 장비 · 펫 · 장신구 · 아바타${seaOpen() ? ' · 호박석 세공' : ''} · 이야기 진행. 재련 단계가 조건인 이야기·시련은 이미 이룬 것으로 쳐요.</p>
     <p class="small cc-warn">되돌릴 수 없어요. [바꾸기]를 누르면 바로 바뀌어요.</p></div>`;
-  showModal('직업 바꾸기 · 꼭 읽어 주세요', html, [{label:'취소'}, {label:'바꾸기', primary:true, fn:() => clsChgRun(c)}]);
+  let brPick = gwonSel();
+  showModal('직업 바꾸기 · 꼭 읽어 주세요', html, [{label:'취소'}, {label:'바꾸기', primary:true, fn:() => clsChgRun(c, brPick)}],
+    () => { document.querySelectorAll('#ccBr .chip').forEach(b => b.addEventListener('click', () => { brPick = +b.dataset.br === 2 ? 2 : 1; document.querySelectorAll('#ccBr .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b))); })); });
 }
-function clsChgRun(c){
-  const P = clsChgDo(c);
+function clsChgRun(c, br){
+  const P = clsChgDo(c, br);
   if (!P){ addLog('지금은 직업을 바꿀 수 없어요.', 'warn'); return; }
   sfx('quest');
   const G = window.__game; if (G && G.quiet) return;
@@ -21112,11 +21280,13 @@ function lookEditorHTML(look){
       <div><div class="opt-l">머리색</div><div class="sw">${sw('hair', HAIRS, '머리색')}</div></div>
       <div><div class="opt-l">피부</div><div class="sw">${sw('skin', SKINS, '피부')}</div></div>
       <div><div class="opt-l">머리 장식</div><div class="chips">${HATS.map(([v, n], k) => `<button class="chip" data-k="hat" data-v="${k}" aria-pressed="${look.hat === v}">${n}</button>`).join('')}</div></div>
+      <div id="lk-sexrow" hidden><div class="opt-l">모습(권사)</div><div class="chips"><button class="chip" data-sex="m" aria-pressed="${look.sex !== 'f'}">남</button><button class="chip" data-sex="f" aria-pressed="${look.sex === 'f'}">여</button></div></div>
     </div></div>`;
 }
 function wireLookEditor(look, getCls, grades){
   let di = 0;
   const upd = () => {
+    const sr = $('#lk-sexrow'); if (sr) sr.hidden = getCls() !== 'gwon';   // 외형 성별은 권사만(다른 직업은 모습이 하나)
     $('#lk-img').src = lookPreview(getCls(), look, grades[0], grades[1], DIR_SEQ[di]);
     setText($('#lk-dir'), DIR_NAME[DIR_SEQ[di]] + ' · 눌러서 돌리기');
   };
@@ -21124,6 +21294,11 @@ function wireLookEditor(look, getCls, grades){
     const k = bt.dataset.k, i = +bt.dataset.v;
     look[k] = k === 'outfit' ? OUTFITS[i] : k === 'hair' ? HAIRS[i] : k === 'skin' ? i : HATS[i][0];
     $('#mBody').querySelectorAll(`.lookwrap [data-k="${k}"]`).forEach(b2 => b2.setAttribute('aria-pressed', String(b2 === bt)));
+    upd();
+  }));
+  $('#mBody').querySelectorAll('.lookwrap [data-sex]').forEach(bt => bt.addEventListener('click', () => {
+    if (bt.dataset.sex === 'f') look.sex = 'f'; else delete look.sex;
+    $('#mBody').querySelectorAll('.lookwrap [data-sex]').forEach(b2 => b2.setAttribute('aria-pressed', String(b2 === bt)));
     upd();
   }));
   const rot = () => { di = (di + 1) % 4; upd(); };
@@ -21827,7 +22002,7 @@ function resetRuntime(){
   paradeAbort();
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null; jobChain = false;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, ki:0, kiT:0, cntCd:0, gN:0, gMv:0, gAlt:false, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
