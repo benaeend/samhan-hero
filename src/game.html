@@ -1704,6 +1704,11 @@ const TIER_P = [0.55, 0.28, 0.13, 0.04];
 const ROMAN = ['I', 'II', 'III', 'IV'];
 
 /* ================= 직업 ================= */
+const GWON_SK1 = ['맴돌이 차기', '정권 지르기', '기합 일성', '태산 내려찍기', '권각 연환', '혈 짚기', '벽력 일권', '금강 쇠주먹', '천수 난타', '개산 장타', '동문 기합', '파도 부수기', '물 밟는 걸음', '천지 난권', '태산 같은 숨'];
+const GWON_SK2 = ['맴돌이 차기', '정권 지르기', '기합 일성', '태산 내려찍기', '권각 연환', '혈 짚기', '번개 곁차기', '풍신 비각', '천수 난타', '개산 장타', '동문 기합', '파도 부수기', '물 밟는 걸음', '천지 난권', '태산 같은 숨'];
+// 권사의 전직 갈래: 0 아직 전직 전 · 1 주먹(맞받아치는 주먹) · 2 발(멈추지 않는 발). S가 만들어지기 전(불러올 때)에 읽혀도 0
+const gwonBr = () => { try { return S.cls === 'gwon' && S.job >= 1 ? (S.gwonBr === 2 ? 2 : 1) : 0; } catch (e) { return 0; } };
+const GB = (a, b) => gwonBr() === 2 ? b : a;   // 갈래별 이름·글: GB('주먹 쪽', '발 쪽')
 const CLASSES = {
   musa:{name:'무사', desc:'튼튼한 몸으로 앞에 서서 베어 넘겨요', tags:'균형 · 근접', hpMul:1.3, atkMul:1, spdMul:1, critAdd:0, regenAdd:0.003, range:1, skillMul:1.1, dr:10,
     role:'균형', traits:['체력이 높고 받는 피해 -10%, 체력 회복도 조금 더 빨라요', '여럿을 베는 기술·한 적을 노리는 기술·힘을 북돋는 기술을 고루 써요', '레이드에서는 보스의 눈길을 끌어 동료를 지켜요'],
@@ -1739,11 +1744,19 @@ const CLASSES = {
     role:'간격', traits:['「간격」: 두 칸 넘게 떨어진 적을 찌르면 피해 +40%, 바로 옆에 붙은 적은 -20%. 머리 위 마름모가 금빛이면 창끝 거리예요', '「되찌르기」: 맞은 직후 되찔러 붙은 적을 한 칸 밀어내요(2.5초마다). 받는 피해 -5%, 두 칸 거리에서 싸워요', '보스의 버팀을 30% 더 빨리 깎고, 휘청이는 보스에게 주는 피해 +15%. 창을 휘두르는 기술은 붙은 몬스터를 밀어내 창끝 거리를 되찾아요 — 몬스터 떼에 강해요'],
     weapon:'창', armor:'표사복', wtype:'spear', base:'#2f6a6a', pants:'#33303c', belt:'#d8b34a', fx:'#ffb070', boltFx:'flash', nukeFx:'slashes', proj:null,
     skills:['창 돌려 쓸기', '일점 찌르기', '표사의 기합', '회전 창무', '백 번 찌르기', '갑옷 뚫기', '표국 창진', '바람 가르는 창', '천 자루 거두기', '불꽃 창끝', '길동무', '물기둥 창', '파도 타기', '만 갈래 창', '위태의 서원'], awaken:'만부부당', awaken4:'화첨 난무'},
+  // 권사(拳士, 2026-11-19): 맨주먹·맨발의 무술가(옛 수박·택견 같은 맨손 무예). 근접 1칸 · 「연권」(FIST, fistFin — 기본 공격 세 번째마다 마무리 일격).
+  // Lv.50 1차 전직에서 두 갈래: S.gwonBr 1 「주먹」(맞받아치는 주먹 — fistCounter, 「기세」) / 2 「발」(멈추지 않는 발 — footStep 「보법」, 두 번 차기). 갈래 이름·기술 6·7번은 skillsBr / JOBS.gwon 의 getter
+  gwon:{name:'권사', desc:'맨주먹과 맨발로 부딪쳐요. Lv.50에 주먹과 발 가운데 한 길을 골라요', tags:'맨손 · 근접', hpMul:1.15, atkMul:1, spdMul:1.1, critAdd:0.03, regenAdd:0, range:1, skillMul:1, dr:3,
+    fist:true,
+    role:'맨손 무술', traits:['「연권」: 기본 공격 세 번째마다 몸을 실은 마무리 일격이 나가요. 박자가 빨라서 쉬지 않고 맞붙어요', 'Lv.50 1차 전직에서 한 길을 골라요. 「주먹」은 맞은 직후 되받아치며 기세를 쌓고, 「발」은 쉬지 않고 옮겨 다니며 두 번씩 차요', '무기가 없어서 장비 칸의 「무기」는 손목 감개(권갑)예요. 재련·소환은 다른 직업과 똑같아요'],
+    weapon:'권갑', armor:'무복', wtype:'none', base:'#d2802f', pants:'#5e5a74', belt:'#efe6d0', fx:'#ffb84a', boltFx:'cross', nukeFx:'slashes', proj:null,
+    get skills(){ return gwonBr() === 2 ? GWON_SK2 : GWON_SK1; },   // 7·8번째(1차·2차 전직 기술)부터 갈래마다 이름이 달라요(주먹 / 발). 아직 전직 전이면 주먹 쪽 이름
+    awaken:'일권 파천', awaken4:'천지 진동'},
 };
 // CLASS_ORDER = 플레이어에게 보이는 직업(타이틀·직업 고르기·직업 바꾸기 창). CLASS_ALL = 게임에 들어 있는 모든 직업(표·전직 망토 아바타처럼 '빠지면 안 되는' 곳).
 // 새 직업은 다 만들 때까지 CLASS_ALL에만 두고(시험은 __game.setClass), 열 때 CLASS_ORDER에 넣는다. 궁사·창객은 물의 신화 8단계에 열었다
-const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek'];
-const CLASS_NEW = ['gungsa', 'changgaek'];   // 새 직업: 새 캐릭터로는 누구나 만들 수 있고, [직업 바꾸기]로는 그 직업 캐릭터를 만든 적이 있는 계정만(clsOpened)
+const CLASS_ORDER = ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'gwon'];
+const CLASS_NEW = ['gungsa', 'changgaek', 'gwon'];   // 새 직업: 새 캐릭터로는 누구나 만들 수 있고, [직업 바꾸기]로는 그 직업 캐릭터를 만든 적이 있는 계정만(clsOpened)
 const CLASS_ALL = Object.keys(CLASSES);
 const W_PRE = ['나무', '무쇠', '청동', '백은', '신령', '용궁', '수미'];
 const A_PRE = ['삼베', '무명', '비단', '금실', '신령', '용궁', '수미'];
@@ -2394,12 +2407,13 @@ const PB = {
   doin:{atk:l => 8 + 0.4 * (l - 1), spd:l => 10 + 0.5 * (l - 1), col:'#8ff0a0'},
   gungsa:{cr:l => 8 + 0.2 * (l - 1), rng:() => 1, col:'#c8f08a'},   // 매의 눈: 치명타 확률 + 멀리 쏘는 용사(사거리 2 이상)의 사거리 +1
   changgaek:{spd:l => 10 + 0.3 * (l - 1), mv:l => 10 + 0.3 * (l - 1), col:'#ffb070'},   // 길동무: 공격 속도·이동 속도
+  gwon:{atk:l => 6 + 0.3 * (l - 1), spd:l => 6 + 0.3 * (l - 1), col:'#ffb84a'},   // 동문 기합(권사): 공격력·공격 속도
 };
 const PB_SH = 20, PB_HEAL = 25;   // 술사 보호막·도인 회복(최대 체력 %)
 let pbT = {}, pbL = {};   // 지금 걸려 있는 파티 버프(직업별 남은 초·레벨)
 const pbV = (c, f) => (pbT[c] || 0) > 0 && PB[c][f] ? PB[c][f](pbL[c] || 1) : 0;
-const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 100);
-const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (1 + (pbV('jagaek', 'cr') + pbV('gungsa', 'cr')) / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
+const pbAtk = () => (1 + pbV('musa', 'atk') / 100) * (1 + pbV('doin', 'atk') / 100) * (1 + pbV('gwon', 'atk') / 100);
+const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (1 + (pbV('jagaek', 'cr') + pbV('gungsa', 'cr')) / 100 * 0.8 + pbV('jagaek', 'cd') / 100 * 0.3) * (1 + pbV('sulsa', 'sk') / 100 * 0.6);   // 동료 피해(어림)
 /* ===== 파티 시너지 · 내 파티 (물의 신화 9-2) =====
    '내 파티' = 나 + 같은 계정의 내 캐릭터(그림자 동료는 안 셈). 직업 조합 일곱 가지가 레이드·진·타임 보스·강림에서만 켜진다(사냥·결투·탑·허수아비에는 없음).
    수치(11-13 잼: 같은 무사 저장에서 직업만 바꿔 서 있는 레이드 보스 bench 150초, 함께하는 싸움 추천 조합, 1부 끝·3부 끝·4부 끝·5부 끝):
@@ -2412,7 +2426,7 @@ const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('cha
    → 무사 ÷ 가장 센 직업(술사) = 1.25 · 0.76 · 0.63 · 0.72, 술사를 빼면(둘째로 센 직업) 1.28 · 0.79 · 0.90 · 1.00.
    벌어진 까닭은 시너지가 아니라 술사의 「맞춤」 빌드: 옵션을 기술 피해·재사용으로 모으면 적성 없이도 기술 배율 ×1.77·재사용 ×0.89로 고르게 뿌린 술사의 1.5~1.9배(무사는 1.1~1.2배 · 그 가운데 적성 배율 몫은 술사 1.09·무사 1.11, 5부 끝 — bal95p/decomp.py·diag.py).
    무사 시너지로 메우려면 +130~140%가 들고 그러면 1부에서 무사가 가장 센 직업의 1.8배라 SYN으로는 안 맞춘다 — 술사 쪽(기술 피해 옵션이 겹쳐 곱해지는 폭)을 손본 뒤 다시 잴 것 */
-const SYN_MELEE = ['musa', 'jagaek', 'changgaek'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
+const SYN_MELEE = ['musa', 'jagaek', 'changgaek', 'gwon'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
 const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
 const synCn = c => (CLASSES[c] || {}).name || '직업 미상';
 function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}], mod:{직업:{dmg, skill, dr, cdr, cd, hp}}, grog}
@@ -2453,7 +2467,7 @@ const synChip = () => { const s = synState(); return s && s.list.length ? ' · '
 const APT_ABIL = {atk:'공격력', hp:'체력', cr:'치명 확률', cd:'치명 피해', sk:'기술 피해', spd:'공격 속도', cdr:'재사용', boss:'보스 피해'};
 const aptName = (a, c) => a === 'boss' && (c || (S && S.cls)) === 'changgaek' ? '휘청' : APT_ABIL[a] || '';
 const APT_COL = {atk:'#ff9a5a', hp:'#ff7a9a', cr:'#ffd24a', cd:'#ff6a6a', sk:'#9fe7ff', spd:'#8ff0a0', cdr:'#c8a0ff', boss:'#ffb070'};
-const APT_MAIN = {musa:['atk', 'hp'], jagaek:['cr', 'cd'], sulsa:['sk', 'cdr'], doin:['spd', 'hp'], gungsa:['cd', 'spd'], changgaek:['atk', 'boss']};
+const APT_MAIN = {gwon:['atk', 'spd'], musa:['atk', 'hp'], jagaek:['cr', 'cd'], sulsa:['sk', 'cdr'], doin:['spd', 'hp'], gungsa:['cd', 'spd'], changgaek:['atk', 'boss']};
 const APT_TAG = {   // b 기본 공격 · c 되받기 · s 기술 칸 0~14. 공격 기술이 아닌 칸(skDef(i).atk 거짓)은 표시만
   musa:     {b:'atk', c:'hp',   s:['atk','atk','atk','atk','atk','atk','atk','atk','atk','hp','hp','atk','hp','atk','hp']},
   jagaek:   {b:'cr',  c:'cd',   s:['cr','cd','cr','cr','cr','cd','cr','cd','cr','cd','cr','cd','cd','cd','cd']},
@@ -2461,8 +2475,9 @@ const APT_TAG = {   // b 기본 공격 · c 되받기 · s 기술 칸 0~14. 공�
   doin:     {b:'spd', c:'spd',  s:['spd','spd','hp','spd','spd','spd','spd','spd','spd','hp','hp','spd','hp','spd','spd']},
   gungsa:   {b:'spd', c:'cd',   s:['spd','cd','cd','spd','spd','cd','cd','cd','cd','cd','cd','spd','spd','spd','cd']},
   changgaek:{b:'atk', c:'boss', s:['atk','atk','atk','atk','atk','boss','atk','boss','atk','boss','atk','atk','atk','boss','boss']},
+  gwon:     {b:'atk', c:'spd',  s:['atk','atk','spd','atk','atk','atk','atk','atk','atk','atk','spd','atk','spd','atk','spd']},
 };
-const APT_W = {musa:{atk:0.8, hp:0.2}, jagaek:{cr:0.35, cd:0.65}, sulsa:{sk:0.65, cdr:0.35}, doin:{spd:1, hp:0}, gungsa:{cd:0.5, spd:0.5}, changgaek:{atk:0.6, boss:0.4}};   // 직업 피해 가운데 꼬리표 몫(어림 — 화면·전투력용. 밸런스 담당이 aptForce로 재서 고침)
+const APT_W = {gwon:{atk:0.75, spd:0.25}, musa:{atk:0.8, hp:0.2}, jagaek:{cr:0.35, cd:0.65}, sulsa:{sk:0.65, cdr:0.35}, doin:{spd:1, hp:0}, gungsa:{cd:0.5, spd:0.5}, changgaek:{atk:0.6, boss:0.4}};   // 직업 피해 가운데 꼬리표 몫(어림 — 화면·전투력용. 밸런스 담당이 aptForce로 재서 고침)
 const APT = {up:0.35, dn:0.40, dz:0.15, grace:14, base:1, half:0.85, kp:0.35, kn:1, spdK:1, aimK:1, lineK:0.3, upA:{atk:0.15, hp:0.20, spd:0.25},   // upA 능력마다 따로 둔 up(없으면 up — 공격력·체력은 옵션 값 자체가 크고 예전 용사가 이미 많이 가져서(베타 무사가 패치 날 1.2배를 넘지 않게), 공격 속도는 '공격 속도의 길'이 따로 붙어서 낮게) · kp/kn 고를 곳이 좁은 능력의 분모 바닥. 2026-11-13 밸런스: sim_apt 여섯 직업 × 3·4·5부 끝
   W:{craft:3, elix:2, skin:2, amb:2, spirit:2, mount:1, guard:1, acc:1},     // 출처 무게
   P:{craft:3, elix:5, skin:1, amb:10, spirit:1, mount:0.5, guard:3, acc:2}};  // 앞몫(옵션이 적을 때 몫을 기대 쪽에 붙여 둠)
@@ -2657,6 +2672,7 @@ function pbDesc(c, l){
   if (c === 'sulsa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 기술 피해 +${fmt(PB.sulsa.sk(l))}%, 최대 체력 ${PB_SH}% 보호막`;
   if (c === 'gungsa') return `함께 싸우는 동료 모두 ${PB_T}초 동안 치명타 확률 +${fmt(PB.gungsa.cr(l))}%, 멀리서 싸우는 용사는 사거리 +1칸`;
   if (c === 'changgaek') return `함께 싸우는 동료 모두 ${PB_T}초 동안 공격 속도 +${fmt(PB.changgaek.spd(l))}%, 걷는 속도 +${fmt(PB.changgaek.mv(l))}%`;
+  if (c === 'gwon') return `함께 싸우는 동료 모두 ${PB_T}초 동안 공격력 +${fmt(PB.gwon.atk(l))}%·공격 속도 +${fmt(PB.gwon.spd(l))}%`;
   return `함께 싸우는 동료 모두 체력 ${PB_HEAL}% 회복, ${PB_T}초 동안 공격력 +${fmt(PB.doin.atk(l))}%·공격 속도 +${fmt(PB.doin.spd(l))}%`;
 }
 function pbGain(l, n){
@@ -2666,6 +2682,7 @@ function pbGain(l, n){
   if (c === 'sulsa') return {lab:'기술 피해', a:pp(P.sk(l)), b:pp(P.sk(n)), g:((100 + P.sk(n)) / (100 + P.sk(l)) - 1) * 100};
   if (c === 'gungsa') return {lab:'치명타 확률', a:pp(P.cr(l)), b:pp(P.cr(n)), g:((100 + P.cr(n)) / (100 + P.cr(l)) - 1) * 100};
   if (c === 'changgaek') return {lab:'공격·이동 속도', a:pp(P.spd(l)), b:pp(P.spd(n)), g:((100 + P.spd(n)) / (100 + P.spd(l)) - 1) * 100};
+  if (c === 'gwon') return {lab:'공격력·속도', a:`${pp(P.atk(l))}·${pp(P.spd(l))}`, b:`${pp(P.atk(n))}·${pp(P.spd(n))}`, g:((100 + P.atk(n)) * (100 + P.spd(n)) / ((100 + P.atk(l)) * (100 + P.spd(l))) - 1) * 100};
   return {lab:'공격력·속도', a:`${pp(P.atk(l))}·${pp(P.spd(l))}`, b:`${pp(P.atk(n))}·${pp(P.spd(n))}`, g:((100 + P.atk(n)) * (100 + P.spd(n)) / ((100 + P.atk(l)) * (100 + P.spd(l))) - 1) * 100};
 }
 // who = 건 동료(없으면 나)
@@ -2820,7 +2837,7 @@ const skillGainHTML = (i, l) => { const r = skillGain(i, l), pa = parseFloat(Str
 const OUTFITS = ['auto', '#8a5a3a', '#3f5f9a', '#3a3450', '#e6e0cc', '#b8382f', '#3f8f6a', '#d8a83a', '#7a4a9a', '#d87aa0', '#5a5a62'];
 const HAIRS = ['#241c26', '#5a3a2a', '#8a5a3a', '#a8a8b0', '#d8c8a0', '#8a2a2a'];
 const SKINS = ['#f4c79c', '#e6b088', '#c98e64'];
-const HATS = [['class', '직업 기본'], ['none', '없음'], ['musa', '머리띠'], ['sulsa', '갓'], ['jagaek', '복면'], ['doin', '상투관'], ['flower', '꽃핀'], ['gungsa', '삿갓'], ['changgaek', '묶은 머리']];
+const HATS = [['class', '직업 기본'], ['none', '없음'], ['musa', '머리띠'], ['sulsa', '갓'], ['jagaek', '복면'], ['doin', '상투관'], ['flower', '꽃핀'], ['gungsa', '삿갓'], ['changgaek', '묶은 머리'], ['gwon', '수련 두건']];
 const defaultLook = () => ({outfit:'auto', hair:HAIRS[0], hat:'class', skin:0});
 const hasK = (o, k) => typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k);   // 서버·남이 보낸 키 검사(constructor·__proto__ 같은 이름 막기)
 const gradeIdx = v => { v = Math.floor(+v); return Number.isInteger(v) && v >= -1 && v <= 4 ? v : -1; };   // 남이 보낸 장비 등급(-1~4)
@@ -2832,6 +2849,7 @@ function cleanLook(l){
     hair:HAIRS.includes(l.hair) ? l.hair : d.hair,
     hat:HATS.some(h => h[0] === l.hat) ? l.hat : d.hat,
     skin:[0, 1, 2].includes(l.skin) ? l.skin : 0,
+    ...(l.sex === 'f' ? {sex:'f'} : {}),   // 권사만 쓰는 외형 성별(없으면 남). 다른 직업 모습에는 아무 영향이 없다
   };
 }
 
@@ -3145,7 +3163,7 @@ const ENGR = {
   a:[{k:'wall', name:'철벽', v:2, d:'받는 피해 감소·체력'}, {k:'swift', name:'신속', v:3, d:'공격 속도'}, {k:'life', name:'생기', v:0.1, d:'초당 체력 회복'}],
   n:[{k:'magic', name:'술력', v:4, d:'기술 피해'}, {k:'cdr', name:'도력', v:2, d:'기술 재사용 시간 감소'}, {k:'pet', name:'공명', v:10, d:'펫 피해'}],
 };
-const ENGR_BEST = {musa:{w:'power', a:'wall', n:'cdr'}, jagaek:{w:'vital', a:'swift', n:'pet'}, sulsa:{w:'vital', a:'wall', n:'magic'}, doin:{w:'vital', a:'swift', n:'cdr'}, gungsa:{w:'vital', a:'swift', n:'magic'}, changgaek:{w:'power', a:'wall', n:'magic'}};
+const ENGR_BEST = {gwon:{w:'power', a:'swift', n:'cdr'}, musa:{w:'power', a:'wall', n:'cdr'}, jagaek:{w:'vital', a:'swift', n:'pet'}, sulsa:{w:'vital', a:'wall', n:'magic'}, doin:{w:'vital', a:'swift', n:'cdr'}, gungsa:{w:'vital', a:'swift', n:'magic'}, changgaek:{w:'power', a:'wall', n:'magic'}};
 const HARMONY = 15;   // 조화: 공격력·체력 +%
 const craftName = (k, t) => { if (!t) return '없음'; const g = Math.floor((t - 1) / 3), st = '★'.repeat((t - 1) % 3 + 1);
   return (k === 'n' ? NORI[g] : `${CRAFT_PRE[g]} ${k === 'w' ? cls().weapon : cls().armor}`) + ' ' + st; };
@@ -3295,7 +3313,7 @@ const NPCS = [
   {name:'솔이', cls:'jagaek', outfit:'#5a5a62', hair:'#5a3a2a'},
   {name:'억쇠', cls:'musa', outfit:'#d8a83a', hair:'#241c26'},
 ];
-const NPC_SHARE = {musa:0.35, doin:0.3, sulsa:0.55, jagaek:0.55, gungsa:0.55, changgaek:0.45};
+const NPC_SHARE = {gwon:0.4, musa:0.35, doin:0.3, sulsa:0.55, jagaek:0.55, gungsa:0.55, changgaek:0.45};
 const RAID_PARTY_MAX = 5;   // 레이드 파티는 나 + 동료 4명까지(동료가 다 잡아 주지 않게)
 const partyOf = info => Math.min(info.party, RAID_PARTY_MAX);   // 용사 초당 피해 대비 동료 몫
 const RAID_MELEE = [[13, 9], [15, 9], [16, 8], [14, 10], [12, 9], [16, 10]].map(([x, y]) => [x + FOX, y + FOY]);
@@ -5326,7 +5344,7 @@ function defaultState(){
     inv:{potion:20, elixir:0, whet:0, mana:20}, buff:{atk:0, spd:0, def:0, gold:0, exp:0}, shop:{day:'', got:{}}, useWhet:false,
     myth:{sword:0, mirror:0, bell:0, pearl:0, flute:0, kusa:0, yata:0, maga:0, uchi:0, pangu:0, sail:0, elixir:0, ose:0}, mw:{},
     world:0, best:{s0:1, l0:1, s1:0, l1:0, s2:0, l2:0, s3:0, l3:0},
-    job:0, av:{own:{}, char:'', cape:'', pet:'', wing:''},
+    job:0, gwonBr:0, av:{own:{}, char:'', cape:'', pet:'', wing:''},   // gwonBr: 권사의 전직 갈래(0 아직 안 고름 · 1 주먹 · 2 발)
     reb:{n:0, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}},
     form:{own:Object.fromEntries(FORMS.map(f => [f.k, false])), eq:'', manual:false, pity:0},
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}, neck:{g:-1, p:0}, pae:{g:-1, p:0}},
@@ -5409,6 +5427,7 @@ function mergeState(d){
   for (const m of MYTHS) out.myth[m.k] = Math.min(m.cap || m.pow || Infinity, Math.max(0, Math.round(+(d.myth && d.myth[m.k]) || 0)));
   out.mw = {}; if (d.mw && typeof d.mw === 'object') for (const M of MWEAP){ const v = d.mw[M.k]; if (v && typeof v === 'object') out.mw[M.k] = {own:!!v.own, lv:Math.max(0, Math.min(MW_MAX, Math.floor(+v.lv) || 0)), cf:Math.max(0, Math.min(99, Math.floor(+v.cf) || 0)), uf:Math.max(0, Math.min(99, Math.floor(+v.uf) || 0))}; }
   // 환생·저승·변신·장신구 (2026-11 추가)
+  out.gwonBr = d.gwonBr === 1 || d.gwonBr === 2 ? d.gwonBr : 0;
   out.world = Number.isInteger(d.world) && d.world >= 0 && d.world <= WORLD_MAX ? d.world : 0;
   const bd = d.best || {};
   // 고침(2026-11 (28)): 예전엔 곤륜(4)이 빠져 있어 곤륜 저장을 불러오면 이승 Lv100으로 바뀌었다.
@@ -5712,7 +5731,7 @@ function statValue(k, st){
   }
 }
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
-const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
+const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
 
@@ -6782,7 +6801,7 @@ function startFight(info, party, o){
   placeOf(hero);
   const melee = RAID_MELEE.slice(), ranged = RAID_RANGED.slice();
   const allies = party.map((a, k) => {
-    const near = a.cls === 'musa' || a.cls === 'jagaek' || a.cls === 'changgaek';
+    const near = a.cls === 'musa' || a.cls === 'jagaek' || a.cls === 'changgaek' || a.cls === 'gwon';
     const spot = (near ? melee.shift() || ranged.shift() : ranged.shift() || melee.shift()) || extraSpot(k);
     const C = CLASSES[a.cls], aspd = C.spdMul;
     const e = Object.assign(a, {tx:spot[0], ty:spot[1], fx:spot[0], fy:spot[1], mt:0, moving:false, x:0, y:0, dir:'right',
@@ -10122,7 +10141,7 @@ function flipCanvas(src){
 }
 
 function drawChibi(g, c, view, f, col, look){
-  if (col.gwon) return drawGwon(g, view, f, col, look);   // 권사 시안(새 옵션 플래그 — 없으면 기존 그림 그대로)
+  if (c === 'gwon') return drawGwon(g, view, f, col, look);   // 권사: 맨손 무술가(전용 그림)
   const L = CLASSES[c], back = view === 'back', atk = f === 3;
   look = look || defaultLook();
   const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
@@ -10410,7 +10429,7 @@ function drawChibi(g, c, view, f, col, look){
    프레임: 0 서기 · 1·2 걷기 · 3 주먹 내지르기 · 4 발차기 · 5 발차기 준비(무릎 들기) · 6 주먹 준비(당기기)
    발 기준점(32, 60)은 그대로: 받치는 다리는 제자리, 몸통만 살짝 기울여 위로 민다. drawChibi가 col.gwon이 있을 때만 이쪽으로 넘어온다 */
 function drawGwon(g, view, f, col, look){
-  const gw = col.gwon, fem = gw.sx === 'f', br = gw.br | 0, back = view === 'back';
+  const fem = !!look && look.sex === 'f', br = col.gbr | 0, back = view === 'back';
   look = look || defaultLook();
   const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
   const O = col.outfit, OD = darken(O, 0.24), OL = mix(O, '#ffffff', 0.2);
@@ -10581,17 +10600,16 @@ function personColors(c, look, armorG, weaponG, ex){
   const form = ex && ex.form || '';
   const cos = ex && ex.costume && AV[ex.costume], cape = ex && ex.cape && AV[ex.cape];
   if (cos) outfit = cos.outfit;
-  if (ex && ex.gwon && !custom && !cos) outfit = '#d2802f';   // 권사 시안: 직업 색(주황빛 황토)
   if (form){ const F = FORMS.find(x => x.k === form); if (F) outfit = mix(outfit, F.color, 0.45); }
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1,
-    gwon:ex && ex.gwon || null, job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
+    gbr:ex && ex.gbr || 0, job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
 }
 const spriteCache = new Map();
 // dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
-  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', col.gwon ? col.gwon.sx + col.gwon.br : ''].join('|');
+  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : ''].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
     const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
@@ -10607,7 +10625,7 @@ function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
 }
 const gradeOf = i => i >= 0 ? Math.min(4, Math.floor(i / 4)) : -1;   // 0~4(유물·영물도 4 — 다른 기기·예전 판에 보내는 값이라 그대로 둔다. 제 등급은 itemG·gearG)
 const heroGx = () => seaOpen() ? {h:S.helmHide || S.equip.helm < 0 ? -1 : gearG('helm'), s:S.equip.shoulder >= 0 ? gearG('shoulder') : -1, b:S.equip.boots >= 0 ? gearG('boots') : -1} : null;   // 투구·어깨·신발 등급(4부부터)
-const heroEx = () => ({gwon:window.__gwonProto || null, form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing, sk:skinLook(), gx:heroGx()});
+const heroEx = () => ({gbr:gwonBr(), form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing, sk:skinLook(), gx:heroGx()});
 const heroSprite = (c, dir, f, white) => personSprite(c, S.look, gearG('armor'), gearG('weapon'), dir, f, white, heroEx());
 
 const petCache = new Map();
@@ -11075,6 +11093,15 @@ const JOBS = {
     {name:'파랑창', weapon:'물결 창', cape:'용궁 비늘 망토', capeC:'#2a7a9a', teacher:'용궁의 창 장수', type:'m5_changgaek', ch:46},
     {name:'위태장', weapon:'금빛 수호창', cape:'하늘 장수 갑포', capeC:'#e0b040', teacher:'위태천', ch:68}],
 };
+// 권사(2026-11-19): 1차 전직에서 고른 갈래(S.gwonBr 1 주먹 · 2 발)에 따라 전직 이름·무기·스승이 달라진다 — 이름·무기·스승은 getter(GB). 망토(AVATARS가 불러올 때 한 번 읽음)는 갈래와 상관없는 이름·색
+// 1차 스승 「늙은 수박꾼」(새로 지은 인물)은 두 갈래를 다 가르치고, 3차 케하야/스쿠네(일본서기의 씨름 인물 — 시험하는 스승으로만)·4차 형천/과보(옛 신화)·5차 용궁의 주먹/발 장수(새로 지은 인물)·6차 비마(옛 서사시의 씨름꾼)/하누만
+JOBS.gwon = [
+  {get name(){ return GB('맞주먹', '곁발'); }, get weapon(){ return GB('붉은 손목 감개', '푸른 발목 감개'); }, cape:'수련생 겉옷', capeC:'#d8a05a', teacher1:'늙은 수박꾼'},
+  {get name(){ return GB('금강수', '비각객'); }, get weapon(){ return GB('쇠 손목 감개', '바람 발목 감개'); }, cape:'권문 홍포', capeC:'#a8402a'},
+  {get name(){ return GB('천수권', '풍신각'); }, get weapon(){ return GB('천 갈래 손목 감개', '번개 발목 감개'); }, cape:'씨름꾼 허리띠 망토', capeC:'#c8b078', get teacher(){ return GB('타이마노 케하야', '노미노 스쿠네'); }, type:'m3_gwon', ch:34},
+  {get name(){ return GB('파천권', '비천각'); }, get weapon(){ return GB('하늘 깨는 손목 감개', '해 쫓는 발목 감개'); }, cape:'붉은 하늘 무복', capeC:'#e0603a', get teacher(){ return GB('형천', '과보'); }, ch:43},
+  {get name(){ return GB('해일권', '파랑각'); }, get weapon(){ return GB('물결 손목 감개', '물결 발목 감개'); }, cape:'용궁 비늘 무복', capeC:'#2a8aa8', get teacher(){ return GB('용궁의 주먹 장수', '용궁의 발 장수'); }, type:'m5_gwon', ch:46},
+  {get name(){ return GB('금강권', '신풍각'); }, get weapon(){ return GB('금빛 손목 감개', '금빛 발목 감개'); }, cape:'하늘 무사 금포', capeC:'#e8c048', get teacher(){ return GB('비마', '하누만'); }, ch:68}];
 const JOB_BONUS = [{atk:0, hp:0, skill:0}, {atk:30, hp:30, skill:20}, {atk:80, hp:80, skill:50}, {atk:150, hp:150, skill:90}, {atk:250, hp:250, skill:140}, {atk:330, hp:330, skill:180}, {atk:420, hp:420, skill:230}];   // 6차(천축): 출발점 — 밸런스에서 맞출 것
 const JOB_MAX = 6;   // 지금 있는 가장 높은 전직(저장을 불러올 때 이 값까지 받는다 — 새 전직을 더하면 꼭 같이 올린다)
 const JOB3_LV = 350, JOB4_LV = 480, JOB5_LV = 505, JOB6_LV = 555;   // 4차: 460 → 480(2026-11 (27), 곤륜은 레벨이 4차를 막게 해 직업 차이를 줄임)
@@ -11180,19 +11207,20 @@ function grantJob(tier){
 }
 const JOB_CUT1 = c => ['village', 'hero,kkachi', 'transform', [['까치', `스승님이 인정하셨어요! 이제 ${JOBS[c][0].name}${josa(JOBS[c][0].name, '이에요', '예요')}!`], ['나', `「${JOBS[c][0].weapon}」… 손에 착 감겨요.`]]];
 const JOB_CUT2 = c => ['court', 'gangrim,hero', 'transform', [['강림도령', `염라대왕도 붙잡아 온 나를 이겼구나. 이제 너는 ${JOBS[c][1].name}${josa(JOBS[c][1].name, '이다', '다')}.`], ['나', '이 힘으로 하늘 문까지 지켜 낼게요.']]];
-const JOB_TEACHER3 = {musa:'susanoo', jagaek:'m:tengu:#c83a2a', sulsa:'seimei', doin:'uzume', gungsa:'yoichi', changgaek:'benkei'}, JOB_TEACHER4 = {musa:'pangu', jagaek:'change', sulsa:'jiutian', doin:'nuwa', gungsa:'houyi', changgaek:'nezha'};
+const JOB_TEACHER3 = {musa:'susanoo', jagaek:'m:tengu:#c83a2a', sulsa:'seimei', doin:'uzume', gungsa:'yoichi', changgaek:'benkei', get gwon(){ return GB('kehaya', 'sukune'); }}, JOB_TEACHER4 = {musa:'pangu', jagaek:'change', sulsa:'jiutian', doin:'nuwa', gungsa:'houyi', changgaek:'nezha', get gwon(){ return GB('xingtian', 'kuafu'); }};
 const JOB_CUT3 = c => ['shore', `${JOB_TEACHER3[c]},hero`, 'transform', [[JOBS[c][2].teacher, `해 뜨는 섬의 바람이 너를 알아보는구나. 이제 너는 ${JOBS[c][2].name}${josa(JOBS[c][2].name, '이다', '다')}.`], ['나', `「${JOBS[c][2].weapon}」… 바다 냄새가 나요.`]]];
 const JOB_CUT4 = c => ['kunlunmt', `${JOB_TEACHER4[c]},hero,kkachi`, 'transform', [[JOBS[c][3].teacher, `세 나라의 스승을 모두 넘었구나. 이제 너는 ${JOBS[c][3].name}${josa(JOBS[c][3].name, '이다', '다')}.`], ['까치', '{name}님, 넋 주머니가 두 칸이 됐어요!'], ['나', '하늘을 꿰매러 가요.']]];
-const JOB_TEACHER5 = {musa:'munmu', jagaek:'haenyeo', sulsa:'yeongdeung', doin:'cheoyong', gungsa:'geotaji', changgaek:'changjang'};
+const JOB_TEACHER5 = {musa:'munmu', jagaek:'haenyeo', sulsa:'yeongdeung', doin:'cheoyong', gungsa:'geotaji', changgaek:'changjang', get gwon(){ return GB('gwonjang1', 'gwonjang2'); }};
 const JOB_CUT5 = c => ['daewangam', `${JOB_TEACHER5[c]},hero,kkachi`, 'transform', [[JOBS[c][4].teacher, `물은 낮은 데로 흘러 가장 큰 것을 이룬다. 이제 너는 ${JOBS[c][4].name}${josa(JOBS[c][4].name, '이다', '다')}.`], ['까치', '{name}님, 새 기술이 둘이나 생겼어요! 마나도 120으로 늘었어요.'], ['나', `「${JOBS[c][4].weapon}」… 물결처럼 가벼워요.`]]];
-const JOB_TEACHER6 = {musa:'indra', jagaek:'yasha', sulsa:'agastya', doin:'gandharva', gungsa:'arjuna', changgaek:'weitian'};
+const JOB_TEACHER6 = {musa:'indra', jagaek:'yasha', sulsa:'agastya', doin:'gandharva', gungsa:'arjuna', changgaek:'weitian', get gwon(){ return GB('bhima', 'hanuman'); }};
 const JOB6_SAY = {
   musa:['가장 단단한 것은 부서지지 않는 것이 아니라 물러서지 않는 것이다. 이제 너는 금강장이다.', '「금강 대검」… 아무리 휘둘러도 발이 흔들리지 않아요.'],
   jagaek:['어둠을 지키는 자는 어둠에 먹히지 않아야 한다. 이제 너는 야차영이다.', '「야차 쌍비수」… 그림자가 저보다 먼저 움직여요.'],
   sulsa:['바다를 마시는 것은 큰 입이 아니라 고요한 속이다. 이제 너는 대선이다.', '「한바다 지팡이」… 손에 쥐니 바다 하나가 통째로 고요해요.'],
   doin:['가락은 혼자 울리지 않는다. 듣는 이가 있어야 노래가 된다. 이제 너는 천악이다.', '「하늘 가락 부채」… 펼치니까 어디선가 노래가 들려요.'],
   gungsa:['나무도 가지도 보지 마라. 새의 눈 한 점만 보아라. 이제 너는 신궁이다.', '「새눈 장궁」… 당기니까 과녁 한 점만 보여요.'],
-  changgaek:['창끝은 앞을 겨누나, 창이 지키는 것은 등 뒤의 사람이다. 이제 너는 위태장이다.', '「금빛 수호창」… 쥐니까 지킬 사람 얼굴이 먼저 떠올라요.']};
+  changgaek:['창끝은 앞을 겨누나, 창이 지키는 것은 등 뒤의 사람이다. 이제 너는 위태장이다.', '「금빛 수호창」… 쥐니까 지킬 사람 얼굴이 먼저 떠올라요.'],
+  get gwon(){ return GB(['힘센 사람은 많다. 그러나 맞고도 물러서지 않는 사람은 드물다. 이제 너는 금강권이다.', '「금빛 손목 감개」… 주먹을 쥐니 맞은 자리가 먼저 뜨거워져요.'], ['빠른 발은 달아나려는 발이 아니라 파고드는 발이다. 이제 너는 신풍각이다.', '「금빛 발목 감개」… 딛는 곳마다 바람이 먼저 가요.']); }};
 const JOB_CUT6 = c => ['sumeru', `${JOB_TEACHER6[c]},hero,kkachi`, 'transform', [[JOBS[c][5].teacher, JOB6_SAY[c][0]], ['까치', '{name}님, 새 기술이 또 둘이에요! 마나도 140으로 늘었어요. 이제 더 오를 전직은 없대요!'], ['나', JOB6_SAY[c][1]]]];
 function unlockSkills(){
   for (let i = 0; i < SKILLS.length; i++){
@@ -13946,6 +13974,9 @@ Object.assign(MOB_HD, {
   m_changgaek:chibiMob('changgaek', {outfit:'#5a4a44', hair:'#b8b8c0', hat:'changgaek', skin:1, beard:true}),                            // 늙은 표두(창객 1차 스승, 새로 지은 인물)
   m3_changgaek:chibiMob('changgaek', {outfit:'#2e2e38', hair:'#1a1a22', hat:'none', skin:1, beard:true}, {job:2, capeC:'#e8e4d8'}),      // 벤케이(창객 3차)
   m5_changgaek:chibiMob('changgaek', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, {job:3, capeC:'#2a7a9a'}),                // 용궁의 창 장수(창객 5차, 새로 지은 인물)
+  m_gwon:chibiMob('gwon', {outfit:'#8a6a4a', hair:'#c8c8d0', hat:'none', skin:1, beard:true}),                                              // 늙은 수박꾼(권사 1차 스승, 새로 지은 인물)
+  m3_gwon:[64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER3.gwon], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }],   // 케하야(주먹) / 스쿠네(발)
+  m5_gwon:[64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER5.gwon], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }],   // 용궁의 주먹 장수 / 발 장수
   gangrim:chibiMob('jagaek', {outfit:'#b8282a', hair:'#241c26', hat:'sulsa', skin:0}, {job:2}),
   soldier:chibiMob('musa', {outfit:'#d8b84a', hair:'#241c26', hat:'helmet', skin:0}, {wtype:'spear', aG:2, wG:2}),
   jeonwoochi:chibiMob('doin', {outfit:'#4a6aa8', hair:'#241c26', hat:'sulsa', skin:0}, {job:1}),
@@ -15546,13 +15577,14 @@ function drawMwAura(x, y, A){
     b.globalCompositeOperation = 'lighter'; vGlow(x, y - 14, 10 + pu * 2, '#ffffff', 0.2); }
   b.restore();
 }
+let gwonForceF = null;   // 권사 그림 프레임 고정(시험·캡처)
 function drawEntityHero(){
   const C = S.cls;
   let f = 0;
-  const GP = window.__gwonProto;   // 권사 시안 시험용(없으면 null)
-  if (GP && GP.force != null) f = GP.force;   // 시험용: 모습 고정
-  else if (hero.swing > 0) f = GP && GP.br === 2 ? 4 : 3;
-  else if (GP && !hero.moving && hero.target && hero.atkT > 0 && hero.atkT < 0.18) f = GP.br === 2 ? 5 : 6;
+  const GW = C === 'gwon' ? gwonBr() : -1, kickF = GW === 2 || (GW === 0 && hero.gAlt);   // 권사: 프레임 3 주먹 · 4 발차기 · 5 발차기 준비 · 6 주먹 준비(전직 전엔 번갈아)
+  if (GW >= 0 && gwonForceF != null) f = gwonForceF;   // 시험·캡처용: 모습 고정
+  else if (hero.swing > 0) f = GW >= 0 && kickF ? 4 : 3;
+  else if (GW >= 0 && !hero.moving && hero.target && hero.atkT > 0 && hero.atkT < 0.18) f = kickF ? 5 : 6;
   else if (hero.moving) f = hero.mt < 0.5 ? 1 : 2;
   const sp = heroSprite(C, hero.dir, f, hero.hurt > 0);
   const bob = !hero.moving && hero.swing <= 0 && Math.floor(gtime * 1.6) % 2 ? 1 : 0;
@@ -16756,6 +16788,13 @@ const CAST = {
   lakshmana:{name:'락슈마나', p:['gungsa', {outfit:'#c8a03a', hair:'#241c26', hat:'none', skin:1}, 2, 2], ex:{wtype:'bow'}},
   sita:{name:'시타', p:['doin', {outfit:'#f0b040', hair:'#241c26', hat:'flower', skin:1}, 3, -1], ex:{wtype:'none', capeC:'#e8506a'}},
   hanuman:{name:'하누만', p:['musa', {outfit:'#e0682a', hair:'#d8b888', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'hammer', capeC:'#c8382f'}},
+  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#8a6a4a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:1, capeC:'#c8b078'}},
+  sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:2, capeC:'#c8b078'}},
+  xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:3, gbr:1, capeC:'#e0603a'}},
+  kuafu:{name:'과보', p:['gwon', {outfit:'#c88a3a', hair:'#3a2a1a', hat:'none', skin:2}, 4, 4], ex:{job:3, gbr:2, capeC:'#e0603a'}},
+  gwonjang1:{name:'용궁의 주먹 장수', p:['gwon', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, 3, 3], ex:{job:3, gbr:1, capeC:'#2a8aa8'}},
+  gwonjang2:{name:'용궁의 발 장수', p:['gwon', {outfit:'#2a9a8a', hair:'#1a2a3a', hat:'none', skin:0, sex:'f'}, 3, 3], ex:{job:3, gbr:2, capeC:'#2a8aa8'}},
+  bhima:{name:'비마', p:['gwon', {outfit:'#8a3a2a', hair:'#241c26', hat:'none', skin:2, beard:true}, 4, 4], ex:{job:4, gbr:1, capeC:'#e8c048'}},
   sugriva:{name:'수그리바', p:['musa', {outfit:'#8a6a2a', hair:'#a8743a', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'none', capeC:'#d8a83a'}},
   indra:{name:'제석천', p:['musa', {outfit:'#f4f0e0', hair:'#241c26', hat:'mcrown', skin:0, beard:true}, 4, 4], ex:{deco:'dragon', capeC:'#3a6ad8', wtype:'rod'}},
   yama:{name:'야마', p:['sulsa', {outfit:'#1e4a3a', hair:'#241c26', hat:'mcrown', skin:1, beard:true}, 4, 4], ex:{capeC:'#0e2a22', wtype:'rod'}},
@@ -16769,7 +16808,7 @@ const CAST = {
   heo:{name:'허황옥', p:['doin', {outfit:'#c8382f', hair:'#241c26', hat:'flower', skin:1}, 4, -1], ex:{wtype:'none', capeC:'#e8c048'}},
 };
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
-const WHO = {'후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
+const WHO = {'타이마노 케하야':'kehaya', '노미노 스쿠네':'sukune', '형천':'xingtian', '과보':'kuafu', '용궁의 주먹 장수':'gwonjang1', '용궁의 발 장수':'gwonjang2', '후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
   '까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백':'habaek', '금와왕':'geumwa', '대소':'daeso', '주몽':'jumong', '송양왕':'songyang', '저승사자':'saja', '나':'hero',
   '주작':'g:jujak', '청룡':'g:cheong', '백호':'g:baekho', '현무':'g:hyeonmu'};
 Object.assign(WHO, {'문무대왕':'munmu', '수로부인':'suro', '소 끄는 노인':'noin', '거타지':'geotaji', '동해 용왕':'yongwang', '서해 용':'seohae', '처용':'cheoyong', '연오랑':'yeono', '세오녀':'seo', '해녀 대상군':'haenyeo', '영등할망':'yeongdeung', '토끼':'tokki',
@@ -16777,7 +16816,7 @@ Object.assign(WHO, {'문무대왕':'munmu', '수로부인':'suro', '소 끄는 �
 Object.assign(WHO, {'설문대할망':'seolmundae', '심청':'simcheong', '개양할미':'gaeyang', '대별왕':'daebyeol', '소별왕':'sobyeol', '뱃사공':'sagong', '촌장':'chonjang',
   '외눈박이 거인':'m:cyclops:#b8865a', '바위 장군':'m:rockgen:#4a4a5e', '칠산의 풍랑':'m:whirl:#5a6a8a', '헛그림자':'m:shade:#5a8a9a', '강철이':'m:serpent:#9a2a2a', '개구리':'m:frog:#6aa86a', '첫 거짓':'m:blackdrop:#14101e', '???':'m:blackdrop:#14101e', '뼈 이무기':'m:serpent:#e8e0d0', '물귀신':'m:mulgwi:#3a5a6a', '검은 물의 바다':'m:whirl:#1a1430'});
 Object.assign(WHO, {'라마':'rama', '락슈마나':'lakshmana', '시타':'sita', '하누만':'hanuman', '수그리바':'sugriva', '허황옥':'heo', '자타유':'m:hawk:#b8905a', '라바나':'m:ravana:#b8862a', '쿰바카르나':'m:kumbha:#7a6a8a', '마리차':'m:deer:#f0c850', '발리':'m:monkey:#c89a5a', '잠바반':'m:bear:#6a4a3a', '심히카':'m:angler:#3a2a4a', '바닷가의 락샤사':'m:rakshasa:#3a6a8a', '란카의 성문 장수':'m:rakshasa:#8a2a2a', '속삭임':'m:shade:#2a1a3a', '제석천':'indra', '성자 다디치':'sage', '꽃목걸이의 성자':'sage', '브리트라':'m:serpent:#5a4a3a', '아수라':'m:asura:#8a3a4a', '아수라 장수':'m:asura:#c8483a', '아수라 대장':'m:asura:#4a2a5a', '보물을 노리는 아수라':'m:asura:#b8862a', '둔갑한 아수라':'m:asura:#e8d8a0', '라후':'m:rahu:#2a2a4a', '야마':'yama', '사비트리':'savitri', '나치케타':'nachiketa', '제석천':'indra', '하누만':'hanuman', '라마':'rama', '시타':'sita', '마라':'mara', '지국천왕':'m:king4:#3a6a8a', '증장천왕':'m:king4:#b8483a', '광목천왕':'m:king4:#e8e4d8', '다문천왕':'m:king4:#3a3a4a', '바람의 딸':'dau1', '미움의 딸':'dau2', '욕심의 딸':'dau3', '구슬에 비친 나':'m:shade:#cfe0ff', '유혹의 환영':'m:shade:#e87aa8', '마라의 군대':'m:soldier:#4a1a3a'});   // 5부 천축(물의 신화 9단계)
-Object.assign(WHO, {'북문 야차 장수':'yasha', '성자 아가스티아':'agastya', '간다르바 왕':'gandharva', '아르주나':'arjuna', '위태천':'weitian'});   // 6차 전직 스승
+Object.assign(WHO, {'북문 야차 장수':'yasha', '성자 아가스티아':'agastya', '간다르바 왕':'gandharva', '아르주나':'arjuna', '위태천':'weitian', '비마':'bhima'});   // 6차 전직 스승
 // 4차 스승 보스 그림(6차 「다섯 스승의 시험」의 넷째 판): 4차 스승 연출 인물(CAST)을 그대로 사람 모양 보스로
 Object.assign(MOB_HD, Object.fromEntries(Object.keys(JOB_TEACHER4).map(c => ['m4_' + c, [64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER4[c]], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }]])));
 let cut = null;

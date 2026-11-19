@@ -1,4 +1,4 @@
-"""권사 시안 캡처(배포 아님): 스프라이트 시트·비교 시트·연속 프레임·사냥 장면.
+"""권사 그림 캡처(배포 아님): 스프라이트 시트·비교 시트·연속 프레임·사냥 장면.
 사용: python3 tools/gwon_shots.py [출력폴더]   (index.html이 빌드되어 있어야 함)"""
 import asyncio, base64, sys
 from pathlib import Path
@@ -6,7 +6,7 @@ from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 URL = (ROOT / 'index.html').as_uri() + '?simtest'
-OUT = Path(sys.argv[1] if len(sys.argv) > 1 else '/home/claude/report/gwon_proto'); OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp/gwon/shots'); OUT.mkdir(parents=True, exist_ok=True)
 
 SHEET = r"""
 ([kind]) => {
@@ -14,7 +14,7 @@ SHEET = r"""
   const Z = 4, W = 64 * Z, H = 64 * Z;
   const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
   const look = {outfit:'auto', hair:'#241c26', hat:'class', skin:0};
-  const spr = (sx, br, dir, f) => window.__game.personSprite('musa', look, -1, -1, dir, f, false, {gwon:{sx, br}});
+  const spr = (sx, br, dir, f) => window.__game.personSprite('gwon', Object.assign({}, look, {sex:sx}), -1, -1, dir, f, false, {gbr:br});
   const cell = (g, sp, x, y, bg) => {
     g.fillStyle = bg || '#2b3a4e'; g.fillRect(x, y, W, H);
     g.fillStyle = 'rgba(255,255,255,0.05)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) if ((i + j) % 2) g.fillRect(x + i * 32, y + j * 32, 32, 32);
@@ -69,18 +69,3 @@ async def main():
         print('오류', errs)
         await b.close()
 asyncio.run(main())
-
-# GIF: 주먹/발차기 연속 동작(남·여)
-async def gifs():
-    from PIL import Image
-    import io
-    async with async_playwright() as p:
-        b = await p.chromium.launch(); pg = await b.new_page(); await pg.goto(URL); await pg.wait_for_timeout(1200)
-        for name, sx, br, fs in [('주먹_남', 'm', 1, [0, 6, 3, 3, 0]), ('주먹_여', 'f', 1, [0, 6, 3, 3, 0]), ('발차기_남', 'm', 2, [0, 5, 4, 4, 0]), ('발차기_여', 'f', 2, [0, 5, 4, 4, 0])]:
-            ims = []
-            for f in fs:
-                u = await pg.evaluate("([sx, br, f]) => { const sp = window.__game.personSprite('musa', {outfit:'auto', hair:'#241c26', hat:'class', skin:0}, -1, -1, 'right', f, false, {gwon:{sx, br}}); const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#2b3a4e'; g.fillRect(0, 0, 256, 256); g.imageSmoothingEnabled = false; g.drawImage(sp, 0, 0, 256, 256); return c.toDataURL(); }", [sx, br, f])
-                ims.append(Image.open(io.BytesIO(base64.b64decode(u.split(',')[1]))).convert('RGB'))
-            ims[0].save(OUT / f'4_연속_{name}.gif', save_all=True, append_images=ims[1:], duration=[260, 220, 180, 260, 300], loop=0)
-        await b.close()
-asyncio.run(gifs())
