@@ -1316,6 +1316,36 @@ async def main():
         check(af0 == 10 and not af1['warn'] and not af1['sleep'], f'자리 비움: 10분 동안 누르지 않으면 예고가 뜨고, 화면을 누르면 취소된다 {af0} {af1}')
         check(af2['sleep'] and af2['saved'] and af2['frozen'] and af2['keep'] and '절전 모드' in af2['txt'] and '2시간' in slt, f'절전 모드: 예고 30초 뒤 저장하고 게임 진행을 멈춘다(저장 시각은 그대로) {af2} {slt}')
         check(af3['sleep'] == 0 and af3['hidden'] and (af3['gold'] > lv0[0] or af3['kills'] > lv0[1]), f'절전 모드에서 화면을 누르면 그 시각부터의 오프라인 보상 창과 함께 돌아온다 {af3} {lv0}')
+        # 그리기 방식(절전 그리기): 컴퓨터는 처음에 「부드럽게」(지금과 같음), 자동·절전이면 장면 위 판의 뒤 흐림이 빠지고 모달·메뉴의 흐림은 그대로
+        dm = await page.evaluate("""() => { const G = window.__game; const bf = q => getComputedStyle(document.querySelector(q)).backdropFilter;
+          const out = {def: G.drawMode, cls0: document.body.classList.contains('lite'), off: [bf('.hud'), bf('.topr .cur'), bf('.qtrack'), bf('.tabs')]};
+          G.setDrawMode('auto'); out.auto = [bf('.hud'), bf('.topr .cur'), bf('.qtrack'), bf('.tabs'), bf('.btn-chat'), bf('.btn-mode')]; out.cls1 = document.body.classList.contains('lite'); out.modal = bf('#modal'); out.saved = localStorage.getItem('samhan-lite');
+          G.setDrawMode('on'); out.on = bf('.hud'); G.setDrawMode('zzz'); out.bad = G.drawMode; localStorage.removeItem('samhan-lite'); return out; }""")
+        check(dm['def'] == 'off' and not dm['cls0'] and all('blur' in x for x in dm['off']), f'그리기 방식: 컴퓨터(마우스) 기본은 「부드럽게」라 지금과 같이 뒤 흐림이 있다 {dm}')
+        check(dm['cls1'] and all(x == 'none' for x in dm['auto']) and dm['on'] == 'none' and 'blur' in dm['modal'] and dm['saved'] == 'auto' and dm['bad'] == 'off',
+              f'그리기 방식: 자동·절전이면 장면 위 판의 뒤 흐림이 빠지고(모달은 그대로), 고른 값은 기기에 남으며 잘못된 값은 「부드럽게」가 된다 {dm}')
+        # 고정 간격 진행(절전 그리기 3단계): 화면 장수가 120·60·30·20·10이어도 update는 늘 1/60초 걸음이고 총 시간은 흐른 시간과 같다 / 「절전」은 그리기만 30장으로 줄인다
+        fx = await page.evaluate("""async () => { const G = window.__game, S = G.S; G.quiet = true; G.noInh = true; G.noFork = true; const m0 = G.drawMode;
+          const raf0 = window.requestAnimationFrame; window.requestAnimationFrame = () => 0; await new Promise(r => setTimeout(r, 250));
+          const upd = window.update, rnd = window.render, hud = window.updateHud; let cu = [], nr = 0, nh = 0;
+          window.update = function(dt){ cu.push(dt); return upd.apply(this, arguments); }; window.render = function(){ nr++; return rnd.apply(this, arguments); }; window.updateHud = function(){ nh++; return hud.apply(this, arguments); };
+          const out = {}; let T = performance.now() + 1000;
+          for (const mode of ['off', 'on']){
+            G.setDrawMode(mode);
+            for (const fps of [120, 60, 30, 20, 10]){
+              G.loop(T += 1000 / fps); cu = []; nr = 0; nh = 0; const p0 = S.rec.play, frames = fps * 20;
+              for (let f = 0; f < frames; f++) G.loop(T += 1000 / fps);
+              out[mode + fps] = {n: cu.length, bad: cu.filter(x => Math.abs(x - 1 / 60) > 1e-9).length, sum: +cu.reduce((a, b) => a + b, 0).toFixed(3), play: +(S.rec.play - p0).toFixed(3), draw: nr, hud: nh, frames};
+            }
+          }
+          window.update = upd; window.render = rnd; window.updateHud = hud; G.setDrawMode(m0); localStorage.removeItem('samhan-lite');
+          window.__game.loop(performance.now());   // 가짜 시각을 쓴 뒤 loop의 기준 시각을 진짜 시각으로 되돌림
+          window.requestAnimationFrame = raf0; raf0.call(window, G.loop);
+          return out; }""")
+        okf = all(abs(v['n'] - 1200) <= 2 and v['bad'] == 0 and abs(v['sum'] - 20) < 0.05 and abs(v['play'] - 20) < 0.1 for v in fx.values())
+        check(okf, f'고정 간격 진행: 화면이 120·60·30·20·10장이어도 update는 늘 1/60초 걸음이고 20초 동안 총 20초(S.rec.play도 20초)다 {fx}')
+        check(all(fx['off' + k]['draw'] == fx['off' + k]['frames'] for k in (120, 60, 30, 20, 10)) and all(abs(fx['on' + str(k)]['draw'] - min(600, fx['on' + str(k)]['frames'])) <= 3 for k in (120, 60, 30, 20, 10)),
+              f'그리기 장수: 「부드럽게」는 프레임마다 그리고 「절전」은 초당 30장을 넘지 않는다 {fx}')
         check(nt1['smith'] and not nt1['noti'] and not nt2['open'] and nt2['btn'] and nt2['cnt'] == '2' and nt2['list'] == ['inh', 'sk8'],
               f'알림 연출 틀: 알릴 것이 여럿이면 중요한 것(계승) 하나만 저절로 찾아오고 나머지는 왼쪽 위 두루마리에 모인다 {nt1} {nt2}')
         check(not nt3['open'] and not nt3['note'] and nt3['log'][0] == 'sk8' and nt3['list'] == ['inh'], f'알림 연출 틀: 두루마리에서 골라 보면 본 것으로 적히고 목록에서 빠진다(계승은 할 때까지 남음) {nt3}')

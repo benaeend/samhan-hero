@@ -924,6 +924,9 @@ body.lite.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.92),rgba(20
 body.lite .topr .cur,body.lite .qtrack,body.lite .btn-chat{background:rgba(8,12,22,.86)}
 body.lite .btn-mode{background-color:rgba(8,12,22,.8)}
 body.lite .log div{background:rgba(8,12,20,.84)}
+/* 그림자 번짐을 움직이는 반짝임은 매 프레임 다시 칠하므로, 절전 그리기에선 뚝뚝 끊어 바뀌게(초당 4~5번) 하고 막대 고리의 부드러운 이어짐도 뺀다 */
+body.lite .bigboss.ready,body.lite .noti-btn,body.lite .formb.ready,body.lite .soulb.full,body.lite .aw2b.full,body.lite .sk.manual.rdy,body.lite .btn-boss,body.lite .pulse{animation-timing-function:steps(4)}
+body.lite .bigboss .rf,body.lite .soulb .rf,body.lite .aw2b .rf,body.lite .aw2b .rh{transition:none}
 body.sleeping .sleep,body.sleeping .sleep *{animation-play-state:running}
 @keyframes pagein{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .page-head{display:flex;align-items:center;gap:8px;padding:10px 14px 10px calc(14px + env(safe-area-inset-left));border-bottom:1px solid var(--line-2);
@@ -21421,21 +21424,35 @@ function sceneCovered(){
   if (titleEl && !titleEl.hidden) return true;
   return !!(currentTab && !$('#page').hidden && !document.body.classList.contains('portrait'));
 }
+/* 게임 진행은 언제나 1/60초 걸음으로 돈다(그리는 장수와 기기 주사율에 상관없이): 흐른 시간을 모아 두었다가 1/60초씩 update를 부르고 남는 자투리는 다음 프레임으로 넘긴다.
+   그려서 30장으로 줄여도 한 프레임에 update가 두 번 — 60장 기기가 받던 호출과 같아서 전투·시간·보상이 그대로다. (예전엔 프레임 간격이 곧 걸음 크기라 30장 기기에서 초반 사냥이 12% 느렸다)
+   모자란 0.5ms는 한 걸음으로 쳐 준다(주사율이 정확히 60이 아니어도 걸음이 들쭉날쭉하지 않게. 어긋남은 쌓이지 않고 0.5ms 안쪽) */
+const STEP = 1 / 60;
+let simAcc = 0, lastDraw = 0;
+/* 그리기를 초당 30번으로 줄일 때인가: 「절전」은 늘, 「자동」은 사냥 중일 때만(레이드·보스전·야행·장터·이야기 연출·기술 컷인은 손으로 피하고 되받는 싸움이라 60장 그대로) */
+function drawSlow(){
+  if (drawMode === 'off') return false;
+  if (drawMode === 'on') return true;
+  return !(raid || bossActive || cut || parade || market || skCut);
+}
 function loop(ts){
-  if (sleepAt){ last = ts; requestAnimationFrame(loop); return; }   // 절전 모드: 게임 진행도 그리기도 멈춤
+  if (sleepAt){ last = ts; simAcc = 0; requestAnimationFrame(loop); return; }   // 절전 모드: 게임 진행도 그리기도 멈춤
   let dt = (ts - last) / 1000; last = ts;
   if (dt > 0.25) dt = 0.25;
   if (cut){ updateCut(dt); shake = Math.max(0, shake - dt); }
   else if (dt > 0 && !inhOpen){   // 계승 화면(대장장이)이 떠 있는 동안은 연출처럼 게임을 멈춘다
-    for (let i = 0; i < S.speed; i++){
-      let rem = dt;
-      while (rem > 0){ const step = Math.min(rem, 0.05); update(step); rem -= step; }
+    simAcc += dt;
+    while (simAcc > STEP - 0.0005){
+      for (let i = 0; i < S.speed; i++) update(STEP);
+      simAcc -= STEP;
     }
   }
   if (session && dt > 0){ tickBuffs(dt); npcChatter(dt); }
   if (heroSay){ heroSay.t -= dt; if (heroSay.t <= 0) heroSay = null; }
-  if (sceneCovered()){ if (!cut) updateCam(); } else render();   // 가려진 장면은 그리지 않는다(게임 진행은 그대로)
-  updateHud();
+  const dd = ts - lastDraw, skip = drawSlow() && dd >= 0 && dd < 31;   // 30장일 때 건너뛰는 프레임(16.7ms 간격이면 한 장 건너 한 장, 주사율이 달라도 약 33ms에 한 번)
+  if (skip || sceneCovered()){ if (!cut) updateCam(); }   // 카메라 따라가기는 건너뛴 프레임에도 한 번씩(그려야만 따라가면 30장에서 카메라가 느려짐)
+  else render();
+  if (!skip){ lastDraw = ts; updateHud(); }
   requestAnimationFrame(loop);
 }
 function start(hotData){
@@ -21528,7 +21545,7 @@ if (location.search.indexOf('simtest') >= 0){
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
-    addTime(ms){ clockSkew += ms; }, quiet:false, setDrawMode, get drawMode(){ return drawMode; },
+    addTime(ms){ clockSkew += ms; }, quiet:false, setDrawMode, get drawMode(){ return drawMode; }, get simAcc(){ return simAcc; }, STEP, loop,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
