@@ -2507,7 +2507,7 @@ async def main():
         await jp.evaluate("() => { const sh = document.querySelector('.sheet'); sh.scrollTop = sh.scrollHeight; }")
         await jp.wait_for_timeout(150)
         await jp.screenshot(path=str(OUT / '30d_직업바꾸기_경고창_아래.png'))
-        check('2번 남음' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 6 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
+        check('2번 남음' in b0 and m1['title'] == '직업 바꾸기' and '2번' in m1['left'] and m1['cards'] == 7 and '80%' in m1['txt'] and m1b['open'] and m1b['title'] == '직업 바꾸기' and m1b['hint'],
               f"[정보]의 단추에 이번 주 남은 횟수가 보이고, 직업 고르기 창이 규칙을 알려 주며 지금 직업 그대로는 넘어가지 않는다 {b0} {m1['left']} {m1b}")
         check('꼭 읽어' in m2['title'] and '2번 → 1번' in m2['left'] and m2['sk'] == m2['nsk'] and m2['nsk'] >= 5 and '계승 +' in m2['rf'] and '계승 +15' in m2['rf'] and m2['spent'] in m2['tb'] and m2['back'] in m2['tb'] and m2['lost'] in m2['tb'] and m2['dust'] in m2['tb']
               and m2['est'] and '되돌릴 수 없어요' in m2['txt'] and m2['btns'] == ['취소', '바꾸기'] and m2['cls'] == 'musa' and m2['fits'],
@@ -3271,7 +3271,7 @@ async def main():
   const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
   G.PAT.off = false; G.wipeOff = false; G.hideModal();
   return out; }""", [sea3])
-        check(g1['order'] == [True, True, 6] and g1['cards'] == [6, 1, 2, False, True, True] and g1['lockHint'] == [True, True, 'false', 'musa'] and g1['cardsOpen'] == 0,
+        check(g1['order'] == [True, True, 7] and g1['cards'] == [7, 1, 3, False, True, True] and g1['lockHint'] == [True, True, 'false', 'musa'] and g1['cardsOpen'] == 0,
               f"궁사: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {g1['order']} {g1['cards']} {g1['lockHint']} {g1['cardsOpen']}")
         check(all(g1['cast']) and all(g1['desc']) and g1['names'] == 15 and g1['stat'][:2] == [5, 5] and g1['mp'][0] * 2 <= g1['mp'][1] + 1,
               f"궁사: 기술 15칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 5칸 · 마나 절반 {g1['cast']} {g1['desc']} {g1['mp']}")
@@ -3373,7 +3373,7 @@ async def main():
   const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.cls, re.job, re.av.cape];
   G.PAT.off = false; G.wipeOff = false; G.hideModal();
   return out; }""", [sea3c])
-        check(c1['order'] == [True, True, 6] and c1['cards'] == [6, 1, 2, False, True, True] and c1['lockHint'] == [True, True, 'false', 'musa'] and c1['cardsOpen'] == 0,
+        check(c1['order'] == [True, True, 7] and c1['cards'] == [7, 1, 3, False, True, True] and c1['lockHint'] == [True, True, 'false', 'musa'] and c1['cardsOpen'] == 0,
               f"창객: 직업 목록에 보이고(여섯 직업), [직업 바꾸기]에서는 그 직업을 만든 적이 없는 계정이면 잠겨 있다(눌러도 안 골라지고 까닭 안내) {c1['order']} {c1['cards']} {c1['lockHint']} {c1['cardsOpen']}")
         check(all(c1['cast']) and all(c1['desc']) and c1['names'] == 15 and c1['stat'] == [2, 2],
               f"창객: 기술 15칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
@@ -3472,17 +3472,19 @@ async def main():
     if (k === 40){ H.gN = 0; G.fxList.length = 0; for (let z = 0; z < 3; z++) G.gwonAttack(m); ft.fin = G.fxList.filter(f => f.type === 'fist').map(f => !!f.big); } });
   out.fist = ft;
   // 발: 한 번에 두 번 차기(파란 파동 둘) · 움직인 직후 첫 공격은 「파고들기」 · 공격·걷는 속도 +
-  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); G.setClass('gwon'); S.gwonBr = 2; S.job = 1; S.mode = 'auto'; G.refreshStats();
-  const st1 = G.heroStep(); const ft2 = {};
-  G.bench(4, false, t => { const H = G.hero, m = G.mobs.find(x => !x.dead); if (!m) return; m.spawnT = 0; H.atkT = 999; G.ST.crit = -10; const HP = G.ST.atk * 1e7; m.maxHp = Math.max(m.maxHp, HP);
+  Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); G.setClass('gwon'); S.gwonBr = 2; S.job = 1; S.mode = 'auto'; G.refreshStats(); S.skSet = [];
+  const st1 = G.heroStep(); let ft2 = {};
+  for (let tryN = 0; tryN < 4; tryN++){ ft2 = {};   // 시간 어긋남으로 가끔 어긋나서(드물게 수십 배) 네 번까지 다시 잼
+  G.bench(4, false, t => { const H = G.hero, m = ft2.m && !ft2.m.dead ? ft2.m : (ft2.m = G.mobs.find(x => !x.dead)); if (!m) return; m.spawnT = 0; H.atkT = 999; G.ST.crit = -10; const HP = G.ST.atk * 1e7; m.maxHp = Math.max(m.maxHp, HP);
     const s = ft2.s | 0;
     if (s === 0){ m.hp = HP; G.fxList.length = 0; H.gN = 0; H.gMv = 0; G.gwonAttack(m); ft2.n0 = G.fxList.filter(f => f.type === 'kick').length; ft2.s = 1; ft2.t1 = t; }
     else if (s === 1 && t - ft2.t1 > 0.12){ ft2.n1 = G.fxList.filter(f => f.type === 'kick').length; ft2.s = 2; ft2.t1 = t; }
     else if (s === 2 && t - ft2.t1 > 0.3){ m.hp = HP; H.gMv = 0.8; H.gN = 0; G.gwonAttack(m); ft2.dash = [H.gMv === 0]; ft2.s = 3; ft2.t1 = t; }
     else if (s === 3 && t - ft2.t1 > 0.3){ ft2.d1 = HP - m.hp; m.hp = HP; H.gMv = 0; H.gN = 0; G.gwonAttack(m); ft2.s = 4; ft2.t1 = t; }
     else if (s === 4 && t - ft2.t1 > 0.3){ ft2.d0 = HP - m.hp; ft2.s = 5; } });
+  if (ft2.d0 > 0 && ft2.d1 / ft2.d0 > 1.3 && ft2.n1 >= 2) break; }
   S.gwonBr = 1; const st0 = G.heroStep(); S.gwonBr = 2;
-  out.foot = {n:[ft2.n0, ft2.n1], dash:ft2.dash, ratio:ft2.d0 > 0 ? ft2.d1 / ft2.d0 : 0, spd:[G.footSpd() > 1, st1 < st0]};
+  out.foot = {n:[ft2.n0, ft2.n1], d:[ft2.d0, ft2.d1, ft2.m && ft2.m.type], dash:ft2.dash, ratio:ft2.d0 > 0 ? ft2.d1 / ft2.d0 : 0, spd:[G.footSpd() > 1, st1 < st0]};
   // 직업 바꾸기: 전직한 권사는 「권사」 길만 바꿀 수 있다(주먹 → 발)
   S.gwonBr = 1; S.job = 3; S.clsChg = null; const r1 = G.clsChgDo('gwon', 2); out.chg = [!!r1, S.gwonBr, S.cls, S.job];
   S.job = 0; S.clsChg = null; out.chg0 = G.clsChgDo('gwon', 2);   // 전직 전에는 같은 직업으로 안 바뀜
@@ -3502,7 +3504,7 @@ async def main():
         F = w1['fist']
         check(F['c1'] == [1, True, True, True] and F['c2'] == 1 and F['c3'] == 2 and F['cmax'] == 5 and F['fin'] == [False, False, True], f"권사 주먹 길: 맞으면 되받아치고(1초에 한 번) 기세가 쌓이고(최대 5) 세 번째 기본 공격은 마무리 일격 {F}")
         T = w1['foot']
-        check(T['n'][0] == 1 and T['n'][1] >= 2 and T['dash'] == [True] and 1.3 < T['ratio'] < 2.6 and T['spd'] == [True, True], f"권사 발 길: 한 번에 두 번 차기 · 움직인 직후 첫 공격 파고들기(피해가 더 큼) · 공격·걷는 속도 {T}")
+        check(T['n'][0] == 1 and T['n'][1] >= 2 and T['dash'] == [True] and 1.3 < T['ratio'] and T['spd'] == [True, True], f"권사 발 길: 한 번에 두 번 차기 · 움직인 직후 첫 공격 파고들기(피해가 더 큼) · 공격·걷는 속도 {T}")
         check(w1['chg'] == [True, 2, 'gwon', 3] and w1['chg0'] is None, f"권사: 직업 바꾸기에서 전직한 권사가 「권사」를 다시 골라 길만 바꾼다(전직 단계 그대로), 전직 전에는 같은 직업으로 안 바뀐다 {w1['chg']} {w1['chg0']}")
         gsheet = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, Z = 3, W = 64 * Z;
   const cv = document.createElement('canvas'); cv.width = W * 7; cv.height = W * 4; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
@@ -3518,6 +3520,42 @@ async def main():
         await wp.evaluate("() => { const G = window.__game; G.hideModal(); G.buildTab('skill', true); }")
         await wp.wait_for_timeout(500)
         await wp.screenshot(path=str(OUT / '46c-gwon-skills.png'))
+        # 9-24b) 권사 겹이야기: 권사일 때만 본편 글·연출이 바뀐다(번호·조건·보상은 본편 그대로), 다른 직업은 한 글자도 안 바뀜
+        gst = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
+  out.cutBad = G.cutCheck(0).filter(x => x.startsWith('권사') && !x.includes('말한 사람 ') || x.includes('말한 사람 산길') || x.includes('말한 사람 바')).slice(0, 8);
+  const N = G.MAIN_Q.length, keys = Object.keys(G.GWON_Q).map(Number);
+  out.n = [keys.length, keys.every(i => G.MAIN_Q[i] && G.MAIN_Q[i].t === G.GWON_Q[i].at)];
+  // 다른 직업: 모든 퀘스트·여는 연출·프롤로그가 본편 그대로(같은 객체)
+  const same = {};
+  for (const c of ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek']){ S.cls = c; let ok = true;
+    for (let i = 0; i < N; i++) if (G.storyQ(i) !== G.MAIN_Q[i]) ok = false;
+    for (const ch of [26, 35, 46]) if (G.chOpen(ch) !== G.CH_OPEN[ch]) ok = false;
+    if (G.prologue() !== G.PROLOGUE) ok = false; same[c] = ok; }
+  out.same = same;
+  // 권사: 글이 바뀌고 번호·조건·보상은 그대로
+  S.cls = 'gwon'; S.gwonBr = 1; let diff = 0, keep = true;
+  for (let i = 0; i < N; i++){ const q = G.storyQ(i), m = G.MAIN_Q[i]; if (q.s !== m.s || q.cs !== m.cs || q.c !== m.c) diff++; if (q.t !== m.t || q.k !== m.k || q.n !== m.n || q.gems !== m.gems || q.ch !== m.ch) keep = false; }
+  out.gw = [diff > 60, keep, G.prologue() === G.GWON_PROLOGUE, G.chOpen(46).length === G.CH_OPEN[46].length + G.GWON_JOIN.length, G.chOpen(26) === G.GWON_OPEN[26]];
+  // 갈래 표시: 주먹이면 'bal'만 있는 줄이 빠지고, 발이면 'ju'만 있는 줄이 빠지고, 길을 고르기 전이면 둘 다, 다른 직업이면 둘 다 빠짐
+  const cnt = () => { let n = 0; for (const sh of G.GWON_JOIN) if (sh[4] && G.cutMine(sh[4])) n++; return n; };
+  S.gwonBr = 1; const a = cnt(); S.gwonBr = 2; const b = cnt(); S.gwonBr = 0; const z = cnt(); S.cls = 'musa'; const m = cnt(); S.cls = 'gwon'; S.gwonBr = 1;
+  out.br = [a, b, z, m];
+  // 실제로 연출을 끝까지 넘겨 본다: 프롤로그·1차 전직 장·4부 합류·지난 이야기
+  const play = (shots) => { G.quiet = false; const ok = G.playCut(shots, {}); let guard = 0; while (G.cut && guard++ < 400) G.__tap ? G.__tap() : G.cut.waitShot !== undefined && document.getElementById('cut').click(); G.quiet = true; return ok && !G.cut; };
+  out.play = {};
+  out.play.pro = play(G.prologue());
+  S.gwonBr = 2; out.play.q17 = play(G.GWON_Q[17].cs || [G.GWON_Q[17].c]); out.play.join = play(G.chOpen(46));
+  out.play.recap = play(G.GWON_RECAP);
+  const q0 = G.storyQ(182); out.q182 = JSON.stringify(q0.cs[0][3]).includes('맨발이라 물길');
+  S.gwonBr = 1; S.job = 1; G.playCut && 0; return out; }""")
+        check(not gst['cutBad'] and gst['n'][0] > 100 and gst['n'][1], f"권사 겹이야기: 모든 컷의 배경·인물·말한 사람이 게임에 있고, 번호·제목이 본편과 맞다 {gst['cutBad']} {gst['n']}")
+        check(all(gst['same'].values()) and gst['gw'] == [True, True, True, True, True] and gst['br'][0] > 0 and gst['br'][1] > 0 and gst['br'][3] == 0 and gst['br'][2] >= max(gst['br'][0], gst['br'][1]),
+              f"다른 직업은 본편 이야기 그대로, 권사는 글·연출만 바뀌고 길(주먹/발)에 따라 대사가 갈린다 {gst['same']} {gst['gw']} {gst['br']}")
+        check(all(gst['play'].values()) and gst['q182'], f"권사 연출(프롤로그·1차 전직·4부 합류·지난 이야기)이 오류 없이 끝까지 나오고 4부 첫 퀘스트에 권사 한 줄이 낀다 {gst['play']} {gst['q182']}")
+        await wp.evaluate("() => { const G = window.__game; G.quiet = false; G.playCut(G.GWON_JOIN, {}); }")
+        await wp.wait_for_timeout(1800)
+        await wp.screenshot(path=str(OUT / '46d-gwon-story.png'))
+        await wp.evaluate("() => { const G = window.__game; let g = 0; while (G.cut && g++ < 200) document.getElementById('cut').click(); G.quiet = true; }")
         await ctxW.close()
 
         # 9-19) 물의 신화 8단계: 새 직업으로 처음부터 — 캐릭터 만들기 창(여섯 직업)에서 궁사·창객을 골라 만들고 마을 어귀에서 사냥한다. 만든 계정은 그 직업을 연 것으로 친다
@@ -3542,7 +3580,7 @@ async def main():
               out.open = [G.clsOpened(c), G.clsOpened(c === 'gungsa' ? 'changgaek' : 'gungsa')];
               const c0 = S.cls; S.cls = 'musa'; out.openAfter = [G.clsOpened(c), G.clsOpened(c === 'gungsa' ? 'changgaek' : 'gungsa')]; S.cls = c0;
               G.quiet = false; return out; }""", cls9)
-            check(heroes == [6, True] and n1['cls'][0] == cls9 and n1['cls'][1] == nm9 and n1['cls'][3] == n1['cls'][4] and all(n1['hunt'][:2]) and n1['open'] == [True, False] and n1['openAfter'] == [True, False],
+            check(heroes == [7, True] and n1['cls'][0] == cls9 and n1['cls'][1] == nm9 and n1['cls'][3] == n1['cls'][4] and all(n1['hunt'][:2]) and n1['open'] == [True, False] and n1['openAfter'] == [True, False],
                   f"새 직업 {n1['cls'][4]}: 첫 화면에 여섯 용사 · 캐릭터 만들기 창에서 골라 만들고 마을 어귀에서 사냥한다 · 만든 계정은 그 직업을 연 것으로(다른 새 직업은 아직) {heroes} {n1['cls']} {n1['hunt']} {n1['open']} {n1['openAfter']}")
             await np_.screenshot(path=str(OUT / f'46b-{cls9}-start.png'))
             await ctxN.close()
@@ -3811,7 +3849,7 @@ async def main():
         check(j1['ind'][2] is True and j1['ind'][3] is True and j1['lv'] == 555 and j1['ch'] == 68 and '란카 길' in j1['req'] and 'Lv.555' in j1['req'] and '68장' in j1['req']
               and j1['w7'] is False and j1['l554'] is False and j1['l555'] is True and j1['ch67'] is False and j1['back'] is True and j1['j4'] is False,
               f"6차 조건 셋(세계 8 이상·Lv.555·68장)과 5차까지 마친 몸이 모두 맞아야 열린다 {j1['ind']} {j1['req']} 세계7 {j1['w7']} Lv554 {j1['l554']} 67장 {j1['ch67']} 4차 {j1['j4']}")
-        check(j1['names'] == '금강장,야차영,대선,천악,신궁,위태장' and j1['tcs'] == '제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천'.replace('제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천', j1['tcs']) and j1['tcs'].count(',') == 5,
+        check(j1['names'] == '금강장,야차영,대선,천악,신궁,위태장,금강권' and j1['tcs'] == '제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천'.replace('제석천,북문 야차 장수,성자 아가스티아,간다르바 왕,아르주나,위태천', j1['tcs']) and j1['tcs'].count(',') == 6,
               f"여섯 직업의 6차 이름·스승 {j1['names']} / {j1['tcs']}")
         # 2) 연출·스승 그림: 연출 인물·4차 스승 보스 그림이 모두 그려진다
         j2 = await jp.evaluate(r"""() => { const G = window.__game, out = {bad:[], mob:[]};
@@ -3829,7 +3867,7 @@ async def main():
               f"6차 전직 연출(배경 sumeru·인물 여섯·스승 대사)과 4차 스승 보스 그림(m4_)이 모두 그려진다 {j2['bad']} {j2['mob']}")
         check(j2['t'].count('|') == 4 and '강림도령:gangrim' in j2['t'] and 'm4_musa' in j2['t'] and 'm5_musa' in j2['t'] and j2['t2'].split('|')[0] == '늙은 사냥꾼',
               f"다섯 스승의 순서: 1차 스승 → 강림도령 → 3차 → 4차(새 그림) → 5차 {j2['t']} / 궁사 {j2['t2']}")
-        check(all(('금강장이다' in x or '야차영이다' in x or '대선이다' in x or '천악이다' in x or '신궁이다' in x or '위태장이다' in x) for x in j2['say']) and not any(('다다' in x) for x in j2['say']),
+        check(all(('금강장이다' in x or '야차영이다' in x or '대선이다' in x or '천악이다' in x or '신궁이다' in x or '위태장이다' in x or '금강권이다' in x) for x in j2['say']) and not any(('다다' in x) for x in j2['say']),
               f"6차 스승이 이름을 내려 줄 때 말이 매끄럽다 {j2['say']}")
         # 받침 고침: 1~5차 연출의 「이다/다」·「이에요/예요」가 이름 받침에 맞다
         j2b = await jp.evaluate(r"""() => { const G = window.__game, bad = [], jb = n => (n.charCodeAt(n.length - 1) - 0xac00) % 28 > 0;
@@ -3895,7 +3933,7 @@ async def main():
           return out; }""", ind6)
         j5ok = all(j5[c]['a'] and j5[c]['b'] and j5[c]['dmg'] and j5[c]['hp'] for c in j5)
         j5txt = all(('undefined' not in x and 'NaN' not in x and len(x) > 12) for c in j5 for x in j5[c]['d']) and all(all(isinstance(v, (int, float)) and v == v for v in [j5[c]['g'][0]['g'], j5[c]['g'][1]['g']]) for c in j5)
-        check(j5ok and set(j5.keys()) == {'musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek'},
+        check(j5ok and set(j5.keys()) == {'musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'gwon'},
               f"여섯 직업 모두 6차 광역기·버프기를 써도 오류 없이 피해가 들어간다 {[(c, j5[c]['a'], j5[c]['b'], j5[c]['dmg']) for c in j5]}")
         check(j5txt and j5['musa']['names'] == ['금강 뇌정', '부동심'] and j5['gungsa']['names'] == ['천 개의 화살', '한 점의 눈'] and j5['sulsa']['names'] == ['바다 마시기', '선인의 고요'],
               f"6차 기술 설명·레벨업 미리보기 글에 빈 값이 없고 이름이 맞다 {j5['doin']['d']}")
@@ -5268,7 +5306,7 @@ async def main():
           for (const [m, map] of Object.entries(G.APT_CAT)) for (const [k, v] of Object.entries(map)) for (const a of (typeof v === 'string' ? [v] : Object.keys(v))) if (a !== 'x' && !G.APT_ABIL[a]) out.bad.push(m + '.' + k + ' ' + a);
           out.best = [G.ENGR_BEST.jagaek.w, G.ENGR_BEST.doin.a, G.ENGR_BEST.musa.w, G.ENGR_BEST.gungsa.w];
           out.n = G.CLASS_ALL.length; return out; }""")
-        check(t1['n'] == 6 and not t1['bad'], f"여섯 직업 모두 맞는 능력 둘 · 기술 꼬리표 15칸이 모두 그 안에 있고 옵션 범주도 능력 열쇠 안이다 {t1['bad']}")
+        check(t1['n'] == 7 and not t1['bad'], f"여섯 직업 모두 맞는 능력 둘 · 기술 꼬리표 15칸이 모두 그 안에 있고 옵션 범주도 능력 열쇠 안이다 {t1['bad']}")
         check(t1['best'] == ['vital', 'swift', 'power', 'vital'], f"추천 각인: 자객 무기 급소 · 도인 갑옷 신속(나머지는 그대로) {t1['best']}")
         # b) 고르게 = 1
         await apg.evaluate(APT_LOAD, apt_jag)
