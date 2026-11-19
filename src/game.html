@@ -21428,7 +21428,7 @@ function sceneCovered(){
    그려서 30장으로 줄여도 한 프레임에 update가 두 번 — 60장 기기가 받던 호출과 같아서 전투·시간·보상이 그대로다. (예전엔 프레임 간격이 곧 걸음 크기라 30장 기기에서 초반 사냥이 12% 느렸다)
    모자란 0.5ms는 한 걸음으로 쳐 준다(주사율이 정확히 60이 아니어도 걸음이 들쭉날쭉하지 않게. 어긋남은 쌓이지 않고 0.5ms 안쪽) */
 const STEP = 1 / 60;
-let simAcc = 0, lastDraw = 0;
+let simAcc = 0, lastDraw = 0, stepN = 0, drawN = 0;   // stepN·drawN: 시험용 세는 값(update 걸음 수·그린 프레임 수)
 /* 그리기를 초당 30번으로 줄일 때인가: 「절전」은 늘, 「자동」은 사냥 중일 때만(레이드·보스전·야행·장터·이야기 연출·기술 컷인은 손으로 피하고 되받는 싸움이라 60장 그대로) */
 function drawSlow(){
   if (drawMode === 'off') return false;
@@ -21444,7 +21444,7 @@ function loop(ts){
     simAcc += dt;
     while (simAcc > STEP - 0.0005){
       for (let i = 0; i < S.speed; i++) update(STEP);
-      simAcc -= STEP;
+      simAcc -= STEP; stepN++;
     }
   }
   if (session && dt > 0){ tickBuffs(dt); npcChatter(dt); }
@@ -21452,7 +21452,7 @@ function loop(ts){
   const dd = ts - lastDraw, skip = drawSlow() && dd >= 0 && dd < 31;   // 30장일 때 건너뛰는 프레임(16.7ms 간격이면 한 장 건너 한 장, 주사율이 달라도 약 33ms에 한 번)
   if (skip || sceneCovered()){ if (!cut) updateCam(); }   // 카메라 따라가기는 건너뛴 프레임에도 한 번씩(그려야만 따라가면 30장에서 카메라가 느려짐)
   else render();
-  if (!skip){ lastDraw = ts; updateHud(); }
+  if (!skip){ lastDraw = ts; drawN++; updateHud(); }
   requestAnimationFrame(loop);
 }
 function start(hotData){
@@ -21545,7 +21545,7 @@ if (location.search.indexOf('simtest') >= 0){
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
-    addTime(ms){ clockSkew += ms; }, quiet:false, setDrawMode, get drawMode(){ return drawMode; }, get simAcc(){ return simAcc; }, STEP, loop,
+    addTime(ms){ clockSkew += ms; }, quiet:false, setDrawMode, audHold, get drawMode(){ return drawMode; }, get simAcc(){ return simAcc; }, get stepN(){ return stepN; }, get drawN(){ return drawN; }, STEP, loop,
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));

@@ -20,7 +20,7 @@ async ([save, secs, trials, fpsList, mode]) => {
   S.mode = 'auto'; S.bossAuto = false; S.autoBoss = false; S.inv.potion = 9999; S.inv.elixir = 9999; S.inv.mana = 9999;
   G.refreshStats(); G.setStage(S.stage);
   window.requestAnimationFrame = () => 0; await new Promise(r => setTimeout(r, 300));   // 진짜 rAF 고리를 끊고 loop를 직접 부른다
-  G.buildTab('grow');                                                                    // 메뉴로 장면을 가려 그리기 비용을 줄임(가로 화면)
+  window.render = () => {};                                                              // 그리기는 게임 상태를 바꾸지 않으므로 빼고 돌린다(옛 판도 같게 비교하려고 loop 안의 render를 비움)
   const save0 = JSON.stringify(S), out = {};
   const reset = () => { const d = JSON.parse(save0); for (const k of Object.keys(S)) if (!(k in d)) delete S[k]; Object.assign(S, d); G.refreshStats(); G.setStage(S.stage); };
   let T = performance.now() + 5e6;
