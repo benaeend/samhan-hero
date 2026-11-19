@@ -916,6 +916,14 @@ i.dust{display:inline-block;width:12px;height:12px;border-radius:3px;background:
 .page[hidden]{display:none}
 /* 절전 화면 밑에서는 계속 반짝이는 효과(보스 단추 등)를 멈춘다 */
 body.sleeping *{animation-play-state:paused}
+/* 절전 그리기(기록 탭 [그리기] 설정, 휴대폰 기본 「자동」): 장면 위에 늘 떠 있는 반투명 판의 「뒤 흐림」을 빼고 배경만 조금 진하게 한다 — 장면이 매 프레임 바뀌어 흐림을 매번 다시 계산하는 것이 합성 비용의 대부분이었다.
+   장면이 멈춘 창(.modal·메뉴)의 흐림은 그대로 둔다 */
+body.lite .hud,body.lite .topr .cur,body.lite .qtrack,body.lite .btn-mode,body.lite .btn-chat,body.lite .log div,body.lite .tabs{-webkit-backdrop-filter:none;backdrop-filter:none}
+body.lite .hud{background:linear-gradient(180deg,rgba(18,26,44,.92),rgba(8,12,22,.88))}
+body.lite.hell .hud{background:linear-gradient(180deg,rgba(48,16,22,.92),rgba(20,8,12,.88))}
+body.lite .topr .cur,body.lite .qtrack,body.lite .btn-chat{background:rgba(8,12,22,.86)}
+body.lite .btn-mode{background-color:rgba(8,12,22,.8)}
+body.lite .log div{background:rgba(8,12,20,.84)}
 body.sleeping .sleep,body.sleeping .sleep *{animation-play-state:running}
 @keyframes pagein{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .page-head{display:flex;align-items:center;gap:8px;padding:10px 14px 10px calc(14px + env(safe-area-inset-left));border-bottom:1px solid var(--line-2);
@@ -21142,6 +21150,15 @@ function afkWarnOff(){ afkWarnAt = 0; const w = $('#afkWarn'); if (w && !w.hidde
 function afkPoke(){ if (sleepAt) return; afkLast = now(); if (afkWarnAt) afkWarnOff(); }
 document.addEventListener('keydown', e => { if (!sleepAt) return; e.preventDefault(); e.stopImmediatePropagation(); sleepWake(); }, true);   // 절전 중 아무 키나 → 돌아옴
 for (const ev of ['pointerdown', 'keydown', 'touchstart', 'wheel']) document.addEventListener(ev, afkPoke, {capture:true, passive:true});
+/* ---- 그리기 방식(2026-11 절전 그리기): off=부드럽게(지금과 같음: 60장·뒤 흐림) / auto=사냥 30장·싸움 60장·뒤 흐림 없음 / on=늘 30장·뒤 흐림 없음·상태판 초당 10번
+   기기 설정이라 저장 파일·서버에는 안 올라간다. 처음엔 휴대폰(손가락 화면)은 auto, 컴퓨터는 off. 게임 진행(시간·전투·보상)에는 아무 영향이 없다 */
+const DRAWM = {key:KP + 'samhan-lite', opts:['off', 'auto', 'on']};
+let drawMode = 'off';
+try { drawMode = matchMedia('(pointer: coarse)').matches ? 'auto' : 'off'; } catch (e) {}
+try { const v = localStorage.getItem(DRAWM.key); if (v && DRAWM.opts.includes(v)) drawMode = v; } catch (e) {}
+function applyDrawMode(){ document.body.classList.toggle('lite', drawMode !== 'off'); }
+function setDrawMode(m){ drawMode = DRAWM.opts.includes(m) ? m : 'off'; try { localStorage.setItem(DRAWM.key, drawMode); } catch (e) {} applyDrawMode(); }
+applyDrawMode();
 function sleepEl(){
   let el = $('#sleep');
   if (!el){
@@ -21417,7 +21434,7 @@ function loop(ts){
   }
   if (session && dt > 0){ tickBuffs(dt); npcChatter(dt); }
   if (heroSay){ heroSay.t -= dt; if (heroSay.t <= 0) heroSay = null; }
-  if (sceneCovered()) updateCam(); else render();   // 가려진 장면은 그리지 않는다(게임 진행은 그대로)
+  if (sceneCovered()){ if (!cut) updateCam(); } else render();   // 가려진 장면은 그리지 않는다(게임 진행은 그대로)
   updateHud();
   requestAnimationFrame(loop);
 }
@@ -21511,7 +21528,7 @@ if (location.search.indexOf('simtest') >= 0){
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
     startParade, finishParade, get parade(){ return parade; }, paradeLeft, TITLES, titleCheck, titleEff, EVTS, get evtT(){ return evtT; }, autoClear, JUMP, SK_JUMP, jumpOn, jumpBusy, jumpMul, jumpCan, jumpKit, jumpJobUp, jumpStep, jumpAll, jumpPick, jumpPicked, jumpTrainAsk, jumpTrainDone, startJumpFight, jumpArrive, updateJump, noJump:false, jumpForce:false, set evtT(v){ evtT = v; }, patBoss, patLv, patStg, heroRoll, handPress, PAT, HAND, expNeed, gainExp, barrack, useExpBank, stageGate, bossGate, raidStoryOpen, raidUnlockedBase, stageLvNeed, get REG(){ return REG; }, startBoss, startRaid, raidReady, raidUnlocked, firstReadyRaid, raidInfo, buildTab,
     buyShop, SHOP, dropMyth, showNotes, playCut, get cut(){ return cut; }, MAIN_Q, PROLOGUE, claimMain, installApp, get pwa(){ return PWA_HOST; }, questLuck, sendChat, addChat, megaPush, megaTick, setMega, MEGA, get megaOn(){ return megaOn; }, get megaQ(){ return megaQ; }, get megaCur(){ return megaCur; }, get megaSeen(){ return megaSeen; }, get ovBot(){ return ovBot; }, get chatMsgs(){ return chatMsgs; }, get skillCd(){ return skillCd; }, luck:null,
-    addTime(ms){ clockSkew += ms; }, quiet:false,
+    addTime(ms){ clockSkew += ms; }, quiet:false, setDrawMode, get drawMode(){ return drawMode; },
     sheet(){ return {hero:CLASS_ORDER.map(c => ['down', 'up', 'right'].map(d => [0, 1, 2, 3].map(f => heroSprite(c, d, f).toDataURL()))), mobs:Object.keys(MOB_HD).map(t => [mobSprite(t, '#8a8a8a', 0, false).toDataURL(), mobSprite(t, '#8a8a8a', 1, false).toDataURL()]), pets:PETS.map((p, i) => [petSprite(i, 0).toDataURL(), petSprite(i, 1).toDataURL()])}; },
     setStage(s){ S.stage = s; mapCache.clear(); resetRuntime(); },
     lookSheet(){ const out = [], L = S.look; for (let g = -1; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'down')); for (let g = 2; g <= 4; g++) out.push(lookPreview(S.cls, L, g, g, 'right')); out.push(lookPreview(S.cls, L, 4, 4, 'up'));
