@@ -5580,8 +5580,11 @@ async def main():
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.world = 9; S.level = 583; S.exp = 0; S.expBank = 20; out.a4 = G.capRaiseFix(); out.a4l = [S.level, S.expBank];
           // A5: Lv.700에서 경험치를 넣으면 레벨 그대로, 모음만 늘어남
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.level = 700; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(700) * 2.5, {raw:true}); out.a5 = [S.level, +S.expBank.toFixed(2)];
-          G.update(0.05); G.render(); out.hud = document.querySelector('#xpnum').textContent;
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); G.refreshStats(); return out; }""")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.expBank = 2.5; }")
+        await mp.wait_for_timeout(300)
+        a['hud'] = await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.render(); return document.querySelector('#xpnum').textContent; }")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; G.refreshStats(); }")
         check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 3, f"만렙 700: 수미산 레벨 상한 700, 저장 판 3 {a['cap']} {a['capNow']} {a['ver']}")
         check(a['a1'] == 15 and a['a1l'] == 615 and a['a1b'] == 0, f"모음 전환 A1: 수미산 Lv.600 모음 50 → 접속할 때 +15레벨(Lv.615), 모음 0 {a['a1']} {a['a1l']} {a['a1b']}")
         check(a['a2'] == 30 and a['a2l'] == 630 and a['d2'] == [30, 3], f"모음 전환 A2: 모음 500 → 최대 +30레벨(Lv.630) · 오름 보상 610·620·630에서 조각 +30 {a['a2']} {a['a2l']} {a['d2']}")
@@ -5635,7 +5638,7 @@ async def main():
         e = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
           S.quest.main = G.MAIN_Q.length + 1; S.world = 10; S.trans.shard = 3; S.trans.buy = {wk:G.weekKey(), got:{}}; S.inv.whet = 0; const tk0 = S.raid.tk;
           out.e1a = [G.buyTrans('t_whet'), S.inv.whet, S.trans.shard]; out.e1b = [G.buyTrans('t_ticket'), S.raid.tk - tk0, S.trans.shard]; out.e1c = [G.buyTrans('t_whet'), G.transShopState(G.TRANS_SHOP[1]).ok, S.inv.whet, S.trans.shard];
-          S.trans.shard = 50; let n = 0; for (let i = 0; i < 9; i++) if (G.buyTrans('t_ticket')) n++; out.e2a = [n, S.trans.shard, G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_ticket')).why];
+          S.trans.shard = 50; S.trans.buy = {wk:G.weekKey(), got:{}}; let n = 0; for (let i = 0; i < 9; i++) if (G.buyTrans('t_ticket')) n++; out.e2a = [n, S.trans.shard, G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_ticket')).why];
           G.addTime(8 * 86400000); out.e2b = G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_ticket')).ok; G.addTime(-8 * 86400000);
           S.trans.shard = 20; S.trans.buy = {wk:G.weekKey(), got:{}}; const bx = S.gems; out.e3 = [G.buyTrans('t_box'), S.trans.shard, S.gems === bx || S.gems >= bx - 1000];
           S.trans.shard = 0; S.trans.total = 0; S.trans.buy = {wk:'', got:{}};
