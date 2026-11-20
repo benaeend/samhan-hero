@@ -7,6 +7,9 @@ cls = sys.argv[1]; hours = float(sys.argv[2]); seg = float(sys.argv[3]); over = 
 stop = int(sys.argv[5]) if len(sys.argv) > 5 else 700
 SIMD = T.ROOT/'docs'/'patch-sea'/'sim'
 save = (SIMD/f'save_{cls}_ind3.json').read_text(encoding='utf-8')
+import os
+SAVE_FILE = os.environ.get('SIM_SAVE')   # 구간마다 저장을 이 파일에 써 두면, 멈춰도 거기서 이어 돌릴 수 있다
+if SAVE_FILE and os.path.exists(SAVE_FILE): save = open(SAVE_FILE, encoding='utf-8').read()
 async def main():
     global save
     t0 = time.time(); done = 0.0; firstAll = {}
