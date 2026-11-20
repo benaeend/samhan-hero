@@ -3574,7 +3574,7 @@ async def main():
         check(w1['sexRow'] == [True, True] and w1['sexImg'] and w1['sexSaved'] == 'f' and w1['sprite'] == [True, True] and w1['musaRow'] == [True],
               f"권사: 꾸미기에 남/여 칸(권사만) · 고르면 그림이 바뀌고 저장 · 다른 직업 그림은 그대로 {w1['sexRow']} {w1['sexImg']} {w1['sexSaved']} {w1['sprite']} {w1['musaRow']}")
         check(w1['old'] == [0, 'musa'] and w1['bad'] == 0, f"권사: 예전 저장은 갈래 0, 이상한 값도 0 {w1['old']} {w1['bad']}")
-        for br, nm, jn, tn, cp in ((1, ['벽력 일권', '금강 쇠주먹'], ['맞주먹', '금강수', '천수권', '파천권', '해일권'], ['타이마노 케하야', '용궁의 주먹 장수'], '주먹'), (2, ['번개 곁차기', '풍신 비각'], ['곁발', '비각객', '풍신각', '비천각', '파랑각'], ['노미노 스쿠네', '용궁의 발 장수'], '발')):
+        for br, nm, jn, tn, cp in ((1, ['벽력 일권', '금강 쇠주먹'], ['맞주먹', '금강수', '천수권', '파천권', '해일권'], ['노미노 스쿠네', '용궁의 주먹 장수'], '주먹'), (2, ['번개 곁차기', '풍신 비각'], ['곁발', '비각객', '풍신각', '비천각', '파랑각'], ['타이마노 케하야', '용궁의 발 장수'], '발')):
             B = w1['branch'][str(br)]
             check(all(B['cast']) and all(B['desc']) and B['names'] == nm and B['range'] == 1 and B['br'] == br, f"권사({cp} 길): 기술 15칸이 모두 나가고 설명·미리보기가 나온다 · 전직 기술 이름 {B['names']} {B['cast']} {B['desc']}")
             J = B['jobs']
@@ -3604,6 +3604,7 @@ async def main():
         gst = await wp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true;
   out.cutBad = G.cutCheck(0).filter(x => x.startsWith('권사') && !x.includes('말한 사람 ') || x.includes('말한 사람 산길') || x.includes('말한 사람 바')).slice(0, 8);
   const N = G.MAIN_Q.length, keys = Object.keys(G.GWON_Q).map(Number);
+  out.jobch = [3, 4, 5].map(n => { const q = G.MAIN_Q.find(x => x.k === 'job' && x.n === n); return G.JOBS.gwon[n - 1].ch < q.ch; });   // 전직 스승이 나오는 장이 그 전직 퀘스트 장보다 앞이어야(같으면 장을 마쳐야 하는데 퀘스트가 그 장 안에 있어 영영 못 함)
   out.n = [keys.length, keys.every(i => G.MAIN_Q[i] && G.MAIN_Q[i].t === G.GWON_Q[i].at)];
   // 다른 직업: 모든 퀘스트·여는 연출·프롤로그가 본편 그대로(같은 객체)
   const same = {};
@@ -3629,7 +3630,7 @@ async def main():
   const q0 = G.storyQ(182); out.q182 = JSON.stringify(q0.cs[0][3]).includes('맨발이라 물길');
   S.gwonBr = 1; S.job = 1; G.playCut && 0; return out; }""")
         check(not gst['cutBad'] and gst['n'][0] > 100 and gst['n'][1], f"권사 겹이야기: 모든 컷의 배경·인물·말한 사람이 게임에 있고, 번호·제목이 본편과 맞다 {gst['cutBad']} {gst['n']}")
-        check(all(gst['same'].values()) and gst['gw'] == [True, True, True, True, True] and gst['br'][0] > 0 and gst['br'][1] > 0 and gst['br'][3] == 0 and gst['br'][2] >= max(gst['br'][0], gst['br'][1]),
+        check(all(gst['jobch']) and all(gst['same'].values()) and gst['gw'] == [True, True, True, True, True] and gst['br'][0] > 0 and gst['br'][1] > 0 and gst['br'][3] == 0 and gst['br'][2] >= max(gst['br'][0], gst['br'][1]),
               f"다른 직업은 본편 이야기 그대로, 권사는 글·연출만 바뀌고 길(주먹/발)에 따라 대사가 갈린다 {gst['same']} {gst['gw']} {gst['br']}")
         check(all(gst['play'].values()) and gst['q182'], f"권사 연출(프롤로그·1차 전직·4부 합류·지난 이야기)이 오류 없이 끝까지 나오고 4부 첫 퀘스트에 권사 한 줄이 낀다 {gst['play']} {gst['q182']}")
         await wp.evaluate("() => { const G = window.__game; G.quiet = false; G.playCut(G.GWON_JOIN, {}); }")
