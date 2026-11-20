@@ -4506,13 +4506,18 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-19-3', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-19-4', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 19일 · 창객 시너지'],
   ['혼자 보스를 칠 때 「한 점 꿰기」', '창객이 보스·레이드 보스 한 대상을 기본 공격이든 기술이든 이어 찌르면 점이 최대 다섯 개까지 쌓여요(머리 위 작은 점 칸). 점이 많을수록 치명타 피해가 커지고(가득이면 +13%), 가득 찬 뒤 다음 한 번은 치명타로 확정되며 피해 +13%로 터져요. 대상을 바꾸거나 3초 동안 못 찌르거나 쓰러지면 점이 풀려요. 몬스터 떼에는 없고, 혼자 보스를 칠 때 창객이 평균 10%쯤 더 세져요.'],
   ['파티 시너지 「꿰뚫린 틈」', '내 파티에 창객이 다른 직업과 함께 있으면, 창객 말고 파티 모두가 보스·레이드 보스에게 주는 피해가 +5% 늘어요. [내 파티]의 켜진 시너지·「한 명만 더 있으면」 칸에도 나와요. 다른 직업의 능력과 다른 시너지 수치는 그대로예요.'],
   ['직업 특성 카드에서 설명 보기', '[수련]의 창객 직업 특성 줄에 「한 점 꿰기」가 생겼어요. 옆 「?」를 누르면 자세한 규칙이 떠요.'],
+  ['#', '11월 19일 · 타임 보스가 하루 두 번으로'],
+  ['오전 9~12시, 오후 6~9시에 열려요', '예전엔 3시간마다 30분씩이라 시간을 맞추기 어려웠어요. 이제 하루 두 번, 3시간씩 열려요. 노말·지옥·심해는 창마다 한 번씩이고, 그 시간 안에 들어온 캐릭터가 같은 파티 후보가 돼요.'],
+  ['보상은 네 가지씩 한꺼번에', '오전에는 장신구·쇳가루와 숫돌·무기·치장, 오후에는 갑옷·신화·고삐와 변신·넋과 아바타를 한 번에 받아요. 엽전·보석·재료도 네 번분이에요. 귀걸이·팔찌·신화 보물·넋·아바타 같은 무작위 보상은 하루에 여덟 번 돌던 것과 같은 몫에 10%를 더 얹었어요.'],
+  ['높은 난이도를 이기면 아래 보상도', '같은 창에서 지옥을 이기면 노말 보상도 같이, 심해를 이기면 지옥·노말 보상도 같이 받아요. 이미 받은 난이도는 건너뛰어요. 창마다 가장 높은 난이도 한 번만 돌면 돼요.'],
+
   ['#', '11월 19일 · 열과 배터리를 아껴요'],
   ['[기록]에 「그리기 방식」이 생겼어요', '부드럽게 · 자동 · 절전 중에 골라요. 자동은 사냥할 때만 움직임을 초당 30장으로 줄이고, 레이드·보스·연출은 그대로 60장이에요. 절전은 늘 30장이에요. 둘 다 장면 위에 떠 있는 반투명 판 뒤의 흐림을 빼서(판을 조금 진하게) 휴대폰이 덜 뜨거워져요. 휴대폰은 처음에 「자동」, 컴퓨터는 「부드럽게」예요. 이 기기에만 저장돼요.'],
   ['안 보이는 것은 그리지 않아요', '가로 화면에서 메뉴가 장면을 다 덮었을 때, 로그인 화면 뒤, 앱이 가려졌을 때는 뒤 장면을 그리지 않고 소리 장치도 쉬어요. 사냥은 그대로 계속되고 메뉴를 닫으면 바로 최신 모습으로 돌아와요. 체력·쿨타임 칸도 초당 10번만 새로 칠해요(기술 「쓸 수 있음」 표시는 그대로 바로 바뀌어요).'],
@@ -7155,20 +7160,18 @@ function memCardRefresh(){
   setText($('#memSum'), st.fin ? `세 갈래를 모두 걸었어요 — 마무리 구슬 ${MEM.fin}개 · 세 번째 환생 오라 · 별호 「${TT.mem3.name}」` : `세 갈래를 모두 마치면 마무리 구슬 ${MEM.fin}개 · 세 번째 환생 오라(푸른 물빛) · 별호 「${TT.mem3.name}」. 얻은 구슬만큼 신속·영안 상한도 늘어요(다 마치면 신속 +${MEM.cap.spd} · 영안 +${MEM.cap.eye}).`);
 }
 /* ================= 타임 보스 =================
-   00시부터 3시간마다(이 기기 시계) 30분 동안 나타난다. 접속한 용사는 저절로 모두 참가(tbAutoJoin), 파티 전체 목숨 TB_LIVES(5)번.
-   참가자: claude.ai에서는 같은 페이지에서 [참가]를 누른 사람(실시간 room 'tb'), 그 밖에는 이 기기의 '다른 계정' 캐릭터.
+   하루 두 번(이 기기 시계) 오전 9~12시·오후 18~21시, 각각 3시간 동안 열린다(2026-11-19 사용자 요청: 예전엔 3시간마다 30분씩 하루 8번).
+   창 id = 시작 시각. 노말·지옥·심해는 각각 창마다 한 번. 높은 난이도를 이기면 그 창의 아래 난이도 보상도 한꺼번에 받는다(노말 ⊂ 지옥 ⊂ 심해).
+   보상은 예전 하루 8번분의 절반씩: 오전 = TB_REW 앞 4종, 오후 = 뒤 4종(기본 엽전·보석·재료도 4번분). 무작위 드랍 확률은 '8번 돈 사람의 하루 기대값'과 같게 맞추고 +10%(TB_BONUS).
+   접속한 용사는 저절로 모두 참가(tbAutoJoin), 파티 전체 목숨 TB_LIVES(5)번.
+   참가자: claude.ai에서는 같은 페이지에서 [참가]를 누른 사람(실시간 room 'tb'), 그 밖에는 이 기기의 '다른 계정' 캐릭터(씨앗 = 창 id라 3시간 동안 같은 파티).
    온라인 서버가 생기면 tbOthers()만 서버 참가자 목록으로 바꾸면 된다. */
-const TB_SLOTS = [
-  {name:'그믐 어둑시니', type:'shade', color:'#2a2238'},
-  {name:'새벽 불가사리', type:'bulgasari', color:'#4a5a6a'},
-  {name:'해돋이 해태', type:'haetae', color:'#e0a03a'},
-  {name:'구미호 여왕', type:'fox', color:'#f4e8ff'},
-  {name:'한낮 도깨비 대장군', type:'dokkaebi', color:'#d8433a'},
-  {name:'노을 이무기', type:'serpent', color:'#c86a3a'},
-  {name:'저녁 장승 대장군', type:'totem', color:'#7a5a4a'},
-  {name:'밤의 염라 그림자', type:'judge', color:'#3a1a2a'},
+const TB_BOSS = [   // 오전·오후 보스(날마다 돌려 씀)
+  [{name:'아침 불가사리', type:'bulgasari', color:'#4a5a6a'}, {name:'해돋이 해태', type:'haetae', color:'#e0a03a'}, {name:'한낮 도깨비 대장군', type:'dokkaebi', color:'#d8433a'}, {name:'구미호 여왕', type:'fox', color:'#f4e8ff'}],
+  [{name:'노을 이무기', type:'serpent', color:'#c86a3a'}, {name:'저녁 장승 대장군', type:'totem', color:'#7a5a4a'}, {name:'밤의 염라 그림자', type:'judge', color:'#3a1a2a'}, {name:'그믐 어둑시니', type:'shade', color:'#2a2238'}],
 ];
-const TB_OPEN = 30 * 60 * 1000, TB_TIME = 120;
+const TB_START = [9, 18], TB_HALF = [[0, 1, 2, 3], [4, 5, 6, 7]], TB_HALF_NAME = ['오전', '오후'], TB_BONUS = 1.1;
+const TB_OPEN = 3 * 3600 * 1000, TB_TIME = 120;
 const TB_DIFF = {
   normal:{name:'노말', ref:60, gold:300, drop:{ear:0.006, brace:0.006, myth:0.01}, gp:[0.4, 0.33, 0.18, 0.07, 0.02], hpSec:120, tgt:98, hit:0.035, aoe:0.03},   // tgt (43) 122 → 98(사용자 요청: 너무 빡빡함 — 기본 피해만으로도 제한 120초 안에)
   hell:{name:'지옥', ref:100, gold:600, drop:{ear:0.02, brace:0.02, myth:0.03}, gp:[0.1, 0.3, 0.35, 0.18, 0.07], hpSec:150, tgt:108, hit:0.05, aoe:0.04},
@@ -7180,15 +7183,21 @@ const TB_DIFF = {
 const tbHeroHp = () => ST.maxHp / Math.max(0.05, takenK(true)) * (TANK.fitB !== 1 && tkOn() && !(raid && raid.info.pvp) ? Math.pow(Math.max(0.25, Math.min(4, tankIdx(S.maxStage))), TANK.fitB - 1) : 1);   // 9-4: fitB 1 = 그대로, 0.5면 지수 0.7 용사가 한 방을 1.2배로(결투는 늘 그대로)   // 파티 버프(호위 진형)의 받는 피해 줄임은 빼지 않는다(동료가 걸어 준 만큼 덜 맞음)   // 방어로 줄어드는 몫을 미리 되돌려, 맞으면 최대 체력의 그 %가 깎인다
 const bossHit = (B, tg, mul = 1) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.hit * mul : B.atk * mul) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() * raidHitK() : 1);   // 9-4: 광폭 · 일반 레이드에서 용사가 맞을 땐 내 직업 몫
 const bossAoe = (B, tg) => (B.tbPct ? (tg === hero ? tbHeroHp() : tg.maxHp) * B.tbPct.aoe : B.aoe) * aw2Weak(B) * tkEnrage(raid) * (tg === hero ? tkHeroK() * raidHitK() : 1);
+const tbHourTxt = t => { const h = new Date(t).getHours(); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}시`; };
 function tbWindow(){
-  const d = new Date(now()), slot = Math.floor(d.getHours() / 3);
-  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), slot * 3).getTime();
-  return {slot, id:start, open:now() - start < TB_OPEN, end:start + TB_OPEN, next:start + 3 * 3600 * 1000, boss:TB_SLOTS[slot]};
+  const t = now(), d = new Date(t), list = [];
+  for (const off of [-1, 0, 1]){
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate() + off), dn = Math.floor(Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()) / 864e5);
+    for (let sl = 0; sl < 2; sl++) list.push({slot:sl, start:new Date(day.getFullYear(), day.getMonth(), day.getDate(), TB_START[sl]).getTime(), boss:TB_BOSS[sl][(dn + sl) % 4]});
+  }
+  let ci = 0; while (ci + 1 < list.length && list[ci + 1].start <= t) ci++;   // 가장 최근에 시작한 창
+  const c = list[ci], n = list[ci + 1];
+  return {slot:c.slot, id:c.start, open:t - c.start < TB_OPEN, end:c.start + TB_OPEN, next:n.start, boss:c.boss, nextSlot:n.slot, nextBoss:n.boss};
 }
 const tbPeers = new Map();     // 실시간으로 참가를 알린 사람들(예전 방식, 지금은 파티를 꾸리는 데 쓰지 않음)
 /* 타임 보스 동료(2026-11 (32), 사용자 요청): 접속한 사람이 아니라 서버에 만들어진 모든 캐릭터 가운데 무작위 TB_PICK(10)명.
    같은 직업은 나까지 합쳐 TB_CLS_CAP(3)명까지. 온라인이면 서버 함수 samhan_tb_pick이 고르고(창마다 한 번),
-   서버가 없거나 아직이면 이 기기에 저장된 캐릭터에서 같은 규칙으로 고른다(창·캐릭터마다 같은 씨앗이라 그 30분 동안은 같은 파티) */
+   서버가 없거나 아직이면 이 기기에 저장된 캐릭터에서 같은 규칙으로 고른다(창·캐릭터마다 같은 씨앗이라 그 3시간 동안은 같은 파티) */
 const TB_PARTY_MAX = 24, TB_ALLY_SK = 1.3, TB_PICK = 10, TB_CLS_CAP = 3;
 let TB_SELF_K = 1;   // 처음 체력에 넣는 내 몫(첫 몇 초 뒤부터는 실제로 재어 맞춘다)
 const TB_LEAD = 0.35;   // 시간표(1 − 지난 시간/tgt)보다 TB_LEAD 넘게 앞서 깎이지 않음(한꺼번에 터진 기술로 몇 초 만에 끝나지 않게)
@@ -7277,7 +7286,7 @@ function tbCan(diff){
   const w = tbWindow();
   if (!w.open) return '아직 나타나지 않았어요';
   if (raid) return '다른 싸움 중이에요';
-  if (tbDone(diff)) return '이번 타임 보스는 이미 잡았어요';
+  if (tbDone(diff)) return '이번 창은 이미 받았어요';
   if (diff === 'hell' && !S.reb.n) return '환생해야 도전할 수 있어요';
   if (diff === 'deep' && S.world < 5) return '4부 동해에 들어서야 도전할 수 있어요';
   return '';
@@ -7308,51 +7317,84 @@ function startTimeBoss(diff){
   tbJoin();
   return true;
 }
-/* 시간대별 보상(2026-11 (42), 사용자 요청): 여덟 시간대(0·3·…·21시)의 타임 보스마다 주는 특산물이 다르다(지옥은 ×2, 확률은 ×1.5).
-   새 장비 체계(공명·세트)에 맞춰 무기·갑옷은 높은 등급으로 — 세계마다 영웅~전설 IV */
+/* 보상 꾸러미(2026-11 (42) 시간대별 특산물 → 2026-11-19 하루 두 번): 예전 여덟 시간대(0·3·…·21시)의 특산물 8종을 오전 앞 4종·오후 뒤 4종으로 나눠 한 창에 한꺼번에 준다(지옥은 ×2, 확률은 ×1.5).
+   ak·mk·sk = 그 특산물이 올리는 장신구(귀걸이·팔찌)·신화 보물·넋 확률 배율(예전 accK·mythK·soulK). 새 장비 체계(공명·세트)에 맞춰 무기·갑옷은 높은 등급 — 세계마다 영웅~전설 IV */
 const tbGearIt = hell => { const g = S.world >= 1 ? 4 : 3, t = Math.min(3, Math.floor(Math.random() * (hell ? 3 : 2)) + (S.world >= 3 ? 1 : 0)); return g * 4 + t; };
+const tbLuckK = () => window.__game && window.__game.tbLuck || 1;
 const TB_REW = [
-  {n:'장신구', d:'귀걸이·팔찌가 잘 나와요(5배) · 원한 조각', f:(h, out) => { out.accK = 5; out.push(`원한 조각 ${gainGrudge(GRUDGE.tb * (h ? 2 : 1), true)}`); }},
+  {n:'장신구', ak:5, d:'귀걸이·팔찌가 잘 나와요(5배) · 원한 조각', f:(h, out) => { out.push(`원한 조각 ${gainGrudge(GRUDGE.tb * (h ? 2 : 1), true)}`); }},
   {n:'쇳가루·숫돌', d:'쇳가루 한 무더기 · 숫돌', f:(h, out) => { const d = Math.round((40 + 25 * S.world) * (h ? 2 : 1)); S.dust += d; S.inv.whet = Math.min(999, (S.inv.whet || 0) + (h ? 6 : 3)); out.push(`쇳가루 ${d}`, `숫돌 ${h ? 6 : 3}`); }},
   {n:'무기', d:'높은 등급 무기 하나(공명·세트의 중심)', f:(h, out) => { const it = tbGearIt(h), nw = giveItem('weapon', it); out.push(`${GRADES[Math.floor(it / 4)].name} ${gearName('weapon', it)}${nw ? ' (새 장비)' : ''}`); }},
   {n:'치장', d:'치장 하나(고급 이상, 치장이 열린 뒤)', f:(h, out) => { if (skinOpen()){ const r = skinDrop(null, true, 1, h ? 2 : 1); if (r) out.push(`치장 ${skName(r.it)}`); } else { S.gems += 150; out.push('보석 150(치장은 17장부터)'); } }},
   {n:'갑옷', d:'높은 등급 갑옷 하나(공명·세트의 중심)', f:(h, out) => { const it = tbGearIt(h), nw = giveItem('armor', it); out.push(`${GRADES[Math.floor(it / 4)].name} ${gearName('armor', it)}${nw ? ' (새 장비)' : ''}`); }},
-  {n:'신화', d:'신화 조각 · 신화 보물이 잘 나와요(3배)', f:(h, out) => { const n = h ? 10 : 5; S.mythShard += n; out.push(`신화 조각 ${n}`); out.mythK = 3; }},
-  {n:'고삐·변신', d:'고삐 조각 · 변신이 아주 드물게', f:(h, out) => { const n = gainPiece(MOUNT_PIECE.tb * (h ? 3 : 2), true); if (n) out.push(`고삐 조각 ${n}`); const f2 = formDrop(FORM_BOX_P * (h ? 3 : 2)); if (f2) out.push(`변신 ${f2.name}`); }},
-  {n:'넋·아바타', d:'넋 구슬이 잘 나와요 · 아바타가 드물게', f:(h, out) => { out.soulK = 3; if (Math.random() < (h ? 0.12 : 0.06) * (window.__game && window.__game.tbLuck || 1)){ const pool = avBoxPool().filter(a => !S.av.own[a.k]); const a = pool[(Math.random() * pool.length) | 0]; if (a){ giveAvatar(a.k, true); out.push(`아바타 ${a.name}`); } } }},
+  {n:'신화', mk:3, d:'신화 조각 · 신화 보물이 잘 나와요(3배)', f:(h, out) => { const n = h ? 10 : 5; S.mythShard += n; out.push(`신화 조각 ${n}`); }},
+  {n:'고삐·변신', d:'고삐 조각 · 변신이 아주 드물게', f:(h, out) => { const n = gainPiece(MOUNT_PIECE.tb * (h ? 3 : 2), true); if (n) out.push(`고삐 조각 ${n}`); const f2 = formDrop(FORM_BOX_P * (h ? 3 : 2) * TB_BONUS); if (f2) out.push(`변신 ${f2.name}`); }},
+  {n:'넋·아바타', sk:3, d:'넋 구슬이 잘 나와요 · 아바타가 드물게', f:(h, out) => { if (Math.random() < (h ? 0.12 : 0.06) * tbLuckK() * TB_BONUS){ const pool = avBoxPool().filter(a => !S.av.own[a.k]); const a = pool[(Math.random() * pool.length) | 0]; if (a){ giveAvatar(a.k, true); out.push(`아바타 ${a.name}`); } } }},
 ];
+const TB_ORDER = ['normal', 'hell', 'deep'];
+const tbHalfOf = w => new Date(w || now()).getHours() < 12 ? 0 : 1;
+/* 무작위 드랍 굴리기(부작용 없음 — 시험이 여러 번 굴려 평균을 본다). 예전엔 창(하루 8번)마다 한 번씩 굴렸으니, 한 창은 그 절반의 네 번을 한꺼번에 굴리되 확률에 TB_BONUS(+10%)를 얹는다.
+   soulX = 넋 구슬 추가 굴림 횟수(기본 굴림은 soulDrop('tb')가 천장과 함께 따로) */
+function tbRolls(diff, half){
+  const D = TB_DIFF[diff], luck = tbLuckK(), R = {ear:0, brace:0, myth:0, soulX:0};
+  for (const i of TB_HALF[half]){
+    const r = TB_REW[i], ak = r.ak || 1, mk = r.mk || 1, sk = r.sk || 1;
+    for (const k of ['ear', 'brace']) if (Math.random() < Math.min(1, D.drop[k] * luck * ak * TB_BONUS)) R[k]++;
+    if (Math.random() < Math.min(1, D.drop.myth * luck * mk * TB_BONUS)) R.myth++;
+    if (Math.random() < Math.min(1, SOUL_P.tb * ((sk - 1) + (TB_BONUS - 1) * sk))) R.soulX++;
+  }
+  return R;
+}
+// 이 창에서 아직 보상을 안 받은 난이도들(이긴 난이도와 그 아래 전부)
+const tbPending = (diff, wid) => TB_ORDER.slice(0, TB_ORDER.indexOf(diff) + 1).filter(d => !S.tb || S.tb[d] !== wid);
 function finishTimeBoss(R){
-  const info = R.info, D = TB_DIFF[info.diff];
+  const info = R.info;
   if (!R.win){
     addLog(`타임 보스 ${info.bossName} 토벌 실패…`, 'warn');
     if (!(window.__game && window.__game.quiet)) showModal('타임 보스 실패', `<p>${TB_TIME}초 안에 <b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 쓰러뜨리지 못했어요. 창이 열려 있는 동안 다시 도전할 수 있어요.</p>`, [{label:'확인', primary:true}]);
     return;
   }
   if (!S.tb) S.tb = {};
-  S.tb[info.diff] = info.w;
-  const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold'), tbGem = raidGemBase(TB_GEMS[info.diff] || TB_GEMS.normal);
-  S.gold += gold; S.gems += tbGem; S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true); ev('tb');
-  gainMat(MAT_DROP.tb); gainPiece(MOUNT_PIECE.tb); gainGrudge(GRUDGE.tb, true); { const n = gainShard(info.diff === 'deep' ? SHARD_SRC.tbHell * 2 : info.diff === 'hell' ? SHARD_SRC.tbHell : SHARD_SRC.tb); if (n) addLog(`신화 조각 +${n}`, 'gain'); }
-  const luck = window.__game && window.__game.tbLuck || 1, drops = [], slot = new Date(info.w || now()).getHours() / 3 | 0, SR = TB_REW[slot] || TB_REW[0], spec = [];
-  SR.f(info.diff !== 'normal', spec);   // 이 시간대의 특산물
-  if (info.diff === 'deep'){ SR.f(true, spec); const an = ambRoll(AMB_YG); gainAmber(0, an); spec.push(`희귀 호박석 ${an}`); }   // 심해: 지옥의 2배(특산물 한 번 더) + 호박석(예전 영웅 80%·전설 20% = 희귀 6.4개)
-  for (const k of ['ear', 'brace']) if (Math.random() < D.drop[k] * luck * (spec.accK || 1)){
-    let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
-    const a = giveAcc(k, g); drops.push(`${GRADES[a.g].name} ${ACC[k].names[a.g]}${a.better ? '' : ' (가방으로)'}`);
+  const half = tbHalfOf(info.w), idx = TB_HALF[half], N = idx.length, diffs = tbPending(info.diff, info.w), groups = [], drops = [], spec = [];
+  let goldAll = 0, gemAll = 0;
+  S.rec.tb = (S.rec.tb || 0) + 1; recWin(true, true); ev('tb');   // 주간 「타임 보스 3번」은 이긴 판 수로 센다
+  for (const d of diffs){
+    const D = TB_DIFF[d];
+    S.tb[d] = info.w;   // 이 창에서는 이 난이도 보상을 받음(아래 난이도도 같이)
+    const gold = Math.max(mobGold(D.ref), mGold(S.stage)) * D.gold * gainMul('gold') * N, tbGem = raidGemBase((TB_GEMS[d] || TB_GEMS.normal) * N);
+    S.gold += gold; S.gems += tbGem; goldAll += gold; gemAll += tbGem;
+    gainMat(MAT_DROP.tb * N); gainPiece(MOUNT_PIECE.tb * N); gainGrudge(GRUDGE.tb * N, true); { const n = gainShard((d === 'deep' ? SHARD_SRC.tbHell * 2 : d === 'hell' ? SHARD_SRC.tbHell : SHARD_SRC.tb) * N); if (n) addLog(`신화 조각 +${n}`, 'gain'); }
+    const items = [], soulTxt = [];
+    for (const i of idx){
+      const out = [];
+      TB_REW[i].f(d !== 'normal', out);   // 이 특산물
+      if (d === 'deep') TB_REW[i].f(true, out);   // 심해: 지옥의 2배(특산물 한 번 더)
+      items.push({n:TB_REW[i].n, t:out.join(' · ')}); spec.push(...out);
+      const so = soulDrop('tb'); if (so) soulTxt.push(soulDropText(so));
+    }
+    if (d === 'deep'){ let an = 0; for (let j = 0; j < N; j++) an += ambRoll(AMB_YG); gainAmber(0, an); spec.push(`희귀 호박석 ${an}`); items.push({n:'호박석', t:`희귀 호박석 ${an}`}); }   // 예전 한 번 6.4개 × 4번분
+    const Rl = tbRolls(d, half), dr = [];
+    for (const k of ['ear', 'brace']) for (let j = 0; j < Rl[k]; j++){
+      let r = Math.random(), g = 0; for (; g < 4; g++){ if (r < D.gp[g]) break; r -= D.gp[g]; }
+      const a = giveAcc(k, g); dr.push(`${GRADES[a.g].name} ${ACC[k].names[a.g]}${a.better ? '' : ' (가방으로)'}`);
+    }
+    for (let j = 0; j < Rl.myth; j++){ const m = dropMyth(D.ref, null, false, true); dr.push(`신화 보물 ${MYTHS.find(x => x.k === m.k).name}${m.locked ? ' (가방으로 · 그 부에 가야 낌)' : m.up ? '' : ' (가방으로)'}`); }
+    for (let j = 0; j < Rl.soulX; j++) if (soulOpen()){ const so = giveSoul(soulRoll()); if (so) soulTxt.push(soulDropText(so)); }
+    dr.push(...soulTxt); drops.push(...dr);
+    groups.push({d, name:D.name, items, drops:dr});
   }
-  if (Math.random() < D.drop.myth * luck * (spec.mythK || 1)){ const m = dropMyth(D.ref, null, false, true); drops.push(`신화 보물 ${MYTHS.find(x => x.k === m.k).name}${m.locked ? ' (가방으로 · 그 부에 가야 낌)' : m.up ? '' : ' (가방으로)'}`); }
-  let soul = soulDrop('tb'); if (!soul && spec.soulK && soulOpen() && Math.random() < SOUL_P.tb * (spec.soulK - 1)) soul = giveSoul(soulRoll()); if (soul) drops.push(soulDropText(soul));
-  addLog(`타임 보스 토벌! 엽전 +${fmt(gold)} · 보석 +${fmt(tbGem)}`, 'gain');
+  addLog(`타임 보스 토벌! 엽전 +${fmt(goldAll)} · 보석 +${fmt(gemAll)}${diffs.length > 1 ? ` (${diffs.map(d => TB_DIFF[d].name).join('·')} 보상)` : ''}`, 'gain');
   announce(`${S.name}님의 파티가 타임 보스 ${info.bossName}${josa(info.bossName, '을', '를')} 쓰러뜨렸어요!`);
   saveLocal();
   sfx('win');
-  if (window.__game && window.__game.quiet) return {spec, drops};
-  showModal('타임 보스 토벌 성공', `<p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} ${info.party}명이 함께 쓰러뜨렸어요!</p>
-    <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li>
-    ${spec.map(d => `<li style="color:var(--gold)">${d}<span>${SR.n} 시간 보상</span></li>`).join('')}
+  if (window.__game && window.__game.quiet) return {spec, drops, groups, gold:goldAll, gems:gemAll, diffs};
+  const nx = tbWindow();
+  showModal('타임 보스 토벌 성공', `<p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} ${info.party}명이 함께 쓰러뜨렸어요!${diffs.length > 1 ? ` <b>${diffs.map(d => TB_DIFF[d].name).join('·')}</b> 보상을 한꺼번에 받아요.` : ''}</p>
+    <ul class="rewards"><li><span class="coin"></span>${fmt(goldAll)}<span>엽전</span></li><li>보석 ${fmt(gemAll)}<span>보석</span></li>
+    ${groups.map(g => `<li style="color:var(--gold)">${g.items.map(x => x.t || x.n).join(' · ')}<span>${g.name} · ${TB_HALF_NAME[half]} 보상 ${N}종</span></li>`).join('')}
     ${drops.map(d => `<li style="color:var(--myth)">${d}<span>희귀 보상!</span></li>`).join('')}</ul>
-    <p class="small" style="margin-top:8px">시간마다 주는 것이 달라요. 다음 타임 보스는 ${new Date(tbWindow().next).getHours()}시(${(TB_REW[(slot + 1) % 8] || TB_REW[0]).n})예요.</p>`, [{label:'확인', primary:true}]);
-  return {spec, drops};
+    <p class="small" style="margin-top:8px">다음 타임 보스는 ${tbHourTxt(nx.next)}에 열려요(${TB_HALF[nx.nextSlot].map(i => TB_REW[i].n).join('·')}).</p>`, [{label:'확인', primary:true}]);
+  return {spec, drops, groups, gold:goldAll, gems:gemAll, diffs};
 }
 
 function pickRaidTarget(){
@@ -19607,15 +19649,16 @@ function buildRaid(){
     return () => {
     const w = tbWindow(), users = tbUsers(), others = tbOthers();
     const tbLeft = w.open ? w.end - now() : w.next - now();
-    const tbB = w.open ? w.boss : TB_SLOTS[(w.slot + 1) % 8];
+    const tbB = w.open ? w.boss : w.nextBoss, rs = w.open ? w.slot : w.nextSlot;
     setHTML($('#tbBox'), `<div class="card dcard ${w.open && !raid ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(tbB.type, tbB.color)}" alt=""></div><div>
-      <div class="ct">타임 보스 · ${w.open ? w.boss.name : TB_SLOTS[(w.slot + 1) % 8].name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 사라짐` : `${new Date(w.next).getHours()}시에 나타남 (${fmtTime(tbLeft / 1000)})`}</span></div>
-      <p class="story">00시부터 3시간마다 30분 동안 나타나요. ${online ? '<b>서버에 만들어진 모든 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 30분 동안은 같은 파티). 보스 체력은 <b>모인 용사들의 피해에 맞춰</b> 제한 시간 언저리에 쓰러질 만큼이라 <b>그냥 두면 이기고 지는 게 반반</b>이에요. 금빛 「!」에 <b>[되받기]</b>(보스를 묶고 크게 침, 두 번이면 휘청), 붉은 칸·강타는 <b>피하기</b>, 휘청일 때(피해 ${FIT.grog}배) 기술을 넣으면 이겨요. 보스 한 방은 방어와 상관없이 맞는 용사 최대 체력의 ${(TB_DIFF.normal.hit * 100).toFixed(1).replace('.0', '')}%(지옥 ${(TB_DIFF.hell.hit * 100).toFixed(1).replace('.0', '')}%), 붉은 칸·강타는 그 ${FIT.tile}~${FIT.blow}배. 파티 전체가 <b>${TB_LIVES}번</b>까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.</p>
-      <div class="dl"><span>이번 시간 보상</span><b style="color:var(--gold)">${TB_REW[w.open ? w.slot : (w.slot + 1) % 8].n} — ${TB_REW[w.open ? w.slot : (w.slot + 1) % 8].d}</b></div>
-      <div class="dbweek">${TB_REW.map((r, i) => `<span class="${i === (w.open ? w.slot : (w.slot + 1) % 8) ? 'on' : ''}">${i * 3}시 ${r.n}</span>`).join('')}</div>
+      <div class="ct">타임 보스 · ${tbB.name}<span class="tag">${w.open ? `${fmtTime(tbLeft / 1000)} 뒤 닫혀요` : `${tbHourTxt(w.next)}에 열려요 (${fmtTime(tbLeft / 1000)})`}</span></div>
+      <p class="story">하루 두 번, <b>오전 9~12시</b>와 <b>오후 6~9시</b>에 3시간씩 열려요. ${online ? '<b>서버에 만들어진 캐릭터</b>' : '<b>이 기기에 만들어 둔 캐릭터</b>'} 가운데 <b>무작위 ${TB_PICK}명</b>이 함께 싸워요(같은 직업은 나까지 ${TB_CLS_CAP}명까지, 한 번 열린 동안은 같은 파티). 보스 체력은 모인 용사들의 피해에 맞춰져서 <b>손을 써야 이겨요</b> — 금빛 「!」에 [되받기], 붉은 칸·강타는 피하기, 휘청일 때 기술.${helpTip(`보스 체력은 모인 용사들의 피해에 맞춰 제한 시간 언저리에 쓰러질 만큼이라 그냥 두면 이기고 지는 게 반반이에요. 금빛 「!」에 [되받기](보스를 묶고 크게 침, 두 번이면 휘청), 붉은 칸·강타는 피하기, 휘청일 때(피해 ${FIT.grog}배) 기술을 넣으면 이겨요. 보스 한 방은 방어와 상관없이 맞는 용사 최대 체력의 ${(TB_DIFF.normal.hit * 100).toFixed(1).replace('.0', '')}%(지옥 ${(TB_DIFF.hell.hit * 100).toFixed(1).replace('.0', '')}%), 붉은 칸·강타는 그 ${FIT.tile}~${FIT.blow}배. 파티 전체가 ${TB_LIVES}번까지만 다시 일어날 수 있어요. 깨면 엽전을 많이 주며 아주 드물게 귀걸이·팔찌·신화 보물을 떨궈요.`, '타임 보스 싸움 방법')}</p>
+      <div class="dl"><span>${w.open ? '이번 창 보상' : `${tbHourTxt(w.next)} 보상`}</span><b style="color:var(--gold)">${TB_HALF[rs].map(i => TB_REW[i].n).join(' · ')}${helpTip(`${TB_HALF_NAME[rs]} 보상 4종을 한꺼번에 줘요: ` + TB_HALF[rs].map(i => `${TB_REW[i].n}(${TB_REW[i].d})`).join(' / ') + `. 오전은 장신구·쇳가루·숫돌·무기·치장, 오후는 갑옷·신화·고삐·변신·넋·아바타예요. 엽전·보석·재료도 네 번분이에요. 노말·지옥${S.world >= 5 ? '·심해' : ''}는 창마다 한 번씩 받고, 지옥은 ×2에 확률 ×1.5예요.`, '보상 설명')}</b></div>
+      <div class="dbweek">${[0, 1].map(sl => `<span class="${sl === rs ? 'on' : ''}">${TB_HALF_NAME[sl]} ${TB_START[sl] % 12 || 12}시 · ${TB_HALF[sl].map(i => TB_REW[i].n).join('·')}</span>`).join('')}</div>
       <div class="dl"><span style="white-space:nowrap">참가자 ${users}명</span><b>${(nm => nm.slice(0, 8).join(', ') + (nm.length > 8 ? ` 외 ${nm.length - 8}명` : ''))(['나'].concat(others.map(o => `${esc(o.name)}(${(hasK(CLASSES, o.cls) ? CLASSES[o.cls] : CLASSES.musa).name}${o.mine ? '·내 캐릭터' : ''})`)))}</b></div>
       ${users < 2 ? `<p class="small">${online ? '아직 함께 싸울 캐릭터가 없어요(한 번이라도 싸워 본 캐릭터만 뽑혀요).' : '캐릭터를 더 만들면 함께 참가해요. 온라인 서버에 연결되면 서버의 모든 캐릭터 가운데에서 뽑혀요.'}</p>` : ''}
-      <div class="dbtns">${['normal', 'hell'].concat(S.world >= 5 ? ['deep'] : []).map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}</div>
+      <div class="dbtns">${['normal', 'hell'].concat(S.world >= 5 ? ['deep'] : []).map(d => { const why = tbCan(d); return `<button class="btn ${why ? '' : 'primary'}" data-tb="${d}" ${why ? 'disabled' : ''}>${TB_DIFF[d].name} 도전${why ? `<br><small style="font-weight:600">${why}</small>` : ''}</button>`; }).join('')}${helpTip('같은 창에서 높은 난이도를 이기면 그 아래 난이도의 이번 창 보상도 함께 받아요(심해 → 지옥 → 노말). 이미 받은 아래 난이도는 건너뛰어요. 그래서 창마다 가장 높은 난이도 한 번만 돌아도 돼요. 지면 표시가 남지 않고 창이 열려 있는 동안 다시 도전할 수 있어요.', '난이도 설명')}</div>
+      <p class="small" style="margin:4px 0 0">이기면 아래 난이도 보상도 같이 받아요.</p>
     </div></div>`);
     if (!dbOpen()) setHTML($('#dbBox'), `<div class="card dcard"><div class="dport"><img src="${bossPortrait(dbBoss().type, dbBoss().color)}" alt=""></div><div><div class="ct">1일 보스<span class="tag">잠김</span></div><p class="story">이야기 <b>${SK_CH0}장(천계)</b>에 닿으면 열려요. 이기면 치장(장비 위에 끼우는 장식)을 줘요.</p><button class="btn" disabled>이야기 ${SK_CH0}장부터</button></div></div>`);
     else { dbCheck(); const B = dbBoss(), sun = dbDay() === 0, part = sun ? null : dbPart(), left = dbLeft(), days = '일월화수목금토';
@@ -19913,7 +19956,7 @@ const HOWTO = [
     ['bamboo', 'hero,kkachi', 'sparkle', [['까치', '[펫]에서 공격·방어·지원 펫을 뽑아 셋을 데려가요. 같은 펫이 또 나오면 별이 올라요.'], ['까치', '60번 안에 영웅 펫이 안 나오면 60번째는 꼭 나와요.']]]]},
   {ic:'⚑', t:'레이드', d:'레이드·타임 보스·허수아비', shots:[
     ['court', 'hero,kkachi,k:4', 'shake', [['까치', '[레이드]에서 동료와 함께 90초 안에 큰 보스를 잡아요. 권장 전투력을 보고 들어가요!']]],
-    ['village', 'hero,kkachi', 'light', [['까치', '3시간마다 30분 동안 「타임 보스」가 나타나요. 서버의 캐릭터 가운데 무작위로 모인 용사들이 함께 싸우고, 파티 전체가 다섯 번까지만 일어날 수 있어요.'], ['까치', '「허수아비」는 혼자 30초 동안 친 피해만큼 등급 보상을 줘요. 하루 3번!']]]]},
+    ['village', 'hero,kkachi', 'light', [['까치', '하루 두 번(오전 9시·오후 6시부터 3시간) 「타임 보스」가 나타나요. 서버의 캐릭터 가운데 무작위로 모인 용사들이 함께 싸우고, 파티 전체가 다섯 번까지만 일어날 수 있어요.'], ['까치', '「허수아비」는 혼자 30초 동안 친 피해만큼 등급 보상을 줘요. 하루 3번!']]]]},
   {ic:'✉', t:'퀘스트와 부탁', d:'이야기·할 일·마을 부탁', shots:[
     ['village', 'hero,kkachi', 'sparkle', [['까치', '왼쪽 위 이야기 퀘스트를 따라가면 길을 잃지 않아요. 다 하면 거기서 바로 보상!']]],
     ['village', 'hero,kkachi', 'light', [['까치', '채팅 「마을」에서 「부탁 ▶」이 붙은 말을 누르면 마을 사람의 부탁을 들어줄 수 있어요. 옛이야기가 숨어 있어요!']]]]},
@@ -20733,7 +20776,7 @@ function updateDots(){
   $('#tab-quest').classList.toggle('has-dot', on && questAnyReady());
   $('#tab-raid').classList.toggle('has-dot', on && !raid && (firstReadyRaid() >= 0 || !tbCan('normal') || !tbCan('hell')));
   const tw = tbWindow();
-  if (on && tw.open && tbAnnounced !== tw.id){ tbAnnounced = tw.id; announce(`타임 보스 「${tw.boss.name}」${josa(tw.boss.name, '이', '가')} 나타났어요! 30분 동안 서버의 캐릭터 가운데 무작위 ${TB_PICK}명과 함께 도전해요. [레이드] → [타임 보스]`); }
+  if (on && tw.open && tbAnnounced !== tw.id){ tbAnnounced = tw.id; announce(`타임 보스 「${tw.boss.name}」${josa(tw.boss.name, '이', '가')} 나타났어요! 3시간 동안 서버의 캐릭터 가운데 무작위 ${TB_PICK}명과 함께 도전해요. [레이드] → [타임 보스]`); }
   shopCheck();
   $('#tab-shop').classList.toggle('has-dot', on && !(S.shop.got.gift >= 1));
   $('#tab-gear').classList.toggle('has-dot', on && craftReady());
@@ -22220,7 +22263,7 @@ if (location.search.indexOf('simtest') >= 0){
       return out;
     },
     setWorld(w){ S.world = w; S.stage = 1; mapCache.clear(); resetRuntime(); applyWorld(); refreshStats(); },
-    doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbCan, tbUsers, tbAutoJoin, castAwaken, startFight,
+    doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbRolls, tbPending, TB_HALF, TB_START, TB_BONUS, SOUL_P, tbCan, tbUsers, tbAutoJoin, castAwaken, startFight,
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
     unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,

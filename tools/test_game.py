@@ -763,7 +763,7 @@ async def main():
         check(hr['ok'] and hr['cast'] and hr['h0'], f'저승 시왕 레이드에서 초각성기를 쓰고 토벌한다 {hr}')
         tb = await page.evaluate("""() => { const G = window.__game;
           G.REG.accounts.friend1 = {salt: 'x', hash: 'p:x', t: 1, chars: [{cid: 'cf', name: '벗님', cls: 'doin', level: 50, maxStage: 50, look: {}, armorG: 3, weaponG: 3, ally: {dps: G.ST.atk * 3, maxHp: G.ST.maxHp}}]};
-          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000);
+          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - G.now() + 60000);
           const g0 = G.S.gold, why = G.tbCan('normal'), ok = G.startTimeBoss('normal');
           for (let i = 0; i < 100 && G.raid; i++) G.update(0.05);
           if (G.raid){ G.raid.info.fit = null; G.raid.boss.hp = 1; }   // 이제 보스는 손을 잘 써야 쓰러지므로(체력을 늘 다시 맞춤), 보상 확인은 맞추기를 끄고 끝낸다
@@ -776,7 +776,7 @@ async def main():
           const oc = ['sulsa', 'jagaek'].find(c => c !== S.cls);
           for (let i = 0; i < 3; i++) A.chars.push({cid:'tb' + i, name:'내캐' + i, cls:oc, level:50, look:{}, armorG:2, weaponG:2, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp * (i + 1), rd:G.realDps() * (i + 1)}});
           G.REG.accounts.friend2 = {salt:'x', hash:'p:x', t:1, chars:[{cid:'f2', name:'벗님2', cls:'doin', level:50, look:{}, armorG:3, weaponG:3, ally:{dps:G.dpsOf(G.ST), maxHp:G.ST.maxHp}}]};
-          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - Date.now() + 60000); S.tb = {};
+          const w = G.tbWindow(); if (!w.open) G.addTime(w.next - G.now() + 60000); S.tb = {};
           const names = G.tbOthers().map(o => o.name), ok = G.startTimeBoss('normal'), R = G.raid, B = R.boss;
           const partyRd = G.realDps() * (G.TB_SELF_K + 6 + 0.8);   // 나(내 몫 TB_SELF_K) + 내캐(1+2+3배) + 벗님(예전 요약이라 기본 피해 × 8 = 실제(×10)의 0.8). 처음 체력은 어림 × 목표 시간(싸우며 맞춤)
           const hpK = +(B.maxHp / partyRd).toFixed(1);
@@ -789,7 +789,7 @@ async def main():
         check(tb2['ok'] and tb2['mine'] == 3 and tb2['friend'] and abs(tb2['hpK'] - tb2['tgt']) < 1 and tb2['ratio'] == 3 and tb2['rise'] == 0 and (tb2['fitK'] or 0) > 0,
               f'타임 보스: 같은 계정의 다른 캐릭터도 뽑히고, 보스 체력은 모두의 실제 피해 합 × 목표 시간에서 시작해 싸우며 맞추고(막대는 거꾸로 안 참, 끝나면 기억), 공격은 맞는 캐릭터 체력에 비례 {tb2}')
 
-        # 타임 보스 동료는 무작위 10명, 같은 직업은 나까지 3명(이 기기만 쓸 때도 같은 규칙, 30분 동안은 같은 파티)
+        # 타임 보스 동료는 무작위 10명, 같은 직업은 나까지 3명(이 기기만 쓸 때도 같은 규칙, 3시간 창 동안은 같은 파티)
         tb3 = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S);
           const cls = ['musa', 'jagaek', 'sulsa', 'doin'], chars = [];
           for (let i = 0; i < 20; i++) chars.push({cid:'p' + i, name:'뽑' + i, cls:cls[i % 4], level:40, look:{}, armorG:1, weaponG:1, ally:{dps:10, maxHp:100, rd:80}});
@@ -799,7 +799,58 @@ async def main():
           delete G.REG.accounts.pickt; Object.assign(S, JSON.parse(keep));
           return {n:a.length, same:a.map(o => o.name).join() === b.map(o => o.name).join(), byCls:n, me:S.cls, none:a.some(o => o.name === '안싸움')}; }""")
         capOk = all(v <= (2 if k == tb3['me'] else 3) for k, v in tb3['byCls'].items())
-        check(tb3['n'] == 10 and tb3['same'] and capOk and not tb3['none'], f'타임 보스: 무작위 10명·같은 직업은 나까지 3명·30분 동안 같은 파티 {tb3}')
+        check(tb3['n'] == 10 and tb3['same'] and capOk and not tb3['none'], f'타임 보스: 무작위 10명·같은 직업은 나까지 3명·3시간 창 동안 같은 파티 {tb3}')
+        # 타임 보스 하루 두 번(2026-11-19): 오전 9~12시·오후 18~21시 3시간 창, 창 id = 시작 시각
+        tw = await page.evaluate("""() => { const G = window.__game, d0 = G.now(), out = [];
+          const at = (h, m) => { const t = new Date(2031, 2, 14, h, m).getTime(); G.addTime(t - G.now()); const w = G.tbWindow(); return [w.open, w.slot, new Date(w.id).getHours(), new Date(w.next).getHours(), new Date(w.next).getDate(), w.boss.name, w.nextBoss.name]; };
+          const r = {a:at(8, 59), b:at(9, 0), c:at(11, 59), d:at(12, 0), e:at(17, 59), f:at(18, 0), g:at(20, 59), h:at(21, 0), i:at(23, 30)};
+          const dayA = (() => { G.addTime(new Date(2031, 2, 14, 10).getTime() - G.now()); const x = G.tbWindow().boss.name; G.addTime(new Date(2031, 2, 15, 10).getTime() - G.now()); return [x, G.tbWindow().boss.name]; })();
+          G.addTime(d0 - G.now()); r.day = dayA; return r; }""")
+        ok_w = (tw['a'][0] is False and tw['a'][2] == 18 and tw['a'][3] == 9 and tw['b'][:4] == [True, 0, 9, 18] and tw['c'][0] is True and tw['d'][0] is False and tw['d'][3] == 18
+                and tw['e'][0] is False and tw['f'][:4] == [True, 1, 18, 9] and tw['g'][0] is True and tw['h'][0] is False and tw['h'][3] == 9 and tw['h'][4] == 15 and tw['i'][3] == 9 and tw['i'][4] == 15)
+        check(ok_w and tw['day'][0] != tw['day'][1], f'타임 보스: 오전 9~12시·오후 18~21시 두 번 열리고(창 id = 시작 시각), 보스는 날마다 바뀐다 {tw}')
+        tr = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S); G.quiet = true;
+          const wAM = new Date(2031, 3, 1, 9).getTime(), wPM = new Date(2031, 3, 1, 18).getTime(), out = {};
+          S.world = 5; S.reb.n = 1; S.tb = {};
+          const am = G.finishTimeBoss({win:true, info:{diff:'normal', w:wAM, bossName:'시험', party:1}});
+          S.tb = {}; const pm = G.finishTimeBoss({win:true, info:{diff:'normal', w:wPM, bossName:'시험', party:1}});
+          out.am = am.groups[0].items.map(x => x.n); out.pm = pm.groups[0].items.map(x => x.n);
+          // 높은 난이도를 이기면 아래 난이도 보상도 함께, 이미 받은 것은 건너뜀
+          S.tb = {}; const h = G.finishTimeBoss({win:true, info:{diff:'hell', w:wAM, bossName:'시험', party:1}});
+          out.h = [h.diffs.join(), S.tb.normal === wAM, S.tb.hell === wAM, S.tb.deep === wAM];
+          const again = G.finishTimeBoss({win:true, info:{diff:'normal', w:wAM, bossName:'시험', party:1}}); out.again = again.diffs.length + ':' + again.gold;
+          S.tb = {}; const n1 = G.finishTimeBoss({win:true, info:{diff:'normal', w:wPM, bossName:'시험', party:1}}), n2 = G.finishTimeBoss({win:true, info:{diff:'hell', w:wPM, bossName:'시험', party:1}});
+          out.nh = [n1.diffs.join(), n2.diffs.join(), n2.groups.length];
+          S.tb = {}; const dp = G.finishTimeBoss({win:true, info:{diff:'deep', w:wAM, bossName:'시험', party:1}});
+          out.deep = [dp.diffs.join(), dp.groups.length, dp.gold > h.gold];
+          S.tb = {}; S.tb.hell = wAM; const d2 = G.finishTimeBoss({win:true, info:{diff:'deep', w:wAM, bossName:'시험', party:1}}); out.deep2 = d2.diffs.join();
+          // 창이 바뀌면(예전 창 id가 저장에 남아 있어도) 새 창은 다시 받는다
+          S.tb = {normal:123, hell:123, deep:123}; out.old = G.tbPending('deep', wPM).join();
+          Object.assign(S, JSON.parse(keep)); G.refreshStats(); return out; }""")
+        check(tr['am'] == ['장신구', '쇳가루·숫돌', '무기', '치장'] and tr['pm'] == ['갑옷', '신화', '고삐·변신', '넋·아바타'], f'타임 보스 보상: 오전은 앞 4종, 오후는 뒤 4종을 한꺼번에 {tr}')
+        check(tr['h'] == ['normal,hell', True, True, False] and tr['again'] == '0:0' and tr['nh'] == ['normal', 'hell', 1] and tr['deep'][0] == 'normal,hell,deep' and tr['deep'][1] == 3 and tr['deep2'] == 'normal,deep' and tr['old'] == 'normal,hell,deep',
+              f'타임 보스: 높은 난이도를 이기면 아래 난이도 보상도 함께(받은 건 건너뜀, 낮은 난이도를 먼저 깼으면 위 난이도분만 추가) {tr}')
+        tx = await page.evaluate("""() => { const G = window.__game, N = 120000, SP = G.SOUL_P.tb, B = G.TB_BONUS, out = {};
+          for (const d of ['normal', 'hell', 'deep']){
+            const D = G.TB_DIFF[d], old = {ear:0, brace:0, myth:0, soul:0};   // 예전: 하루 여덟 번 각각 한 번씩 굴림 = 확률 합
+            for (const r of G.TB_REW){ old.ear += D.drop.ear * (r.ak || 1); old.brace += D.drop.brace * (r.ak || 1); old.myth += D.drop.myth * (r.mk || 1); old.soul += SP * (r.sk || 1); }
+            const sum = {ear:0, brace:0, myth:0, soulX:0};
+            for (const h of [0, 1]) for (let i = 0; i < N; i++){ const R = G.tbRolls(d, h); for (const k in sum) sum[k] += R[k]; }
+            for (const k in sum) sum[k] /= N;
+            out[d] = {ear:+(sum.ear / (old.ear * B)).toFixed(3), brace:+(sum.brace / (old.brace * B)).toFixed(3), myth:+(sum.myth / (old.myth * B)).toFixed(3), soul:+((sum.soulX + SP * 8) / (old.soul * B)).toFixed(3)};
+          } return out; }""")
+        okx = all(abs(v - 1) < 0.05 for d in tx.values() for v in d.values())
+        check(okx, f'타임 보스: 하루(오전+오후) 무작위 드랍 기대값 = 예전 하루 여덟 번 기대값 × 1.1 (비율 1±5%) {tx}')
+        tp = await page.evaluate("""() => { const G = window.__game, S = G.S, keep = JSON.stringify(S), d0 = G.now();
+          const cls = ['musa', 'jagaek', 'sulsa', 'doin'], chars = [];
+          for (let i = 0; i < 20; i++) chars.push({cid:'q' + i, name:'창' + i, cls:cls[i % 4], level:40, look:{}, armorG:1, weaponG:1, ally:{dps:10, maxHp:100, rd:80}});
+          G.REG.accounts.pickw = {salt:'x', hash:'p:x', t:1, chars};
+          const w = G.tbWindow(); G.addTime(new Date(2031, 5, 3, 9, 10).getTime() - G.now());   // 오전 창 시작 10분 뒤
+          const a = G.tbOthers().map(o => o.name).join(), id0 = G.tbWindow().id; G.addTime(2 * 3600e3);   // 두 시간 뒤(같은 창)
+          const id1 = G.tbWindow().id, c = G.tbOthers().map(o => o.name).join(), op = G.tbWindow().open;
+          delete G.REG.accounts.pickw; G.addTime(d0 - G.now()); Object.assign(S, JSON.parse(keep));
+          return {same:a === c && a.length > 0, id:id0 === id1, op}; }""")
+        check(tp['same'] and tp['id'] and tp['op'], f'타임 보스: 3시간 창 안에 들어온 캐릭터는 늘 같은 파티 후보(씨앗 = 창 id) {tp}')
         await page.click('#tab-raid'); await page.wait_for_timeout(300)
         await page.screenshot(path=str(OUT / '18_레이드_저승.png'))
 
@@ -1186,8 +1237,8 @@ async def main():
           S.av.own.p_dragon = true; S.av.cape = ''; S.acc.brace = {g:4, p:80}; S.form.own.cheong = true; S.form.eq = 'cheong'; G.refreshStats();
           const c0 = G.ST.crit + G.ST.critOver; out.res = G.gearRes(); out.set0 = G.setSum().on; S.av.cape = 'p_dragon'; G.refreshStats(); out.set1 = G.setSum().on; out.setUp = +((G.ST.crit + G.ST.critOver) - c0).toFixed(3);
           S.equip.weapon = 4; G.refreshStats(); out.setOff = G.setSum().on.length; out.resLow = G.gearRes(); S.equip.weapon = 16; G.refreshStats();
-          // 타임 보스 시간대 보상: 6시 = 무기, 9시 = 치장/보석
-          const R = {win:true, info:{diff:'normal', w:new Date(2026, 10, 10, 6).getTime(), bossName:'해태', party:1}}; out.tb6 = G.finishTimeBoss(R).spec;
+          // 타임 보스 보상: 오전(9시) 창 = 장신구·쇳가루숫돌·무기·치장 4종
+          const R = {win:true, info:{diff:'normal', w:new Date(2026, 10, 10, 9).getTime(), bossName:'해태', party:1}}; out.tb6 = G.finishTimeBoss(R).spec;
           // 천공의 탑
           out.ws = [G.towerWS(1), G.towerWS(100), G.towerWS(300)];
           S.tower = {best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}; const g0 = S.gems;
@@ -1239,7 +1290,7 @@ async def main():
           G.PAT.off = was[0]; G.gateOff = was[1]; Object.assign(S, JSON.parse(keep)); G.applyWorld(); G.refreshStats(); G.quiet = false; return out; }""")
         check(nk['res'] == 1 and nk['set1'] and nk['set1'][0][0] == 'haemosu' and nk['set1'][0][1] == 5 and nk['setUp'] >= 0.059 and nk['setOff'] == 0 and nk['resLow'] < 1,
               f'장비 공명(전설 1배)·세트(해모수의 조합 5세트, 무기·갑옷이 안 맞으면 꺼짐) {nk}')
-        check(any('검' in x or '무기' in x or '신령' in x for x in nk['tb6']), f'타임 보스: 6시는 무기를 준다 {nk["tb6"]}')
+        check(any('검' in x or '무기' in x or '신령' in x for x in nk['tb6']), f'타임 보스: 오전 창은 무기를 준다 {nk["tb6"]}')
         check(nk['ws'][0][0] == 0 and nk['ws'][1][0] == 1 and nk['ws'][2][0] == 4 and nk['t1'] and nk['tPre'] is None and nk['tBest'] == 1 and nk['tGems'] and nk['tLeft'] == 4 and nk['wing'],
               f'천공의 탑: 층마다 정해진 세기, 저절로 조합 안 바꿈, 지면 하루 횟수 하나, 50층 날개 {nk}')
         check(nk['tc'] and nk['tcWipes'] == 3 and nk['tcWipe'] and nk['godWin'] == 1 and nk['seed'] and nk['tWing'], f'태초의 신: 전멸기 세 번, 이기면 태초의 씨앗·태초의 날개 {nk}')
