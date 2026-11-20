@@ -2174,6 +2174,35 @@ async def main():
         await jp.evaluate("() => { window.__game.noJin = true; }")
         await ctxJ.close()
 
+        # 9-10b) 2026-11-19: 마지막 땅 수미산의 「진」 — 이야기 끝(90장 앞까지) 또는 4-10 격파에 열림, 잠겨 있을 땐 「이야기를 끝내면 열려요」 안내(「?」)
+        sm = json.loads((ROOT / 'docs' / 'patch-sea' / 'sim' / 'save_musa_ind3.json').read_text(encoding='utf-8'))
+        ctxM = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        mp = await ctxM.new_page()
+        watch(mp, errors, '수미산 진 ')
+        await fresh(mp)
+        await signup(mp, 'sumtest', 'abcd', '수미산용사')
+        m1 = await mp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}; G.quiet = true; G.noFork = true; G.noInh = true;
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '수미산용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats();
+          const idx = G.MAIN_Q.findIndex(q => q.ch >= 90); out.w = S.world; out.cls6 = Object.keys(G.JIN_W[10].c).length;
+          S.quest.main = idx - 1; S.best.s10 = 40; out.closed = G.jinOpen(10); out.noteW9 = (S.world = 9, G.jinOpen(10)); S.world = 10;
+          G.buildTab('raid'); const lock = document.querySelector('#jinLock'); out.lock = lock ? lock.textContent : ''; out.qm = !!(lock && lock.querySelector('.qmark')); out.nCards0 = document.querySelectorAll('.rcard.jin[id^="jin-10-"]').length;
+          S.best.s10 = 41; out.byBoss = G.jinOpen(10); S.best.s10 = 40; S.quest.main = idx; out.byStory = G.jinOpen(10);
+          G.buildTab('raid'); out.lock1 = !!document.querySelector('#jinLock'); out.nCards = document.querySelectorAll('.rcard.jin[id^="jin-10-"]').length; out.txt = (document.querySelector('.rcard.jin[id^="jin-10-"] .rpow.jin') || {textContent:''}).textContent;
+          out.rec = [0, 1, 2].map(i => Math.log10(G.jinRec(10, i))); out.rec9 = Math.log10(G.jinRec(9, 2));
+          out.newW = G.jinNewW(); out.noti = G.notiList().map(N => N.k).includes('jin');
+          S.jin.day = ''; S.jin.wk = {}; S.jin.win = {}; S.jin.fail = {}; S.raid.first = {}; S.inv.potion = 50; S.inv.mana = 50; const g0 = S.gems;
+          out.start = G.startJin(10, 2); out.hp = G.raid && G.raid.boss.maxHp === G.jinBase(10, 2)[0]; out.label = G.raid && G.raid.info.label;
+          if (G.raid){ G.raid.boss.hp = 1e-9; for (let k = 0; k < 300 && G.raid; k++) G.update(0.05); }
+          out.win = [S.jin.win.ju2, !!S.jin.wk.ju2, !!S.raid.first.u2, S.gems > g0, G.jinLeft()];
+          S.world = 9; S.quest.main = 0; S.best.s10 = 1; out.back = G.jinOpen(10); return out; }""", sm)
+        check(m1['w'] == 10 and m1['cls6'] == 6 and not m1['closed'] and not m1['noteW9'] and '이야기를 끝내면 열려요' in m1['lock'] and m1['qm'] and m1['nCards0'] == 0
+              and m1['byBoss'] and m1['byStory'] and not m1['lock1'] and m1['nCards'] == 3 and '권장 전투력' in m1['txt'],
+              f'수미산 진: 이야기 끝 전에는 닫혀 「이야기를 끝내면 열려요」(?) 안내만, 4-10 격파 또는 이야기 끝이면 레이드 3곳의 진 칸이 열린다 {m1}')
+        check(m1['rec'][0] < m1['rec'][1] < m1['rec'][2] and m1['rec'][0] > m1['rec9'] and m1['newW'] == 10 and m1['noti'] and m1['start'] and m1['hp'] and m1['label'].startswith('진 ·')
+              and m1['win'][:4] == [1, True, True, True] and m1['win'][4] == 2 and not m1['back'],
+              f'수미산 진: 권장 전투력은 젖의 바다 진보다 높고 레이드마다 커지며, 열리면 알림(「진」), 이기면 주간 첫 승리·일반 첫 토벌 기록·하루 횟수 {m1["rec"]} {m1["win"]}')
+        await ctxM.close()
+
         # 9-11) 물의 신화 4단계: 새 장비 칸(투구·어깨·신발)·재련, 유물 등급, 3차 계승(용궁 진주·한 벌), 호박석 세공 — 4부 전에는 안 보임(시험은 seaForce)
         ctxE = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
         ep = await ctxE.new_page()
