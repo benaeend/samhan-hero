@@ -1748,7 +1748,7 @@ const CLASSES = {
     skills:['창 돌려 쓸기', '일점 찌르기', '표사의 기합', '회전 창무', '백 번 찌르기', '갑옷 뚫기', '표국 창진', '바람 가르는 창', '천 자루 거두기', '불꽃 창끝', '길동무', '물기둥 창', '파도 타기', '만 갈래 창', '위태의 서원'], awaken:'만부부당', awaken4:'화첨 난무'},
   // 권사(拳士, 2026-11-19): 맨주먹·맨발의 무술가(옛 수박·택견 같은 맨손 무예). 근접 1칸 · 「연권」(FIST, fistFin — 기본 공격 세 번째마다 마무리 일격).
   // Lv.50 1차 전직에서 두 갈래: S.gwonBr 1 「주먹」(맞받아치는 주먹 — fistCounter, 「기세」) / 2 「발」(멈추지 않는 발 — footStep 「보법」, 두 번 차기). 갈래 이름·기술 6·7번은 skillsBr / JOBS.gwon 의 getter
-  gwon:{name:'권사', desc:'맨주먹과 맨발로 부딪쳐요. Lv.50에 주먹과 발 가운데 한 길을 골라요', tags:'맨손 · 근접', hpMul:1.15, atkMul:1, grow:[0.78, 1.1], spdMul:1.1, critAdd:0.03, regenAdd:0, range:1, skillMul:1, dr:3,
+  gwon:{name:'권사', desc:'맨주먹과 맨발로 부딪쳐요. Lv.50에 주먹과 발 가운데 한 길을 골라요', tags:'맨손 · 근접', hpMul:1.15, atkMul:1, spdMul:1.1, critAdd:0.03, regenAdd:0, range:1, skillMul:1, dr:3,
     fist:true,
     role:'맨손 무술', traits:['「연권」: 기본 공격 세 번째마다 몸을 실은 마무리 일격이 나가요. 박자가 빨라서 쉬지 않고 맞붙어요', 'Lv.50 1차 전직에서 한 길을 골라요. 「주먹」은 맞은 직후 되받아치며 기세를 쌓고, 「발」은 쉬지 않고 옮겨 다니며 두 번씩 차요', '무기가 없어서 장비 칸의 「무기」는 손목 감개(권갑)예요. 재련·소환은 다른 직업과 똑같아요'],
     weapon:'권갑', armor:'무복', wtype:'none', base:'#d2802f', pants:'#5e5a74', belt:'#efe6d0', fx:'#ffb84a', boltFx:'cross', nukeFx:'slashes', proj:null,
@@ -2143,21 +2143,21 @@ const CLASS_SK = Object.fromEntries(Object.keys(CLASSES).map(c => [c, SKILLS.map
    c가 레이드 재사용을 넘을 수 있게 풀었다(곤륜·4·5부는 c 2~5 → 레이드보다 드물게, 그만큼 크게). 이승 자객은 벽(106단계)에서 느려 w 0.65·c 1.6.
    bj·bc: 단계 보스·수문장 보정(전직 단계별 · 직업) — 버프·약점 기술이 많아질수록(5·6차 버프기) 큰 한 방과 겹치던 몫이 커서 사냥 박자에서 잃는 몫도 큼(bench로 레이드 박자와 초당 피해를 맞춤) */
 const HUNT = {w:[
-  {musa:0.57, jagaek:0.65, sulsa:0.75, doin:0.5, gungsa:0.5, changgaek:0.5},   // 이승
-  {musa:0.67, jagaek:0.76, sulsa:0.7, doin:0.48, gungsa:0.65, changgaek:0.79},   // 저승
-  {musa:0.62, jagaek:0.71, sulsa:0.89, doin:0.99, gungsa:0.78, changgaek:0.96},   // 천계
-  {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 부상
-  {musa:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 곤륜
-  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.74, gungsa:0.55, changgaek:0.6},   // 4부 바다
-  {musa:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6}],   // 5부 천축
+  {musa:0.57, gwon:0.57, jagaek:0.65, sulsa:0.75, doin:0.5, gungsa:0.5, changgaek:0.5},   // 이승
+  {musa:0.67, gwon:0.67, jagaek:0.76, sulsa:0.7, doin:0.48, gungsa:0.65, changgaek:0.79},   // 저승
+  {musa:0.62, gwon:0.62, jagaek:0.71, sulsa:0.89, doin:0.99, gungsa:0.78, changgaek:0.96},   // 천계
+  {musa:0.56, gwon:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 부상
+  {musa:0.56, gwon:0.56, jagaek:0.46, sulsa:0.48, doin:0.5, gungsa:0.54, changgaek:0.5},   // 곤륜
+  {musa:0.6, gwon:0.6, jagaek:0.81, sulsa:0.58, doin:0.74, gungsa:0.55, changgaek:0.6},   // 4부 바다
+  {musa:0.6, gwon:0.6, jagaek:0.81, sulsa:0.58, doin:0.96, gungsa:0.55, changgaek:0.6}],   // 5부 천축
   c:[
-  {musa:2.17, jagaek:1.6, sulsa:1.26, doin:2.01, gungsa:1.39, changgaek:1.3},   // 이승
-  {musa:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 저승
-  {musa:1, jagaek:1, sulsa:1, doin:1.87, gungsa:1, changgaek:1},   // 천계
-  {musa:1.98, jagaek:1.52, sulsa:1.19, doin:1.86, gungsa:2.03, changgaek:1.58},   // 부상
-  {musa:3.99, jagaek:2.34, sulsa:2.86, doin:5, gungsa:2.64, changgaek:2.19},   // 곤륜
-  {musa:2.48, jagaek:2.64, sulsa:3.58, doin:3, gungsa:1.76, changgaek:3.88},   // 4부 바다
-  {musa:3.92, jagaek:4.2, sulsa:4.2, doin:4.38, gungsa:3.64, changgaek:4.3}],   // 5부 천축
+  {musa:2.17, gwon:2.17, jagaek:1.6, sulsa:1.26, doin:2.01, gungsa:1.39, changgaek:1.3},   // 이승
+  {musa:1, gwon:1, jagaek:1, sulsa:1, doin:1, gungsa:1, changgaek:1},   // 저승
+  {musa:1, gwon:1, jagaek:1, sulsa:1, doin:1.87, gungsa:1, changgaek:1},   // 천계
+  {musa:1.98, gwon:1.98, jagaek:1.52, sulsa:1.19, doin:1.86, gungsa:2.03, changgaek:1.58},   // 부상
+  {musa:3.99, gwon:3.99, jagaek:2.34, sulsa:2.86, doin:5, gungsa:2.64, changgaek:2.19},   // 곤륜
+  {musa:2.48, gwon:2.48, jagaek:2.64, sulsa:3.58, doin:3, gungsa:1.76, changgaek:3.88},   // 4부 바다
+  {musa:3.92, gwon:3.92, jagaek:4.2, sulsa:4.2, doin:4.38, gungsa:3.64, changgaek:4.3}],   // 5부 천축
   bj:[1, 1.06, 1.08, 1.03, 1.06, 1.04, 0.86], bc:{doin:1.07}, slots:10};   // slots: 이 표를 잰 때의 전투 기술 칸 수(2026-11-14 10칸으로 다시 잼 — SK_SLOTS가 바뀌면 HUNT.w·c·bj를 다시 잴 것)
 let beatHunt = null, castCtx = null, castFrac = 0;   // beatHunt: 지금 재사용이 맞춰진 박자 · castCtx: 지금 치는 기술의 사냥 보정({dur, f, b}) · castFrac: 「기술 수련」 의뢰 셈(사냥 박자는 hcd÷cd번)
 const huntBeat = () => { const f = window.__game && window.__game.beat; return f ? f === 'hunt' : !raid; };   // 레이드(startFight 싸움)가 아니면 사냥 박자
@@ -5756,7 +5756,7 @@ function statValue(k, st){
    발(S.gwonBr 2): 기본 공격이 두 번 차기(한 번 FOOT.each배), 움직인 직후(0.8초 안) 첫 공격은 「파고들기」 FOOT.dash배, 공격 속도 +FOOT.spd·걷는 속도 +FOOT.mv(「보법」). 2차 기술 「풍신 비각」은 공격 속도도 +20%.
    전직 전(0)에는 주먹·발을 번갈아 내지르는 평범한 연권만. 수치는 tools/test_game.py --sim · --long 으로 잼(docs/report gwon_balance) */
 const FIST = {fin:1.5, counter:2.0, cd:1.0, kiT:6, kiMax:5, kiAtk:4};
-const FOOT = {each:0.55, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
+const FOOT = {each:0.6, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
 const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
 const footSpd = () => gwonBr() === 2 ? (1 + FOOT.spd) * (hero.jobBuffT > 0 ? FOOT.jobB : 1) : 1;
 const atkBuff = () => pbAtk() * kiMul() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
