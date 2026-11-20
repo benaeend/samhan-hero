@@ -20,6 +20,7 @@ async def main():
             r = await page.evaluate(T.SIM, [seg*60, cls, opts])
             info = await page.evaluate("() => { const G = window.__game, S = G.S; const q = G.mainQuest(); return {save:JSON.stringify(S), q:S.quest.main, lv:S.level, exp:S.exp/G.expNeed(S.level), st:S.stage, best:S.best.s10, gate:G.bossGate().why||'', gems:S.gems, gemsAll:(S.rec&&S.rec.gems)||0, atk:G.ST.atk, hp:G.ST.maxHp, tr:S.transShard||0}; }")
             save = info.pop('save')
+            if SAVE_FILE: open(SAVE_FILE, 'w', encoding='utf-8').write(save)
             for k, v in r['first'].items():
                 if isinstance(v, (int, float)) and k.startswith('L10:') and k not in firstAll: firstAll[k] = round(done + v/60, 1)
             done += seg
