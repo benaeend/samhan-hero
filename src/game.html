@@ -1748,7 +1748,7 @@ const CLASSES = {
     skills:['창 돌려 쓸기', '일점 찌르기', '표사의 기합', '회전 창무', '백 번 찌르기', '갑옷 뚫기', '표국 창진', '바람 가르는 창', '천 자루 거두기', '불꽃 창끝', '길동무', '물기둥 창', '파도 타기', '만 갈래 창', '위태의 서원'], awaken:'만부부당', awaken4:'화첨 난무'},
   // 권사(拳士, 2026-11-19): 맨주먹·맨발의 무술가(옛 수박·택견 같은 맨손 무예). 근접 1칸 · 「연권」(FIST, fistFin — 기본 공격 세 번째마다 마무리 일격).
   // Lv.50 1차 전직에서 두 갈래: S.gwonBr 1 「주먹」(맞받아치는 주먹 — fistCounter, 「기세」) / 2 「발」(멈추지 않는 발 — footStep 「보법」, 두 번 차기). 갈래 이름·기술 6·7번은 skillsBr / JOBS.gwon 의 getter
-  gwon:{name:'권사', desc:'맨주먹과 맨발로 부딪쳐요. Lv.50에 주먹과 발 가운데 한 길을 골라요', tags:'맨손 · 근접', hpMul:1.15, atkMul:1, spdMul:1.1, critAdd:0.03, regenAdd:0, range:1, skillMul:1, dr:3,
+  gwon:{name:'권사', desc:'맨주먹과 맨발로 부딪쳐요. Lv.50에 주먹과 발 가운데 한 길을 골라요', tags:'맨손 · 근접', hpMul:1.15, atkMul:1, grow:[0.78, 1.1], spdMul:1.1, critAdd:0.03, regenAdd:0, range:1, skillMul:1, dr:3,
     fist:true,
     role:'맨손 무술', traits:['「연권」: 기본 공격 세 번째마다 몸을 실은 마무리 일격이 나가요. 박자가 빨라서 쉬지 않고 맞붙어요', 'Lv.50 1차 전직에서 한 길을 골라요. 「주먹」은 맞은 직후 되받아치며 기세를 쌓고, 「발」은 쉬지 않고 옮겨 다니며 두 번씩 차요', '무기가 없어서 장비 칸의 「무기」는 손목 감개(권갑)예요. 재련·소환은 다른 직업과 똑같아요'],
     weapon:'권갑', armor:'무복', wtype:'none', base:'#d2802f', pants:'#5e5a74', belt:'#efe6d0', fx:'#ffb84a', boltFx:'cross', nukeFx:'slashes', proj:null,
@@ -5756,7 +5756,7 @@ function statValue(k, st){
    발(S.gwonBr 2): 기본 공격이 두 번 차기(한 번 FOOT.each배), 움직인 직후(0.8초 안) 첫 공격은 「파고들기」 FOOT.dash배, 공격 속도 +FOOT.spd·걷는 속도 +FOOT.mv(「보법」). 2차 기술 「풍신 비각」은 공격 속도도 +20%.
    전직 전(0)에는 주먹·발을 번갈아 내지르는 평범한 연권만. 수치는 tools/test_game.py --sim · --long 으로 잼(docs/report gwon_balance) */
 const FIST = {fin:1.5, counter:2.0, cd:1.0, kiT:6, kiMax:5, kiAtk:4};
-const FOOT = {each:0.6, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
+const FOOT = {each:0.55, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
 const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
 const footSpd = () => gwonBr() === 2 ? (1 + FOOT.spd) * (hero.jobBuffT > 0 ? FOOT.jobB : 1) : 1;
 const atkBuff = () => pbAtk() * kiMul() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
