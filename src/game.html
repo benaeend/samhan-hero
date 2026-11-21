@@ -5762,7 +5762,7 @@ function statValue(k, st){
    발(S.gwonBr 2): 기본 공격이 두 번 차기(한 번 FOOT.each배), 움직인 직후(0.8초 안) 첫 공격은 「파고들기」 FOOT.dash배, 공격 속도 +FOOT.spd·걷는 속도 +FOOT.mv(「보법」). 2차 기술 「풍신 비각」은 공격 속도도 +20%.
    전직 전(0)에는 주먹·발을 번갈아 내지르는 평범한 연권만. 수치는 tools/test_game.py --sim · --long 으로 잼(docs/report gwon_balance) */
 const FIST = {fin:1.5, counter:2.0, cd:1.0, kiT:6, kiMax:5, kiAtk:4};
-const FOOT = {each:0.6, dash:1.6, spd:0.12, mv:0.2, jobB:1.2};
+const FOOT = {each:0.5, dash:1.6, spd:0.08, mv:0.2, jobB:1.1};
 const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
 const footSpd = () => gwonBr() === 2 ? (1 + FOOT.spd) * (hero.jobBuffT > 0 ? FOOT.jobB : 1) : 1;
 const atkBuff = () => pbAtk() * kiMul() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
