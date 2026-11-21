@@ -4646,9 +4646,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-21-8', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-21-10', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 21일 · 권사 이야기 인물 그림'],
+  ['권사 이야기의 새 인물 7명이 저마다 모습을 갖췄어요', '산길 노인은 키가 작고 흰 수염이 가슴까지 흘러요(머리에 흰 깃털). 바위손은 회색 머리에 돌구슬 목걸이를 건 듬직한 어른, 바람발은 높이 묶은 머리에 뒤로 날리는 푸른 목도리를 두른 날쌘 사람이에요. 형천은 산해경대로 머리가 없는 거인이라 가슴에 두 눈이 있고 큰 도끼와 둥근 방패를 들었어요. 과보는 머리 뒤로 붉은 해가 뜬 거인이고 꽃 핀 복숭아 지팡이를 짚었어요.'],
+  ['스쿠네와 게하야는 옛 장사의 넋이에요', '스쿠네는 새끼 금줄 허리띠를 두르고 푸른 넋불이 떠돌아요. 게하야는 수염 난 굵은 다리 장사이고 주황 넋불이 떠돌아요. 이야기 연출에서 일곱 인물이 나란히 서도 한눈에 구분돼요.'],
+
   ['#', '11월 21일 · 남·여 모습 · 표정'],
   ['남·여 모습을 고를 수 있어요', '[꾸미기]와 캐릭터를 만들 때 「모습」에서 남·여를 고를 수 있어요. 여자 모습은 어깨가 가늘고 허리가 잘록하며 치마 윤곽에 긴 머리, 속눈썹, 붉은 댕기 리본이 있어요. 모든 직업에서 고를 수 있고, 예전 캐릭터는 그대로 남자 모습이에요. 언제든 다시 바꿀 수 있어요.'],
   ['용사 표정이 상황에 따라 바뀌어요', '싸울 때는 눈이 매서워지고, 맞으면 깜짝 놀라고, 체력이 30% 밑이면 기운 없는 얼굴이 돼요. 레벨이 오르면 기뻐하고, 보스를 쓰러뜨리면 크게 웃어요. 평소엔 가끔 눈을 깜빡여요. 절전 그리기에서는 깜빡임과 싸우는 표정을 빼고 나머지만 보여요.'],
@@ -10629,6 +10633,86 @@ function drawFaceExpr(g, hx, hy, face, SK, masked, fem){
   else E(mx, my, 1.3, 0.7, fem ? '#d0605a' : '#b0584a');
 }
 
+/* ===== 연출 인물 소품(권사 이야기 인물 7명): col.prop = 공백으로 나눈 이름들, col.pc = 소품 색, col.headless = 머리 없는 거인(가슴에 얼굴), col.thick = 굵은 다리.
+   phase 'pre' = 몸 뒤(스카프 자락·해 뒤광·넋불), 'post' = 몸 앞(깃털·긴 수염·돌구슬·금줄·도끼·방패·지팡이). 앞모습만 그린다. 그림 파일 없이 둥근 도형 ===== */
+function castProp(g, col, view, phase, by, sway){
+  if (view === 'back') return;
+  const PR = (col.prop || '').split(' ').filter(Boolean), has = k => PR.includes(k);
+  if (!PR.length && !col.headless) return;
+  const E = (x, y, rx, ry, cl, rot = 0) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
+  const Pl = (pts, cl) => { g.fillStyle = cl; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
+  const RR = (x, y, w, h, r, cl) => { g.fillStyle = cl; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const LN = (x1, y1, x2, y2, w, cl, cap = 'round') => { g.strokeStyle = cl; g.lineWidth = w; g.lineCap = cap; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  const hx = 32, hy = 24 + by, pc = col.pc || '';
+  if (phase === 'pre'){
+    if (has('scarf')){   // 바람발: 뒤로 길게 날리는 푸른 목도리 자락
+      const c = pc || '#9ad8f0';
+      Pl([[27, 36 + by], [35, 36 + by], [26, 40 + by + sway * 0.6], [9, 34 + by - sway], [1, 43 + by + sway], [5, 47 + by], [24, 47 + by]], c);
+      Pl([[22, 42 + by], [9, 39.6 + by - sway * 0.6], [5.4, 45 + by + sway * 0.6], [22, 46.6 + by]], darken(c, 0.2));
+      Pl([[14, 38 + by], [16, 38.4 + by], [12, 45 + by], [10, 44.6 + by]], mix(c, '#ffffff', 0.5));
+    }
+    if (has('halo')){    // 과보: 머리 뒤의 붉은 해(해를 쫓는 거인) + 짧은 햇살
+      for (let i = 0; i < 10; i++){ const a = i * Math.PI / 5 + 0.2; Pl([[hx + Math.cos(a - 0.16) * 17, hy - 2 + Math.sin(a - 0.16) * 17], [hx + Math.cos(a) * 24, hy - 2 + Math.sin(a) * 24], [hx + Math.cos(a + 0.16) * 17, hy - 2 + Math.sin(a + 0.16) * 17]], '#ff8a2a'); }
+      E(hx, hy - 2, 17, 17, '#ff7a2a'); E(hx, hy - 2, 14, 14, '#ffb23a'); E(hx - 4, hy - 7, 5, 4, '#ffe08a');
+    }
+    if (has('wisp')){    // 스쿠네·게하야: 옛 장사의 넋을 알리는 떠도는 넋불(색은 pc)
+      const c = pc || '#8ad0ff', f = sway * 0.8;
+      for (const [x, y, r] of [[10, 22, 3.4], [55, 17, 3], [54, 47, 2.6], [8, 46, 2.2]]){
+        E(x, y + 2 + f, r, r, c); Pl([[x - r, y + 1.6 + f], [x + 0.4, y - r * 2.2 + f], [x + r, y + 1.6 + f]], c); E(x, y + 2.4 + f, r * 0.5, r * 0.5, mix(c, '#ffffff', 0.65));
+      }
+    }
+    return;
+  }
+  // ── post: 몸 앞
+  if (col.headless){   // 형천: 머리를 잃은 거인 — 어깨 사이를 옷깃으로 닫고, 가슴에 두 눈, 배꼽에 입
+    const O = col.outfit || '#7a3a2a';
+    E(32, 37 + by, 10, 2.6, darken(O, 0.3)); E(32, 37.2 + by, 7.6, 1.5, darken(O, 0.5));
+    for (const x of [27, 37]){ E(x, 42 + by, 3.1, 3.6, '#ffffff'); E(x + 0.6, 42.4 + by, 1.7, 2.4, '#2a1a22'); E(x + 1.2, 41.2 + by, 0.7, 0.7, '#ffffff'); }
+    LN(23.6, 38.6 + by, 30, 40.2 + by, 1.7, '#1d1420'); LN(40.4, 38.6 + by, 34, 40.2 + by, 1.7, '#1d1420');
+    E(32, 48 + by, 3.6, 2.4, '#3a1a22'); RR(29.4, 46.6 + by, 5.2, 1.3, 0.5, '#ffffff'); E(32, 49.2 + by, 1.8, 0.9, '#d8544a');
+  }
+  if (has('scarf')){ const c = pc || '#9ad8f0'; RR(24, 35.4 + by, 16, 3.4, 1.6, c); RR(24, 37.2 + by, 16, 1.4, 0.7, darken(c, 0.2)); }
+  if (has('longbeard')){   // 산길 노인: 가슴까지 흐르는 흰 수염 + 흰 눈썹
+    const bx = hx + 2;
+    Pl([[bx - 7, hy + 8.4], [bx + 7.4, hy + 8], [bx + 7.6, hy + 17], [bx + 4, hy + 27], [bx + 0.6, hy + 31.4], [bx - 2.6, hy + 25.6], [bx - 6.4, hy + 16]], '#f4f4f8');
+    Pl([[bx + 1, hy + 9], [bx + 7.4, hy + 8], [bx + 7.6, hy + 17], [bx + 4, hy + 27], [bx + 0.6, hy + 31.4], [bx + 1.6, hy + 20]], '#d4d4e0');
+    for (const [x1, x2] of [[-3, -3.6], [0.4, 0.6], [3.6, 4]]) LN(bx + x1, hy + 12, bx + x2, hy + 26, 0.6, '#b4b4c4');
+    E(bx - 0.6, hy + 8.6, 3.4, 1.2, '#f4f4f8');
+    LN(hx + 3.8, hy - 0.4, hx + 8.8, hy - 0.8, 1.6, '#e8e8f0'); LN(hx - 3.8, hy - 0.4, hx + 0.6, hy - 0.2, 1.5, '#e8e8f0');
+  }
+  if (has('feather')){   // 산길 노인: 상투에 꽂은 흰 깃털(하늘 고니 종자)
+    Pl([[hx + 1, hy - 11], [hx + 5, hy - 19], [hx + 10.4, hy - 28], [hx + 12.2, hy - 19], [hx + 7.4, hy - 11.4]], '#f8f8fc');
+    Pl([[hx + 7, hy - 14], [hx + 10.4, hy - 28], [hx + 12.2, hy - 19], [hx + 7.4, hy - 11.4]], '#d8d8e6');
+    LN(hx + 1.4, hy - 10.6, hx + 10.2, hy - 27.4, 0.8, '#a8a8bc'); RR(hx - 1, hy - 11.6, 5, 1.6, 0.7, '#b8382f');
+  }
+  if (has('stonebeads')){   // 바위손: 큰 돌구슬 목걸이(돌을 쥐고 산 사람)
+    for (let i = 0; i <= 6; i++){ const t = i / 6, x = 25.6 + 12.8 * t, y = 38.6 + by + Math.sin(Math.PI * t) * 7.4; E(x, y, 2, 1.8, i % 2 ? '#9a9aa4' : '#7a7a86'); E(x - 0.5, y - 0.6, 0.7, 0.6, '#d8d8e0'); }
+    E(32, 47 + by, 3, 3.1, '#6a6a76'); E(31, 45.9 + by, 1.1, 0.9, '#d0d0da');
+  }
+  if (has('rope')){   // 스쿠네: 굵은 새끼 금줄 허리띠 + 늘어진 흰 종이 술
+    RR(19.6, 44.6 + by, 24.8, 4.4, 2, '#d8c490'); RR(19.6, 47.2 + by, 24.8, 1.8, 0.9, '#a8946a');
+    for (let x = 22; x < 43; x += 3.6) LN(x, 44.8 + by, x + 1.8, 48.8 + by, 0.8, '#8a7650');
+    for (const x of [24, 29.4, 34.8, 40]){ Pl([[x - 1.6, 48.6 + by], [x + 1.6, 48.6 + by], [x + 2.2, 51 + by], [x - 1, 51.6 + by], [x + 1.8, 54 + by + sway * 0.4], [x - 1.8, 54.4 + by + sway * 0.4]], '#f6f2e6'); }
+  }
+  if (has('shield')){   // 형천: 왼손에 든 둥근 방패
+    E(17.4, 44.4 + by, 9, 10.6, '#5a3a22'); E(17.4, 44.4 + by, 7.8, 9.4, '#b8864a'); E(14.6, 40 + by, 3.4, 4.2, '#d8a868');
+    E(17.4, 44.4 + by, 3.2, 3.4, '#e8c880'); E(16.6, 43.4 + by, 1.1, 1.1, '#fff0c0');
+    for (const [dx, dy] of [[0, -6.2], [0, 6.4], [-5.6, 0], [5.8, 0]]) E(17.4 + dx, 44.4 + by + dy, 0.9, 0.9, '#6a4a2a');
+  }
+  if (has('axe')){   // 형천: 오른손에 든 커다란 도끼(도끼날이 머리보다 크다)
+    LN(43.6, 59, 43.6, 9 + by, 2.6, '#6b4a2b'); LN(42.9, 58, 42.9, 11 + by, 0.8, '#9a7250');
+    Pl([[44.4, 9 + by], [57.6, 4.6 + by], [61.8, 15 + by], [58.4, 27 + by], [44.4, 24 + by]], '#7c8290');
+    Pl([[44.4, 9 + by], [57.6, 4.6 + by], [60.4, 11 + by], [44.4, 15.4 + by]], '#d4dae6'); Pl([[58.4, 27 + by], [61.8, 15 + by], [60.2, 14 + by], [57.4, 24.6 + by]], '#c4cad6');
+    RR(42.4, 21.4 + by, 4.4, 4.4, 1.2, '#d8b34a'); RR(42.4, 5.6 + by, 4.4, 3.4, 1.2, '#d8b34a');
+  }
+  if (has('peachstaff')){   // 과보: 버린 지팡이가 숲이 되었다는 복숭아 지팡이(꼭대기에 분홍 꽃)
+    LN(44.6, 60, 46, 14 + by, 2.8, '#6b4a2b'); LN(44, 58, 45.2, 16 + by, 0.8, '#9a7250');
+    LN(45.8, 24 + by, 40.4, 17.6 + by, 1.5, '#6b4a2b'); LN(46, 18 + by, 51.6, 12.6 + by, 1.5, '#6b4a2b');
+    for (const [x, y] of [[46, 11 + by], [40, 16 + by], [52.4, 11 + by], [49, 6.6 + by], [42.4, 11 + by]]){
+      for (let i = 0; i < 5; i++){ const a = i * 1.257; E(x + Math.cos(a) * 2.1, y + Math.sin(a) * 2.1, 1.7, 1.7, '#ff9ac0'); } E(x, y, 1.1, 1.1, '#ffe08a'); }
+    E(38, 22 + by, 2.2, 1.3, '#5aa860', -0.5); E(53.6, 19 + by, 2.2, 1.3, '#5aa860', 0.5);
+  }
+}
 function drawChibi(g, c, view, f, col, look){
   if (c === 'gwon') return drawGwon(g, view, f, col, look);   // 권사: 맨손 무술가(전용 그림)
   const L = CLASSES[c], back = view === 'back', atk = f === 3;
@@ -10650,6 +10734,7 @@ function drawChibi(g, c, view, f, col, look){
 
   // ── 몸 뒤: 망토·날개·등껍질·꼬리, 뒤로 든 무기
   const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
+  castProp(g, col, view, 'pre', by, sway);
   if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
   const FLK = FORM_LOOK[fm] || {}, WG = FLK.wings || col.wing;   // 변신 날개가 없으면 날개 아바타
   if (WG){
@@ -10865,6 +10950,7 @@ function drawChibi(g, c, view, f, col, look){
     Pl([[37.6, 51], [42, 49], [33.6, 36.4 + by], [29.6, 38.4 + by]], '#7a5230'); Pl([[33.6, 36.4 + by], [29.6, 38.4 + by], [30.2, 39.8 + by], [34.4, 37.8 + by]], '#c8a04a');
     for (const [qx, qy, qc] of [[29.4, 35.4, '#f4f0e6'], [31.4, 34.2, '#d8433a'], [33.2, 33.4, '#f4f0e6']]) Pl([[qx - 1.4, qy - 2.6 + by], [qx + 1.2, qy - 3.4 + by], [qx + 1.4, qy + 1 + by], [qx - 0.2, qy + 1.6 + by]], qc);
   }
+  castProp(g, col, view, 'post', by, sway);   // 연출 인물 소품(긴 수염·깃털 등)
   // 무기: 앞모습은 오른손에, 뒷모습은 몸 뒤 오른쪽에
   function drawWeapon(behind){
     const t = col.wtype || L.wtype, wc = col.wcol, jb = col.job || 0, lbow = t === 'bow' && !!L.aim && !behind, lsx = !behind && atk ? -40 : -16, hxw = behind ? 43 : atk ? (lbow ? 51 : 49) : 42, hyw = (behind ? 46 : atk ? 41.6 : lbow ? 46 : 48) + by;   // lbow: 궁사의 장궁(앞모습) — 줌통을 손에 쥔다(서 있을 땐 몸 옆에 세워 들고, 쏠 땐 앞으로)
@@ -10968,6 +11054,7 @@ function drawGwon(g, view, f, col, look){
   // ── 몸 뒤: 망토·날개·등껍질·꼬리(drawChibi와 같은 그림)
   const by0 = by, sway0 = sway;
   const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
+  castProp(g, col, view, 'pre', by, sway);
   if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
   const FLK = FORM_LOOK[fm] || {}, WG = FLK.wings || col.wing;   // 변신 날개가 없으면 날개 아바타
   if (WG){
@@ -10988,7 +11075,7 @@ function drawGwon(g, view, f, col, look){
     E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
 
   // ── 다리(받치는 다리는 제자리 — 발 기준점)
-  const lw = fem ? 5.2 : 6.6, lx = fem ? 26 : 25.4, rx = fem ? 33.6 : 32.6;
+  const lw = fem ? 5.2 : col.thick ? 8 : 6.6, lx = fem ? 26 : col.thick ? 24.2 : 25.4, rx = fem ? 33.6 : col.thick ? 32.4 : 32.6;   // thick: 굵은 다리(게하야)
   const legL = () => { RR(lx, 49 + lf * 0.5, lw, 9 - lf * 0.4, 2, PT); RR(lx - 0.2, br === 2 ? 53.4 + lf * 0.4 : 55.2 + lf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, AW); E(28.6, 58.6 + lf * 0.4, fem ? 3.4 : 3.7, 2, SHOE); E(30.6, 58 + lf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
   const legR = () => { RR(rx, 49 + rf * 0.5, lw, 9 - rf * 0.4, 2, PTD); RR(rx - 0.2, br === 2 ? 53.4 + rf * 0.4 : 55.2 + rf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, darken(AW, 0.1)); E(35.6, 58.6 + rf * 0.4, fem ? 3.4 : 3.7, 2, darken(SHOE, 0.1)); E(37.4, 58 + rf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
   legL();
@@ -11087,7 +11174,8 @@ function drawGwon(g, view, f, col, look){
     if (GX && GX.s >= 4){ E(23, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); E(41, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); } }
   else if (br === 1){ for (const sx of [23, 41]){ const w = fem ? 3.8 : 4.6; E(sx, 38.4 + by, w, 2.9, '#a8302a'); E(sx, 38 + by, w - 0.5, 2.4, RED); E(sx - 1.2, 37 + by, 1.8, 0.9, mix(RED, '#ffffff', 0.5)); } }
 
-  // ── 머리
+  // ── 머리(headless면 머리·머리 장식을 모두 그리지 않는다: 형천)
+  g.save(); if (col.headless){ g.beginPath(); g.rect(0, 0, 0, 0); g.clip(); }
   if (!back){
     E(hx - 1, hy - 1, 14, 12.6, HR);
     E(hx + 2, hy + 3, fem ? 10.2 : 10.6, fem ? 9.2 : 9.6, SK);
@@ -11190,8 +11278,10 @@ function drawGwon(g, view, f, col, look){
     if (!back){ E(hx + 6.2, hy + 4.2, 1.9, 2.7, EYE); E(hx - 1.2, hy + 4.2, 1.6, 2.5, EYE); E(hx + 6.8, hy + 3.2, 0.8, 0.8, '#ffffff'); }
   }
 
+  g.restore();   // (headless 가리개 끝)
   // ── 앞쪽 팔(앞모습) + 어깨 받이 위에
   if (!back) arm(...FA, true);
+  castProp(g, col, view, 'post', by, sway);   // 연출 인물 소품(도끼·방패·지팡이·금줄 등, 팔 위에)
   // (충격 별·발 파동은 몸 그림 밖에서 fx로 따로 그림 — 'fist'·'kick', 그림 칸에 잘리지 않게)
   g.restore();
   // ── 발 갈래: 푸른 바람(발목 둘레 바람 줄기) — 몸 기울기와 상관없이 발 가까이
@@ -11213,14 +11303,14 @@ function personColors(c, look, armorG, weaponG, ex){
   if (cos) outfit = cos.outfit;
   if (form){ const F = FORMS.find(x => x.k === form); if (F) outfit = mix(outfit, F.color, 0.45); }
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1,
-    gbr:ex && ex.gbr || 0, face:ex && ex.face || '', job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
+    gbr:ex && ex.gbr || 0, face:ex && ex.face || '', job:ex && ex.job || 0, prop:ex && ex.prop || '', pc:ex && ex.pc || '', headless:!!(ex && ex.headless), thick:!!(ex && ex.thick), deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
 }
 const spriteCache = new Map();
 // dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
-  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : '', look.sex === 'f' ? 'f' : '', col.face].join('|');
+  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : '', look.sex === 'f' ? 'f' : '', col.face, col.prop, col.pc, col.headless ? 1 : 0, col.thick ? 1 : 0].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
     const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
@@ -17689,15 +17779,15 @@ const CAST = {
   lakshmana:{name:'락슈마나', p:['gungsa', {outfit:'#c8a03a', hair:'#241c26', hat:'none', skin:1}, 2, 2], ex:{wtype:'bow'}},
   sita:{name:'시타', p:['doin', {outfit:'#f0b040', hair:'#241c26', hat:'flower', skin:1}, 3, -1], ex:{wtype:'none', capeC:'#e8506a'}},
   hanuman:{name:'하누만', p:['musa', {outfit:'#e0682a', hair:'#d8b888', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'hammer', capeC:'#c8382f'}},
-  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#8a6a4a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, capeC:'#c8b078'}},
-  sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, capeC:'#c8b078'}},
-  xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:3, gbr:1, capeC:'#e0603a'}},
-  gw_noin:{name:'산길 노인', p:['doin', {outfit:'#e8e4d8', hair:'#d8d8dc', hat:'none', skin:1, beard:true}, 3, -1], ex:{wtype:'none'}},
-  gw_bawi:{name:'바위손', p:['gwon', {outfit:'#8a3a2a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:1, gbr:1, capeC:'#c8382f'}},
-  gw_baram:{name:'바람발', p:['gwon', {outfit:'#3a5a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:1, gbr:2, capeC:'#3a78c8'}},
-  gw_sukune:{name:'스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, capeC:'#c8b078'}},
-  gw_kehaya:{name:'게하야', p:['gwon', {outfit:'#8a6a4a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, capeC:'#c8b078'}},
-  kuafu:{name:'과보', p:['gwon', {outfit:'#c88a3a', hair:'#3a2a1a', hat:'none', skin:2}, 4, 4], ex:{job:3, gbr:2, capeC:'#e0603a'}},
+  // 권사 이야기 인물 7명(2026-11-21): 모두 옛 한국풍 2~3등신, 그림 파일 없이 drawGwon/drawChibi + castProp 소품. 서로 키·색·소품으로 구별
+  // 스쿠네·게하야는 옛 장사의 넋이라 넋불이 떠돈다(스쿠네 푸른 불·게하야 주황 불). 형천은 산해경대로 머리가 없고 가슴에 얼굴, 과보는 해를 쫓는 거인
+  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#9a5a3a', hair:'#3a2a22', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, thick:1, prop:'wisp', pc:'#ff9a4a'}, sc:1.95},
+  sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, prop:'rope wisp', pc:'#8ad0ff'}, sc:2.05},
+  xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1}, 4, 4], ex:{job:3, gbr:1, headless:1, prop:'axe shield', capeC:'#e0603a'}, sc:2.2},
+  gw_noin:{name:'산길 노인', p:['doin', {outfit:'#efe9dc', hair:'#f0f0f4', hat:'none', skin:1}, 3, -1], ex:{wtype:'none', prop:'longbeard feather'}, sc:1.5},
+  gw_bawi:{name:'바위손', p:['gwon', {outfit:'#6a4a38', hair:'#8a8a92', hat:'none', skin:2, beard:true}, 3, 3], ex:{job:1, gbr:1, prop:'stonebeads'}, sc:1.9},
+  gw_baram:{name:'바람발', p:['gwon', {outfit:'#3a7aa8', hair:'#241c26', hat:'changgaek', skin:0}, 3, 3], ex:{job:1, gbr:2, prop:'scarf', pc:'#9ad8f0'}, sc:1.7},
+  kuafu:{name:'과보', p:['gwon', {outfit:'#d89a3a', hair:'#3a2a1a', hat:'musa', skin:2}, 4, 4], ex:{job:3, gbr:2, prop:'halo peachstaff'}, sc:2.2},
   gwonjang1:{name:'용궁의 주먹 장수', p:['gwon', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, 3, 3], ex:{job:3, gbr:1, capeC:'#2a8aa8'}},
   gwonjang2:{name:'용궁의 발 장수', p:['gwon', {outfit:'#2a9a8a', hair:'#1a2a3a', hat:'none', skin:0, sex:'f'}, 3, 3], ex:{job:3, gbr:2, capeC:'#2a8aa8'}},
   bhima:{name:'비마', p:['gwon', {outfit:'#8a3a2a', hair:'#241c26', hat:'none', skin:2, beard:true}, 4, 4], ex:{job:4, gbr:1, capeC:'#e8c048'}},
@@ -17713,7 +17803,8 @@ const CAST = {
   dau3:{name:'욕심', p:['doin', {outfit:'#e8c048', hair:'#241c26', hat:'flower', skin:0}, 3, -1], ex:{wtype:'none', capeC:'#b8862a'}},
   heo:{name:'허황옥', p:['doin', {outfit:'#c8382f', hair:'#241c26', hat:'flower', skin:1}, 4, -1], ex:{wtype:'none', capeC:'#e8c048'}},
 };
-CAST.gw_xingtian = CAST.xingtian; CAST.gw_kuafu = CAST.kuafu;   // 권사 이야기 글의 인물 키(임시 그림 — 나중에 다듬음)
+CAST.gw_xingtian = CAST.xingtian; CAST.gw_kuafu = CAST.kuafu;   // 권사 이야기 글의 인물 키(형천·과보는 같은 그림)
+CAST.gw_sukune = Object.assign({}, CAST.sukune, {name:'스쿠네'}); CAST.gw_kehaya = Object.assign({}, CAST.kehaya, {name:'게하야'});   // 스쿠네·게하야도 같은 그림(이름만 짧게)
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
 const WHO = {'산길 노인':'gw_noin', '바위손':'gw_bawi', '바람발':'gw_baram', '스쿠네':'gw_sukune', '게하야':'gw_kehaya', '타이마노 케하야':'kehaya', '노미노 스쿠네':'sukune', '형천':'xingtian', '과보':'kuafu', '용궁의 주먹 장수':'gwonjang1', '용궁의 발 장수':'gwonjang2', '후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
   '까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백':'habaek', '금와왕':'geumwa', '대소':'daeso', '주몽':'jumong', '송양왕':'songyang', '저승사자':'saja', '나':'hero',
@@ -24012,7 +24103,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
-    storyQ, chOpen, prologue, cutMine, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
+    storyQ, chOpen, prologue, cutMine, castSprite, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
     update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineCost, refineRunNew, refineRunStep, refineRunEnd, get refRun(){ return refRun; }, refGoal, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },

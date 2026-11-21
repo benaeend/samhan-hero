@@ -3743,6 +3743,16 @@ async def main():
         await wp.wait_for_timeout(1800)
         await wp.screenshot(path=str(OUT / '46d-gwon-story.png'))
         await wp.evaluate("() => { const G = window.__game; let g = 0; while (G.cut && g++ < 200) document.getElementById('cut').click(); G.quiet = true; }")
+        # 권사 이야기 새 인물 7명(산길 노인·바위손·바람발·스쿠네·게하야·형천·과보): 서로 다른 그림인지 + 연출 두 컷 캡처
+        gart = await wp.evaluate("""() => { const G = window.__game, ks = ['gw_noin', 'gw_bawi', 'gw_baram', 'gw_sukune', 'gw_kehaya', 'gw_xingtian', 'gw_kuafu'];
+          const urls = ks.map(k => { const c = G.castSprite(k, 0, 'right'); return c && c.sp ? c.sp.toDataURL() : ''; });
+          return {n:new Set(urls).size, ok:urls.every(u => u.length > 500)}; }""")
+        check(gart['n'] == 7 and gart['ok'], f"권사 새 인물 7명이 서로 다른 그림으로 그려진다 {gart}")
+        for nm, shot in (('gw_noin,gw_bawi,gw_baram,gw_sukune,gw_kehaya', '46e-gwon-cast-a.png'), ('gw_xingtian,hero,gw_kuafu', '46e-gwon-cast-b.png')):
+            await wp.evaluate("([cs]) => { const G = window.__game; G.quiet = false; G.playCut([['kunlunmt', cs, '', [['', '권사 이야기의 새 인물들']]]], {}); }", [nm])
+            await wp.wait_for_timeout(1500)
+            await wp.screenshot(path=str(OUT / shot))
+            await wp.evaluate("() => { const G = window.__game; let g = 0; while (G.cut && g++ < 200) document.getElementById('cut').click(); G.quiet = true; }")
         await ctxW.close()
 
         # 9-19) 물의 신화 8단계: 새 직업으로 처음부터 — 캐릭터 만들기 창(여섯 직업)에서 궁사·창객을 골라 만들고 마을 어귀에서 사냥한다. 만든 계정은 그 직업을 연 것으로 친다
