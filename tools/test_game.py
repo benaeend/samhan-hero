@@ -5722,7 +5722,7 @@ async def main():
           reset(); T().lv = 99; G.refreshStats(); G.gainExp(G.realmNeed(99) * 3, {raw:true}); out.r4 = [T().lv, T().exp, +S.expBank.toFixed(2) > 1, +(G.ST.atk / a0).toFixed(3)];
           G.gainExp(E * 2, {raw:true}); out.r4b = [T().lv, +S.expBank.toFixed(2) > 3];
           // R5: 수미산 레벨 문이 Lv.700 + n까지(Lv.715 문 = 301단계 보스)
-          reset(); S.maxStage = 400; const okAt = lv => { T().lv = lv; return [G.gateLv(), G.bossGate(300).ok]; }; out.r5 = [okAt(0), okAt(14), okAt(15)]; S.level = 750; T().lv = 30; out.r5b = G.gateLv(); S.world = 9; out.r5c = G.gateLv(); S.world = 10; S.level = 700;
+          reset(); S.maxStage = 400; const okAt = lv => { T().lv = lv; return [G.gateLv(), G.bossGate(300).ok]; }; out.r5 = [okAt(0), okAt(14), okAt(15)]; S.level = 750; T().lv = 30; out.r5b = G.gateLv(); S.level = 700; S.world = 9; out.r5c = G.gateLv(); S.world = 10;
           // R6: 700 전에 모아 둔 모음 10 → 접속할 때 경지로(11단 · 조각 10), 모음 0 · 두 번 안 줌
           reset(); S.expBank = 10; let acc = 0, k = 0; while (acc + G.realmNeed(k) <= 10 * E){ acc += G.realmNeed(k); k++; } out.r6e = [k, 10 * Math.floor(k / 10)]; out.r6a = G.realmBankFix(); out.r6b = [T().lv, S.trans.shard, S.expBank]; out.r6c = G.realmBankFix();
           // R7: 6부 상한(700 → 800)이 오르면 경지는 멈추고(힘·문은 유지) 경험치는 레벨로, 모음은 30%
