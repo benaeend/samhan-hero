@@ -4647,13 +4647,19 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-21-9', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-21-12', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 21일 · 경지·초월 레이드 조정'],
   ['초월의 경지가 조금 빨라졌어요', '경지 한 단에 드는 경험치를 20% 줄였어요. Lv.700에 막 닿은 용사는 수미산 240단계 안팎에서 힘이 모자라 더 못 나아가는 일이 많은데, 그 자리에서 재 보니 한 단에 2시간쯤 걸렸어요. 이제 한 단에 1시간 반 안팎이에요. 높은 단으로 갈수록 한 단에 드는 양이 단마다 조금씩(2%) 늘어나는 건 그대로예요.'],
   ['초월 레이드 세기를 다시 맞췄어요', '권장 전투력에 딱 맞을 때 자동 전투로는 열에 세 번쯤, 붉은 칸을 피하고 되받기를 하면 열에 여섯 번쯤, 잘하면 거의 이기도록 고쳤어요. 첫째 라바나와 둘째 브리트라는 보스 체력이 조금 늘어 어려워졌고, 라후·마라의 군대·마라는 체력이 조금 줄어 쉬워진 대신 한 방이 세져서 자동 피하기에만 맡기면 더 아파요.'],
   ['직업마다 세기를 고르게 했어요', '같은 권장 전투력이어도 직업마다 너무 쉽거나 너무 어려웠던 것을 고쳤어요. 술사와 도인은 보스 체력이 늘어 어려워졌고, 궁사는 보스 체력이 많이 줄어 훨씬 쉬워졌어요(예전엔 잘해도 거의 못 이겼어요). 창객은 조금 쉬워졌어요. 자객은 화면 전투력이 실제 싸움 힘보다 크게 나오는 직업이라 권장 전투력이 크게 올랐어요. 대신 그 숫자에 맞으면 실제로 이길 만하게 맞췄어요(예전엔 「딱 맞음」이어도 잘해도 못 이겼어요). 다른 직업의 권장 전투력 숫자는 그대로예요.'],
+  ['#', '11월 21일 · 권사 이야기 다듬기'],
+  ['권사 2부·3부 이야기 문장을 다듬었어요', '부상·곤륜 이야기에서 어색하던 대사 순서와 말투를 고쳤어요. 같은 말을 되풀이하던 줄을 줄이고, 주먹 길·발 길 대사가 앞뒤 말과 어긋나지 않게 맞췄어요. 까치는 이제 끝까지 「님」을 붙여 불러요.'],
+  ['4부로 넘어가는 장면이 자연스러워졌어요', '곤륜 이야기를 마친 뒤 두 스승이 배웅하는 장면이 「신들의 배웅이 끝난 저녁」으로 시작해, 바로 이어지는 바다 이야기의 첫 장면과 같은 말이 두 번 나오지 않아요. 바다로 건너는 첫 장면의 권사 대사도 1부의 「헤엄쳐 건너겠다」는 말과 이어지게 바꿨어요.'],
+  ['#', '11월 21일 · 권사 이야기 인물 그림'],
+  ['권사 이야기의 새 인물 7명이 저마다 모습을 갖췄어요', '산길 노인은 키가 작고 흰 수염이 가슴까지 흘러요(머리에 흰 깃털). 바위손은 회색 머리에 돌구슬 목걸이를 건 듬직한 어른, 바람발은 높이 묶은 머리에 뒤로 날리는 푸른 목도리를 두른 날쌘 사람이에요. 형천은 산해경대로 머리가 없는 거인이라 가슴에 두 눈이 있고 큰 도끼와 둥근 방패를 들었어요. 과보는 머리 뒤로 붉은 해가 뜬 거인이고 꽃 핀 복숭아 지팡이를 짚었어요.'],
+  ['스쿠네와 게하야는 옛 장사의 넋이에요', '스쿠네는 새끼 금줄 허리띠를 두르고 푸른 넋불이 떠돌아요. 게하야는 수염 난 굵은 다리 장사이고 주황 넋불이 떠돌아요. 이야기 연출에서 일곱 인물이 나란히 서도 한눈에 구분돼요.'],
   ['#', '11월 21일 · 남·여 모습 · 표정'],
   ['남·여 모습을 고를 수 있어요', '[꾸미기]와 캐릭터를 만들 때 「모습」에서 남·여를 고를 수 있어요. 여자 모습은 어깨가 가늘고 허리가 잘록하며 치마 윤곽에 긴 머리, 속눈썹, 붉은 댕기 리본이 있어요. 모든 직업에서 고를 수 있고, 예전 캐릭터는 그대로 남자 모습이에요. 언제든 다시 바꿀 수 있어요.'],
   ['용사 표정이 상황에 따라 바뀌어요', '싸울 때는 눈이 매서워지고, 맞으면 깜짝 놀라고, 체력이 30% 밑이면 기운 없는 얼굴이 돼요. 레벨이 오르면 기뻐하고, 보스를 쓰러뜨리면 크게 웃어요. 평소엔 가끔 눈을 깜빡여요. 절전 그리기에서는 깜빡임과 싸우는 표정을 빼고 나머지만 보여요.'],
@@ -10634,6 +10640,86 @@ function drawFaceExpr(g, hx, hy, face, SK, masked, fem){
   else E(mx, my, 1.3, 0.7, fem ? '#d0605a' : '#b0584a');
 }
 
+/* ===== 연출 인물 소품(권사 이야기 인물 7명): col.prop = 공백으로 나눈 이름들, col.pc = 소품 색, col.headless = 머리 없는 거인(가슴에 얼굴), col.thick = 굵은 다리.
+   phase 'pre' = 몸 뒤(스카프 자락·해 뒤광·넋불), 'post' = 몸 앞(깃털·긴 수염·돌구슬·금줄·도끼·방패·지팡이). 앞모습만 그린다. 그림 파일 없이 둥근 도형 ===== */
+function castProp(g, col, view, phase, by, sway){
+  if (view === 'back') return;
+  const PR = (col.prop || '').split(' ').filter(Boolean), has = k => PR.includes(k);
+  if (!PR.length && !col.headless) return;
+  const E = (x, y, rx, ry, cl, rot = 0) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), rot, 0, Math.PI * 2); g.fill(); };
+  const Pl = (pts, cl) => { g.fillStyle = cl; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); };
+  const RR = (x, y, w, h, r, cl) => { g.fillStyle = cl; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const LN = (x1, y1, x2, y2, w, cl, cap = 'round') => { g.strokeStyle = cl; g.lineWidth = w; g.lineCap = cap; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  const hx = 32, hy = 24 + by, pc = col.pc || '';
+  if (phase === 'pre'){
+    if (has('scarf')){   // 바람발: 뒤로 길게 날리는 푸른 목도리 자락
+      const c = pc || '#9ad8f0';
+      Pl([[27, 36 + by], [35, 36 + by], [26, 40 + by + sway * 0.6], [9, 34 + by - sway], [1, 43 + by + sway], [5, 47 + by], [24, 47 + by]], c);
+      Pl([[22, 42 + by], [9, 39.6 + by - sway * 0.6], [5.4, 45 + by + sway * 0.6], [22, 46.6 + by]], darken(c, 0.2));
+      Pl([[14, 38 + by], [16, 38.4 + by], [12, 45 + by], [10, 44.6 + by]], mix(c, '#ffffff', 0.5));
+    }
+    if (has('halo')){    // 과보: 머리 뒤의 붉은 해(해를 쫓는 거인) + 짧은 햇살
+      for (let i = 0; i < 10; i++){ const a = i * Math.PI / 5 + 0.2; Pl([[hx + Math.cos(a - 0.16) * 17, hy - 2 + Math.sin(a - 0.16) * 17], [hx + Math.cos(a) * 24, hy - 2 + Math.sin(a) * 24], [hx + Math.cos(a + 0.16) * 17, hy - 2 + Math.sin(a + 0.16) * 17]], '#ff8a2a'); }
+      E(hx, hy - 2, 17, 17, '#ff7a2a'); E(hx, hy - 2, 14, 14, '#ffb23a'); E(hx - 4, hy - 7, 5, 4, '#ffe08a');
+    }
+    if (has('wisp')){    // 스쿠네·게하야: 옛 장사의 넋을 알리는 떠도는 넋불(색은 pc)
+      const c = pc || '#8ad0ff', f = sway * 0.8;
+      for (const [x, y, r] of [[10, 22, 3.4], [55, 17, 3], [54, 47, 2.6], [8, 46, 2.2]]){
+        E(x, y + 2 + f, r, r, c); Pl([[x - r, y + 1.6 + f], [x + 0.4, y - r * 2.2 + f], [x + r, y + 1.6 + f]], c); E(x, y + 2.4 + f, r * 0.5, r * 0.5, mix(c, '#ffffff', 0.65));
+      }
+    }
+    return;
+  }
+  // ── post: 몸 앞
+  if (col.headless){   // 형천: 머리를 잃은 거인 — 어깨 사이를 옷깃으로 닫고, 가슴에 두 눈, 배꼽에 입
+    const O = col.outfit || '#7a3a2a';
+    E(32, 37 + by, 10, 2.6, darken(O, 0.3)); E(32, 37.2 + by, 7.6, 1.5, darken(O, 0.5));
+    for (const x of [27, 37]){ E(x, 42 + by, 3.1, 3.6, '#ffffff'); E(x + 0.6, 42.4 + by, 1.7, 2.4, '#2a1a22'); E(x + 1.2, 41.2 + by, 0.7, 0.7, '#ffffff'); }
+    LN(23.6, 38.6 + by, 30, 40.2 + by, 1.7, '#1d1420'); LN(40.4, 38.6 + by, 34, 40.2 + by, 1.7, '#1d1420');
+    E(32, 48 + by, 3.6, 2.4, '#3a1a22'); RR(29.4, 46.6 + by, 5.2, 1.3, 0.5, '#ffffff'); E(32, 49.2 + by, 1.8, 0.9, '#d8544a');
+  }
+  if (has('scarf')){ const c = pc || '#9ad8f0'; RR(24, 35.4 + by, 16, 3.4, 1.6, c); RR(24, 37.2 + by, 16, 1.4, 0.7, darken(c, 0.2)); }
+  if (has('longbeard')){   // 산길 노인: 가슴까지 흐르는 흰 수염 + 흰 눈썹
+    const bx = hx + 2;
+    Pl([[bx - 7, hy + 8.4], [bx + 7.4, hy + 8], [bx + 7.6, hy + 17], [bx + 4, hy + 27], [bx + 0.6, hy + 31.4], [bx - 2.6, hy + 25.6], [bx - 6.4, hy + 16]], '#f4f4f8');
+    Pl([[bx + 1, hy + 9], [bx + 7.4, hy + 8], [bx + 7.6, hy + 17], [bx + 4, hy + 27], [bx + 0.6, hy + 31.4], [bx + 1.6, hy + 20]], '#d4d4e0');
+    for (const [x1, x2] of [[-3, -3.6], [0.4, 0.6], [3.6, 4]]) LN(bx + x1, hy + 12, bx + x2, hy + 26, 0.6, '#b4b4c4');
+    E(bx - 0.6, hy + 8.6, 3.4, 1.2, '#f4f4f8');
+    LN(hx + 3.8, hy - 0.4, hx + 8.8, hy - 0.8, 1.6, '#e8e8f0'); LN(hx - 3.8, hy - 0.4, hx + 0.6, hy - 0.2, 1.5, '#e8e8f0');
+  }
+  if (has('feather')){   // 산길 노인: 상투에 꽂은 흰 깃털(하늘 고니 종자)
+    Pl([[hx + 1, hy - 11], [hx + 5, hy - 19], [hx + 10.4, hy - 28], [hx + 12.2, hy - 19], [hx + 7.4, hy - 11.4]], '#f8f8fc');
+    Pl([[hx + 7, hy - 14], [hx + 10.4, hy - 28], [hx + 12.2, hy - 19], [hx + 7.4, hy - 11.4]], '#d8d8e6');
+    LN(hx + 1.4, hy - 10.6, hx + 10.2, hy - 27.4, 0.8, '#a8a8bc'); RR(hx - 1, hy - 11.6, 5, 1.6, 0.7, '#b8382f');
+  }
+  if (has('stonebeads')){   // 바위손: 큰 돌구슬 목걸이(돌을 쥐고 산 사람)
+    for (let i = 0; i <= 6; i++){ const t = i / 6, x = 25.6 + 12.8 * t, y = 38.6 + by + Math.sin(Math.PI * t) * 7.4; E(x, y, 2, 1.8, i % 2 ? '#9a9aa4' : '#7a7a86'); E(x - 0.5, y - 0.6, 0.7, 0.6, '#d8d8e0'); }
+    E(32, 47 + by, 3, 3.1, '#6a6a76'); E(31, 45.9 + by, 1.1, 0.9, '#d0d0da');
+  }
+  if (has('rope')){   // 스쿠네: 굵은 새끼 금줄 허리띠 + 늘어진 흰 종이 술
+    RR(19.6, 44.6 + by, 24.8, 4.4, 2, '#d8c490'); RR(19.6, 47.2 + by, 24.8, 1.8, 0.9, '#a8946a');
+    for (let x = 22; x < 43; x += 3.6) LN(x, 44.8 + by, x + 1.8, 48.8 + by, 0.8, '#8a7650');
+    for (const x of [24, 29.4, 34.8, 40]){ Pl([[x - 1.6, 48.6 + by], [x + 1.6, 48.6 + by], [x + 2.2, 51 + by], [x - 1, 51.6 + by], [x + 1.8, 54 + by + sway * 0.4], [x - 1.8, 54.4 + by + sway * 0.4]], '#f6f2e6'); }
+  }
+  if (has('shield')){   // 형천: 왼손에 든 둥근 방패
+    E(17.4, 44.4 + by, 9, 10.6, '#5a3a22'); E(17.4, 44.4 + by, 7.8, 9.4, '#b8864a'); E(14.6, 40 + by, 3.4, 4.2, '#d8a868');
+    E(17.4, 44.4 + by, 3.2, 3.4, '#e8c880'); E(16.6, 43.4 + by, 1.1, 1.1, '#fff0c0');
+    for (const [dx, dy] of [[0, -6.2], [0, 6.4], [-5.6, 0], [5.8, 0]]) E(17.4 + dx, 44.4 + by + dy, 0.9, 0.9, '#6a4a2a');
+  }
+  if (has('axe')){   // 형천: 오른손에 든 커다란 도끼(도끼날이 머리보다 크다)
+    LN(43.6, 59, 43.6, 9 + by, 2.6, '#6b4a2b'); LN(42.9, 58, 42.9, 11 + by, 0.8, '#9a7250');
+    Pl([[44.4, 9 + by], [57.6, 4.6 + by], [61.8, 15 + by], [58.4, 27 + by], [44.4, 24 + by]], '#7c8290');
+    Pl([[44.4, 9 + by], [57.6, 4.6 + by], [60.4, 11 + by], [44.4, 15.4 + by]], '#d4dae6'); Pl([[58.4, 27 + by], [61.8, 15 + by], [60.2, 14 + by], [57.4, 24.6 + by]], '#c4cad6');
+    RR(42.4, 21.4 + by, 4.4, 4.4, 1.2, '#d8b34a'); RR(42.4, 5.6 + by, 4.4, 3.4, 1.2, '#d8b34a');
+  }
+  if (has('peachstaff')){   // 과보: 버린 지팡이가 숲이 되었다는 복숭아 지팡이(꼭대기에 분홍 꽃)
+    LN(44.6, 60, 46, 14 + by, 2.8, '#6b4a2b'); LN(44, 58, 45.2, 16 + by, 0.8, '#9a7250');
+    LN(45.8, 24 + by, 40.4, 17.6 + by, 1.5, '#6b4a2b'); LN(46, 18 + by, 51.6, 12.6 + by, 1.5, '#6b4a2b');
+    for (const [x, y] of [[46, 11 + by], [40, 16 + by], [52.4, 11 + by], [49, 6.6 + by], [42.4, 11 + by]]){
+      for (let i = 0; i < 5; i++){ const a = i * 1.257; E(x + Math.cos(a) * 2.1, y + Math.sin(a) * 2.1, 1.7, 1.7, '#ff9ac0'); } E(x, y, 1.1, 1.1, '#ffe08a'); }
+    E(38, 22 + by, 2.2, 1.3, '#5aa860', -0.5); E(53.6, 19 + by, 2.2, 1.3, '#5aa860', 0.5);
+  }
+}
 function drawChibi(g, c, view, f, col, look){
   if (c === 'gwon') return drawGwon(g, view, f, col, look);   // 권사: 맨손 무술가(전용 그림)
   const L = CLASSES[c], back = view === 'back', atk = f === 3;
@@ -10655,6 +10741,7 @@ function drawChibi(g, c, view, f, col, look){
 
   // ── 몸 뒤: 망토·날개·등껍질·꼬리, 뒤로 든 무기
   const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
+  castProp(g, col, view, 'pre', by, sway);
   if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
   const FLK = FORM_LOOK[fm] || {}, WG = FLK.wings || col.wing;   // 변신 날개가 없으면 날개 아바타
   if (WG){
@@ -10870,6 +10957,7 @@ function drawChibi(g, c, view, f, col, look){
     Pl([[37.6, 51], [42, 49], [33.6, 36.4 + by], [29.6, 38.4 + by]], '#7a5230'); Pl([[33.6, 36.4 + by], [29.6, 38.4 + by], [30.2, 39.8 + by], [34.4, 37.8 + by]], '#c8a04a');
     for (const [qx, qy, qc] of [[29.4, 35.4, '#f4f0e6'], [31.4, 34.2, '#d8433a'], [33.2, 33.4, '#f4f0e6']]) Pl([[qx - 1.4, qy - 2.6 + by], [qx + 1.2, qy - 3.4 + by], [qx + 1.4, qy + 1 + by], [qx - 0.2, qy + 1.6 + by]], qc);
   }
+  castProp(g, col, view, 'post', by, sway);   // 연출 인물 소품(긴 수염·깃털 등)
   // 무기: 앞모습은 오른손에, 뒷모습은 몸 뒤 오른쪽에
   function drawWeapon(behind){
     const t = col.wtype || L.wtype, wc = col.wcol, jb = col.job || 0, lbow = t === 'bow' && !!L.aim && !behind, lsx = !behind && atk ? -40 : -16, hxw = behind ? 43 : atk ? (lbow ? 51 : 49) : 42, hyw = (behind ? 46 : atk ? 41.6 : lbow ? 46 : 48) + by;   // lbow: 궁사의 장궁(앞모습) — 줌통을 손에 쥔다(서 있을 땐 몸 옆에 세워 들고, 쏠 땐 앞으로)
@@ -10973,6 +11061,7 @@ function drawGwon(g, view, f, col, look){
   // ── 몸 뒤: 망토·날개·등껍질·꼬리(drawChibi와 같은 그림)
   const by0 = by, sway0 = sway;
   const cc = col.capeC || (aG >= 3 ? capeC : ''), ctr = col.capeC ? mix(col.capeC, col.capeStar ? '#ffd24a' : '#ffffff', 0.45) : trim;
+  castProp(g, col, view, 'pre', by, sway);
   if (cc && !back){ Pl([[22, 37 + by], [42, 37 + by], [47 + sway * 0.5, 57], [17 + sway * 0.5, 57]], cc); Pl([[17, 57], [47, 57], [46, 55], [18, 55]], ctr); }
   const FLK = FORM_LOOK[fm] || {}, WG = FLK.wings || col.wing;   // 변신 날개가 없으면 날개 아바타
   if (WG){
@@ -10993,7 +11082,7 @@ function drawGwon(g, view, f, col, look){
     E(tx - 9 * (back ? -1 : 1), 42 + sway, 1.4, 1.2, '#22202c'); }
 
   // ── 다리(받치는 다리는 제자리 — 발 기준점)
-  const lw = fem ? 5.2 : 6.6, lx = fem ? 26 : 25.4, rx = fem ? 33.6 : 32.6;
+  const lw = fem ? 5.2 : col.thick ? 8 : 6.6, lx = fem ? 26 : col.thick ? 24.2 : 25.4, rx = fem ? 33.6 : col.thick ? 32.4 : 32.6;   // thick: 굵은 다리(게하야)
   const legL = () => { RR(lx, 49 + lf * 0.5, lw, 9 - lf * 0.4, 2, PT); RR(lx - 0.2, br === 2 ? 53.4 + lf * 0.4 : 55.2 + lf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, AW); E(28.6, 58.6 + lf * 0.4, fem ? 3.4 : 3.7, 2, SHOE); E(30.6, 58 + lf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
   const legR = () => { RR(rx, 49 + rf * 0.5, lw, 9 - rf * 0.4, 2, PTD); RR(rx - 0.2, br === 2 ? 53.4 + rf * 0.4 : 55.2 + rf * 0.4, lw + 0.4, br === 2 ? 3.8 : 2, 0.8, darken(AW, 0.1)); E(35.6, 58.6 + rf * 0.4, fem ? 3.4 : 3.7, 2, darken(SHOE, 0.1)); E(37.4, 58 + rf * 0.4, 1, 0.7, mix(SH, '#ffffff', 0.4)); };
   legL();
@@ -11092,7 +11181,8 @@ function drawGwon(g, view, f, col, look){
     if (GX && GX.s >= 4){ E(23, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); E(41, 40.2 + by, 3.4, 1, darken(tr2, 0.35)); } }
   else if (br === 1){ for (const sx of [23, 41]){ const w = fem ? 3.8 : 4.6; E(sx, 38.4 + by, w, 2.9, '#a8302a'); E(sx, 38 + by, w - 0.5, 2.4, RED); E(sx - 1.2, 37 + by, 1.8, 0.9, mix(RED, '#ffffff', 0.5)); } }
 
-  // ── 머리
+  // ── 머리(headless면 머리·머리 장식을 모두 그리지 않는다: 형천)
+  g.save(); if (col.headless){ g.beginPath(); g.rect(0, 0, 0, 0); g.clip(); }
   if (!back){
     E(hx - 1, hy - 1, 14, 12.6, HR);
     E(hx + 2, hy + 3, fem ? 10.2 : 10.6, fem ? 9.2 : 9.6, SK);
@@ -11195,8 +11285,10 @@ function drawGwon(g, view, f, col, look){
     if (!back){ E(hx + 6.2, hy + 4.2, 1.9, 2.7, EYE); E(hx - 1.2, hy + 4.2, 1.6, 2.5, EYE); E(hx + 6.8, hy + 3.2, 0.8, 0.8, '#ffffff'); }
   }
 
+  g.restore();   // (headless 가리개 끝)
   // ── 앞쪽 팔(앞모습) + 어깨 받이 위에
   if (!back) arm(...FA, true);
+  castProp(g, col, view, 'post', by, sway);   // 연출 인물 소품(도끼·방패·지팡이·금줄 등, 팔 위에)
   // (충격 별·발 파동은 몸 그림 밖에서 fx로 따로 그림 — 'fist'·'kick', 그림 칸에 잘리지 않게)
   g.restore();
   // ── 발 갈래: 푸른 바람(발목 둘레 바람 줄기) — 몸 기울기와 상관없이 발 가까이
@@ -11218,14 +11310,14 @@ function personColors(c, look, armorG, weaponG, ex){
   if (cos) outfit = cos.outfit;
   if (form){ const F = FORMS.find(x => x.k === form); if (F) outfit = mix(outfit, F.color, 0.45); }
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1,
-    gbr:ex && ex.gbr || 0, face:ex && ex.face || '', job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
+    gbr:ex && ex.gbr || 0, face:ex && ex.face || '', job:ex && ex.job || 0, prop:ex && ex.prop || '', pc:ex && ex.pc || '', headless:!!(ex && ex.headless), thick:!!(ex && ex.thick), deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
 }
 const spriteCache = new Map();
 // dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
-  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : '', look.sex === 'f' ? 'f' : '', col.face].join('|');
+  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : '', look.sex === 'f' ? 'f' : '', col.face, col.prop, col.pc, col.headless ? 1 : 0, col.thick ? 1 : 0].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
     const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
@@ -17695,15 +17787,15 @@ const CAST = {
   lakshmana:{name:'락슈마나', p:['gungsa', {outfit:'#c8a03a', hair:'#241c26', hat:'none', skin:1}, 2, 2], ex:{wtype:'bow'}},
   sita:{name:'시타', p:['doin', {outfit:'#f0b040', hair:'#241c26', hat:'flower', skin:1}, 3, -1], ex:{wtype:'none', capeC:'#e8506a'}},
   hanuman:{name:'하누만', p:['musa', {outfit:'#e0682a', hair:'#d8b888', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'hammer', capeC:'#c8382f'}},
-  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#8a6a4a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, capeC:'#c8b078'}},
-  sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, capeC:'#c8b078'}},
-  xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1, beard:true}, 4, 4], ex:{job:3, gbr:1, capeC:'#e0603a'}},
-  gw_noin:{name:'산길 노인', p:['doin', {outfit:'#e8e4d8', hair:'#d8d8dc', hat:'none', skin:1, beard:true}, 3, -1], ex:{wtype:'none'}},
-  gw_bawi:{name:'바위손', p:['gwon', {outfit:'#8a3a2a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:1, gbr:1, capeC:'#c8382f'}},
-  gw_baram:{name:'바람발', p:['gwon', {outfit:'#3a5a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:1, gbr:2, capeC:'#3a78c8'}},
-  gw_sukune:{name:'스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, capeC:'#c8b078'}},
-  gw_kehaya:{name:'게하야', p:['gwon', {outfit:'#8a6a4a', hair:'#241c26', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, capeC:'#c8b078'}},
-  kuafu:{name:'과보', p:['gwon', {outfit:'#c88a3a', hair:'#3a2a1a', hat:'none', skin:2}, 4, 4], ex:{job:3, gbr:2, capeC:'#e0603a'}},
+  // 권사 이야기 인물 7명(2026-11-21): 모두 옛 한국풍 2~3등신, 그림 파일 없이 drawGwon/drawChibi + castProp 소품. 서로 키·색·소품으로 구별
+  // 스쿠네·게하야는 옛 장사의 넋이라 넋불이 떠돈다(스쿠네 푸른 불·게하야 주황 불). 형천은 산해경대로 머리가 없고 가슴에 얼굴, 과보는 해를 쫓는 거인
+  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#9a5a3a', hair:'#3a2a22', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, thick:1, prop:'wisp', pc:'#ff9a4a'}, sc:1.95},
+  sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, prop:'rope wisp', pc:'#8ad0ff'}, sc:2.05},
+  xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1}, 4, 4], ex:{job:3, gbr:1, headless:1, prop:'axe shield', capeC:'#e0603a'}, sc:2.2},
+  gw_noin:{name:'산길 노인', p:['doin', {outfit:'#efe9dc', hair:'#f0f0f4', hat:'none', skin:1}, 3, -1], ex:{wtype:'none', prop:'longbeard feather'}, sc:1.5},
+  gw_bawi:{name:'바위손', p:['gwon', {outfit:'#6a4a38', hair:'#8a8a92', hat:'none', skin:2, beard:true}, 3, 3], ex:{job:1, gbr:1, prop:'stonebeads'}, sc:1.9},
+  gw_baram:{name:'바람발', p:['gwon', {outfit:'#3a7aa8', hair:'#241c26', hat:'changgaek', skin:0}, 3, 3], ex:{job:1, gbr:2, prop:'scarf', pc:'#9ad8f0'}, sc:1.7},
+  kuafu:{name:'과보', p:['gwon', {outfit:'#d89a3a', hair:'#3a2a1a', hat:'musa', skin:2}, 4, 4], ex:{job:3, gbr:2, prop:'halo peachstaff'}, sc:2.2},
   gwonjang1:{name:'용궁의 주먹 장수', p:['gwon', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, 3, 3], ex:{job:3, gbr:1, capeC:'#2a8aa8'}},
   gwonjang2:{name:'용궁의 발 장수', p:['gwon', {outfit:'#2a9a8a', hair:'#1a2a3a', hat:'none', skin:0, sex:'f'}, 3, 3], ex:{job:3, gbr:2, capeC:'#2a8aa8'}},
   bhima:{name:'비마', p:['gwon', {outfit:'#8a3a2a', hair:'#241c26', hat:'none', skin:2, beard:true}, 4, 4], ex:{job:4, gbr:1, capeC:'#e8c048'}},
@@ -17719,7 +17811,8 @@ const CAST = {
   dau3:{name:'욕심', p:['doin', {outfit:'#e8c048', hair:'#241c26', hat:'flower', skin:0}, 3, -1], ex:{wtype:'none', capeC:'#b8862a'}},
   heo:{name:'허황옥', p:['doin', {outfit:'#c8382f', hair:'#241c26', hat:'flower', skin:1}, 4, -1], ex:{wtype:'none', capeC:'#e8c048'}},
 };
-CAST.gw_xingtian = CAST.xingtian; CAST.gw_kuafu = CAST.kuafu;   // 권사 이야기 글의 인물 키(임시 그림 — 나중에 다듬음)
+CAST.gw_xingtian = CAST.xingtian; CAST.gw_kuafu = CAST.kuafu;   // 권사 이야기 글의 인물 키(형천·과보는 같은 그림)
+CAST.gw_sukune = Object.assign({}, CAST.sukune, {name:'스쿠네'}); CAST.gw_kehaya = Object.assign({}, CAST.kehaya, {name:'게하야'});   // 스쿠네·게하야도 같은 그림(이름만 짧게)
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
 const WHO = {'산길 노인':'gw_noin', '바위손':'gw_bawi', '바람발':'gw_baram', '스쿠네':'gw_sukune', '게하야':'gw_kehaya', '타이마노 케하야':'kehaya', '노미노 스쿠네':'sukune', '형천':'xingtian', '과보':'kuafu', '용궁의 주먹 장수':'gwonjang1', '용궁의 발 장수':'gwonjang2', '후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
   '까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백':'habaek', '금와왕':'geumwa', '대소':'daeso', '주몽':'jumong', '송양왕':'songyang', '저승사자':'saja', '나':'hero',
@@ -18786,7 +18879,7 @@ const GWON_P1 = {
 };
 
 /* 권사 겹이야기 — 2부 부상(본편 퀘스트 번호 113~144, 26장~34장) 초안
-   줄기: 천마의 원한 조각이 부상의 옛 넋을 깨운다 — 이 섬 첫 맨손 겨루기에서 진 장사 「다이마노 게하야」의 넋이
+   줄기: 천마의 원한 조각이 부상의 옛 넋을 깨운다 — 옛 맨손 겨루기에서 진 장사 「다이마노 게하야」의 넋이
    깨어나 산과 강을 울리고, 그를 이긴 「노미노 스쿠네」의 넋이 뒤를 쫓는다. 권사가 두 넋의 다시 겨루기를 맡아 원한을 푼다.
    (일본서기 수인 7년 조: 당마의 게하야가 힘자랑을 하자 이즈모의 스쿠네를 불러 서로 발로 차며 겨뤘고,
     스쿠네가 게하야의 갈비뼈와 허리를 밟아 꺾어 죽였다는 줄거리만 씀 — 원문 대조는 「확인 필요」)
@@ -18811,7 +18904,7 @@ const GWON_P2 = {
 
   // ── 27장 · 강의 갓파 — 씨름을 좋아하는 강의 요괴
   117:{at:'사라진 신발',
-    c:['izumo', 'hero,m:kappa:#5aa86a', '', [['', '강가에 아이들 신발만 덩그러니 놓여 있었어요.'], ['나', '머리에 접시를 인 녀석들이 오이를 훔쳐 가네?'], ['나', '신발을 훔쳐 간다고? 나는 맨발이라 걱정 없네.']]]},
+    c:['izumo', 'hero,m:kappa:#5aa86a', '', [['', '강가에 아이들 신발만 덩그러니 놓여 있었어요.'], ['나', '머리에 접시를 인 녀석들이 오이를 훔쳐 가네?'], ['나', '아이들 신발까지 훔쳐 가다니. 나는 맨발이라 훔쳐 갈 것도 없지만.']]]},
   118:{at:'갓파 대왕',
     c:['izumo', 'hero,m:kappa:#2f7a44', '', [['갓파 대왕', '맨손잡이로군! 씨름 한판 하자!'], ['나', '좋아. 대신 겨루기 전엔 인사부터.'], ['갓파 대왕', '인사를 받으면 인사를 해야 하는 법… 앗, 내 물!'], ['', '고개를 숙이자 머리 접시의 물이 쏟아져 갓파 대왕이 힘을 잃었어요.']]]},
   119:{at:'돌아온 아이들',
@@ -18819,7 +18912,7 @@ const GWON_P2 = {
 
   // ── 28장 · 여우불 들판
   121:{at:'흰 옷의 음양사',
-    c:['foxnight', 'hero,seimei', 'light', [['세이메이', '그대 몸에 저승의 냄새가 배어 있군. 술법을 배워 볼 텐가?'], ['나', '저는 손발뿐이에요. 술법은 몰라요.'], ['세이메이', '그렇다면 옛이야기 하나를 들려주지.'], ['세이메이', '이 섬 첫 맨손 겨루기에서 진 장사의 넋이 깨어났다네. 원한 조각을 삼키고.']]]},
+    c:['foxnight', 'hero,seimei', 'light', [['세이메이', '그대 몸에 저승의 냄새가 배어 있군. 술법을 배워 볼 텐가?'], ['나', '저는 손발뿐이에요. 술법은 몰라요.'], ['세이메이', '그렇다면 옛이야기 하나를 들려주지.'], ['세이메이', '아주 옛날 이 섬에서 맨손 겨루기에 진 장사의 넋이 깨어났다네. 원한 조각을 삼키고.']]]},
   123:{at:'은여우 무사',
     c:['foxnight', 'hero,seimei', 'sparkle', [['세이메이', '그 장사의 이름은 게하야. 발이 빠르기로는 당할 자가 없었다지.'], ['세이메이', '그를 이긴 사내도 넋이 되어 그 뒤를 쫓고 있다네.'], ['나', '이긴 사람도, 진 사람도… 아직 그 겨루기에 묶여 있구나.']]]},
 
@@ -18832,8 +18925,8 @@ const GWON_P2 = {
   // ── 30장 · 눈의 여인 — 두 장사의 넋
   130:{at:'세 번째 길', s:'레벨 350을 달성해요. [수련] → [전직]에 3차 전직이 보여요. 옛 장사 두 사람의 넋을 만나요.',
     cs:[['snowpass', 'hero,kkachi', 'sparkle', [['까치', '{name}님, 세 번째 전직이 가까워요!'], ['까치', '그런데 {name}님을 기다리는 스승님은… 둘 다 넋이래요.']]],
-      ['snowpass', 'gw_kehaya,hero', 'shake', [['', '눈보라 고개 꼭대기, 다리가 굵은 장사의 넋이 발을 굴렀어요.'], ['게하야', '나는 다이마노 게하야. 이 섬에서 내 발을 당할 자는 없었다.'], ['게하야', '단 한 번, 이즈모에서 온 사내에게 진 것 말고는!'], ['나', '그 한 번이 원한이 되었군요.']]],
-      ['snowpass', 'gw_sukune,gw_kehaya,hero', '', [['스쿠네', '게하야, 그만 멈춰라. 나는 노미노 스쿠네. 그날 너를 이긴 자다.'], ['게하야', '이겼다고? 나를 죽였지!'], ['스쿠네', '…그래. 그래서 나도 이렇게 떠돈다.']]]]},
+      ['snowpass', 'gw_kehaya,hero', 'shake', [['', '눈보라 고개 꼭대기, 다리가 굵은 장사의 넋이 발을 굴렀어요.'], ['게하야', '내 이름은 게하야. 이 섬에서 내 발을 당할 자는 없었다.'], ['게하야', '단 한 번, 이즈모에서 온 사내에게 진 것 말고는!'], ['나', '그 한 번이 원한이 되었군요.']]],
+      ['snowpass', 'gw_sukune,gw_kehaya,hero', '', [['스쿠네', '게하야, 그만 멈춰라. 나는 스쿠네. 그날 너를 이긴 자다.'], ['게하야', '이겼다고? 나를 죽였지!'], ['스쿠네', '…그래. 그래서 나도 이렇게 떠돈다.']]]]},
 
   // ── 31장 · 오니 섬
   133:{at:'오니 왕의 잔치',
@@ -18888,21 +18981,21 @@ const GWON_P3 = {
   146:{at:'타는 들판',
     c:['burnfield', 'hero,m:crow:#ff7a2a', 'fire', [['', '하늘에 해가 열 개! 땅이 갈라지고 강물이 말랐어요.'], ['나', '이 해들… 생김새가 삼족오를 닮았어.'], ['', '들판에는 해 쪽으로 이어진 커다란 발자국이 길게 찍혀 있었어요.']]]},
   147:{at:'활을 든 사내',
-    c:['burnfield', 'houyi,hero', '', [['후예', '해는 하나면 충분하다. 아홉은 떨어뜨리겠다.'], ['나', '잠깐만요! 저 해들은 길을 잃은 형제들이에요.'], ['후예', '해를 쫓는 자가 또 있군. 저 거인은 아주 오래전부터 해를 쫓는다.']]]},
+    c:['burnfield', 'houyi,hero', '', [['후예', '해는 하나면 충분하다. 아홉은 떨어뜨리겠다.'], ['나', '잠깐만요! 저 해들은 길을 잃은 형제들이에요.'], ['후예', '해를 쫓는 자는 따로 있다. 저 거인은 아주 오래전부터 해를 쫓고 있지.']]]},
   148:{at:'열 개의 해',
     cs:[['burnfield', 'hero,houyi,m:crow:#ff8a2a', 'light', [['', '주몽의 활 이야기와 삼족오의 노래에 해들이 하나둘 제자리로 돌아갔어요.'], ['후예', '쏘지 않고도 이길 수 있군. 이 활은 네가 가져라.']]],
-      ['burnfield', 'hero,gw_kuafu', '', [['과보', '해들이 제자리로… 그럼 나는 이제 무엇을 쫓지?'], ['나', '쫓지 말고 같이 걸어요. 해는 내일도 떠요.'], ['나', '받아 낸 다음엔 놓아주는 것도 주먹이에요.', 'ju'], ['나', '멈추지 않아도 돼요. 대신 옆을 보며 달려요.', 'bal']]]]},
+      ['burnfield', 'hero,gw_kuafu', '', [['과보', '해들이 제자리로… 그럼 나는 이제 무엇을 쫓지?'], ['나', '쫓지 말고 같이 걸어요. 해는 내일도 떠요.'], ['나', '받아 낸 다음엔 놓아주는 것도 주먹이에요.', 'ju'], ['나', '달려도 좋아요. 다만 무엇을 쫓는지는 알고 달려요.', 'bal']]]]},
 
   // ── 36장 · 황하의 큰물
   151:{at:'물길을 내는 사람',
-    c:['yellowriver', 'yu,hero', '', [['우', '물을 막으면 넘치고, 길을 내 주면 바다로 간다.'], ['나', '받아서 흘려보내는 거군요. 주먹도 그래요.', 'ju'], ['나', '멈추지 않고 흐르게 두는 거군요. 발도 그래요.', 'bal'], ['나', '삽 한 자루로 강을 다스리시는군요.']]]},
+    c:['yellowriver', 'yu,hero', '', [['우', '물을 막으면 넘치고, 길을 내 주면 바다로 간다.'], ['나', '삽 한 자루로 강을 다스리시는군요.'], ['나', '받아서 흘려보내는 거군요. 주먹도 그래요.', 'ju'], ['나', '멈추지 않고 흐르게 두는 거군요. 발도 그래요.', 'bal']]]},
   152:{at:'상류',
     cs:[['yellowriver', 'yu,hero,m:serpent:#3a6a8a', 'shake', [['', '아홉 머리 뱀이 물러가자 날개 달린 용이 꼬리로 땅을 그어 물길을 냈어요.'], ['우', '응룡이 너를 따르겠다는구나.']]],
       ['yellowriver', 'hero,gw_kuafu', '', [['', '강가에 엎드려 물을 들이켜는 거인이 있었어요.'], ['과보', '황하를 다 마셔도 목이 탄다. 해를 쫓던 그날처럼.'], ['나', '그 목마름도 원한이었어요. 이제 천천히 마셔요.']]]]},
 
   // ── 38장 · 버려진 절의 밤
   158:{at:'불 바퀴의 소년',
-    c:['oldtemple', 'nezha,hero', 'fire', [['나타', '꼬리가 아홉이면 아홉 번 치면 돼!'], ['나타', '어? 맨주먹이야? 누가 먼저 아홉 대 치나 내기하자.'], ['나', '좋아. 대신 맞받아친 것도 한 대로 쳐 줘.', 'ju'], ['나', '좋아. 대신 발도 한 대로 쳐 줘.', 'bal'], ['나', '같이 가자. 벽에 비친 저 그림자, 아홉 꼬리야.']]]},
+    c:['oldtemple', 'nezha,hero', 'fire', [['나타', '꼬리가 아홉이면 아홉 번 치면 돼!'], ['나타', '어? 맨주먹이야? 누가 먼저 아홉 대 치나 내기하자.'], ['나', '좋아. 대신 맞받아친 것도 한 대로 쳐 줘.', 'ju'], ['나', '좋아. 대신 발로 찬 것도 한 대로 쳐 줘.', 'bal'], ['나', '같이 가자. 벽에 비친 저 그림자, 아홉 꼬리야.']]]},
 
   // ── 40장 · 사흉 — 머리 없는 거인
   163:{at:'도철',
@@ -18913,14 +19006,14 @@ const GWON_P3 = {
   166:{at:'곤륜 가는 길',
     cs:[['kunlunmt', 'hero,wukong', '', [['손오공', '저 위가 곤륜이다. 아홉 문이 있지. 셈 잘하냐?']]],
       ['kunlunmt', 'hero,gw_xingtian', 'flash', [['', '곤륜 문 앞, 형천이 용사에게 도끼를 내리쳤어요. 용사는 피하지 않고 받아 냈어요.'], ['형천', '왜 되받아치지 않느냐!'], ['나', '되받아치는 건 지키려고 하는 거예요. 원한을 갚으려고가 아니라.'], ['형천', '…지킬 것. 머리와 함께 잃어버린 말이로구나.']]],
-      ['kunlunmt', 'hero,gw_xingtian', 'light', [['', '형천은 도끼를 내려놓고 방패만 든 채 곤륜 문 곁에 섰어요.'], ['나', '바위손 스승님이 하신 말씀이 이제야 무거워요.', 'ju'], ['나', '받는 쪽 마음을 알아야 발도 멈출 때를 알겠지.', 'bal']]]]},
+      ['kunlunmt', 'hero,gw_xingtian', 'light', [['', '형천은 도끼를 내려놓고 방패만 든 채 곤륜 문 곁에 섰어요.'], ['나', '바위손 스승님 말씀을 이제야 제대로 알 것 같아요.', 'ju'], ['나', '받는 쪽 마음을 알아야 발도 멈출 때를 알겠지.', 'bal']]]]},
 
   // ── 41장 · 곤륜의 문 — 복숭아 숲
   168:{at:'구천현녀의 두루마리',
-    c:['kunlunmt', 'jiutian,hero', 'light', [['구천현녀', '이기는 법보다 싸우지 않고 이기는 법이 먼저다.'], ['나', '먼저 치지 않는 것. 스승님들이 다 같은 말을 하시네요.']]]},
+    c:['kunlunmt', 'jiutian,hero', 'light', [['구천현녀', '이기는 법보다 싸우지 않고 이기는 법이 먼저다.'], ['나', '싸우지 않고 이기는 법… 스승님들 말씀이랑 닮았어요.']]]},
   169:{at:'서왕모의 잔치',
     cs:[['palace', 'xiwangmu,hero,kkachi', 'sparkle', [['서왕모', '하늘 기둥이 다시 흔들리고 있다. 이 약과 흰 사슴을 가져가거라.'], ['까치', '흰 사슴이 {name}님 손을 핥아요!']]],
-      ['palace', 'xiwangmu,gw_kuafu,hero', 'light', [['서왕모', '해를 쫓던 거인이여, 네가 버린 지팡이가 숲이 되어 아직 푸르다.'], ['과보', '…쫓다 쓰러진 자리에도 숲이 자랐군요.'], ['나', '멈추지 않은 걸음이 헛되진 않았어요. 이제 그 숲에서 쉬어요.'], ['', '과보는 복숭아 숲 쪽으로 천천히, 처음으로 걸어서 갔어요.']]]]},
+      ['palace', 'xiwangmu,gw_kuafu,hero', 'light', [['서왕모', '해를 쫓던 거인이여, 네가 버린 지팡이가 숲이 되어 아직 푸르다.'], ['과보', '…쫓다 쓰러진 자리에도 숲이 자랐군요.'], ['나', '멈추지 않은 걸음이 헛되진 않았어요. 이제 그 숲에서 쉬어요.'], ['', '과보는 그 숲 쪽으로 천천히, 처음으로 걸어서 갔어요.']]]]},
 
   // ── 42장 · 무너진 기둥 — 스승이 붙들던 금의 뿌리
   171:{at:'공공',
@@ -18938,31 +19031,31 @@ const GWON_P3 = {
 
   // ── 45장 · 세 하늘의 신화 — 까치가 처음 찾아온 까닭
   180:{at:'다리를 놓는 새',
-    cs:[['sky', 'kkachi,hero', 'light', [['까치', '저는 원래 다리를 놓는 새예요. 하늘과 하늘 사이에요.'], ['까치', '그 밤, 흰 고니 할아버지가 저를 찾아오셨어요.'], ['까치', '「내 아이와 하늘 사이에 다리가 되어 다오.」 그렇게요.'], ['나', '그래서 그날 아침 산길 어귀에 네가 있었구나.']]],
+    cs:[['sky', 'kkachi,hero', 'light', [['까치', '저는 원래 다리를 놓는 새예요. 하늘과 하늘 사이에요.'], ['까치', '하늘 문이 갈라진 그 밤, 흰 고니 할아버지가 저를 찾아오셨어요.'], ['까치', '「내 아이와 하늘 사이에 다리가 되어 다오.」 그렇게요.'], ['나', '그래서 그날 아침 산길 어귀에 네가 있었구나.']]],
       ['sky', 'kkachi,hero', 'sparkle', [['', '구름 사이로 흰 고니 한 마리가 내려와 한 바퀴 돌고 올라갔어요.'], ['나', '보고 계셨군요, 스승님.'], ['까치', '처음부터 쭉이요.']]]]},
   181:{at:'세 하늘의 신화',
-    c:['palace', 'xiwangmu,amaterasu,jumong,hero,kkachi', 'sparkle', [['', '세 나라의 신들이 하늘 문 앞에 모여 용사를 배웅했어요.'], ['주몽', '빈손으로 따라나섰던 벗이, 세 하늘을 다 지켰구나.'], ['까치', '{name}, 이제 세 하늘의 신화예요.']]]},
+    c:['palace', 'xiwangmu,amaterasu,jumong,hero,kkachi', 'sparkle', [['', '세 나라의 신들이 하늘 문 앞에 모여 용사를 배웅했어요.'], ['주몽', '빈손으로 따라나섰던 벗이, 세 하늘을 다 지켰구나.'], ['까치', '{name}님, 이제 세 하늘의 신화예요!']]]},
 };
 
 /* 권사 겹이야기 — 4부 합류(46장 「마지막 시련」, 본편 퀘스트 번호 182) 초안
    - GWON_JOIN: 권사일 때 46장 여는 연출(CH_OPEN[46]) 「앞에」 붙이는 컷. 이 뒤로 본편 CH_OPEN[46]이 그대로 이어진다.
-     본편 첫 컷이 「세 나라의 하늘이 하나로 이어진 날 밤이었어요」로 시작하므로, 합류 컷은 같은 날 「저녁」으로 썼다.
+     본편 첫 컷이 「세 나라의 하늘이 하나로 이어진 날 밤이었어요」로 시작하므로, 합류 컷은 181번(신들의 배웅) 뒤 같은 날 「저녁」으로 썼다(같은 첫 문장이 두 번 나오지 않게 「신들의 배웅이 끝난 저녁」으로 시작).
    - GWON_Q_LINES4: (선택) 4부 첫 퀘스트 연출에 끼울 권사 대사 한 줄. 4부부터는 본편 글을 쓰므로 이 정도만.
    - GWON_RECAP: (선택) 「4부부터 시작」으로 만든 권사가 처음 들어올 때 보여 줄 「지난 이야기」 요약 컷.
      갈래는 시작 걸음에서 고르므로 갈래 표시 대사를 함께 넣었다.
    형식은 part1.js와 같다(대사 셋째 칸·컷 다섯째 칸의 'ju'·'bal' = 갈래 표시) */
 
 const GWON_JOIN = [
-  ['rock', 'hero,gw_bawi,gw_baram,kkachi', 'light', [['', '세 나라의 하늘이 하나로 이어진 날 저녁, 산길 어귀에서 두 스승이 기다리고 있었어요.'], ['바위손', '받을 것은 다 받았고, 돌려줄 것도 다 돌려줬구나.'], ['바람발', '그리고 한 번도 멈추지 않고 여기까지 왔고.'], ['나', '두 분이 같이 계신 건 처음 봬요.']]],
+  ['rock', 'hero,gw_bawi,gw_baram,kkachi', 'light', [['', '신들의 배웅이 끝난 저녁, 산길 어귀에서 두 스승이 용사를 기다리고 있었어요.'], ['바위손', '받을 것은 다 받았고, 돌려줄 것도 다 돌려줬구나.'], ['바람발', '그리고 한 번도 멈추지 않고 여기까지 왔고.'], ['나', '두 분이 함께 오신 건 길을 고르던 날 뒤로 처음이에요.']]],
   ['rock', 'hero,gw_bawi,gw_baram', '', [['바람발', '갈라선 지 오래였지. 서서 받느냐, 흘러가느냐로.'], ['바위손', '네가 걸어온 길을 보니, 그 둘이 다른 말이 아니었다.']]],
   ['rock', 'hero,gw_bawi', '', [['바위손', '이제부터 네 앞에 오는 것은 우리도 겪어 보지 못한 것들이다.'], ['나', '그래도 똑같이 할게요. 서서 받고, 지키려고 돌려줄게요.']], 'ju'],
-  ['rock', 'hero,gw_baram', '', [['바람발', '이제부턴 우리도 모르는 길이다. 앞장서 줄 수가 없구나.'], ['나', '괜찮아요. 멈추지 않으면 길은 생겨요. 갈 곳도 알고요.']], 'bal'],
+  ['rock', 'hero,gw_baram', '', [['바람발', '이제부턴 우리도 모르는 길이다. 앞장서 줄 수가 없구나.'], ['나', '괜찮아요. 멈추지 않으면 길은 생겨요. 갈 곳은 제가 알고요.']], 'bal'],
   ['rock', 'hero,gw_bawi,gw_baram,kkachi', 'sparkle', [['', '하늘에서 흰 고니 한 마리가 내려와 두 스승의 어깨를 한 번씩 스치고 올라갔어요.'], ['바람발', '스승님도 이제야 마음을 놓으셨군.'], ['바위손', '가거라. 빈손으로 온 아이가 이제 남의 손을 잡아 줄 차례다.']]],
   ['sky', 'hero,kkachi', '', [['', '두 스승은 산길로 돌아가고, 용사와 까치만 남았어요.'], ['나', '손은 여전히 비었는데, 잡아 줄 손은 많아졌어.']]],
 ];
 
 const GWON_Q_LINES4 = {
-  182:{at:'마지막 시련', shot:0, after:1, line:['나', '맨발이라 물길은 자신 있어요. 따라갈게요.']},   // 본편 첫 컷(문무대왕·별주)의 둘째 대사 뒤
+  182:{at:'마지막 시련', shot:0, after:1, line:['나', '헤엄이라면 산골 개울에서 익혔어요. 따라갈게요.']},   // 본편 첫 컷(문무대왕·별주)의 둘째 대사(별주 「내 등딱지만 따라오시오」) 뒤 — 1부 23번 「헤엄쳐 건너겠지만」과 이어짐
 };
 
 const GWON_RECAP = [
@@ -24018,7 +24111,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
-    storyQ, chOpen, prologue, cutMine, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
+    storyQ, chOpen, prologue, cutMine, castSprite, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
     update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineCost, refineRunNew, refineRunStep, refineRunEnd, get refRun(){ return refRun; }, refGoal, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
