@@ -5683,6 +5683,50 @@ async def main():
         await tab(mp, 'bag'); await mp.wait_for_timeout(300)
         bg = await mp.evaluate("() => document.querySelector('#bagStack') ? document.querySelector('#bagStack').textContent : ''")
         check('초월의 조각' in bg, f"[가방]에 초월의 조각 줄이 보임 {bg[-40:]}")
+        # 남·여 모습 · 표정(11월 21일)
+        sx = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, o = {};
+          o.keep = G.cleanLook({hair:'#241c26', sex:'f'}).sex; o.bad = [G.cleanLook({sex:'x'}).sex, G.cleanLook({}).sex, G.cleanLook(null).sex, G.cleanLook({sex:'m'}).sex].map(v => v === undefined ? '없음' : v).join();
+          const old = G.mergeState({v:1, name:'옛', look:{outfit:'auto', hair:'#241c26', hat:'class', skin:1}}); o.old = old.look.sex === undefined && old.look.skin === 1;
+          const url = (c, sex, dir, f, face) => { const sp = G.personSprite(c, Object.assign({outfit:'auto', hair:'#241c26', hat:'class', skin:0}, sex ? {sex} : {}), 2, 2, dir, f, false, face ? {face} : null); const cv = document.createElement('canvas'); cv.width = sp.width; cv.height = sp.height; cv.getContext('2d').drawImage(sp, 0, 0); return cv.toDataURL(); };
+          o.diff = {}; for (const c of G.CLASS_ORDER) o.diff[c] = [['right', 0], ['up', 0], ['down', 1]].every(([d, f]) => url(c, 'f', d, f) !== url(c, '', d, f));
+          o.same = url('musa', 'm', 'right', 0) === url('musa', '', 'right', 0);   // 남 = 예전 그림 그대로
+          o.faceDiff = ['fight', 'joy', 'surprise', 'sad', 'laugh'].map(e => url('musa', '', 'right', 0, e + ':0:0') !== url('musa', '', 'right', 0)); o.blink = url('musa', '', 'right', 0, 'normal:1:0') !== url('musa', '', 'right', 0);
+          o.faceDiffF = url('sulsa', 'f', 'right', 0, 'laugh:0:0') !== url('sulsa', 'f', 'right', 0);
+          // 시트: 직업 6 × (남 앞·여 앞·여 뒤·여 걷기) + 표정 7종(남·여)
+          const Z = 3, W = 64 * Z, cv = document.createElement('canvas'); cv.width = W * 7; cv.height = W * 8; const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.fillStyle = '#4a5a6a'; g.fillRect(0, 0, cv.width, cv.height);
+          const dr = (c, sex, d, f, face, x, y) => { const sp = G.personSprite(c, Object.assign({outfit:'auto', hair:'#241c26', hat:'class', skin:0}, sex ? {sex} : {}), 2, 2, d, f, false, face ? {face} : null); g.drawImage(sp, x * W, y * W, W, W); };
+          G.CLASS_ORDER.forEach((c, i) => { dr(c, '', 'right', 0, '', i, 0); dr(c, 'f', 'right', 0, '', i, 1); dr(c, 'f', 'up', 0, '', i, 2); dr(c, 'f', 'right', 1, '', i, 3); });
+          ['normal:1:0', 'fight:0:0', 'surprise:0:0', 'sad:0:0', 'joy:0:0', 'laugh:0:0', 'angry:0:0'].forEach((e, i) => { dr('musa', '', 'right', 0, e, i, 4); dr('musa', 'f', 'right', 0, e, i, 5); dr('jagaek', 'f', 'right', 0, e, i, 6); dr('sulsa', 'f', 'right', 0, e, i, 7); });
+          o.sheet = cv.toDataURL();
+          // 용사 표정 정하기
+          const h = G.hero, st = G.ST; const keep = {hp:h.hp, dead:h.dead}; h.dead = false; h.hp = st.maxHp; h.shockT = h.engT = h.cheerT = 0; h.swing = 0;
+          G.setDrawMode('off'); o.f = {}; o.f.calm = G.heroFace().split(':')[0] || 'normal';
+          h.engT = 1; o.f.fight = G.heroFace(); h.shockT = 0.5; o.f.hurt = G.heroFace(); h.shockT = 0; h.cheerT = 1; h.cheerBig = 0; o.f.lv = G.heroFace(); h.cheerBig = 1; o.f.boss = G.heroFace(); h.cheerT = 0; h.engT = 0;
+          h.hp = st.maxHp * 0.2; o.f.low = G.heroFace(); h.hp = st.maxHp;
+          G.setDrawMode('on'); h.engT = 1; o.l = {fight:G.heroFace() || '(그대로)', hurt:(h.shockT = 0.5, G.heroFace()), boss:(h.shockT = 0, h.cheerT = 1, h.cheerBig = 1, G.heroFace())}; h.cheerT = 0; h.engT = 0;
+          G.setDrawMode('off'); h.hp = keep.hp; h.dead = keep.dead; return o; }""")
+        (OUT / '98a-sexface-sheet.png').write_bytes(base64.b64decode(sx['sheet'].split(',')[1]))   # 윗줄부터: 남 앞 · 여 앞 · 여 뒤 · 여 걷기 · 남 표정 · 여 표정(무사·자객·술사)
+        check(sx['keep'] == 'f' and sx['bad'] == '없음,없음,없음,없음' and sx['old'], f"꾸미기 값 정리: 여는 지키고 이상한 값·남·옛 저장은 남(값 없음)으로 {sx['keep']} {sx['bad']} {sx['old']}")
+        check(all(sx['diff'].values()) and sx['same'], f"모든 직업에서 여자 모습은 앞·뒤·걷기가 남자와 다르게 그려지고 남자 모습은 예전 그림 그대로 {sx['diff']} {sx['same']}")
+        check(all(sx['faceDiff']) and sx['blink'] and sx['faceDiffF'], f"표정 그림: 싸움·기쁨·놀람·기운 없음·웃음·깜빡임이 평소 얼굴과 다르다(여자 모습도) {sx['faceDiff']} {sx['blink']} {sx['faceDiffF']}")
+        check(sx['f']['fight'].startswith('fight') and sx['f']['hurt'].startswith('surprise') and sx['f']['lv'].startswith('joy') and sx['f']['boss'].startswith('laugh') and sx['f']['low'].startswith('sad') and sx['f']['calm'] in ('normal',),
+              f"용사 표정: 싸움→매서운 눈, 맞음→놀람, 레벨업→기쁨, 보스→큰 웃음, 체력 30% 밑→기운 없음 {sx['f']}")
+        check(sx['l']['fight'] == '(그대로)' and sx['l']['hurt'].startswith('surprise') and sx['l']['boss'].startswith('laugh'), f"절전 그리기: 싸우는 표정은 빼고 놀람·웃음은 남는다 {sx['l']}")
+        await mp.evaluate("() => { const G = window.__game; G.closePage(); G.openLookEditor(); }")
+        await mp.wait_for_selector('#lk-sexrow')
+        await mp.click('#lk-sexrow [data-sex="f"]'); await mp.wait_for_timeout(250)
+        await mp.screenshot(path=str(OUT / '98b-꾸미기-여자.png'))
+        ed = await mp.evaluate("() => ({f:document.querySelector('#lk-sexrow [data-sex=\"f\"]').getAttribute('aria-pressed'), m:document.querySelector('#lk-sexrow [data-sex=\"m\"]').getAttribute('aria-pressed'), before:window.__game.S.look.sex || ''})")
+        await mp.click('#modal-btn-1'); await mp.wait_for_timeout(300)
+        sv = await mp.evaluate("() => window.__game.S.look.sex || ''")
+        check(ed['f'] == 'true' and ed['m'] == 'false' and ed['before'] == '' and sv == 'f', f"[꾸미기] 모습 단추: 여를 누르면 저장 뒤 용사가 여자 모습이 된다 {ed} {sv}")
+        await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.hero.engT = 2; }")
+        await mp.wait_for_timeout(700)
+        await mp.screenshot(path=str(OUT / '98c-여자용사-싸움.png'))
+        await mp.evaluate("() => { const G = window.__game; G.hero.cheerT = 3; G.hero.cheerBig = 1; }")
+        await mp.wait_for_timeout(300)
+        await mp.screenshot(path=str(OUT / '98d-여자용사-승리.png'))
+        await mp.evaluate("() => { const G = window.__game; delete G.S.look.sex; G.hero.cheerT = 0; }")
         await mp.evaluate("() => window.__game.closePage()")
         await ctxM.close()
         srv.shutdown()
