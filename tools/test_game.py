@@ -3733,7 +3733,7 @@ async def main():
   out.play.pro = play(G.prologue());
   S.gwonBr = 2; out.play.q17 = play(G.GWON_Q[17].cs || [G.GWON_Q[17].c]); out.play.join = play(G.chOpen(46));
   out.play.recap = play(G.GWON_RECAP);
-  const q0 = G.storyQ(182); out.q182 = JSON.stringify(q0.cs[0][3]).includes('맨발이라 물길');
+  const q0 = G.storyQ(182); out.q182 = JSON.stringify(q0.cs[0][3]).includes('헤엄이라면 산골 개울');
   S.gwonBr = 1; S.job = 1; G.playCut && 0; return out; }""")
         check(not gst['cutBad'] and gst['n'][0] > 100 and gst['n'][1], f"권사 겹이야기: 모든 컷의 배경·인물·말한 사람이 게임에 있고, 번호·제목이 본편과 맞다 {gst['cutBad']} {gst['n']}")
         check(all(gst['jobch']) and all(gst['same'].values()) and gst['gw'] == [True, True, True, True, True] and gst['br'][0] > 0 and gst['br'][1] > 0 and gst['br'][3] == 0 and gst['br'][2] >= max(gst['br'][0], gst['br'][1]),
