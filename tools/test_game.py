@@ -3428,6 +3428,20 @@ async def main():
   const rp = {far:0, back:0};
   G.bench(6, false, t => { const m = G.mobs[0], H = G.hero, d = Math.abs(m.tx - H.tx) + Math.abs(m.ty - H.ty); if (d >= 2 && !rp.far){ rp.far = t + 0.05; rp.cd = H.ripCd > 0; rp.stun = m.stunT > 0; } if (rp.far && d === 1 && !rp.back) rp.back = t; });
   out.rip = [rp.far > 0 && rp.far < 1.5, !!rp.cd, !!rp.stun, rp.back > rp.far];
+  // 한 점 꿰기(11-19): 보스 한 대상을 이어 찌르면 점이 쌓이고, 가득 뒤 다음 한 번이 터지며 풀린다 · 대상을 바꾸면·시간이 지나면·쓰러지면 풀린다 · 몹·다른 직업엔 없음
+  S.skSet = []; const ptr = {};
+  G.bench(0.2, false, t => { const k = Math.round(t / 0.05), m = G.mobs[0], H = G.hero; if (k !== 1) return;
+    const PT = G.PT; H.pt = 0; H.ptFull = false; H.ptTg = null; const rs = [];
+    for (let i = 0; i < PT.max + 1; i++){ H.ptGap = 0; const r = G.ptStep(m); rs.push([H.pt, H.ptFull, r.burst, Math.round(r.cd * 100)]); }
+    ptr.seq = rs.map(x => x.join(':')).join(' ');
+    H.ptGap = 0; G.ptStep(m); H.ptGap = 0; ptr.sw = (G.ptStep({boss:true, dead:false}), H.pt);
+    H.pt = 3; H.ptTg = m; H.ptT = 0.02; G.updatePt(0.05); ptr.hold = H.pt;
+    H.pt = 3; H.ptTg = m; H.ptT = 3; H.dead = true; G.updatePt(0.05); H.dead = false; ptr.dead = H.pt;
+    H.pt = 0; H.ptTg = null; m.boss = false; m.raid = false; G.hit(m, 1, 'basic'); ptr.mob = H.pt; m.boss = true;
+    const cls0 = S.cls; S.cls = 'musa'; G.hit(m, 1, 'basic'); ptr.musa = H.pt; S.cls = cls0;
+    H.pt = 0; H.ptFull = false; H.ptTg = null; G.noPt = true; ptr.off = G.ptStep(m); G.noPt = false;
+    H.pt = 0; H.ptFull = false; H.ptTg = null; });
+  out.pt = ptr;
   // 길동무(파티 버프): 공격·걷는 속도, 파도 타기(5차): 창끝 거리 +1칸
   S.skSet = [10, 12]; const st0 = G.heroStep();
   G.bench(1, false, t => { if (Math.round(t / 0.05) === 4){ G.hero.mp = 999; G.castNow(10); } if (Math.round(t / 0.05) === 8){ G.hero.mp = 999; G.castNow(12); } if (Math.round(t / 0.05) === 12) out.wave = [G.heroRange(), G.hero.waveT > 0, G.pbDesc('changgaek', 1).includes('걷는 속도'), G.heroStep() < st0]; });
@@ -3459,6 +3473,7 @@ async def main():
               f"창객: 기술 15칸이 모두 나가고 설명·레벨 미리보기가 나온다 · 사거리 2칸 {c1['cast']} {c1['desc']} {c1['stat']}")
         check(c1['gap'] == [80, 140, 160, 100, 100, 100], f"창객 「간격」: 붙은 적 -20% · 두 칸 밖 +40% · 「표사의 기합」 동안 +60%·붙어도 안 깎임 · 기본 공격·기술이 아닌 것과 다른 직업은 그대로 {c1['gap']}")
         check(c1['rip'] == [True, True, True, True], f"창객 「되찌르기」: 맞은 직후 되찔러 붙은 보스를 한 칸 밀어내고(잠깐 비틀) 보스는 다시 걸어온다 {c1['rip']}")
+        check(c1['pt']['seq'] == '1:false:false:100 2:false:false:103 3:false:false:105 4:false:false:108 5:true:false:110 0:false:true:113' and c1['pt']['sw'] == 1 and c1['pt']['hold'] == 0 and c1['pt']['dead'] == 0 and c1['pt']['mob'] == 0 and c1['pt']['musa'] == 0 and c1['pt']['off'] is None, f"창객 「한 점 꿰기」: 점이 한 점씩 쌓여(치명타 피해 최대 +13%) 다섯이면 가득 → 다음 한 번이 터지며 풀림 · 대상을 바꾸면 1부터 · 3초 못 찌르거나 쓰러지면 풀림 · 몬스터(보스 아님)·무사·끄면 없음 {c1['pt']}")
         check(c1['wave'] == [3, True, True, True], f"창객: 파도 타기(5차)가 창끝 거리를 한 칸 늘리고, 길동무(파티 버프)가 걷는 속도를 올린다 {c1['wave']}")
         cj = c1['jobs']
         check([j['names'] for j in cj] == [['늙은 표두'], ['강림도령'], ['벤케이'], ['늙은 표두', '강림도령', '벤케이'], ['용궁의 창 장수']] and all(j['st'] and j['ready'] and j['own'] and j['sprite'] for j in cj)
@@ -4892,7 +4907,17 @@ async def main():
           return out; }""")
         check(y1['mine'] == 'true,true,false,false' and y1['two'] == '1,4,N,N', f"레이드에 고른 캐릭터가 동료로 나오고 남는 자리는 그림자 동료가 채운다(그림자는 내 파티가 아님) {y1['two']} {y1['mine']}")
         check(y1['def'].startswith('동료4,동료3,동료2,동료1'), f"고르지 않으면 레이드 동료도 센 순서 {y1['def']}")
-        check(y1['none'] == '' and '앞뒤 진' in y1['front'] and '선봉' in y1['front'] and y1['van'] == '선봉' and y1['pair'] == '창칼 진' and y1['shadow'] == '그림자 살' and y1['thunder'] == '벼락과 부적', f"시너지 켜짐/꺼짐: 앞뒤 진·선봉·창칼 진·그림자 살·벼락과 부적 {y1}")
+        check(y1['none'] == '' and '앞뒤 진' in y1['front'] and '선봉' in y1['front'] and y1['van'] == '선봉' and y1['pair'] == '창칼 진|꿰뚫린 틈' and y1['shadow'] == '그림자 살' and y1['thunder'] == '벼락과 부적', f"시너지 켜짐/꺼짐: 앞뒤 진·선봉·창칼 진·그림자 살·벼락과 부적 {y1}")
+        y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, cl0 = S.cls, SY = G.synCalc;
+          const l = o => SY(o).list.map(x => x.k).join('|');
+          out.solo = l({changgaek:1}); out.duo = l({sulsa:1, changgaek:1}); out.noC = l({jagaek:1, sulsa:1});
+          const m1 = SY({sulsa:1, changgaek:1}).mod; out.mod = [m1.sulsa.boss, m1.changgaek.boss, m1.musa.boss, SY({musa:1, sulsa:1}).mod.sulsa.boss];
+          const boss = {boss:true}, mob = {boss:false};
+          G.synForce = SY({sulsa:1, changgaek:1}); S.cls = 'sulsa'; out.mineS = [G.synBossMine(boss), G.synBossMine(mob)]; S.cls = 'changgaek'; out.mineC = G.synBossMine(boss);
+          G.synForce = null; S.cls = 'sulsa'; out.none = G.synBossMine(boss); S.cls = cl0;
+          return out; }""")
+        check(y1b['solo'] == '' and y1b['duo'] == 'pierce' and y1b['noC'] == '' and y1b['mod'] == [5, 0, 5, 0], f"창객이 파티에 다른 직업과 있으면 「꿰뚫린 틈」: 창객 말고 모두 보스 피해 +5% · 혼자·창객 없음은 꺼짐 {y1b}")
+        check(y1b['mineS'] == [1.05, 1] and y1b['mineC'] == 1 and y1b['none'] == 1, f"꿰뚫린 틈은 보스·레이드 보스에게만 · 창객 본인·시너지 없는 싸움은 그대로 {y1b['mineS']} {y1b['mineC']} {y1b['none']}")
         check('다섯 갈래' in y1['five4'] and '+4%' in y1['five5'] and y1['one'] == '한 길', f"다섯 갈래(4종 +2%·5종 +4%)·한 길(같은 직업 3명) {y1['five4']} {y1['five5']} {y1['one']}")
         check('선봉:sulsa' in y1['hint'] and '창칼 진:changgaek' in y1['hint'], f"한 명만 더 있으면 켜지는 시너지를 알려 준다 {y1['hint']}")
         check(y1['hint5'] == 0, '다섯이 다 차면 한 명 더 힌트는 없다')
