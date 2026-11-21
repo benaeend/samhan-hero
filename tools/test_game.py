@@ -5684,6 +5684,98 @@ async def main():
         bg = await mp.evaluate("() => document.querySelector('#bagStack') ? document.querySelector('#bagStack').textContent : ''")
         check('초월의 조각' in bg, f"[가방]에 초월의 조각 줄이 보임 {bg[-40:]}")
         await mp.evaluate("() => window.__game.closePage()")
+
+        # ---- 도깨비 보따리(2026-11-21) ----
+        bg1 = await mp.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true;
+          const o = {};
+          o.odds = +G.BAG_ODDS.reduce((a, x) => a + x.p, 0).toFixed(1); o.nOdds = G.BAG_ODDS.length;
+          o.cos = [G.bagCos('fx').length, G.bagCos('head').length];
+          S.gems = 5e6; S.bot = {pity:0, day:'', n:0, got:0};
+          // 10번: 열 번째 희귀 이상 확정(나머지는 일반 쪽으로 굴림)
+          G.bagRng = () => 0.99; const g0 = S.gems, r10 = G.bagBuy(10);
+          o.ten = [r10.length, g0 - S.gems, r10.slice(0, 9).every(x => x.g === '일반' || x.g === '고급'), r10[9].rare, r10[9].g];
+          // 천장: 80번째는 전설 치장
+          S.bot = {pity:79, day:S.bot.day, n:0, got:0}; const rp = G.bagBuy(1)[0]; o.pity = [rp.g, !!rp.av && rp.av.type === 'fx', S.bot.pity];
+          // 하루 50번
+          S.bot = {pity:0, day:S.bot.day, n:45, got:0}; o.day = [G.bagBuy(10) === null, G.bagState(10).ok, G.bagBuy(1) !== null, G.bagLeft ? 0 : 0];
+          for (let i = 0; i < 4; i++) G.bagBuy(1);
+          o.dayEnd = [S.bot.n, G.bagBuy(1) === null, G.bagState(1).why];
+          S.bot.day = 'old'; o.dayReset = G.bagState(1).ok && S.bot.n === 0;
+          // 전설 8종 → 다 모으면 보석 3,000
+          G.bagRng = () => 0.005; S.bot = {pity:0, day:S.bot.day, n:0, got:0};
+          for (const a of G.bagCos('fx')) delete S.av.own[a.k];
+          const legs = []; for (let i = 0; i < 8; i++){ S.bot.n = 0; const r = G.bagBuy(1)[0]; legs.push(r.g + ':' + !!r.isNew); }
+          o.legs = [legs.every(x => x === '전설:true'), G.bagCos('fx').every(a => S.av.own[a.k])];
+          S.bot.n = 0; const gm = S.gems; const rd = G.bagBuy(1)[0]; o.legDup = [rd.g, S.gems - gm + 1000];
+          // 영웅 머리 장식 6종 → 다 모으면 부적 10분씩
+          G.bagRng = () => 0.05; for (const a of G.bagCos('head')) delete S.av.own[a.k];
+          const hs = []; for (let i = 0; i < 6; i++){ S.bot.n = 0; const r = G.bagBuy(1)[0]; hs.push(r.g + ':' + !!r.isNew); }
+          for (const k of ['atk', 'spd', 'def', 'gold', 'exp']) S.buff[k] = 0;
+          S.bot.n = 0; const rh = G.bagBuy(1)[0]; o.heads = [hs.every(x => x === '영웅:true'), G.bagCos('head').every(a => S.av.own[a.k]), rh.isNew, S.buff.atk, S.buff.exp];
+          // 부적: 희귀 30분 · 일반 10분 · 다 차면 숫돌
+          G.bagRng = () => 0.7; for (const k of ['atk', 'spd', 'def', 'gold', 'exp']) S.buff[k] = 0; S.bot = {pity:0, day:S.bot.day, n:0, got:0};
+          const rc = G.bagBuy(1)[0]; o.charm = [rc.g, rc.txt, ['atk', 'spd', 'def', 'gold', 'exp'].reduce((a, k) => a + S.buff[k], 0)];
+          for (const k of ['atk', 'spd', 'def', 'gold', 'exp']) S.buff[k] = 3600; S.inv.whet = 0; const rf = G.bagBuy(1)[0]; o.charmFull = [rf.txt, S.inv.whet];
+          return o; }""")
+        check(bg1['odds'] == 100 and bg1['nOdds'] == 7 and bg1['cos'] == [8, 6], f"보따리: 확률표 합 100%·7칸·치장 이펙트 8+머리 장식 6 {bg1['odds']} {bg1['cos']}")
+        check(bg1['ten'][0] == 10 and bg1['ten'][1] == 9000 and bg1['ten'][2] and bg1['ten'][3], f"보따리: 10번은 보석 9,000, 열 번째는 희귀 이상 확정 {bg1['ten']}")
+        check(bg1['pity'][0] == '전설' and bg1['pity'][1] and bg1['pity'][2] == 0, f"보따리: 천장(80번째) 전설 이펙트 확정 후 카운터 0 {bg1['pity']}")
+        check(bg1['day'][0] and not bg1['day'][1] and bg1['day'][2] and bg1['dayEnd'][0] == 50 and bg1['dayEnd'][1] and bg1['dayEnd'][2] == '오늘 다 열었어요' and bg1['dayReset'], f"보따리: 하루 50번 제한(10번은 45에서 막힘)·다음 날 새로 {bg1['day']} {bg1['dayEnd']} {bg1['dayReset']}")
+        check(bg1['legs'][0] and bg1['legs'][1] and bg1['legDup'] == ['전설', 3000], f"보따리: 전설 8종을 안 가진 것부터 얻고, 다 모으면 보석 3,000 {bg1['legs']} {bg1['legDup']}")
+        check(bg1['heads'][0] and bg1['heads'][1] and not bg1['heads'][2] and bg1['heads'][3] == 600 and bg1['heads'][4] == 600, f"보따리: 머리 장식 6종 뒤 겹치면 다섯 부적 10분씩 {bg1['heads']}")
+        check(bg1['charm'][0] == '일반' and bg1['charm'][2] == 600 and bg1['charmFull'][1] == 1 and '숫돌' in bg1['charmFull'][0], f"보따리: 부적이 다 차면 숫돌로 {bg1['charm']} {bg1['charmFull']}")
+        bg2 = await mp.evaluate("""() => { const G = window.__game, S = G.S, o = {}; G.bagRng = null; S.level = 640; S.world = 10;
+          const base = () => { for (const k of ['atk', 'spd', 'def', 'gold', 'exp', 's2', 's4']) S.buff[k] = 0; };
+          base(); o.m0 = G.gainMul('exp');
+          S.buff.exp = 600; o.m15 = G.gainMul('exp') / o.m0; base(); S.buff.s2 = 600; o.m2 = G.gainMul('exp') / o.m0;
+          S.buff.exp = 600; o.m2b = G.gainMul('exp') / o.m0;   // 두 곱 + 글공부 = 큰 것 하나(2배)
+          base(); S.buff.s4 = 600; S.buff.s2 = 600; S.buff.exp = 600; o.m4 = G.gainMul('exp') / o.m0; o.gold = G.gainMul('gold');
+          G.tickBuffs(100); o.tick1 = [S.buff.s4, S.buff.s2, S.buff.exp];   // 네 곱만 줄고 나머지는 기다림
+          S.buff.s4 = 0; G.tickBuffs(100); o.tick2 = [S.buff.s2, S.buff.exp];   // 두 곱만 줄고 글공부는 기다림
+          S.buff.s2 = 0; G.tickBuffs(100); o.tick3 = S.buff.exp;
+          base(); o.noOff = +(G.gainMul('exp', true) / o.m0).toFixed(3);   // noBuff(오프라인) = 두루마리 안 붙음
+          S.buff.s4 = 600; o.off = +(G.gainMul('exp', true) / o.m0).toFixed(3); base();
+          // 2시간 상한과 넘는 몫 숫돌 3개
+          G.bagRng = () => 0; S.inv.whet = 0; S.buff.s4 = 7200 - 100; S.gems = 1e6; S.bot = {pity:0, day:S.bot.day, n:0, got:0}; const r4 = G.bagBuy(1)[0];
+          o.cap = [r4.g, S.buff.s4, S.inv.whet, r4.txt.includes('숫돌')]; G.bagRng = null; base();
+          // 저장 불러오기에서 범위 자르기
+          const m = G.mergeState(Object.assign(JSON.parse(JSON.stringify(S)), {buff:{atk:99999, s2:99999, s4:-5}, bot:{n:999, pity:500, day:5, got:-3}}));
+          o.merge = [m.buff.atk, m.buff.s2, m.buff.s4, m.bot.n, m.bot.pity, m.bot.day, m.bot.got];
+          const m0 = G.mergeState({}); o.def = [m0.buff.s2, m0.buff.s4, JSON.stringify(m0.bot), m0.av.fx, m0.av.head];
+          // 도감 효과(아바타 +2%에 비해 보따리는 하나 +0.3%)
+          for (const a of G.bagCos('fx').concat(G.bagCos('head'))) delete S.av.own[a.k]; const p0 = G.avColPct(); S.av.own.x_moon = true; const p1 = G.avColPct(); o.pct = [+(p1 - p0).toFixed(3), G.BAG_PCT];
+          return o; }""")
+        check(abs(bg2['m15'] - 1.5) < 0.01 and abs(bg2['m2'] - 2) < 0.01 and abs(bg2['m2b'] - 2) < 0.01 and abs(bg2['m4'] - 4) < 0.01 and bg2['gold'] > 0, f"보따리: 경험치 두루마리는 가장 큰 것 하나만(×1.5·×2·×2·×4) {bg2['m15']} {bg2['m2']} {bg2['m2b']} {bg2['m4']}")
+        check(bg2['tick1'] == [500, 600, 600] and bg2['tick2'] == [500, 600] and bg2['tick3'] == 500, f"보따리: 큰 두루마리가 도는 동안 작은 것은 시간이 멈춰 기다림 {bg2['tick1']} {bg2['tick2']} {bg2['tick3']}")
+        check(bg2['noOff'] == 1 and bg2['off'] == 1, f"보따리: 오프라인 보상(noBuff)에는 두루마리가 안 붙음 {bg2['noOff']} {bg2['off']}")
+        check(bg2['cap'][0] == '신화' and bg2['cap'][1] == 7200 and bg2['cap'][2] == 3 and bg2['cap'][3], f"보따리: 두루마리 최대 2시간, 넘는 몫은 숫돌 3개 {bg2['cap']}")
+        check(bg2['merge'] == [3600, 7200, 0, 50, 79, '', 0] and bg2['def'][:2] == [0, 0] and bg2['def'][2] == '{"pity":0,"day":"","n":0,"got":0}' and bg2['def'][3] == '' and bg2['def'][4] == '', f"보따리: 저장 불러올 때 범위 자르기·빈 저장 기본값 {bg2['merge']} {bg2['def']}")
+        check(0 < bg2['pct'][0] < 2 and bg2['pct'][1] == 0.3, f"보따리: 치장 하나의 도감 효과는 아주 약간(+0.3%에 부 배율) {bg2['pct']}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.gems = 50000; S.level = 700; S.buff.s4 = 600; S.buff.s2 = 1200; S.buff.exp = 900; S.bot = {pity:10, day:'', n:3, got:3}; G.update(0.05); }")
+        await tab(mp, 'shop'); await mp.click('.shop-cats .chip[data-c="bag"]'); await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '98a_보따리.png'))
+        bs = await mp.evaluate("() => ({chips:[...document.querySelectorAll('.shop-cats .chip')].map(b => b.textContent), txt:document.querySelector('#panel').textContent, one:document.querySelector('#bagOne').disabled, ten:document.querySelector('#bagTen').disabled})")
+        check('보따리' in bs['chips'] and '전설 확정까지 70번' in bs['txt'] and '오늘 3/50' in bs['txt'] and '(기다리는 중)' in bs['txt'] and '만렙' in bs['txt'] and not bs['one'] and not bs['ten'], f"보따리 화면: 칸·천장·오늘 횟수·대기 표시·만렙 안내 {bs['chips']} {bs['txt'][:120]}")
+        await mp.click('#bagOddsBtn'); await mp.wait_for_timeout(200)
+        await mp.evaluate("() => document.querySelector('#bagOddsBox').scrollIntoView()")
+        await mp.screenshot(path=str(OUT / '98b_보따리_확률.png'))
+        ot = await mp.evaluate("() => document.querySelector('#bagOddsBox').textContent")
+        check(all(x in ot for x in ['0.1%', '1.5%', '0.9%', '5.1%', '17.5%', '30%', '44.9%']) and '가장 큰 것 하나만' in ot and '천장은' in ot and '꺼 둔 동안은 안 줄어요' in ot, f"보따리 화면: 확률 공개 표와 규칙 세 줄 {ot[:60]}")
+        await mp.evaluate("() => { const G = window.__game; G.quiet = false; G.bagRng = () => 0.5; }")
+        await mp.click('#bagOne'); await mp.wait_for_timeout(500)
+        await mp.screenshot(path=str(OUT / '98c_보따리_결과.png'))
+        mt = await mp.evaluate("() => ({t:document.querySelector('#mTitle').textContent, b:document.querySelector('#mBody').textContent})")
+        check(mt['t'] == '도깨비 보따리' and ('부적' in mt['b'] or '숫돌' in mt['b']), f"보따리: 열면 결과 창이 뜸 {mt}")
+        await mp.click('#modal-btn-0'); await mp.evaluate("() => { window.__game.quiet = true; window.__game.bagRng = null; window.__game.closePage(); }")
+        # 치장 입기·장면에 그려짐·아바타 칸 14개
+        for kind, key in [('fx', 'x_samtaeguk'), ('head', 'h_lantern')]:
+            await mp.evaluate("([k]) => { const G = window.__game, S = G.S; for (const a of G.bagCos('fx').concat(G.bagCos('head'))) S.av.own[a.k] = true; G.quiet = false; S.av[k.startsWith('x') ? 'fx' : 'head'] = k; }", [key])
+        await mp.wait_for_timeout(500)
+        await mp.screenshot(path=str(OUT / '98d_보따리_치장입음.png'))
+        await tab(mp, 'gear'); await mp.click('#seg-av'); await mp.wait_for_timeout(500)
+        av = await mp.evaluate("() => ({cells:document.querySelectorAll('.avcell[data-kd=fx], .avcell[data-kd=head]').length, now:[...document.querySelectorAll('.avcell[aria-pressed=true]')].map(b => b.textContent.slice(0, 12)).join('|'), imgs:[...document.querySelectorAll('.avcell[data-kd=fx] img, .avcell[data-kd=head] img')].every(i => i.src.startsWith('data:image')), t:document.querySelector('#panel').textContent})")
+        check(av['cells'] == 14 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸·입은 것 표시 {av['cells']} {av['now']}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.av.fx = ''; S.av.head = ''; G.closePage(); }")
         await ctxM.close()
         srv.shutdown()
 

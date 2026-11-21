@@ -4369,7 +4369,91 @@ const SHOP = [
   {id:'avbox', cat:'pack', icon:'gift', name:'꾸미기 상자', desc:'옷 6% · 망토 11% · 펫 꾸미기 28% · 나머지 55%는 위로품(인삼 탕약 10개). 이미 가진 아바타는 보석 30개로. 40번 안에 새 옷·망토가 안 나오면 40번째는 확정!', cur:'gems', price:() => AV_BOX},
   {id:'gift', cat:'pack', icon:'gift', name:'오늘의 선물', desc:'하루 한 번 공짜! 보석 10개와 인삼 탕약 5개·감로수 5개.', cur:'free', price:() => 0, daily:1},
 ];
-const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'], ['pack', '꾸러미']];
+const SHOP_CATS = [['potion', '물약'], ['charm', '부적'], ['mat', '재료'], ['pack', '꾸러미'], ['bag', '보따리']];
+/* ================= 도깨비 보따리(2026-11-21) =================
+   [상점] → 「보따리」. 보석 1,000(1번)·9,000(10번, 희귀 이상 하나 확정), 하루 50번, 80번째까지 전설 치장이 없으면 80번째는 확정(천장).
+   나오는 것: 시간제 「두 곱·네 곱 두루마리」(경험치) · 보따리 전용 치장 14종 · 부적 시간 · 숫돌. 사냥·레이드에서 나오는 것(재료·엽전·장비·넋)과 겹치지 않는다.
+   치장은 능력치가 하나에 BAG_PCT%뿐이고 화려한 이펙트가 핵심(아바타 틀을 그대로 씀, [장비] → [아바타]의 「이펙트」「머리 장식」). */
+const BAG = {one:1000, ten:9000, day:50, pity:80, legDup:3000, cap:2 * 3600, s2:30 * 60, s4:15 * 60, over:3};
+const BAG_PCT = 0.3;   // 치장 하나마다 공격력·체력 +0.3%(다른 아바타는 +2%) — 이펙트가 핵심이라 능력치는 아주 약간만
+// 확률표(%, 합 100). rare = 「희귀 이상」(10번 묶음에서 하나 확정되는 범위)
+const BAG_ODDS = [
+  {id:'s4', g:'신화', color:'#ff8ad8', p:0.1, rare:true, name:'네 곱 두루마리', note:'경험치 ×4 · 15분'},
+  {id:'leg', g:'전설', color:'#ffb347', p:1.5, rare:true, name:'전용 치장(이펙트) 8종', note:'안 가진 것부터 · 다 모으면 보석 3,000'},
+  {id:'s2', g:'영웅', color:'#c08bff', p:0.9, rare:true, name:'두 곱 두루마리', note:'경험치 ×2 · 30분'},
+  {id:'head', g:'영웅', color:'#c08bff', p:5.1, rare:true, name:'전용 머리 장식 6종', note:'안 가진 것부터 · 다 모으면 부적 다섯 가지 10분씩'},
+  {id:'ch30', g:'희귀', color:'#6ab8ff', p:17.5, rare:true, name:'부적 한 가지 30분', note:'가득 안 찬 것 가운데'},
+  {id:'whet', g:'고급', color:'#7fdc7f', p:30, name:'숫돌 2개', note:''},
+  {id:'ch10', g:'일반', color:'#c8c0b0', p:44.9, name:'부적 한 가지 10분', note:'가득 안 찬 것 가운데'},
+];
+const bagRand = () => (window.__game && window.__game.bagRng ? window.__game.bagRng() : Math.random());
+const bagCheck = () => { const d = today(); if (S.bot.day !== d){ S.bot.day = d; S.bot.n = 0; } };
+const bagLeft = () => { bagCheck(); return Math.max(0, BAG.day - S.bot.n); };
+const bagPityLeft = () => Math.max(1, BAG.pity - S.bot.pity);   // 전설 치장이 확정되기까지 남은 번호(1이면 다음 번이 확정)
+const bagCos = t => AVATARS.filter(a => a.bag && a.type === t);
+function bagAddScroll(k, secs){   // 두루마리 시간을 더한다(최대 2시간). 넘는 몫은 숫돌 3개로
+  const over = S.buff[k] + secs > BAG.cap;
+  S.buff[k] = Math.min(BAG.cap, S.buff[k] + secs);
+  if (over){ S.inv.whet = Math.min(999, S.inv.whet + BAG.over); return true; }
+  return false;
+}
+function bagCharm(secs){   // 가득 안 찬 부적 가운데 하나(없으면 null)
+  const ks = Object.keys(BUFFS).filter(k => S.buff[k] < BUFF_MAX);
+  if (!ks.length) return null;
+  const k = ks[Math.floor(bagRand() * ks.length)];
+  S.buff[k] = Math.min(BUFF_MAX, S.buff[k] + secs);
+  return k;
+}
+// 한 번 굴린다. force = 'leg'(천장) | 'rare'(10번째 확정) | 없음
+function bagRollOne(force){
+  let pool = BAG_ODDS;
+  if (force === 'leg') pool = BAG_ODDS.filter(o => o.id === 'leg');
+  else if (force === 'rare') pool = BAG_ODDS.filter(o => o.rare);
+  const tot = pool.reduce((a, o) => a + Math.round(o.p * 10), 0);
+  let r = bagRand() * tot, o = pool[pool.length - 1];
+  for (const x of pool){ r -= Math.round(x.p * 10); if (r < 0){ o = x; break; } }
+  S.bot.got++;
+  if (o.id === 'leg') S.bot.pity = 0; else S.bot.pity = Math.min(BAG.pity - 1, S.bot.pity + 1);
+  const out = {id:o.id, g:o.g, color:o.color, rare:!!o.rare, txt:'', av:null, isNew:false};
+  if (o.id === 's4' || o.id === 's2'){
+    const over = bagAddScroll(o.id, o.id === 's4' ? BAG.s4 : BAG.s2);
+    out.txt = `${o.name} ${o.id === 's4' ? 15 : 30}분${over ? ` (넘친 몫은 숫돌 ${BAG.over}개)` : ''}`;
+  } else if (o.id === 'leg' || o.id === 'head'){
+    const all = bagCos(o.id === 'leg' ? 'fx' : 'head'), fresh = all.filter(a => !S.av.own[a.k]);
+    if (fresh.length){
+      const a = fresh[Math.floor(bagRand() * fresh.length)];
+      giveAvatar(a.k); out.av = a; out.isNew = true; out.txt = a.name;
+    } else if (o.id === 'leg'){ S.gems += BAG.legDup; out.txt = `이미 다 모았어요 · 보석 ${fmt(BAG.legDup)}개`; }
+    else { for (const k of Object.keys(BUFFS)) S.buff[k] = Math.min(BUFF_MAX, S.buff[k] + 10 * 60); out.txt = '이미 다 모았어요 · 다섯 부적 10분씩'; }
+  } else if (o.id === 'whet'){ S.inv.whet = Math.min(999, S.inv.whet + 2); out.txt = '숫돌 2개'; }
+  else {
+    const secs = o.id === 'ch30' ? 30 * 60 : 10 * 60, k = bagCharm(secs);
+    if (k) out.txt = `${BUFFS[k].name} ${secs / 60}분`;
+    else { S.inv.whet = Math.min(999, S.inv.whet + (o.id === 'ch30' ? 2 : 1)); out.txt = `부적이 다 차서 숫돌 ${o.id === 'ch30' ? 2 : 1}개`; }
+  }
+  return out;
+}
+function bagState(n){
+  bagCheck();
+  const price = n === 10 ? BAG.ten : BAG.one;
+  if (S.bot.n + n > BAG.day) return {price, ok:false, why:S.bot.n >= BAG.day ? '오늘 다 열었어요' : `오늘 ${BAG.day - S.bot.n}번 남음`};
+  if (S.gems < price) return {price, ok:false};
+  return {price, ok:true};
+}
+// n번(1 또는 10) 연다. 결과 목록을 돌려준다(못 열면 null)
+function bagBuy(n){
+  n = n === 10 ? 10 : 1;
+  const st = bagState(n);
+  if (!st.ok) return null;
+  S.gems -= st.price; S.bot.n += n;
+  const res = [];
+  for (let i = 0; i < n; i++){
+    const force = S.bot.pity >= BAG.pity - 1 ? 'leg' : (n === 10 && i === 9 && !res.some(r => r.rare)) ? 'rare' : '';
+    res.push(bagRollOne(force));
+  }
+  refreshStats();
+  return res;
+}
 /* 초월의 조각(만렙 700 패치): 수미산 이야기(600)를 마친 용사에게 열리는 재화. 얻는 곳 = 끝없는 신화 5번째부터 · 오름 보상(Lv.610부터 10레벨마다) · 주간 상자.
    쓰는 곳은 아직 임시(이미 상점에 있는 물건 5종). 나중에 「초월의 경지」 소모 재료를 살 때는 TRANS_SHOP에 줄만 더한다(open = 열리는 조건) */
 const TRANS = {lvFrom:600, lvStep:10, lvGive:10, questGive:1, weekGive:5, max:99999, color:'#b9a8ff', realmLv:700};
@@ -4521,6 +4605,12 @@ const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본
 const NOTE_VER = '2026-11-19-7', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 21일 · 도깨비 보따리'],
+  ['도깨비 보따리가 열렸어요', '[상점] → 「보따리」에서 보석 1,000개로 한 번, 9,000개로 열 번 열 수 있어요. 열 번째는 「희귀」 이상이 하나 꼭 나와요. 하루 50번까지 열 수 있고, 전설 치장이 안 나와도 80번째는 꼭 나와요(천장). 화면에서 「전설 확정까지 몇 번 · 오늘 몇/50」을 늘 볼 수 있고, [확률 보기]에서 품목마다 확률을 다 공개해요.'],
+  ['경험치 「두 곱·네 곱 두루마리」', '네 곱은 15분(0.1%), 두 곱은 30분(0.9%)이에요. 얻으면 남은 시간에 더해지고, 각각 최대 2시간이에요(넘는 몫은 숫돌 3개로 바뀌어요). 글공부 두루마리와 겹치면 가장 큰 것 하나만 적용되고, 작은 것은 시간이 멈춰 기다려요. 화면 위 칩에 「경험 ×4 12분」처럼 보이고, 기다리는 것은 흐리게 「(대기)」로 보여요. 만렙에서는 「만렙 — 모음으로 쌓여요」라고 알려 줘요. 시간은 게임이 켜져 있고 싸우는 동안에만 줄어요.'],
+  ['보따리에서만 나오는 화려한 치장 14가지', '[장비] → [아바타]의 「이펙트」 8가지(도깨비불 장판 · 삼태극 장판 · 구미호 아홉 불 · 계수나무 달무리 · 봉황 불꽃 오라 · 용궁 물결 장판 · 진달래 꽃비 · 오방 빛기둥)는 발밑과 몸 둘레에 크고 화려한 빛이 나요(전설 1.5%). 「머리 장식」 6가지(청사초롱 한 쌍 · 까치 한 쌍 · 호랑나비 떼 · 북두 일곱 별 · 연꽃 후광 · 눈꽃 관)는 머리 둘레에 떠다녀요(영웅 5.1%). 이펙트와 머리 장식은 하나씩 같이 입을 수 있어요. 능력치는 하나에 공격력·체력 +0.3%로 아주 조금뿐이에요. 다 모은 뒤 또 나오면 이펙트는 보석 3,000개, 머리 장식은 다섯 부적 10분씩으로 바뀌어요.'],
+  ['부적과 숫돌도 나와요', '일반 44.9%는 부적 한 가지 10분, 고급 30%는 숫돌 2개, 희귀 17.5%는 부적 한 가지 30분(가득 안 찬 것 가운데)이에요.'],
+
   ['#', '11월 21일 · 만렙 700과 초월의 조각'],
   ['만렙이 700으로 올랐어요', '수미산 이야기를 끝내 Lv.600에 닿은 용사는 이제 Lv.700까지 더 올라요(수미산 269단계까지). 레벨이 오를 때 필요한 경험치와 능력치 몫은 600까지의 곡선을 그대로 이어요. 220단계 안팎부터는 레벨뿐 아니라 힘도 받쳐 줘야 앞으로 나아가요. 잘 키운 용사가 Lv.700에 닿기까지는 대략 150시간쯤 걸려요.'],
   ['새 재화 「초월의 조각」', '끝없는 신화 5번째부터는 이야기마다 보석 500개와 초월의 조각 1개를 줘요. Lv.610부터 10레벨마다 오름 보상으로 조각 10개, 주간 퀘스트를 모두 끝내면 조각 5개를 더 받아요. [상점] → [조각]에서 탕약·숫돌·토벌패·재료·꾸미기 상자로 바꿀 수 있고, 물건마다 한 주에 살 수 있는 횟수가 있어요(월요일에 새로 채워져요). [수련] → 「초월」 칸에서 오름 보상을 한눈에 봐요.'],
@@ -5352,10 +5442,10 @@ function defaultState(){
     week:{key:'', wp:{}, wgot:[], wall:false},
     sub:{act:{}, done:{}}, dummy:{day:'', n:0, best:0},
     raid:{first:{}, tk:TICKET_MAX, tkT:0},
-    inv:{potion:20, elixir:0, whet:0, mana:20}, buff:{atk:0, spd:0, def:0, gold:0, exp:0}, shop:{day:'', got:{}}, useWhet:false,
+    inv:{potion:20, elixir:0, whet:0, mana:20}, buff:{atk:0, spd:0, def:0, gold:0, exp:0, s2:0, s4:0}, bot:{pity:0, day:'', n:0, got:0}, shop:{day:'', got:{}}, useWhet:false,
     myth:{sword:0, mirror:0, bell:0, pearl:0, flute:0, kusa:0, yata:0, maga:0, uchi:0, pangu:0, sail:0, elixir:0, ose:0}, mw:{},
     world:0, best:{s0:1, l0:1, s1:0, l1:0, s2:0, l2:0, s3:0, l3:0},
-    job:0, av:{own:{}, char:'', cape:'', pet:'', wing:''},
+    job:0, av:{own:{}, char:'', cape:'', pet:'', wing:'', fx:'', head:''},
     reb:{n:0, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}},
     form:{own:Object.fromEntries(FORMS.map(f => [f.k, false])), eq:'', manual:false, pity:0},
     acc:{ring:{g:-1, p:0}, ear:{g:-1, p:0}, brace:{g:-1, p:0}, neck:{g:-1, p:0}, pae:{g:-1, p:0}},
@@ -5432,6 +5522,8 @@ function mergeState(d){
   out.inv = {potion:num(d.inv, 'potion', 9999), elixir:num(d.inv, 'elixir', 999), whet:num(d.inv, 'whet', 999), mana:num(d.inv, 'mana', 9999)};
   out.buff = {};
   for (const k of Object.keys(BUFFS)) out.buff[k] = Math.min(BUFF_MAX, Math.max(0, +(d.buff && d.buff[k]) || 0));
+  for (const k of ['s2', 's4']) out.buff[k] = Math.min(BAG.cap, Math.max(0, +(d.buff && d.buff[k]) || 0));   // 도깨비 보따리 두루마리(두 곱·네 곱): 0~2시간
+  { const bt = d.bot || {}; out.bot = {pity:Math.min(BAG.pity - 1, Math.max(0, Math.floor(+bt.pity) || 0)), day:typeof bt.day === 'string' ? bt.day : '', n:Math.min(BAG.day, Math.max(0, Math.floor(+bt.n) || 0)), got:Math.max(0, Math.floor(+bt.got) || 0)}; }
   out.shop = {day:d.shop && typeof d.shop.day === 'string' ? d.shop.day : '', got:Object.assign({}, (d.shop && d.shop.got) || {})};
   out.useWhet = !!d.useWhet;
   out.myth = {};
@@ -5457,9 +5549,9 @@ function mergeState(d){
   out.job = Math.min(JOB_MAX, Math.max(0, Math.floor(+d.job) || 0));
   if (out.job === 3 && d.skills && d.skills.jobD > 0) out.job = 4;   // (물의 신화) 버그 고침: 예전에는 여기서 3까지만 받아 4차 전직자가 다시 들어오면 3차로 내려갔다. 4차 기술(jobD)을 익힌 기록이 있으면 4차로 되돌린다
   const av = d.av && typeof d.av === 'object' ? d.av : {};
-  out.av = {own:{}, char:'', cape:'', pet:'', wing:''};
+  out.av = {own:{}, char:'', cape:'', pet:'', wing:'', fx:'', head:''};
   for (const a of AVATARS) if (av.own && av.own[a.k]) out.av.own[a.k] = true;
-  for (const t of ['char', 'cape', 'pet', 'wing']) if (out.av.own[av[t]] && AV[av[t]].type === t) out.av[t] = av[t];
+  for (const t of ['char', 'cape', 'pet', 'wing', 'fx', 'head']) if (out.av.own[av[t]] && AV[av[t]].type === t) out.av[t] = av[t];
   const rb = d.reb || {};
   out.reb = {n:Math.max(0, Math.floor(+rb.n) || 0), pts:Math.max(0, Math.floor(+rb.pts) || 0), total:Math.max(0, Math.floor(+rb.total) || 0), up:{}};
   for (const st of REB_STATS) out.reb.up[st.k] = Math.min(st.max ? st.max + (MEM.cap[st.k] || 0) : 9999, Math.max(0, Math.floor(+(rb.up && rb.up[st.k])) || 0));
@@ -5746,7 +5838,7 @@ function statValue(k, st){
 const atkBuff = () => pbAtk() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
 const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1);
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
-const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff && S.buff[k] > 0 ? BUFFS[k].mul : 1);
+const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff ? (k === 'exp' ? expBuffMul() : S.buff[k] > 0 ? BUFFS[k].mul : 1) : 1);
 
 /* ================= 강화·기술·장비 ================= */
 function buyInfo(k){
@@ -6313,7 +6405,18 @@ function drinkHp(k, manual){
   fx.push({type:'heal', t:0, dur:0.7});
   return true;
 }
-function tickBuffs(dt){ for (const k in S.buff) if (S.buff[k] > 0) S.buff[k] = Math.max(0, S.buff[k] - dt); }
+/* 경험치 두루마리 규칙(도깨비 보따리): 네 곱 > 두 곱 > 글공부 두루마리(+50%) 중 가장 큰 것 하나만 적용하고, 작은 것은 시계가 멈춰 기다린다(곱하면 6배가 되므로) */
+const scrollTier = () => S.buff.s4 > 0 ? 4 : S.buff.s2 > 0 ? 2 : 0;
+const expBuffMul = () => scrollTier() || (S.buff.exp > 0 ? BUFFS.exp.mul : 1);
+function tickBuffs(dt){
+  const t = scrollTier();
+  for (const k in S.buff){
+    if (!(S.buff[k] > 0)) continue;
+    if (k === 'exp' && t) continue;               // 큰 두루마리가 도는 동안 글공부 두루마리는 기다려요
+    if (k === 's2' && S.buff.s4 > 0) continue;    // 네 곱이 도는 동안 두 곱은 기다려요
+    S.buff[k] = Math.max(0, S.buff[k] - dt);
+  }
+}
 
 function claimAll(){ let n = 0; while (claimMain()) n++; while (claimHidden()) n++; for (const d of DAILY) if (claimDaily(d.key)) n++; if (claimDailyAll()) n++; for (const W of WEEKLY) if (claimWeek(W.key)) n++; if (claimWeekAll()) n++; return n; }
 function mergeableSets(slot, i){
@@ -11276,10 +11379,26 @@ const AVATARS = [
   // 5부 천축(물의 신화 9-24): 날개는 바깥 겹이 첫 색(깃 끝) · 안쪽이 마지막 색
   {k:'w_eagle', type:'wing', name:'독수리 왕의 날개', wingC:['#f8f2e4', '#c9a070', '#8a5e38', '#5a3a22'], star:true, src:'천공의 탑 450층', pt:5},
   {k:'w_waterfire', type:'wing', name:'물불의 날개', wingC:['#1f78d8', '#5ad8ff', '#ff8a3a', '#ffd08a'], star:true, src:'태초의 신 · 참모습', pt:5},
+  // 도깨비 보따리 전용 치장(2026-11-21): 능력치는 하나에 +BAG_PCT%뿐이고, 화려하고 크게 보이는 이펙트가 핵심. 상점 보따리에서만 나온다.
+  // 전설 8 = 이펙트(발밑 장판·오라, 몸 둘레), 영웅 6 = 머리 장식(머리 둘레·위). 그림은 `drawBagFx`(그림 파일 없이 둥근 도형·빛으로 직접 그림)
+  {k:'x_dokkaebibul', type:'fx', bag:true, fx:'dokkaebibul', name:'도깨비불 장판', col:'#5ad8ff', src:'도깨비 보따리', d:'발밑에 푸른 도깨비불이 둥글게 일렁이고, 불꽃이 둘레를 타고 올라요.'},
+  {k:'x_samtaeguk', type:'fx', bag:true, fx:'samtaeguk', name:'삼태극 장판', col:'#ffd24a', src:'도깨비 보따리', d:'붉고 푸르고 노란 삼태극 무늬가 발밑에서 큼직하게 빙글빙글 돌아요.'},
+  {k:'x_gumiho', type:'fx', bag:true, fx:'gumiho', name:'구미호 아홉 불', col:'#9fd0ff', src:'도깨비 보따리', d:'아홉 개의 여우불이 몸 둘레를 높고 낮게 돌아요.'},
+  {k:'x_moon', type:'fx', bag:true, fx:'moon', name:'계수나무 달무리', col:'#fff0b0', src:'도깨비 보따리', d:'등 뒤에 커다란 보름달이 뜨고 달빛 가루가 내려와요.'},
+  {k:'x_bonghwang', type:'fx', bag:true, fx:'bonghwang', name:'봉황 불꽃 오라', col:'#ff8a3a', src:'도깨비 보따리', d:'등 뒤로 봉황 깃 같은 불꽃이 활짝 펴지고 불티가 날려요.'},
+  {k:'x_yonggung', type:'fx', bag:true, fx:'yonggung', name:'용궁 물결 장판', col:'#4ad8c8', src:'도깨비 보따리', d:'발밑에서 맑은 물결이 겹겹이 퍼지고 물방울이 올라와요.'},
+  {k:'x_jindallae', type:'fx', bag:true, fx:'jindallae', name:'진달래 꽃비', col:'#ff8ab8', src:'도깨비 보따리', d:'분홍 꽃잎이 둘레에 흩날리고 발밑에 꽃이 번져요.'},
+  {k:'x_obang', type:'fx', bag:true, fx:'obang', name:'오방 빛기둥', col:'#ffd24a', src:'도깨비 보따리', d:'청·적·황·백·흑 다섯 빛기둥이 둥글게 서서 천천히 돌아요.'},
+  {k:'h_lantern', type:'head', bag:true, fx:'lantern', name:'청사초롱 한 쌍', col:'#ff6a4a', src:'도깨비 보따리', d:'붉고 푸른 청사초롱 둘이 머리 곁에 둥실 떠 불을 밝혀요.'},
+  {k:'h_magpie', type:'head', bag:true, fx:'magpie', name:'까치 한 쌍', col:'#9fb8ff', src:'도깨비 보따리', d:'까치 두 마리가 머리 위를 빙글 돌아요.'},
+  {k:'h_butterfly', type:'head', bag:true, fx:'butterfly', name:'호랑나비 떼', col:'#ffa03a', src:'도깨비 보따리', d:'호랑나비 네 마리가 머리 둘레를 팔랑팔랑 날아요.'},
+  {k:'h_bukdu', type:'head', bag:true, fx:'bukdu', name:'북두 일곱 별', col:'#ffe08a', src:'도깨비 보따리', d:'북두칠성 일곱 별이 머리 위에서 반짝여요.'},
+  {k:'h_lotus', type:'head', bag:true, fx:'lotus', name:'연꽃 후광', col:'#ffa8c8', src:'도깨비 보따리', d:'머리 뒤에 분홍 연꽃잎 후광이 천천히 돌아요.'},
+  {k:'h_snow', type:'head', bag:true, fx:'snow', name:'눈꽃 관', col:'#cfeaff', src:'도깨비 보따리', d:'눈꽃 여섯 송이가 머리 위에 관처럼 돌고 눈가루가 날려요.'},
 ];
 for (const c of CLASS_ALL) for (const j of [1, 2, 3, 4, 5, 6]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
 const AV = Object.fromEntries(AVATARS.map(a => [a.k, a]));
-const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기'], ['wing', '날개']];
+const AV_TYPES = [['char', '옷'], ['cape', '망토'], ['pet', '펫 꾸미기'], ['wing', '날개'], ['fx', '이펙트(보따리)'], ['head', '머리 장식(보따리)']];
 const AV_PCT = 2, AV_BOX = 1000, AV_DUP_GEMS = 30, AV_PITY = 40;
 const AV_ODDS = [['char', 6], ['cape', 11], ['pet', 28], ['miss', 55]];   // 꾸미기 상자 확률(%)
 /* ================= 장별 치장(스킨, 2026-11 (30), 사용자 요청) =================
@@ -13253,8 +13372,9 @@ function npcBuy(i){
   S.gems -= o.price; S.mkNpc.got.push(i); mkGive(o.it); saveLocal();
   return {ok:true};
 }
-const avCount = () => AVATARS.filter(a => S.av.own[a.k] && (!a.job || a.cls === S.cls)).length;   // 전직 망토는 지금 직업 것만 센다
-const avColPct = () => AV_PCT * avCount() * lateCol() * gearRes();   // 아바타 도감 효과 %(부상부터 ×LATE_COL)
+const avCount = () => AVATARS.filter(a => S.av.own[a.k] && !a.bag && (!a.job || a.cls === S.cls)).length;
+const bagCount = () => AVATARS.filter(a => a.bag && S.av.own[a.k]).length;   // 전직 망토는 지금 직업 것만 센다
+const avColPct = () => (AV_PCT * avCount() + BAG_PCT * bagCount()) * lateCol() * gearRes();   // 아바타 도감 효과 %(부상부터 ×LATE_COL)
 function giveAvatar(k, quiet){
   const a = AV[k];
   if (!a) return false;
@@ -15511,6 +15631,149 @@ function drawMwAura(x, y, A){
     b.globalCompositeOperation = 'lighter'; vGlow(x, y - 14, 10 + pu * 2, '#ffffff', 0.2); }
   b.restore();
 }
+/* ================= 도깨비 보따리 치장 그림(2026-11-21) =================
+   그림 파일 없이 둥근 도형·빛으로 직접 그린다. g = 그릴 캔버스(장면 `b` 또는 미리보기), (x, y) = 발밑, hy = 탈것을 탔을 때의 머리 기준 높이.
+   pass 0 = 용사 몸 뒤(발밑 장판·뒤쪽 불꽃·등 뒤 빛), pass 1 = 용사 앞(앞쪽 불꽃·불티·머리 장식). 전설 8종은 장판·오라가 크게(반지름 20~26), 영웅 6종은 머리 둘레 */
+const bagGlow = (g, x, y, r, col, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, hexA('#ffffff', a)); gr.addColorStop(0.3, hexA(col, a * 0.8)); gr.addColorStop(1, hexA(col, 0)); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); };
+const bagRing = (g, x, y, rx, ry, col, a, lw, a0 = 0, a1 = Math.PI * 2) => { g.strokeStyle = hexA(col, a); g.lineWidth = lw; g.beginPath(); g.ellipse(x, y, rx, ry, 0, a0, a1); g.stroke(); };
+const bagEll = (g, x, y, rx, ry, col, a, rot = 0) => { g.fillStyle = hexA(col, a); g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); g.fill(); };
+function bagSpark(g, x, y, r, col, a){   // 네 갈래 반짝이
+  g.fillStyle = hexA(col, a); g.beginPath(); g.moveTo(x, y - r); g.quadraticCurveTo(x + r * 0.18, y - r * 0.18, x + r, y); g.quadraticCurveTo(x + r * 0.18, y + r * 0.18, x, y + r); g.quadraticCurveTo(x - r * 0.18, y + r * 0.18, x - r, y); g.quadraticCurveTo(x - r * 0.18, y - r * 0.18, x, y - r); g.fill();
+}
+function bagFlame(g, x, y, w, h, c1, c2, a){   // 불꽃 혀(아래가 밝고 끝이 흩어짐)
+  const gr = g.createLinearGradient(x, y, x, y - h); gr.addColorStop(0, hexA(c1, a)); gr.addColorStop(1, hexA(c2, 0));
+  g.fillStyle = gr; g.beginPath(); g.moveTo(x - w, y); g.quadraticCurveTo(x - w * 0.3, y - h * 0.55, x, y - h); g.quadraticCurveTo(x + w * 0.3, y - h * 0.55, x + w, y); g.closePath(); g.fill();
+}
+function drawBagFx(g, kind, x, y, t, pass, hy){
+  const TAU = Math.PI * 2, pu = 0.5 + 0.5 * Math.sin(t * 2.6);
+  if (hy == null) hy = y;
+  g.save();
+  switch (kind){
+    case 'dokkaebibul': {   // 푸른 도깨비불 장판
+      const c = '#5ad8ff', c2 = '#c8fff4';
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagEll(g, x, y, 23, 9.5, c, 0.14 + 0.08 * pu); bagGlow(g, x, y - 3, 24, c, 0.2 + 0.1 * pu); g.globalCompositeOperation = 'source-over';
+        bagRing(g, x, y, 21 + pu, 8.4 + pu * 0.4, c, 0.85, 1.3); bagRing(g, x, y, 14, 5.6, c2, 0.5, 0.8);
+      }
+      g.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 10; k++){ const a = k / 10 * TAU + t * 1.2, fx = x + Math.cos(a) * 20, fy = y + Math.sin(a) * 8; if ((Math.sin(a) > 0) !== (pass === 1)) continue;
+        bagFlame(g, fx, fy, 2.6, 8 + 6 * (0.5 + 0.5 * Math.sin(t * 7 + k * 1.9)), c2, c, 0.95); }
+      if (pass === 1) for (let k = 0; k < 9; k++){ const ph = (t * 0.6 + k / 9) % 1; g.fillStyle = hexA(k % 2 ? '#ffffff' : c, 0.9 * (1 - ph)); g.fillRect(x + Math.sin(k * 2.3 + t) * (11 + ph * 5) - 0.8, y - 2 - ph * 30, 1.6, 1.8); }
+      break; }
+    case 'samtaeguk': {   // 삼태극 장판
+      const cols = ['#e8483a', '#3a6ae8', '#ffd24a'];
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, x, y, 28, '#ffd24a', 0.2 + 0.08 * pu); g.globalCompositeOperation = 'source-over';
+        g.translate(x, y); g.scale(1, 0.42);
+        for (let i = 0; i < 3; i++){ g.save(); g.rotate(t * 1.1 + i * TAU / 3); g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 22, 0, TAU / 3); g.closePath(); g.fillStyle = hexA(cols[i], 0.66); g.fill(); g.restore(); }
+        g.strokeStyle = hexA('#ffffff', 0.5); g.lineWidth = 1.3; g.beginPath(); g.arc(0, 0, 12, t * 1.1, t * 1.1 + Math.PI); g.stroke();
+        g.strokeStyle = hexA('#ffe08a', 0.95); g.lineWidth = 2; g.beginPath(); g.arc(0, 0, 22, 0, TAU); g.stroke();
+        g.fillStyle = hexA('#ffffff', 0.45 + 0.2 * pu); g.beginPath(); g.arc(0, 0, 3.2, 0, TAU); g.fill();
+      } else for (let k = 0; k < 9; k++){ const ph = (t * 0.55 + k / 9) % 1, a = k * 2.1 + t * 0.9; g.fillStyle = hexA(cols[k % 3], 0.9 * (1 - ph)); g.fillRect(x + Math.cos(a) * 16 - 1, y + Math.sin(a) * 6.4 - ph * 24 - 1, 2, 2); }
+      break; }
+    case 'gumiho': {   // 구미호 아홉 불
+      const c = '#9fd0ff';
+      if (pass === 0){ g.globalCompositeOperation = 'lighter'; bagEll(g, x, y, 19, 7.5, c, 0.13 + 0.06 * pu); g.globalCompositeOperation = 'source-over'; bagRing(g, x, y, 18, 7, c, 0.55, 1); }
+      g.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 9; k++){ const lv = k % 3, ba = t * 1.5 + k * TAU / 9;
+        if ((Math.sin(ba) > 0) !== (pass === 1)) continue;
+        for (let s = 3; s >= 0; s--){ const a = ba - s * 0.22, ox = x + Math.cos(a) * (16 + lv * 2.5), oy = y - 6 - lv * 9 + Math.sin(a) * 5 + Math.sin(t * 3 + k) * 1.4, r = s ? 2.4 - s * 0.5 : 3;
+          bagGlow(g, ox, oy, r * 2.8, c, s ? 0.2 / s : 0.5); if (!s){ g.fillStyle = '#ffffff'; g.beginPath(); g.arc(ox, oy, 1.7, 0, TAU); g.fill(); } } }
+      break; }
+    case 'moon': {   // 계수나무 달무리
+      const mx = x, my = y - 19;
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, mx, my, 25, '#fff0b0', 0.3 + 0.06 * pu); g.globalCompositeOperation = 'source-over';
+        const gr = g.createRadialGradient(mx - 4, my - 4, 2, mx, my, 18); gr.addColorStop(0, hexA('#fffff0', 0.78)); gr.addColorStop(1, hexA('#ffe08a', 0.55)); g.fillStyle = gr; g.beginPath(); g.arc(mx, my, 18, 0, TAU); g.fill();
+        bagEll(g, mx + 5, my - 4, 3.4, 2.6, '#c8a850', 0.2); bagEll(g, mx - 6, my + 5, 4.2, 3, '#c8a850', 0.16); bagEll(g, mx + 6, my + 7, 2.2, 1.6, '#c8a850', 0.18);
+        bagRing(g, mx, my, 18, 18, '#fff6c8', 0.7, 1.1); bagRing(g, x, y, 17, 6.6, '#e8f0ff', 0.55, 1);
+      } else for (let k = 0; k < 10; k++){ const ph = (t * 0.4 + k / 10) % 1; bagSpark(g, x + Math.sin(k * 2.7) * 15 + Math.sin(t + k) * 2, y - 38 + ph * 38, 1.6 + (k % 3) * 0.5, k % 2 ? '#ffffff' : '#fff0b0', Math.min(1, (1 - ph) * 2.5)); }
+      break; }
+    case 'bonghwang': {   // 봉황 불꽃 오라
+      const by = y - 12;
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, x, y - 16, 34, '#ff7a2a', 0.3 + 0.08 * pu);
+        for (let k = 0; k < 9; k++){ const a = -Math.PI / 2 + (k - 4) * 0.36, L = 25 + (k === 4 ? 8 : 0) + 5 * Math.sin(t * 4 + k * 1.3), ex = x + Math.cos(a) * L, ey = by + Math.sin(a) * L, nx = -Math.sin(a), ny = Math.cos(a), w = 3.4;
+          const gr = g.createLinearGradient(x, by, ex, ey); gr.addColorStop(0, hexA('#ffd24a', 0)); gr.addColorStop(0.45, hexA(k % 2 ? '#ff8a3a' : '#ffb84a', 0.9)); gr.addColorStop(1, hexA('#d8301a', 0));
+          g.fillStyle = gr; g.beginPath(); g.moveTo(x + nx * w * 0.4, by + ny * w * 0.4); g.quadraticCurveTo(x + Math.cos(a) * L * 0.55 + nx * w, by + Math.sin(a) * L * 0.55 + ny * w, ex, ey); g.quadraticCurveTo(x + Math.cos(a) * L * 0.55 - nx * w, by + Math.sin(a) * L * 0.55 - ny * w, x - nx * w * 0.4, by - ny * w * 0.4); g.fill(); }
+        g.globalCompositeOperation = 'source-over'; bagRing(g, x, y, 18, 7, '#ff8a3a', 0.75, 1.3); bagRing(g, x, y, 12, 4.6, '#ffe08a', 0.55, 0.9);
+      } else { g.globalCompositeOperation = 'lighter'; for (let k = 0; k < 12; k++){ const ph = (t * 0.7 + k / 12) % 1; g.fillStyle = hexA(k % 3 ? '#ffb04a' : '#fff2b0', 0.95 * (1 - ph)); g.fillRect(x + Math.sin(k * 2.9 + t * 1.2) * (8 + ph * 8) - 0.9, y - 2 - ph * 36, 1.8, 2.2); } }
+      break; }
+    case 'yonggung': {   // 용궁 물결 장판
+      const c = '#4ad8c8';
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagEll(g, x, y, 20, 8, '#2ab8c8', 0.18 + 0.06 * pu); bagGlow(g, x, y, 24, c, 0.15); g.globalCompositeOperation = 'source-over';
+        for (let k = 0; k < 3; k++){ const ph = (t * 0.5 + k / 3) % 1, rx = 5 + ph * 21; bagRing(g, x, y, rx, rx * 0.4, k % 2 ? '#c8fff4' : c, 0.95 * (1 - ph), 1.5); }
+      } else for (let k = 0; k < 8; k++){ const ph = (t * 0.45 + k / 8) % 1, px = x + Math.sin(k * 2.1 + t * 1.5) * (10 + ph * 3), py = y - 2 - ph * 36, r = 1 + (k % 3) * 0.6;
+        g.strokeStyle = hexA('#dfffff', 0.9 * (1 - ph)); g.lineWidth = 0.8; g.beginPath(); g.arc(px, py, r, 0, TAU); g.stroke(); g.fillStyle = hexA('#ffffff', 0.8 * (1 - ph)); g.fillRect(px - r * 0.4, py - r * 0.5, 0.9, 0.9); }
+      break; }
+    case 'jindallae': {   // 진달래 꽃비
+      if (pass === 0){ g.globalCompositeOperation = 'lighter'; bagEll(g, x, y, 20, 8, '#ff8ab8', 0.15 + 0.06 * pu); g.globalCompositeOperation = 'source-over';
+        for (let k = 0; k < 10; k++){ const a = k / 10 * TAU + t * 0.3; bagEll(g, x + Math.cos(a) * 17, y + Math.sin(a) * 6.8, 2, 1, k % 2 ? '#ff8ab8' : '#ffd0e0', 0.9, a); } }
+      for (let k = 0; k < 16; k++){ const ph = (t * 0.32 + k / 16) % 1, a = k * 2.4 + t * 0.8, R = 9 + (k % 4) * 3.4;
+        if ((Math.sin(a) > 0) !== (pass === 1)) continue;
+        bagEll(g, x + Math.cos(a) * R, y - 36 + ph * 36 + Math.sin(a) * 3, 2.3, 1.2, k % 2 ? '#ff8ab8' : '#ffd0e0', Math.min(1, (1 - ph) * 3, ph * 8), t * 2 + k); }
+      break; }
+    case 'obang': {   // 오방 빛기둥
+      const cols = ['#3a7aff', '#ff4a3a', '#ffd24a', '#f4f4ff', '#8a6ad8'];
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, x, y - 4, 26, '#ffffff', 0.14); g.globalCompositeOperation = 'source-over';
+        for (let k = 0; k < 5; k++) bagRing(g, x, y, 20, 8, cols[k], 0.9, 1.6, k * TAU / 5 + t * 0.7, (k + 0.85) * TAU / 5 + t * 0.7);
+      }
+      g.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 5; k++){ const a = t * 0.7 + (k + 0.4) * TAU / 5, px = x + Math.cos(a) * 20, py = y + Math.sin(a) * 8; if ((Math.sin(a) > 0) !== (pass === 1)) continue;
+        const gr = g.createLinearGradient(px, py, px, py - 40); gr.addColorStop(0, hexA(cols[k], 0.9)); gr.addColorStop(1, hexA(cols[k], 0)); g.fillStyle = gr; g.fillRect(px - 2.2, py - 40, 4.4, 40); bagGlow(g, px, py, 7, cols[k], 0.5); }
+      break; }
+    case 'lantern': {   // 청사초롱 한 쌍
+      if (pass !== 1) break;
+      for (let k = 0; k < 2; k++){ const sg = k ? 1 : -1, lx = x + sg * 15 + Math.sin(t * 1.4 + k * 2) * 1.2, ly = hy - 24 + Math.sin(t * 2 + k * 2.4) * 2;
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, lx, ly, 13, '#ffb04a', 0.38 + 0.08 * Math.sin(t * 5 + k)); g.globalCompositeOperation = 'source-over';
+        g.strokeStyle = '#6a4a2a'; g.lineWidth = 0.6; g.beginPath(); g.moveTo(lx, ly - 5.4); g.lineTo(lx, ly - 8); g.stroke();
+        g.fillStyle = '#d8382a'; g.beginPath(); g.ellipse(lx, ly, 3.4, 4.3, 0, 0, TAU); g.fill();
+        g.fillStyle = '#2a4aa8'; g.fillRect(lx - 2.5, ly - 5.4, 5, 1.7); g.fillRect(lx - 2.5, ly + 3.7, 5, 1.7);
+        g.fillStyle = '#fff2b0'; g.beginPath(); g.ellipse(lx, ly, 1.2, 2, 0, 0, TAU); g.fill();
+        g.strokeStyle = '#ffd24a'; g.lineWidth = 0.7; g.beginPath(); g.moveTo(lx, ly + 5.4); g.lineTo(lx + Math.sin(t * 3 + k) * 0.8, ly + 8.6); g.stroke(); }
+      break; }
+    case 'magpie': {   // 까치 한 쌍
+      for (let k = 0; k < 2; k++){ const a = t * 1.6 + k * Math.PI, front = Math.sin(a) > 0; if (front !== (pass === 1)) continue;
+        const px = x + Math.cos(a) * 16, py = hy - 27 + Math.sin(a) * 4.2, d = -Math.sin(a) >= 0 ? 1 : -1, fl = Math.sin(t * 14 + k * 2);
+        g.fillStyle = '#2a3a7a'; g.beginPath(); g.moveTo(px - d * 2, py); g.lineTo(px - d * 8, py + 1.4); g.lineTo(px - d * 2, py + 1.6); g.fill();   // 꼬리
+        bagEll(g, px, py, 3.4, 2, '#15151f', 1); bagEll(g, px - d * 0.4, py + 0.8, 2, 1.1, '#ffffff', 1);
+        g.fillStyle = '#15151f'; g.beginPath(); g.arc(px + d * 3.2, py - 0.8, 1.5, 0, TAU); g.fill(); g.fillStyle = '#ffb04a'; g.fillRect(px + d * 4.2 - (d < 0 ? 1.2 : 0), py - 1, 1.2, 0.8);
+        g.fillStyle = '#3a4a9a'; g.beginPath(); g.moveTo(px - d * 1.2, py - 0.8); g.lineTo(px - d * 3, py - 1.2 - 3.6 * fl); g.lineTo(px + d * 1.6, py - 0.9); g.fill(); }
+      break; }
+    case 'butterfly': {   // 호랑나비 떼
+      if (pass !== 1) break;
+      for (let k = 0; k < 4; k++){ const bx = x + Math.cos(t * 0.9 + k * 1.57) * (11 + (k % 2) * 4) + Math.sin(t * 2.2 + k) * 2, by = hy - 26 + Math.sin(t * 1.3 + k * 2) * 7, fw = 0.2 + 0.8 * Math.abs(Math.sin(t * 11 + k * 1.3));
+        for (const sg of [-1, 1]){ bagEll(g, bx + sg * 2.4 * fw, by - 0.8, 2.8 * fw, 3.2, '#ffa03a', 0.95, sg * 0.3); bagEll(g, bx + sg * 1.8 * fw, by + 2.2, 1.9 * fw, 2, '#ff7a2a', 0.95, -sg * 0.3);
+          g.strokeStyle = '#2a1a10'; g.lineWidth = 0.5; g.beginPath(); g.ellipse(bx + sg * 2.4 * fw, by - 0.8, 2.8 * fw, 3.2, sg * 0.3, 0, TAU); g.stroke(); }
+        g.fillStyle = '#2a1a10'; g.fillRect(bx - 0.5, by - 2, 1, 5); }
+      break; }
+    case 'bukdu': {   // 북두 일곱 별
+      if (pass !== 1) break;
+      const P7 = [[-13, 3], [-9, 0.5], [-5, -1.5], [-1, 0], [0, 5], [8, 5], [7, -0.5]], cx = x + 17, cy = hy - 27 + Math.sin(t * 1.2) * 1.2;   // 이름표·체력 막대에 안 가리게 머리 오른쪽 곁에
+      g.strokeStyle = hexA('#ffe08a', 0.5); g.lineWidth = 0.7; g.beginPath(); [0, 1, 2, 3, 4, 5, 6, 3].forEach((i, n) => { const q = P7[i]; n ? g.lineTo(cx + q[0], cy + q[1]) : g.moveTo(cx + q[0], cy + q[1]); }); g.stroke();
+      g.globalCompositeOperation = 'lighter';
+      P7.forEach((q, k) => { const a = 0.65 + 0.35 * Math.sin(t * 3 + k * 1.7); bagGlow(g, cx + q[0], cy + q[1], 6, '#ffe08a', 0.32 * a); bagSpark(g, cx + q[0], cy + q[1], 2.6 * (0.8 + 0.3 * a), '#ffffff', a); });
+      break; }
+    case 'lotus': {   // 연꽃 후광
+      if (pass !== 0) break;
+      const cx = x, cy = hy - 23;
+      g.globalCompositeOperation = 'lighter'; bagGlow(g, cx, cy, 24, '#ffa8c8', 0.3 + 0.06 * pu); g.globalCompositeOperation = 'source-over';
+      for (let k = 0; k < 12; k++){ const a = t * 0.3 + k * Math.PI / 6; g.save(); g.translate(cx + Math.cos(a) * 14, cy + Math.sin(a) * 14); g.rotate(a); g.fillStyle = hexA(k % 2 ? '#ffb8d0' : '#fff0f6', 0.78); g.beginPath(); g.ellipse(0, 0, 5.8, 2.3, 0, 0, TAU); g.fill(); g.restore(); }
+      bagRing(g, cx, cy, 11, 11, '#ffd0e0', 0.85, 1.1);
+      break; }
+    case 'snow': {   // 눈꽃 관
+      const cx = x, cy = hy - 27;
+      for (let k = 0; k < 6; k++){ const a = t * 1.1 + k * TAU / 6, front = Math.sin(a) > 0; if (front !== (pass === 1)) continue;
+        const fx = cx + Math.cos(a) * 12.5, fy = cy + Math.sin(a) * 3.6;
+        g.strokeStyle = hexA('#e8f6ff', 0.95); g.lineWidth = 0.8; g.beginPath(); for (let s = 0; s < 3; s++){ const aa = s * Math.PI / 3 + t * 0.6; g.moveTo(fx - Math.cos(aa) * 2.6, fy - Math.sin(aa) * 2.6); g.lineTo(fx + Math.cos(aa) * 2.6, fy + Math.sin(aa) * 2.6); } g.stroke();
+        g.globalCompositeOperation = 'lighter'; bagGlow(g, fx, fy, 6, '#cfeaff', 0.3); g.globalCompositeOperation = 'source-over'; }
+      if (pass === 1) for (let k = 0; k < 8; k++){ const ph = (t * 0.4 + k / 8) % 1; g.fillStyle = hexA('#ffffff', 0.9 * (1 - ph)); g.fillRect(x + Math.sin(k * 2.7 + t) * 13 - 0.6, hy - 34 + ph * 34, 1.3, 1.3); }
+      break; }
+  }
+  g.restore();
+}
 function drawEntityHero(){
   const C = S.cls;
   let f = 0;
@@ -15572,6 +15835,8 @@ function drawEntityHero(){
     b.restore();
     return;
   }
+  const bfx = AV[S.av.fx], bhd = AV[S.av.head], bt = reduceMotion ? 1.3 : gtime;   // 도깨비 보따리 치장(이펙트·머리 장식)
+  if (bfx) drawBagFx(b, bfx.fx, x, y, bt, 0);
   const M = rideM();
   let hy = y;
   if (M){
@@ -15583,8 +15848,11 @@ function drawEntityHero(){
     b.drawImage(ms, x - (flip ? 21 : 23), y - 31 - fly + (hero.moving && !M.fly ? mf : 0), spW(ms) * K, spH(ms) * K);
     hy = y - 16 - fly;
   }
+  if (bhd) drawBagFx(b, bhd.fx, x, y, bt, 0, hy);
   b.drawImage(sp, x - HD_AX, hy - HD_AY + bob, spW(sp), spH(sp));
   b.restore();
+  if (bfx) drawBagFx(b, bfx.fx, x, y, bt, 1);
+  if (bhd) drawBagFx(b, bhd.fx, x, y, bt, 1, hy);
   if (hero.cloneT > 0){ b.save(); b.globalAlpha = 0.38 + 0.12 * Math.sin(gtime * 8); for (const [ox, oy] of [[-12, 3], [12, 3], [0, -6]]) b.drawImage(sp, x + ox - HD_AX, y + oy - HD_AY, spW(sp), spH(sp)); b.restore(); }
   if (hero.shield > 0){
     // 술사 마력 보호막: 몸을 감싸는 하늘빛 방울(남은 양만큼 진하게)
@@ -16167,16 +16435,19 @@ let ovRects = {stage:null, boss:null, buff:null};
 function drawBuffChips(cw){
   ovRects.buff = null;
   if (!session) return;
-  const ks = Object.keys(BUFFS).filter(k => S.buff[k] > 0);
-  if (!ks.length) return;
+  const mn = k => Math.ceil(S.buff[k] / 60), tier = scrollTier(), list = [];
+  for (const k of Object.keys(BUFFS)) if (S.buff[k] > 0){ const wait = k === 'exp' && tier > 0; list.push({lab:`${BUFFS[k].short}${wait ? ' (대기)' : ''} ${mn(k)}분`, col:BUFFS[k].color, dim:wait}); }
+  for (const [k, m] of [['s4', 4], ['s2', 2]]) if (S.buff[k] > 0){ const wait = k === 's2' && S.buff.s4 > 0; list.push({lab:`경험 ×${m}${wait ? ' (대기)' : ''} ${mn(k)}분`, col:m === 4 ? '#ffd24a' : '#ffe9a0', dim:wait}); }
+  if (!list.length) return;
+  if ((S.buff.exp > 0 || tier > 0) && S.level >= levelCap()) list.push({lab:'만렙 — 모음으로 쌓여요', col:'#9fe7ff', dim:false});
   ctx.font = '700 10px SamhanSans, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  const chips = ks.map(k => { const lab = `${BUFFS[k].short} ${Math.ceil(S.buff[k] / 60)}분`; return {k, lab, w: Math.ceil(ctx.measureText(lab).width) + 10}; });
+  const chips = list.map(c => Object.assign({w: Math.ceil(ctx.measureText(c.lab).width) + 10}, c));
   const maxW = cw - 16, gap = 3, rows = [[]]; let cur = 0;
   for (const c of chips){ if (cur && cur + gap + c.w > maxW){ rows.push([]); cur = 0; } rows[rows.length - 1].push(c); cur += (cur ? gap : 0) + c.w; }
   let y = ovBot + 4, x0 = 1e9, x1 = -1e9;
   for (const row of rows){
     const rw = row.reduce((a, c) => a + c.w, 0) + gap * (row.length - 1); let x = Math.round((cw - rw) / 2);
-    for (const c of row){ box(x, y, c.w, 15); ctx.fillStyle = BUFFS[c.k].color; ctx.fillText(c.lab, x + 5, y + 8); x0 = Math.min(x0, x); x += c.w + gap; x1 = Math.max(x1, x - gap); }
+    for (const c of row){ if (c.dim) ctx.globalAlpha = 0.5; box(x, y, c.w, 15); ctx.fillStyle = c.col; ctx.fillText(c.lab, x + 5, y + 8); ctx.globalAlpha = 1; x0 = Math.min(x0, x); x += c.w + gap; x1 = Math.max(x1, x - gap); }
     y += 18;
   }
   ovRects.buff = [x0, ovBot + 4, x1, y - 3];
@@ -18936,7 +19207,24 @@ function buildMarket(){
 
 /* --- 아바타 --- */
 function avPetIdx(){ for (const t of PET_TYPE_ORDER){ const i = eqPet(t); if (i >= 0) return i; } const j = S.pets.lv.findIndex(l => l > 0); return j >= 0 ? j : 0; }
+function bagPreview(a){   // 보따리 치장: 정지 모습(용사 앞모습 + 이펙트)
+  const look = cleanLook(S.look), key = ['bag', a.k, S.cls, look.outfit, look.hair, look.hat, look.skin, gearG('armor'), gearG('weapon'), S.job, S.av.char, S.av.cape, S.av.wing].join('|');
+  let u = prevCache.get(key);
+  if (!u){
+    const sp = personSprite(S.cls, look, gearG('armor'), gearG('weapon'), 'down', 0, false, {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing});
+    const cc = document.createElement('canvas'); cc.width = 100; cc.height = 104; const g = cc.getContext('2d');
+    for (const pass of [0, 1]){
+      if (pass) g.drawImage(sp, 0, 0, 64, 64, 18, 30, 64, 64);
+      g.save(); g.scale(2, 2); drawBagFx(g, a.fx, 25, 45, 1.3, pass, 45); g.restore();
+    }
+    u = cc.toDataURL();
+    if (prevCache.size > 200) prevCache.clear();
+    prevCache.set(key, u);
+  }
+  return u;
+}
 function avPreview(a){
+  if (a.bag) return bagPreview(a);
   if (a.type === 'pet'){ const old = S.av.pet; S.av.pet = a.k; const u = petSprite(avPetIdx(), 0).toDataURL(); S.av.pet = old; return u; }
   const ex = {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:a.type === 'char' ? a.k : S.av.char, cape:a.type === 'cape' ? a.k : S.av.cape};
   return lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), a.type === 'cape' ? 'up' : 'down', ex);
@@ -18945,18 +19233,18 @@ function buildAvatar(){
   const list = t => AVATARS.filter(a => a.type === t && (!a.job || a.cls === S.cls));
   panel.innerHTML = `${gearSegHTML()}
     <div class="ph" style="margin-top:10px"><h2>아바타</h2><span class="small">도감 효과 공격력·체력 <b id="avBonus"></b></span></div>
-    <p class="hint">옷·망토·펫 꾸미기는 모습만 바꿔요. 대신 가진 아바타 하나마다 공격력·체력이 ${AV_PCT}%씩 올라요(도감 효과, 부상부터 ${AV_PCT * LATE_COL}%). 다시 누르면 벗어요.</p>
+    <p class="hint">옷·망토·펫 꾸미기는 모습만 바꿔요. 대신 가진 아바타 하나마다 공격력·체력이 ${AV_PCT}%씩 올라요(도감 효과, 부상부터 ${AV_PCT * LATE_COL}%). 다시 누르면 벗어요. <b>이펙트·머리 장식</b>은 [상점] → 「보따리」에서만 나오고, 능력치는 하나에 ${BAG_PCT}%뿐이지만 발밑·머리 둘레에 화려한 빛이 나요.</p>
     <button class="btn primary" id="avBox" style="width:100%;margin-bottom:6px">꾸미기 상자 열기 (보석 ${AV_BOX})</button>
     <p class="odds" id="avOdds"></p>
     ${partBarHTML()}
     ${AV_TYPES.map(([t, nm]) => `<div data-psec><div class="ph"><h2>${nm}</h2></div><div class="avgrid">${list(t).map(a => `<button class="avcell" data-k="${a.k}" data-part="${avPart(a)}" data-pk="${a.k}" data-kd="${t}" aria-pressed="false">
       <img alt="" data-r="img"><b>${a.name}</b><em data-r="st"></em></button>`).join('')}</div></div>`).join('')}`;
   wireGearSeg();
-  partWire('av', {own:k => !!S.av.own[k], kinds:AV_TYPES, nowLabel:'입는 중', now:() => AV_TYPES.map(([t]) => AV[S.av[t]]).filter(Boolean).map(a => ({n:a.name, c:a.capeC || a.outfit || a.tint || (a.wingC && a.wingC[2]) || 'var(--gold)'}))});
+  partWire('av', {own:k => !!S.av.own[k], kinds:AV_TYPES, nowLabel:'입는 중', now:() => AV_TYPES.map(([t]) => AV[S.av[t]]).filter(Boolean).map(a => ({n:a.name, c:a.capeC || a.outfit || a.tint || a.col || (a.wingC && a.wingC[2]) || 'var(--gold)'}))});
   $('#avBox').addEventListener('click', () => { if (buyShop('avbox')) refreshPanel(); });
   panel.querySelectorAll('.avcell').forEach(bt => bt.addEventListener('click', () => { if (S.av.own[bt.dataset.k]){ equipAvatar(bt.dataset.k); sfx('click'); refreshPanel(); } }));
   return () => {
-    setText($('#avBonus'), `+${fmt(avColPct())}% (${avCount()}개${lateCol() > 1 ? `, ${WORLD_NAME[S.world]} ×${LATE_COL}` : ''})`);
+    setText($('#avBonus'), `+${fmt(avColPct())}% (${avCount()}개${bagCount() ? ` + 보따리 ${bagCount()}개` : ''}${lateCol() > 1 ? `, ${WORLD_NAME[S.world]} ×${LATE_COL}` : ''})`);
     $('#avBox').disabled = S.gems < AV_BOX;
     setHTML($('#avOdds'), `확률 공개 — 옷 ${AV_ODDS[0][1]}% · 망토 ${AV_ODDS[1][1]}% · 펫 꾸미기 ${AV_ODDS[2][1]}% · 위로품(인삼 탕약) ${AV_ODDS[3][1]}%. 종류 안에서는 똑같은 확률. <b>새 옷·망토 확정까지 ${Math.max(1, AV_PITY - (S.avPity || 0))}번</b>`);
     panel.querySelectorAll('.avcell').forEach(bt => {
@@ -19043,9 +19331,64 @@ function buildShopTrans(){
 const shopCatsList = () => SHOP_CATS.concat(transShopOn() ? [['trans', '조각']] : []);
 const shopCatsHTML = () => shopCatsList().map(([k, n]) => `<button class="chip" data-c="${k}" aria-pressed="${k === shopCat}">${n}</button>`).join('');
 const wireShopCats = () => panel.querySelectorAll('.shop-cats .chip').forEach(bt => bt.addEventListener('click', () => { shopCat = bt.dataset.c; buildTab('shop', true); }));
+/* 도깨비 보따리 화면: 열기 단추 · 천장·오늘 횟수 · 확률 보기 · 방금 나온 것 · 가진 치장 */
+let bagLast = [], bagOddsOpen = false;
+const bagResHTML = res => res.map(r => `<li style="color:${r.color}"><b>${r.g}</b> ${esc(r.txt)}${r.isNew ? ' <em style="color:var(--gold)">새로 얻음!</em>' : ''}</li>`).join('');
+function bagOpen(n){
+  const res = bagBuy(n);
+  if (!res) return false;
+  bagLast = res; sfx(res.some(r => r.g === '전설' || r.g === '신화') ? 'rare' : 'gem');
+  const hit = res.filter(r => r.rare);
+  addLog(`도깨비 보따리 ${n}번: ${hit.length ? hit.map(r => r.txt).join(' · ') : '부적과 숫돌'}`, hit.some(r => r.g === '전설' || r.g === '신화') ? 'gain' : '');
+  if (!(window.__game && window.__game.quiet)) showModal('도깨비 보따리', `<ul class="rewards" style="list-style:none;padding:0;margin:0">${bagResHTML(res)}</ul><p class="small">새 치장은 [장비] → [아바타]의 「이펙트」·「머리 장식」에서 입어요.</p>`, [{label:'확인', primary:true}]);
+  refreshPanel();
+  return true;
+}
+function bagOddsHTML(){
+  return `<div class="card" style="margin-top:8px"><div class="ct">확률 (한 번 열 때)</div>
+    ${BAG_ODDS.map(o => `<div class="dl" style="margin:3px 0"><span style="color:${o.color}"><b>${o.g}</b> ${o.p}%</span><b style="text-align:right;font-weight:600;color:var(--text)">${o.name}${o.note ? `<br><span class="small" style="font-weight:400">${o.note}</span>` : ''}</b></div>`).join('')}
+    <p class="rtable">· 천장은 <b>전설 치장</b>만 세어요. ${BAG.pity}번째까지 전설이 안 나오면 ${BAG.pity}번째는 전설이에요(두루마리에는 천장이 없어요).<br>
+    · 두루마리는 <b>가장 큰 것 하나만</b> 적용돼요(네 곱 → 두 곱 → 글공부 두루마리). 작은 것은 시간이 멈춰 기다려요. 각각 최대 2시간, 넘는 몫은 숫돌 ${BAG.over}개로 바뀌어요.<br>
+    · 두루마리 시간은 게임이 켜져 있고 싸우는 동안에만 줄어요. 꺼 둔 동안은 안 줄어요.<br>
+    · 10번(보석 ${fmt(BAG.ten)})은 열 번째에 「희귀 이상」이 하나 확정이에요. 하루 ${BAG.day}번까지 열 수 있어요.</p></div>`;
+}
+function buildShopBag(){
+  const cosAll = AVATARS.filter(a => a.bag);
+  panel.innerHTML = `
+    <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
+    <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
+    <div class="card"><div class="ct">도깨비 보따리</div>
+      <p class="small" style="margin:0 0 8px">경험치 <b>두 곱·네 곱 두루마리</b>, 화려한 <b>전용 치장</b>(이펙트·머리 장식), 부적 시간, 숫돌이 들어 있어요. 치장은 능력치가 아주 조금(하나에 +${BAG_PCT}%)뿐이고 모습이 핵심이에요.</p>
+      <p id="bagPity" style="margin:0 0 8px;font-weight:700"></p>
+      <div style="display:flex;gap:8px"><button class="btn primary" id="bagOne" style="flex:1"><i class="gem"></i><span data-r="p"></span></button>
+        <button class="btn primary" id="bagTen" style="flex:1"><i class="gem"></i><span data-r="p"></span></button></div>
+      <button class="btn sm" id="bagOddsBtn" style="margin-top:8px">확률 보기</button></div>
+    <div id="bagOddsBox" ${bagOddsOpen ? '' : 'hidden'}>${bagOddsHTML()}</div>
+    <div class="card" id="bagNow"><div class="ct">두루마리와 치장</div><p class="small" id="bagScroll" style="margin:0 0 6px"></p><p class="small" id="bagOwn" style="margin:0"></p></div>
+    <div class="card" id="bagLastBox" hidden><div class="ct">방금 나온 것</div><ul class="rewards" id="bagLastList" style="list-style:none;padding:0;margin:0"></ul></div>`;
+  wireShopCats();
+  $('#bagOne').addEventListener('click', () => bagOpen(1));
+  $('#bagTen').addEventListener('click', () => bagOpen(10));
+  $('#bagOddsBtn').addEventListener('click', () => { bagOddsOpen = !bagOddsOpen; $('#bagOddsBox').hidden = !bagOddsOpen; });
+  const mm = k => Math.ceil(S.buff[k] / 60);
+  return () => {
+    setHTML($('#bag'), `보석 <b>${fmt(S.gems)}</b> · 숫돌 <b>${S.inv.whet}</b>`);
+    const s1 = bagState(1), s10 = bagState(10);
+    setHTML($('#bagPity'), `전설 확정까지 <b style="color:var(--gold)">${bagPityLeft()}번</b> · 오늘 <b>${S.bot.n}/${BAG.day}</b>`);
+    setText($('#bagOne').querySelector('[data-r=p]'), `1번 · ${s1.why && !s1.ok ? s1.why : fmt(s1.price)}`); $('#bagOne').disabled = !s1.ok;
+    setText($('#bagTen').querySelector('[data-r=p]'), `10번 · ${s10.why && !s10.ok ? s10.why : fmt(s10.price)}`); $('#bagTen').disabled = !s10.ok;
+    const t = scrollTier();
+    setHTML($('#bagScroll'), `네 곱 <b>${mm('s4')}분</b>${S.buff.s4 > 0 ? ' (켜짐)' : ''} · 두 곱 <b>${mm('s2')}분</b>${S.buff.s2 > 0 && S.buff.s4 > 0 ? ' (기다리는 중)' : S.buff.s2 > 0 ? ' (켜짐)' : ''} · 글공부 <b>${mm('exp')}분</b>${S.buff.exp > 0 && t ? ' (기다리는 중)' : ''}${S.level >= levelCap() ? '<br><span style="color:#9fe7ff">만렙이에요 — 두루마리로 번 경험치는 모음으로 쌓여요.</span>' : ''}`);
+    const own = cosAll.filter(a => S.av.own[a.k]);
+    setHTML($('#bagOwn'), `가진 치장 <b>${own.length}/${cosAll.length}</b> (이펙트 ${own.filter(a => a.type === 'fx').length}/${bagCos('fx').length} · 머리 장식 ${own.filter(a => a.type === 'head').length}/${bagCos('head').length}) · 도감 효과 +${(BAG_PCT * own.length).toFixed(1)}%. [장비] → [아바타]에서 입어요.`);
+    const lb = $('#bagLastBox'); lb.hidden = !bagLast.length;
+    if (bagLast.length) setHTML($('#bagLastList'), bagResHTML(bagLast));
+  };
+}
 function buildShop(){
   if (shopCat === 'trans' && !transShopOn()) shopCat = 'potion';
   if (shopCat === 'trans') return buildShopTrans();
+  if (shopCat === 'bag') return buildShopBag();
   const items = SHOP.filter(it => it.cat === shopCat);
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
@@ -20627,6 +20970,7 @@ const mountPart = m => { if (m.pt) return m.pt; const x = /^(\d+)장/.exec(m.fro
 let avPartMap = null;
 function avPart(a){
   if (!avPartMap){ avPartMap = {}; for (const q of MAIN_Q) if (q.av && avPartMap[q.av] == null) avPartMap[q.av] = partOfCh(q.ch || 1); }
+  if (a.bag) return curPart();   // 보따리 치장은 어느 부에서나 나오므로 지금 부에 보인다
   return a.pt || (a.w ? partOfW(a.w) : a.job ? [1, 1, 2, 3, 4, 5][a.job - 1] || 1 : avPartMap[a.k] || 1);
 }
 const itemPart = it => it.t === 'acc' ? accPart(it.k) : it.t === 'myth' && MT_BY[it.k] ? mythPart(MT_BY[it.k]) : it.t === 'skin' && SKC[it.c] ? partOfCh(SKC[it.c].c) : 1;   // 가방·보관함 물건
@@ -20702,7 +21046,7 @@ function partClick(e){
 const DEX = [
   {n:'펫', list:() => PETS.map((p, i) => [petPart(p), S.pets.lv[i] > 0])},
   {n:'탈것', list:() => MOUNTS.filter(m => m.src !== 'dex').map(m => [mountPart(m), !!S.mount.own[m.k]])},   // 세트 도감 보상(2026-11-17)은 부 도감에 넣지 않음
-  {n:'아바타', list:() => AVATARS.filter(a => (!a.job || a.cls === S.cls) && a.src !== '세트 도감').map(a => [avPart(a), !!S.av.own[a.k]])},
+  {n:'아바타', list:() => AVATARS.filter(a => (!a.job || a.cls === S.cls) && a.src !== '세트 도감' && !a.bag).map(a => [avPart(a), !!S.av.own[a.k]])},
   {n:'치장', list:() => SK_LIST.map(x => [partOfCh(x.c), !!S.skin.found[x.c]])},
   {n:'넋 구슬', list:() => SOULS.map(x => [soulPart(x), !!S.soul.own[x.k]])},
 ];
@@ -22393,7 +22737,7 @@ if (location.search.indexOf('simtest') >= 0){
     setWorld(w){ S.world = w; S.stage = 1; mapCache.clear(); resetRuntime(); applyWorld(); refreshStats(); },
     doRebirth, rebirthReady, claimTrial, rebUp, giveAcc, rollAcc, startTimeBoss, tbWindow, tbRolls, tbPending, TB_HALF, TB_START, TB_BONUS, SOUL_P, tbCan, tbUsers, tbAutoJoin, castAwaken, startFight,
     craft, craftNeed, pickEngr, gainMat, CRAFT_T, ENGR_BEST, harmonyOn, castNow, toggleSkAuto, skLv, skDef, tryCast, craftComp,
-    unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx,
+    unlockSkills, AV_PITY, avLuck:null, craftLuck:null, closePage, playFx, bagBuy, bagState, bagCos, bagOpen, BAG, BAG_ODDS, BAG_PCT, bagRng:null, scrollTier, expBuffMul, tickBuffs, gainMul, drawBagFx, avColPct,
     openMap, jmNodes, grindGear, bossGearDrop, refineDust, startDummy, dummyTiers, get dmgMeter(){ return dmgMeter; }, FIELD, SUB_Q, offerSub, acceptSub, claimSub, subProg, subHook, mHp, mAtk, busE, doCross, crossReady, busangRaidInfo, BUSANG, EXP_K, showChapterCard, get CROSS_Q(){ return CROSS_Q; }, get CROSS_Q4(){ return CROSS_Q4; }, BUSANG_REGIONS, KUNLUN_REGIONS, KUNLUN, CONT, MOB_HD,
     subOpen, subGems, get PART1_END(){ return PART1_END; }, get PART2_END(){ return PART2_END; },
     skAuto, coopFight, raidParty,
