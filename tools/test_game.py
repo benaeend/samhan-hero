@@ -5579,18 +5579,19 @@ async def main():
           // A4: 젖의 바다(세계 9) 만렙 583 모음은 그대로
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.world = 9; S.level = 583; S.exp = 0; S.expBank = 20; out.a4 = G.capRaiseFix(); out.a4l = [S.level, S.expBank];
           // A5: Lv.700에서 경험치를 넣으면 레벨 그대로, 모음만 늘어남
-          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.level = 700; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(700) * 2.5, {raw:true}); out.a5 = [S.level, +S.expBank.toFixed(2)];
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.level = 700; S.exp = 0; S.expBank = 0; S.trans.lv = 0; S.trans.exp = 0; G.gainExp(G.expNeed(700) * 2.5, {raw:true}); out.a5 = [S.level, +S.expBank.toFixed(2), S.trans.lv >= 2];
           Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); G.refreshStats(); return out; }""")
-        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.expBank = 2.5; }")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.expBank = 2.5; S.trans.lv = 100; S.trans.exp = 0; }")
         await mp.wait_for_timeout(300)
         a['hud'] = await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.render(); return document.querySelector('#xpnum').textContent; }")
-        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; G.refreshStats(); }")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; G.refreshStats(); }")
         check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 3, f"만렙 700: 수미산 레벨 상한 700, 저장 판 3 {a['cap']} {a['capNow']} {a['ver']}")
         check(a['a1'] == 15 and a['a1l'] == 615 and a['a1b'] == 0, f"모음 전환 A1: 수미산 Lv.600 모음 50 → 접속할 때 +15레벨(Lv.615), 모음 0 {a['a1']} {a['a1l']} {a['a1b']}")
         check(a['a2'] == 30 and a['a2l'] == 630 and a['d2'] == [30, 3], f"모음 전환 A2: 모음 500 → 최대 +30레벨(Lv.630) · 오름 보상 610·620·630에서 조각 +30 {a['a2']} {a['a2l']} {a['d2']}")
         check(a['a3'] == 0 and a['a3l'] == 615, f"모음 전환 A3: 저장해 다시 들어와도 두 번 주지 않음 {a['a3']} {a['a3l']}")
         check(a['a4'] == 0 and a['a4l'] == [583, 20], f"모음 전환 A4: 젖의 바다 만렙(583)의 모음은 건드리지 않음 {a['a4']} {a['a4l']}")
-        check(a['a5'] == [700, 2.5] and '만렙 · 모음' in a['hud'], f"모음 전환 A5: Lv.700에서 경험치는 모음에 쌓이고 HUD에 「만렙 · 모음」 {a['a5']} {a['hud']}")
+        check(a['a5'] == [700, 0, True], f"모음 전환 A5: Lv.700에서 경험치는 모음이 아니라 초월의 경지로 쌓임(레벨 그대로, 모음 0, 경지 2단 이상) {a['a5']}")
+        check('경지 100단 · 모음 2.5' in a['hud'], f"모음 전환 A5: 경지 100단이면 넘친 경험치는 모음에 쌓이고 HUD에 「경지 100단 · 모음」 {a['hud']}")
         b = await mp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}, old = JSON.parse(JSON.stringify(save));
           const m1 = G.mergeState(JSON.parse(JSON.stringify(old))); out.b1a = [m1.trans.shard, m1.trans.lvGot, m1.trans.lv, m1.trans.buy.wk, Object.keys(m1.trans.buy.got).length, m1.level];
           const bad = JSON.parse(JSON.stringify(old)); bad.trans = {shard:-5, total:'x', lvGot:99, lv:-1, exp:'zz', buy:'x'};
@@ -5674,11 +5675,63 @@ async def main():
         await mp.screenshot(path=str(OUT / '97b_초월의경지_잠김.png'))
         gt = await mp.evaluate("() => ({txt:document.querySelector('#panel').textContent, bar:document.querySelector('#trBar').style.width, hold:document.querySelectorAll('#panel [data-hold]').length})")
         check('잠김' in gt['txt'] and 'Lv.700에 닿으면 열려요' in gt['txt'] and gt['bar'] == '40%' and gt['txt'].count('받음') == 4 and '초월의 조각' in gt['txt'], f"[수련] → [초월]: 잠김 카드(진행 40%·오름 보상 4칸 받음) {gt['bar']} {gt['txt'].count('받음')}")
-        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.trans.lvGot = 10; S.expBank = 3.5; G.update(0.05); }")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.trans.lvGot = 10; S.expBank = 3.5; S.trans.lv = 0; S.trans.exp = 0; G.update(0.05); }")
         await mp.wait_for_timeout(400)
         await mp.screenshot(path=str(OUT / '97c_초월의경지_700.png'))
         g7 = await mp.evaluate("() => document.querySelector('#panel').textContent")
-        check('열림' in g7 and '모음 3.5' in g7 and '준비 중' in g7, f"[수련] → [초월]: Lv.700이면 「열림 · 준비 중」과 모음 표시 {g7[:90]}")
+        check('0단' in g7 and '모음 3.5' in g7 and '준비 중' not in g7 and '잠김' not in g7, f"[수련] → [초월]: Lv.700이면 경지 카드(0단)가 열리고 모음 표시, 「준비 중」은 사라짐 {g7[:90]}")
+
+        # 초월의 경지(2026-11-21): 경험치 → 단 · 체감 곡선 · 100단 상한 · 힘·레벨 문 · 모음 옮기기 · 6부 상한 처리 · 조각 상점 첫 물건
+        R = await mp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}, T = () => S.trans, E = G.expNeed(700);
+          const reset = () => { Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '칠백용사'; S.world = 10; S.level = 700; S.exp = 0; S.expBank = 0; S.quest.main = G.MAIN_Q.length + 5; S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; S.trans.shard = 0; S.trans.buy = {wk:'', got:{}}; G.refreshStats(); };
+          // R1: 경험치 2.5단어치 → 2단 + 반 단
+          reset(); const n0 = G.realmNeed(0), n1 = G.realmNeed(1); G.gainExp(n0 + n1 + n0 * 1.02 * 0.5 * 1.02, {raw:true}); out.r1 = [S.level, T().lv, +(T().exp / G.realmNeed(2)).toFixed(2), S.expBank];
+          // R2: 10단마다 조각 10, 저장 후 다시 들어와도 또 안 줌
+          reset(); let need = 0; for (let i = 0; i < 10; i++) need += G.realmNeed(i); G.gainExp(need * 1.001, {raw:true}); out.r2a = [T().lv, S.trans.shard, T().rGot];
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); Object.assign(S, re); G.realmGain(1); out.r2b = [S.trans.shard, S.trans.rGot];
+          for (let i = 10; i < 20; i++) need += G.realmNeed(i); reset(); G.gainExp(need * 1.001, {raw:true}); out.r2c = [T().lv, S.trans.shard];
+          // R3: 체감 곡선(1단 = 700 한 레벨 × realmBase, 단마다 ×realmStep) · 힘 +0.3%/단 · 100단 +30%
+          reset(); out.r3a = [+(G.realmNeed(0) / E).toFixed(3), +(G.realmNeed(99) / G.realmNeed(0)).toFixed(3)]; G.refreshStats(); const a0 = G.ST.atk, h0 = G.ST.maxHp;
+          T().lv = 10; G.refreshStats(); out.r3b = [+(G.ST.atk / a0).toFixed(4), +(G.ST.maxHp / h0).toFixed(4)]; T().lv = 100; G.refreshStats(); out.r3c = +(G.ST.atk / a0).toFixed(3);
+          // R4: 100단이 한도 — 넘친 경험치는 모음, 단·힘은 더 안 오름
+          reset(); T().lv = 99; G.refreshStats(); G.gainExp(G.realmNeed(99) * 3, {raw:true}); out.r4 = [T().lv, T().exp, +S.expBank.toFixed(2) > 1, +(G.ST.atk / a0).toFixed(3)];
+          G.gainExp(E * 2, {raw:true}); out.r4b = [T().lv, +S.expBank.toFixed(2) > 3];
+          // R5: 수미산 레벨 문이 Lv.700 + n까지(Lv.715 문 = 301단계 보스)
+          reset(); S.maxStage = 400; const okAt = lv => { T().lv = lv; return [G.gateLv(), G.bossGate(300).ok]; }; out.r5 = [okAt(0), okAt(14), okAt(15)]; S.level = 750; T().lv = 30; out.r5b = G.gateLv(); S.world = 9; out.r5c = G.gateLv(); S.world = 10; S.level = 700;
+          // R6: 700 전에 모아 둔 모음 10 → 접속할 때 경지로(11단 · 조각 10), 모음 0 · 두 번 안 줌
+          reset(); S.expBank = 10; let acc = 0, k = 0; while (acc + G.realmNeed(k) <= 10 * E){ acc += G.realmNeed(k); k++; } out.r6e = [k, 10 * Math.floor(k / 10)]; out.r6a = G.realmBankFix(); out.r6b = [T().lv, S.trans.shard, S.expBank]; out.r6c = G.realmBankFix();
+          // R7: 6부 상한(700 → 800)이 오르면 경지는 멈추고(힘·문은 유지) 경험치는 레벨로, 모음은 30%
+          reset(); T().lv = 30; T().exp = 5; G.refreshStats(); const aw = G.ST.atk; G.LV_CAP[10] = 800; G.gainExp(G.expNeed(700) * 1.5, {raw:true}); out.r7 = [S.level, T().lv, T().exp, G.gateLv(), +(G.ST.atk / aw).toFixed(3) > 1];
+          S.level = 800; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(800) * 2, {raw:true}); out.r7b = [T().lv, T().exp > 0, S.expBank]; S.level = 700; S.exp = 0; S.expBank = 10; out.r7c = [G.capRaiseFix(), S.level]; G.LV_CAP[10] = 700;
+          // R8: 조각 상점 첫 물건 「경지 수련 단약」
+          reset(); S.trans.shard = 10; S.level = 640; out.r8a = [G.buyTrans('t_realm'), S.trans.shard]; S.level = 700; const need0 = G.realmNeed(0);
+          out.r8b = [G.buyTrans('t_realm'), S.trans.shard, +(T().exp / need0).toFixed(3)]; G.buyTrans('t_realm'); G.buyTrans('t_realm'); out.r8c = [G.buyTrans('t_realm'), S.trans.shard, G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_realm')).why];
+          S.trans.buy = {wk:'', got:{}}; T().lv = 100; out.r8d = G.buyTrans('t_realm');
+          // R9: 저장 — 예전 저장(경지 칸 없음) · 이상한 값 · 옛 저장의 rGot 기본값
+          const old = JSON.parse(JSON.stringify(save)); delete old.trans; const m1 = G.mergeState(old); out.r9a = [m1.trans.lv, m1.trans.exp, m1.trans.rGot];
+          const bad = JSON.parse(JSON.stringify(save)); bad.trans = {lv:999, exp:-4, rGot:77, shard:1}; const m2 = G.mergeState(bad); out.r9b = [m2.trans.lv, m2.trans.exp, m2.trans.rGot];
+          const mid = JSON.parse(JSON.stringify(save)); mid.trans = {lv:25, exp:3, shard:1}; const m3 = G.mergeState(mid); out.r9c = [m3.trans.lv, m3.trans.rGot];
+          reset(); return out; }""", msave)
+        check(R['r1'][:2] == [700, 2] and abs(R['r1'][2] - 0.5) < 0.03 and R['r1'][3] == 0, f"경지 R1: Lv.700에서 번 경험치는 모음이 아니라 경지 단으로 쌓임(2단 + 반 단, 레벨 그대로) {R['r1']}")
+        check(R['r2a'] == [10, 10, 1] and R['r2b'] == [10, 1] and R['r2c'] == [20, 20], f"경지 R2: 10단마다 조각 +10, 저장해 다시 들어와도 또 안 줌, 20단에서 합 20 {R['r2a']} {R['r2b']} {R['r2c']}")
+        check(abs(R['r3a'][0] - 0.85) < 1e-9 and abs(R['r3a'][1] - 7.103) < 0.01 and R['r3b'] == [1.03, 1.03] and R['r3c'] == 1.3, f"경지 R3: 1단 = Lv.700 한 레벨 몫의 0.85배, 단마다 ×1.02(100단에서 7배), 힘은 단마다 +0.3% · 100단 +30%(총량 한도) {R['r3a']} {R['r3b']} {R['r3c']}")
+        check(R['r4'][0] == 100 and R['r4'][1] == 0 and R['r4'][2] and R['r4'][3] == 1.3 and R['r4b'][0] == 100 and R['r4b'][1], f"경지 R4: 100단에서 멈춤 — 넘친 경험치는 모음에, 단·힘은 더 안 오름 {R['r4']} {R['r4b']}")
+        check(R['r5'] == [[700, False], [714, False], [715, True]] and R['r5b'] == 750 and R['r5c'] == 700, f"경지 R5: 단마다 수미산 레벨 문이 Lv.700 + n까지(14단은 Lv.715 문 못 넘고 15단은 넘음), 레벨이 앞서면 레벨 그대로, 다른 땅은 영향 없음 {R['r5']} {R['r5b']} {R['r5c']}")
+        check(R['r6a'] == R['r6e'][0] and R['r6b'] == [R['r6e'][0], R['r6e'][1], 0] and R['r6e'][0] >= 10 and R['r6c'] == 0, f"경지 R6: 700에서 모아 둔 모음 10 → 접속할 때 100%로 경지 {R['r6e'][0]}단 · 조각 {R['r6e'][1]}으로 옮기고 모음 0, 두 번 안 줌 {R['r6a']} {R['r6b']} {R['r6c']}")
+        check(R['r7'][0] == 701 and R['r7'][1] == 30 and R['r7'][2] == 5 and R['r7'][3] == 730 and R['r7'][4] and R['r7b'] == [31, True, 0] and R['r7c'] == [3, 703], f"경지 R7: 상한이 800으로 오르면 경지는 멈추고(30단·힘 유지, 문 Lv.730) 경험치는 다시 레벨로, 모아 둔 모음은 30%를 레벨로(+3), 새 만렙 800에서는 경지가 이어 쌓임 {R['r7']} {R['r7b']} {R['r7c']}")
+        check(R['r8a'] == [False, 10] and R['r8b'][0] is True and R['r8b'][1] == 7 and abs(R['r8b'][2] - 0.2) < 0.001 and R['r8c'] == [False, 1, '이번 주 다 샀어요'] and R['r8d'] is False, f"조각 상점 R8: 「경지 수련 단약」 — Lv.700 전엔 안 팔고, 조각 3개로 지금 단의 20% 채움, 주 3번, 100단이면 안 팔림 {R['r8a']} {R['r8b']} {R['r8c']} {R['r8d']}")
+        check(R['r9a'] == [0, 0, 0] and R['r9b'] == [100, 0, 10] and R['r9c'] == [25, 2], f"경지 R9: 예전 저장은 0단으로, 이상한 값은 100단·0·10으로 다듬어지고, 옛 저장(25단)의 받은 보상은 2번으로 채움 {R['r9a']} {R['r9b']} {R['r9c']}")
+        await mp.evaluate("([q]) => { const G = window.__game, S = G.S; G.closePage(); S.world = 10; S.level = 700; S.quest.main = q; S.trans.lv = 12; S.trans.exp = G.realmNeed(12) * 0.4; S.trans.shard = 30; S.trans.buy = {wk:'', got:{}}; S.expBank = 0; G.refreshStats(); G.update(0.05); G.render(); }", [349])
+        await tab(mp, 'grow'); await mp.click('#gv-trans'); await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '97d_초월의경지_12단.png'))
+        gr = await mp.evaluate("() => ({txt:document.querySelector('#panel').textContent, bar:parseFloat(document.querySelector('#trBar').style.width), hud:document.querySelector('#xpnum').textContent})")
+        check('12단' in gr['txt'] and '+3.6%' in gr['txt'] and 'Lv.712' in gr['txt'] and '20단에 조각 +10' in gr['txt'] and 39 < gr['bar'] < 41 and '경지 12단' in gr['hud'], f"[수련] → [초월]: 경지 12단 카드(진행 40% · 힘 +3.6% · 레벨 문 Lv.712 · 다음 보상 20단)와 HUD 「경지 12단」 {gr['bar']} {gr['hud']}")
+        await mp.evaluate("() => window.__game.closePage()")
+        await tab(mp, 'shop'); await mp.click('.shop-cats .chip[data-c="trans"]'); await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '97e_조각상점_경지.png'))
+        sh2 = await mp.evaluate("() => ({rows:document.querySelectorAll('#panel .list .row').length, txt:document.querySelector('#panel').textContent})")
+        check(sh2['rows'] == 6 and '경지 수련 단약' in sh2['txt'], f"[상점] → [조각]: Lv.700이면 첫 경지 물건(경지 수련 단약)이 6번째로 보임 {sh2['rows']}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; S.trans.shard = 0; S.level = 600; G.refreshStats(); }")
         await mp.evaluate("() => window.__game.closePage()")
         await tab(mp, 'bag'); await mp.wait_for_timeout(300)
         bg = await mp.evaluate("() => document.querySelector('#bagStack') ? document.querySelector('#bagStack').textContent : ''")
