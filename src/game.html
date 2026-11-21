@@ -4310,7 +4310,7 @@ const DAILY = [
   {key:'summon', name:'장비·펫 10번 소환하기', goal:10, gems:30},
   {key:'up', name:'능력치 1번 올리기', goal:1, gems:20},
   {key:'refine', name:'재련·강화 1번 하기', goal:1, gems:20},   // (43, 사용자 요청: 재련을 다 올리면 못 함) 펫·기술·각인 강화·탈것 별·장비 각성도 셈(ev 'enh')
-  {key:'raid', name:'레이드 1번 클리어', goal:1, gems:50},
+  {key:'raid', name:'레이드 1번 토벌', goal:1, gems:50},
 ];
 const DAILY_ALL = 100;
 const DAILY_OF = {kill:'kill', boss:'boss', gsummon:'summon', psummon:'summon', up:'up', refine:'refine', enh:'refine', raid:'raid'};
@@ -4319,7 +4319,7 @@ const DAILY_OF = {kill:'kill', boss:'boss', gsummon:'summon', psummon:'summon', 
 const WEEKLY = [
   {key:'kill', name:'몬스터 5,000마리 잡기', goal:5000, gems:400, ex:'dust'},
   {key:'boss', name:'보스 40번 물리치기(레이드 보스 포함)', goal:40, gems:400, ex:'mat'},
-  {key:'raid', name:'레이드 10번 클리어', goal:10, gems:500, ex:'shard'},
+  {key:'raid', name:'레이드 10번 토벌', goal:10, gems:500, ex:'shard'},
   {key:'tb', name:'타임 보스 3번 쓰러뜨리기', goal:3, gems:600, ex:'shard2'},
   {key:'parade', name:'백귀야행 3번 막기', goal:3, gems:400, ex:'grudge'},
   {key:'summon', name:'장비·펫 50번 소환하기', goal:50, gems:300, ex:'whet'},
@@ -4507,9 +4507,14 @@ const SAVE_BUILD = 2;   // 저장 판 번호. 아래 staleStop 설명 참고(본
 const NOTE_VER = '2026-11-19-5', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 21일 · 글 다듬기'],
+  ['알림 말투를 맞췄어요', '장비를 장착했을 때, 새 레이드가 열렸을 때, 용사가 쓰러졌을 때, 보석이 모자랄 때 같은 알림이 「~습니다」와 「~어요」로 섞여 있던 것을 「~어요」로 맞췄어요.'],
+  ['이름을 화면과 같게', '안내에 [보스]라고 적혀 있던 단추를 실제 이름인 [보스 도전]으로, 「버튼」은 다른 안내처럼 「단추」로 고쳤어요. 레이드의 「첫 클리어 보상」과 일일 퀘스트 「레이드 1번 클리어」도 「토벌」로 맞췄어요.'],
+  ['헷갈리던 문장을 쉽게', '「허수아비는 때리지 않아요」는 「허수아비는 용사를 때리지 않아요」로, 「진」의 「세 번째 쓰러지면」은 「세 번째로 쓰러지면」으로 고치는 등 뜻이 두 가지로 읽히던 문장을 다듬었어요. 규칙과 숫자는 그대로예요.'],
+
   ['#', '11월 19일 · 수미산 진 레이드'],
   ['수미산에도 「진」이 열려요', '마지막 땅 수미산의 이야기를 끝내면(89장 「천마의 본모습」까지 마치거나 수미산 4-10 보스를 물리치면) 사천왕의 문 · 마라의 군대 · 마라, 세 곳에 상위 단계 「진」이 열려요. 다음 땅이 없어서 이야기의 끝이 열쇠예요. 아직 닫혀 있을 땐 [레이드]에 「이야기를 끝내면 열려요」 안내(「?」)가 보여요.'],
-  ['규칙과 보상은 다른 땅과 같아요', '하루 3번(모든 진을 합쳐) · 레이드마다 주에 한 번 첫 승리 보상 · 전멸기와 「쫓는 살」 · 세 번째 쓰러지면 끝 · 탕약은 한 판에 10개까지. 보석·전설 장비·신화 조각·진 전용 아바타도 그대로예요. 세기는 이야기를 막 끝낸 용사에 맞춰져 있고, 권장 전투력에 딱 맞을 땐 손으로 피하고 되받아야 쉬워져요. 여섯 직업 모두 같은 눈높이로 맞췄어요.'],
+  ['규칙과 보상은 다른 땅과 같아요', '하루 3번(모든 진을 합쳐) · 레이드마다 주에 한 번 첫 승리 보상 · 전멸기와 「쫓는 살」 · 세 번째로 쓰러지면 끝 · 탕약은 한 판에 10개까지. 보석·전설 장비·신화 조각·진 전용 아바타도 그대로예요. 세기는 이야기를 막 끝낸 용사에 맞춰져 있고, 권장 전투력에 딱 맞을 땐 손으로 피하고 되받아야 쉬워져요. 여섯 직업 모두 같은 눈높이로 맞췄어요.'],
 
   ['#', '11월 19일 · 타임 보스가 하루 두 번으로'],
   ['오전 9~12시, 오후 6~9시에 열려요', '예전엔 3시간마다 30분씩이라 시간을 맞추기 어려웠어요. 이제 하루 두 번, 3시간씩 열려요. 노말·지옥·심해는 창마다 한 번씩이고, 그 시간 안에 들어온 캐릭터가 같은 파티 후보가 돼요.'],
@@ -4592,8 +4597,8 @@ const NOTES = [
   ['레벨 문 앞 수련', '4·5부에서 이야기가 레벨을 기다리는 동안(레벨 문) 할 일이 생겼어요. [퀘스트] → [수련 의뢰]에서 사냥·기술·손질·겨루기 가운데 하나를 받아 마치면 수련 기운이 쌓여 경험치와 함께 흘러들어요. 하루 5번(엽전·재료) + 보석으로 2번 더, 다 채우면 저절로 마쳐요.'],
   ['무엇을 올리면 버틸까', '버티는 힘은 체력 능력치 · 방어구 재련(4부부터 투구·신발도) · 방어 펫 · 성주신으로 키워요. 카드에 내 공격 쪽과 견줘 가장 뒤처진 것과 [바로 가기]가 나오고, 모자라면 체력 줄·성주신 카드에 「이 단계에서 부족해요」가 붙어요. 단계 보스에게 쓰러지면 기록에도 한 줄 남아요.'],
   ['깊은 상처 · 큰 살 · 덤벼들기', '받은 피해의 절반은 그 싸움이 끝날 때까지 탕약·회복으로 못 채워요(체력 막대의 어두운 줄, 사냥터에서는 천천히 아물어요. 레이드에서는 체력 50% 아래에서 탕약을 먹고, 깊은 상처도 절반만 쌓여요). 보스의 큰 살은 평균 용사 체력의 55%로 들어와 버티는 힘이 낮을수록 아프고, 사냥터 요괴는 처음 붙을 때 한 번 덤벼들어요. 버티는 힘이 아주 낮으면 잡몹이 약해져 사냥은 늘 할 수 있어요.'],
-  ['파티 레이드', 'NPC 동료는 내 용사가 아니라 「그 레이드 평균 용사」만큼 단단해요. 용사가 세 번 쓰러지면 물러나고(토벌패는 돌려받아요), 동료는 한 번 다시 일어나고 두 번째에는 끝까지 누워요. 38초가 지나면 보스가 광폭해져 갈수록 아파요. 권장 전투력은 내 실제 보스 피해로 다시 셈하고, 레이드 카드에 「버티는 힘 n%」도 보여요.'],
-  ['익숙한 길 · 그대로인 곳', '이미 넘은 단계와 첫 토벌한 레이드는 몬스터 공격이 30% 약해 지나온 곳은 다시 깰 수 있어요. 전직 시험·환생의 기억·결투·천공의 탑·태초의 신·허수아비·해태·백귀야행류·보물 동굴류는 그대로예요. 자리를 비운 동안의 보스 자동 도전도 같은 기준으로 셈해요. 무사 파티 버프 「호위 진형」의 받는 피해 감소가 용사 자신에게는 안 걸리던 것도 고쳤어요.'],
+  ['파티 레이드', 'NPC 동료는 내 용사가 아니라 「그 레이드 평균 용사」만큼 단단해요. 용사가 세 번 쓰러지면 물러나고(토벌패는 돌려받아요), 동료는 한 번 다시 일어나고, 두 번째로 쓰러지면 끝까지 누워 있어요. 38초가 지나면 보스가 광폭해져 갈수록 아파요. 권장 전투력은 내 실제 보스 피해로 다시 셈하고, 레이드 카드에 「버티는 힘 n%」도 보여요.'],
+  ['익숙한 길 · 그대로인 곳', '이미 넘은 단계와 처음 토벌한 레이드는 몬스터 공격이 30% 약해서, 지나온 곳은 다시 깰 수 있어요. 전직 시험·환생의 기억·결투·천공의 탑·태초의 신·허수아비·해태·백귀야행류·보물 동굴류는 그대로예요. 자리를 비운 동안의 보스 자동 도전도 같은 기준으로 셈해요. 무사 파티 버프 「호위 진형」의 받는 피해 감소가 용사 자신에게는 안 걸리던 것도 고쳤어요.'],
   ['예전 캐릭터는 약해지지 않아요', '업데이트 날 가진 옵션의 쏠림은 손해로 치지 않아요. 맞는 능력 쪽으로 바꾸면 세지기만 하고, 더 엇나가게 바꾼 만큼만 줄어요. 처음 14일은 엇나간 쪽 손해가 절반이고, 옵션 숫자 자체는 하나도 안 바뀌었어요.'],
   ['적성 화면 · ★ · 꼬리표', '[수련] → 능력치 맨 위에 「직업 적성」 카드(맞는 능력 막대·기술 배율·어디서 올리나요), [기술]의 기술마다 꼬리표(지금 붙는 배율), [장비]의 맞는 옵션마다 금빛 ★. 직업 고르기·바꾸기 창에도 「맞는 능력」이 보여요.'],
   ['새 옵션 줄 · 각인 추천', '공격 속도·치명 확률을 올릴 곳으로 호박석 문양 「돛」(공격 속도)·「물수리」(치명타 확률)와 영약 비 장 「공격 속도」·폐 장 「치명타 확률」을 더했어요. 자객의 추천 각인은 무기 「사냥」 → 「급소」, 도인은 갑옷 「생기」 → 「신속」으로 바뀌었고, 그 각인을 끼던 분은 [조합 공방]에서 한 번 무료로 바꿀 수 있어요.'],
@@ -4652,7 +4657,7 @@ const NOTES = [
   ['초각성기 2 「잘 싸워야 차는 한 방」', '4부 56장을 마치면 직업 1차 스승이 찾아와 퀘스트 「두 번째 깨달음」을 줘요. 다섯 단계 — 스승 다섯의 한마디 → 레이드에서 되받기 30번 → 버팀 깨기 20번 → 붉은 칸·강타·큰 살에 한 번도 맞지 않고 수문장·레이드 보스 3번 → 5차 스승과 다시 겨루기. 익히는 순간의 설명 연출만은 [건너뛰기]가 없고, 끝나면 연습 허수아비에게 직접 한 번 써 봐요.'],
   ['기운 채우기 · 직업 효과', '레이드에서 싸움 단추 옆 물빛 단추의 고리가 1초에 2씩 차요. 손으로 되받기 +30 · 손으로 싸우다 버팀 깨기 +30 · 붉은 칸에서 직접 굴러 피하기 +10. 100이면 내 보스 피해 4초 몫, 손으로 채운 몫이 클수록 최대 7초 몫(한 판에 한 번, 길게 누르면 수동). 무사 대왕암 가르기(보스가 주는 피해 -30%) · 자객 그믐 만 갈래(모든 공격 치명타) · 술사 한바다 뒤집기(보스 4초 멈춤) · 도인 일만 넋 대굿(파티 체력 50% 회복·동료 일으킴).'],
   ['환생의 기억 · 한 번뿐인 선택', '4부 53장에 들어서면 강림도령이 물어요. 「잊고 온 것을 되찾겠느냐. 길은 멀고 값은 싸지 않다.」 [떠올린다]·[나중에]·[떠올리지 않는다] 가운데 골라요. 「나중에」는 5부 끝까지 [수련] → [환생]에서 다시 열 수 있고, 「떠올리지 않는다」는 되돌릴 수 없어요(별호 「뒤돌아보지 않는 자」). 이야기·전직 조건과는 상관없어요.'],
-  ['기억의 길 세 갈래', '[수련] → [환생]에서 값을 치르면 그 기억 속 싸움이 시작돼요. 이승(옛 보스 넷, 엽전) · 저승(시왕 진 넷, 보석 3,000) · 천계(네 스승의 넋, 보석 6,000 + 원한 조각 20), 모두 지금 땅 재료도 들어요. 이기면 윤회 구슬 2·3·3개씩, 지면 값을 다시 내지 않고 다시 싸워요. 다 마치면 마무리 8개를 더해 40개 · 푸른 물빛 환생 오라 · 별호 「세 번 산 자」 · 신속 15·영안 25까지.'],
+  ['기억의 길 세 갈래', '[수련] → [환생]에서 값을 치르면 그 기억 속 싸움이 시작돼요. 이승(옛 보스 넷, 엽전) · 저승(시왕 진 넷, 보석 3,000) · 천계(네 스승의 넋, 보석 6,000 + 원한 조각 20), 모두 지금 땅 재료도 들어요. 이기면 윤회 구슬 2·3·3개씩, 지면 값을 또 내지 않고 다시 싸워요. 다 마치면 마무리 8개를 더해 40개 · 푸른 물빛 환생 오라 · 별호 「세 번 산 자」 · 신속 15·영안 25까지.'],
   ['#', '물의 신화 업데이트 · 직업 바꾸기가 무거워졌어요'],
   ['한 주에 2번까지', '[정보] → [직업 바꾸기]는 이제 캐릭터마다 한 주에 2번까지예요(월요일 0시에 다시 차요). 단추에 이번 주 남은 횟수가 보여요. 캐릭터를 만들 때 처음 고르는 것은 세지 않아요. 싸움·이야기 연출 중에는 못 바꿔요.'],
   ['기술·재련이 처음으로', '직업을 바꾸면 기술 레벨이 모두 Lv.1로, 재련은 모든 장비 칸이 처음(+0)으로 돌아가요. 계승한 칸은 계승 직후(+15)로 돌아가고, 계승으로 굳힌 효과는 그대로 남아요.'],
@@ -4686,7 +4691,7 @@ const NOTES = [
   ['싸움 중 물약 구매 금지', '레이드·타임 보스·강림·1일 보스·보물 동굴·천공의 탑·전직 시험·허수아비·백귀야행이 시작되면 물약(상점의 물약 칸·오늘의 선물·꾸미기 상자·장터의 탕약)을 살 수 없어요. 들고 간 물약은 그대로 마실 수 있고, 시작 전 창에서 들고 가는 수를 알려 줘요(적으면 [사러 가기]). 일반 사냥·단계 보스 중에는 살 수 있어요.'],
   ['초각성 줄임', '초각성기 피해: 내 보스 피해 8초 몫 → 5초 몫(4차 전직 뒤 12초 → 8초 몫). 동료의 초각성도 5초 몫.'],
   ['드롭·레이드 보상 줄임', '세계 재료(수문장 6 → 4, 레이드 8 → 6, 타임 보스 15 → 10, 몬스터 1.2% → 0.8%), 신화 조각(레이드 50% → 30%, 보물 동굴 조금 줄임, 주간 상자 50 → 40), 레이드 신화 보물 2% → 1.2%, 수문장 장신구(반지 8% → 6%, 귀걸이·팔찌 1.5% → 1%), 넋 구슬 확정 40번째 → 50번째, 장터 상인 귀한 물건 2% → 1.5%. 레이드류 보석 1.5배 → 1.2배, 타임 보스 150·300 → 100·200, 강림 250 → 180, 보물 동굴 120 → 90. 첫 토벌·이야기 보상과 이미 가진 것은 그대로예요.'],
-  ['보스 자동 다시 도전', '같은 단계 보스에게 여러 번 져서 도전 기운이 다 찬 뒤(8번)에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 못 이길 보스에 시간을 쓰는 대신 그동안 사냥해서 더 빨리 커요. [보스] 단추를 누르면 언제든 바로 도전할 수 있어요.'],
+  ['보스 자동 다시 도전', '같은 단계 보스에게 여러 번 져서 도전 기운이 다 찬 뒤(8번)에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 못 이길 보스에 시간을 쓰는 대신 그동안 사냥해서 더 빨리 커요. [보스 도전] 단추를 누르면 언제든 바로 도전할 수 있어요.'],
   ['치장 「버선」', '치장 다섯 부위 가운데 「신발」의 이름이 「버선」으로 바뀌었어요(효과와 가진 치장은 그대로). 곧 생길 새 장비 칸 「신발」과 헷갈리지 않게요.'],
   ['고침', '4차 전직을 마친 용사가 다시 접속하면 3차로 돌아가던 문제를 고쳤어요(4차 기술을 익힌 기록이 있으면 4차로 되돌려요). 부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 예전 것(무기 +20 재련)으로 되돌아가던 문제도 고쳤어요(되돌아갔던 용사는 건너기 퀘스트까지 되찾아요).'],
 ];
@@ -4711,7 +4716,7 @@ const SEASON1_NOTES = [
   ['#', '2026-11-12 · 버그 고침'],
   ['4차 전직이 3차로 돌아가던 것', '4차 전직을 한 용사가 다시 접속하면 3차로 내려가던 버그를 고쳤어요. 4차 기술을 익힌 기록이 있으면 접속할 때 4차로 되돌려요.'],
   ['이야기 퀘스트가 되돌아가던 것', '부상·곤륜에 건너간 뒤 다시 접속하면 이야기 퀘스트가 옛 퀘스트(무기 재련)로 되돌아가던 버그를 고쳤어요. 되돌아간 용사는 접속할 때 그 땅에 건너온 대목으로 되찾아요.'],
-  ['못 이기는 보스에 시간을 다 쓰던 것', '보스 자동 도전에서 도전 기운이 다 찬 뒤에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 그 사이 사냥해서 레벨을 올려요. 바로 도전하려면 [보스] 단추를 누르면 돼요.'],
+  ['못 이기는 보스에 시간을 다 쓰던 것', '보스 자동 도전에서 도전 기운이 다 찬 뒤에도 지면, 다시 도전하는 간격이 45초 → 90초 → 3분 → 6분 → 10분으로 벌어져요. 그 사이 사냥해서 레벨을 올려요. 바로 도전하려면 [보스 도전] 단추를 누르면 돼요.'],
   ['#', '2026-11-11 · 채팅 확성기'],
   ['채팅 확성기', '용사가 채팅으로 한 말(내 말·다른 용사의 말)이 확성기 공지처럼 게임 화면 위 가운데에 띠로 잠깐 떠요. 채팅창을 닫고 사냥·레이드를 하거나 메뉴를 보고 있어도 보여요. 여럿이 말하면 차례로, 긴 글은 옆으로 흘러요. 주민(마을) 수다와 알림은 채팅창에만 나와요. [정보] → 채팅 확성기에서 끌 수 있어요.'],
   ['#', '2026-11-11 · 계승(대장장이) · 재료 수급처 · 재료 말풍선'],
@@ -6360,7 +6365,7 @@ function gainExp(x, o){   // o.raw = 레벨 문 새 요소를 더하지 않음(�
   if (step && Math.floor(S.level / step) > Math.floor(lv0 / step)){
     const ri = Math.floor(S.level / step) - 1, info = raidAt(ri);
     if (S.level % 50 < step) announce(`${S.name}님이 레벨 ${Math.floor(S.level / step) * step}을 넘었어요!`);
-    if (ri < raidUnlocked()) addLog(`새 레이드가 열렸습니다: ${info.label} (${partyOf(info)}인)`, 'good');
+    if (ri < raidUnlocked()) addLog(`새 레이드가 열렸어요: ${info.label} (${partyOf(info)}인)`, 'good');
   }
   unlockSkills();
 }
@@ -6567,7 +6572,7 @@ function heroDie(){
   }
   if (raid && raid.info.jin){   // 상위 레이드 「진」: JIN.lives번째 쓰러지면 끝
     raid.falls = (raid.falls || 0) + 1;
-    if (raid.falls >= JIN.lives){ hero.deadT = Infinity; addLog(`「진」에서는 ${JIN.lives}번째 쓰러지면 물러나야 해요…`, 'warn'); raidEnd(false); return; }
+    if (raid.falls >= JIN.lives){ hero.deadT = Infinity; addLog(`「진」에서는 ${JIN.lives}번째로 쓰러지면 물러나야 해요…`, 'warn'); raidEnd(false); return; }
   }
   if (raid && raid.norm && tkFx()){   // 일반 파티 레이드(9-4): 용사가 TANK.raidLives번째 쓰러지면 물러난다
     raid.falls = (raid.falls || 0) + 1;
@@ -6582,7 +6587,7 @@ function heroDie(){
   const wasBoss = bossActive;
   if (bossActive) bossFail('용사가 쓰러짐');
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; }
-  addLog('용사가 쓰러졌습니다…', 'warn');
+  addLog('용사가 쓰러졌어요…', 'warn');
   if (!wasBoss){
     S.deathsHere++;
     if (S.deathsHere >= 2 && S.stage > 1){
@@ -6658,8 +6663,8 @@ function bossWin(){
   if (ri !== prev){ const nm = curRegion(S.stage).name; addLog(`새 지역에 들어섰어요: ${nm}`, 'good'); announce(`${S.name}님이 ${nm}에 들어섰어요.`); }
   if (isGateStage(S.stage)) addLog('이 단계 보스는 수문장! 장신구가 떨어질 수 있어요.', 'warn');
   { const RW = RAID_WORLDS.find(x => x.w === S.world), st = RW && RW.every;   // 부상부터: 단계 몇 개마다 레이드가 하나씩(부상·곤륜 8, 동해 10)
-    if (st && (S.stage - 1) % st === 0 && S.stage - 1 === S.maxStage - 1 && (S.stage - 1) / st <= RW.n){ const info = raidAt((S.stage - 1) / st - 1); if (info) addLog(`새 레이드가 열렸습니다: ${info.label}`, 'good'); }
-    if (RW && RW.at && S.stage === S.maxStage && RW.at.includes(S.stage)){ const info = raidAt(RW.at.indexOf(S.stage)); if (info) addLog(`새 레이드가 열렸습니다: ${info.label}`, 'good'); } }
+    if (st && (S.stage - 1) % st === 0 && S.stage - 1 === S.maxStage - 1 && (S.stage - 1) / st <= RW.n){ const info = raidAt((S.stage - 1) / st - 1); if (info) addLog(`새 레이드가 열렸어요: ${info.label}`, 'good'); }
+    if (RW && RW.at && S.stage === S.maxStage && RW.at.includes(S.stage)){ const info = raidAt(RW.at.indexOf(S.stage)); if (info) addLog(`새 레이드가 열렸어요: ${info.label}`, 'good'); } }
   ev('boss');
 }
 /* --- 장신구 --- */
@@ -7124,7 +7129,7 @@ function memCardHTML(){
   if (st.ch === 'no') body = `<p class="story">떠올리지 않기로 했어요. 뒤돌아보지 않고 앞으로 가요. (별호 「${TT.memNo.name}」)</p>`;
   else if (st.ch !== 'yes') body = memClosed() ? '<p class="story">5부 이야기를 마쳐 기억의 길은 닫혔어요.</p>'
     : `<p class="story">물에 비친 얼굴이 이승의 나, 저승의 나로 바뀌어요. 강림도령이 물어요. 「잊고 온 것을 되찾겠느냐. 길은 멀고 값은 싸지 않다.」 — 지난 두 번의 삶을 다시 떠올려 <b>윤회 구슬 ${MEM.total}개</b>까지 얻는 선택 콘텐츠예요(캐릭터마다 한 번).</p><button class="btn primary" id="memAskBtn">강림도령의 물음 듣기</button>`;
-  else body = `<p class="story">기억의 길 세 갈래. 값을 치르면 그 기억 속 싸움이 시작돼요. 이기면 윤회 구슬을 얻고, 지면 값을 다시 내지 않고 다시 싸워요. 갈래 하나만 하고 멈춰도 얻은 구슬은 남아요.</p>
+  else body = `<p class="story">기억의 길 세 갈래. 값을 치르면 그 기억 속 싸움이 시작돼요. 이기면 윤회 구슬을 얻고, 지면 값을 또 내지 않고 다시 싸워요. 갈래 하나만 하고 멈춰도 얻은 구슬은 남아요.</p>
     <ul class="list" id="memList">${MEM_BR.map((B, b) => `<li class="qrow" id="mem-${b}"><div><div class="qn" style="color:${B.c}">${B.name}<span data-m="n"></span></div><p class="small" data-m="t"></p><p class="small" data-m="c"></p><div class="meter gold"><i></i></div></div><button class="btn sm" data-mb="${b}"></button></li>`).join('')}</ul>
     <p class="small" id="memSum"></p>`;
   return `<div class="card ${st.fin ? 'ready' : ''}" id="memCard"><div class="ct"><span style="color:${MEM.col}">환생의 기억</span><span class="tag">${st.ch === 'yes' ? `윤회 구슬 ${st.orbs}/${MEM.total}` : st.ch === 'no' ? '닫음' : '한 번뿐인 선택'}</span></div>${body}${S.world >= LG.w0 && st.ch === 'yes' ? `<p class="small">갈래를 하나 되찾을 때마다 [퀘스트] → [수련 의뢰]의 기억의 향이 +${LG.inMem}%씩 세져요(지금 +${lgIncPct()}%).</p>` : ''}</div>`;
@@ -7557,7 +7562,7 @@ function patHeads(B, P){
   P.tel = {kind:'tiles', shape:'heads', heads:n, anchors, t:0, T:PAT.warnRaid + 0.3, set, tiles:[...set].map(x => x.split(',').map(Number)),
     auto:{ok:Math.random() < handP('dodge'), at:0.25 + Math.random() * 0.5, done:false}};
   addText(`열 머리! ${n}개`, B.x, B.y - mobHeight(B) - 14, '#ffd24a', 12, true); sfx('blip');
-  if (!S.seenCut.patHeads){ S.seenCut.patHeads = 1; addLog('「열 머리」! 남은 머리마다 붉은 칸이 깔려요. [되받기]를 성공할 때마다 머리가 하나씩 꺼져 붉은 칸이 줄어요.', 'warn'); }
+  if (!S.seenCut.patHeads){ S.seenCut.patHeads = 1; addLog('「열 머리」! 남은 머리마다 붉은 칸이 깔려요. [되받기]에 성공할 때마다 머리가 하나씩 꺼져 붉은 칸이 줄어요.', 'warn'); }
 }
 function headOff(B){
   if (B.heads == null) B.heads = IND_PAT.heads;
@@ -12531,7 +12536,7 @@ const JUMP_CUT = () => [
   ['daewangam', 'granny,hero,kkachi', '', [['이야기꾼 할머니', '자, 이제 네 차례다. 동쪽 바다에서 검은 물이 밀려온다는구나.'], ['까치', '{name}님, 떠나기 전에 몸부터 풀어요!'], ['나', '지난 이야기는 마음에 담고, 이제 내 이야기를 쓸게요.']]]];
 // 몸 풀기 넷: [제목, 설명, 끝나면 열리는 전직]
 const JUMP_TR = [
-  {t:'기술 쓰기', d:'아래 <b>기술 칸</b>을 눌러 기술을 써 보세요. [자동]이면 용사가 알아서 써요. 허수아비는 때리지 않아요.', tip:'기술 칸을 눌러 보세요. 길게 누르면 그 기술만 수동/자동이 바뀌어요.'},
+  {t:'기술 쓰기', d:'아래 <b>기술 칸</b>을 눌러 기술을 써 보세요. [자동]이면 용사가 알아서 써요. 허수아비는 용사를 때리지 않아요.', tip:'기술 칸을 눌러 보세요. 길게 누르면 그 기술만 수동/자동이 바뀌어요.'},
   {t:'피하고 되받기', d:'바닥에 <b>붉은 칸</b>이 깔리면 [구르기]로 벗어나고, 스승이 금빛으로 힘을 모으면 [되받기]를 눌러요. 그냥 두어도 용사가 어느 정도 알아서 해요.', tip:'붉은 칸 → [구르기] · 금빛으로 힘을 모으면 → [되받기]'},
   {t:'넋 부름과 변신', d:'싸우는 동안 <b>넋의 기운</b>이 차면 넋이 나타나 도와요. 보스 앞에서는 <b>변신</b>(청룡)이 한 판에 한 번 켜져요. 둘 다 [자동]이면 저절로 써요.', tip:'[넋 부름] · [변신] 단추를 눌러 보세요(자동이면 저절로).'},
   {t:'연습 레이드', d:'동료 셋과 함께 스승에게 도전해요. 보스가 <b>전멸기</b>를 쓰면 체력이 1이 되니 곧바로 탕약을 마셔요(자동이면 저절로). <b>초각성기</b>도 한 번 나가요.', tip:'동료와 함께! 전멸기 뒤에는 탕약.'}];
@@ -13537,7 +13542,7 @@ function finishEntry(R){
   saveLocal();
   if (window.__game && window.__game.quiet) return;
   showModal(`토벌 성공 · ${info.label}`, `
-    <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 길을 비켜 줬어요! ${rw.first ? '<b>첫 클리어 보상</b>도 함께 받았어요.' : ''}</p>
+    <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 길을 비켜 줬어요! ${rw.first ? '<b>첫 토벌 보상</b>도 함께 받았어요.' : ''}</p>
     <ul class="rewards">
       <li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>
       <li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>
@@ -17904,7 +17909,7 @@ function buildElix(){
 function buildGuard(){
   panel.innerHTML = `${growSegHTML()}
     <div class="ph"><h2>수호신</h2><span class="small">모신 수호신 <b id="gdOn"></b></span></div>
-    <p class="hint">집과 마을을 지켜 준다는 옛 지킴이 신이에요. 엽전을 바쳐 레벨을 올리면(최대 Lv.${GUARD_MAX}, 바다·천축의 수호신은 Lv.10) 효과가 커져요. 하나를 <b>모시면</b> 그 수호신 효과를 모두, 나머지 수호신은 <b>${Math.round(GUARD_REST * 100)}%</b>만 받아요. 버튼을 길게 누르면 계속 올라가요.</p>
+    <p class="hint">집과 마을을 지켜 준다는 옛 지킴이 신이에요. 엽전을 바쳐 레벨을 올리면(최대 Lv.${GUARD_MAX}, 바다·천축의 수호신은 Lv.10) 효과가 커져요. 하나를 <b>모시면</b> 그 수호신 효과를 모두, 나머지 수호신은 <b>${Math.round(GUARD_REST * 100)}%</b>만 받아요. 단추를 길게 누르면 계속 올라가요.</p>
     <p class="small apt-leg">${aptLegend()}</p>
     ${S.world >= LG.w0 ? '<p class="small"><b>레벨 문</b> = 이야기가 레벨을 기다리는 때예요. 용왕신·업신은 그때만 힘을 써요.</p>' : ''}
     <div class="guards">${GUARDS.filter(guardShown).map(g => `<div class="card guard" id="gd-${g.k}" style="--gc:${g.c}">
@@ -17971,7 +17976,7 @@ function buildGrow(){
       <div class="mode" role="group" aria-label="한 번에 올릴 단계">
         <button class="chip" id="mode-1" data-m="1">×1</button><button class="chip" id="mode-10" data-m="10">×10</button><button class="chip" id="mode-max" data-m="max">최대</button>
       </div></div>
-    <p class="hint">엽전으로 능력을 갈고닦아요. 버튼을 길게 누르면 계속 올라가요.</p>
+    <p class="hint">엽전으로 능력을 갈고닦아요. 단추를 길게 누르면 계속 올라가요.</p>
     ${tkCardHTML()}
     ${aptCardHTML()}
     <ul class="list">${STAT_ORDER.map(k => `
@@ -18238,7 +18243,7 @@ let gearSlot = 'weapon', gearSel = -1;
 // 세트·공명(2026-11 (42))
 function buildSet(){
   panel.innerHTML = `${gearSegHTML()}<div class="ph"><h2>장비 세트 · 공명</h2><span class="small" id="resTag"></span></div>
-    <p class="hint">무기·갑옷이 중심이에요. 낀 무기·갑옷의 등급이 높을수록 <b>장비 공명</b>으로 장신구·치장·변신·탈것·아바타 효과가 커지고(전설 1배 · 신화 각성 1.1배 · 태초 1.2배, 낮으면 줄어요 — 영웅 0.93배), 정해진 무기·갑옷 등급과 함께 아바타(입은 것)·장신구·천공의 탑 층, 그리고 <b>가지고만 있으면 되는</b> 변신·넋·신화 보물·펫을 맞추면 <b>세트 효과</b>가 켜져요. 세트는 <b>무기·갑옷 둘 다</b> 맞아야 켜지고, 맞춘 개수(2~5)만큼 효과가 쌓여요. 한 번에 <b>하나</b>(가장 많이 맞춘 세트)만 켜져요. 효과는 '몇 단계만큼'이라 어느 땅에서나 비슷하게 세요.</p>
+    <p class="hint">무기·갑옷이 중심이에요. 낀 무기·갑옷의 등급이 높을수록 <b>장비 공명</b>으로 장신구·치장·변신·탈것·아바타 효과가 커지고(전설 1배 · 신화 각성 1.1배 · 태초 1.2배, 낮으면 줄어요 — 영웅 0.93배), 정해진 무기·갑옷 등급과 함께 아바타(입은 것)·장신구·천공의 탑 층, 그리고 <b>가지고만 있으면 되는</b> 변신·넋·신화 보물·펫을 맞추면 <b>세트 효과</b>가 켜져요. 세트는 <b>무기·갑옷 둘 다</b> 맞아야 켜지고, 맞춘 개수(2~5)만큼 효과가 쌓여요. 한 번에 <b>하나</b>(가장 많이 맞춘 세트)만 켜져요. 효과는 '몇 단계만큼'이라 어느 땅에서나 비슷하게 강해요.</p>
     <div id="setList"></div>`;
   wireGearSeg();
   $('#setList').addEventListener('click', e => { const sc = e.target.closest('[data-sdclaim]'); if (sc){ if (sdClaim(+sc.dataset.sdclaim)) sfx('win'); refreshPanel(); return; }
@@ -18384,10 +18389,10 @@ function buildGear(){
   $('#sum10').addEventListener('click', () => doSummon(slot, 10));
   panel.querySelectorAll('[data-spb]').forEach(bt => bt.addEventListener('click', () => { if (spPick(slot, +bt.dataset.spb)) buildTab('gear', true); }));
   panel.querySelectorAll('.cell').forEach(bt => bt.addEventListener('click', () => { const i = +bt.dataset.i; gearSel = gearSel === i ? -1 : i; buildTab('gear', true); }));
-  if ($('#eqBtn')) $('#eqBtn').addEventListener('click', () => { S.equip[slot] = gearSel; refreshStats(); buildTab('gear', true); addLog(`${gearName(slot, gearSel)}${josa(gearName(slot, gearSel), '을', '를')} 장착했습니다.`); });
+  if ($('#eqBtn')) $('#eqBtn').addEventListener('click', () => { S.equip[slot] = gearSel; refreshStats(); buildTab('gear', true); addLog(`${gearName(slot, gearSel)}${josa(gearName(slot, gearSel), '을', '를')} 장착했어요.`); });
   if ($('#mgBtn')) $('#mgBtn').addEventListener('click', () => { const n = mergeOne(slot, gearSel); refreshStats(); if (n) addLog(`${gearName(slot, gearSel + 1)} ${n}개를 만들었어요.`, 'gain'); buildTab('gear', true); });
   $('#mergeAll').addEventListener('click', () => { const n = mergeAll(slot); addLog(n ? `${n}번 합성했어요.` : '합성할 장비가 없어요. 같은 장비 4개가 필요해요.', n ? 'gain' : ''); buildTab('gear', true); });
-  $('#equipBest').addEventListener('click', () => { equipBest(slot); addLog(S.equip[slot] >= 0 ? `${gearName(slot, S.equip[slot])}${josa(gearName(slot, S.equip[slot]), '을', '를')} 장착했습니다.` : '먼저 장비를 소환해 주세요.'); buildTab('gear', true); });
+  $('#equipBest').addEventListener('click', () => { equipBest(slot); addLog(S.equip[slot] >= 0 ? `${gearName(slot, S.equip[slot])}${josa(gearName(slot, S.equip[slot]), '을', '를')} 장착했어요.` : '먼저 장비를 소환해 주세요.'); buildTab('gear', true); });
   $('#ascBtn').addEventListener('click', e => { if (ascend(slot)){ playFx('craft', {el:e.currentTarget, sub:`${GRADES[ASC[ascLv(slot)].g].name} 각성`}); buildTab('gear', true); } });
   return () => {
     $('#sum1').disabled = S.gems < 50; $('#sum10').disabled = S.gems < 450;
@@ -18406,7 +18411,7 @@ function buildGear(){
 }
 function doSummon(slot, n){
   const res = summon(slot, n);
-  if (!res){ addLog('보석이 부족합니다.', 'warn'); return; }
+  if (!res){ addLog('보석이 모자라요.', 'warn'); return; }
   sfx(res.some(r => r.it >= 12) ? 'rare' : 'summon');
   if (currentTab === 'gear') buildTab('gear', true);
   const best = res.reduce((a, r) => Math.max(a, r.it), 0);
@@ -19226,7 +19231,7 @@ let petSumAt = 0;
 function doPetSummon(n){
   const tNow = performance.now(); if (tNow - petSumAt < 250) return; petSumAt = tNow;   // 마구 누를 때 겹친 누름
   const res = petSummon(n);
-  if (!res){ addLog('보석이 부족합니다.', 'warn'); return; }
+  if (!res){ addLog('보석이 모자라요.', 'warn'); return; }
   sfx(res.some(r => PETS[r.i].g >= 3) ? 'rare' : 'summon');
   if (currentTab === 'pet') buildTab('pet', true);
   const lab = {new:'NEW', star:'★+1', gem:'보석'};
@@ -19254,7 +19259,7 @@ function questGo(q){   // 「바로 가기」·퀘스트 누르기: 이 퀘스�
     // 마을 부탁의 '레이드'는 [레이드] 칸의 어느 싸움이든 세므로, 이 땅 레이드가 아직 잠겨 있으면(저승·천계 초입 등) 지금 할 수 있는 칸으로(2026-11 (48) 버그: 저승 초입에 잠긴 레이드 목록만 보임)
     if (q.c === 'raids' && raidUnlocked() < 1){
       raidView = (dummyLeft() > 0 && !tierLock('dummy')) || (haetaeOpen() && haetaeLeft() > 0 && !tierLock('haetae')) ? 'dummy' : paradeLeft() > 0 ? 'parade' : (vaultLeft() > 0 && !tierLock('vault')) || (yvOpen() && yvLeft() > 0 && !tierLock('yv')) ? 'vault' : 'tb';
-      addLog(`이 땅의 레이드는 아직 잠겨 있어요. 허수아비·백귀야행·보물 동굴·타임 보스 가운데 아무거나 해도 부탁이 세어져요.`, 'good');
+      addLog(`이 땅의 레이드는 아직 잠겨 있어요. 허수아비·백귀야행·보물 동굴·타임 보스 가운데 아무거나 해도 부탁 횟수로 쳐요.`, 'good');
     }
     return buildTab('raid');
   }
@@ -19765,7 +19770,7 @@ function buildRaid(){
     panel.innerHTML = top + chips('dummy') + `
       <div class="card dcard"><div class="dport"><img src="${bossPortrait('scarecrow', '#d8b060')}" alt=""></div>
         <div><div class="ct">허수아비 수련<span class="tag" id="dLeft"></span></div>
-        <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번). 5등급을 채우면 바로 끝나요.</p></div></div>
+        <p class="story">혼자 ${DUMMY_TIME}초 동안 짚 허수아비를 있는 힘껏 쳐요. 허수아비는 용사를 때리지 않아요. 넣은 피해만큼 <b>1~5등급</b> 보상을 받아요(하루 ${DUMMY_TRIES}번). 5등급을 채우면 바로 끝나요.</p></div></div>
       <div class="card"><div class="ct">등급 보상<span class="small" id="dBest"></span></div>
         <ul class="list dtiers">${[1, 2, 3, 4, 5].map(t => `<li class="qrow" id="dt-${t}"><div><div class="qn"><span><b>${t}등급</b> <span class="small" data-dt="${t}"></span></span>
           <span class="rchips"><span class="rchip rc-gold">엽전</span><span class="rchip rc-gem">보석 ${fmt(Math.round([0, 15, 45, 90, 150, 225][t] * WEEK_K[Math.max(0, Math.min(4, S.world))] * gemMul()))}</span><span class="rchip rc-mat">재료 ${MAT_SRC.dummy[t]}</span>${t === 4 ? '<span class="rchip rc-acc">반지</span>' : t === 5 ? '<span class="rchip rc-acc">귀걸이·팔찌</span>' : ''}</span></div></div></li>`).join('')}</ul></div>
@@ -19803,10 +19808,10 @@ function buildRaid(){
     return `<div class="rcard entry" id="raid-entry" data-part="${cpart}" data-pk="e${S.world}" data-pn="0">
       <div class="rport"><img src="${bossPortrait(info.type, info.color)}" alt=""></div>
       <div class="rbody">
-        <div class="rtop"><b>입문 · ${info.name}</b><span class="rstate ${efirst ? 'new' : 'done'}">${efirst ? '첫 클리어 보상!' : '토벌함 ✓'}</span></div>
+        <div class="rtop"><b>입문 · ${info.name}</b><span class="rstate ${efirst ? 'new' : 'done'}">${efirst ? '첫 토벌 보상!' : '토벌함 ✓'}</span></div>
         <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티 · 늘 열림 · 세기가 나를 따라감</div>
         <div class="rpow" data-rp="entry"></div>
-        <div class="rchips"><span class="rchip rc-gem">보석 ${info.gems}${efirst ? ` +${info.firstGems}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[info.g].name} 장비</span>${efirst ? '<span class="rchip rc-myth">첫 클리어 장비 +1</span>' : ''}</div>
+        <div class="rchips"><span class="rchip rc-gem">보석 ${info.gems}${efirst ? ` +${info.firstGems}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[info.g].name} 장비</span>${efirst ? '<span class="rchip rc-myth">첫 토벌 장비 +1</span>' : ''}</div>
       </div>
       <button class="btn rgo" data-e="1"></button>
     </div>`; })(entryInfo());
@@ -19818,7 +19823,7 @@ function buildRaid(){
         <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`;
     const jdone = L.filter(x => S.jin.win['j' + x.key]).length;
     return `<div data-psec><div class="ph"><h2>${WORLD_NAME[R.w]} 레이드 · 진(眞)</h2><span class="tkbadge jin-left"></span></div>
-      <p class="hint">${R.w < S.world ? '지나온 땅' : '이야기를 마친 땅'} ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
+      <p class="hint">${R.w < S.world ? '지나온 땅' : '이야기를 마친 땅'} ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째로 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
       <div class="rlist">${L.map((b0, i) => { const info = jinInfo(R.w, i), wk = !S.jin.wk[info.key], n = S.jin.win[info.key] || 0, pity = Math.round(jinPity(info.key) * 100);
         return `<div class="rcard jin" id="jin-${R.w}-${i}" data-part="${partOfW(R.w)}" data-pk="${b0.key}">
           <div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""><span class="jmark">眞</span></div>
@@ -20819,7 +20824,7 @@ function setClass(c){
   if (changed){ S.skSet = []; S.skOff = []; S.skSetMan = false; S.skKnown = []; skSetFix(); skBarKey = ''; }
   refreshStats(); hero.hp = ST.maxHp; hero.target = null;
   buildTab(currentTab, true);
-  if (changed) addLog(`${CLASSES[c].name}의 길을 걷습니다.`, 'good');
+  if (changed) addLog(`${CLASSES[c].name}의 길을 걸어요.`, 'good');
   saveLocal();
 }
 /* ================= 직업 바꾸기 제한 (물의 신화 5-1단계, 2026-11-12 주인 요청: 「직업 변경을 너무 쉽게 설계해 뒀다」) =================
