@@ -5975,7 +5975,7 @@ async def main():
           reset(); return out; }""", msave)
         check(R['r1'][:2] == [700, 2] and abs(R['r1'][2] - 0.5) < 0.03 and R['r1'][3] == 0, f"경지 R1: Lv.700에서 번 경험치는 모음이 아니라 경지 단으로 쌓임(2단 + 반 단, 레벨 그대로) {R['r1']}")
         check(R['r2a'] == [10, 10, 1] and R['r2b'] == [10, 1] and R['r2c'] == [20, 20], f"경지 R2: 10단마다 조각 +10, 저장해 다시 들어와도 또 안 줌, 20단에서 합 20 {R['r2a']} {R['r2b']} {R['r2c']}")
-        check(abs(R['r3a'][0] - 0.85) < 1e-9 and abs(R['r3a'][1] - 7.103) < 0.01 and R['r3b'] == [1.03, 1.03] and R['r3c'] == 1.3, f"경지 R3: 1단 = Lv.700 한 레벨 몫의 0.85배, 단마다 ×1.02(100단에서 7배), 힘은 단마다 +0.3% · 100단 +30%(총량 한도) {R['r3a']} {R['r3b']} {R['r3c']}")
+        check(abs(R['r3a'][0] - 0.68) < 1e-9 and abs(R['r3a'][1] - 7.103) < 0.01 and R['r3b'] == [1.03, 1.03] and R['r3c'] == 1.3, f"경지 R3: 1단 = Lv.700 한 레벨 몫의 0.68배, 단마다 ×1.02(100단에서 7배), 힘은 단마다 +0.3% · 100단 +30%(총량 한도) {R['r3a']} {R['r3b']} {R['r3c']}")
         check(R['r4'][0] == 100 and R['r4'][1] == 0 and R['r4'][2] and R['r4'][3] == 1.3 and R['r4b'][0] == 100 and R['r4b'][1], f"경지 R4: 100단에서 멈춤 — 넘친 경험치는 모음에, 단·힘은 더 안 오름 {R['r4']} {R['r4b']}")
         check(R['r5'] == [[700, False], [714, False], [715, True]] and R['r5b'] == 750 and R['r5c'] == 700, f"경지 R5: 단마다 수미산 레벨 문이 Lv.700 + n까지(14단은 Lv.715 문 못 넘고 15단은 넘음), 레벨이 앞서면 레벨 그대로, 다른 땅은 영향 없음 {R['r5']} {R['r5b']} {R['r5c']}")
         check(R['r6a'] == R['r6e'][0] and R['r6b'] == [R['r6e'][0], R['r6e'][1], 0] and R['r6e'][0] >= 10 and R['r6c'] == 0, f"경지 R6: 700에서 모아 둔 모음 10 → 접속할 때 100%로 경지 {R['r6e'][0]}단 · 조각 {R['r6e'][1]}으로 옮기고 모음 0, 두 번 안 줌 {R['r6a']} {R['r6b']} {R['r6c']}")
@@ -6101,6 +6101,7 @@ async def main():
           S.quest.main = 340; out.openStory = op(700); S.quest.main = G.MAIN_Q.length + 1;
           const recs = R.map((_, k) => G.transRec(k)); out.recUp = recs.every((v, k) => isFinite(v) && v > 0 && (k === 0 || v >= recs[k - 1])); out.recs = recs.map(v => +Math.log10(v).toFixed(2));
           const bases = R.map((_, k) => G.transBase(k)); out.baseOk = bases.every(b => b.every(v => isFinite(v) && v > 0));
+          { const c0 = S.cls; S.cls = 'musa'; out.fit = R.map((r, k) => { const f = r.fit, b1 = G.transBase(k); r.fit = [0, 0]; const b0 = G.transBase(k); r.fit = f; return [Array.isArray(f) && f.length === 2, +Math.log10(b1[0] / b0[0]).toFixed(4), +Math.log10(b1[1] / b0[1]).toFixed(4), b1[2] === b0[2], f]; }); S.cls = c0; }   // 11-21 보정: 보스 체력·한 방만 옮기고 권장 전투력은 그대로
           const cl = {}; for (const c of ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'zzz']){ const c0 = S.cls; S.cls = c; cl[c] = G.transBase(2).every(v => isFinite(v) && v > 0); S.cls = c0; } out.cls = cl;
           S.level = 620; const I = G.transInfo(0); out.info = [I.jin, I.tr, I.key, I.label, I.bossName, I.jw, I.ji];
           const sh0 = S.trans.shard, gm0 = S.gems; out.st0 = G.startTrans(0); out.stInfo = G.raid ? [G.raid.info.tr, G.raid.info.jin, isFinite(G.raid.boss.maxHp) && G.raid.boss.maxHp > 0, G.raid.limit] : null;
@@ -6118,6 +6119,7 @@ async def main():
         check(tr['lvs'] == [620, 640, 660, 680, 700] and all(tr['names']), f"초월 레이드: 다섯 곳이 Lv.620·640·660·680·700에 열리고 이름이 있다 {tr['lvs']}")
         check(tr['open'] == ['00000', '10000', '10000', '11000', '11100', '11110', '11111'] and tr['openStory'] == '00000', f"초월 레이드 열림: 레벨마다 한 곳씩, 수미산 이야기를 안 마쳤으면 안 열림 {tr['open']} {tr['openStory']}")
         check(tr['recUp'] and tr['baseOk'] and all(tr['cls'].values()), f"초월 레이드 세기: 권장 전투력이 뒤로 갈수록 세지고 모든 직업(모르는 직업 포함)이 유한한 값 {tr['recs']} {tr['cls']}")
+        check(all(f[0] and abs(f[1] - f[4][0]) < 1e-3 and abs(f[2] - f[4][1]) < 1e-3 and f[3] for f in tr['fit']) and [f[4] for f in tr['fit']] == [[0.055, 0], [0.035, 0.1], [-0.025, 0.1], [-0.015, 0.15], [-0.025, 0.15]], f"초월 레이드 보정(11-21): 곳마다 보스 체력·한 방만 정한 만큼(log10) 옮기고 권장 전투력은 그대로 {tr['fit']}")
         check(tr['info'][:2] == [True, True] and tr['info'][2] == 't0' and tr['info'][3] == '초월 · 열한 번째 머리' and tr['info'][4] == '초월한 라바나', f"초월 레이드 정보: 진 레이드 싸움 규칙(jin)을 쓰고 이름이 다른 모습 {tr['info']}")
         check(tr['st0'] is True and tr['stInfo'] and tr['stInfo'][:3] == [True, True, True] and tr['stInfo'][3] == 90 and tr['st1'] is False, f"초월 레이드 시작: 제한 90초, 싸우는 중엔 다른 곳 못 시작 {tr['stInfo']} {tr['st1']}")
         check(tr['w1'] == [13, 1, 1, True], f"초월 레이드 첫 승리: 조각 3 + 처음 이긴 보상 10, 보석 {tr['w1']}")

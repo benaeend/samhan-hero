@@ -3,7 +3,7 @@
 사용(먼저 python3 tools/build.py — 빌드된 index.html 을 쓴다):
   python3 tools/sim_trans.py ladder <직업> <저장.json>…       저장마다 [D0, EHP, PW](log10)와 레벨 — 초월 레이드의 TRANS_LADDER 기준값(무사)
   python3 tools/sim_trans.py tower <직업> <저장.json> [n=3]   그 저장이 탑 501~600층(수미산 단계 띠)에서 일반 층 · 문지기 층을 몇 단계까지 버티는지 이분 탐색(n판 중 과반)
-  python3 tools/sim_trans.py table <직업> <저장.json> [k…] [n=20] [ov=D0,EHP,PW]   초월 레이드 k(0~4)를 권장 전투력 80·100·130·200%로 손 모델 3가지(자동·평범·잘함) 클리어율 — 게임에 적힌 TRANS_LADDER 그대로(ov 를 주면 그 log10 기준으로 — 예: 진 레이드 수미산 값과 견줄 때)
+  python3 tools/sim_trans.py table <직업> <저장.json> [k…] [n=20] [rs=0.8,1.0] [ov=D0,EHP,PW]   초월 레이드 k(0~4)를 권장 전투력 80·100·130·200%로 손 모델 3가지(자동·평범·잘함) 클리어율 — 게임에 적힌 TRANS_LADDER 그대로(ov 를 주면 그 log10 기준으로 — 예: 진 레이드 수미산 값과 견줄 때)
 - 저장은 수미산 이야기 끝(docs/patch-sea/sim/save_<직업>_ind3.json)에서 tools/sim_post.py 로 레벨을 올리며 남긴 것(예: /tmp/max700/end_musa_t650.json)
 - 재는 법·손 모델은 tools/sim_jin.py 와 같다(JS_LOAD·JS_D0·HANDS를 그대로 가져다 씀)
 """
@@ -97,13 +97,14 @@ async def main():
             ks = [int(a) for a in rest[1:] if a.isdigit()] or [0, 1, 2, 3, 4]
             n = int([a for a in rest[1:] if a.startswith('n=')][0][2:]) if any(a.startswith('n=') for a in rest[1:]) else 20
             ov = [float(x) for x in [a for a in rest[1:] if a.startswith('ov=')][0][3:].split(',')] if any(a.startswith('ov=') for a in rest[1:]) else None
+            rs = [float(x) for x in [a for a in rest[1:] if a.startswith('rs=')][0][3:].split(',')] if any(a.startswith('rs=') for a in rest[1:]) else RS
             page, info = await load(b, rest[0], cls)
             for k in ks:
-                res = await page.evaluate(JS_TRANS, [k, [[h, v] for h, v in HANDS.items()], RS, n, info['pw'], ov])
+                res = await page.evaluate(JS_TRANS, [k, [[h, v] for h, v in HANDS.items()], rs, n, info['pw'], ov])
                 if 'err' in res:
                     raise SystemExit(f'k={k}: {res}')
                 print(f"## 초월 레이드 {k} · {cls} Lv.{info['lv']} · {n}판 (권장 전투력 비율별 클리어율)")
-                for r in RS:
+                for r in rs:
                     print(f'  {int(r * 100):3d}%  ' + '  '.join(f"{h} {res[f'{h}:{round(r * 100)}']['win'] * 100:3.0f}% (쓰러짐 {res[f'{h}:{round(r * 100)}']['falls']:.1f})" for h in HANDS), flush=True)
         await b.close()
 
