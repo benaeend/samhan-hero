@@ -688,8 +688,7 @@ body.hell .sheet{background:linear-gradient(180deg,#2a161c,#170b0f)}
   .log div{transition:none}
 }
 
-/* ================= 가로 화면 배치(2026-11) =================
-   장면이 화면을 가득 채우고, 상태·재화·퀘스트·기술은 장면 위에 떠 있다. 오른쪽(세로 화면에서는 아래) 메뉴를 누르면
+/* ================= 가로 화면 배치(2026-11) ==========   장면이 화면을 가득 채우고, 상태·재화·퀘스트·기술은 장면 위에 떠 있다. 오른쪽(세로 화면에서는 아래) 메뉴를 누르면
    장면을 덮는 '페이지'가 별도 배경으로 열린다. 세로 화면도 그대로 쓸 수 있다 */
 #app{position:fixed;inset:0;max-width:none;margin:0;display:flex;flex-direction:row;background:#03050a;box-shadow:none}
 .scene{position:relative;flex:1;min-width:0;min-height:0;overflow:hidden;line-height:1.45;background:radial-gradient(120% 90% at 50% 40%,#101a2e,#04060c);box-shadow:none}
@@ -2416,11 +2415,11 @@ const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('cha
    벌어진 까닭은 시너지가 아니라 술사의 「맞춤」 빌드: 옵션을 기술 피해·재사용으로 모으면 적성 없이도 기술 배율 ×1.77·재사용 ×0.89로 고르게 뿌린 술사의 1.5~1.9배(무사는 1.1~1.2배 · 그 가운데 적성 배율 몫은 술사 1.09·무사 1.11, 5부 끝 — bal95p/decomp.py·diag.py).
    무사 시너지로 메우려면 +130~140%가 들고 그러면 1부에서 무사가 가장 센 직업의 1.8배라 SYN으로는 안 맞춘다 — 술사 쪽(기술 피해 옵션이 겹쳐 곱해지는 폭)을 손본 뒤 다시 잴 것 */
 const SYN_MELEE = ['musa', 'jagaek', 'changgaek'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
-const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
+const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4, pierce:5};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
 const synCn = c => (CLASSES[c] || {}).name || '직업 미상';
 function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}], mod:{직업:{dmg, skill, dr, cdr, cd, hp}}, grog}
   const mod = {}, list = []; let grog = 0;
-  for (const c of Object.keys(CLASSES)) mod[c] = {dmg:0, skill:0, dr:0, cdr:0, cd:0, hp:0};
+  for (const c of Object.keys(CLASSES)) mod[c] = {dmg:0, skill:0, dr:0, cdr:0, cd:0, hp:0, boss:0};
   const n = c => cnt[c] || 0, melee = SYN_MELEE.reduce((t, c) => t + n(c), 0), ranged = SYN_RANGED.reduce((t, c) => t + n(c), 0), kinds = Object.keys(cnt).filter(c => cnt[c] > 0 && CLASSES[c]).length;
   const all = f => { for (const c of Object.keys(mod)) f(mod[c]); };
   if (melee >= 2 && ranged >= 2){ all(m => m.dmg += SYN.front); list.push({k:'front', lv:1, name:'앞뒤 진', txt:`파티 모두 피해 +${SYN.front}%`}); }
@@ -2429,6 +2428,7 @@ function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}]
   if (n('musa') >= 1 && n('changgaek') >= 1){ mod.musa.dmg += SYN.pair; mod.changgaek.dmg += SYN.pair; grog += SYN.pairGrog; list.push({k:'pair', lv:1, name:'창칼 진', txt:`무사·창객 피해 +${SYN.pair}% · 휘청 시간 +${SYN.pairGrog}초`}); }
   if (n('jagaek') >= 1 && n('gungsa') >= 1){ mod.jagaek.cd += SYN.shadow; mod.gungsa.cd += SYN.shadow; list.push({k:'shadow', lv:1, name:'그림자 살', txt:`자객·궁사 치명타 피해 +${SYN.shadow}%`}); }
   if (n('sulsa') >= 1 && n('doin') >= 1){ mod.sulsa.skill += SYN.thunder; mod.doin.skill += SYN.thunder; list.push({k:'thunder', lv:1, name:'벼락과 부적', txt:`술사·도인 기술 피해 +${SYN.thunder}%`}); }
+  if (n('changgaek') >= 1 && kinds >= 2){ for (const c of Object.keys(mod)) if (c !== 'changgaek') mod[c].boss += SYN.pierce; list.push({k:'pierce', lv:1, name:'꿰뚫린 틈', txt:`창객 말고 파티 모두 보스·레이드 보스 피해 +${SYN.pierce}%`}); }   // 창객이 찌른 보스의 빈틈(물의 신화 11-19): 창객 본인은 「한 점 꿰기」(PT)가 몫이라 뺌
   if (kinds >= 4){ const v = kinds >= 5 ? SYN.five5 : SYN.five4; all(m => { m.dmg += v; m.hp += v; }); list.push({k:'five', lv:kinds >= 5 ? 2 : 1, name:'다섯 갈래', txt:`파티 모두 피해·체력 +${v}% (${kinds}종)`}); }
   for (const c of Object.keys(CLASSES)) if (n(c) >= 3){ mod[c].skill += SYN.one; list.push({k:'one:' + c, lv:1, name:'한 길', txt:`${synCn(c)} 기술 피해 +${SYN.one}%`}); }
   return {list, mod, grog};
@@ -2445,7 +2445,8 @@ function synState(){   // 지금 싸움의 시너지(없으면 null). 싸움 시
 const synV = (c, f) => { const s = synState(); return s && s.mod[c] ? s.mod[c][f] || 0 : 0; };
 const synDmg = (c, skill) => { const s = synState(); if (!s || !s.mod[c]) return 0; return Math.min(synCap(c), s.mod[c].dmg + (skill ? s.mod[c].skill : 0)); };   // 한 캐릭터가 받는 피해 합 상한(SYN.capMusa·SYN.cap)
 const synMine = kind => 1 + synDmg(S.cls, kind === 'skill' || kind === 'soul') / 100;
-const synAlly = (c, skill) => { const s = synState(); return s ? (1 + synDmg(c, skill) / 100) * (1 + synV(c, 'cd') / 100 * 0.7) : 1; };
+const synAlly = (c, skill) => { const s = synState(); return s ? (1 + synDmg(c, skill) / 100) * (1 + synV(c, 'cd') / 100 * 0.7) * (1 + synV(c, 'boss') / 100) : 1; };   // 동료는 레이드 보스만 치니 보스 몫(꿰뚫린 틈)도 여기에
+const synBossMine = m => (m.boss || m.raid) ? 1 + synV(S.cls, 'boss') / 100 : 1;
 const synTaken = c => { const s = synState(); return s ? (1 - synV(c, 'dr') / 100) / (1 + synV(c, 'hp') / 100) : 1; };
 const synGrog = () => { const s = synState(); return s ? s.grog : 0; };
 const synChip = () => { const s = synState(); return s && s.list.length ? ' · ' + s.list.map(x => x.name).join('·') : ''; };
@@ -4616,6 +4617,11 @@ const NOTES = [
   ['새 재화 「초월의 조각」', '끝없는 신화 5번째부터는 이야기마다 보석 500개와 초월의 조각 1개를 줘요. Lv.610부터 10레벨마다 오름 보상으로 조각 10개, 주간 퀘스트를 모두 끝내면 조각 5개를 더 받아요. [상점] → [조각]에서 탕약·숫돌·토벌패·재료·꾸미기 상자로 바꿀 수 있고, 물건마다 한 주에 살 수 있는 횟수가 있어요(월요일에 새로 채워져요). [수련] → 「초월」 칸에서 오름 보상을 한눈에 봐요.'],
   ['새 칸은 준비 중이에요', 'Lv.700에 닿으면 「초월의 경지」가 열릴 예정이에요. 지금은 칸만 보이고 효과는 다음 패치에서 열려요. Lv.700 뒤에 번 경험치는 「모음」에 쌓아 둬요.'],
 
+  ['#', '11월 19일 · 창객 시너지'],
+  ['혼자 보스를 칠 때 「한 점 꿰기」', '창객이 보스·레이드 보스 한 대상을 기본 공격이든 기술이든 이어 찌르면 점이 최대 다섯 개까지 쌓여요(머리 위 작은 점 칸). 점이 많을수록 치명타 피해가 커지고(가득이면 +13%), 가득 찬 뒤 다음 한 번은 치명타로 확정되며 피해 +13%로 터져요. 대상을 바꾸거나 3초 동안 못 찌르거나 쓰러지면 점이 풀려요. 몬스터 떼에는 없고, 혼자 보스를 칠 때 창객이 평균 10%쯤 더 세져요.'],
+  ['파티 시너지 「꿰뚫린 틈」', '내 파티에 창객이 다른 직업과 함께 있으면, 창객 말고 파티 모두가 보스·레이드 보스에게 주는 피해가 +5% 늘어요. [내 파티]의 켜진 시너지·「한 명만 더 있으면」 칸에도 나와요. 다른 직업의 능력과 다른 시너지 수치는 그대로예요.'],
+  ['직업 특성 카드에서 설명 보기', '[수련]의 창객 직업 특성 줄에 「한 점 꿰기」가 생겼어요. 옆 「?」를 누르면 자세한 규칙이 떠요.'],
+
   ['#', '11월 19일 · 수미산 진 레이드'],
   ['수미산에도 「진」이 열려요', '마지막 땅 수미산의 이야기를 끝내면(89장 「천마의 본모습」까지 마치거나 수미산 4-10 보스를 물리치면) 사천왕의 문 · 마라의 군대 · 마라, 세 곳에 상위 단계 「진」이 열려요. 다음 땅이 없어서 이야기의 끝이 열쇠예요. 아직 닫혀 있을 땐 [레이드]에 「이야기를 끝내면 열려요」 안내(「?」)가 보여요.'],
   ['규칙과 보상은 다른 땅과 같아요', '하루 3번(모든 진을 합쳐) · 레이드마다 주에 한 번 첫 승리 보상 · 전멸기와 「쫓는 살」 · 세 번째 쓰러지면 끝 · 탕약은 한 판에 10개까지. 보석·전설 장비·신화 조각·진 전용 아바타도 그대로예요. 세기는 이야기를 막 끝낸 용사에 맞춰져 있고, 권장 전투력에 딱 맞을 땐 손으로 피하고 되받아야 쉬워져요. 여섯 직업 모두 같은 눈높이로 맞췄어요.'],
@@ -6658,6 +6664,8 @@ let dmgMeter = 0, dmgBy = {};   // 용사 쪽이 준 피해 합(시험용 측정
 function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(치명타·보스 피해 배율을 또 곱하지 않음)
   if (m.dead) return;
   const C = cls(), mine = kind !== 'ally';
+  const ptB = mine && !raw && C.gap && (kind === 'basic' || kind === 'skill') && (m.boss || m.raid) ? ptStep(m) : null;   // 창객 「한 점 꿰기」: 보스 한 대상을 이어 찌른 점(PT)
+  if (ptB && ptB.burst) sure = true;
   if (castCtx && castCtx.f && mine && kind === 'skill' && !raw){   // 사냥 박자 보정: 단계 보스·수문장엔 b(초당 피해 = 레이드 박자), 몹엔 f(세계·직업 표 HUNT.w)
     base *= m.boss ? castCtx.b : castCtx.f;
   }
@@ -6665,12 +6673,12 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const sc = (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) + pbV('jagaek', 'cr') / 100 + pbV('gungsa', 'cr') / 100;   // 넋·파티 버프(그믐 맹약) 치명타 확률
   const aw2C = mine && !!(raid && raid.awk2 && raid.awk2.critT > 0);   // 자객 「그믐 만 갈래」: 8초 동안 모든 공격 치명타
   const crit = sure || (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit) && (aw2C || Math.random() < ST.crit + sc);
-  const cd = (ST.critDmg * (1 + synV(S.cls, 'cd') / 100) + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0)) * (mine && hero.incT > 0 && kind === 'skill' ? 1 + (hero.incP || 0) / 100 : 1) * aimMul(mine && kind !== 'pet');   // 간다르바의 향(6차): 기술 치명타 피해에 곱함(더하기로는 후반 치명타 피해에 묻혀 효과가 없었음)
+  const cd = (ST.critDmg * (1 + synV(S.cls, 'cd') / 100) + (hero.baguaT > 0 ? hero.baguaAdd / 100 : 0) + (hero.soulCritT > 0 ? hero.soulCrit / 100 : 0) * 2 + pbV('jagaek', 'cd') / 100 + (hero.sumbiT > 0 ? (hero.sumbiP || 50) / 100 : 0)) * (mine && hero.incT > 0 && kind === 'skill' ? 1 + (hero.incP || 0) / 100 : 1) * aimMul(mine && kind !== 'pet') * (ptB ? ptB.cd : 1);   // 간다르바의 향(6차): 기술 치명타 피해에 곱함(더하기로는 후반 치명타 피해에 묻혀 효과가 없었음)
   const avg = window.__game && window.__game.benchAvg && !sure && (kind === 'basic' || kind === 'skill' || kind === 'soul' || kind === 'pet' && C.petCrit);   // 시험(bench)용: 치명타·흔들림을 평균값으로
   const fit = fitOn(m), grog = (m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1) * (mine && m.pat && m.pat.grogT > 0 && !fit ? (C.grogMul ? 1 + (C.grogMul - 1) * aptMul('boss') : 1) : 1);   // 창객: 휘청이는 보스에게 +15%(내 세기에 맞춘 싸움 FIT은 빼고)
   const gp = raw ? 1 : gapMul(m, mine && (kind === 'basic' || kind === 'skill')) * aw2Pierce(m);   // 창객 「간격」 · 초각성기 2 「바다 꿰는 창」
   const vz = !raw && mine && S.myth.vajra > 0 && (kind === 'basic' || kind === 'skill') ? (avg ? 1 + Math.min(1, ST.crit + sc) * VAJRA_BOLT : crit ? 1 + VAJRA_BOLT : 1) : 1;   // 금강저(5부): 치명타가 터지면 번개가 그 피해의 10%를 더 넣는다
-  const dmg = raw ? base : base * gp * vz * (mine && kind === 'basic' ? aptMul(aptTags().b) : 1) * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * (mine && hero.eyeT > 0 && (m.boss || m.raid) ? 1 + (hero.eyeP || 0) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (mine ? synMine(kind) : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const dmg = raw ? base : base * gp * vz * (mine && kind === 'basic' ? aptMul(aptTags().b) : 1) * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * (mine && hero.eyeT > 0 && (m.boss || m.raid) ? 1 + (hero.eyeP || 0) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (mine ? synMine(kind) * synBossMine(m) : 1) * (ptB && ptB.burst ? 1 + PT.burst : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
@@ -10059,6 +10067,24 @@ function gapRiposte(m){
   hit(m, ST.atk * atkBuff() * GAP.rip * (hero.waveT > 0 ? 2 : 1), 'skill');
   return true;
 }
+/* 창객 「한 점 꿰기」(물의 신화 11-19): 보스·레이드 보스 한 대상을 이어 찌르면(기본 공격·기술 어느 쪽이든 PT.gap초에 한 점) 점이 쌓여(최대 PT.max) 치명타 피해가 (1 + PT.cd × 점/PT.max)배가 되고,
+   가득 차면 다음 한 번이 치명타로 확정되며 피해 ×(1 + PT.burst)로 터지고 점이 모두 풀린다. 대상을 바꾸거나 PT.hold초 동안 못 찌르거나 쓰러지면 풀린다.
+   몹·사냥터 잡몹에는 없음(혼자 보스를 칠 때의 단일 대상 시너지) · 머리 위 점 다섯 칸(drawEntityHero) */
+const PT = {max:5, hold:3, gap:0.35, cd:0.13, burst:0.13};   // 잼(11-19, 무사 저장에서 직업만 창객으로 바꾼 보스 bench 120초 ×4판, 끔 대비): 0.12/0.12 +8.8% · 0.15/0.15 +12.0% → 0.13/0.13 ≈ +10%
+function ptStep(m){   // hit 앞에서 부름: 이번 한 대의 몫을 돌려주고(점 수는 맞기 직전 기준) 점을 쌓거나 터뜨린다
+  if (window.__game && window.__game.noPt) return null;
+  if (hero.ptTg !== m){ hero.ptTg = m; hero.pt = 0; hero.ptFull = false; }
+  hero.ptT = PT.hold;
+  const n = hero.pt || 0, burst = !!hero.ptFull, r = {cd:1 + PT.cd * (burst ? PT.max : n) / PT.max, burst};
+  if (burst){ hero.pt = 0; hero.ptFull = false; hero.ptGap = PT.gap; addText('한 점 꿰기!', m.x, m.y - mobHeight(m) - 14, '#ffe08a', 12, true); }
+  else if (!(hero.ptGap > 0) && n < PT.max){ hero.pt = n + 1; hero.ptGap = PT.gap; if (hero.pt >= PT.max) hero.ptFull = true; }
+  return r;
+}
+function updatePt(dt){
+  if (hero.ptGap > 0) hero.ptGap -= dt;
+  if (hero.dead || !hero.ptTg || hero.ptTg.dead){ hero.pt = 0; hero.ptFull = false; hero.ptTg = null; return; }
+  if ((hero.pt || 0) > 0 && (hero.ptT -= dt) <= 0){ hero.pt = 0; hero.ptFull = false; hero.ptTg = null; }
+}
 // 지금 사거리: 궁사 「바람 읽기」 +1, 창객 「파도 타기」 +1, 파티 버프 「매의 눈」은 멀리서 싸우는 용사(사거리 2 이상)에게 +1
 const heroRange = () => { const r = cls().range; return r + (hero.windT > 0 ? 1 : 0) + (hero.waveT > 0 ? 1 : 0) + (r > 1 && pbV('gungsa', 'rng') ? 1 : 0); };
 function mobInReach(){
@@ -10247,6 +10273,7 @@ function update(dt){
   if (hero.waveT > 0) hero.waveT -= dt;
   if (hero.ripCd > 0) hero.ripCd -= dt;
   if (cls().aim) updateAim(dt);
+  if (cls().gap) updatePt(dt);
   if (!hero.dead && (hero.mp ?? mpMax()) < mpMax()) hero.mp = Math.min(mpMax(), (hero.mp ?? mpMax()) + MP_REGEN * dt);
   for (const c in pbT) if (pbT[c] > 0) pbT[c] -= dt;
   if (hero.shinT > 0){ hero.shinT -= dt; if (!hero.dead) heroHeal(ST.maxHp * 0.03 * dt, 'skill'); }
@@ -15865,6 +15892,7 @@ function drawEntityHero(){
   hero.tagY = hy - 34;
   if (cls().aim){ const am = hero.aim || 0; hero.tagY = hy - 37; P(x - 8, hy - 36, 16, 3, '#1a1218'); P(x - 7, hy - 35, Math.max(0, Math.round(14 * am)), 1, am >= 1 ? '#ffe08a' : '#a8d86a'); if (am >= 1) P(x + 8, hy - 36, 1, 3, '#ffe08a'); }   // 궁사 「조준」 눈금(체력 막대 위)
   if (cls().gap){ const tg = hero.target && !hero.target.dead ? hero.target : null, gc = !tg ? '#6a6470' : gapFar(tg) || hero.buffT > 0 ? '#ffd24a' : '#ff5a4a'; hero.tagY = hy - 38; P(x - 2, hy - 36, 5, 1, gc); P(x - 1, hy - 37, 3, 3, gc); P(x, hy - 38, 1, 5, gc); }   // 창객 「간격」: 금빛 = 창끝 거리(+40%), 붉은빛 = 너무 붙음(-20%)
+  if (cls().gap && (hero.pt || 0) > 0){ hero.tagY = hy - 42; for (let i = 0; i < PT.max; i++) P(x - 9 + i * 4, hy - 42, 3, 3, i < hero.pt ? (hero.ptFull ? '#fff2b0' : '#ffd24a') : '#3a3440'); }   // 창객 「한 점 꿰기」: 쌓인 점(가득 차면 밝게)
   P(x - 8, hy - 33, 16, 3, '#1a1218'); P(x - 7, hy - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
@@ -18287,6 +18315,7 @@ function buildGuard(){
 // 물의 신화 9-5: 직업 적성 화면 도우미
 const APT_STAT_VALS = Object.values(APT_STAT);
 const aptTagText = i => { const d = skDef(i), t = aptTagOf(i); return d.atk ? `${aptName(t)} ${aptX(aptHitMul(i))}` : `${aptName(t)} · 버프`; };
+const ptTraitHTML = () => `<b>한 점 꿰기</b> 보스 한 대상을 이어 찌르면 점이 쌓여요 ${helpTip(`보스·레이드 보스 한 대상을 기본 공격이든 기술이든 이어 찌르면 점이 최대 ${PT.max}개까지 쌓여요(0.35초에 한 점). 점이 많을수록 치명타 피해가 커지고(가득이면 +${Math.round(PT.cd * 100)}%), 가득 찬 뒤 다음 한 번은 치명타로 확정되며 피해 +${Math.round(PT.burst * 100)}%로 터져요. 대상을 바꾸거나 ${PT.hold}초 동안 못 찌르면 점이 풀려요. 몬스터 떼에는 없고, 혼자 보스를 칠 때를 위한 힘이에요. 창객이 파티에 있으면 창객 말고 모두 보스 피해 +${SYN.pierce}%(꿰뚫린 틈)도 켜져요.`)}`;
 const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} ${helpTip(`기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(Math.max(...aptMain().map(a => APT.upA[a] ?? APT.up)) * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%).`)} — 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
 function aptWhereList(){
   const M = aptMain(), mine = (map, k) => Object.keys(aptOne(map, k)).some(a => M.includes(a)), R = [];
@@ -18543,7 +18572,7 @@ function buildSkill(){
   if (skillView === 'soul') return buildSoul();
   panel.innerHTML = `${skillSegHTML()}
     <div class="ph"><h2>${cls().name}의 기술</h2><span class="small">${cls().role}</span></div>
-    <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}<li id="aptTrait">${aptTraitHTML()}</li></ul></div>
+    <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}<li id="aptTrait">${aptTraitHTML()}</li>${cls().gap ? `<li id="ptTrait">${ptTraitHTML()}</li>` : ''}</ul></div>
     <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).
       칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).<br><b>공격 기술은 두 가지 박자</b>로 나가요 — 사냥터·단계 보스·수문장에서는 <b>자주, 작게</b>(사냥 박자), 레이드·진·타임 보스 같은 「싸움 시작 창」이 뜨는 싸움에서는 <b>지금처럼 크게</b>(레이드 박자). 버프·약점 기술과 초각성기는 어디서나 같아요.</p>
     <div class="card" style="margin-top:10px"><div class="ct">사냥(스테이지) 기술 칸<span class="tag" id="skSetN"></span></div>
@@ -22159,7 +22188,7 @@ function resetRuntime(){
   paradeAbort();
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null; jobChain = false;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, pt:0, ptT:0, ptGap:0, ptFull:false, ptTg:null, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
@@ -22774,7 +22803,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {ASURA, startAsura, finishAsura, asuraOpen, asuraLeft, asuraTier, indSoulRoll, asLuck:null, KUB, startKub, finishKub, kubOpen, kubLeft, kubTier, kubLuck:null, IND_PAT, patInd, patHeads, headOff, headsLeft, patFlower, flowerNear, flowerOk, patTiles, updatePat, heroTile, noIndPat:false, DBOSS_IND, dbInd, DB_SPIRIT_P, skinDropPart});   // 물의 신화 9-26
   // @@END-F
   // @@HOOK-G (갈래 G의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
-  Object.assign(window.__game, {SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, synForce:null, raidParty, raidAt});
+  Object.assign(window.__game, {PT, ptStep, updatePt, hit, noPt:false, synBossMine, SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, synForce:null, raidParty, raidAt});
   // @@END-G
   // @@HOOK-H (갈래 H의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
