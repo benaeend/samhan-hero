@@ -4646,9 +4646,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-21-7', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-21-8', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 21일 · 남·여 모습 · 표정'],
+  ['남·여 모습을 고를 수 있어요', '[꾸미기]와 캐릭터를 만들 때 「모습」에서 남·여를 고를 수 있어요. 여자 모습은 어깨가 가늘고 허리가 잘록하며 치마 윤곽에 긴 머리, 속눈썹, 붉은 댕기 리본이 있어요. 모든 직업에서 고를 수 있고, 예전 캐릭터는 그대로 남자 모습이에요. 언제든 다시 바꿀 수 있어요.'],
+  ['용사 표정이 상황에 따라 바뀌어요', '싸울 때는 눈이 매서워지고, 맞으면 깜짝 놀라고, 체력이 30% 밑이면 기운 없는 얼굴이 돼요. 레벨이 오르면 기뻐하고, 보스를 쓰러뜨리면 크게 웃어요. 평소엔 가끔 눈을 깜빡여요. 절전 그리기에서는 깜빡임과 싸우는 표정을 빼고 나머지만 보여요.'],
   ['#', '11월 21일 · 도깨비 보따리'],
   ['도깨비 보따리가 열렸어요', '[상점] → 「보따리」에서 보석 1,000개로 한 번, 9,000개로 열 번 열 수 있어요. 열 번째는 「희귀」 이상이 하나 꼭 나와요. 하루 50번까지 열 수 있고, 전설 치장이 안 나와도 80번째는 꼭 나와요(천장). 화면에서 「전설 확정까지 몇 번 · 오늘 몇/50」을 늘 볼 수 있고, [확률 보기]에서 품목마다 확률을 다 공개해요.'],
   ['경험치 「두 곱·네 곱 두루마리」', '네 곱은 15분(0.1%), 두 곱은 30분(0.9%)이에요. 얻으면 남은 시간에 더해지고, 각각 최대 2시간이에요(넘는 몫은 숫돌 3개로 바뀌어요). 글공부 두루마리와 겹치면 가장 큰 것 하나만 적용되고, 작은 것은 시간이 멈춰 기다려요. 화면 위 칩에 「경험 ×4 12분」처럼 보이고, 기다리는 것은 흐리게 「(대기)」로 보여요. 만렙에서는 「만렙 — 모음으로 쌓여요」라고 알려 줘요. 시간은 게임이 켜져 있고 싸우는 동안에만 줄어요.'],
@@ -6696,6 +6699,7 @@ function gainExp(x, o){   // o.raw = 레벨 문 새 요소를 더하지 않음(�
   refreshStats();
   heroHeal(ST.maxHp, 'level');   // 가득
   fx.push({type:'level', t:0, dur:0.8}); sfx('level');
+  if (!(hero.cheerT > 0)){ hero.cheerT = 2.2; hero.cheerBig = 0; }   // 레벨이 오르면 기쁜 얼굴
   addText('LEVEL UP', hero.x, hero.y - 34, '#ffe27a', 13);
   if (session) playFx('levelup', {hero:true, sub:`Lv.${S.level}`});
   addLog(S.level >= cap ? `레벨 ${S.level}! ${WORLD_NAME[S.world]}의 만렙에 닿았어요.` : `레벨 ${S.level}에 올랐어요!`, 'good');
@@ -6893,7 +6897,7 @@ function damageHero(d){
     if (dmg <= 0){ addText('막음', hero.x + Math.random() * 8 - 4, hero.y - 30, '#9fe7ff', 10, true); return; }
   }
   tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0); tkWoundAdd(Math.min(dmg, Math.max(0, hero.hp)));
-  hero.hp -= dmg; hero.hurt = 0.12;
+  hero.hp -= dmg; hero.hurt = 0.12; hero.shockT = 0.7;
   addText('-' + fmt(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
   else if (cls().fist && gwonBr() === 1) gwonCounter();
@@ -6982,6 +6986,7 @@ function bossFail(reason){
   if (reason === '용사가 쓰러짐') tkFailNote();   // 9-4: 버티는 힘이 모자라면 무엇을 올릴지 알림
 }
 function bossWin(){
+  hero.cheerT = 3.2; hero.cheerBig = 1;   // 보스를 쓰러뜨리면 크게 웃는다
   if (TM && (TM.kind === 'boss' || TM.kind === 'gate')) tmEnd(true, 'win');   // (오프라인 자동 도전이 부른 것은 안 셈)
   bmeterEnd();
   if (window.__game && window.__game.onBoss) window.__game.onBoss('win');
@@ -8070,7 +8075,7 @@ function patHitHero(d, raw){
     if (hero.shield > 0){ const a = Math.min(hero.shield, dmg); hero.shield -= a; dmg -= a; tmDmg(0, a); }
     if (dmg <= 0){ addText('막음', hero.x, hero.y - 30, '#9fe7ff', 10, true); return; }
     tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0); tkWoundAdd(Math.min(dmg, Math.max(0, hero.hp)));
-    hero.hp -= dmg; hero.hurt = 0.15; addText('-' + fmt(dmg), hero.x, hero.y - 30, '#ff5a4a', 13, true);
+    hero.hp -= dmg; hero.hurt = 0.15; hero.shockT = 0.7; addText('-' + fmt(dmg), hero.x, hero.y - 30, '#ff5a4a', 13, true);
     if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
   } else damageHero(d);
 }
@@ -9818,7 +9823,7 @@ function gwonCounter(){   // 주먹 갈래: 맞은 순간 되받아치기 + 기�
 }
 function attack(tg){
   const C = cls();
-  hero.swing = 0.2; hero.atkT = 1;
+  hero.swing = 0.2; hero.atkT = 1; hero.engT = 2.5;
   if (C.fist) return gwonAttack(tg);
   if (!C.proj){
     fx.push({type:'slash', t:0, dur:0.16, x:hero.x, y:hero.y - 8, dir:hero.dir, color:C.fx});
@@ -10310,6 +10315,7 @@ function update(dt){
   shake = Math.max(0, shake - dt);
   hero.swing = Math.max(0, hero.swing - dt);
   hero.hurt = Math.max(0, hero.hurt - dt);
+  hero.shockT = Math.max(0, (hero.shockT || 0) - dt); hero.engT = Math.max(0, (hero.engT || 0) - dt); hero.cheerT = Math.max(0, (hero.cheerT || 0) - dt);   // 표정 타이머(맞음·싸움·기쁨)
   if (hero.buffT > 0) hero.buffT -= dt;
   if (hero.jobBuffT > 0) hero.jobBuffT -= dt;
   if (hero.oathT > 0) hero.oathT -= dt;
@@ -10578,10 +10584,56 @@ function flipCanvas(src){
   c.hd = src.hd; return c;
 }
 
+/* ===== 표정(시안): 눈·눈썹·입을 상황에 맞게. col.face = '감정:깜빡임0/1:입0~2'. 없으면 예전 얼굴 그대로.
+   감정: normal 평소 · fight 싸울 때(매서운 눈, 💢 없음) · joy 기쁨 · surprise 맞았을 때 · angry 화남 · sad 기운 없음 · laugh 크게 웃음 ===== */
+const FACE_EMO = ['normal', 'joy', 'surprise', 'angry', 'sad', 'laugh', 'fight'];
+function drawFaceExpr(g, hx, hy, face, SK, masked, fem){
+  const [emo0, bl, mo] = face.split(':'), emo = emo0 === 'fight' ? 'angry' : emo0, vein = emo0 === 'angry', blink = bl === '1', open = +mo || 0;
+  const E = (x, y, rx, ry, cl) => { g.fillStyle = cl; g.beginPath(); g.ellipse(x, y, Math.max(0.3, rx), Math.max(0.3, ry), 0, 0, Math.PI * 2); g.fill(); };
+  const ln = (x1, y1, x2, y2, w, cl) => { g.strokeStyle = cl; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  const ar = (x, y, r, a0, a1, w, cl) => { g.strokeStyle = cl; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.arc(x, y, r, a0, a1); g.stroke(); };
+  const BR = '#3a2430', MO = '#7a2a30';
+  const ey = masked ? hy + 3.6 : hy + 4, EX = [[hx + 6.2, 2.2, 3.1], [hx - 1.4, 1.9, 2.9]];   // 가까운 눈(오른쪽)이 조금 더 큼
+  // 눈
+  if (emo === 'laugh'){ for (const [x, rx] of EX) ar(x, ey + 1.4, rx + 0.2, Math.PI * 1.08, Math.PI * 1.92, 1.3, EYE); }
+  else if (blink){ for (const [x, rx] of EX) ln(x - rx, ey + 1.2, x + rx, ey + 1.2, 1.2, EYE); }
+  else if (emo === 'surprise'){ for (const [x, rx, ry] of EX){ E(x, ey - 0.2, rx + 0.7, ry + 0.7, '#ffffff'); E(x, ey - 0.2, rx * 0.62, ry * 0.62, EYE); E(x + 0.5, ey - 1, 0.7, 0.7, '#ffffff'); } }
+  else if (emo === 'angry'){   // 눈꺼풀을 안쪽이 낮게 비스듬히 깎은 매서운 눈(눈썹은 머리색에 묻혀 안 보여서 눈 모양으로 표현)
+    for (const [x, rx, ry, k] of [[EX[0][0], EX[0][1], EX[0][2], 1], [EX[1][0], EX[1][1], EX[1][2], -1]]){
+      g.save(); g.beginPath(); g.moveTo(x - k * (rx + 1.5), ey - 0.2); g.lineTo(x + k * (rx + 1.5), ey - 2.4); g.lineTo(x + k * (rx + 1.5), ey + 6); g.lineTo(x - k * (rx + 1.5), ey + 6); g.closePath(); g.clip();
+      E(x, ey + 0.9, rx + 0.3, ry, EYE); E(x - k * 0.4, ey + 1.2, 0.7, 0.7, '#ffffff'); g.restore(); } }
+  else { for (const [x, rx, ry] of EX){ E(x, ey, rx, ry, EYE); E(x + 0.7, ey - 1.2, rx * 0.46, rx * 0.46, '#ffffff'); }
+    if (emo === 'joy') for (const [x] of EX) E(x - 0.9, ey + 1, 0.5, 0.5, '#ffffff');
+    if (emo === 'sad'){ for (const [x] of EX) E(x - 0.9, ey + 1.2, 0.75, 0.75, '#bfe4ff'); } }
+  if (fem && !masked && !blink && emo !== 'laugh') for (const [x, rx] of EX){ ln(x + rx * 0.5, ey - 2.6, x + rx + 1.1, ey - 3.4, 0.8, EYE); }   // 여자 모습: 속눈썹
+  if (masked) return;
+  // 눈썹(기본 얼굴은 눈썹이 없다 — 감정이 있을 때만)
+  const bw = 1.1;
+  if (emo === 'joy') for (const [x, rx] of EX) ar(x, ey - 4.2 + 2.6, rx + 0.6, Math.PI * 1.2, Math.PI * 1.8, bw, BR);
+  if (emo === 'surprise') for (const [x, rx] of EX) ar(x, ey - 5.4 + 2.6, rx + 0.6, Math.PI * 1.15, Math.PI * 1.85, bw, BR);
+  if (vein){ const vx = hx + 10.4, vy = hy - 1.2, VC = '#e8432f'; ln(vx - 1.8, vy - 0.6, vx - 0.6, vy - 0.6, 0.9, VC); ln(vx + 0.6, vy - 0.6, vx + 1.8, vy - 0.6, 0.9, VC); ln(vx - 0.9, vy + 0.5, vx - 0.9, vy + 1.7, 0.9, VC); ln(vx + 0.9, vy + 0.5, vx + 0.9, vy + 1.7, 0.9, VC); }   // 💢
+  if (emo === 'sad'){ ln(hx + 3.8, ey - 5, hx + 9.4, ey - 3, bw, BR); ln(hx - 5.4, ey - 3.4, hx + 0.8, ey - 5.2, bw, BR); }
+  if (emo === 'laugh') for (const [x, rx] of EX) ar(x, ey + 2.6, rx + 0.8, Math.PI * 1.15, Math.PI * 1.85, bw, BR);
+  // 볼·눈물
+  E(hx + 8.4, hy + 7.6, 2, 1.1, mix(SK, '#ff7a7a', emo === 'joy' || emo === 'laugh' ? 0.55 : emo === 'angry' ? 0.5 : 0.35)); E(hx - 3.2, hy + 7.6, 1.6, 1, mix(SK, '#ff7a7a', emo === 'joy' || emo === 'laugh' ? 0.5 : 0.3));
+  if (emo === 'sad'){ E(hx + 8.8, hy + 7.6, 0.9, 1.5, '#9fd4ff'); E(hx + 8.8, hy + 6.4, 0.5, 0.5, '#ffffff'); }
+  // 입
+  const mx = hx + 3.4, my = hy + 8.4;
+  const D = (rx, ry) => { g.fillStyle = MO; g.beginPath(); g.ellipse(mx, my, rx, ry, 0, 0, Math.PI * 2); g.fill(); if (ry > 1.4) E(mx, my + ry * 0.45, rx * 0.6, ry * 0.4, '#d8706a'); };
+  if (emo === 'laugh'){ g.fillStyle = MO; g.beginPath(); g.moveTo(mx - 3.2, my - 1.2); g.quadraticCurveTo(mx, my - 0.2, mx + 3.2, my - 1.2); g.quadraticCurveTo(mx + 2.6, my + 2.2 + open * 0.8, mx, my + 3 + open * 0.8); g.quadraticCurveTo(mx - 2.6, my + 2.2 + open * 0.8, mx - 3.2, my - 1.2); g.fill(); E(mx, my + 1.8 + open * 0.5, 1.7, 0.9 + open * 0.2, '#d8706a'); }
+  else if (open > 0) D(emo === 'surprise' ? 1.5 + open * 0.2 : 1.5 + open * 0.2, emo === 'surprise' ? 1.4 + open * 0.8 : 0.7 + open * 0.55);
+  else if (emo === 'joy') ar(mx, my - 1.6, 2.6, Math.PI * 0.15, Math.PI * 0.85, 1.1, '#b0584a');
+  else if (emo === 'surprise') D(1.1, 1.5);
+  else if (emo === 'angry'){ ln(mx - 2, my + 0.9, mx + 2, my + 0.1, 1.1, '#8a3a3a'); ln(mx - 1.4, my + 0.7, mx + 1.4, my + 0.3, 0.5, '#ffffff'); }
+  else if (emo === 'sad') ar(mx, my + 2.2, 2.2, Math.PI * 1.15, Math.PI * 1.85, 1.1, '#b0584a');
+  else E(mx, my, 1.3, 0.7, fem ? '#d0605a' : '#b0584a');
+}
+
 function drawChibi(g, c, view, f, col, look){
   if (c === 'gwon') return drawGwon(g, view, f, col, look);   // 권사: 맨손 무술가(전용 그림)
   const L = CLASSES[c], back = view === 'back', atk = f === 3;
   look = look || defaultLook();
+  const fem = look.sex === 'f';   // 여자 모습: 가는 어깨·잘록한 허리·치마 윤곽, 긴 머리·댕기, 속눈썹(남자 모습 그림은 그대로)
   const SK = SKINS[look.skin] || SKINS[0], SKD = darken(SK, 0.16), HR = look.hair, HRD = darken(HR, 0.28), HRL = mix(HR, '#ffffff', 0.22);
   const O = col.outfit, OD = darken(O, 0.24), OL = mix(O, '#ffffff', 0.18), BELT = col.belt;
   const SKL = col.sk || {};   // 장별 치장 색(토시·버선·허리띠·무기 술)
@@ -10635,10 +10687,19 @@ function drawChibi(g, c, view, f, col, look){
   else { E(28.6, 58.6 + lf * 0.4, 3.6, 2, '#3a2a20'); E(35.6, 58.6 + rf * 0.4, 3.6, 2, '#2e2018'); }
 
   // ── 몸(도포·저고리)
+  const bx0 = fem ? 24.6 : 21, bw0 = fem ? 14.8 : 22;   // 허리띠 자리(여자 모습은 허리가 가늘다)
+  if (fem){   // 저고리(가는 어깨) + 잘록한 허리 + 넓게 퍼지는 치마. 치마 끝자락은 걸을 때 살짝 흔들린다
+    const hw = sway * 0.6;
+    Pl([[24.4, 37 + by], [39.6, 37 + by], [38.6, 45], [41.6, 47], [45.6 + hw, 55], [18.4 + hw, 55], [22.4, 47], [25.4, 45]], O);
+    Pl([[18.4 + hw, 55], [45.6 + hw, 55], [44.8 + hw, 52.4], [19.2 + hw, 52.4]], OD);
+    Pl([[33, 37 + by], [39.6, 37 + by], [38.6, 45], [41.6, 47], [45.6 + hw, 55], [36, 55]], OD);    // 오른쪽 그늘
+    Pl([[24.4, 37 + by], [26, 37 + by], [25.4, 45], [22.4, 47]], OL);   // 왼쪽 빛
+  } else {
   Pl([[23, 37 + by], [41, 37 + by], [44, 52], [20, 52]], O);
   Pl([[20, 52], [44, 52], [43.4, 48.6], [20.6, 48.6]], OD);
   Pl([[33, 37 + by], [41, 37 + by], [44, 52], [36, 52]], OD);    // 오른쪽 그늘
-  RR(21, 44.6 + by * 0.5, 22, 3, 1.2, BELT);
+  }
+  RR(bx0, 44.6 + by * 0.5, bw0, 3, 1.2, BELT);
   if (!back){
     Pl([[26, 37 + by], [32, 44.6 + by], [38, 37 + by], [35.5, 37 + by], [32, 41.8 + by], [28.5, 37 + by]], '#efe9da');   // 동정·깃
     if (aG >= 1) Pl([[26, 37 + by], [27.4, 37 + by], [32, 43.4 + by], [32, 44.6 + by]], trim);
@@ -10664,7 +10725,7 @@ function drawChibi(g, c, view, f, col, look){
   else if (dc === 'saekdong'){ for (let k = 0; k < 4; k++){ const cl = ['#ffd84a', '#5ad87a', '#5aa8ff', '#ff6a8a'][k]; RR(20, 40 + k * 2 + by, 4, 1.4, 0.6, cl); RR(40, 40 + k * 2 + by, 4, 1.4, 0.6, cl); } }
   else if (dc === 'sash'){ g.globalAlpha = 1; Pl([[18, 41 + by], [12, 46 + sway], [14, 47 + sway], [20, 43 + by]], '#fff0f6'); Pl([[46, 41 + by], [52, 46 - sway], [50, 47 - sway], [44, 43 + by]], '#fff0f6'); RR(21, 44.6 + by * 0.5, 22, 2, 1, '#ff9ac0'); }
   else if (dc === 'saja'){ RR(21, 44.6 + by * 0.5, 22, 3, 1.2, '#16131c'); for (const x of [24, 40]) RR(x, 47, 1.4, 6, 0.6, '#16131c'); }
-  if (SKL.belt){ const bc = SKL.belt; RR(21, 44.6 + by * 0.5, 22, 3, 1.2, bc); RR(21, 44.6 + by * 0.5, 22, 0.9, 0.4, mix(bc, '#ffffff', 0.35));
+  if (SKL.belt){ const bc = SKL.belt; RR(bx0, 44.6 + by * 0.5, bw0, 3, 1.2, bc); RR(bx0, 44.6 + by * 0.5, bw0, 0.9, 0.4, mix(bc, '#ffffff', 0.35));
     if (!back){ RR(30.4, 44.3 + by * 0.5, 3.2, 3.6, 0.8, mix(bc, '#ffd24a', 0.45)); E(32, 46.1 + by * 0.5, 0.8, 0.8, '#ffffff'); RR(25.6, 47.4 + by * 0.5, 1.2, 4.4, 0.6, darken(bc, 0.2)); E(26.2, 52.2 + by * 0.5, 1.5, 1.3, mix(bc, '#ffd24a', 0.3)); } }
   if (back && cc){ Pl([[22, 37 + by], [42, 37 + by], [46, 56], [18, 56]], cc); Pl([[18, 56], [46, 56], [45.6, 54], [18.4, 54]], ctr); Pl([[23, 37 + by], [41, 37 + by], [41.4, 39 + by], [22.6, 39 + by]], ctr);
     if (col.capeStar) for (const [x, y] of [[26, 44], [37, 47], [31, 51], [40, 41]]) E(x, y + by * 0.5, 0.9, 0.9, '#ffe28a'); }
@@ -10680,6 +10741,13 @@ function drawChibi(g, c, view, f, col, look){
   if (FLK.scale){ for (const x of [23, 41]){ E(x, 38.6 + by, 3.6, 2.2, FLK.scale[0]); E(x - 1, 38 + by, 1.6, 0.9, FLK.scale[1]); } }
 
   // ── 머리
+  const longHair = fem && !['jagaek', 'changgaek', 'helmet'].includes(hat);   // 여자 모습: 어깨 아래로 내려오는 긴 머리(복면·묶은 머리·투구일 땐 없음)
+  if (longHair){
+    if (!back){ Pl([[hx - 12, hy - 2], [hx - 14.4, hy + 8], [hx - 14 + sway * 0.6, hy + 19], [hx - 7 + sway * 0.6, hy + 20.4], [hx - 3, hy + 8], [hx - 2, hy - 2]], HRD);
+      Pl([[hx - 11, hy - 1], [hx - 13, hy + 8], [hx - 12.6 + sway * 0.6, hy + 17], [hx - 9.6, hy + 8]], HR); }
+    else { Pl([[hx - 13, hy - 2], [hx - 14.6, hy + 10], [hx - 12 + sway * 0.6, hy + 21], [hx + 12 + sway * 0.6, hy + 21], [hx + 14.6, hy + 10], [hx + 13, hy - 2]], HR);
+      Pl([[hx + 2, hy + 4], [hx + 13, hy + 4], [hx + 14.6, hy + 10], [hx + 12 + sway * 0.6, hy + 21], [hx + 4, hy + 21]], HRD); }
+  }
   if (!back){
     E(hx - 1, hy - 1, 14, 12.6, HR);                                  // 뒷머리
     E(hx + 2, hy + 3, 10.6, 9.6, SK);                                // 얼굴(오른쪽으로 돌림)
@@ -10690,20 +10758,27 @@ function drawChibi(g, c, view, f, col, look){
     for (const [x, d] of [[-8, 4], [-3, 5], [2, 4.4], [7, 3.6], [11, 2.6]]) Pl([[hx + x - 3, hy - 4], [hx + x + 3, hy - 4], [hx + x + 0.6, hy - 4 + d]], HR);
     E(hx - 3, hy - 8, 4, 1.6, HRL);
     // 눈·볼·입
-    if (hat !== 'jagaek'){
+    if (col.face && hat !== 'jagaek') drawFaceExpr(g, hx, hy, col.face, SK, false, fem);
+    else if (hat !== 'jagaek'){
       E(hx + 6.2, hy + 4, 2.2, 3.1, EYE); E(hx - 1.4, hy + 4, 1.9, 2.9, EYE);
       E(hx + 6.9, hy + 2.8, 1, 1, '#ffffff'); E(hx - 0.8, hy + 2.8, 0.9, 0.9, '#ffffff'); E(hx + 5.6, hy + 5.6, 0.6, 0.6, '#6a5a8a');
       E(hx + 8.4, hy + 7.6, 2, 1.1, mix(SK, '#ff7a7a', 0.35)); E(hx - 3.2, hy + 7.6, 1.6, 1, mix(SK, '#ff7a7a', 0.3));
-      E(hx + 3.4, hy + 8.4, 1.3, 0.7, '#b0584a');
+      E(hx + 3.4, hy + 8.4, 1.3, 0.7, fem ? '#d0605a' : '#b0584a');
+      if (fem){ for (const [lx, lw] of [[hx + 6.2, 2.2], [hx - 1.4, 1.9]]){ g.strokeStyle = EYE; g.lineWidth = 0.8; g.lineCap = 'round'; g.beginPath(); g.moveTo(lx + lw * 0.5, hy + 1.4); g.lineTo(lx + lw + 1.1, hy + 0.6); g.stroke(); } }   // 속눈썹
     } else {
-      E(hx + 6.2, hy + 3.6, 1.9, 2.2, EYE); E(hx - 1.2, hy + 3.6, 1.6, 2.1, EYE); E(hx + 6.8, hy + 2.8, 0.8, 0.8, '#ffffff');
+      if (col.face) drawFaceExpr(g, hx, hy, col.face, SK, true, fem); else { E(hx + 6.2, hy + 3.6, 1.9, 2.2, EYE); E(hx - 1.2, hy + 3.6, 1.6, 2.1, EYE); E(hx + 6.8, hy + 2.8, 0.8, 0.8, '#ffffff'); }
     }
   } else {
     E(hx, hy, 14, 12.8, HR); E(hx + 3, hy + 4, 10, 7, HRD); E(hx - 3, hy - 4, 6, 3, HRL);
   }
-  if (look.beard && !back){ Pl([[hx - 3, hy + 9], [hx + 9, hy + 8.4], [hx + 6, hy + 16], [hx + 2, hy + 17], [hx - 1, hy + 14]], HR); Pl([[hx + 1, hy + 8.6], [hx + 6, hy + 8.4], [hx + 3.4, hy + 9.6]], darken(HR, 0.3)); }
+  if (look.beard && !fem && !back){ Pl([[hx - 3, hy + 9], [hx + 9, hy + 8.4], [hx + 6, hy + 16], [hx + 2, hy + 17], [hx - 1, hy + 14]], HR); Pl([[hx + 1, hy + 8.6], [hx + 6, hy + 8.4], [hx + 3.4, hy + 9.6]], darken(HR, 0.3)); }
   // 상투(머리 위 매듭)
-  if (!['jagaek', 'sulsa', 'helmet', 'mcrown', 'gungsa', 'changgaek'].includes(hat)){ E(hx - 1, hy - 12.4, 3.6, 3.2, HR); E(hx - 2, hy - 13.4, 1.4, 1, HRL); RR(hx - 4, hy - 10.6, 6, 1.6, 0.8, darken(HR, 0.4)); }
+  if (fem && !['jagaek', 'sulsa', 'helmet', 'mcrown', 'gungsa', 'changgaek'].includes(hat)){   // 여자 모습: 상투 대신 머리 위 작은 쪽머리 + 붉은 댕기 리본
+    const rx = back ? hx + 1 : hx - 3, RB = '#e0507a';
+    E(rx, hy - 12.2, 3.2, 2.8, HR); E(rx - 0.8, hy - 13.2, 1.3, 0.9, HRL);
+    Pl([[rx - 0.6, hy - 9.4], [rx - 5.6, hy - 11.6 + sway * 0.3], [rx - 5.4, hy - 7.2 + sway * 0.3]], RB); Pl([[rx + 0.6, hy - 9.4], [rx + 5.6, hy - 11.6 - sway * 0.3], [rx + 5.4, hy - 7.2 - sway * 0.3]], darken(RB, 0.15)); E(rx, hy - 9.4, 1.2, 1.2, mix(RB, '#ffffff', 0.4));
+  }
+  else if (!['jagaek', 'sulsa', 'helmet', 'mcrown', 'gungsa', 'changgaek'].includes(hat)){ E(hx - 1, hy - 12.4, 3.6, 3.2, HR); E(hx - 2, hy - 13.4, 1.4, 1, HRL); RR(hx - 4, hy - 10.6, 6, 1.6, 0.8, darken(HR, 0.4)); }
 
   // ── 머리 장식
   if (hat === 'musa'){
@@ -11138,14 +11213,14 @@ function personColors(c, look, armorG, weaponG, ex){
   if (cos) outfit = cos.outfit;
   if (form){ const F = FORMS.find(x => x.k === form); if (F) outfit = mix(outfit, F.color, 0.45); }
   return {outfit, belt, wcol, aG:armorG, wG:weaponG, form, ear:ex && ex.ear != null ? ex.ear : -1, brace:ex && ex.brace != null ? ex.brace : -1,
-    gbr:ex && ex.gbr || 0, job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
+    gbr:ex && ex.gbr || 0, face:ex && ex.face || '', job:ex && ex.job || 0, deco:cos ? cos.deco : (ex && ex.deco) || '', capeC:cape ? cape.capeC : (ex && ex.capeC) || '', capeStar:!!(cape && cape.star), wtype:ex && ex.wtype || '', sk:ex && ex.sk || null, gx:ex && ex.gx || null, wing:ex && ex.wing && AV[ex.wing] && AV[ex.wing].wingC || null, wingStar:!!(ex && ex.wing && AV[ex.wing] && AV[ex.wing].star)};
 }
 const spriteCache = new Map();
 // dir: right=오른쪽 아래(앞) · down=왼쪽 아래(앞, 뒤집음) · up=오른쪽 위(뒤) · left=왼쪽 위(뒤, 뒤집음)
 function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
   look = look || defaultLook();
   const col = personColors(c, look, armorG, weaponG, ex);
-  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : ''].join('|');
+  const key = [c, dir, f, col.outfit, col.belt, col.wcol, look.hair, look.hat, look.skin, look.beard ? 1 : 0, armorG, weaponG, col.form, col.ear, col.brace, col.job, col.deco, col.capeC, col.wtype, col.sk ? SK_PARTS.map(P => col.sk[P.k] || '').join(',') : '', col.wing ? col.wing.join(',') : '', col.gx ? [col.gx.h, col.gx.s, col.gx.b].join(',') : '', c === 'gwon' ? (look.sex === 'f' ? 'f' : 'm') + (col.gbr | 0) : '', look.sex === 'f' ? 'f' : '', col.face].join('|');
   let sp = spriteCache.get(key);
   if (!sp){
     const view = dir === 'up' || dir === 'left' ? 'back' : 'front', flip = dir === 'down' || dir === 'left';
@@ -11162,7 +11237,20 @@ function personSprite(c, look, armorG, weaponG, dir, f, white, ex){
 const gradeOf = i => i >= 0 ? Math.min(4, Math.floor(i / 4)) : -1;   // 0~4(유물·영물도 4 — 다른 기기·예전 판에 보내는 값이라 그대로 둔다. 제 등급은 itemG·gearG)
 const heroGx = () => seaOpen() ? {h:S.helmHide || S.equip.helm < 0 ? -1 : gearG('helm'), s:S.equip.shoulder >= 0 ? gearG('shoulder') : -1, b:S.equip.boots >= 0 ? gearG('boots') : -1} : null;   // 투구·어깨·신발 등급(4부부터)
 const heroEx = () => ({gbr:gwonBr(), form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing, sk:skinLook(), gx:heroGx()});
-const heroSprite = (c, dir, f, white) => personSprite(c, S.look, gearG('armor'), gearG('weapon'), dir, f, white, heroEx());
+const heroSprite = (c, dir, f, white, face) => personSprite(c, S.look, gearG('armor'), gearG('weapon'), dir, f, white, face ? Object.assign(heroEx(), {face}) : heroEx());
+// 용사의 지금 표정('감정:깜빡임:입', 없으면 ''): 맞음(놀람) > 기쁨/큰 웃음 > 기운 없음(체력 30% 아래) > 싸우는 중(매서운 눈) > 평소(가끔 깜빡임).
+// 절전 그리기(lite)에서는 깜빡임·싸움 표정을 빼고 맞음·기쁨·기운 없음만 남긴다(그림 가짓수·그리는 일을 줄이려고)
+function heroFace(){
+  const lite = drawMode !== 'off';
+  let emo = 'normal';
+  if (hero.dead) emo = 'sad';
+  else if ((hero.shockT || 0) > 0) emo = 'surprise';
+  else if ((hero.cheerT || 0) > 0) emo = hero.cheerBig ? 'laugh' : 'joy';
+  else if (hero.hp < ST.maxHp * 0.3) emo = 'sad';
+  else if (!lite && ((hero.engT || 0) > 0 || hero.swing > 0)) emo = 'fight';
+  const blink = !lite && !reduceMotion && emo === 'normal' && gtime % 3.7 < 0.14;
+  return emo === 'normal' && !blink ? '' : emo + ':' + (blink ? 1 : 0) + ':0';
+}
 
 const petCache = new Map();
 function petSprite(i, f){
@@ -16381,7 +16469,7 @@ function drawEntityHero(){
   else if (hero.swing > 0) f = GW >= 0 && kickF ? 4 : 3;
   else if (GW >= 0 && !hero.moving && hero.target && hero.atkT > 0 && hero.atkT < 0.18) f = kickF ? 5 : 6;
   else if (hero.moving) f = hero.mt < 0.5 ? 1 : 2;
-  const sp = heroSprite(C, hero.dir, f, hero.hurt > 0);
+  const sp = heroSprite(C, hero.dir, f, hero.hurt > 0, heroFace());
   const bob = !hero.moving && hero.swing <= 0 && Math.floor(gtime * 1.6) % 2 ? 1 : 0;
   const x = Math.round(hero.x), y = Math.round(hero.y);
   drawShadow(x, y, 12);
@@ -19073,7 +19161,7 @@ function updateFormBtn(){
   const F = session ? formOf() : null, show = !!F && !market;
   if (elForm.hidden === show) elForm.hidden = !show;
   if (!show) return;
-  const key = [F.k, S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin].join('|');
+  const key = [F.k, S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin, S.look.sex || ''].join('|');
   if (formImgKey !== key){ formImgKey = key; $('#formImg').src = lookPreview(S.cls, S.look, gearG('armor'), gearG('weapon'), 'down', {form:F.k}); elForm.style.setProperty('--fc', F.color === '#4a4a6a' ? '#9a9ad8' : F.color); setText($('#formName'), F.name); }
   const fight = curFight(), on = formT > 0, ready = formReady(), used = !!fight && formFor === fight && !on, auto = formAuto(), cd = !on && !ready;
   setText($('#formState'), on ? `변신 중 ${Math.ceil(formT)}초` : ready ? (auto ? '곧 변신' : '누르기!') : used ? '이번 싸움엔 씀' : '보스·레이드에서');
@@ -19162,7 +19250,7 @@ const elFace = $('#hudFace'), elPets = $('#hudPets'), elBig = $('#bigBoss'), elD
 let faceKey = '', petFaceKey = '';
 function updateFace(){
   const aG = gearG('armor'), wG = gearG('weapon'), ex = {form:formOn() ? S.form.eq : '', ear:S.acc.ear.g, brace:S.acc.brace.g, job:S.job, costume:S.av.char, cape:S.av.cape, wing:S.av.wing};
-  const k = [S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin, aG, wG, ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape, ex.wing].join('|');
+  const k = [S.cls, S.look.outfit, S.look.hair, S.look.hat, S.look.skin, S.look.sex || '', aG, wG, ex.form, ex.ear, ex.brace, ex.job, ex.costume, ex.cape, ex.wing].join('|');
   if (k === faceKey) return;
   faceKey = k; elFace.src = lookPreview(S.cls, S.look, aG, wG, 'down', ex);
 }
@@ -22654,14 +22742,13 @@ function lookEditorHTML(look){
       <div><div class="opt-l">옷 색</div><div class="sw">${OUTFITS.map((v, k) => `<button data-k="outfit" data-v="${k}" ${v === 'auto' ? 'class="auto"' : `style="--c:${v}"`} aria-label="${v === 'auto' ? '직업 기본 옷' : '옷 색 ' + k}" aria-pressed="${look.outfit === v}">${v === 'auto' ? '기본' : ''}</button>`).join('')}</div></div>
       <div><div class="opt-l">머리색</div><div class="sw">${sw('hair', HAIRS, '머리색')}</div></div>
       <div><div class="opt-l">피부</div><div class="sw">${sw('skin', SKINS, '피부')}</div></div>
+      <div id="lk-sexrow"><div class="opt-l">모습</div><div class="chips"><button class="chip" data-sex="m" aria-pressed="${look.sex !== 'f'}">남</button><button class="chip" data-sex="f" aria-pressed="${look.sex === 'f'}">여</button></div></div>
       <div><div class="opt-l">머리 장식</div><div class="chips">${HATS.map(([v, n], k) => `<button class="chip" data-k="hat" data-v="${k}" aria-pressed="${look.hat === v}">${n}</button>`).join('')}</div></div>
-      <div id="lk-sexrow" hidden><div class="opt-l">모습(권사)</div><div class="chips"><button class="chip" data-sex="m" aria-pressed="${look.sex !== 'f'}">남</button><button class="chip" data-sex="f" aria-pressed="${look.sex === 'f'}">여</button></div></div>
     </div></div>`;
 }
 function wireLookEditor(look, getCls, grades){
   let di = 0;
   const upd = () => {
-    const sr = $('#lk-sexrow'); if (sr) sr.hidden = getCls() !== 'gwon';   // 외형 성별은 권사만(다른 직업은 모습이 하나)
     $('#lk-img').src = lookPreview(getCls(), look, grades[0], grades[1], DIR_SEQ[di]);
     setText($('#lk-dir'), DIR_NAME[DIR_SEQ[di]] + ' · 눌러서 돌리기');
   };
@@ -24014,6 +24101,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {ENTRY, ENTRY_RAIDS, entrySt, entryRaidOpen, entryInfo, entryReady, startEntry, entryReward, confirmEntry, RAID_WORLDS, raidAt, raidTickets, mGold, TICKET_MAX});
   // @@END-ENTRY
   Object.assign(window.__game, {moveChar, applyOrder, flushOrder, syncChars, showCharSelect});   // 캐릭터 순서 시험
+  Object.assign(window.__game, {cleanLook, lookPreview, heroFace, setDrawMode, openLookEditor, defaultLook});   // 남·여 모습·표정 시험
 }
 
 const hot = window.claude && window.claude.hot;
