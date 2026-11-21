@@ -458,7 +458,7 @@ async def main():
             kb = await B.evaluate('async () => await window.__game.checkKick()')
             check(kb is False, f'내가 마지막으로 접속한 화면은 멈추지 않는다 {kb}')
             with pg.conn() as c, c.cursor() as cur:   # 앞 점검이 올려 둔 「더 새 판」 기록을 되돌려, 새 기기가 정상으로 들어오게 한다
-                cur.execute("update samhan_chars set save = replace(save, '\"saveBuild\":2', '\"saveBuild\":1') where name = '온라인용사'")
+                cur.execute("update samhan_chars set save = replace(save, %s, %s) where name = '온라인용사'", (f'"saveBuild":{SB}', f'"saveBuild":{SB - 1}'))
             ctxF, F = await device(api)
             await F.evaluate("() => { window.__samhanNoKick = false; }")
             await F.click('#lg-tab-login')

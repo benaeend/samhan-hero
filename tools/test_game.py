@@ -608,6 +608,97 @@ async def main():
         await page.click('#shb-b_atk')
         st = await page.evaluate('() => ({buff: window.__game.S.buff.atk})')
         check(st['buff'] > 590, f'범 부적을 사면 10분 동안 공격력이 오른다 {st}')
+
+        # 4-2b) 상점·재련 편의(2026-11-21): 윤회 리셋권 · 엽전 꾸러미 묶음 100개 · 재련 ×10/목표까지
+        await page.evaluate("() => { const G = window.__game; window.__keepShop = JSON.stringify(G.S); G.S.gold = 1e30; G.S.gems = 5e6; G.S.dust = 1e9; G.S.shop.got = {}; G.S.world = 0; G.S.reb = {n:0, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}}; G.buildTab('shop', true); }")
+        await page.click('.shop-cats [data-c="pack"]')
+        t0 = await page.evaluate("() => ({dis: document.querySelector('#shb-rebreset').disabled, txt: document.querySelector('#shb-rebreset').textContent.trim(), g100: !!document.querySelector('#shb-goldbag100'), shot: 1})")
+        check(t0['dis'] and '환생' in t0['txt'] and t0['g100'], f'윤회 리셋권: 환생을 안 했으면 못 사고 이유가 단추에 뜬다 {t0}')
+        await page.evaluate("() => { const G = window.__game; G.S.reb = {n:1, pts:0, total:0, up:{atk:0, hp:0, spd:0, luck:0, eye:0}}; G.refreshPanel(); }")
+        t1 = await page.evaluate("() => ({dis: document.querySelector('#shb-rebreset').disabled, txt: document.querySelector('#shb-rebreset').textContent.trim()})")
+        check(t1['dis'] and '올린' in t1['txt'], f'윤회 리셋권: 올린 구슬이 없으면 못 사고 이유가 뜬다 {t1}')
+        await page.evaluate("() => { const G = window.__game; G.S.reb = {n:2, pts:3, total:40, up:{atk:7, hp:3, spd:2, luck:0, eye:1}}; G.refreshPanel(); }")
+        sp = await page.evaluate("() => window.__game.rebSpent()")   # atk7: 5*1+2*2=9, hp3: 3, spd2: 2, eye1: 1 -> 15
+        check(sp == 15, f'윤회 리셋권: 올린 구슬 합계(단계마다 1 + 5단계마다 1씩 더) {sp}')
+        await page.click('#shb-rebreset')
+        await page.wait_for_timeout(200)
+        m1 = await page.evaluate("() => ({shown: !document.querySelector('#modal').hidden, txt: document.querySelector('#modal').innerText, gems: window.__game.S.gems, up: window.__game.S.reb.up.atk})")
+        check(m1['shown'] and '윤회 구슬 15개' in m1['txt'] and m1['gems'] == 5e6 and m1['up'] == 7, f'윤회 리셋권: 사기 전에 확인 창이 뜨고 아직 아무것도 안 바뀐다 {m1}')
+        await page.screenshot(path=str(OUT / '16b_윤회리셋권확인.png'))
+        await page.click('#modal-btn-0')
+        m2 = await page.evaluate("() => ({gems: window.__game.S.gems, up: window.__game.S.reb.up.atk})")
+        check(m2['gems'] == 5e6 and m2['up'] == 7, f'윤회 리셋권: [그만두기]를 누르면 그대로다 {m2}')
+        await page.click('#shb-rebreset'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
+        m3 = await page.evaluate("() => { const S = window.__game.S; return {gems: S.gems, pts: S.reb.pts, total: S.reb.total, up: Object.values(S.reb.up), sp: window.__game.rebSpent()}; }")
+        check(m3['gems'] == 5e6 - 400000 and m3['pts'] == 18 and m3['total'] == 40 and all(v == 0 for v in m3['up']) and m3['sp'] == 0,
+              f'윤회 리셋권: 보석 400,000을 내고 올린 15개를 돌려받는다(구슬 3 → 18, 능력 전부 Lv.0, 총량 그대로) {m3}')
+        m4 = await page.evaluate("() => { const G = window.__game; const r = G.rebUp('atk'); const none = G.rebSpent() === 0 && !G.buyShop('rebreset'); return {r, pts: G.S.reb.pts, atk: G.S.reb.up.atk, none}; }")
+        check(m4['r'] and m4['pts'] == 17 and m4['atk'] == 1, f'윤회 리셋권: 돌려받은 구슬로 다시 올릴 수 있다 {m4}')
+        m4b = await page.evaluate("() => { const G = window.__game; G.S.reb.up.atk = 0; G.S.reb.pts += 1; return G.rebSpent() === 0 && !G.buyShop('rebreset') && G.shopState(G.SHOP.find(x => x.id === 'rebreset')).why; }")
+        check(m4b == '올린 구슬 없음', f'윤회 리셋권: 올린 게 없으면 또 살 수 없다 {m4b}')
+        m5 = await page.evaluate("() => { const G = window.__game, S = G.S; S.reb.up = {atk:20, hp:20, spd:10, luck:20, eye:15}; const sp = G.rebSpent(), tot = S.reb.pts + sp; S.gems = 1e6; const a = G.buyShop('rebreset'), b = G.buyShop('rebreset'); return {sp, a, b, conserved: S.reb.pts === tot, gems: S.gems}; }")
+        check(m5['a'] and not m5['b'] and m5['conserved'] and m5['gems'] == 6e5, f'윤회 리셋권: 횟수 제한은 없고(구슬이 다시 올라가면 또 사진다) 구슬 총량은 늘지도 줄지도 않는다 {m5}')
+        # 엽전 꾸러미 묶음
+        g1 = await page.evaluate("() => { const G = window.__game, S = G.S; S.gems = 5e6; S.gold = 0; G.buyShop('goldbag'); const one = S.gold, paid1 = 5e6 - S.gems; S.gold = 0; S.gems = 5e6; const ok = G.buyShop('goldbag100'); return {ok, one, paid1, gold: S.gold, paid: 5e6 - S.gems}; }")
+        check(g1['ok'] and g1['paid'] == g1['paid1'] * 100 and abs(g1['gold'] / g1['one'] - 100) < 1.0, f'엽전 꾸러미 묶음: 꾸러미 100개를 덤 없이 한 번에(값 {g1["paid1"]}×100, 엽전 ×100) {g1}')
+        await page.evaluate("() => { const G = window.__game; G.S.gems = 5e6; G.S.gold = 0; G.refreshPanel(); }")
+        await page.click('#shb-goldbag100'); await page.wait_for_timeout(200)
+        gm = await page.evaluate("() => ({shown: !document.querySelector('#modal').hidden, txt: document.querySelector('#modal').innerText, gems: window.__game.S.gems, gold: window.__game.S.gold})")
+        check(gm['shown'] and '100개' in gm['txt'] and gm['gems'] == 5e6 and gm['gold'] < 1e6, f'엽전 꾸러미 묶음: 사기 전에 확인 창이 뜬다 {gm["shown"]} {gm["gems"]}')
+        await page.click('#modal-btn-0')
+        g2 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
+        check(g2['gems'] == 5e6, f'엽전 꾸러미 묶음: [그만두기]를 누르면 안 산다 {g2}')
+        await page.click('#shb-goldbag100'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
+        g3 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
+        check(g3['gems'] < 5e6 and g3['gold'] > 0, f'엽전 꾸러미 묶음: 확인하면 보석을 내고 엽전을 받는다 {g3}')
+        # 재련 연속
+        await page.evaluate("() => { const G = window.__game, S = G.S; S.gold = 1e30; S.gems = 1e9; S.dust = 1e9; S.world = 0; S.useWhet = false; S.useProtect = false; S.refine.weapon.lv = 5; S.refine.weapon.drops = 0; G.buildTab('gear', true); }")
+        await page.click('#seg-refine')
+        r1 = await page.evaluate("() => { const S = window.__game.S; return {n: S.rec.refines, lv: S.refine.weapon.lv, x10: !!document.querySelector('#rf-weapon [data-r=x10]'), goal: document.querySelectorAll('#rf-weapon [data-r=goal] option').length, auto: document.querySelector('#rf-weapon [data-r=auto]').textContent}; }")
+        check(r1['x10'] and r1['goal'] > 3 and '목표까지' in r1['auto'], f'재련 화면에 [×10]·목표 칸·[목표까지]가 있다 {r1}')
+        await page.click('#rf-weapon [data-r=x10]')
+        r2 = await page.evaluate("() => { const S = window.__game.S; return {n: S.rec.refines, lv: S.refine.weapon.lv, logs: [...document.querySelectorAll('#log div')].map(e => e.textContent)}; }")
+        check(r2['n'] - r1['n'] == 10 and any('재련 연속' in t and '10번 시도' in t for t in r2['logs']), f'재련 ×10: 한 번에 10번 시도하고 요약 한 줄이 로그에 남는다 {r2}')
+        await page.screenshot(path=str(OUT / '6b_재련연속.png'))
+        r3 = await page.evaluate("""() => { const G = window.__game, S = G.S; S.refine.weapon.lv = 12; S.refine.weapon.drops = 0; S.gold = G.refineCost('weapon', 12).g * 2.5; S.dust = 1e9; G.refreshPanel(); const n0 = S.rec.refines;
+          document.querySelector('#rf-weapon [data-r=x10]').click(); return {tries: S.rec.refines - n0, logs: [...document.querySelectorAll('#log div')].map(e => e.textContent)}; }""")
+        check(1 <= r3['tries'] <= 3 and any('모자라 멈췄어요' in t for t in r3['logs']), f'재련 ×10: 엽전이 모자라면 거기서 멈춘다 {r3}')
+        await page.evaluate("() => { const G = window.__game, S = G.S; S.gold = 1e30; S.dust = 1e9; S.refine.weapon.lv = 5; S.refine.weapon.drops = 0; G.refreshPanel(); }")
+        await page.select_option('#rf-weapon [data-r=goal]', '7')
+        await page.click('#rf-weapon [data-r=auto]')
+        run0 = await page.evaluate("() => ({run: !!window.__game.refRun, txt: document.querySelector('#rf-weapon [data-r=auto]').textContent, main: document.querySelector('#rf-weapon [data-r=btn]').disabled})")
+        check(run0['run'] and '멈춤' in run0['txt'] and run0['main'], f'재련 목표까지: 누르면 자동으로 돌고 단추가 [멈춤]으로 바뀐다 {run0}')
+        await page.wait_for_function("() => !window.__game.refRun", timeout=20000)
+        r4 = await page.evaluate("() => ({lv: window.__game.S.refine.weapon.lv, logs: [...document.querySelectorAll('#log div')].map(e => e.textContent), txt: document.querySelector('#rf-weapon [data-r=res]').textContent})")
+        check(r4['lv'] >= 7 and any('목표에 닿았어요' in t for t in r4['logs']), f'재련 목표까지: 목표(+7)에 닿으면 멈추고 요약 로그가 남는다 {r4}')
+        await page.evaluate("() => { const G = window.__game, S = G.S; S.refine.weapon.lv = 14; S.refine.weapon.drops = 0; G.refreshPanel(); }")
+        await page.select_option('#rf-weapon [data-r=goal]', '25')
+        await page.click('#rf-weapon [data-r=auto]')
+        await page.wait_for_timeout(500)
+        st1 = await page.evaluate("() => !!window.__game.refRun")
+        await page.click('#rf-weapon [data-r=auto]')
+        st2 = await page.evaluate("() => ({run: !!window.__game.refRun, logs: [...document.querySelectorAll('#log div')].map(e => e.textContent)})")
+        check(st1 and not st2['run'] and any('멈췄어요' in t for t in st2['logs']), f'재련 목표까지: 돌고 있을 때 다시 누르면(멈춤) 멈추고 요약이 남는다 {st1} {st2}')
+        await page.evaluate("() => { const G = window.__game, S = G.S; S.refine.weapon.lv = 14; S.refine.weapon.drops = 0; S.gold = G.refineCost('weapon', 14).g * 3; S.dust = 1e9; G.refreshPanel(); }")
+        await page.select_option('#rf-weapon [data-r=goal]', '25')
+        await page.click('#rf-weapon [data-r=auto]')
+        await page.wait_for_function("() => !window.__game.refRun", timeout=20000)
+        st3 = await page.evaluate("() => ({lv: window.__game.S.refine.weapon.lv, logs: [...document.querySelectorAll('#log div')].map(e => e.textContent)})")
+        check(st3['lv'] < 25 and any('모자라 멈췄어요' in t for t in st3['logs']), f'재련 목표까지: 엽전이 모자라면 멈춘다 {st3}')
+        await page.evaluate("() => { const G = window.__game, S = G.S; S.refine.weapon.lv = 14; S.refine.weapon.drops = 0; S.gold = 1e30; S.dust = 1e9; G.refreshPanel(); }")
+        await page.select_option('#rf-weapon [data-r=goal]', '25')
+        await page.click('#rf-weapon [data-r=auto]')
+        await page.wait_for_timeout(300)
+        await tab(page, 'quest')
+        await page.wait_for_timeout(400)
+        st4 = await page.evaluate("() => !!window.__game.refRun")
+        check(not st4, '재련 목표까지: 다른 탭으로 가면 멈춘다')
+        # 숫돌을 켜 두면 기존대로 함께 쓰인다
+        await page.click('#tab-gear'); await page.click('#seg-refine')
+        w = await page.evaluate("() => { const G = window.__game, S = G.S; S.useWhet = true; S.inv.whet = 100; S.refine.weapon.lv = 3; S.refine.weapon.drops = 0; S.gold = 1e30; G.refreshPanel(); document.querySelector('#rf-weapon [data-r=x10]').click(); return {left: S.inv.whet}; }")
+        check(w['left'] == 90, f'재련 ×10: 숫돌을 켜 두면 시도마다 하나씩 함께 쓰인다 {w}')
+        await page.evaluate("() => { const G = window.__game; const k = JSON.parse(window.__keepShop); G.closePage(); Object.assign(G.S, k); G.refreshStats(); }")
+        await tab(page, 'shop')
         drank = await page.evaluate('''() => { const G = window.__game; const n = G.S.inv.potion; G.hero.hp = G.ST.maxHp * 0.1; G.update(0.05);
           return {before: n, after: G.S.inv.potion, hp: G.hero.hp / G.ST.maxHp}; }''')
         check(drank['after'] == drank['before'] - 1 and drank['hp'] > 0.4, f'체력이 낮으면 탕약을 저절로 마신다 {drank}')
@@ -3785,7 +3876,7 @@ async def main():
         check(i1['inh0'] == [True, 'weapon,armor,helm,shoulder,boots'] and i1['inh'] == [False, '44444', '15,15,15,15,15', True, True, 4] and i1['re'][6] == 4,
               f"4차 계승: 란카 길에 들어서면 대장장이가 다섯 칸 모두를 계승하고(+15부터) 능력치는 줄지 않는다 {i1['inh0']} {i1['inh']}")
         check(i1['cum'] == 850 and i1['atk'] and i1['regs'] == ['단다카 숲·원숭이 나라·란카 성', '마른 강·만다라 산·젖빛 바다', '야마의 길·사천왕 문·마라의 들'] and i1['here'] == ['단다카 숲', '원숭이 나라', '란카 성', '란카 성']
-              and i1['raids'] == ['황금 사슴·잠자는 거인·열 머리 왕', '물을 가둔 뱀·둔갑한 아수라·해를 무는 머리', '사천왕의 문·마라의 군대·마라'] and i1['keys'] == ['r0r1r2', 'c0c1c2', 'u0u1u2'] and i1['caps'] == [566, 583, 600] and i1['wmax'] == 10 and i1['pat'] == [False, False],
+              and i1['raids'] == ['황금 사슴·잠자는 거인·열 머리 왕', '물을 가둔 뱀·둔갑한 아수라·해를 무는 머리', '사천왕의 문·마라의 군대·마라'] and i1['keys'] == ['r0r1r2', 'c0c1c2', 'u0u1u2'] and i1['caps'] == [566, 583, 700] and i1['wmax'] == 10 and i1['pat'] == [False, False],
               f"5부 지역 아홉·레이드 아홉(키 r·c·u), 새 세계에서도 능력치가 멀쩡하고, 물살·숨은 바다에서만 {i1['regs']} {i1['raids']} {i1['cum']} {i1['pat']}")
         check('수미산' in i1['q'][0] and 'Lv.' in i1['q'][1] and '수미산으로 건너기' in i1['q'][2], f"두 자리 세계 번호(10)의 퀘스트 조건 글이 맞게 나온다 {i1['q']}")
         RUN_IND = r"""(w) => { const G = window.__game, S = G.S, out = {done:[], bosses:{}, raid:{}, got:{}}; G.quiet = true; G.noFork = true; G.powK = 200; G.wipeOff = true; G.noSeaPat = true; G.refreshStats();
@@ -3850,9 +3941,9 @@ async def main():
         i4 = await ip.evaluate(RUN_IND, 10)
         await ip.wait_for_timeout(700)
         i4['title'] = await ip.evaluate(TITLES9)
-        check(not i4.get('stuck') and i4['crossed'] and i4['w'] == 10 and i4['cap'] == 600 and i4['regs'] == ['야마의 길', '사천왕 문', '마라의 들'] and i4['q'] == i4['end'] and i4['chs'] == [83, 84, 85, 86, 87, 88, 89, 90]
-              and i4['nextK'] == 's10' and '끝없는 신화' in i4['next'] and i4['lv'] == 600 and 'ind3' in i4['title'],
-              f"5부 셋째: 수미산으로 건너가(상한 600) 83장부터 90장까지 끝까지 이어지고(5부 끝) 별호 「끝없는 신화」 {i4.get('stuck')} {i4['w']} {i4['q']}/{i4['end']} {i4['chs']} {i4['next']} {i4['title']}")
+        check(not i4.get('stuck') and i4['crossed'] and i4['w'] == 10 and i4['cap'] == 700 and i4['regs'] == ['야마의 길', '사천왕 문', '마라의 들'] and i4['q'] == i4['end'] and i4['chs'] == [83, 84, 85, 86, 87, 88, 89, 90]
+              and i4['nextK'] == 's10' and '끝없는 신화' in i4['next'] and 600 <= i4['lv'] <= 700 and 'ind3' in i4['title'],
+              f"5부 셋째: 수미산으로 건너가(상한 700 — 이야기는 600까지) 83장부터 90장까지 끝까지 이어지고(5부 끝) 별호 「끝없는 신화」 {i4.get('stuck')} {i4['w']} {i4['q']}/{i4['end']} {i4['chs']} {i4['next']} {i4['title']}")
         check(i4['bosses'].get('10') == '길목을 지키는 네 눈 박이 개' and i4['bosses'].get('20') == '문을 지키는 돌 야차' and i4['bosses'].get('24') == '구슬에 비친 나' and i4['bosses'].get('28') == '세 딸의 환영'
               and all(i4['raid'].get(k, {}).get('start') and i4['raid'][k]['open'] and not i4['raid'][k]['early'] and i4['raid'][k]['first'] for k in ('u0', 'u1', 'u2')) and i4['raid']['u2']['boss'] == '마라',
               f"수미산 지역 보스·이야기 속 보스(24단계 구슬에 비친 나·28단계 세 딸의 환영)와 레이드 셋(사천왕의 문·마라의 군대·마라) {i4['bosses']} {i4['raid']}")
@@ -3877,7 +3968,7 @@ async def main():
         i5['title'] = await ip.evaluate(TITLES9)
         check(i5['got4'] == [12, 120, 50, 2] and i5['kOk'] and i5['k'] > 1.3 and i5['off'] == [1, True, True, True] and i5['back'],
               f"5부 신화 보물 넷: 파사석(재사용)·금강저(공격력)·영약 호리병(회복)이 듣고, 구슬 그물의 구슬은 가진 보물 {i5['n']}개 × 2%만큼 모든 보물 효과를 키운다(×{i5['k']:.2f}) {i5['got4']} {i5['off']}")
-        check(i5['pend'] and i5['say0'] and i5['pick'] and i5['say1'] and not i5['again'] and i5['fk'] == 1 and 'f_yamaB' in i5['title'] and 'f_yamaA' not in i5['title'] and i5['re'][:2] == [1, 2] and i5['re'][3:] == [10, i4['st'], 600, 9],
+        check(i5['pend'] and i5['say0'] and i5['pick'] and i5['say1'] and not i5['again'] and i5['fk'] == 1 and 'f_yamaB' in i5['title'] and 'f_yamaA' not in i5['title'] and i5['re'][:2] == [1, 2] and i5['re'][3:5] == [10, i4['st']] and i5['re'][5] >= 600 and i5['re'][6] == 9,
               f"갈림길(84장 야마의 물음): 한 번만 고르고, 고른 답이 연출 대사의 {{yama}} 자리에 들어가고, 별호를 얻고, 저장해도 그대로 {i5['pend']} {i5['pick']} {i5['again']} {i5['title']} {i5['re']}")
         check(i5['mem'][0] is True and i5['mem'][2] == 83 and i5['mem'][3] == 91 and i5['opens'] == 23,
               f"5부 이야기 83개·장 제목 23개가 들어 있고, 90장을 마치면 환생의 기억 「나중에」는 닫힌다(여는 연출 {i5['opens']}/23장) {i5['mem']}")
@@ -5725,6 +5816,136 @@ async def main():
                 check(bfr['n'] == (1 if nb else 0) and not bfr['hitStage'] and not bfr['hitBoss'] and not bfr['hits'] and bfr['inside'] and bfr['top'], f'{nm} 화면 버프 {nb}개: 버프 칩이 단계 이름·보스 막대·단추와 겹치지 않고 화면 안에 있다 {bfr}')
             await ctxBf.close()
         await ctxB.close()
+
+        # 만렙 700(2026-11-19): 수미산 상한 700 · 모음 전환 · 저장 호환 · 초월의 조각 · 초월의 경지 잠김 카드
+        ctxM = await browser.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2)
+        mp = await ctxM.new_page()
+        watch(mp, errors, '만렙700 ')
+        await fresh(mp)
+        await signup(mp, 'max700', 'abcd', '칠백용사')
+        await mp.wait_for_timeout(500)
+        msave = json.loads((ROOT / 'tools' / 'beta_saves' / '90_musa_ind3_end.json').read_text(encoding='utf-8'))['save']
+        LOADM = r"""(save) => { const G = window.__game, S = G.S; G.quiet = true; G.noFork = true; G.noInh = true; G.closePage(); G.hideModal && G.hideModal(); if (G.raid) G.raidEnd(false);
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '칠백용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); return {w:S.world, lv:S.level, q:S.quest.main}; }"""
+        m0 = await mp.evaluate(LOADM, msave)
+        a = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, snap = () => JSON.parse(JSON.stringify(S));
+          out.cap = G.LV_CAP[10]; out.capNow = G.levelCap(); out.ver = G.SAVE_BUILD_;
+          const base = snap();
+          // A1: 모음 50 → +15레벨
+          S.expBank = 50; S.exp = 0; out.a1 = G.capRaiseFix(); out.a1l = S.level; out.a1b = S.expBank;
+          // A3: 저장 → 다시 들어와도 두 번 주지 않음
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); Object.assign(S, re); out.a3 = G.capRaiseFix(); out.a3l = S.level;
+          // A2: 모음 500 → 최대 30레벨
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.expBank = 500; S.exp = 0; S.trans.lvGot = 0; S.trans.shard = 0; out.a2 = G.capRaiseFix(); out.a2l = S.level; out.d2 = [S.trans.shard, S.trans.lvGot];
+          // A4: 젖의 바다(세계 9) 만렙 583 모음은 그대로
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.world = 9; S.level = 583; S.exp = 0; S.expBank = 20; out.a4 = G.capRaiseFix(); out.a4l = [S.level, S.expBank];
+          // A5: Lv.700에서 경험치를 넣으면 레벨 그대로, 모음만 늘어남
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); S.level = 700; S.exp = 0; S.expBank = 0; G.gainExp(G.expNeed(700) * 2.5, {raw:true}); out.a5 = [S.level, +S.expBank.toFixed(2)];
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(base)))); G.refreshStats(); return out; }""")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.expBank = 2.5; }")
+        await mp.wait_for_timeout(300)
+        a['hud'] = await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.render(); return document.querySelector('#xpnum').textContent; }")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; G.refreshStats(); }")
+        check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 3, f"만렙 700: 수미산 레벨 상한 700, 저장 판 3 {a['cap']} {a['capNow']} {a['ver']}")
+        check(a['a1'] == 15 and a['a1l'] == 615 and a['a1b'] == 0, f"모음 전환 A1: 수미산 Lv.600 모음 50 → 접속할 때 +15레벨(Lv.615), 모음 0 {a['a1']} {a['a1l']} {a['a1b']}")
+        check(a['a2'] == 30 and a['a2l'] == 630 and a['d2'] == [30, 3], f"모음 전환 A2: 모음 500 → 최대 +30레벨(Lv.630) · 오름 보상 610·620·630에서 조각 +30 {a['a2']} {a['a2l']} {a['d2']}")
+        check(a['a3'] == 0 and a['a3l'] == 615, f"모음 전환 A3: 저장해 다시 들어와도 두 번 주지 않음 {a['a3']} {a['a3l']}")
+        check(a['a4'] == 0 and a['a4l'] == [583, 20], f"모음 전환 A4: 젖의 바다 만렙(583)의 모음은 건드리지 않음 {a['a4']} {a['a4l']}")
+        check(a['a5'] == [700, 2.5] and '만렙 · 모음' in a['hud'], f"모음 전환 A5: Lv.700에서 경험치는 모음에 쌓이고 HUD에 「만렙 · 모음」 {a['a5']} {a['hud']}")
+        b = await mp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {}, old = JSON.parse(JSON.stringify(save));
+          const m1 = G.mergeState(JSON.parse(JSON.stringify(old))); out.b1a = [m1.trans.shard, m1.trans.lvGot, m1.trans.lv, m1.trans.buy.wk, Object.keys(m1.trans.buy.got).length, m1.level];
+          const bad = JSON.parse(JSON.stringify(old)); bad.trans = {shard:-5, total:'x', lvGot:99, lv:-1, exp:'zz', buy:'x'};
+          const m2 = G.mergeState(bad); out.b1b = [m2.trans.shard, m2.trans.lvGot, m2.trans.lv, m2.trans.exp, m2.trans.buy.wk, Object.keys(m2.trans.buy.got).length];
+          const ok = JSON.parse(JSON.stringify(old)); ok.trans = {shard:12, total:30, lvGot:2, lv:0, exp:0, buy:{wk:'2026-11-16', got:{t_whet:2, nope:5, t_ticket:99}}};
+          const m3 = G.mergeState(ok); out.b1c = [m3.trans.shard, m3.trans.total, m3.trans.lvGot, JSON.stringify(m3.trans.buy.got)];
+          const l = JSON.parse(JSON.stringify(old)); l.level = 650; l.best.l10 = 650; const m4 = G.mergeState(l); out.b2 = [m4.level, m4.best.l10];
+          const h = JSON.parse(JSON.stringify(old)); h.level = 650; h.world = 9; const m5 = G.mergeState(h); out.b2h = m5.level;   // 젖의 바다는 583에서 잘림
+          return out; }""", msave)
+        check(b['b1a'] == [0, 0, 0, '', 0, 600], f"초월 저장 B1: 예전 저장(trans 없음)은 기본값으로 {b['b1a']}")
+        check(b['b1b'] == [0, 10, 0, 0, '', 0], f"초월 저장 B1: 이상한 값은 0·범위 안으로 다듬어짐 {b['b1b']}")
+        check(b['b1c'][:3] == [12, 30, 2] and b['b1c'][3] == '{"t_whet":2,"t_ticket":7}', f"초월 저장 B1: 정상 값은 그대로, 모르는 물건·한도 넘은 횟수만 정리 {b['b1c']}")
+        check(b['b2'] == [650, 650] and b['b2h'] == 583, f"저장 호환 B2: 수미산 Lv.650 저장이 600으로 잘리지 않고, 다른 땅은 그 땅 상한으로 {b['b2']} {b['b2h']}")
+        f = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
+          const oldNeed = L => 10 * Math.pow(1.11, Math.min(L, 100) - 1) * Math.pow(1.04, Math.max(0, Math.min(L, 300) - 100)) * Math.pow(1.02, Math.max(0, L - 300));
+          out.same = [1, 50, 100, 101, 250, 300, 301, 450, 599, 600, 650, 700].every(L => Math.abs(G.expNeed(L) / oldNeed(L) - 1) < 1e-12);
+          out.exact = Array.from({length:600}, (_, i) => i + 1).every(L => G.expNeed(L) === oldNeed(L));
+          S.level = 600; G.refreshStats(); const a6 = G.ST.atk; S.level = 700; G.refreshStats(); const a7 = G.ST.atk; S.level = 600; G.refreshStats();
+          out.lv = +(a7 / a6).toFixed(3); out.curve = [G.CURVE.need4, G.CURVE.lv3]; return out; }""")
+        check(f['exact'] and f['same'], f"영향 0 F1: 필요 경험치 식이 Lv.1~600에서 예전 식과 글자까지 같고 601~700도 같은 걸음 {f}")
+        check(abs(f['lv'] - 1.647) < 0.01, f"레벨 효과: Lv.600 → 700에서 공격력 ×{f['lv']}(×1.647) {f['curve']}")
+        # C: 끝없는 신화 4번째(그대로)·5번째부터(보석 500 + 초월의 조각 1)
+        c = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; S.quest.main = G.MAIN_Q.length + 3; S.best.s10 = 999; S.trans.shard = 0; S.trans.total = 0;
+          const q4 = G.mainQuest(); out.q4 = [q4.t, q4.gems, q4.ts || 0]; let g0 = S.gems; G.claimMain(); out.r4 = [S.gems - g0 >= 6200 && S.gems - g0 < 6200 + 2000000, S.trans.shard];
+          const q5 = G.mainQuest(); out.q5 = [q5.t, q5.gems, q5.ts || 0]; g0 = S.gems; G.claimMain(); out.r5 = [S.gems - g0, S.trans.shard];
+          S.quest.main = G.MAIN_Q.length; out.q1 = [G.mainQuest().gems, G.mainQuest().ts || 0]; S.quest.main = G.MAIN_Q.length + 109; out.q110 = [G.mainQuest().gems, G.mainQuest().ts || 0, G.mainQuest().n];
+          S.quest.main = G.MAIN_Q.length + 4; return out; }""")
+        check(c['q4'] == ['끝없는 신화 4', 6200, 0] and c['r4'][1] == 0 and c['q5'] == ['끝없는 신화 5', 500, 1] and c['r5'] == [500, 1] and c['q1'] == [5300, 0] and c['q110'] == [500, 1, 260],
+              f"끝없는 신화 보상 C1: 1~4번째는 예전 그대로(보석 5,300~6,200), 5번째부터 보석 500 + 초월의 조각 1 {c}")
+        # D: 오름 보상 · 주간 상자
+        d = await mp.evaluate(r"""(save) => { const G = window.__game, S = G.S, out = {};
+          Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '칠백용사'; S.level = 609; S.exp = 0; S.trans.shard = 0; S.trans.lvGot = 0; S.expBank = 0; S.world = 10;
+          const need = G.expNeed(609); G.gainExp(need * 2.1, {raw:true}); out.d1 = [S.level, S.trans.shard, S.trans.lvGot];
+          G.transLvCheck(); const re = G.mergeState(JSON.parse(JSON.stringify(S))); Object.assign(S, re); G.transLvCheck(); out.d1b = [S.trans.shard, S.trans.lvGot];
+          S.level = 700; S.trans.lvGot = 9; G.transLvCheck(); out.d1c = [S.trans.shard, S.trans.lvGot]; G.transLvCheck(); out.d1d = S.trans.lvGot;
+          // D3: 주간 상자 — 이야기 전 / 후
+          const wk = G.weekKey(); const full = () => { S.week = {key:wk, wp:{}, wgot:G.WEEKLY.map(W => W.key), wall:false}; };
+          S.trans.shard = 0; S.quest.main = 340; full(); G.claimWeekAll(); out.d3a = S.trans.shard;
+          S.quest.main = G.MAIN_Q.length + 1; full(); G.claimWeekAll(); out.d3b = S.trans.shard;
+          return out; }""", msave)
+        check(d['d1'] == [611, 10, 1] and d['d1b'] == [10, 1], f"오름 보상 D1: Lv.609 → 611이면 조각 +10 한 번, 다시 들어와도 또 안 줌 {d['d1']} {d['d1b']}")
+        check(d['d1c'] == [20, 10] and d['d1d'] == 10, f"오름 보상: Lv.700까지 열 번(합 100), 그 뒤는 더 안 줌 {d['d1c']} {d['d1d']}")
+        check(d['d3a'] == 0 and d['d3b'] == 5, f"주간 상자 D3: 이야기 중에는 조각 0, 끝없는 신화에서는 +5 {d['d3a']} {d['d3b']}")
+        # E: 조각 상점
+        e = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {};
+          S.quest.main = G.MAIN_Q.length + 1; S.world = 10; S.trans.shard = 3; S.trans.buy = {wk:G.weekKey(), got:{}}; S.inv.whet = 0; const tk0 = S.raid.tk;
+          out.e1a = [G.buyTrans('t_whet'), S.inv.whet, S.trans.shard]; out.e1b = [G.buyTrans('t_ticket'), S.raid.tk - tk0, S.trans.shard]; out.e1c = [G.buyTrans('t_whet'), G.transShopState(G.TRANS_SHOP[1]).ok, S.inv.whet, S.trans.shard];
+          S.trans.shard = 50; S.trans.buy = {wk:G.weekKey(), got:{}}; let n = 0; for (let i = 0; i < 9; i++) if (G.buyTrans('t_ticket')) n++; out.e2a = [n, S.trans.shard, G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_ticket')).why];
+          G.addTime(8 * 86400000); out.e2b = G.transShopState(G.TRANS_SHOP.find(x => x.id === 't_ticket')).ok; G.addTime(-8 * 86400000);
+          S.trans.shard = 20; S.trans.buy = {wk:G.weekKey(), got:{}}; const bx = S.gems; out.e3 = [G.buyTrans('t_box'), S.trans.shard, S.gems === bx || S.gems >= bx - 1000];
+          S.trans.shard = 0; S.trans.total = 0; S.trans.buy = {wk:'', got:{}};
+          return out; }""")
+        check(e['e1a'] == [True, 11, 1] and e['e1b'] == [True, 1, 0] and e['e1c'][0] is False and e['e1c'][1] is False and e['e1c'][3] == 0,
+              f"조각 상점 E1: 조각 3개로 숫돌 묶음(2)·토벌패(1), 모자라면 못 삼 {e['e1a']} {e['e1b']} {e['e1c']}")
+        check(e['e2a'] == [7, 43, '이번 주 다 샀어요'] and e['e2b'] is True, f"조각 상점 E2: 토벌패는 이번 주 7번까지(「이번 주 다 샀어요」), 다음 주 월요일이 지나면 다시 삼 {e['e2a']} {e['e2b']}")
+        check(e['e3'][0] is True and e['e3'][1] == 10, f"조각 상점: 꾸미기 상자는 조각 10개로 한 번 열림 {e['e3']}")
+        # 표시: 이야기 중 용사에게는 안 보임 / 끝없는 신화에서는 보임
+        async def trans_ui(mainq, shard):
+            await mp.evaluate("([q, sh]) => { const G = window.__game, S = G.S; G.quiet = true; G.closePage(); S.world = 10; S.quest.main = q; S.trans.shard = sh; G.update(0.05); G.render(); }", [mainq, shard])
+            await mp.wait_for_timeout(250)
+            await tab(mp, 'shop')
+            await mp.wait_for_timeout(300)
+            r = await mp.evaluate("""() => ({chips:[...document.querySelectorAll('.shop-cats .chip')].map(b => b.textContent), cur:!document.querySelector('#curTrans').hidden, curTxt:document.querySelector('#transTop').textContent})""")
+            await mp.evaluate("() => window.__game.closePage()")
+            await tab(mp, 'grow')
+            await mp.wait_for_timeout(300)
+            r['gv'] = await mp.evaluate("() => !!document.querySelector('#gv-trans')")
+            await mp.evaluate("() => window.__game.closePage()")
+            return r
+        u0 = await trans_ui(340, 0)
+        check('조각' not in u0['chips'] and not u0['cur'] and not u0['gv'], f"초월 표시 E3: 이야기 중인 용사에게는 [상점] 「조각」 칸·재화 칸·[수련] 「초월」 단추가 안 보임 {u0}")
+        u1 = await trans_ui(349, 12)
+        check('조각' in u1['chips'] and u1['cur'] and u1['curTxt'] == '12' and u1['gv'], f"초월 표시: 이야기를 마치면 [상점] 「조각」 칸·재화 칸(12)·[수련] 「초월」 단추가 보임 {u1}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.world = 10; S.level = 640; S.trans.lvGot = 4; S.trans.shard = 12; S.expBank = 0; G.update(0.05); }")
+        await tab(mp, 'shop'); await mp.click('.shop-cats .chip[data-c="trans"]'); await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '97a_조각상점.png'))
+        sh = await mp.evaluate("() => ({rows:document.querySelectorAll('#panel .list .row').length, txt:document.querySelector('#panel').textContent, dis:[...document.querySelectorAll('#panel .buy')].filter(b => b.disabled).length})")
+        check(sh['rows'] == 5 and '이번 주 10번 남음' in sh['txt'] and '산삼 탕약 묶음' in sh['txt'] and '꾸미기 상자' in sh['txt'], f"[상점] → [조각]: 임시 물건 5종과 주 한도가 보임 {sh['rows']}")
+        await mp.evaluate("() => window.__game.closePage()")
+        await tab(mp, 'grow'); await mp.click('#gv-trans'); await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '97b_초월의경지_잠김.png'))
+        gt = await mp.evaluate("() => ({txt:document.querySelector('#panel').textContent, bar:document.querySelector('#trBar').style.width, hold:document.querySelectorAll('#panel [data-hold]').length})")
+        check('잠김' in gt['txt'] and 'Lv.700에 닿으면 열려요' in gt['txt'] and gt['bar'] == '40%' and gt['txt'].count('받음') == 4 and '초월의 조각' in gt['txt'], f"[수련] → [초월]: 잠김 카드(진행 40%·오름 보상 4칸 받음) {gt['bar']} {gt['txt'].count('받음')}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.exp = 0; S.trans.lvGot = 10; S.expBank = 3.5; G.update(0.05); }")
+        await mp.wait_for_timeout(400)
+        await mp.screenshot(path=str(OUT / '97c_초월의경지_700.png'))
+        g7 = await mp.evaluate("() => document.querySelector('#panel').textContent")
+        check('열림' in g7 and '모음 3.5' in g7 and '준비 중' in g7, f"[수련] → [초월]: Lv.700이면 「열림 · 준비 중」과 모음 표시 {g7[:90]}")
+        await mp.evaluate("() => window.__game.closePage()")
+        await tab(mp, 'bag'); await mp.wait_for_timeout(300)
+        bg = await mp.evaluate("() => document.querySelector('#bagStack') ? document.querySelector('#bagStack').textContent : ''")
+        check('초월의 조각' in bg, f"[가방]에 초월의 조각 줄이 보임 {bg[-40:]}")
+        await mp.evaluate("() => window.__game.closePage()")
+        await ctxM.close()
         srv.shutdown()
 
         if '--sim' in sys.argv:
