@@ -4562,9 +4562,14 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-21-5', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-21-6', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 21일 · 천공탑 501~600층 · 초월 레이드'],
+  ['천공의 탑이 600층까지 이어져요', '수미산에서 Lv.600이 되고 500층까지 올랐다면 탑이 하늘 문까지 이어져요(501~600층). 10층 묶음마다 레벨 문이 있어요 — 501~509층은 Lv.600, 510~519층은 Lv.610, 520층부터 Lv.620 … 600층은 Lv.700이 되어야 올라요. 층마다 세기가 정해져 있고, 10층마다 문지기(전멸기)가 지키는 건 그대로예요. 레벨이 먼저 오르는 순서로 한 묶음씩 열려요.'],
+  ['탑에서 초월의 조각을 받아요', '510층부터 10층 문지기를 처음 넘을 때마다 초월의 조각 4개, 550층과 600층은 8개를 받아요. 550층은 날개 「구름 계단 날개」, 600층은 별호 「하늘 문을 연 자」(공격력·체력 +10%, 보스 피해 +8%)예요. 층마다 주던 보석·쇳가루·영물 장비는 그대로 이어져요.'],
+  ['초월 레이드 다섯 곳', '[레이드] 아래쪽에 「초월 레이드」가 생겨요(수미산 이야기를 마친 용사에게). 5부 레이드 보스 라바나 · 브리트라 · 라후 · 마라의 군대 · 마라의 「다른 모습」이 Lv.620 · 640 · 660 · 680 · 700에 한 곳씩 열려요. 세기가 정해져 있고 싸우는 방식은 진(眞) 레이드와 같아요(전멸기·쫓는 살, 세 번째 쓰러지면 끝). 이기면 초월의 조각 3 · 4 · 5 · 6 · 8개(곳마다 처음 이기면 +10)와 보석·엽전·신화 조각 2개를 받아요. 주 3번까지 받고, 져도 횟수는 쓰지 않아요.'],
+
   ['#', '11월 21일 · 초월의 경지'],
   ['Lv.700 뒤에도 계속 자라요', 'Lv.700에 닿으면 그 뒤에 번 경험치가 「초월의 경지」로 쌓여요. 경험치가 차면 경지 1단, 2단… 오르고, 단마다 공격력과 체력이 0.3%씩 세져요(100단에서 +30%로 멈춰요). 한 단은 한 시간 반쯤 걸리고(직업마다 조금 달라요), 높은 단일수록 한 단에 드는 경험치가 조금씩 늘어서 100단 가까이에서는 두 시간쯤 걸려요. 경지 단이 오를수록 수미산 레벨 문도 Lv.700보다 한 단씩 더 열려요. 만렙에서 모아 둔 「모음」이 있으면 접속할 때 그대로 경지로 옮겨 줘요.'],
   ['경지 10단마다 초월의 조각', '경지 10단을 오를 때마다 초월의 조각 10개를 받아요. [수련] → 「초월」 칸에서 지금 단과 진행, 힘, 다음 보상을 한눈에 볼 수 있고, 화면 위 경험치 줄에도 「경지 n단」이 보여요.'],
@@ -5429,7 +5434,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, rGot:0, buy:{wk:'', got:{}}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, rGot:0, buy:{wk:'', got:{}}, rd:{wk:'', n:0, tot:{}}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -5582,7 +5587,7 @@ function mergeState(d){
   { const bp = d.bossPity && typeof d.bossPity === 'object' ? d.bossPity : {}; out.bossPity = {k:typeof bp.k === 'string' ? bp.k : '', n:Math.max(0, Math.min(99, Math.floor(+bp.n) || 0))}; }
   { const db = d.dboss && typeof d.dboss === 'object' ? d.dboss : {}; out.dboss = {day:typeof db.day === 'string' ? db.day : '', n:Math.max(0, Math.floor(+db.n) || 0), paid:!!db.paid, won:!!db.won}; }
   { const t = d.tower && typeof d.tower === 'object' ? d.tower : {}, st = v => typeof v === 'string' ? v : '', nn = v => Math.max(0, Math.floor(+v) || 0);
-    out.tower = {best:Math.min(TOWER.max, nn(t.best)), day:st(t.day), n:nn(t.n), gday:st(t.gday), gn:nn(t.gn), godWin:nn(t.godWin), seed:!!t.seed, gweek:st(t.gweek)};
+    out.tower = {best:Math.min(TOWER.top, nn(t.best)), day:st(t.day), n:nn(t.n), gday:st(t.gday), gn:nn(t.gn), godWin:nn(t.godWin), seed:!!t.seed, gweek:st(t.gweek)};
     const v = d.pvp && typeof d.pvp === 'object' ? d.pvp : {};
     out.pvp = {pt:Math.max(0, Math.floor(+v.pt) || 1000), best:Math.max(1000, Math.floor(+v.best) || 1000), win:nn(v.win), lose:nn(v.lose), day:st(v.day), n:nn(v.n), fw:st(v.fw)};
     out.skSaves = [0, 1, 2].map(k => Array.isArray(d.skSaves) && Array.isArray(d.skSaves[k]) ? d.skSaves[k].filter(i => Number.isInteger(i) && i >= 0 && i < SKILLS.length).slice(0, SK_SLOTS) : null); }
@@ -5601,9 +5606,10 @@ function mergeState(d){
     const b = Math.min(BOND_MAX, Math.max(0, Math.floor(+(so.bond && so.bond[sl.k])) || 0)); if (b) out.soul.bond[sl.k] = b; }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
-  { const t = d.trans && typeof d.trans === 'object' ? d.trans : {}, n0 = (v, mx) => Math.min(mx, Math.max(0, Math.floor(+v) || 0)), by = t.buy && typeof t.buy === 'object' ? t.buy : {}, got = {};   // 초월의 조각·경지(만렙 700 패치): 예전 저장은 없음 → 기본값
+  { const t = d.trans && typeof d.trans === 'object' ? d.trans : {}, n0 = (v, mx) => Math.min(mx, Math.max(0, Math.floor(+v) || 0)), by = t.buy && typeof t.buy === 'object' ? t.buy : {}, got = {}, rd = t.rd && typeof t.rd === 'object' ? t.rd : {}, tot = {};   // 초월의 조각·경지(만렙 700 패치): 예전 저장은 없음 → 기본값
+    if (rd.tot && typeof rd.tot === 'object') for (let k = 0; k < 5; k++){ const g = n0(rd.tot[k], 99999); if (g) tot[k] = g; }   // 초월 레이드: 곳마다 이긴 횟수(0~4)
     if (by.got && typeof by.got === 'object') for (const it of TRANS_SHOP){ const g = n0(by.got[it.id], it.week); if (g) got[it.id] = g; }
-    out.trans = {shard:n0(t.shard, TRANS.max), total:n0(t.total, 99999999), lvGot:n0(t.lvGot, 10), lv:n0(t.lv, TRANS.realmMax), exp:Math.max(0, isFinite(+t.exp) ? +t.exp : 0), rGot:n0(t.rGot != null ? t.rGot : Math.floor(n0(t.lv, TRANS.realmMax) / TRANS.realmEvery), TRANS.realmMax / TRANS.realmEvery), buy:{wk:typeof by.wk === 'string' ? by.wk : '', got}}; }
+    out.trans = {shard:n0(t.shard, TRANS.max), total:n0(t.total, 99999999), lvGot:n0(t.lvGot, 10), lv:n0(t.lv, TRANS.realmMax), exp:Math.max(0, isFinite(+t.exp) ? +t.exp : 0), rGot:n0(t.rGot != null ? t.rGot : Math.floor(n0(t.lv, TRANS.realmMax) / TRANS.realmEvery), TRANS.realmMax / TRANS.realmEvery), buy:{wk:typeof by.wk === 'string' ? by.wk : '', got}, rd:{wk:typeof rd.wk === 'string' ? rd.wk : '', n:n0(rd.n, 3), tot}}; }
   { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2 = {day:typeof x.day === 'string' ? x.day : '', sugun:n0(x.sugun), yv:n0(x.yv), ygr:n0(x.ygr), ygrWon:!!x.ygrWon, ygrPity:n0(x.ygrPity), sugunBest:n0(x.sugunBest)}; }   // 물의 신화 7-2
   out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
@@ -9077,9 +9083,11 @@ function finishGangrim(R){
    10층마다 문지기(더 단단하고 전멸기). 기술 조합·장비는 저절로 바꾸지 않는다 — 들어가기 전 '정비' 창에서 직접(저장한 조합 3칸을 불러올 수 있음).
    지면 하루 도전 횟수(TOWER.tries)를 하나 쓰고, 이기면 그대로 다음 층. 처음 오른 층마다 보상: 보석·쇳가루, 5층마다 신화 조각, 10층마다 높은 등급 무기·갑옷,
    50·150·250층 날개, 100·200층 탈것, 300층 별호와 태초의 신 */
-const TOWER = {max:500, sea:400, base:300, tries:5, time:60, hp:20, atk:2, lv:30};   // max: 물의 신화 9-24 — 401~500층은 5부 천축(란카 길에 들어선 뒤). sea: 4부 바다 끝 층(301~400층). base: 태초의 신이 깨어나는 층
-const towerMaxOf = tw => tw > TOWER.sea || S.world >= 8 ? TOWER.max : tw > TOWER.base || S.world >= 5 ? TOWER.sea : TOWER.base;   // 남의 정보 창에서 보여 줄 끝 층
-const towerCap = () => S.world >= 8 ? TOWER.max : S.world >= 5 ? TOWER.sea : TOWER.base;   // 지금 오를 수 있는 끝 층
+const TOWER = {max:500, top:600, skyLv:600, sea:400, base:300, tries:5, time:60, hp:20, atk:2, lv:30, shard:4, shardTop:4};   // max: 물의 신화 9-24 — 401~500층은 5부 천축(란카 길에 들어선 뒤). sea: 4부 바다 끝 층(301~400층). base: 태초의 신이 깨어나는 층
+const towerMaxOf = tw => tw > TOWER.max ? TOWER.top : tw > TOWER.sea || S.world >= 8 ? TOWER.max : tw > TOWER.base || S.world >= 5 ? TOWER.sea : TOWER.base;   // 남의 정보 창에서 보여 줄 끝 층
+const towerCap = () => S.world >= WORLD_MAX && S.level >= TOWER.skyLv && S.tower.best >= TOWER.max ? TOWER.top : S.world >= 8 ? TOWER.max : S.world >= 5 ? TOWER.sea : TOWER.base;   // 지금 오를 수 있는 끝 층(501~600층은 수미산에서 Lv.600이 되고 500층을 오른 뒤)
+// 501~600층(11월 21일): 10층 묶음마다 레벨 문 — 501~509층은 Lv.600, 510~519층은 Lv.610 … 591~599층은 Lv.690, 600층은 Lv.700(= 층 + 100). 문지기 층(510·520…)이 그 묶음의 레벨 문
+const towerLvNeed = f => f <= TOWER.max || window.__game && window.__game.towerLvOff ? 0 : f % 10 === 0 ? f + 100 : f - f % 10 + 100;
 const towerOpen = () => S.level >= TOWER.lv || S.world >= 1 || S.reb.n > 0;
 // 층 → [세계, 단계](2026-11 (43), 사용자 요청: 층별 난이도가 너무 쉬움). 예전엔 층마다 그 세계 이야기 단계와 거의 같아서 지금 단계까지는 그냥 올랐다.
 // 이제 띠마다 [세계, 첫 층, 끝 층, 첫 단계, 끝 단계] — 띠의 끝은 그 세계 이야기 끝보다 20~40단계 위라, 한 세계를 끝낸 용사도 그 띠 끝 몇 층은 막힌다(다음 세계에서 세져서 넘음).
@@ -9088,9 +9096,11 @@ const towerOpen = () => S.level >= TOWER.lv || S.world >= 1 || S.reb.n > 0;
 // 401~500층(물의 신화 9-24): 5부 끝 저장(란카 길 끝 ind1 · 젖의 바다 끝 ind2 · 5부 끝 ind3, 6차 전직을 조용히 준 뒤)을 층 하나짜리 띠로 바꿔 가며 3판 2승 이분 탐색(scratchpad twcap5.py).
 //   버티는 세기 e(무사/자객): ind1 189/180.3 · ind2 195.5/195.3 · ind3 199.3/198.3, 문지기 층은 약 2 낮음(ind1 187.3/178.3 · ind2 193.3/193.5 · ind3 196.8/196.5).
 //   층 세기 e: 401층 178.2 → 430층 182.6 → 460층 193.7 → 488층 196.9 → 500층 200(띠 끝은 어떤 저장도 못 버팀). 처음 닿는 층(실측 twreach5.py)은 아래 시험 글
+// 501~600층(11월 21일, 만렙 700): 수미산 이어서 세기 띠 넷 — 무사가 Lv.600(이야기 끝)·608·624·654·685·700일 때 tools/sim_trans.py tower 로 잰 '버티는 수미산 단계'(일반 층/문지기 층):
+//   138/130 · 182/175 · 195/188 · 213/205 · 237/228(도인 Lv.700 233/225). 문지기 층(510·520…)이 레벨 문이라 층의 단계를 그 레벨 무사가 버티는 문지기 단계보다 2~15 아래로 잡았다(510층 148 = Lv.610 · 520층 183 = Lv.620 · 550층 198 = Lv.650 · 600층 222 = Lv.700)
 // 탑에서 버티는 힘을 재서 맞춤(scratchpad twcap.py: 층 세기를 e로 고르게 펴고 3판 2승 이분 탐색) — 동해 끝 용사 e 167.1~167.5 · 남쪽 바다 끝 171.9~172.2 · 4부 끝 자객 175.2 · 무사 176.1 · 술사 180.3.
 // 그래서 동해 끝 328층쯤 · 남쪽 바다 끝 355층쯤 · 4부 끝 372~393층, 400층(깊은 바다 83단계만큼)은 5부에서. 처음 값(12~50 · 20~43 · 37~52)은 4부 끝 무사가 400층을 다 올랐다(탑은 60초·물약이 있어 단계 보스보다 e 3쯤 더 버팀)
-const TOWER_BANDS = [[0, 1, 40, 5, 130], [1, 41, 100, 10, 125], [2, 101, 160, 10, 120], [3, 161, 230, 10, 150], [4, 231, 300, 12, 95], [5, 301, 330, 21, 62], [6, 331, 365, 35, 55], [7, 366, 400, 50, 83], [8, 401, 430, 44, 61], [9, 431, 460, 50, 93], [10, 461, 488, 69, 82], [10, 489, 500, 83, 94]];   // 401~500층(물의 신화 9-24): 란카 길 → 젖의 바다 → 수미산(수미산은 두 띠)
+const TOWER_BANDS = [[0, 1, 40, 5, 130], [1, 41, 100, 10, 125], [2, 101, 160, 10, 120], [3, 161, 230, 10, 150], [4, 231, 300, 12, 95], [5, 301, 330, 21, 62], [6, 331, 365, 35, 55], [7, 366, 400, 50, 83], [8, 401, 430, 44, 61], [9, 431, 460, 50, 93], [10, 461, 488, 69, 82], [10, 489, 500, 83, 94], [10, 501, 509, 100, 135], [10, 510, 520, 148, 183], [10, 521, 550, 185, 198], [10, 551, 600, 199, 222]];   // 401~500층(물의 신화 9-24): 란카 길 → 젖의 바다 → 수미산(수미산은 두 띠)
 function towerWS(f){
   const [w, f0, f1, s0, s1] = TOWER_BANDS.find(b => f <= b[2]) || TOWER_BANDS[TOWER_BANDS.length - 1];
   return [w, Math.max(1, Math.round(s0 + (Math.min(f, f1) - f0) * (s1 - s0) / (f1 - f0)))];
@@ -9106,22 +9116,25 @@ function towerBoss(f){
 }
 function towerCheck(){ if (S.tower.day !== dummyDay()){ S.tower.day = dummyDay(); S.tower.n = 0; } }
 const towerLeft = () => { towerCheck(); return TOWER.tries - S.tower.n; };
-const TOWER_MILE = {50:{av:'w_cloud'}, 100:{mount:'unryong'}, 150:{av:'w_phoenix'}, 200:{mount:'cheonma'}, 250:{av:'w_galaxy'}, 300:{title:'tower'}, 350:{av:'w_fin'}, 400:{mount:'yongma'}, 450:{av:'w_eagle'}, 500:{mount:'skyhorse', title:'sumeru'}};   // 350·400층은 4부 바다 · 450·500층은 5부 천축(저장 보호 4의 되찾기가 이 표를 따라온다. title은 TITLES 열쇠 — 별호는 autoClear가 저절로 줌)
+const TOWER_MILE = {50:{av:'w_cloud'}, 100:{mount:'unryong'}, 150:{av:'w_phoenix'}, 200:{mount:'cheonma'}, 250:{av:'w_galaxy'}, 300:{title:'tower'}, 350:{av:'w_fin'}, 400:{mount:'yongma'}, 450:{av:'w_eagle'}, 500:{mount:'skyhorse', title:'sumeru'}, 550:{av:'w_skystair'}, 600:{title:'skygate'}};   // 350·400층은 4부 바다 · 450·500층은 5부 천축(저장 보호 4의 되찾기가 이 표를 따라온다. title은 TITLES 열쇠 — 별호는 autoClear가 저절로 줌)
 function towerRewardText(f){
   const o = [`보석 ${20 + f}`, `쇳가루 ${5 + Math.floor(f / 5)}`];
   if (f % 5 === 0) o.push('신화 조각 2');
   if (f % 10 === 0){ const it = towerGearIt(f), sl = towerGearSlot(f); o.push(`${GRADES[itemG(it)].name} ${SLOT_NAME_T[sl]} ${ROMAN[it % 4]}${it >= 24 ? '(깃든 짐승 무작위)' : ''}`); }
   if (f > TOWER.base && f % 10 === 5) o.push('호박석 1');
+  if (f > TOWER.max && f % 10 === 0) o.push(`초월의 조각 ${towerShard(f)}`);
   const M = TOWER_MILE[f];
   if (M){ if (M.av) o.push(`날개 「${AV[M.av].name}」`); if (M.mount) o.push(`탈것 「${MT[M.mount].name}」`); if (M.title) o.push(M.title === 'tower' ? '별호 「천공을 오른 자」 · 태초의 신' : `별호 「${TT[M.title].name}」${M.title === 'sumeru' ? ' · 태초의 신 참모습' : ''}`); }
   return o;
 }
+// 501층부터 10층 문지기를 처음 넘을 때마다 초월의 조각(550·600층은 이정표라 더)
+const towerShard = f => f > TOWER.max && f % 10 === 0 ? TOWER.shard + (f % 50 === 0 ? TOWER.shardTop : 0) : 0;
 const towerGearIt = f => f > TOWER.sea ? 24 + Math.min(3, Math.floor((f - TOWER.sea - 1) / 25)) : f > TOWER.base ? 20 + Math.min(3, Math.floor((f - TOWER.base - 1) / 25)) : f <= 60 ? 12 + Math.min(3, Math.floor(f / 20)) : f <= 180 ? 16 + (f > 120 ? 1 : 0) : f <= 260 ? 18 : 19;   // 영웅 I~IV → 전설 I~IV → (301층부터) 유물 I~IV → (401층부터) 영물 I~IV
 const SLOT_NAME_T = {weapon:'무기', armor:'갑옷', helm:'투구', shoulder:'어깨', boots:'신발'};
 const towerGearSlot = f => f > TOWER.base ? ALL_SLOTS[(f / 10) % ALL_SLOTS.length] : f % 20 === 10 ? 'weapon' : 'armor';   // 바다 층은 다섯 칸을 돌아가며
 function startTower(){
   towerCheck();
-  if (raid || parade || market || !towerOpen() || S.tower.best >= towerCap() || towerLeft() <= 0 || !session && !window.__game) return false;
+  if (raid || parade || market || !towerOpen() || S.tower.best >= towerCap() || towerLeft() <= 0 || S.level < towerLvNeed(S.tower.best + 1) || !session && !window.__game) return false;
   const f = S.tower.best + 1, [w, st] = towerWS(f), B = towerBoss(f), gate = f % 10 === 0;
   const hp = withWorld(w, () => mHp(st)) * TOWER.hp * BOSS_K.hp[w] * (gate ? 1.5 : 1), atk = withWorld(w, () => mAtk(st)) * TOWER.atk * BOSS_K.atk[w] * (gate ? 1.2 : 1);
   const info = {tower:true, f, gate, wipe:gate, label:`천공의 탑 ${f}층`, bossName:`${gate ? '문지기 ' : ''}${B.name}`, type:B.type, color:gate ? mix(B.color, '#ffd24a', 0.35) : B.color, region:0, party:1, ref:st, g:0, sc:gate ? 2.8 : 2.4};
@@ -9150,6 +9163,7 @@ function finishTower(R){
       if (it >= 24){ const r = spGive(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)} · 깃든 짐승 ${SPIRITS[r.beast].name}${r.isNew ? ' (새 장비)' : ''}`); }   // 401층부터는 영물(깃든 짐승은 무작위)
       else { const nw = giveItem(sl, it); out.push(`${GRADES[itemG(it)].name} ${gearName(sl, it)}${nw ? ' (새 장비)' : ''}`); }
     }
+    if (towerShard(f)){ gainTrans(towerShard(f), true); out.push(`초월의 조각 ${towerShard(f)}`); }
     if (f > TOWER.base && f % 10 === 5){ const an = f % 50 === 45 ? 16 : f % 20 === 5 ? 4 : 1; gainAmber(0, an); out.push(`희귀 호박석 ${an}`); }   // 바다 층: 5로 끝나는 층마다 희귀 호박석(1 · 20층마다 4 · 345·395층 16 — 예전 희귀·영웅·전설 1개씩의 값)
     const M = TOWER_MILE[f];
     if (M){
@@ -9157,6 +9171,7 @@ function finishTower(R){
       if (M.mount && giveMount(M.mount, true)) out.push(`탈것 「${MT[M.mount].name}」`);
       if (M.title === 'tower'){ out.push('별호 「천공을 오른 자」 · 태초의 신이 깨어났어요'); announce(`${S.name}님이 천공의 탑 300층에 올랐어요! 태초의 신이 깨어났어요.`); }
       if (M.title === 'sumeru'){ out.push('별호 「수미를 오른 자」 · 태초의 신의 참모습이 보여요'); announce(`${S.name}님이 천공의 탑 500층, 수미산 꼭대기에 올랐어요!`); }
+      if (M.title === 'skygate'){ out.push('별호 「하늘 문을 연 자」'); announce(`${S.name}님이 천공의 탑 600층, 하늘 문 앞에 올랐어요!`); }
     }
     if (f % 50 === 0 && !(M && M.title)) announce(`${S.name}님이 천공의 탑 ${f}층에 올랐어요!`);
     ev('raid');
@@ -9173,7 +9188,7 @@ function finishTower(R){
 // 정비 알림(사용자 요청): 탑은 자동 조합이 없으니 들어가기 전에 기술·장비를 직접. 저장한 조합 3칸을 불러올 수 있다
 function towerAsk(){
   towerCheck();
-  if (raid || !towerOpen() || towerLeft() <= 0 || S.tower.best >= towerCap()) return false;
+  if (raid || !towerOpen() || towerLeft() <= 0 || S.tower.best >= towerCap() || S.level < towerLvNeed(S.tower.best + 1)) return false;
   const f = S.tower.best + 1, [w, st] = towerWS(f), B = towerBoss(f);
   const html = () => `<p class="warn-line">⚠ 천공의 탑은 <b>기술 조합·장비를 저절로 바꾸지 않아요.</b> 지금 끼운 그대로 싸우니, 들어가기 전에 정비하세요.</p>
     <div class="pre-box"><div class="pre-h">${f}층 ${f % 10 === 0 ? '문지기 ' : ''}${esc(B.name)}<span class="tag">${WORLD_NAME[w] || ''} ${st}단계만큼 · ${TOWER.time}초</span></div>
@@ -11761,6 +11776,7 @@ const AVATARS = [
   {k:'w_fin', type:'wing', name:'지느러미 날개', wingC:['#1f6a8a', '#3aa8c8', '#8fe0f0', '#e8fbff'], star:true, src:'천공의 탑 350층', pt:4},   // 물의 신화 7-2
   // 5부 천축(물의 신화 9-24): 날개는 바깥 겹이 첫 색(깃 끝) · 안쪽이 마지막 색
   {k:'w_eagle', type:'wing', name:'독수리 왕의 날개', wingC:['#f8f2e4', '#c9a070', '#8a5e38', '#5a3a22'], star:true, src:'천공의 탑 450층', pt:5},
+  {k:'w_skystair', type:'wing', name:'구름 계단 날개', wingC:['#e8f0ff', '#b9a8ff', '#6a7ae8', '#2a2a78'], star:true, src:'천공의 탑 550층', pt:5},   // 501~600층(11월 21일)
   {k:'w_waterfire', type:'wing', name:'물불의 날개', wingC:['#1f78d8', '#5ad8ff', '#ff8a3a', '#ffd08a'], star:true, src:'태초의 신 · 참모습', pt:5},
 ];
 for (const c of CLASS_ALL) for (const j of [1, 2, 3, 4, 5, 6]) AVATARS.push({k:jobCapeKey(c, j), type:'cape', name:JOBS[c][j - 1].cape, capeC:JOBS[c][j - 1].capeC, star:j >= 2, src:`${j}차 전직(${CLASSES[c].name})`, job:j, cls:c});
@@ -12210,6 +12226,7 @@ const TITLES = [
   {k:'taecho', name:'태초를 넘은 자', need:'태초의 신을 쓰러뜨려요', prog:() => [S.tower.godWin || 0, 1], eff:{atk:10, boss:10}},
   // 5부 천축(물의 신화 9-24): 천공의 탑 500층·태초의 신 참모습 — 세계 8에 들어서기 전엔 목록에 안 보인다
   {k:'sumeru', name:'수미를 오른 자', need:'천공의 탑 500층(수미산 꼭대기)', prog:() => [S.tower.best, 500], eff:{atk:8, hp:8, boss:6}, hide:() => S.world < 8},
+  {k:'skygate', name:'하늘 문을 연 자', need:'천공의 탑 600층(Lv.700)', prog:() => [S.tower.best, TOWER.top], eff:{atk:10, hp:10, boss:8}, hide:() => S.world < WORLD_MAX},
   {k:'trueform', name:'참모습을 본 자', need:'태초의 신 · 참모습을 쓰러뜨려요', prog:() => [S.tower.trueWin || 0, 1], eff:{atk:12, boss:12}, hide:() => S.world < 8},
   {k:'pvp1', name:'명인', need:'결투 점수 1,400', prog:() => [S.pvp.best || 1000, 1400], eff:{critDmg:15}},
   {k:'pvp2', name:'천하제일', need:'결투 점수 1,600', prog:() => [S.pvp.best || 1000, 1600], eff:{atk:5, critDmg:20}},
@@ -12266,7 +12283,7 @@ const TITLES = [
 const TITLE_RANK = {step:0, hunt1:0, event:0, smith:0, helper:0, sea:0, pet:0,
   hunt2:1, boss1:1, raid1:1, counter:1, reb1:1, soul:1, west:1, east:1, india:1, f_snowA:1, f_snowB:1, f_towerA:1, f_towerB:1, f_yamaA:1, f_yamaB:1, sd1:1, sd2:1,
   myth:2, reb2:2, legend:2, three:2, sea1:2, sea2:2, ind1:2, ind2:2, pvp1:2, tower:2, haetae7:2, memNo:2, dex1:2, dex2:2, sd3:2, sd4:2,
-  taecho:3, sumeru:3, trueform:3, pvp2:3, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
+  taecho:3, sumeru:3, skygate:3, trueform:3, pvp2:3, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
 const TITLE_RANKS = [{n:'일반', c:'trk0'}, {n:'희귀', c:'trk1'}, {n:'영예', c:'trk2'}, {n:'전설', c:'trk3'}];
 for (const t of TITLES) t.rank = TITLE_RANK[t.k] || 0;
 const trk = k => (TT[k] && TT[k].rank) || 0;
@@ -14206,7 +14223,7 @@ function jinReward(info){
   return {gems, gold, out, mat, shard, piece, grudge, soul, av, week, firstN};
 }
 function finishJin(R){
-  const info = R.info; jinCheck();
+  const info = R.info; if (info.tr) return finishTrans(R); jinCheck();
   if (!R.win){
     S.jin.fail[info.key] = Math.min(Math.round(JIN.failMax / JIN.failPer), (S.jin.fail[info.key] || 0) + 1);
     const pity = Math.round(jinPity(info.key) * 100);
@@ -14280,6 +14297,98 @@ notiReg({k:'jin', pri:40, flag:'noJin', who:() => { const w = Math.max(0, jinNew
   body:() => { const w = Math.max(0, jinNewW()), R = RAID_WORLDS.find(x => x.w === w), pw = power(ST); return `<div class="inh-h">${WORLD_NAME[w]} 진 레이드 · 권장 전투력</div><div class="pre-row">${Array.from({length:R.n}, (_, i) => { const T = jinTier(pw / jinRec(w, i)); return `<span class="pre-sk"><i>${esc(R.info(i).label)} <b class="jt-${T[1]}">${T[2]}</b></i></span>`; }).join('')}</div>`; },
   go:{label:'바로 가기', fn:() => { raidView = 'raid'; PV.tab.raid = partOfW(Math.max(0, jinNewW())); buildTab('raid'); }}});
 
+/* ================= 초월 레이드(11월 21일, 만렙 700 · 초월의 조각) =================
+   5부 레이드 보스 다섯의 「다른 모습」(새 그림 없이 색·크기·이름만). 진(眞) 레이드의 싸움 규칙(전멸기·쫓는 살·손컨·목숨 3·탕약 10)을 그대로 쓰고, 세기는 진처럼 고정이다(용사를 따라 세지지 않음).
+   · 열리는 때: 초월의 조각이 열린 용사(수미산 이야기를 마침)가 Lv.620 · 640 · 660 · 680 · 700에 닿을 때마다 한 곳씩 — 만렙 700으로 가는 길(600 → 700)의 할 거리
+   · 주 3번 이긴 보상(들어가서 져도 횟수는 안 씀). 보상은 초월의 조각이 주축: 곳마다 3·4·5·6·8개, 곳마다 처음 이기면 +10, 거기에 보석·엽전·신화 조각 2. 운이 걸리는 것은 없음
+   · 세기 TRANS_LADDER: 그 레벨에 막 닿은 용사(무사, 장비·재련을 그만큼 키운 시뮬 저장)의 [D0 손컨 없이 보스에 넣는 초당 피해, EHP 버티는 힘, PW 전투력](log10) — 보스 체력 = D0 × JIN.t0초, 한 방 = EHP × JIN.a0, 권장 전투력 = PW.
+     직업 차는 수미산 진(JIN_W[10])의 직업 간 차이를 그대로 옮김(TRANS_CLS). 레벨 사이는 log10 직선. tools/sim_trans.py 가 재고 표를 찍는다 */
+const TRANS_RD = {week:3, firstShard:10};
+const TRANS_RAIDS = [
+  {w:8, i:2, lv:620, name:'열한 번째 머리', boss:'초월한 라바나', shard:3, gems:3000},
+  {w:9, i:0, lv:640, name:'하늘을 두른 똬리', boss:'초월한 브리트라', shard:4, gems:4000},
+  {w:9, i:2, lv:660, name:'꺼지지 않는 그늘', boss:'초월한 라후', shard:5, gems:5000},
+  {w:10, i:1, lv:680, name:'끝없는 군대', boss:'초월한 마라의 군대', shard:6, gems:6000},
+  {w:10, i:2, lv:700, name:'마지막 유혹', boss:'초월한 마라', shard:8, gems:8000},
+];
+const TRANS_LADDER = [[608, 27.558, 22.726, 23.452], [624, 27.867, 22.824, 23.599], [654, 28.315, 23.781, 23.979], [685, 28.828, 24.288, 24.436], [700, 28.899, 24.551, 24.743]];   // [레벨, D0, EHP, PW](log10, 무사) — tools/sim_trans.py ladder 로 잰 값(수미산 이야기 끝 저장에서 sim_post.py 로 레벨을 올려 가며)
+const TRANS_CLS = {musa:[[0, 0, 0], [0, 0, 0]], doin:[[-0.249, -1.555, -0.879], [-0.027, -0.974, -0.383]], jagaek:[[-0.225, -0.265, -0.522], [-0.025, -0.167, -0.230]], sulsa:[[0.468, -0.585, 0.150], [0.051, -0.369, 0.066]],
+  gungsa:[[0.864, -0.502, 0.448], [0.095, -0.316, 0.197]], changgaek:[[0.537, -0.880, 0.189], [0.059, -0.554, 0.083]]};   // 직업 차 [Lv.600일 때, Lv.700일 때](무사와의 차, log10). Lv.600 쪽은 수미산 진(JIN_W[10].a)에서, 도인의 Lv.700 쪽은 잰 값(sim_trans.py ladder). 나머지 직업의 Lv.700 쪽은 도인의 줄어든 비율(0.11·0.63·0.44)로 어림 — 직업마다 700까지 재면 고칠 것. 그 사이 레벨은 직선
+function transBase(k){   // [보스 체력, 보스 한 방, 권장 전투력] (log10 아님)
+  const ov = window.__game && window.__game.transOv; if (ov) return ov;
+  const L = TRANS_RAIDS[k].lv, A = TRANS_LADDER;
+  let j = 0; while (j < A.length - 2 && L > A[j + 1][0]) j++;
+  const u = (L - A[j][0]) / (A[j + 1][0] - A[j][0]);
+  const cu = Math.max(0, Math.min(1, (L - 600) / 100)), co = c => [0, 1, 2].map(x => c[0][x] + (c[1][x] - c[0][x]) * cu), off = TRANS_CLS[S.cls] ? co(TRANS_CLS[S.cls]) : [0, 1, 2].map(x => Object.values(TRANS_CLS).reduce((t, c) => t + co(c)[x], 0) / Object.keys(TRANS_CLS).length);
+  const v = [0, 1, 2].map(x => Math.pow(10, A[j][x + 1] + (A[j + 1][x + 1] - A[j][x + 1]) * u + off[x]));
+  return [v[0] * JIN.t0, v[1] * JIN.a0 / Math.pow(10, tkLagLog()), v[2]];
+}
+const transRec = k => transBase(k)[2];
+function transInfo(k){
+  const T = TRANS_RAIDS[k], R = RAID_WORLDS.find(x => x.w === T.w), base = R.info(T.i);
+  return Object.assign({}, base, {jin:true, tr:true, tk:k, jw:T.w, ji:T.i, mw:T.w, nkey:base.key, key:'t' + k, label:'초월 · ' + T.name, bossName:T.boss, color:mix(base.color, '#b9a8ff', 0.5), sc:3.1, wipes:JIN.wipes, rec:transRec(k)});
+}
+function transRdCheck(){ const T = S.trans, w = weekKey(); if (T.rd.wk !== w){ T.rd.wk = w; T.rd.n = 0; } }
+const transRdLeft = () => { transRdCheck(); return Math.max(0, TRANS_RD.week - S.trans.rd.n); };
+const transRaidOpen = k => !!TRANS_RAIDS[k] && (transOpen() && S.level >= TRANS_RAIDS[k].lv || !!(window.__game && window.__game.transForce));
+function startTrans(k){
+  transRdCheck();
+  if (raid || parade || market || !transRaidOpen(k) || transRdLeft() <= 0 || !session && !window.__game) return false;
+  const info = transInfo(k), [bhp, atk] = transBase(k), party = raidParty(info), tk = Math.max(0.05, takenK(true));
+  for (const a of party) if (a.npc) a.maxHp = (tkOnAt(info.jw, info.ref) ? atk / JIN.a0 : ST.maxHp / tk) * (a.cls === 'musa' ? 1.3 : 0.85);   // 동료도 진과 같게 기준 용사만큼 버틴다
+  startFight(info, party, {hp:bhp, atk, aoe:atk * JIN.aoe, time:JIN.time});
+  raid.falls = 0; raid.pots = 0;
+  addLog(`${info.label} 토벌 시작! ${JIN.time}초 · 쓰러질 수 있는 건 ${JIN.lives - 1}번 · 탕약 ${JIN.pots}개까지.`, 'warn');
+  if (!fxOff()) fxBanner('초월', info.bossName, '#d8ccff', '30%', 1.6);
+  return true;
+}
+function transReward(k){
+  const T = TRANS_RAIDS[k], R = S.trans.rd, first = !R.tot[k], shard = T.shard + (first ? TRANS_RD.firstShard : 0);
+  gainTrans(shard, true);
+  const gems = Math.round(T.gems * gemMul()), gold = Math.round(mGold(Math.max(1, S.maxStage)) * JIN.goldK * gainMul('gold', true)), myth = gainShard(2);
+  S.gems += gems; S.gold += gold;
+  R.n++; R.tot[k] = (R.tot[k] || 0) + 1;
+  refreshStats();
+  return {shard, gems, gold, myth, first};
+}
+function finishTrans(R){
+  const info = R.info, k = info.tk;
+  if (!R.win){
+    addLog(`${info.label} 토벌 실패… 이번 주 횟수는 쓰지 않았어요.`, 'warn'); sfx('fail'); saveLocal();
+    if (window.__game && window.__game.quiet) return {win:false};
+    const why = (R.falls || 0) >= JIN.lives ? `<b>${JIN.lives}번</b> 쓰러져 물러났어요.` : `${JIN.time}초 안에 쓰러뜨리지 못했어요.`;
+    showModal('초월 · 토벌 실패', `<p><b>${info.bossName}</b> — ${why}</p><p class="small">초월 레이드는 져도 이번 주 횟수(주 ${TRANS_RD.week}번 이긴 보상)를 쓰지 않아요. 보스의 세기는 정해져 있어서 권장 전투력에 못 미치면 장비·재련·능력치를 키운 뒤 다시 와요. 붉은 칸·쫓는 살은 직접 피하고 금빛 「!」에 [되받기]를 눌러 보세요.</p>`, [{label:'확인', primary:true}]);
+    return {win:false};
+  }
+  const rw = transReward(k);
+  addLog(`${info.label} 토벌 성공! 초월의 조각 +${rw.shard}${rw.first ? ' (처음 이긴 보상 포함)' : ''}`, 'gain'); sfx('win');
+  announce(`${S.name}님의 파티가 ${info.bossName}${josa(info.bossName, '을', '를')} 토벌했어요!`);
+  saveLocal();
+  if (window.__game && window.__game.quiet) return rw;
+  showModal(`토벌 성공 · ${info.label}`, `<p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 물리쳤어요! ${rw.first ? '<b>처음 이긴 보상</b>도 함께 받았어요.' : ''}</p>
+    <ul class="rewards"><li style="color:${TRANS.color}">${rw.shard}<span>초월의 조각</span></li><li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li><li><span class="coin"></span>${fmt(rw.gold)}<span>엽전</span></li>${rw.myth ? `<li style="color:var(--myth)">${rw.myth}<span>신화 조각</span></li>` : ''}</ul>
+    <p class="small" style="margin-top:8px">이번 주 이긴 보상 <b>${transRdLeft()}번</b> 남았어요(주 ${TRANS_RD.week}번). 초월의 조각은 [상점] → [조각]에서 써요.</p>`, [{label:'확인', primary:true}]);
+  return rw;
+}
+function transPowHTML(k, pw = power(ST)){
+  const rec = transRec(k), T = jinTier(pw / rec);
+  return `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="jt-${T[1]}">내 ${fmt(pw)} · ${T[2]}</span>`;
+}
+function confirmTrans(k){
+  transRdCheck();
+  if (raid || !transRaidOpen(k) || transRdLeft() <= 0) return false;
+  const info = transInfo(k), T = TRANS_RAIDS[k], party = raidParty(info), ask = S.presetMode === 'ask' || !S.presetMode;
+  showModal(info.label, `
+    <p><b>${info.bossName}</b> — 5부 레이드 보스의 다른 모습이에요. 세기가 정해져 있는 레이드라, 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
+    <div class="rpow jin">${transPowHTML(k)}</div>
+    <ul class="jrules"><li>싸우는 방식은 <b>진(眞) 레이드와 같아요</b> — 전멸기 · 큰 살 두 번 · 「쫓는 살」, 자동 피하기는 절반만, 금빛 「!」를 되받으면 보스가 바로 휘청</li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지</li><li>이기면 <b>초월의 조각 ${T.shard}개</b>${S.trans.rd.tot[k] ? '' : `(처음 이기면 +${TRANS_RD.firstShard})`} · 보석 ${fmt(T.gems)} · 엽전 · 신화 조각 2 — 주 ${TRANS_RD.week}번까지</li></ul>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <p class="small" style="margin-top:8px">져도 이번 주 횟수는 안 써요(지금 ${transRdLeft()}번 남음, 이길 때만 줄어요).</p>
+    ${ask ? presetHTML('party') : potNoteHTML()}`,
+    [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startTrans(k)) closePage(); presetNext = undefined; }}],
+    () => { if (ask) presetWire('party'); else { const pb = $('#prePot'); if (pb) pb.addEventListener('click', () => { sfx('click'); potShopGo(); }); } });
+  return true;
+}
 /* ================= 해태 수련(물의 신화 3단계 — 허수아비 수련의 상위판. 열림은 46장이라 4부를 넣기 전에는 보이지 않는다) =================
    30초 동안 돌 해태를 친다. 해태는 옳고 그름을 가리는 짐승이라 '제대로 친 것'만 센다:
    · 뿔이 빛날 때(HAETAE.horn 구간) 친 피해는 ×hornMul · 눈이 붉을 때(eye 구간) 치면 세지 않고 불을 뿜어 되돌려준다(최대 체력의 burn, 0.4초에 한 번)
@@ -19825,7 +19934,7 @@ const BAG_STACK = [
   {k:'amber', n:'호박석', icon:'amber', c:'#ffc35a', hide:() => !seaOpen(), get:() => S.amber ? S.amber.raw.reduce((x, y) => x + y, 0) : 0, use:'[장비] → [세공]에서 장비 다섯 칸에 하나씩 박고 깎아 문양을 새겨요(희귀·영웅·전설·유물 — 줄마다 6·8·10·10칸). 같은 등급 4개는 [합성]으로 한 단계 위 1개가 돼요(전설 → 유물만 확률).', get2:'바다의 수문장·레이드, 상위 레이드 「진」에서 희귀 호박석이 나와요.'},
   {k:'shard', n:'신화 조각', icon:'shard', c:'#ff9de0', get:() => S.mythShard || 0, use:'[레이드] → [보물 동굴]에서 30개로 신화 보물 만들기 · [장비] → [신화]의 신화 제작 장비 · 장비 각성([장비] → 검·갑옷)에 써요.', get2:'보물 동굴(하루 2번) · 레이드(가끔, 첫 토벌 +3) · 타임 보스 · 수문장 · 1일 보스 · 강림 · 오늘의 할 일 모두 · 주간 퀘스트 · 천공의 탑 5층마다'},
   {k:'grudge', n:'원한 조각', icon:'grudge', c:'#ff8a9a', get:() => S.grudge || 0, use:'[기술] → [넋 부름]의 결이야기 · 장비 각성 · 사인검(신화 제작 장비) · 영약 다시 달이기에 써요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·보물 동굴·백귀야행·급보·갈림길'},
-  {k:'trans', n:'초월의 조각', icon:'shard', c:'#b9a8ff', hide:() => !transShopOn(), get:() => S.trans.shard, use:'[상점] → [조각]에서 물건으로 바꿔요. Lv.700이 되면 「경지 수련 단약」도 살 수 있어요.', get2:'끝없는 신화(5번째부터) · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자 · 경지 10단마다'},
+  {k:'trans', n:'초월의 조각', icon:'shard', c:'#b9a8ff', hide:() => !transShopOn(), get:() => S.trans.shard, use:'[상점] → [조각]에서 물건으로 바꿔요. Lv.700이 되면 「경지 수련 단약」도 살 수 있어요.', get2:'끝없는 신화(5번째부터) · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자 · 경지 10단마다 · 천공의 탑 510층부터 10층마다 · 초월 레이드(주 3번)'},
   {k:'piece', n:'고삐 조각', icon:'rein', c:'#c8b0ff', get:() => S.mount.piece || 0, use:'[장비] → [탈것]에서 탈것을 사거나 별을 올려요.', get2:'부상부터 단계 보스·수문장·레이드·타임 보스·허수아비 4~5등급·백귀야행·주간 퀘스트·마을 부탁'},
 ];
 // 재료 말풍선(2026-11 (48), 사용자 요청): 재료 이름을 누르면 어디에 쓰고(어느 메뉴) 어디서 얻는지. data-mtip="m0|m1|m2|mat(지금 세계 재료)|shard|grudge|dust|piece|…"
@@ -20012,7 +20121,7 @@ function buildShopTrans(){
   const items = TRANS_SHOP.filter(it => !it.open || it.open());
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
-    <p class="hint">초월의 조각으로 사는 물건이에요. 물건마다 <b>일주일에 살 수 있는 횟수</b>가 정해져 있고, 월요일에 새로 채워져요. 조각은 끝없는 신화 · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자에서 얻어요.</p>
+    <p class="hint">초월의 조각으로 사는 물건이에요. 물건마다 <b>일주일에 살 수 있는 횟수</b>가 정해져 있고, 월요일에 새로 채워져요. 조각은 끝없는 신화 · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자 · 천공의 탑 510층부터 10층마다 · 초월 레이드(주 3번)에서 얻어요.</p>
     <p class="small" id="shopLock" hidden style="margin:0 0 8px;color:#ff8a7a;font-weight:700">지금은 싸우는 중이라 이 물건은 살 수 없어요. ${POT_LOCK_MSG}.</p>
     <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
     <ul class="list">${items.map(it => `<li class="row" id="tsh-${it.id}"><div class="ic">${SVG[it.icon]}</div>
@@ -21038,6 +21147,21 @@ function buildRaid(){
           </div>
           <button class="btn rgo" data-jin="${R.w}:${i}"></button>
         </div>`; }).join('')}</div></div>`; }).join('');
+  // 초월 레이드(11월 21일): 5부 레이드 보스의 다른 모습 다섯 — 초월의 조각이 열린 용사(수미산 이야기를 마침)에게만 보인다
+  transRdCheck();
+  const transSec = !transOpen() ? '' : `<div data-psec><div class="ph"><h2>초월 레이드</h2><span class="tkbadge" id="trLeft"></span></div>
+      <p class="hint">5부 레이드 보스의 <b>다른 모습</b> 다섯이에요. 레벨 600에서 700으로 가는 길에 Lv.${TRANS_RAIDS.map(T => T.lv).join('·')}에 한 곳씩 열려요. 세기가 <b>정해져 있고</b>(진 레이드와 같은 싸움) <b>이기면 주 ${TRANS_RD.week}번까지</b> 초월의 조각을 받아요. 져도 횟수는 안 써요.</p>
+      <div class="rlist">${TRANS_RAIDS.map((T, k) => { const info = transInfo(k), tot = S.trans.rd.tot[k] || 0;
+        return `<div class="rcard jin" id="trr-${k}" data-part="5" data-pk="t${k}" data-pn="0">
+          <div class="rport"><img src="${bossPortrait(info.type || 'm_musa', info.color)}" alt=""><span class="jmark">超</span></div>
+          <div class="rbody">
+            <div class="rtop"><b>${T.name}</b><span class="rstate" data-trs="${k}"></span></div>
+            <div class="rsub">${info.bossName} · ${partyOf(info)}인 파티${tot ? ` · 토벌 ${tot}번` : ''}</div>
+            <div class="rpow jin" data-trp="${k}"></div>
+            <div class="rchips"><span class="rchip rc-myth">초월의 조각 ${T.shard}${tot ? '' : ` +${TRANS_RD.firstShard}`}</span><span class="rchip rc-gem">보석 ${fmt(T.gems)}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-myth">신화 조각 2</span></div>
+          </div>
+          <button class="btn rgo" data-trk="${k}"></button>
+        </div>`; }).join('')}</div></div>`;
   panel.innerHTML = top + `${partBarHTML()}
     <div data-psec><div class="ph"><h2>${WORLD_NAME[S.world]} 레이드</h2><span class="tkbadge" id="tkInfo"></span></div>
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개를 쓰고(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
@@ -21046,12 +21170,13 @@ function buildRaid(){
     ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
     ${eCard ? `<p class="small" style="margin:0 0 8px"><b>입문 레이드</b>는 이 땅에 들어서자마자 열리고 늘 열려 있어요. 세기는 내가 지나온 단계를 따라가서, 다른 레이드가 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 쓰기 좋아요. 이야기의 레이드 횟수에는 세지 않아요.</p>` : ''}
     <div class="rlist">${eCard}${cards.join('')}</div></div>
-    ${past}`;
+    ${transSec}${past}`;
   wireSeg();
   partWire('raid', {own:k => !!S.raid.first[k], count:raidPartCount, filt:false, fresh:false});
   panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => bt.addEventListener('click', () => confirmRaid(+bt.dataset.i)));
   panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => bt.addEventListener('click', () => { const [w, i] = bt.dataset.jin.split(':').map(Number); confirmJin(w, i); }));
   { const eb = panel.querySelector('.rcard .btn[data-e]'); if (eb) eb.addEventListener('click', confirmEntry); }
+  panel.querySelectorAll('.rcard .btn[data-trk]').forEach(bt => bt.addEventListener('click', () => confirmTrans(+bt.dataset.trk)));
   return () => {
     const live = $('#raidLive');
     if (raid){
@@ -21092,6 +21217,17 @@ function buildRaid(){
       setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
       const rp = panel.querySelector(`[data-jp="${w}:${i}"]`); if (rp) setHTML(rp, jinPowHTML(w, i, pw));
     });
+    { const trl = transRdLeft(), tb = $('#trLeft'); if (tb) setText(tb, `초월 ${'■'.repeat(trl)}${'□'.repeat(Math.max(0, TRANS_RD.week - trl))} ${leftTxt(trl, '이번 주')}`);
+      panel.querySelectorAll('.rcard .btn[data-trk]').forEach(bt => {
+        const k = +bt.dataset.trk; let t, dis = true;
+        if (!transRaidOpen(k)) t = `Lv.${TRANS_RAIDS[k].lv}에 열려요`;
+        else if (raid) t = raid.info.tr && raid.info.tk === k ? '토벌 중' : '다른 싸움 중';
+        else if (trl <= 0) t = '다음 주에';
+        else { t = '초월 입장'; dis = false; }
+        setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
+        const st = panel.querySelector(`[data-trs="${k}"]`); if (st){ const on = transRaidOpen(k); setText(st, !on ? '잠김' : (S.trans.rd.tot[k] ? '토벌함 ✓' : '처음 이기면 +' + TRANS_RD.firstShard)); st.className = 'rstate' + (on && S.trans.rd.tot[k] ? ' done' : on ? ' new' : ''); }
+        const rp = panel.querySelector(`[data-trp="${k}"]`); if (rp) setHTML(rp, transRaidOpen(k) ? transPowHTML(k, pw) : `<span>Lv.${TRANS_RAIDS[k].lv}이 되면 열려요 · 권장 전투력 <b>${fmt(transRec(k))}</b></span>`);
+      }); }
   };
 }
 function confirmEntry(){
@@ -21314,8 +21450,16 @@ function drawSumeruArt(g, W, H, best, rnd){
   g.strokeStyle = 'rgba(255,236,170,.55)'; g.lineWidth = 1; for (let k = 0; k < 8; k++){ const a = k * Math.PI / 4 + 0.2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 9, yp - 4 + Math.sin(a) * 9); g.lineTo(cx + Math.cos(a) * 26, yp - 4 + Math.sin(a) * 26); g.stroke(); }
   g.fillStyle = '#fffbe8'; g.beginPath(); g.arc(cx, yp - 4, 5, 0, 7); g.fill(); g.fillStyle = '#e0b03c'; g.beginPath(); g.moveTo(cx - 6, yp + 6); g.lineTo(cx, yp - 1); g.lineTo(cx + 6, yp + 6); g.closePath(); g.fill();
   cloud(H * 0.94, 0.7, 20, 1.1); cloud(H * 0.3, 0.1, 80, 1.3);
+  // 501~600층(11월 21일): 꼭대기 위로 보랏빛 빛줄기가 하늘 문까지 — 10층마다 점(문지기), 오른 만큼 밝아짐
+  const sky = towerCap() > TOWER.max || best > TOWER.max, up = Math.max(0, Math.min(1, (best - TOWER.max) / (TOWER.top - TOWER.max))), sy0 = yp - 14, sy1 = 7, sat = u => sy0 - (sy0 - sy1) * u;
+  if (sky){
+    g.strokeStyle = 'rgba(185,168,255,.35)'; g.lineWidth = 3; g.beginPath(); g.moveTo(cx, sy0); g.lineTo(cx, sy1); g.stroke();
+    if (up > 0){ g.strokeStyle = '#d8ccff'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx, sy0); g.lineTo(cx, sat(up)); g.stroke(); }
+    for (let f = 510; f <= TOWER.top; f += 10){ const on = best >= f; g.fillStyle = on ? '#e8e0ff' : '#4a3f78'; g.beginPath(); g.arc(cx, sat((f - TOWER.max) / (TOWER.top - TOWER.max)), f % 50 === 0 ? 2.1 : 1.3, 0, 7); g.fill(); }
+    g.fillStyle = up >= 1 ? '#fff6d0' : '#8a7ab8'; g.beginPath(); g.arc(cx, 4.5, 3.2, 0, 7); g.fill();   // 하늘 문
+  }
   // 지금 오른 자리: 금빛 표시와 층
-  const me = at(prog); g.fillStyle = 'rgba(255,210,90,.25)'; g.beginPath(); g.arc(me[0], me[1], 9, 0, 7); g.fill(); g.fillStyle = '#ffd24a'; g.strokeStyle = '#ffffff'; g.lineWidth = 1.4; g.beginPath(); g.arc(me[0], me[1], 4.4, 0, 7); g.fill(); g.stroke();
+  const me = sky && best > TOWER.max ? [cx, sat(up)] : at(prog); g.fillStyle = 'rgba(255,210,90,.25)'; g.beginPath(); g.arc(me[0], me[1], 9, 0, 7); g.fill(); g.fillStyle = '#ffd24a'; g.strokeStyle = '#ffffff'; g.lineWidth = 1.4; g.beginPath(); g.arc(me[0], me[1], 4.4, 0, 7); g.fill(); g.stroke();
   g.font = '800 10px SamhanSans, sans-serif'; g.fillStyle = '#ffe08a'; g.textAlign = me[0] > cx ? 'left' : 'right'; g.fillText(`${Math.max(best, TOWER.sea)}층`, me[0] + (me[0] > cx ? 9 : -9), me[1] + 3); g.textAlign = 'left';
 }
 let towerArtKey = '';
@@ -21334,14 +21478,14 @@ function buildTower(){
     towerCheck(); taechoCheck(); trueCheck();
     const best = S.tower.best, k = best + ':' + S.world;
     if (k !== towerArtKey){ towerArtKey = k; drawTowerArt($('#twArt'), best); }
-    const cap = towerCap(), open = towerOpen(), left = towerLeft(), done = best >= cap, ok = open && !done && left > 0 && !raid;
-    const next = [1, 2, 3, 4, 5].map(d => best + d).filter(f => f <= cap).map(f => { const [w, st] = towerWS(f), B = towerBoss(f); return `<li class="${f === best + 1 ? 'now' : ''}"><b>${f}층</b> ${f % 10 === 0 ? '<i class="gate">문지기</i> ' : ''}${esc(B.name)} <span class="small">· ${WORLD_NAME[w]} ${st}단계만큼</span><br><span class="tw-rw">${towerRewardText(f).join(' · ')}</span></li>`; }).join('');
-    const mile = Object.entries(TOWER_MILE).filter(([f]) => +f <= cap).map(([f, M]) => `<span class="${best >= +f ? 'ok' : ''}">${f}층 ${M.av ? AV[M.av].name : M.mount ? MT[M.mount].name : '태초의 신'}</span>`).join('');
+    const cap = towerCap(), open = towerOpen(), left = towerLeft(), done = best >= cap, need = towerLvNeed(best + 1), lvLock = !done && S.level < need, ok = open && !done && left > 0 && !raid && !lvLock;
+    const next = [1, 2, 3, 4, 5].map(d => best + d).filter(f => f <= cap).map(f => { const [w, st] = towerWS(f), B = towerBoss(f); return `<li class="${f === best + 1 ? 'now' : ''}"><b>${f}층</b> ${f % 10 === 0 ? '<i class="gate">문지기</i> ' : ''}${esc(B.name)} <span class="small">· ${WORLD_NAME[w]} ${st}단계만큼${towerLvNeed(f) ? ` · Lv.${towerLvNeed(f)}부터` : ''}</span><br><span class="tw-rw">${towerRewardText(f).join(' · ')}</span></li>`; }).join('');
+    const mile = Object.entries(TOWER_MILE).filter(([f]) => +f <= cap).map(([f, M]) => `<span class="${best >= +f ? 'ok' : ''}">${f}층 ${M.av ? AV[M.av].name : M.mount ? MT[M.mount].name : M.title === 'skygate' ? '별호 「하늘 문을 연 자」' : '태초의 신'}</span>`).join('');
     setHTML($('#twSide'), `<div class="card ${ok ? 'ready' : ''}"><div class="ct">천공의 탑<span class="tag">${best} / ${cap}층</span></div>
         <p class="small" style="margin:0">층마다 세기가 정해진 수호자와 혼자 ${TOWER.time}초. 10층마다 문지기(전멸기). <b>기술 조합·장비는 저절로 바뀌지 않아요</b> — 들어가기 전 정비 창에서 직접 골라요. 지면 하루 도전 횟수를 하나 써요(이기면 안 써요).</p>
         <div class="dl"><span>오늘 남은 도전</span><b>${open ? leftTxt(left, '') : `Lv.${TOWER.lv}부터`}</b></div>
-        <button class="btn ${ok ? 'primary' : ''}" data-tw-go ${ok ? '' : 'disabled'}>${!open ? `Lv.${TOWER.lv}에 열려요` : done ? (cap < TOWER.max ? `${cap}층을 모두 올랐어요` : `${cap}층을 모두 올랐어요`) : raid ? '다른 싸움 중' : left <= 0 ? '오늘은 다 했어요(내일 다시)' : `${best + 1}층 정비하고 도전`}</button></div>
-      <div class="card"><div class="ct">다음 층</div><ul class="tw-next">${next || `<li>모두 올랐어요${cap < TOWER.max && MAIN_Q.some(q => q.ch >= 46) ? `<br><span class="small">${cap < TOWER.sea ? '301층부터는 4부 동해에 들어서면 — 탑이 물 밑으로 이어져요' : '401층부터는 5부 란카 길에 들어서면 — 탑이 수미산 산길로 이어져요'}</span>` : ''}</li>`}</ul></div>
+        <button class="btn ${ok ? 'primary' : ''}" data-tw-go ${ok ? '' : 'disabled'}>${!open ? `Lv.${TOWER.lv}에 열려요` : done ? `${cap}층을 모두 올랐어요` : lvLock ? `${best + 1}층은 Lv.${need}부터` : raid ? '다른 싸움 중' : left <= 0 ? '오늘은 다 했어요(내일 다시)' : `${best + 1}층 정비하고 도전`}</button></div>
+      <div class="card"><div class="ct">다음 층</div><ul class="tw-next">${next || `<li>모두 올랐어요${cap < TOWER.max && MAIN_Q.some(q => q.ch >= 46) ? `<br><span class="small">${cap < TOWER.sea ? '301층부터는 4부 동해에 들어서면 — 탑이 물 밑으로 이어져요' : '401층부터는 5부 란카 길에 들어서면 — 탑이 수미산 산길로 이어져요'}</span>` : cap === TOWER.max && best >= TOWER.max && S.world >= WORLD_MAX ? `<br><span class="small">501~600층은 수미산에서 <b>Lv.${TOWER.skyLv}</b>이 되면 이어져요 — 10층 묶음마다 레벨 문이 있어요(510층 Lv.610 … 600층 Lv.700)</span>` : ''}</li>`}</ul></div>
       <div class="card"><div class="ct">이정표 보상</div><div class="setp">${mile}</div></div>
       <div class="card ${taechoOpen() ? 'ready' : ''}"><div class="ct">최종 레이드 · 태초의 신<span class="tag">${taechoOpen() ? `${leftTxt(taechoLeft())}` : '300층을 오르면'}</span></div>
         <p class="small" style="margin:0">나 + 다른 용사 3명(같은 직업 2명까지). ${TAECHO.time}초, 전멸기 세 번·창세의 빛. 처음 이기면 엔드 아이템 「태초의 씨앗」(공격력·체력 +2단계)·날개 「태초의 날개」·별호 「태초를 넘은 자」, 그리고 주마다 처음 이기면 <b>엔드 상자</b>(전설 장신구 최고 수치·전설 치장·장비 각성 가운데 하나는 꼭).</p>
@@ -22691,7 +22835,7 @@ const ordSum = () => { const A = online && REG.accounts[online.acc]; return A &&
 // 다른 용사 요약의 진행도 다듬기(남이 보낸 값이라 범위·키를 막음)
 const sumProg = sm => ({world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
   maxStage:Math.max(1, Math.min(9999, Math.floor(+sm.maxStage) || 1)), job:Math.max(0, Math.min(JOB_MAX, Math.floor(+sm.job) || 0)), reb:Math.max(0, Math.min(2, Math.floor(+sm.reb) || 0)),
-  q:Math.max(0, Math.min(MAIN_Q.length, Math.floor(+sm.q) || 0)), tw:Math.max(0, Math.min(TOWER.max, Math.floor(+sm.tw) || 0)), pv:Math.max(0, Math.min(99999, Math.floor(+sm.pv) || 1000)),
+  q:Math.max(0, Math.min(MAIN_Q.length, Math.floor(+sm.q) || 0)), tw:Math.max(0, Math.min(TOWER.top, Math.floor(+sm.tw) || 0)), pv:Math.max(0, Math.min(99999, Math.floor(+sm.pv) || 1000)),
   tt:typeof sm.tt === 'string' && hasK(TT, sm.tt) ? sm.tt : ''});
 // 서버의 내 캐릭터 목록을 이 기기 목록과 합친다. 이 기기에만 있는 캐릭터는 서버로 올린다
 async function syncChars(acc){
@@ -23434,7 +23578,7 @@ if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     TRANS, TRANS_SHOP, realmGain, realmNeed, realmMul, realmOn, realmBankFix, gateLv, transRealmOpen, transOpen, gainTrans, transLvCheck, buyTrans, transShopState, capRaiseFix, LV_STORY, buildTrans, get SAVE_BUILD_(){ return SAVE_BUILD; },
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
-    power, JIN, JIN_W, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
+    power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     storyQ, chOpen, prologue, cutMine, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
@@ -23497,7 +23641,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip});   // 물의 신화 9단계(5부 물건)
   // @@END-C
   // @@HOOK-D (갈래 D의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
-  Object.assign(window.__game, {TOWER, TOWER_BANDS, TOWER_MILE, towerWS, towerBoss, TRUEF, trueOpen, trueLeft, startTrue, finishTrue, endBox2, trueForm, patTiles, drawSumeruArt, startTower, finishTower, MOUNT_G});
+  Object.assign(window.__game, {TOWER, TOWER_BANDS, TOWER_MILE, towerWS, towerBoss, TRUEF, trueOpen, trueLeft, startTrue, finishTrue, endBox2, trueForm, patTiles, drawSumeruArt, startTower, finishTower, towerMaxOf, towerCap, MOUNT_G});
   // @@END-D
   // @@HOOK-E (갈래 E의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {refreshPanel, topTier, bossWin, raidReward, seaMul, setPieceName, SPIRITS, SP_AT, SP_FX, SPIRIT_GEAR, spiritOpen, spSt, spBeast, spiritSum, spGive, spMerge, spPick, spFixAll, spiritGearDrop, spiritLine, spOwned, setShown, SETS, MATS, CRAFT_T, CRAFT_RATE, CRAFT_PITY, craftName, matShown, gradeHave, mergeOne, mergeAll, equipBest, spiritForce:false, spiritLuck:null, spBeastForce:null, drawSpiritAura});

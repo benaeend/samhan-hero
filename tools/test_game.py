@@ -5998,6 +5998,106 @@ async def main():
         bg = await mp.evaluate("() => document.querySelector('#bagStack') ? document.querySelector('#bagStack').textContent : ''")
         check('초월의 조각' in bg, f"[가방]에 초월의 조각 줄이 보임 {bg[-40:]}")
         await mp.evaluate("() => window.__game.closePage()")
+        # 11월 21일: 천공의 탑 501~600층 · 초월 레이드
+        await mp.evaluate(LOADM, msave)
+        tw = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, T = G.TOWER; G.quiet = true; G.noFork = true; G.closePage();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          S.world = 10; S.quest.main = G.MAIN_Q.length + 1; S.level = 600; S.tower.best = 500; S.tower.day = ''; S.tower.n = 0; S.inv.potion = 9999;
+          out.cap = [G.towerCap(), T.max, T.top];
+          S.level = 599; out.capLow = G.towerCap(); S.level = 600; S.tower.best = 499; out.cap499 = G.towerCap(); S.tower.best = 500;
+          out.need = [500, 501, 509, 510, 519, 520, 591, 599, 600].map(f => G.towerLvNeed(f));
+          out.ws = [500, 501, 550, 600].map(f => G.towerWS(f)); let mono = true, pv = 0; for (let f = 489; f <= 600; f++){ const st = G.towerWS(f)[1]; if (st < pv) mono = false; pv = st; } out.mono = mono;
+          let nm = true; for (let f = 501; f <= 600; f++){ const B = G.towerBoss(f); if (!B.name || !B.type) nm = false; } out.names = nm;
+          out.rw = [505, 510, 550, 600].map(f => G.towerRewardText(f).join('|'));
+          out.sh = [501, 509, 510, 540, 550, 600].map(f => G.towerShard(f));
+          // 레벨 문: Lv.600은 510층(Lv.610)을 못 시작, 610이면 시작
+          S.tower.best = 509; S.tower.n = 0; out.gate600 = G.startTower(); out.ask600 = G.towerAsk(); S.level = 610; out.gate610 = G.startTower(); out.gateInfo = G.raid ? [G.raid.info.f, G.raid.info.gate, G.raid.info.wipe, isFinite(G.raid.boss.maxHp) && G.raid.boss.maxHp > 0] : null;
+          const s0 = S.trans.shard, g0 = S.gems; if (G.raid){ G.raid.boss.hp = 1; run(8, () => !G.raid); } out.b510 = S.tower.best; out.sh510 = S.trans.shard - s0; out.gem510 = S.gems > g0;
+          S.level = 700; S.tower.best = 504; S.tower.n = 0; const s1 = S.trans.shard; out.start505 = G.startTower(); if (G.raid){ G.raid.boss.hp = 1; run(8, () => !G.raid); } out.b505 = [S.tower.best, S.trans.shard - s1];
+          S.tower.best = 549; S.tower.n = 0; const s2 = S.trans.shard; G.startTower(); if (G.raid){ G.raid.boss.hp = 1; run(8, () => !G.raid); } out.b550 = [S.tower.best, S.trans.shard - s2, !!S.av.own.w_skystair];
+          S.tower.best = 599; S.tower.n = 0; const s3 = S.trans.shard; G.startTower(); if (G.raid){ G.raid.boss.hp = 1; run(8, () => !G.raid); } out.b600 = [S.tower.best, S.trans.shard - s3]; G.titleCheck(); out.title = !!S.title.own.skygate; out.cap600 = [G.towerCap(), G.startTower(), G.towerAsk()];
+          S.tower.best = 539; S.tower.n = 0; G.startTower(); const hp0 = G.raid.boss.maxHp; G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.raid.time = 0; run(8, () => !G.raid); out.lose = [S.tower.best, G.towerLeft()]; S.tower.n = 0;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.tower.best, !!re.av.own.w_skystair, !!re.title.own.skygate];
+          const big = JSON.parse(JSON.stringify(S)); big.tower.best = 9999; out.clamp = G.mergeState(big).tower.best;
+          out.mx = [G.towerMaxOf(540), G.towerMaxOf(500), G.towerMaxOf(120)];
+          const cv = document.createElement('canvas'); cv.width = 480; cv.height = 640; for (const b of [500, 520, 560, 600]){ S.tower.best = b; G.drawTowerArt(cv, b); } out.art = true;
+          return out; }""")
+        check(tw['cap'] == [600, 500, 600] and tw['capLow'] == 500 and tw['cap499'] == 500, f"탑 501~600: Lv.600이고 500층을 오르면 끝 층이 600, 아니면 500 {tw['cap']} {tw['capLow']} {tw['cap499']}")
+        check(tw['need'] == [0, 600, 600, 610, 610, 620, 690, 690, 700], f"탑 레벨 문: 501~509층 Lv.600 · 510층 Lv.610 · 520층 Lv.620 … 600층 Lv.700 {tw['need']}")
+        check(tw['ws'][0] == [10, 94] and tw['ws'][1] == [10, 100] and tw['ws'][3][0] == 10 and tw['mono'] and tw['names'], f"탑 501~600층: 수미산 100단계부터 이어지고 층마다 세기가 오르며 보스 이름·모양이 있다 {tw['ws']} {tw['mono']} {tw['names']}")
+        check('초월의 조각 4' in tw['rw'][1] and '초월의 조각' not in tw['rw'][0] and '초월의 조각 8' in tw['rw'][2] and '하늘 문을 연 자' in tw['rw'][3] and '구름 계단 날개' in tw['rw'][2], f"탑 보상 글: 10층 문지기마다 조각 4, 550·600층은 8 + 날개·별호 {tw['rw']}")
+        check(tw['sh'] == [0, 0, 4, 4, 8, 8], f"탑 조각 값 {tw['sh']}")
+        check(tw['gate600'] is False and tw['ask600'] is False and tw['gate610'] is True and tw['gateInfo'] and tw['gateInfo'][:3] == [510, True, True] and tw['gateInfo'][3], f"탑 레벨 문: Lv.600은 510층 못 시작, Lv.610은 시작(문지기·전멸기) {tw['gate600']} {tw['ask600']} {tw['gate610']} {tw['gateInfo']}")
+        check(tw['b510'] == 510 and tw['sh510'] == 4 and tw['gem510'], f"510층 처음 돌파: 초월의 조각 +4와 보석 {tw['b510']} {tw['sh510']}")
+        check(tw['start505'] is True and tw['b505'] == [505, 0], f"505층(문지기 아님): 돌파해도 조각 없음 {tw['b505']}")
+        check(tw['b550'] == [550, 8, True] and tw['b600'] == [600, 8] and tw['title'], f"550층 날개 + 조각 8, 600층 별호 「하늘 문을 연 자」 + 조각 8 {tw['b550']} {tw['b600']} {tw['title']}")
+        check(tw['cap600'] == [600, False, False], f"600층을 모두 오르면 더 도전 못 함 {tw['cap600']}")
+        check(tw['lose'] == [539, 4], f"탑 539층에서 지면 층은 그대로, 오늘 도전 횟수 하나 씀 {tw['lose']}")
+        check(tw['re'] == [539, True, True] and tw['clamp'] == 600 and tw['mx'] == [600, 500, 500] and tw['art'], f"탑 저장 호환: 층 600까지 보존·그 위는 600으로, 그림 {tw['re']} {tw['clamp']} {tw['mx']}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 650; S.tower.best = 518; S.tower.n = 0; G.closePage(); G.buildTab('tower'); G.update(0.05); }")
+        await mp.wait_for_timeout(400)
+        tu = await mp.evaluate("() => document.querySelector('#twSide') ? document.querySelector('#twSide').textContent : ''")
+        check('519층' in tu and '/ 600층' in tu and '초월의 조각 4' in tu, f"[천공의 탑] 화면: 519~523층 목록과 520층 문지기 조각 보상, 끝 층 600 {tu[:120]}")
+        await mp.screenshot(path=str(OUT / '98a_탑501_650.png'))
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 605; S.tower.best = 509; S.tower.n = 0; G.buildTab('tower'); G.update(0.05); }")
+        await mp.wait_for_timeout(300)
+        tu2 = await mp.evaluate("() => ({txt:document.querySelector('#twSide').textContent, dis:document.querySelector('[data-tw-go]').disabled})")
+        check(tu2['dis'] and '510층은 Lv.610부터' in tu2['txt'], f"[천공의 탑] 화면: 레벨이 모자라면 「510층은 Lv.610부터」 단추가 꺼짐 {tu2['txt'][:100]}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 700; S.tower.best = 566; S.tower.n = 0; G.buildTab('tower'); G.update(0.05); }")
+        await mp.wait_for_timeout(300)
+        await mp.screenshot(path=str(OUT / '98b_탑566_700.png'))
+        await mp.evaluate("() => window.__game.closePage()")
+        await mp.evaluate(LOADM, msave)
+        tr = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, R = G.TRANS_RAIDS; G.quiet = true; G.noFork = true; G.closePage();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          S.world = 10; S.quest.main = G.MAIN_Q.length + 1; S.inv.potion = 9999; S.trans.shard = 0; S.trans.rd = {wk:'', n:0, tot:{}};
+          out.lvs = R.map(r => r.lv); out.names = R.map(r => !!r.name && !!r.boss);
+          const op = lv => { S.level = lv; return R.map((_, k) => G.transRaidOpen(k) ? 1 : 0).join(''); };
+          out.open = [op(619), op(620), op(639), op(640), op(660), op(680), op(700)];
+          S.quest.main = 340; out.openStory = op(700); S.quest.main = G.MAIN_Q.length + 1;
+          const recs = R.map((_, k) => G.transRec(k)); out.recUp = recs.every((v, k) => isFinite(v) && v > 0 && (k === 0 || v >= recs[k - 1])); out.recs = recs.map(v => +Math.log10(v).toFixed(2));
+          const bases = R.map((_, k) => G.transBase(k)); out.baseOk = bases.every(b => b.every(v => isFinite(v) && v > 0));
+          const cl = {}; for (const c of ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'zzz']){ const c0 = S.cls; S.cls = c; cl[c] = G.transBase(2).every(v => isFinite(v) && v > 0); S.cls = c0; } out.cls = cl;
+          S.level = 620; const I = G.transInfo(0); out.info = [I.jin, I.tr, I.key, I.label, I.bossName, I.jw, I.ji];
+          const sh0 = S.trans.shard, gm0 = S.gems; out.st0 = G.startTrans(0); out.stInfo = G.raid ? [G.raid.info.tr, G.raid.info.jin, isFinite(G.raid.boss.maxHp) && G.raid.boss.maxHp > 0, G.raid.limit] : null;
+          out.st1 = G.startTrans(1);   // 싸우는 중이라 못 시작(레벨도 모자람)
+          G.raid.boss.hp = 1; run(10, () => !G.raid); out.w1 = [S.trans.shard - sh0, S.trans.rd.n, S.trans.rd.tot[0], S.gems > gm0];
+          out.st0b = G.startTrans(0); G.raid.boss.hp = 1; run(10, () => !G.raid); out.w2 = [S.trans.shard - sh0, S.trans.rd.n];
+          out.st0c = G.startTrans(0); G.raid.boss.hp = 1; run(10, () => !G.raid); out.w3 = [S.trans.shard - sh0, S.trans.rd.n, G.transRdLeft()];
+          out.st0d = G.startTrans(0); G.addTime(8 * 86400000); G.transRdCheck(); out.wk = [S.trans.rd.n, G.transRdLeft(), S.trans.rd.tot[0]];
+          S.level = 640; out.st1b = G.startTrans(1); const s1 = S.trans.shard; G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.raid.time = 0; run(10, () => !G.raid); out.lose = [S.trans.shard - s1, S.trans.rd.n, S.trans.rd.tot[1] || 0];
+          out.st1c = G.startTrans(1); const s2 = S.trans.shard; G.raid.boss.hp = 1; run(10, () => !G.raid); out.f1 = S.trans.shard - s2;
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.trans.rd.wk === S.trans.rd.wk, re.trans.rd.n, JSON.stringify(re.trans.rd.tot)];
+          const bad = JSON.parse(JSON.stringify(S)); bad.trans.rd = {wk:5, n:99, tot:{0:'x', 1:-4, 2:7, 9:3}}; const mb = G.mergeState(bad); out.bad = [mb.trans.rd.wk, mb.trans.rd.n, JSON.stringify(mb.trans.rd.tot)];
+          const old = JSON.parse(JSON.stringify(S)); delete old.trans; const mo = G.mergeState(old); out.old = [mo.trans.rd.n, JSON.stringify(mo.trans.rd.tot)];
+          return out; }""")
+        check(tr['lvs'] == [620, 640, 660, 680, 700] and all(tr['names']), f"초월 레이드: 다섯 곳이 Lv.620·640·660·680·700에 열리고 이름이 있다 {tr['lvs']}")
+        check(tr['open'] == ['00000', '10000', '10000', '11000', '11100', '11110', '11111'] and tr['openStory'] == '00000', f"초월 레이드 열림: 레벨마다 한 곳씩, 수미산 이야기를 안 마쳤으면 안 열림 {tr['open']} {tr['openStory']}")
+        check(tr['recUp'] and tr['baseOk'] and all(tr['cls'].values()), f"초월 레이드 세기: 권장 전투력이 뒤로 갈수록 세지고 모든 직업(모르는 직업 포함)이 유한한 값 {tr['recs']} {tr['cls']}")
+        check(tr['info'][:2] == [True, True] and tr['info'][2] == 't0' and tr['info'][3] == '초월 · 열한 번째 머리' and tr['info'][4] == '초월한 라바나', f"초월 레이드 정보: 진 레이드 싸움 규칙(jin)을 쓰고 이름이 다른 모습 {tr['info']}")
+        check(tr['st0'] is True and tr['stInfo'] and tr['stInfo'][:3] == [True, True, True] and tr['stInfo'][3] == 90 and tr['st1'] is False, f"초월 레이드 시작: 제한 90초, 싸우는 중엔 다른 곳 못 시작 {tr['stInfo']} {tr['st1']}")
+        check(tr['w1'] == [13, 1, 1, True], f"초월 레이드 첫 승리: 조각 3 + 처음 이긴 보상 10, 보석 {tr['w1']}")
+        check(tr['w2'] == [16, 2] and tr['w3'] == [19, 3, 0] and tr['st0d'] is False, f"초월 레이드: 이긴 뒤엔 조각 3씩, 주 3번을 다 하면 더 못 함 {tr['w2']} {tr['w3']} {tr['st0d']}")
+        check(tr['wk'] == [0, 3, 3], f"초월 레이드: 다음 주엔 횟수가 다시 3번, 이긴 기록은 그대로 {tr['wk']}")
+        check(tr['st1b'] is True and tr['lose'] == [0, 0, 0] and tr['st1c'] is True and tr['f1'] == 14, f"초월 레이드 패배: 져도 주 횟수·조각·기록 그대로, 두 번째 곳 첫 승리는 4 + 10 {tr['lose']} {tr['f1']}")
+        check(tr['re'][1:] == [1, '{"0":3,"1":1}'] and tr['bad'][0] == '' and tr['bad'][1] == 3 and tr['bad'][2] == '{"2":7}' and tr['old'] == [0, '{}'], f"초월 저장 호환: 보존·이상한 값 다듬기·예전 저장 기본값 {tr['re']} {tr['bad']} {tr['old']}")
+        await mp.evaluate("() => { const G = window.__game, S = G.S; S.world = 10; S.quest.main = G.MAIN_Q.length + 1; S.level = 660; S.trans.rd = {wk:G.weekKey(), n:1, tot:{0:3, 1:1}}; G.closePage(); G.buildTab('raid'); G.update(0.05); }")
+        await mp.wait_for_timeout(500)
+        ru = await mp.evaluate("""() => ({sec:!!document.querySelector('#trLeft'), head:document.querySelector('#trLeft') ? document.querySelector('#trLeft').textContent : '', btn:[...document.querySelectorAll('[data-trk]')].map(b => b.textContent + (b.disabled ? '(꺼짐)' : '')), cards:document.querySelectorAll('#trr-0,#trr-1,#trr-2,#trr-3,#trr-4').length})""")
+        check(ru['sec'] and ru['cards'] == 5 and ru['btn'][:3] == ['초월 입장'] * 3 and '열려요' in ru['btn'][3] and '열려요' in ru['btn'][4] and '2번 남음' in ru['head'], f"[레이드] 화면: 초월 레이드 다섯 칸, Lv.660이면 셋이 입장 가능·둘은 잠김, 이번 주 2번 남음 {ru}")
+        await mp.evaluate("() => { const el = document.querySelector('#trr-0'); if (el) el.scrollIntoView(); }")
+        await mp.wait_for_timeout(300)
+        await mp.screenshot(path=str(OUT / '98c_초월레이드.png'))
+        await mp.evaluate("() => document.querySelector('[data-trk=\"0\"]').click()")
+        await mp.wait_for_timeout(400)
+        rm = await mp.evaluate("() => document.querySelector('#mBody') ? document.querySelector('#mBody').textContent : ''")
+        check('초월한 라바나' in rm and '권장 전투력' in rm and '초월의 조각 3개' in rm and '져도' in rm, f"초월 레이드 입장 창: 보스·권장 전투력·보상·지면 횟수 안 씀 {rm[:100]}")
+        await mp.screenshot(path=str(OUT / '98d_초월레이드_입장창.png'))
+        await mp.evaluate("() => { const G = window.__game; G.hideModal && G.hideModal(); G.closePage(); G.S.level = 600; G.S.quest.main = 340; G.buildTab('raid'); G.update(0.05); }")
+        await mp.wait_for_timeout(300)
+        r0 = await mp.evaluate("() => !!document.querySelector('#trLeft') || !!document.querySelector('[data-trk]')")
+        check(not r0, "이야기를 마치기 전 용사의 [레이드] 화면에는 초월 레이드 칸이 안 보임")
+        await mp.evaluate("() => window.__game.closePage()")
         await ctxM.close()
         srv.shutdown()
 
