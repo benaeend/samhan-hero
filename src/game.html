@@ -581,7 +581,13 @@ body.portrait .chars.many{grid-template-columns:1fr}
 .sheet:has(.chars.many) #mBody{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
 .sheet:has(.chars.many) #mBody>*{flex:0 0 auto}
 .sheet:has(.chars.many) #mBody>.chars.many{flex:1 1 auto;min-height:96px;overscroll-behavior:contain}
-.sheet:has(.chars.many) .mbtns{flex:0 0 auto}   /* 10칸: 칸이 많으면 목록만 스크롤(세로 화면은 한 줄씩) */
+.sheet:has(.chars.many) .mbtns{flex:0 0 auto}
+@media (max-height:480px){   /* 화면이 낮으면: 목록 스크롤을 없애고 창 하나만 스크롤(스크롤은 늘 하나) */
+  .sheet:has(.chars.many){display:block;overflow:auto}
+  .sheet:has(.chars.many) #mBody{display:block}
+  .sheet:has(.chars.many) #mBody>.chars.many{max-height:none;overflow:visible}
+}
+.csnote{margin:0 0 6px;font-size:12px;color:var(--text-soft)}.csnote summary{cursor:pointer;padding:2px 0}   /* 10칸: 칸이 많으면 목록만 스크롤(세로 화면은 한 줄씩) */
 body.portrait .chars.many .char{padding:6px 9px}body.portrait .chars.many .char.empty{min-height:40px}
 .char.empty{grid-template-columns:1fr;place-items:center;min-height:50px;border-style:dashed;background:none;color:var(--text-soft);font-weight:700;font-size:13px}
 .char.empty:hover{border-color:rgba(255,204,77,.5);color:var(--gold)}
@@ -23195,9 +23201,9 @@ function showCharSelect(msg, keepPick){
       <img src="${lookPreview(ch.cls in CLASSES ? ch.cls : 'musa', ch.look, ch.armorG >= 0 ? ch.armorG : -1, ch.weaponG >= 0 ? ch.weaponG : -1)}" alt="">
       <span><b>${esc(ch.name)}</b><span>${(CLASSES[ch.cls] || CLASSES.musa).name} · ${WORLD_NAME[ch.world || 0] || '이승'} Lv.${ch.level || 1} · 최고 ${ch.maxStage || 1}단계</span>${ch.srvErr === 'many' && online ? '<em class="loc">이 기기에만 저장 중 (서버 준비 중)</em>' : ''}</span></button>${nCh > 1 ? `<span class="mv"><button class="mvb" data-mv="-1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 앞으로 한 칸(위로)"${ci === 0 ? ' disabled' : ''}>▲</button><button class="mvb" data-mv="1" data-cid="${esc(ch.cid)}" aria-label="${esc(ch.name)} 뒤로 한 칸(아래로)"${ci === nCh - 1 ? ' disabled' : ''}>▼</button></span>` : ''}</div>`).join('')
     + Array.from({length:Math.max(0, MAX_CHARS - A.chars.length)}, (_, i) => `<button class="char empty" data-new="1" aria-label="빈 칸 — 새 캐릭터 만들기">＋ 빈 칸${i ? '' : ' · 새 캐릭터'}</button>`).join('');
-  const html = `<p>아이디 <b>${esc(curAcc)}</b>로 들어왔어요. 함께할 캐릭터를 골라요. (한 계정에 ${MAX_CHARS}명까지)</p>
-    ${A.chars.length > 1 ? `<p class="small" style="margin:0 0 6px">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석). 앞 6칸까지만 세요.</p>` : ''}
-    ${nCh > 1 ? '<p class="small" style="margin:0 0 6px">▲▼로 캐릭터 순서를 바꿀 수 있어요. 맨 앞(맨 위·왼쪽)이 본캐 자리예요. 순서는 다른 기기에서도 그대로예요.</p>' : ''}
+  const html = `<p style="margin:0 0 6px">아이디 <b>${esc(curAcc)}</b> · 함께할 캐릭터를 골라요. (${MAX_CHARS}명까지)</p>
+    ${nCh > 1 ? `<details class="csnote"><summary>안내 보기 (배럭 효과·순서 바꾸기)</summary><p class="small" style="margin:6px 0">배럭 효과: 같은 계정의 캐릭터끼리 서로 도와요(가장 높은 캐릭터 레벨만큼 능력치, 캐릭터 수만큼 경험치·엽전·보석). 앞 6칸까지만 세요.</p>
+    <p class="small" style="margin:0 0 6px">▲▼로 캐릭터 순서를 바꿀 수 있어요. 맨 앞(맨 위·왼쪽)이 본캐 자리예요. 순서는 다른 기기에서도 그대로예요.</p></details>` : ''}
     ${A.chars.length ? '' : '<p class="small">아직 캐릭터가 없어요. [새 캐릭터]를 눌러 만들어 주세요.</p>'}
     <div class="chars many">${list}</div>
     <p class="err" role="alert" style="color:var(--jade)">${esc(msg || '')}</p>
