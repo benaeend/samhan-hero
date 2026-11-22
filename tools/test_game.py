@@ -627,10 +627,10 @@ async def main():
         await page.screenshot(path=str(OUT / '16b_윤회리셋권확인.png'))
         await page.click('#modal-btn-0')
         m2 = await page.evaluate("() => ({gems: window.__game.S.gems, up: window.__game.S.reb.up.atk})")
-        check(m2['gems'] == 5e6 and m2['up'] == 7, f'윤회 리셋권: [그만두기]를 누르면 그대로다 {m2}')
+        check(0 <= m2['gems'] - 5e6 <= 200 and m2['up'] == 7, f'윤회 리셋권: [그만두기]를 누르면 그대로다(사냥 중 우연히 들어온 보석 몇 개는 허용) {m2}')
         await page.click('#shb-rebreset'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
         m3 = await page.evaluate("() => { const S = window.__game.S; return {gems: S.gems, pts: S.reb.pts, total: S.reb.total, up: Object.values(S.reb.up), sp: window.__game.rebSpent()}; }")
-        check(0 <= m3['gems'] - (5e6 - 400000) <= 20 and m3['pts'] == 18 and m3['total'] == 40 and all(v == 0 for v in m3['up']) and m3['sp'] == 0,
+        check(0 <= m3['gems'] - (m2['gems'] - 400000) <= 200 and m3['pts'] == 18 and m3['total'] == 40 and all(v == 0 for v in m3['up']) and m3['sp'] == 0,
               f'윤회 리셋권: 보석 400,000을 내고 올린 15개를 돌려받는다(구슬 3 → 18, 능력 전부 Lv.0, 총량 그대로) {m3}')
         m4 = await page.evaluate("() => { const G = window.__game; const r = G.rebUp('atk'); const none = G.rebSpent() === 0 && !G.buyShop('rebreset'); return {r, pts: G.S.reb.pts, atk: G.S.reb.up.atk, none}; }")
         check(m4['r'] and m4['pts'] == 17 and m4['atk'] == 1, f'윤회 리셋권: 돌려받은 구슬로 다시 올릴 수 있다 {m4}')
@@ -647,7 +647,7 @@ async def main():
         check(gm['shown'] and '100개' in gm['txt'] and gm['gems'] == 5e6 and gm['gold'] < 1e6, f'엽전 꾸러미 묶음: 사기 전에 확인 창이 뜬다 {gm["shown"]} {gm["gems"]}')
         await page.click('#modal-btn-0')
         g2 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
-        check(0 <= g2['gems'] - 5e6 <= 20, f'엽전 꾸러미 묶음: [그만두기]를 누르면 안 산다 {g2}')
+        check(0 <= g2['gems'] - 5e6 <= 200, f'엽전 꾸러미 묶음: [그만두기]를 누르면 안 산다 {g2}')
         await page.click('#shb-goldbag100'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
         g3 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
         check(g3['gems'] < 5e6 and g3['gold'] > 0, f'엽전 꾸러미 묶음: 확인하면 보석을 내고 엽전을 받는다 {g3}')
@@ -5052,25 +5052,29 @@ async def main():
         check(gw['wall'] == [8, 18, 0, 0] and gw['trail'] == [1.5, 0, 0], f"든든한 앞자리: 권사 말고 받는 피해 -8%(선봉과 더해짐) · 이어 가는 발길: 보스 휘청 +1.5초 {gw['wall']} {gw['trail']}")
         check('든든한 앞자리:gwon1' in gw['hint2'] and '이어 가는 발길:gwon2' in gw['hint2'], f"한 명만 더 있으면에 주먹·발 길 권사가 따로 나온다 {gw['hint2']}")
         check(gw['f1'] == 1 and gw['f2'] == 2 and gw['fMax'] == 3 and gw['used'] == 0 and gw['ratio'] == 5.5 and gw['mobSame'] and gw['mobCounter'] == 0 and gw['off'] == '1:2', f"주먹 「받아낸 힘」: 보스를 맞받아칠 때마다 한 겹(최대 3) → 다음 한 방이 겹마다 +150%로 터지고 풀림 · 몹은 안 쌓고 안 씀 · 끄면 없음 {gw}")
-        check(gw['spd'] == 1.075 and gw['spd0'] == 1 and gw['spdOff'] == 1 and gw['spdFist'] == 1 and gw['spdMusa'] == 1, f"발 「이어 차기」: 5겹이면 공격·재사용 속도 +7.5% · 시간이 지나면·끄면·주먹·다른 직업은 그대로 {gw['spd']} {gw['spdOff']} {gw['spdFist']}")
+        check(gw['spd'] == 1.2 and gw['spd0'] == 1 and gw['spdOff'] == 1 and gw['spdFist'] == 1 and gw['spdMusa'] == 1, f"발 「이어 차기」: 5겹이면 공격·재사용 속도 +20% · 시간이 지나면·끄면·주먹·다른 직업은 그대로 {gw['spd']} {gw['spdOff']} {gw['spdFist']}")
         # --- 권사 첫째 초각성기(11-22): 연타가 쌓여 저절로 터지는 패시브(보스·레이드 보스에서만) · 다른 직업은 예전 방식(12초 뒤 한 번)
         ga = await pty.evaluate(r"""() => { try { const G = window.__game, S = G.S, H = G.hero, out = {}; G.quiet = true; G.wipeOff = true;
   const cl0 = S.cls, br0 = S.gwonBr, job0 = S.job, aw0 = S.awaken, A0 = G.GWA, info = () => ({label:'시험', bossName:'허수아비', type:'scarecrow', color:'#d8b060', region:0, party:1, ref:S.maxStage, g:0});
   S.awaken = true; S.cls = 'gwon'; S.job = Math.max(1, S.job); S.gwonBr = 2; G.refreshStats();
   G.startFight(info(), [], {hp:1e300, atk:0, aoe:0, time:300}); let R = G.raid, B = R.boss; B.atk = 0; B.spawnT = 0; H.dead = false; H.gwK = 0; H.gwTg = null;
   out.gw = !!R.awk.gw; out.g0 = R.awk.g;
-  G.gwonAttack(B); out.k1 = R.awk.g; G.gwonAttack(B); out.k2 = R.awk.g;   // 발: 처음 차기 +0.5, 이어 찬 두 번째부터 +1
+  G.gwonAttack(B); out.k1 = R.awk.g; G.gwonAttack(B); out.k2 = +R.awk.g.toFixed(3);   // 발: 처음 차기는 덤 없음(싸움이 나아간 만큼만), 이어 찬 두 번째부터 덤 +GWA.chain
   const mob = G.makeMob(false, 9, 8); mob.hp = mob.maxHp = 1e300; const g1 = R.awk.g; G.gwonAttack(mob); out.mobSame = R.awk.g === g1;
-  S.gwonBr = 1; R.awk.g = 0; G.gwonAttack(B); out.f1 = R.awk.g; H.cntCd = 0; H.hp = H.hp || 1; H.stunT = 0; H.target = B; G.damageHero(1); out.f2 = R.awk.g;   // 주먹: 기본 +1, 맞받아치기 +4
-  R.awk.g = G.GWA.full - 0.5; R.awk.n = 0; const dm0 = G.dmgMeter; G.gwonAttack(B); for (let i = 0; i < 20; i++) G.update(0.05);
+  S.gwonBr = 1; R.awk.g = 0; G.gwonAttack(B); out.f1 = R.awk.g; H.cntCd = 0; H.hp = H.hp || 1; H.stunT = 0; H.target = B; G.damageHero(1); out.f2 = R.awk.g;   // 주먹: 기본은 덤 없음, 맞받아치기 덤 +GWA.ctr
+  R.awk.g = 0; R.time -= 6; G.gwonAttack(B); out.tp = +R.awk.g.toFixed(2);   // 6초가 지나면(보스 체력은 그대로) 6/GWA.t 몫 × GWA.n칸만큼
+  R.awk.g = 0; const lp0 = R.awk.lp; B.maxHp = 1e6; B.hp = 1e6 * (1 - lp0 - 0.1); G.gwonAttack(B); out.hp = +R.awk.g.toFixed(2); B.hp = B.maxHp = 1e300;   // 보스 체력이 10% 줄면 0.1 × GWA.n칸
+  R.awk.g = G.GWA.full - 0.5; R.awk.n = 0; R.time -= 9; const dm0 = G.dmgMeter; G.gwonAttack(B); for (let i = 0; i < 20; i++) G.update(0.05);
   out.burst = [R.awk.n, R.awk.used, R.awk.g < G.GWA.full, G.dmgMeter > dm0, R.awk.show > 0];
-  R.awk.n = G.GWA.max - 1; R.awk.g = G.GWA.full - 0.5; G.gwonAttack(B); out.cap = [R.awk.n, R.awk.g]; G.gwonAttack(B); G.gwonAttack(B); out.cap2 = [R.awk.n, R.awk.g];
+  R.awk.n = G.GWA.max - 1; R.awk.g = G.GWA.full - 0.5; R.time -= 3; G.gwonAttack(B); out.cap = [R.awk.n, R.awk.g]; R.time -= 3; G.gwonAttack(B); G.gwonAttack(B); out.cap2 = [R.awk.n, R.awk.g];
   G.raidEnd(false); for (let i = 0; i < 200 && G.raid; i++) G.update(0.05);
   S.cls = 'musa'; G.refreshStats(); G.startFight(info(), [], {hp:1e300, atk:0, aoe:0, time:300}); R = G.raid; B = R.boss; B.atk = 0; B.spawnT = 0;
   out.musa = [!!R.awk.gw, R.awk.used]; for (let i = 0; i < 280; i++) G.update(0.05); out.musa2 = [R.awk.used, R.awk.g];   // 12초 뒤 저절로 한 번(예전 방식)
   G.raidEnd(false); for (let i = 0; i < 200 && G.raid; i++) G.update(0.05); out.after = !G.raid; S.raid.tk = 3; S.cls = cl0; S.gwonBr = br0; S.job = job0; S.awaken = aw0; G.refreshStats(); return out; } catch (e) { return {err: String(e)}; } }""")
-        check('err' not in ga and ga['gw'] and ga['g0'] == 0 and ga['k1'] == 0.5 and ga['k2'] == 1.5 and ga['mobSame'] and ga['f1'] == 1 and ga['f2'] == 5, f"권사 초각성 연타 칸: 보스에서만 쌓임(발 처음 +0.5·이어 찬 발 +1·주먹 +1·맞받아치기 +4) · 몬스터에선 안 쌓임 {ga}")
-        check('err' not in ga and ga['burst'] == [1, False, True, True, True] and ga['cap'][0] == 7 and ga['cap2'] == [7, 0], f"가득 차면 저절로 터지고(한 판에 여러 번, 쓰고 끝이 아님) 한 판 최대 {ga.get('cap')} {ga['burst']}")
+        A = await pty.evaluate("() => window.__game.GWA")
+        check('err' not in ga and ga['gw'] and ga['g0'] == 0 and ga['k1'] == 0 and ga['k2'] == A['chain'] and ga['mobSame'] and ga['f1'] == 0 and ga['f2'] == A['ctr'], f"권사 초각성 연타 칸: 보스에서만 쌓임(덤: 이어 찬 발 +{A['chain']}·맞받아치기 +{A['ctr']}, 그냥 치기는 덤 없음) · 몬스터에선 안 쌓임 {ga}")
+        check('err' not in ga and abs(ga['tp'] - 6 / A['t'] * A['n'] * A['full']) < 0.6 and abs(ga['hp'] - 0.1 * A['n'] * A['full']) < 0.6, f"연타 칸은 싸움이 나아간 만큼(지난 시간 ÷ {A['t']}초, 보스 체력이 준 몫 가운데 큰 쪽) × {A['n']}칸 찬다 — 보스가 세든 약하든 한 판 4번 안팎 {ga.get('tp')} {ga.get('hp')}")
+        check('err' not in ga and ga['burst'] == [1, False, True, True, True] and ga['cap'][0] == A['max'] and ga['cap2'] == [A['max'], 0], f"가득 차면 저절로 터지고(한 판에 여러 번, 쓰고 끝이 아님) 한 판 최대 {A['max']}번 {ga.get('cap')} {ga['burst']}")
         check('err' not in ga and ga['musa'] == [False, False] and ga['musa2'][0] is True, f"다른 직업(무사)은 예전 방식: 연타 칸 없고 12초 뒤 한 번 {ga['musa']} {ga['musa2']}")
         y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S; S.myParty = ['q1', 'q4']; const t = G.tbOthers(); const r = {head:t.slice(0, 2).map(o => o.name).join(), mine:t.slice(0, 2).every(o => o.mine && o.syn), n:t.length};
           S.myParty = []; return r; }""")
