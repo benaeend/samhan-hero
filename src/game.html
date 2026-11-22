@@ -4656,9 +4656,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-22-1', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-22-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 22일 · 권사 스승 이름 바로잡기'],
+  ['권사의 첫 스승 이름이 이야기와 맞아졌어요', '[전직] 화면과 전직 시험에서 권사의 1차 스승이 「늙은 수박꾼」으로 나오던 것을 이야기 속 스승으로 고쳤어요. 주먹 길은 「바위손」, 발 길은 「바람발」이에요. 아직 길을 고르기 전에는 「바위손·바람발」로 함께 보여요. 「세 스승의 시험」에서도 같은 이름이 나와요.'],
+  ['3차 스승 이름을 「다이마노 게하야」로 하나로 맞췄어요', '발 길 권사의 3차 스승이 [전직] 화면에서는 「타이마노 케하야」, 이야기에서는 「게하야」로 다르게 보였어요. 이제 어디서나 「다이마노 게하야」(짧게는 「게하야」)로 나와요. 주먹 길 스승 「노미노 스쿠네」와 같은 표기 방식이에요.'],
   ['#', '11월 22일 · 권사 시너지'],
   ['주먹 길 권사: 맞받아칠수록 다음 한 방이 세져요', '보스를 맞받아치는 데 성공할 때마다 「받아낸 힘」이 한 겹씩(최대 3겹) 모이고, 다음 한 방이 겹마다 크게 터져요. 머리 위 붉은 점으로 보여요. 혼자 보스·레이드 보스를 칠 때만 있고, 몬스터 떼에는 없어요. [수련]의 직업 특성에서 「?」를 누르면 자세히 나와요.'],
   ['발 길 권사: 이어 찰수록 빨라져요', '같은 보스를 쉬지 않고 차면 「이어 차기」가 겹겹이 쌓여(최대 5겹) 공격과 기술 재사용이 점점 빨라져요. 머리 위 푸른 점으로 보여요. 보스에게만 걸리고, 못 차거나 대상이 바뀌면 처음부터예요.'],
@@ -11844,11 +11847,11 @@ const JOBS = {
     {name:'위태장', weapon:'금빛 수호창', cape:'하늘 장수 갑포', capeC:'#e0b040', teacher:'위태천', ch:68}],
 };
 // 권사(2026-11-19): 1차 전직에서 고른 갈래(S.gwonBr 1 주먹 · 2 발)에 따라 전직 이름·무기·스승이 달라진다 — 이름·무기·스승은 getter(GB). 망토(AVATARS가 불러올 때 한 번 읽음)는 갈래와 상관없는 이름·색
-// 1차 스승 「늙은 수박꾼」(새로 지은 인물)은 두 갈래를 다 가르치고, 3차 스쿠네/케하야(일본서기의 씨름 인물 — 시험하는 스승으로만)·4차 형천/과보(옛 신화)·5차 용궁의 주먹/발 장수(새로 지은 인물)·6차 비마(옛 서사시의 씨름꾼)/하누만
+// 1차 스승은 산길 노인의 옛 제자 「바위손」(주먹 길)·「바람발」(발 길 — 길을 고르기 전엔 「바위손·바람발」)이고, 3차 스쿠네/게하야(일본서기의 씨름 인물 — 시험하는 스승으로만)·4차 형천/과보(옛 신화)·5차 용궁의 주먹/발 장수(새로 지은 인물)·6차 비마(옛 서사시의 씨름꾼)/하누만
 JOBS.gwon = [
-  {get name(){ return GB('맞주먹', '곁발'); }, get weapon(){ return GB('붉은 손목 감개', '푸른 발목 감개'); }, cape:'수련생 겉옷', capeC:'#d8a05a', teacher1:'늙은 수박꾼'},
+  {get name(){ return GB('맞주먹', '곁발'); }, get weapon(){ return GB('붉은 손목 감개', '푸른 발목 감개'); }, cape:'수련생 겉옷', capeC:'#d8a05a', get teacher1(){ return S.cls === 'gwon' && S.gwonBr === 1 ? '바위손' : S.cls === 'gwon' && S.gwonBr === 2 ? '바람발' : '바위손·바람발'; }},
   {get name(){ return GB('금강수', '비각객'); }, get weapon(){ return GB('쇠 손목 감개', '바람 발목 감개'); }, cape:'권문 홍포', capeC:'#a8402a'},
-  {get name(){ return GB('천수권', '풍신각'); }, get weapon(){ return GB('천 갈래 손목 감개', '번개 발목 감개'); }, cape:'씨름꾼 허리띠 망토', capeC:'#c8b078', get teacher(){ return GB('노미노 스쿠네', '타이마노 케하야'); }, type:'m3_gwon', ch:33},
+  {get name(){ return GB('천수권', '풍신각'); }, get weapon(){ return GB('천 갈래 손목 감개', '번개 발목 감개'); }, cape:'씨름꾼 허리띠 망토', capeC:'#c8b078', get teacher(){ return GB('노미노 스쿠네', '다이마노 게하야'); }, type:'m3_gwon', ch:33},
   {get name(){ return GB('파천권', '비천각'); }, get weapon(){ return GB('하늘 깨는 손목 감개', '해 쫓는 발목 감개'); }, cape:'붉은 하늘 무복', capeC:'#e0603a', get teacher(){ return GB('형천', '과보'); }, ch:43},
   {get name(){ return GB('해일권', '파랑각'); }, get weapon(){ return GB('물결 손목 감개', '물결 발목 감개'); }, cape:'용궁 비늘 무복', capeC:'#2a8aa8', get teacher(){ return GB('용궁의 주먹 장수', '용궁의 발 장수'); }, type:'m5_gwon', ch:46},
   {get name(){ return GB('금강권', '신풍각'); }, get weapon(){ return GB('금빛 손목 감개', '금빛 발목 감개'); }, cape:'하늘 무사 금포', capeC:'#e8c048', get teacher(){ return GB('비마', '하누만'); }, ch:68}];
@@ -14841,8 +14844,8 @@ Object.assign(MOB_HD, {
   m_changgaek:chibiMob('changgaek', {outfit:'#5a4a44', hair:'#b8b8c0', hat:'changgaek', skin:1, beard:true}),                            // 늙은 표두(창객 1차 스승, 새로 지은 인물)
   m3_changgaek:chibiMob('changgaek', {outfit:'#2e2e38', hair:'#1a1a22', hat:'none', skin:1, beard:true}, {job:2, capeC:'#e8e4d8'}),      // 벤케이(창객 3차)
   m5_changgaek:chibiMob('changgaek', {outfit:'#2a7a9a', hair:'#1a2a3a', hat:'helmet', skin:0}, {job:3, capeC:'#2a7a9a'}),                // 용궁의 창 장수(창객 5차, 새로 지은 인물)
-  m_gwon:chibiMob('gwon', {outfit:'#8a6a4a', hair:'#c8c8d0', hat:'none', skin:1, beard:true}),                                              // 늙은 수박꾼(권사 1차 스승, 새로 지은 인물)
-  m3_gwon:[64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER3.gwon], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }],   // 스쿠네(주먹) / 케하야(발)
+  m_gwon:chibiMob('gwon', {outfit:'#8a6a4a', hair:'#c8c8d0', hat:'none', skin:1, beard:true}),                                              // 바위손·바람발(권사 1차 스승, 같은 그림)
+  m3_gwon:[64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER3.gwon], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }],   // 스쿠네(주먹) / 게하야(발)
   m5_gwon:[64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER5.gwon], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }],   // 용궁의 주먹 장수 / 발 장수
   gangrim:chibiMob('jagaek', {outfit:'#b8282a', hair:'#241c26', hat:'sulsa', skin:0}, {job:2}),
   soldier:chibiMob('musa', {outfit:'#d8b84a', hair:'#241c26', hat:'helmet', skin:0}, {wtype:'spear', aG:2, wG:2}),
@@ -17822,7 +17825,7 @@ const CAST = {
   hanuman:{name:'하누만', p:['musa', {outfit:'#e0682a', hair:'#d8b888', hat:'fillet', skin:2}, 4, 4], ex:{wtype:'hammer', capeC:'#c8382f'}},
   // 권사 이야기 인물 7명(2026-11-21): 모두 옛 한국풍 2~3등신, 그림 파일 없이 drawGwon/drawChibi + castProp 소품. 서로 키·색·소품으로 구별
   // 스쿠네·게하야는 옛 장사의 넋이라 넋불이 떠돈다(스쿠네 푸른 불·게하야 주황 불). 형천은 산해경대로 머리가 없고 가슴에 얼굴, 과보는 해를 쫓는 거인
-  kehaya:{name:'타이마노 케하야', p:['gwon', {outfit:'#9a5a3a', hair:'#3a2a22', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, thick:1, prop:'wisp', pc:'#ff9a4a'}, sc:1.95},
+  kehaya:{name:'다이마노 게하야', p:['gwon', {outfit:'#9a5a3a', hair:'#3a2a22', hat:'none', skin:1, beard:true}, 3, 3], ex:{job:2, gbr:2, thick:1, prop:'wisp', pc:'#ff9a4a'}, sc:1.95},
   sukune:{name:'노미노 스쿠네', p:['gwon', {outfit:'#6a7a8a', hair:'#241c26', hat:'none', skin:0}, 3, 3], ex:{job:2, gbr:1, prop:'rope wisp', pc:'#8ad0ff'}, sc:2.05},
   xingtian:{name:'형천', p:['gwon', {outfit:'#7a3a2a', hair:'#241c26', hat:'none', skin:1}, 4, 4], ex:{job:3, gbr:1, headless:1, prop:'axe shield', capeC:'#e0603a'}, sc:2.2},
   gw_noin:{name:'산길 노인', p:['doin', {outfit:'#efe9dc', hair:'#f0f0f4', hat:'none', skin:1}, 3, -1], ex:{wtype:'none', prop:'longbeard feather'}, sc:1.5},
@@ -17847,7 +17850,7 @@ const CAST = {
 CAST.gw_xingtian = CAST.xingtian; CAST.gw_kuafu = CAST.kuafu;   // 권사 이야기 글의 인물 키(형천·과보는 같은 그림)
 CAST.gw_sukune = Object.assign({}, CAST.sukune, {name:'스쿠네'}); CAST.gw_kehaya = Object.assign({}, CAST.kehaya, {name:'게하야'});   // 스쿠네·게하야도 같은 그림(이름만 짧게)
 const GUARD = {jujak:{name:'주작', pet:14}, cheong:{name:'청룡', mob:['serpent', '#3a8aff']}, baekho:{name:'백호', pet:3}, hyeonmu:{name:'현무', pet:5}};
-const WHO = {'산길 노인':'gw_noin', '바위손':'gw_bawi', '바람발':'gw_baram', '스쿠네':'gw_sukune', '게하야':'gw_kehaya', '타이마노 케하야':'kehaya', '노미노 스쿠네':'sukune', '형천':'xingtian', '과보':'kuafu', '용궁의 주먹 장수':'gwonjang1', '용궁의 발 장수':'gwonjang2', '후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
+const WHO = {'산길 노인':'gw_noin', '바위손':'gw_bawi', '바람발':'gw_baram', '스쿠네':'gw_sukune', '게하야':'gw_kehaya', '다이마노 게하야':'kehaya', '노미노 스쿠네':'sukune', '형천':'xingtian', '과보':'kuafu', '용궁의 주먹 장수':'gwonjang1', '용궁의 발 장수':'gwonjang2', '후예':'houyi', '우':'yu', '흰 뱀':'baisuzhen', '종규':'zhongkui', '나타':'nezha', '항아':'change', '서왕모':'xiwangmu', '여와':'nuwa', '공공':'gonggong', '구천현녀':'jiutian', '반고의 넋':'pangu', '혼돈':'m:chaos:#4a3a5a', '스사노오':'susanoo', '세이메이':'seimei', '아메노우즈메':'uzume', '아마테라스':'amaterasu', '강림도령':'gangrim', '전우치':'jeonwoochi', '홍길동':'hong', '을지문덕':'eulji', '이순신':'admiral', '손오공':'wukong', '옥황상제':'emperor', '염라대왕':'k:4', '천마':'m:cheonma:#2a1a3a', '천병':'m:soldier:#d8b84a',
   '까치':'kkachi', '해모수':'haemosu', '유화':'yuhwa', '하백':'habaek', '금와왕':'geumwa', '대소':'daeso', '주몽':'jumong', '송양왕':'songyang', '저승사자':'saja', '나':'hero',
   '주작':'g:jujak', '청룡':'g:cheong', '백호':'g:baekho', '현무':'g:hyeonmu'};
 Object.assign(WHO, {'문무대왕':'munmu', '수로부인':'suro', '소 끄는 노인':'noin', '거타지':'geotaji', '동해 용왕':'yongwang', '서해 용':'seohae', '처용':'cheoyong', '연오랑':'yeono', '세오녀':'seo', '해녀 대상군':'haenyeo', '영등할망':'yeongdeung', '토끼':'tokki',
