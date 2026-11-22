@@ -6086,6 +6086,48 @@ async def main():
         check(sx['f']['fight'].startswith('fight') and sx['f']['hurt'].startswith('surprise') and sx['f']['lv'].startswith('joy') and sx['f']['boss'].startswith('laugh') and sx['f']['low'].startswith('sad') and sx['f']['calm'] in ('normal',),
               f"용사 표정: 싸움→매서운 눈, 맞음→놀람, 레벨업→기쁨, 보스→큰 웃음, 체력 30% 밑→기운 없음 {sx['f']}")
         check(sx['l']['fight'] == '(그대로)' and sx['l']['hurt'].startswith('surprise') and sx['l']['boss'].startswith('laugh'), f"절전 그리기: 싸우는 표정은 빼고 놀람·웃음은 남는다 {sx['l']}")
+        # 이야기 속 표정(11월 22일): 대사 한 줄마다 말한 사람의 얼굴만 바뀐다
+        cf = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, o = {}, skip = () => { const b = document.querySelector('#cutSkip'); if (G.cut && b) b.click(); };
+          o.rule = [['와하하! 해냈어요!'], ['감히 네가 나를 막느냐!'], ['그랬군요…'], ['헉! 뭐라고요?!'], ['고마워요.'], ['잘 지켜 볼게요!'], ['안녕하세요.'], ['하하!', 'sad'], ['하하!', 'normal'], ['하하!', '이상한이름']].map(a => G.cutFaceOf(a[0], a[1]) || '(없음)');
+          G.quiet = false; S.cls = 'musa'; G.setDrawMode('off');
+          const shots = [['palace', 'hero,houyi,kkachi', '', [['후예', '와하하! 해냈어요!'], ['나', '헉! 이럴 수가!'], ['후예', '그랬군요…'], ['까치', '고마워요!'], ['후예', '안녕하세요.'], ['후예', '네 이놈!', '', 'sad'], ['후예', '이 줄은 다른 직업 몫이에요.', 'doin'], ['후예', '이 줄은 내 직업 몫이에요…', 'musa'], ['', '해설 줄이에요!']]]];
+          G.playCut(shots);
+          const c = G.cut; o.n = c.lines.length; o.seen = []; o.frame = [];
+          const faceNow = () => { G.renderCut(); return Object.assign({}, c.faces); };
+          for (let i = 0; i < c.lines.length; i++){
+            c.t = 3; c.typ = 0; c.waitShot = false;   // 인물이 다 걸어 들어온 뒤, 글자가 나오는 중
+            o.seen.push([c.who, c.emo, c.speaker]); o.frame.push(faceNow());
+            G.cutTap(); G.cutTap();
+          }
+          skip(); o.end = !G.cut;
+          // 인물 그림: 사람 모양은 얼굴이 바뀌고(용사·후예), 몬스터·신 그림은 그대로
+          const u = (k, f) => { const r = G.castSprite(k, 0, 'right', f); return r && r.sp ? r.sp.toDataURL() : ''; };
+          o.chg = ['hero', 'houyi'].map(k => u(k, 'laugh:0:0') !== u(k, '') && u(k, 'surprise:0:0') !== u(k, 'laugh:0:0') && u(k, 'sad:0:0') !== u(k, ''));
+          o.same = [u('m:fox:#b8b0a8', 'laugh:0:0') === u('m:fox:#b8b0a8', ''), u('k:4', 'sad:0:0') === u('k:4', ''), u('kkachi', 'laugh:0:0') === u('kkachi', '')];
+          o.bad = G.cutCheck(0).filter(x => x.includes('표정')).length;
+          // 절전 그리기: 매서운 눈·화남·입 움직임은 빠지고 기쁨·놀람·슬픔·웃음은 남는다
+          G.setDrawMode('on'); G.playCut([['palace', 'hero,houyi', '', [['후예', '네 이놈!'], ['후예', '와하하!']]]]);
+          const c2 = G.cut; c2.t = 3; c2.typ = 0; c2.waitShot = false; o.lite = [G.cutFaceStr(c2) || '(그대로)'];
+          G.cutTap(); G.cutTap(); c2.t = 3; c2.typ = 0; c2.waitShot = false; o.lite.push(G.cutFaceStr(c2)); skip(); G.setDrawMode('off');
+          return o; }""")
+        w = cf['frame']; sn = cf['seen']
+        check(cf['rule'] == ['laugh', 'angry', 'sad', 'surprise', 'joy', 'fight', '(없음)', 'sad', 'normal', '(없음)'], f"표정 규칙표: 웃음·화·망설임·놀람·기쁨·결의가 대사 낱말·끝 부호로 정해지고, 직접 적은 이름이 먼저, 모르는 이름은 무시 {cf['rule']}")
+        check(cf['n'] == 8 and [x[1] for x in sn] == ['laugh', 'surprise', 'sad', 'joy', 'normal', 'sad', 'sad', ''] and cf['end'], f"이야기 표정: 줄마다 말한 사람의 표정이 바뀌고(다른 직업 줄은 빠지고, 직업 표시가 있는 줄도 표정이 안 깨짐), 해설 줄엔 표정이 없다 {sn}")
+        check(w[0].get('houyi', '').startswith('laugh') and w[1].get('hero', '').startswith('surprise') and w[2].get('houyi', '').startswith('sad') and w[3].get('kkachi', '').startswith('joy') and w[4].get('houyi', '').startswith('normal'),
+              f"말하는 인물만 표정이 바뀐다(까치는 표정이 전달돼도 펫 그림이라 그대로 — 아래 인물 그림 점검) {[w[i] for i in range(5)]}")
+        check(all(not (f.get('hero') and f.get('houyi')) for f in w) and w[0].get('hero', '') == '' and w[1].get('houyi', '') == '' and w[7].get('hero', '') == '' and w[7].get('houyi', '') == '',
+              f"말 안 하는 인물과 해설 줄에서는 모두 평소 얼굴이다 {w[0]} {w[1]} {w[7]}")
+        check(all(cf['chg']) and all(cf['same']) and cf['bad'] == 0, f"인물 그림: 용사·후예는 웃음·놀람·슬픔이 평소와 다르고 몬스터·왕·펫 그림은 그대로 {cf['chg']} {cf['same']} {cf['bad']}")
+        check(cf['lite'][0] == '(그대로)' and cf['lite'][1].startswith('laugh:0:0'), f"절전 그리기: 매서운 눈·화남은 평소 얼굴로, 웃음은 남고 입은 안 움직인다 {cf['lite']}")
+        # 장면 캡처: 웃음·놀람·슬픔 컷
+        for nm, who, line, tg in [('웃음', '후예', '와하하! 해냈어요!', 'laugh'), ('놀람', '나', '헉! 이럴 수가!', 'surprise'), ('슬픔', '후예', '그랬군요…', 'sad')]:
+            await mp.evaluate("([who, line]) => { const G = window.__game; G.quiet = false; G.setDrawMode('off'); G.playCut([['palace', 'hero,houyi', '', [[who, line]]]]); }", [who, line])
+            await mp.wait_for_timeout(1500)
+            await mp.evaluate("() => { const c = window.__game.cut; if (c) { c.lineDur = 999; c.typ = c.text.length; document.querySelector('#cutText').textContent = c.text; } }")   # 줄이 넘어가지 않게 붙들어 둠
+            await mp.wait_for_timeout(400)
+            await mp.screenshot(path=str(OUT / f"98d-이야기표정-{nm}.png"))
+            await mp.evaluate("() => { const b = document.querySelector('#cutSkip'); if (window.__game.cut && b) b.click(); }")
+        await mp.wait_for_timeout(200)
         await mp.evaluate("() => { const G = window.__game; G.closePage(); G.openLookEditor(); }")
         await mp.wait_for_selector('#lk-sexrow')
         await mp.click('#lk-sexrow [data-sex="f"]'); await mp.wait_for_timeout(250)

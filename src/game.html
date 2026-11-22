@@ -4663,9 +4663,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-22-6', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-22-7', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 22일 · 이야기 속 표정'],
+  ['이야기 속 인물도 표정이 바뀌어요', '이야기 장면에서 말하는 사람의 얼굴이 대사에 맞게 바뀌어요. 웃음소리가 나오면 크게 웃고, 놀라면 눈이 동그래지고, 말끝이 "…"로 흐려지면 슬픈 얼굴이 돼요. 화를 내거나 꾸짖을 땐 눈이 매서워지고요. 용사와 사람 모양 인물에게만 보이고, 말하지 않는 사람은 평소 얼굴 그대로예요.'],
+  ['말하는 동안 입이 움직여요', '대사 글자가 나오는 동안 말하는 인물의 입이 뻐끔거려요. 절전 그리기에서는 입 움직임과 매서운 눈·화난 얼굴을 빼고, 기쁨·놀람·슬픔·웃음만 보여요(게임 속도와 보상은 그대로예요).'],
   ['#', '11월 22일 · 화면 편하게'],
   ['업데이트 소식 창: [확인]이 늘 아래에 보여요', '소식이 길어도 끝까지 내릴 필요 없이, 창 아래에 [확인] 단추가 붙어 있어요. 소식 묶음은 맨 위 새 소식만 펼쳐 두고, 나머지는 「이전 소식 n개 펼쳐보기」 한 줄로 접어 뒀어요. [정보]에서 다시 볼 때도 같아요.'],
   ['영약 달이기: 누른 영약 바로 아래에서 처방을 골라요', '아래쪽 영약에서 [달이기]를 눌러도 화면이 맨 위로 올라가지 않아요. 처방 세 장이 달인 영약 바로 아래에 펼쳐지고, 고르면 그 자리에서 이어서 달일 수 있어요.'],
@@ -17897,8 +17900,8 @@ Object.assign(WHO, {'북문 야차 장수':'yasha', '성자 아가스티아':'ag
 // 4차 스승 보스 그림(6차 「다섯 스승의 시험」의 넷째 판): 4차 스승 연출 인물(CAST)을 그대로 사람 모양 보스로
 Object.assign(MOB_HD, Object.fromEntries(Object.keys(JOB_TEACHER4).map(c => ['m4_' + c, [64, 64, (g, f, color) => { const d = CAST[JOB_TEACHER4[c]], [cc, look, aG, wG] = d.p; return chibiMob(cc, look, Object.assign({aG, wG}, d.ex || {}))[2](g, f, color); }]])));
 let cut = null;
-function castSprite(k, f, dir){
-  if (k === 'hero') return {sp:heroSprite(S.cls, dir === 'left' ? 'down' : 'right', f), sc:1.7, flip:false};
+function castSprite(k, f, dir, face){   // face: 연출 대사의 표정('감정:깜빡임:입', 용사·사람 모양 인물에만. 없으면 평소 얼굴)
+  if (k === 'hero') return {sp:heroSprite(S.cls, dir === 'left' ? 'down' : 'right', f, false, face || ''), sc:1.7, flip:false};
   if (k.startsWith('m:')){ const [, t, c] = k.split(':'); return {sp:mobSprite(t, c, f % 2, true), sc:3, flip:dir === 'right'}; }
   if (k.startsWith('k:')){ const K = KINGS[+k.slice(2)] || KINGS[0]; return {sp:mobSprite('judge', K.color, f % 2, true), sc:3, flip:dir === 'right'}; }
   if (k.startsWith('g:')){ const g = GUARD[k.slice(2)]; if (g.pet != null) return {sp:petSprite(g.pet, f % 2), sc:3, flip:dir === 'right', fly:PET_FLY[PETS[g.pet].draw] ? 10 : 0};
@@ -17907,7 +17910,39 @@ function castSprite(k, f, dir){
   if (!d) return null;
   if (d.pet != null) return {sp:petSprite(d.pet, f % 2), sc:d.sc || 2, flip:dir === 'right', fly:8};
   const [c, look, aG, wG] = d.p;
-  return {sp:personSprite(c, look, aG, wG, dir === 'left' ? 'down' : 'right', f, false, d.ex), sc:d.sc || 1.7, flip:false};
+  return {sp:personSprite(c, look, aG, wG, dir === 'left' ? 'down' : 'right', f, false, face && !(d.ex && d.ex.headless) ? Object.assign({}, d.ex, {face}) : d.ex), sc:d.sc || 1.7, flip:false};
+}
+/* ===== 이야기 속 표정: 말하는 사람의 얼굴만 대사에 맞게 바뀐다(용사·사람 모양 인물만 — 몬스터·신 그림은 그대로).
+   정하는 순서: ① 대사 배열 넷째 칸에 표정 이름을 적었으면 그대로(normal 평소 · joy 기쁨 · surprise 놀람 · angry 화남 · sad 슬픔 · laugh 웃음 · fight 매서운 눈)
+   ② 없으면 아래 규칙표를 위에서부터 봐서 처음 맞는 것(낱말은 대사 어디에 있어도, 부호는 끝에 있을 때). 아무것도 안 맞으면 평소 얼굴.
+   절전 그리기에서는 매서운 눈·화남과 입 움직임을 빼고 기쁨·놀람·슬픔·웃음만 보인다(그림 가짓수를 줄이려고) ===== */
+const CUT_FACE_RULES = [
+  ['laugh',    /하하|호호|허허|히히|크크|껄껄|ㅋㅋ|웃음|웃어|웃는/],
+  ['angry',    /감히|이놈|네 이놈|용서 못|용서하지|가만두지|닥쳐|꺼져|건방|괘씸|분노|노여/],
+  ['fight',    /물러서|비켜|덤벼|막아라|각오해|쓰러뜨|무찌|공격하라|싸우자|싸워라|맞서/],
+  ['sad',      /눈물|흑흑|슬퍼|슬프|외로|쓸쓸|그리워|그립|미안해|미안하|떠났|잃었|아파요|아프|울어|울고|울음|우는|…$|\.\.\.$|…\?$/],
+  ['surprise', /헉|앗|어머|깜짝|설마|세상에|으악|이럴 수가|뭐라|뭐야|[?!]!$|!\?$|!!$/],
+  ['joy',      /고마워|고맙|감사|기뻐|기쁘|반가|잘했|해냈|축하|훌륭|대단|만세|다행/],
+  ['fight',    /지키|지켜|이겨|가자|간다|함께 싸|힘내|할 수 있/],
+  ['surprise', /!$/]
+];
+const CUT_FACE_OK = ['normal', 'joy', 'surprise', 'angry', 'sad', 'laugh', 'fight'];
+function cutFaceOf(text, tag){
+  if (tag) return CUT_FACE_OK.includes(tag) ? tag : '';
+  const t = String(text || '').replace(/[\s"'」』”)]+$/, '');
+  for (const [emo, re] of CUT_FACE_RULES) if (re.test(t)) return emo;
+  return '';
+}
+// 지금 말하는 사람의 얼굴 글자('감정:깜빡임:입'). 말을 하는 동안(글자가 나오는 중)엔 입이 움직이고, 절전 그리기에선 단순하게
+function cutFaceStr(c){
+  if (!c || !c.emo || c.waitShot) return '';
+  const lite = drawMode !== 'off';
+  let emo = c.emo;
+  if (lite && (emo === 'fight' || emo === 'angry')) emo = 'normal';
+  const talking = !lite && !reduceMotion && c.typ < c.text.length;
+  const open = talking ? Math.floor(c.t * 8) % 3 : 0;
+  if (emo === 'normal' && !talking && !c.emoSet) return '';   // 평소 얼굴·말 안 하는 때는 예전 그림 그대로
+  return emo + ':0:' + open;
 }
 const castName = k => k.startsWith('k:') ? (KINGS[+k.slice(2)] || KINGS[0]).boss : k.startsWith('g:') ? GUARD[k.slice(2)].name : k.startsWith('m:') ? '' : CAST[k] ? (typeof CAST[k].name === 'function' ? CAST[k].name() : CAST[k].name) : '';
 const CUT_X = {1:[120], 2:[72, 170], 3:[52, 122, 192], 4:[40, 96, 152, 206], 5:[30, 75, 120, 165, 210]};
@@ -17919,7 +17954,7 @@ function cutCheck(fromCh = 0){
     const [bg, castStr, fx, lines] = sh;
     try { if (!cutBg(bg)) bad.push(where + ': 배경 ' + bg); } catch (e){ bad.push(where + ': 배경 ' + bg + ' ' + e.message); }
     for (const k of (castStr ? castStr.split(',').filter(Boolean) : [])){ let sp = null; try { sp = castSprite(k, 0, 'right'); } catch (e){ sp = null; } if (!sp || !sp.sp) bad.push(where + ': 인물 ' + k); }
-    for (const L of lines || []){ if (!Array.isArray(L) || typeof L[1] !== 'string') bad.push(where + ': 대사 모양'); else if (L[0] && L[0] !== '나' && L[0] !== '♪' && !WHO[L[0]]) bad.push(where + ': 말한 사람 ' + L[0]); }
+    for (const L of lines || []){ if (!Array.isArray(L) || typeof L[1] !== 'string') bad.push(where + ': 대사 모양'); else if (L[0] && L[0] !== '나' && L[0] !== '♪' && !WHO[L[0]]) bad.push(where + ': 말한 사람 ' + L[0]); else if (L[3] && !CUT_FACE_OK.includes(L[3])) bad.push(where + ': 표정 이름 ' + L[3]); }
   };
   MAIN_Q.forEach((q, i) => { if (q.ch >= fromCh) qShots(q).forEach((sh, k) => one(`퀘스트 ${i} 「${q.t}」 ${k + 1}컷`, sh)); });
   for (const c of Object.keys(CH_OPEN)) if (+c >= fromCh) CH_OPEN[c].forEach((sh, k) => one(`${c}장 여는 연출 ${k + 1}컷`, sh));
@@ -17966,8 +18001,10 @@ function nextLine(){
   const box = $('#cutBox');
   if (cut.li >= cut.lines.length){ box.classList.remove('done'); cut.lineDur = 0.5; cut.waitShot = true; return; }
   cut.waitShot = false;
-  const [who, text] = cut.lines[cut.li];
+  const [who, text, , tag] = cut.lines[cut.li];
   cut.text = cutVars(text);
+  cut.emoSet = !!tag;   // 표정 이름을 직접 적은 줄은 normal이어도 얼굴 그림을 새로 그림(평소 얼굴과 구분 없이 같지만 입이 움직임)
+  cut.emo = who && who !== '♪' ? cutFaceOf(cut.text, tag) || 'normal' : '';
   const song = who === '♪';   // 노래 줄(4부): 가락에 맞춰 한 줄씩
   cut.who = song ? '' : who === '나' ? (S.name || '나') : who;
   cut.speaker = WHO[who] || '';
@@ -18397,9 +18434,11 @@ function renderCut(){
     const k2 = Math.max(0, Math.min(1, (c.t - a.delay) / 0.9)), walking = k2 < 1;
     const x = a.x0 + (a.x - a.x0) * (1 - Math.pow(1 - k2, 2));
     const f = walking ? (Math.floor(c.t * 8) % 2 ? 1 : 2) : 0;
-    const spr = castSprite(a.k, f, a.dir);
-    if (!spr) continue;
     const talk = c.speaker === a.k && !c.waitShot;
+    const fs = talk ? cutFaceStr(c) : '';
+    (c.faces || (c.faces = {}))[a.k] = fs;   // 점검용 기록
+    const spr = castSprite(a.k, f, a.dir, fs);
+    if (!spr) continue;
     const bob = (!walking && Math.floor(c.t * 2 + a.delay * 7) % 2 ? 1 : 0) + (talk ? Math.round(Math.abs(Math.sin(c.t * 9)) * -2) : 0);
     const w = spW(spr.sp) * spr.sc, h = spH(spr.sp) * spr.sc, gy = 132 - (spr.fly || 0) + bob;
     b.globalAlpha = 0.3; P(x - w * 0.3, 132, w * 0.6, 3, '#000000'); b.globalAlpha = 1;
@@ -24201,7 +24240,7 @@ if (location.search.indexOf('simtest') >= 0){
     power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
-    storyQ, chOpen, prologue, cutMine, castSprite, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
+    storyQ, chOpen, prologue, cutMine, castSprite, cutFaceOf, cutFaceStr, cutTap, renderCut, get cutNow(){ return cut; }, CUT_FACE_RULES, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
     update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,
     petSummon, petUpgrade, petEquipBest, petUpCost, PETS, PET_TYPE_ORDER, eqPet, refineTry, refineCost, refineRunNew, refineRunStep, refineRunEnd, get refRun(){ return refRun; }, refGoal, refineGold, refineGems, REFINE_MAX, refineCap, refineEff, refineInherit,
     claimAll, skillGain, subCh, SOULS, giveSoul, soulDrop, castSoul, soulEq, soulCol, soulEquipBest, soulFillEmpty, equipSoul, get soulG(){ return soulG; }, set soulG(v){ soulG = v; }, get soulApp(){ return soulApp; },
