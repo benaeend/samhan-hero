@@ -575,7 +575,13 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .chars.many .char{grid-template-columns:44px 1fr;gap:9px;padding:7px 9px}.chars.many .char.empty{grid-template-columns:1fr}
 .chars.many .char img{width:44px;height:42px}.chars.many .char b{font-size:14.5px}.chars.many .char span span{font-size:11px;display:block;line-height:1.35}
 body.portrait .chars.many{grid-template-columns:1fr}
-.chars.many{max-height:min(50vh,420px);overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}   /* 10칸: 칸이 많으면 목록만 스크롤(세로 화면은 한 줄씩) */
+.chars.many{overflow-y:auto;padding-right:2px;-webkit-overflow-scrolling:touch}
+/* 캐릭터 고르기: 창 바깥 스크롤을 없애고 목록만 스크롤(안내 글·단추는 고정) */
+.sheet:has(.chars.many){display:flex;flex-direction:column;overflow:hidden}
+.sheet:has(.chars.many) #mBody{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.sheet:has(.chars.many) #mBody>*{flex:0 0 auto}
+.sheet:has(.chars.many) #mBody>.chars.many{flex:1 1 auto;min-height:96px;overscroll-behavior:contain}
+.sheet:has(.chars.many) .mbtns{flex:0 0 auto}   /* 10칸: 칸이 많으면 목록만 스크롤(세로 화면은 한 줄씩) */
 body.portrait .chars.many .char{padding:6px 9px}body.portrait .chars.many .char.empty{min-height:40px}
 .char.empty{grid-template-columns:1fr;place-items:center;min-height:50px;border-style:dashed;background:none;color:var(--text-soft);font-weight:700;font-size:13px}
 .char.empty:hover{border-color:rgba(255,204,77,.5);color:var(--gold)}
