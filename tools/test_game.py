@@ -3680,13 +3680,13 @@ async def main():
         check(w1['sexRow'] == [True, True] and w1['sexImg'] and w1['sexSaved'] == 'f' and w1['sprite'] == [True, True] and w1['musaRow'] == [False],
               f"권사: 꾸미기에 남/여 칸(모든 직업에 보임) · 고르면 그림이 바뀌고 저장 · 다른 직업도 그림이 바뀜 {w1['sexRow']} {w1['sexImg']} {w1['sexSaved']} {w1['sprite']} {w1['musaRow']}")
         check(w1['old'] == [0, 'musa'] and w1['bad'] == 0, f"권사: 예전 저장은 갈래 0, 이상한 값도 0 {w1['old']} {w1['bad']}")
-        for br, nm, jn, tn, cp in ((1, ['벽력 일권', '금강 쇠주먹'], ['맞주먹', '금강수', '천수권', '파천권', '해일권'], ['노미노 스쿠네', '용궁의 주먹 장수'], '주먹'), (2, ['번개 곁차기', '풍신 비각'], ['곁발', '비각객', '풍신각', '비천각', '파랑각'], ['타이마노 케하야', '용궁의 발 장수'], '발')):
+        for br, nm, jn, tn, cp, t1 in ((1, ['벽력 일권', '금강 쇠주먹'], ['맞주먹', '금강수', '천수권', '파천권', '해일권'], ['노미노 스쿠네', '용궁의 주먹 장수'], '주먹', '바위손'), (2, ['번개 곁차기', '풍신 비각'], ['곁발', '비각객', '풍신각', '비천각', '파랑각'], ['다이마노 게하야', '용궁의 발 장수'], '발', '바람발')):
             B = w1['branch'][str(br)]
             check(all(B['cast']) and all(B['desc']) and B['names'] == nm and B['range'] == 1 and B['br'] == br, f"권사({cp} 길): 기술 15칸이 모두 나가고 설명·미리보기가 나온다 · 전직 기술 이름 {B['names']} {B['cast']} {B['desc']}")
             J = B['jobs']
-            check([j['name'] for j in J] == jn and [j['job'] for j in J] == [1, 2, 3, 4, 5] and all(j['st'] and j['sprite'] for j in J) and J[0]['names'] == ['늙은 수박꾼'] and J[2]['names'] == [tn[0]] and J[4]['names'] == [tn[1]] and J[1]['names'] == ['강림도령']
+            check([j['name'] for j in J] == jn and [j['job'] for j in J] == [1, 2, 3, 4, 5] and all(j['st'] and j['sprite'] for j in J) and J[0]['names'] == [t1] and J[2]['names'] == [tn[0]] and J[4]['names'] == [tn[1]] and J[1]['names'] == ['강림도령']
                   and J[4]['cape'] == 'j_gwon_5' and B['after'] == [br, br] and B['re'] == ['gwon', 5, br, 'f'],
-                  f"권사({cp} 길) 전직 1~5차: 이름·스승(늙은 수박꾼·강림도령·{tn[0]}·세 스승·{tn[1]})·망토, 저장하고 불러와도 그대로(남/여 포함) {[(j['names'], j['name']) for j in J]} {B['after']} {B['re']}")
+                  f"권사({cp} 길) 전직 1~5차: 이름·스승({t1}·강림도령·{tn[0]}·세 스승·{tn[1]})·망토, 저장하고 불러와도 그대로(남/여 포함) {[(j['names'], j['name']) for j in J]} {B['after']} {B['re']}")
         F = w1['fist']
         check(F['c1'] == [1, True, True, True] and F['c2'] == 1 and F['c3'] == 2 and F['cmax'] == 5 and F['fin'] == [False, False, True], f"권사 주먹 길: 맞으면 되받아치고(1초에 한 번) 기세가 쌓이고(최대 5) 세 번째 기본 공격은 마무리 일격 {F}")
         T = w1['foot']
