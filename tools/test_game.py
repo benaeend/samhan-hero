@@ -5050,6 +5050,25 @@ async def main():
         check('든든한 앞자리:gwon1' in gw['hint2'] and '이어 가는 발길:gwon2' in gw['hint2'], f"한 명만 더 있으면에 주먹·발 길 권사가 따로 나온다 {gw['hint2']}")
         check(gw['f1'] == 1 and gw['f2'] == 2 and gw['fMax'] == 3 and gw['used'] == 0 and gw['ratio'] == 5.5 and gw['mobSame'] and gw['mobCounter'] == 0 and gw['off'] == '1:2', f"주먹 「받아낸 힘」: 보스를 맞받아칠 때마다 한 겹(최대 3) → 다음 한 방이 겹마다 +150%로 터지고 풀림 · 몹은 안 쌓고 안 씀 · 끄면 없음 {gw}")
         check(gw['spd'] == 1.075 and gw['spd0'] == 1 and gw['spdOff'] == 1 and gw['spdFist'] == 1 and gw['spdMusa'] == 1, f"발 「이어 차기」: 5겹이면 공격·재사용 속도 +7.5% · 시간이 지나면·끄면·주먹·다른 직업은 그대로 {gw['spd']} {gw['spdOff']} {gw['spdFist']}")
+        # --- 권사 첫째 초각성기(11-22): 연타가 쌓여 저절로 터지는 패시브(보스·레이드 보스에서만) · 다른 직업은 예전 방식(12초 뒤 한 번)
+        ga = await pty.evaluate(r"""() => { try { const G = window.__game, S = G.S, H = G.hero, out = {}; G.quiet = true; G.wipeOff = true;
+  const cl0 = S.cls, br0 = S.gwonBr, job0 = S.job, aw0 = S.awaken, A0 = G.GWA, info = () => ({label:'시험', bossName:'허수아비', type:'scarecrow', color:'#d8b060', region:0, party:1, ref:S.maxStage, g:0});
+  S.awaken = true; S.cls = 'gwon'; S.job = Math.max(1, S.job); S.gwonBr = 2; G.refreshStats();
+  G.startFight(info(), [], {hp:1e300, atk:0, aoe:0, time:300}); let R = G.raid, B = R.boss; B.atk = 0; B.spawnT = 0; H.dead = false; H.gwK = 0; H.gwTg = null;
+  out.gw = !!R.awk.gw; out.g0 = R.awk.g;
+  G.gwonAttack(B); out.k1 = R.awk.g; G.gwonAttack(B); out.k2 = R.awk.g;   // 발: 처음 차기 +0.5, 이어 찬 두 번째부터 +1
+  const mob = G.makeMob(false, 9, 8); mob.hp = mob.maxHp = 1e300; const g1 = R.awk.g; G.gwonAttack(mob); out.mobSame = R.awk.g === g1;
+  S.gwonBr = 1; R.awk.g = 0; G.gwonAttack(B); out.f1 = R.awk.g; H.cntCd = 0; H.hp = H.hp || 1; H.stunT = 0; H.target = B; G.damageHero(1); out.f2 = R.awk.g;   // 주먹: 기본 +1, 맞받아치기 +4
+  R.awk.g = G.GWA.full - 0.5; R.awk.n = 0; const dm0 = G.dmgMeter; G.gwonAttack(B); for (let i = 0; i < 20; i++) G.update(0.05);
+  out.burst = [R.awk.n, R.awk.used, R.awk.g < G.GWA.full, G.dmgMeter > dm0, R.awk.show > 0];
+  R.awk.n = G.GWA.max - 1; R.awk.g = G.GWA.full - 0.5; G.gwonAttack(B); out.cap = [R.awk.n, R.awk.g]; G.gwonAttack(B); G.gwonAttack(B); out.cap2 = [R.awk.n, R.awk.g];
+  G.raidEnd(false); for (let i = 0; i < 200 && G.raid; i++) G.update(0.05);
+  S.cls = 'musa'; G.refreshStats(); G.startFight(info(), [], {hp:1e300, atk:0, aoe:0, time:300}); R = G.raid; B = R.boss; B.atk = 0; B.spawnT = 0;
+  out.musa = [!!R.awk.gw, R.awk.used]; for (let i = 0; i < 280; i++) G.update(0.05); out.musa2 = [R.awk.used, R.awk.g];   // 12초 뒤 저절로 한 번(예전 방식)
+  G.raidEnd(false); for (let i = 0; i < 200 && G.raid; i++) G.update(0.05); out.after = !G.raid; S.raid.tk = 3; S.cls = cl0; S.gwonBr = br0; S.job = job0; S.awaken = aw0; G.refreshStats(); return out; } catch (e) { return {err: String(e)}; } }""")
+        check('err' not in ga and ga['gw'] and ga['g0'] == 0 and ga['k1'] == 0.5 and ga['k2'] == 1.5 and ga['mobSame'] and ga['f1'] == 1 and ga['f2'] == 5, f"권사 초각성 연타 칸: 보스에서만 쌓임(발 처음 +0.5·이어 찬 발 +1·주먹 +1·맞받아치기 +4) · 몬스터에선 안 쌓임 {ga}")
+        check('err' not in ga and ga['burst'] == [1, False, True, True, True] and ga['cap'][0] == 7 and ga['cap2'] == [7, 0], f"가득 차면 저절로 터지고(한 판에 여러 번, 쓰고 끝이 아님) 한 판 최대 {ga.get('cap')} {ga['burst']}")
+        check('err' not in ga and ga['musa'] == [False, False] and ga['musa2'][0] is True, f"다른 직업(무사)은 예전 방식: 연타 칸 없고 12초 뒤 한 번 {ga['musa']} {ga['musa2']}")
         y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S; S.myParty = ['q1', 'q4']; const t = G.tbOthers(); const r = {head:t.slice(0, 2).map(o => o.name).join(), mine:t.slice(0, 2).every(o => o.mine && o.syn), n:t.length};
           S.myParty = []; return r; }""")
         check(y1b['head'] == '동료1,동료4' and y1b['mine'] and y1b['n'] <= 10, f"타임 보스에도 고른 내 캐릭터가 먼저 동료로 나온다 {y1b}")
