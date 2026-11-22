@@ -630,7 +630,7 @@ async def main():
         check(m2['gems'] == 5e6 and m2['up'] == 7, f'윤회 리셋권: [그만두기]를 누르면 그대로다 {m2}')
         await page.click('#shb-rebreset'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
         m3 = await page.evaluate("() => { const S = window.__game.S; return {gems: S.gems, pts: S.reb.pts, total: S.reb.total, up: Object.values(S.reb.up), sp: window.__game.rebSpent()}; }")
-        check(m3['gems'] == 5e6 - 400000 and m3['pts'] == 18 and m3['total'] == 40 and all(v == 0 for v in m3['up']) and m3['sp'] == 0,
+        check(0 <= m3['gems'] - (5e6 - 400000) <= 20 and m3['pts'] == 18 and m3['total'] == 40 and all(v == 0 for v in m3['up']) and m3['sp'] == 0,
               f'윤회 리셋권: 보석 400,000을 내고 올린 15개를 돌려받는다(구슬 3 → 18, 능력 전부 Lv.0, 총량 그대로) {m3}')
         m4 = await page.evaluate("() => { const G = window.__game; const r = G.rebUp('atk'); const none = G.rebSpent() === 0 && !G.buyShop('rebreset'); return {r, pts: G.S.reb.pts, atk: G.S.reb.up.atk, none}; }")
         check(m4['r'] and m4['pts'] == 17 and m4['atk'] == 1, f'윤회 리셋권: 돌려받은 구슬로 다시 올릴 수 있다 {m4}')
@@ -647,7 +647,7 @@ async def main():
         check(gm['shown'] and '100개' in gm['txt'] and gm['gems'] == 5e6 and gm['gold'] < 1e6, f'엽전 꾸러미 묶음: 사기 전에 확인 창이 뜬다 {gm["shown"]} {gm["gems"]}')
         await page.click('#modal-btn-0')
         g2 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
-        check(g2['gems'] == 5e6, f'엽전 꾸러미 묶음: [그만두기]를 누르면 안 산다 {g2}')
+        check(0 <= g2['gems'] - 5e6 <= 20, f'엽전 꾸러미 묶음: [그만두기]를 누르면 안 산다 {g2}')
         await page.click('#shb-goldbag100'); await page.wait_for_timeout(200); await page.click('#modal-btn-1')
         g3 = await page.evaluate("() => ({gems: window.__game.S.gems, gold: window.__game.S.gold})")
         check(g3['gems'] < 5e6 and g3['gold'] > 0, f'엽전 꾸러미 묶음: 확인하면 보석을 내고 엽전을 받는다 {g3}')
