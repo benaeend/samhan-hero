@@ -5022,6 +5022,34 @@ async def main():
         check('다섯 갈래' in y1['five4'] and '+4%' in y1['five5'] and y1['one'] == '한 길', f"다섯 갈래(4종 +2%·5종 +4%)·한 길(같은 직업 3명) {y1['five4']} {y1['five5']} {y1['one']}")
         check('선봉:sulsa' in y1['hint'] and '창칼 진:changgaek' in y1['hint'], f"한 명만 더 있으면 켜지는 시너지를 알려 준다 {y1['hint']}")
         check(y1['hint5'] == 0, '다섯이 다 차면 한 명 더 힌트는 없다')
+        # --- 권사 시너지(11-22): 혼자 보스(주먹 받아낸 힘 · 발 이어 차기) + 파티(주먹 든든한 앞자리 · 발 이어 가는 발길)
+        gw = await pty.evaluate(r"""() => { const G = window.__game, S = G.S, H = G.hero, out = {}; G.quiet = true; G.benchAvg = true;
+  const cl0 = S.cls, br0 = S.gwonBr, job0 = S.job, SY = G.synCalc, l = o => SY(o).list.map(x => x.k).join('|');
+  out.fist = l({gwon:1, gwon1:1, musa:1, sulsa:1}); out.foot = l({gwon:1, gwon2:1, musa:1, sulsa:1}); out.two = l({gwon:1, gwon1:1, musa:1});
+  out.nob = l({gwon:1, musa:1, sulsa:1}); out.solo = l({gwon:1, gwon1:1});
+  const mf = SY({gwon:1, gwon1:1, musa:1, sulsa:1}).mod; out.wall = [mf.musa.dr, mf.sulsa.dr, mf.gwon.dr, SY({gwon:1, gwon1:1, musa:1, sulsa:1}).grog];
+  const mt = SY({gwon:1, gwon2:1, musa:1, sulsa:1}); out.trail = [mt.grog, mt.mod.musa.dr, mt.mod.gwon.dr];
+  out.hint = G.synHints({gwon:1, gwon1:1, musa:1}).map(h => h.name + ':' + h.cls.join('/')).join(' ; ');
+  out.hint2 = G.synHints({musa:1, sulsa:1}).filter(h => /앞자리|발길/.test(h.name)).map(h => h.name + ':' + h.cls.join('/')).join(' ; ');
+  // 혼자 효과
+  S.cls = 'gwon'; S.job = Math.max(1, S.job); G.refreshStats();
+  const boss = G.makeMob(true, 9, 8), mob = G.makeMob(false, 9, 8); for (const m of [boss, mob]){ m.hp = m.maxHp = 1e300; m.atk = 0; }
+  const dmg = (m, base) => { const a = G.dmgMeter; G.hit(m, base, 'basic'); return G.dmgMeter - a; };
+  S.gwonBr = 1; H.cntCd = 0; H.hp = H.hp || 1; H.gwF = 0; H.gwFT = 0; H.dead = false; H.stunT = 0; H.target = boss;
+  G.damageHero(1); out.f1 = H.gwF; H.cntCd = 0; G.damageHero(1); out.f2 = H.gwF; H.cntCd = 0; G.damageHero(1); H.cntCd = 0; G.damageHero(1); out.fMax = H.gwF;
+  const hi = dmg(boss, 1000); out.used = H.gwF; const lo = dmg(boss, 1000); out.ratio = Math.round(hi / lo * 100) / 100;
+  H.gwF = 2; H.gwFT = 8; const m1 = dmg(mob, 1000), m2 = dmg(mob, 1000); out.mobSame = Math.abs(m1 - m2) < 1e-6 * m1 && H.gwF === 2;
+  H.gwF = 0; H.target = mob; H.cntCd = 0; G.damageHero(1); out.mobCounter = H.gwF;
+  H.gwF = 2; H.gwFT = 8; G.noGw = true; const off = dmg(boss, 1000); G.noGw = false; out.off = Math.round(off / lo * 100) / 100 + ':' + H.gwF;
+    S.gwonBr = 2; H.gwK = 5; H.gwKT = 2; out.spd = Math.round(G.gwKSpd() * 1000) / 1000; H.gwKT = 0; out.spd0 = G.gwKSpd(); H.gwK = 5; H.gwKT = 2; G.noGw = true; out.spdOff = G.gwKSpd(); G.noGw = false;
+  S.gwonBr = 1; out.spdFist = G.gwKSpd(); S.cls = 'musa'; S.gwonBr = 2; out.spdMusa = G.gwKSpd();
+  S.cls = cl0; S.gwonBr = br0; S.job = job0; H.gwF = 0; H.gwK = 0; H.gwKT = 0; return out; }
+""")
+        check(gw['fist'] == 'van|wall' and gw['foot'] == 'van|trail' and gw['two'] == '' and gw['nob'] == 'van' and gw['solo'] == '', f"권사 파티 시너지는 갈래마다 다르고(주먹=든든한 앞자리·발=이어 가는 발길) 권사 말고 다른 직업이 둘 이상일 때만, 길을 모르면 꺼짐 {gw['fist']} {gw['foot']} {gw['two']} {gw['nob']}")
+        check(gw['wall'] == [8, 18, 0, 0] and gw['trail'] == [1.5, 0, 0], f"든든한 앞자리: 권사 말고 받는 피해 -8%(선봉과 더해짐) · 이어 가는 발길: 보스 휘청 +1.5초 {gw['wall']} {gw['trail']}")
+        check('든든한 앞자리:gwon1' in gw['hint2'] and '이어 가는 발길:gwon2' in gw['hint2'], f"한 명만 더 있으면에 주먹·발 길 권사가 따로 나온다 {gw['hint2']}")
+        check(gw['f1'] == 1 and gw['f2'] == 2 and gw['fMax'] == 3 and gw['used'] == 0 and gw['ratio'] == 5.5 and gw['mobSame'] and gw['mobCounter'] == 0 and gw['off'] == '1:2', f"주먹 「받아낸 힘」: 보스를 맞받아칠 때마다 한 겹(최대 3) → 다음 한 방이 겹마다 +150%로 터지고 풀림 · 몹은 안 쌓고 안 씀 · 끄면 없음 {gw}")
+        check(gw['spd'] == 1.075 and gw['spd0'] == 1 and gw['spdOff'] == 1 and gw['spdFist'] == 1 and gw['spdMusa'] == 1, f"발 「이어 차기」: 5겹이면 공격·재사용 속도 +7.5% · 시간이 지나면·끄면·주먹·다른 직업은 그대로 {gw['spd']} {gw['spdOff']} {gw['spdFist']}")
         y1b = await pty.evaluate(r"""() => { const G = window.__game, S = G.S; S.myParty = ['q1', 'q4']; const t = G.tbOthers(); const r = {head:t.slice(0, 2).map(o => o.name).join(), mine:t.slice(0, 2).every(o => o.mine && o.syn), n:t.length};
           S.myParty = []; return r; }""")
         check(y1b['head'] == '동료1,동료4' and y1b['mine'] and y1b['n'] <= 10, f"타임 보스에도 고른 내 캐릭터가 먼저 동료로 나온다 {y1b}")

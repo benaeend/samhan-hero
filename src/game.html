@@ -2434,8 +2434,8 @@ const pbAllyMul = () => pbAtk() * (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwo
    벌어진 까닭은 시너지가 아니라 술사의 「맞춤」 빌드: 옵션을 기술 피해·재사용으로 모으면 적성 없이도 기술 배율 ×1.77·재사용 ×0.89로 고르게 뿌린 술사의 1.5~1.9배(무사는 1.1~1.2배 · 그 가운데 적성 배율 몫은 술사 1.09·무사 1.11, 5부 끝 — bal95p/decomp.py·diag.py).
    무사 시너지로 메우려면 +130~140%가 들고 그러면 1부에서 무사가 가장 센 직업의 1.8배라 SYN으로는 안 맞춘다 — 술사 쪽(기술 피해 옵션이 겹쳐 곱해지는 폭)을 손본 뒤 다시 잴 것 */
 const SYN_MELEE = ['musa', 'jagaek', 'changgaek', 'gwon'], SYN_RANGED = ['sulsa', 'doin', 'gungsa'];
-const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4, pierce:5};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
-const synCn = c => (CLASSES[c] || {}).name || '직업 미상';
+const SYN = {cap:25, capMusa:65, front:3, van:15, vanMax:45, vanDr:10, pair:13, pairGrog:1, shadow:15, thunder:5, five4:2, five5:4, one:8, myMax:4, pierce:5, wall:8, footGrog:1.5};   // (11-13 잼: 기획 제안값 35·45·6·8/24·10·15·8·4/8·10에서. shadow는 치명타 피해에 곱함(더하면 후반엔 1%도 안 됨), thunder는 기술 재사용 대신 기술 피해(재사용 -2~8%는 술사 x0.99~1.37·도인 x0.88~1.14로 들쭉날쭉))
+const synCn = c => c === 'gwon1' ? '권사(주먹 길)' : c === 'gwon2' ? '권사(발 길)' : (CLASSES[c] || {}).name || '직업 미상';
 function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}], mod:{직업:{dmg, skill, dr, cdr, cd, hp}}, grog}
   const mod = {}, list = []; let grog = 0;
   for (const c of Object.keys(CLASSES)) mod[c] = {dmg:0, skill:0, dr:0, cdr:0, cd:0, hp:0, boss:0};
@@ -2448,12 +2448,19 @@ function synCalc(cnt){   // cnt: {직업: 인원} → {list:[{k, lv, name, txt}]
   if (n('jagaek') >= 1 && n('gungsa') >= 1){ mod.jagaek.cd += SYN.shadow; mod.gungsa.cd += SYN.shadow; list.push({k:'shadow', lv:1, name:'그림자 살', txt:`자객·궁사 치명타 피해 +${SYN.shadow}%`}); }
   if (n('sulsa') >= 1 && n('doin') >= 1){ mod.sulsa.skill += SYN.thunder; mod.doin.skill += SYN.thunder; list.push({k:'thunder', lv:1, name:'벼락과 부적', txt:`술사·도인 기술 피해 +${SYN.thunder}%`}); }
   if (n('changgaek') >= 1 && kinds >= 2){ for (const c of Object.keys(mod)) if (c !== 'changgaek') mod[c].boss += SYN.pierce; list.push({k:'pierce', lv:1, name:'꿰뚫린 틈', txt:`창객 말고 파티 모두 보스·레이드 보스 피해 +${SYN.pierce}%`}); }   // 창객이 찌른 보스의 빈틈(물의 신화 11-19): 창객 본인은 「한 점 꿰기」(PT)가 몫이라 뺌
+  if (n('gwon1') >= 1 && kinds >= 3){ for (const c of Object.keys(mod)) if (c !== 'gwon') mod[c].dr += SYN.wall; list.push({k:'wall', lv:1, name:'든든한 앞자리', txt:`주먹 길 권사가 앞에서 버텨요: 권사 말고 파티 모두 받는 피해 -${SYN.wall}%`}); }
+  if (n('gwon2') >= 1 && kinds >= 3){ grog += SYN.footGrog; list.push({k:'trail', lv:1, name:'이어 가는 발길', txt:`발 길 권사가 보스를 쉬지 않고 몰아쳐요: 보스 휘청 시간 +${SYN.footGrog}초(파티 모두 몰아칠 틈)`}); }   // 권사가 앞에서 버텨 주는 몫(11-22): 권사 본인은 갈래별 혼자 효과(GW)가 몫이라 뺌. 받는 피해 감소라 SYN.cap(주는 피해 합 상한) 밖
   if (kinds >= 4){ const v = kinds >= 5 ? SYN.five5 : SYN.five4; all(m => { m.dmg += v; m.hp += v; }); list.push({k:'five', lv:kinds >= 5 ? 2 : 1, name:'다섯 갈래', txt:`파티 모두 피해·체력 +${v}% (${kinds}종)`}); }
   for (const c of Object.keys(CLASSES)) if (n(c) >= 3){ mod[c].skill += SYN.one; list.push({k:'one:' + c, lv:1, name:'한 길', txt:`${synCn(c)} 기술 피해 +${SYN.one}%`}); }
   return {list, mod, grog};
 }
 const synCap = c => c === 'musa' ? SYN.capMusa : SYN.cap;
-const synCnt = party => { const cnt = {[S.cls]:1}; for (const a of party || []) if (a && a.mine && a.syn && hasK(CLASSES, a.cls)) cnt[a.cls] = (cnt[a.cls] || 0) + 1; return cnt; };
+const synCnt = party => {   // gwon1·gwon2 = 권사 가운데 주먹·발 길을 고른 사람 수(전직 전·모르면 어느 쪽도 아님 — 갈래별 파티 시너지는 길을 고른 권사만)
+  const cnt = {[S.cls]:1}; if (S.cls === 'gwon' && gwonBr()) cnt['gwon' + gwonBr()] = 1;
+  for (const a of party || []) if (a && a.mine && a.syn && hasK(CLASSES, a.cls)){ cnt[a.cls] = (cnt[a.cls] || 0) + 1; if (a.cls === 'gwon' && (a.gb === 1 || a.gb === 2)) cnt['gwon' + a.gb] = (cnt['gwon' + a.gb] || 0) + 1; }
+  return cnt;
+};
+const synBrName = (c, gb) => c === 'gwon' && (gb === 1 || gb === 2) ? '권사·' + (gb === 1 ? '주먹' : '발') : synCn(c);
 const synFight = R => !!R && !!R.allies && !R.info.dummy && !R.info.haetae && !R.info.vault && !R.info.dboss && !R.info.job && !R.info.tower && !R.info.pvp && !R.info.aw2tut && !R.info.aw2t && !(R.info.mem && !R.info.jin) && !R.info.parade;
 function synState(){   // 지금 싸움의 시너지(없으면 null). 싸움 시작 때 한 번 계산해 둔다
   if (window.__game && window.__game.synForce) return window.__game.synForce;   // 시험(bench)용: 싸움 없이 시너지를 켬
@@ -2617,10 +2624,11 @@ function aptRebuild(mode){
 }
 // 한 명만 더 있으면 켜지는 것: [{cls:[직업…], name, txt}]
 function synHints(cnt){
-  const total = Object.values(cnt).reduce((t, v) => t + v, 0); if (total >= 1 + SYN.myMax) return [];
+  const total = Object.keys(cnt).filter(c => CLASSES[c]).reduce((t, c) => t + cnt[c], 0); if (total >= 1 + SYN.myMax) return [];
   const have = new Set(synCalc(cnt).list.map(x => x.k + ':' + x.lv)), out = {};
-  for (const c of Object.keys(CLASSES)){
-    const c2 = Object.assign({}, cnt, {[c]:(cnt[c] || 0) + 1});
+  for (const c of [...Object.keys(CLASSES), 'gwon1', 'gwon2']){
+    const b = c.startsWith('gwon') && c.length > 4 ? c : '', k0 = b ? 'gwon' : c;   // 'gwon1'·'gwon2' = 주먹·발 길 권사 한 명
+    const c2 = Object.assign({}, cnt, {[k0]:(cnt[k0] || 0) + 1}); if (b) c2[b] = (cnt[b] || 0) + 1;
     for (const x of synCalc(c2).list) if (!have.has(x.k + ':' + x.lv)){ const key = x.k + ':' + x.lv; (out[key] = out[key] || {cls:[], name:x.name, txt:x.txt}).cls.push(c); }
   }
   return Object.values(out);
@@ -2658,10 +2666,11 @@ function myPartyHTML(){
   if (!session) return '';
   const pool = myPartyPool(), pick = myPartyPick(), ids = new Set(pick.map(c => c.cid));
   if (!pool.length) return `<div class="card" id="myParty"><div class="ct">내 파티</div><p class="small">다른 캐릭터를 만들면 데려갈 수 있어요</p></div>`;
-  const cnt = {[S.cls]:1}; for (const c of pick) if (hasK(CLASSES, c.cls)) cnt[c.cls] = (cnt[c.cls] || 0) + 1;
+  const cnt = {[S.cls]:1}; if (S.cls === 'gwon' && gwonBr()) cnt['gwon' + gwonBr()] = 1;
+  for (const c of pick) if (hasK(CLASSES, c.cls)){ cnt[c.cls] = (cnt[c.cls] || 0) + 1; if (c.cls === 'gwon' && (c.gb === 1 || c.gb === 2)) cnt['gwon' + c.gb] = (cnt['gwon' + c.gb] || 0) + 1; }
   const L = synCalc(cnt).list, H = synHints(cnt), dis = raid ? ' disabled' : '';
   return `<div class="card" id="myParty"><div class="ct">내 파티<span class="tag">나 + ${SYN.myMax}명까지 · ${ids.size}명</span></div>
-    <div class="chips"><span class="chip on">${esc(S.name)} (나·${cls().name})</span>${pool.map(c => `<button type="button" class="chip${ids.has(c.cid) ? ' on' : ''}" data-mp="${esc(c.cid)}"${dis}>${esc(c.name)} · ${esc(synCn(c.cls))} Lv.${c.level | 0}</button>`).join('')}</div>
+    <div class="chips"><span class="chip on">${esc(S.name)} (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)})</span>${pool.map(c => `<button type="button" class="chip${ids.has(c.cid) ? ' on' : ''}" data-mp="${esc(c.cid)}"${dis}>${esc(c.name)} · ${esc(synBrName(c.cls, c.gb))} Lv.${c.level | 0}</button>`).join('')}</div>
     <p class="small" id="mpHelp" style="margin-top:6px">${(S.myParty || []).length ? '고른 캐릭터가 레이드·진·타임 보스에 함께해요.' : '고르지 않으면 강한 순서로 데려가요. 눌러서 고르면 기억해요.'}${raid ? ' (싸우는 중에는 못 바꿔요)' : ''}</p>
     <p class="small" id="mpSyn"><b>켜진 시너지</b> ${L.length ? L.map(x => `<span class="chip on">${x.name}</span> ${x.txt}`).join(' · ') : '없어요'}</p>
     ${H.length ? `<p class="small" id="mpHint"><b>한 명만 더 있으면</b> ${H.map(h => `${h.cls.map(synCn).join('·')} 한 명 → ${h.name}`).join(' / ')}</p>` : ''}</div>`;
@@ -4647,9 +4656,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-21-12', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-22-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 22일 · 권사 시너지'],
+  ['주먹 길 권사: 맞받아칠수록 다음 한 방이 세져요', '보스를 맞받아치는 데 성공할 때마다 「받아낸 힘」이 한 겹씩(최대 3겹) 모이고, 다음 한 방이 겹마다 크게 터져요. 머리 위 붉은 점으로 보여요. 혼자 보스·레이드 보스를 칠 때만 있고, 몬스터 떼에는 없어요. [수련]의 직업 특성에서 「?」를 누르면 자세히 나와요.'],
+  ['발 길 권사: 이어 찰수록 빨라져요', '같은 보스를 쉬지 않고 차면 「이어 차기」가 겹겹이 쌓여(최대 5겹) 공격과 기술 재사용이 점점 빨라져요. 머리 위 푸른 점으로 보여요. 보스에게만 걸리고, 못 차거나 대상이 바뀌면 처음부터예요.'],
+  ['파티에 권사가 있으면 길마다 다른 힘이 켜져요', '권사와 다른 직업 둘 이상이 함께하면, 주먹 길은 「든든한 앞자리」로 권사 말고 모두 받는 피해 -8%, 발 길은 「이어 가는 발길」로 보스 휘청 시간 +1.5초예요. [내 파티]에는 권사가 주먹인지 발인지 같이 보이고, 「한 명만 더 있으면」 칸에도 나와요.'],
   ['#', '11월 21일 · 경지·초월 레이드 조정'],
   ['초월의 경지가 조금 빨라졌어요', '경지 한 단에 드는 경험치를 20% 줄였어요. Lv.700에 막 닿은 용사는 수미산 240단계 안팎에서 힘이 모자라 더 못 나아가는 일이 많은데, 그 자리에서 재 보니 한 단에 2시간쯤 걸렸어요. 이제 한 단에 1시간 반 안팎이에요. 높은 단으로 갈수록 한 단에 드는 양이 단마다 조금씩(2%) 늘어나는 건 그대로예요.'],
   ['초월 레이드 세기를 다시 맞췄어요', '권장 전투력에 딱 맞을 때 자동 전투로는 열에 세 번쯤, 붉은 칸을 피하고 되받기를 하면 열에 여섯 번쯤, 잘하면 거의 이기도록 고쳤어요. 첫째 라바나와 둘째 브리트라는 보스 체력이 조금 늘어 어려워졌고, 라후·마라의 군대·마라는 체력이 조금 줄어 쉬워진 대신 한 방이 세져서 자동 피하기에만 맡기면 더 아파요.'],
@@ -5929,10 +5942,17 @@ function statValue(k, st){
    전직 전(0)에는 주먹·발을 번갈아 내지르는 평범한 연권만. 수치는 tools/test_game.py --sim · --long 으로 잼(docs/report gwon_balance) */
 const FIST = {fin:1.5, counter:2.0, cd:1.0, kiT:6, kiMax:5, kiAtk:4};
 const FOOT = {each:0.5, dash:1.6, spd:0.08, mv:0.2, jobB:1.1};
+/* 권사 시너지(2026-11-22) — 혼자 보스를 칠 때 갈래마다 하나(몬스터 떼에는 없고 보스·레이드 보스에만) + 파티 시너지 「든든한 앞자리」(SYN.wall)
+   주먹 「받아낸 힘」: 보스를 맞받아치는 데 성공할 때마다 힘이 한 겹(최대 GW.fMax, GW.fHold초) 모이고, 다음 한 방(기본 공격·기술 첫 타)이 (1 + GW.fK × 겹)배로 터지며 모두 풀린다(맞받아치기 자체는 겹을 안 씀).
+   발 「이어 차기」: 같은 보스를 이어 찰 때마다(기본 공격 한 번에 한 겹, 최대 GW.kMax, 안 차면 GW.kHold초 뒤 풀림·대상 바뀌면 처음부터) 공격 속도와 기술 재사용이 흐르는 속도 +GW.kSpd씩(배율).
+   수치는 tools/sim_gwon.py(무사 저장에서 직업만 권사로 바꿔 보스 bench 120초, 켬/끔 — window.__game.noGw)로 잼 */
+const GW = {fMax:3, fHold:8, fK:1.5, kMax:5, kHold:2.5, kSpd:0.015};   // 잼(11-22, 무사 저장 4개·보스 bench 120초·보스가 3초에 한 번 때림, 끔 대비): 주먹 fK 0.5 +4% · 1.0 +4% · 1.5 +10.6% — 발 kSpd 0.03 +15.7% · 0.02 +14% · 0.015 +8.8%
+const gwOn = () => !(window.__game && window.__game.noGw);
+const gwKSpd = () => gwOn() && gwonBr() === 2 && hero.gwKT > 0 ? 1 + GW.kSpd * (hero.gwK || 0) : 1;
 const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
 const footSpd = () => gwonBr() === 2 ? (1 + FOOT.spd) * (hero.jobBuffT > 0 ? FOOT.jobB : 1) : 1;
 const atkBuff = () => pbAtk() * kiMul() * (hero.buffT > 0 ? 1 + roarAtk(hero.buffLv) / 100 : 1) * (S.buff.atk > 0 ? BUFFS.atk.mul : 1) * (hero.jobBuffT > 0 ? 1.3 : 1) * (hero.gutT > 0 ? 1 + (hero.gutP || 50) / 100 : 1) * (hero.shinT > 0 ? 1 + (hero.shinP || 20) / 100 : 1) * (hero.graceT > 0 ? 1 + hero.graceP / 100 : 1) * (hero.oathT > 0 ? 1 + (hero.oathN || 0) * oathAtk(hero.oathLv || 1) / 100 : 1) * (hero.budongT > 0 ? 1 + (hero.budongP || 30) / 100 : 1) * (hero.vowT > 0 ? 1 + (hero.vowAtk || 25) / 100 : 1);
-const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1) * footSpd();
+const spdBuff = () => (1 + pbV('doin', 'spd') / 100) * (1 + pbV('gwon', 'spd') / 100) * (1 + pbV('changgaek', 'spd') / 100) * (hero.buffT > 0 ? 1 + roarSpd(hero.buffLv) / 100 : 1) * (S.buff.spd > 0 ? BUFFS.spd.mul : 1) * (hero.shinT > 0 ? 1.3 : 1) * (hero.windT > 0 ? 1 + (hero.windP || 25) / 100 : 1) * footSpd() * gwKSpd();
 // 펫·여의주(+%)와 상점 부적(×)을 합친 엽전·경험치 배율. 오프라인 보상에는 부적이 빠진다
 const gainMul = (k, noBuff) => (1 + (petBonus() + (S.myth.pearl + (S.myth.uchi || 0) + (S.myth.yagwang || 0) + (S.myth.goldjar || 0) * (k === 'gold' ? 1 : k === 'exp' ? 0.25 : 0) + (k === 'exp' ? (S.myth.silk || 0) / 2 : 0)) * mythK() + 10 * S.reb.up.luck + fxNow.gain + rideAb(k) + (k === 'exp' ? barrack().exp : barrack().gain) + titleEff(k) + guardEff(k) + (k === 'exp' ? setSum().exp : 0) + (k === 'gold' || k === 'exp' ? accP('pae') + elPct(k) + seaPct(k) : 0)) / 100) * (!noBuff ? (k === 'exp' ? expBuffMul() : S.buff[k] > 0 ? BUFFS[k].mul : 1) : 1);
 
@@ -6835,6 +6855,10 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const C = cls(), mine = kind !== 'ally';
   const ptB = mine && !raw && C.gap && (kind === 'basic' || kind === 'skill') && (m.boss || m.raid) ? ptStep(m) : null;   // 창객 「한 점 꿰기」: 보스 한 대상을 이어 찌른 점(PT)
   if (ptB && ptB.burst) sure = true;
+  let gwB = 1;   // 권사 주먹 「받아낸 힘」: 모인 겹만큼 다음 한 방이 세진다(맞받아치기 자체는 gwSkip으로 건너뜀)
+  if (mine && !raw && C.fist && gwonBr() === 1 && !hero.gwSkip && (hero.gwF || 0) > 0 && (kind === 'basic' || kind === 'skill') && (m.boss || m.raid) && gwOn()){
+    gwB = 1 + GW.fK * hero.gwF; hero.gwF = 0; hero.gwFT = 0; addText('받아낸 힘!', m.x, m.y - mobHeight(m) - 14, '#ff9a6a', 12, true);
+  }
   if (castCtx && castCtx.f && mine && kind === 'skill' && !raw){   // 사냥 박자 보정: 단계 보스·수문장엔 b(초당 피해 = 레이드 박자), 몹엔 f(세계·직업 표 HUNT.w)
     base *= m.boss ? castCtx.b : castCtx.f;
   }
@@ -6847,7 +6871,7 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   const fit = fitOn(m), grog = (m.pat && m.pat.grogT > 0 ? fit ? FIT.grog : raid && raid.info.jin ? JIN.grogMul : PAT.grogMul : 1) * (mine && m.pat && m.pat.grogT > 0 && !fit ? (C.grogMul ? 1 + (C.grogMul - 1) * aptMul('boss') : 1) : 1);   // 창객: 휘청이는 보스에게 +15%(내 세기에 맞춘 싸움 FIT은 빼고)
   const gp = raw ? 1 : gapMul(m, mine && (kind === 'basic' || kind === 'skill')) * aw2Pierce(m);   // 창객 「간격」 · 초각성기 2 「바다 꿰는 창」
   const vz = !raw && mine && S.myth.vajra > 0 && (kind === 'basic' || kind === 'skill') ? (avg ? 1 + Math.min(1, ST.crit + sc) * VAJRA_BOLT : crit ? 1 + VAJRA_BOLT : 1) : 1;   // 금강저(5부): 치명타가 터지면 번개가 그 피해의 10%를 더 넣는다
-  const dmg = raw ? base : base * gp * vz * (mine && kind === 'basic' ? aptMul(aptTags().b) : 1) * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * (mine && hero.eyeT > 0 && (m.boss || m.raid) ? 1 + (hero.eyeP || 0) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (mine ? synMine(kind) * synBossMine(m) : 1) * (ptB && ptB.burst ? 1 + PT.burst : 1) * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
+  const dmg = raw ? base : base * gp * vz * (mine && kind === 'basic' ? aptMul(aptTags().b) : 1) * (avg ? 1 + Math.min(1, ST.crit + sc) * (cd - 1) : crit ? cd : 1) * (m.markT > 0 ? 1 + m.markP * aw2Mark(m) / 100 : 1) * (mine && hero.darkT > 0 && m.markT > 0 ? 1 + (hero.darkP || 40) / 100 : 1) * (mine && hero.eyeT > 0 && (m.boss || m.raid) ? 1 + (hero.eyeP || 0) / 100 : 1) * grog * (mine && (m.boss || m.raid) ? (C.bossMul || 1) * (1 + craftEff('hunt') / 100) * (1 + rideAb('boss') / 100) * (1 + titleEff('boss') / 100) * (1 + accP('neck') / 100) * (1 + (S.myth.tal || 0) * mythK() / 100) * skMul('boss') * elMul('boss') * seaMul('boss') * fxNow.boss * setMul('boss') : 1) * (mine ? synMine(kind) * synBossMine(m) : 1) * (ptB && ptB.burst ? 1 + PT.burst : 1) * gwB * (window.__game && window.__game.benchAvg ? 1 : 0.92 + Math.random() * 0.16);
   if (mine && raid && raid.info.haetae && m === raid.boss) haetaeHit(dmg, kind);
   if (mine){ dmgMeter += dmg; if ((m.boss || m.raid) && !hitNoBase) bmeter.d += dmg; dmgBy[kind] = (dmgBy[kind] || 0) + dmg; if (!hitNoBase && dmg > (S.rec.maxHit || 0)) S.rec.maxHit = dmg; }   // 되받기(파티 피해 몇 초 몫)는 내 실제 피해 기억·가장 큰 한 방에 넣지 않음
   if (kind === 'basic' || kind === 'skill') sfx(crit ? 'crit' : 'hit');
@@ -9811,6 +9835,7 @@ function gwonAttack(tg){   // 권사의 기본 공격(위 FIST·FOOT)
   const px = tg.x, py = tg.y - mobHeight(tg) * 0.5;
   if (br === 2){
     const dash = hero.gMv > 0; hero.gMv = 0;
+    if ((tg.boss || tg.raid) && gwOn()){ if (hero.gwTg !== tg){ hero.gwTg = tg; hero.gwK = 0; } hero.gwK = Math.min(GW.kMax, (hero.gwK || 0) + 1); hero.gwKT = GW.kHold; }   // 「이어 차기」: 같은 보스를 이어 찰수록 겹
     if (dash) addText('파고들기', hero.x, hero.y - 40, '#9fe7ff', 9, true);
     fx.push({type:'kick', t:0, dur:0.22, x:px, y:py, dir:hero.dir, big:fin || dash});
     hit(tg, ST.atk * m * FOOT.each * (dash ? FOOT.dash : 1), 'basic');
@@ -9830,7 +9855,8 @@ function gwonCounter(){   // 주먹 갈래: 맞은 순간 되받아치기 + 기�
   hero.kiT = FIST.kiT; hero.ki = Math.min(FIST.kiMax, (hero.ki || 0) + 1);
   fx.push({type:'fist', t:0, dur:0.3, x:tg.x, y:tg.y - mobHeight(tg) * 0.5, big:true, br:1});
   addText(`맞받아치기! 기세 ${hero.ki}`, hero.x, hero.y - 44, '#ff9a6a', 9, true);
-  hit(tg, ST.atk * atkBuff() * FIST.counter, 'basic');
+  hero.gwSkip = true; hit(tg, ST.atk * atkBuff() * FIST.counter, 'basic'); hero.gwSkip = false;
+  if ((tg.boss || tg.raid) && gwOn()){ hero.gwF = Math.min(GW.fMax, (hero.gwF || 0) + 1); hero.gwFT = GW.fHold; }   // 보스를 맞받아쳤을 때만 「받아낸 힘」이 쌓임
 }
 function attack(tg){
   const C = cls();
@@ -10338,6 +10364,9 @@ function update(dt){
   if (hero.eyeT > 0) hero.eyeT -= dt;
   if (hero.vowT > 0) hero.vowT -= dt;
   if (hero.kiT > 0) hero.kiT -= dt;
+  if (hero.gwFT > 0 && (hero.gwFT -= dt) <= 0) hero.gwF = 0;
+  if (hero.gwKT > 0 && (hero.gwKT -= dt) <= 0){ hero.gwK = 0; hero.gwTg = null; }
+  if (hero.gwTg && hero.gwTg.dead){ hero.gwK = 0; hero.gwKT = 0; hero.gwTg = null; }
   if (hero.cntCd > 0) hero.cntCd -= dt;
   if (hero.gMv > 0) hero.gMv -= dt;
   if (hero.ebbT > 0) hero.ebbT -= dt;
@@ -10512,7 +10541,7 @@ function update(dt){
       const key = SKILLS[i].key, lv = skLv(i);
       if (!lv || !skIn(i)) continue;   // 전투 칸(8칸)에 낀 기술만
       const was = skillCd[key] || 0;
-      skillCd[key] = Math.max(0, was - dt * (hero.hushT > 0 ? 1 / (1 - (hero.hushP || 30) / 100) : 1));   // 선인의 고요(6차): 재사용이 빨리 흐름
+      skillCd[key] = Math.max(0, was - dt * (hero.hushT > 0 ? 1 / (1 - (hero.hushP || 30) / 100) : 1) * gwKSpd());   // 선인의 고요(6차): 재사용이 빨리 흐름
       if (skillCd[key] <= 0){ if (was > 0 || skReadyT[key] == null) skReadyT[key] = gtime; if (skAuto(i)) rdy.push(i); }
     }
     // (물의 신화) 마나가 모자라 기다리는 기술이 있으면, 그보다 늦게 준비된 기술은 새치기하지 않는다(마나가 넉넉하면 예전처럼 위 순서대로).
@@ -14574,7 +14603,7 @@ function confirmJin(w, i){
     <p><b>${info.bossName}</b> — 세기가 정해져 있는 상위 레이드예요. 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
     <div class="rpow jin">${jinPowHTML(w, i)}</div>
     <ul class="jrules"><li>전멸기 · 큰 살 두 번 · 새 패턴 <b>「쫓는 살」</b>(발밑이 세 번 연달아)</li><li><b>자동 피하기가 절반만</b> 통해요 · 붉은 칸·강타에 맞으면 <b>잠깐 기절</b> · 금빛 「!」를 되받으면 보스가 <b>바로 휘청</b></li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지 — 싸움 화면에 <b>「탕약 ${JIN.pots}/${JIN.pots}」</b>로 남은 수가 보여요</li>${pity ? `<li>지난 도전의 기운: 보스 체력 <b>−${pity}%</b></li>` : ''}</ul>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">들어가면 오늘 횟수 1번을 써요(지금 ${jinLeft()}번 남음, 이기든 지든). 레이드 리셋권으로는 되돌아오지 않아요.</p>
     ${ask ? presetHTML('party') : potNoteHTML()}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startJin(w, i)) closePage(); presetNext = undefined; }}],
@@ -14688,7 +14717,7 @@ function confirmTrans(k){
     <p><b>${info.bossName}</b> — 5부 레이드 보스의 다른 모습이에요. 세기가 정해져 있는 레이드라, 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
     <div class="rpow jin">${transPowHTML(k)}</div>
     <ul class="jrules"><li>싸우는 방식은 <b>진(眞) 레이드와 같아요</b> — 전멸기 · 큰 살 두 번 · 「쫓는 살」, 자동 피하기는 절반만, 금빛 「!」를 되받으면 보스가 바로 휘청</li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지</li><li>이기면 <b>초월의 조각 ${T.shard}개</b>${S.trans.rd.tot[k] ? '' : `(처음 이기면 +${TRANS_RD.firstShard})`} · 보석 ${fmt(T.gems)} · 엽전 · 신화 조각 2 — 주 ${TRANS_RD.week}번까지</li></ul>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">져도 이번 주 횟수는 안 써요(지금 ${transRdLeft()}번 남음, 이길 때만 줄어요).</p>
     ${ask ? presetHTML('party') : potNoteHTML()}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startTrans(k)) closePage(); presetNext = undefined; }}],
@@ -16654,6 +16683,10 @@ function drawEntityHero(){
   if (cls().aim){ const am = hero.aim || 0; hero.tagY = hy - 37; P(x - 8, hy - 36, 16, 3, '#1a1218'); P(x - 7, hy - 35, Math.max(0, Math.round(14 * am)), 1, am >= 1 ? '#ffe08a' : '#a8d86a'); if (am >= 1) P(x + 8, hy - 36, 1, 3, '#ffe08a'); }   // 궁사 「조준」 눈금(체력 막대 위)
   if (cls().gap){ const tg = hero.target && !hero.target.dead ? hero.target : null, gc = !tg ? '#6a6470' : gapFar(tg) || hero.buffT > 0 ? '#ffd24a' : '#ff5a4a'; hero.tagY = hy - 38; P(x - 2, hy - 36, 5, 1, gc); P(x - 1, hy - 37, 3, 3, gc); P(x, hy - 38, 1, 5, gc); }   // 창객 「간격」: 금빛 = 창끝 거리(+40%), 붉은빛 = 너무 붙음(-20%)
   if (cls().gap && (hero.pt || 0) > 0){ hero.tagY = hy - 42; for (let i = 0; i < PT.max; i++) P(x - 9 + i * 4, hy - 42, 3, 3, i < hero.pt ? (hero.ptFull ? '#fff2b0' : '#ffd24a') : '#3a3440'); }   // 창객 「한 점 꿰기」: 쌓인 점(가득 차면 밝게)
+  if (cls().fist && gwonBr() >= 1){   // 권사 시너지: 주먹 「받아낸 힘」(붉은 점) · 발 「이어 차기」(푸른 점) — 쌓인 만큼 머리 위에
+    const f = gwonBr() === 1 ? (hero.gwFT > 0 ? hero.gwF || 0 : 0) : (hero.gwKT > 0 ? hero.gwK || 0 : 0), mx = gwonBr() === 1 ? GW.fMax : GW.kMax;
+    if (f > 0){ hero.tagY = hy - 42; for (let i = 0; i < mx; i++) P(x - mx * 2 + i * 4, hy - 42, 3, 3, i < f ? (gwonBr() === 1 ? (f >= mx ? '#ffd0b0' : '#ff7a5a') : (f >= mx ? '#d0f4ff' : '#6fd0ff')) : '#3a3440'); }
+  }
   P(x - 8, hy - 33, 16, 3, '#1a1218'); P(x - 7, hy - 32, Math.max(0, Math.round(14 * r)), 1, r > 0.5 ? '#5fd07c' : r > 0.25 ? '#ffd166' : '#ff5a4a');
 }
 function drawMob(m){
@@ -19566,6 +19599,11 @@ function buildGuard(){
 const APT_STAT_VALS = Object.values(APT_STAT);
 const aptTagText = i => { const d = skDef(i), t = aptTagOf(i); return d.atk ? `${aptName(t)} ${aptX(aptHitMul(i))}` : `${aptName(t)} · 버프`; };
 const ptTraitHTML = () => `<b>한 점 꿰기</b> 보스 한 대상을 이어 찌르면 점이 쌓여요 ${helpTip(`보스·레이드 보스 한 대상을 기본 공격이든 기술이든 이어 찌르면 점이 최대 ${PT.max}개까지 쌓여요(0.35초에 한 점). 점이 많을수록 치명타 피해가 커지고(가득이면 +${Math.round(PT.cd * 100)}%), 가득 찬 뒤 다음 한 번은 치명타로 확정되며 피해 +${Math.round(PT.burst * 100)}%로 터져요. 대상을 바꾸거나 ${PT.hold}초 동안 못 찌르면 점이 풀려요. 몬스터 떼에는 없고, 혼자 보스를 칠 때를 위한 힘이에요. 창객이 파티에 있으면 창객 말고 모두 보스 피해 +${SYN.pierce}%(꿰뚫린 틈)도 켜져요.`)}`;
+const gwTraitHTML = () => gwonBr() === 2
+  ? `<b>이어 차기</b> 같은 보스를 이어 차면 발이 붙어요 ${helpTip(`보스·레이드 보스를 이어서 찰 때마다(기본 공격 한 번에 한 겹) 공격 속도와 기술 재사용 속도가 +${Math.round(GW.kSpd * 1000) / 10}%씩, 최대 ${GW.kMax}겹(+${Math.round(GW.kSpd * GW.kMax * 100)}%)까지 빨라져요. ${GW.kHold}초 동안 못 차거나 대상이 바뀌면 처음부터예요. 몬스터 떼에는 없고, 혼자 보스를 칠 때를 위한 힘이에요. 파티에 발 길 권사와 다른 직업 둘 이상이 있으면 보스 휘청 시간 +${SYN.footGrog}초(이어 가는 발길)도 켜져요(파티 모두 몰아칠 틈이 길어져요).`)}`
+  : gwonBr() === 1
+  ? `<b>받아낸 힘</b> 맞받아칠수록 다음 한 방이 세져요 ${helpTip(`보스·레이드 보스를 맞받아치는 데 성공할 때마다 힘이 한 겹(최대 ${GW.fMax}겹) 모여요. 다음 한 방(기본 공격이나 기술 첫 타)이 겹마다 +${Math.round(GW.fK * 100)}%로 터지고 겹은 모두 풀려요. ${GW.fHold}초 안에 쓰지 않으면 사라져요. 몬스터 떼에는 없고, 혼자 보스를 칠 때를 위한 힘이에요. 파티에 주먹 길 권사와 다른 직업 둘 이상이 있으면 권사 말고 모두 받는 피해 -${SYN.wall}%(든든한 앞자리)도 켜져요.`)}`
+  : `<b>혼자 보스 시너지</b> 전직하면 고른 길의 힘이 열려요 ${helpTip(`주먹 길은 맞받아칠수록 다음 한 방이 세지고(받아낸 힘), 발 길은 이어 찰수록 빨라져요(이어 차기). 몬스터 떼에는 없고 보스·레이드 보스에만 있어요. 파티에 주먹 길 권사와 다른 직업 둘 이상이 있으면 받는 피해 -${SYN.wall}%(든든한 앞자리), 발 길 권사가 있으면 보스 휘청 시간 +${SYN.footGrog}초(이어 가는 발길)도 켜져요.`)}`;
 const aptTraitHTML = () => `<b>맞는 능력</b> ${aptMain().map(a => '★' + aptName(a)).join(' · ')} ${helpTip(`기술마다 꼬리표가 있어요. 장비 옵션을 꼬리표 능력 쪽으로 모을수록 그 기술이 세져요(최대 +${Math.round(Math.max(...aptMain().map(a => APT.upA[a] ?? APT.up)) * 100)}%), 엉뚱한 쪽에 몰면 약해져요(최대 −${Math.round(APT.dn * 100)}%).`)} — 지금 ${aptMain().map(a => aptName(a) + ' ' + aptX(aptCalc().m[a])).join(' · ')}`;
 function aptWhereList(){
   const M = aptMain(), mine = (map, k) => Object.keys(aptOne(map, k)).some(a => M.includes(a)), R = [];
@@ -19830,7 +19868,7 @@ function buildSkill(){
   if (skillView === 'soul') return buildSoul();
   panel.innerHTML = `${skillSegHTML()}
     <div class="ph"><h2>${cls().name}의 기술</h2><span class="small">${cls().role}</span></div>
-    <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}<li id="aptTrait">${aptTraitHTML()}</li>${cls().gap ? `<li id="ptTrait">${ptTraitHTML()}</li>` : ''}</ul></div>
+    <div class="card"><div class="ct">직업 특성 · ${cls().role}</div><ul class="traits">${cls().traits.map(t => `<li>${t}</li>`).join('')}<li id="aptTrait">${aptTraitHTML()}</li>${cls().gap ? `<li id="ptTrait">${ptTraitHTML()}</li>` : ''}${cls().fist ? `<li id="gwTrait">${gwTraitHTML()}</li>` : ''}</ul></div>
     <p class="hint">익힌 기술은 알아서 써요. 아래 기술 칸을 <b>누르면 바로</b> 쓰고, <b>길게 누르면 자동/수동</b>을 바꿔요. 수동으로 둔 기술은 내가 누를 때만 써요(준비되면 반짝여요).
       칸마다 <b>다음 레벨</b>에 숫자가 어떻게 바뀌고 그 기술의 힘이 <b style="color:var(--jade)">몇 % 세지는지</b> 보여 줘요(버프는 버프를 받은 동안의 피해로 셈). 예: 피해 220% → 242%는 <b>22%p</b>가 더해져 기술이 <b>10% 세지는</b> 거예요(220의 10% = 22).<br><b>공격 기술은 두 가지 박자</b>로 나가요 — 사냥터·단계 보스·수문장에서는 <b>자주, 작게</b>(사냥 박자), 레이드·진·타임 보스 같은 「싸움 시작 창」이 뜨는 싸움에서는 <b>지금처럼 크게</b>(레이드 박자). 버프·약점 기술과 초각성기는 어디서나 같아요.</p>
     <div class="card" style="margin-top:10px"><div class="ct">사냥(스테이지) 기술 칸<span class="tag" id="skSetN"></span></div>
@@ -21387,7 +21425,7 @@ function openReplay(){
 }
 
 /* --- 레이드 --- */
-function partyLine(m){ return `${esc(m.name)}(${CLASSES[m.cls].name}${m.npc ? '·NPC' : '·내 캐릭터'})`; }
+function partyLine(m){ return `${esc(m.name)}(${synBrName(m.cls, m.gb)}${m.npc ? '·NPC' : '·내 캐릭터'})`; }
 // 레이드 화면: 레이드 · 타임 보스 · 허수아비 세 칸. 레이드 카드는 보스 얼굴·권장 전투력·보상·입장 단추
 let raidView = 'raid';
 let tierSel = {};   // 칸마다 사용자가 고른 쪽({dummy:'lo'|'hi', …}) — 안 골랐으면 기본
@@ -21765,7 +21803,7 @@ function confirmEntry(){
   const info = entryInfo(), party = raidParty(info);
   showModal(info.label, `
     <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 새 땅의 길목을 막고 있어요. ${partyOf(info)}인 파티로 자동 전투를 해요.</p>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">세기는 이 땅에서 지나온 단계를 따라가요(지금 ${info.ref}단계 세기). 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개). 이야기의 레이드 횟수에는 세지 않아요.</p>
     ${S.presetMode === 'ask' || !S.presetMode ? presetHTML('party') : ''}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (S.presetMode === 'ask' || !S.presetMode) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startEntry()) buildTab('raid'); presetNext = undefined; }}],
@@ -21777,7 +21815,7 @@ function confirmRaid(i){
   const own = party.filter(m => m.own).length;
   showModal(`${info.label} 토벌`, `
     <p><b>${info.bossName}</b>${josa(info.bossName, '이', '가')} 기다려요. ${partyOf(info)}인 파티로 자동 전투를 해요.</p>
-    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${cls().name} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
     <p class="small" style="margin-top:8px">${own ? `이 기기의 다른 캐릭터 ${own}명이 함께해요. ` : ''}NPC 동료의 힘은 내 용사에 맞춰져요. 무사는 보스의 공격을 받아 주고, 도인은 파티를 치유해요. 동료도 저마다 파티 버프를 걸어 줘요. 깨면 토벌패 1개를 써요(지금 ${raidTickets()}개).</p>
     ${S.presetMode === 'ask' || !S.presetMode ? presetHTML('party') : ''}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (S.presetMode === 'ask' || !S.presetMode) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startRaid(i)) buildTab('raid'); presetNext = undefined; }}],
@@ -23358,12 +23396,12 @@ function lostOnline(msg){
   if (session) addLog(msg || '서버 로그인이 끊겼어요. 다시 로그인하면 서버에 이어서 저장돼요(지금은 이 기기에 저장 중).', 'warn');
 }
 // 캐릭터 요약(목록·레이드 동료용)
-const charSummary = ch => ({cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level,
+const charSummary = ch => ({gb:ch.gb || 0, cls:ch.cls, level:ch.level, maxStage:ch.maxStage, look:ch.look, armorG:ch.armorG, weaponG:ch.weaponG, ally:ch.ally, world:ch.world || 0, cum:ch.cum || ch.level,
   job:ch.job || 0, reb:ch.reb || 0, q:ch.q || 0, tw:ch.tw || 0, pv:ch.pv || 1000, tt:ch.tt || '', ...ordSum()});
 // 캐릭터 순서를 바꾼 적이 있으면 요약마다 순서(ordl)와 바꾼 시각(ordT)을 같이 적는다(없으면 아무것도 안 붙음 — 서버·옛 화면과 호환)
 const ordSum = () => { const A = online && REG.accounts[online.acc]; return A && A.ordT ? {ordl:A.chars.map(c => c.cid), ordT:A.ordT} : {}; };
 // 다른 용사 요약의 진행도 다듬기(남이 보낸 값이라 범위·키를 막음)
-const sumProg = sm => ({world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
+const sumProg = sm => ({gb:sm.gb === 1 || sm.gb === 2 ? sm.gb : 0, world:Math.max(0, Math.min(WORLD_MAX, Math.floor(+sm.world) || 0)), cum:Math.max(1, Math.min(2000, Math.floor(+sm.cum) || Math.max(1, Math.floor(+sm.level) || 1))),
   maxStage:Math.max(1, Math.min(9999, Math.floor(+sm.maxStage) || 1)), job:Math.max(0, Math.min(JOB_MAX, Math.floor(+sm.job) || 0)), reb:Math.max(0, Math.min(2, Math.floor(+sm.reb) || 0)),
   q:Math.max(0, Math.min(MAIN_Q.length, Math.floor(+sm.q) || 0)), tw:Math.max(0, Math.min(TOWER.top, Math.floor(+sm.tw) || 0)), pv:Math.max(0, Math.min(99999, Math.floor(+sm.pv) || 1000)),
   tt:typeof sm.tt === 'string' && hasK(TT, sm.tt) ? sm.tt : ''});
@@ -23505,8 +23543,8 @@ function saveLocal(){
   if (!ch) return;
   const sum = {name:S.name, cls:S.cls, level:S.level, maxStage:S.maxStage, look:S.look, armorG:gradeOf(S.equip.armor), weaponG:gradeOf(S.equip.weapon),
     ally:{dps:Math.round(dpsOf(ST)), maxHp:Math.round(ST.maxHp), ehp:Math.round(ST.maxHp / Math.max(0.05, takenK(true))), rd:Math.round(realDps())}, world:S.world, cum:cumLv(),
-    job:S.job || 0, reb:S.reb.n || 0, q:S.quest.main || 0, tw:S.tower.best || 0, pv:S.pvp.pt || 1000, tt:S.title.eq || '', jump:jumpOn() ? 1 : 0};   // 진행도(2026-11 (43), 다른 용사가 내 정보 창으로 봄)
-  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum, o.job, o.reb, o.q, o.tw, o.pv, o.tt, o.jump || 0]);
+    job:S.job || 0, reb:S.reb.n || 0, q:S.quest.main || 0, tw:S.tower.best || 0, pv:S.pvp.pt || 1000, tt:S.title.eq || '', jump:jumpOn() ? 1 : 0, gb:S.cls === 'gwon' ? gwonBr() : 0};   // 진행도(2026-11 (43), 다른 용사가 내 정보 창으로 봄)
+  const pick = o => JSON.stringify([o.name, o.cls, o.level, o.maxStage, o.look, o.armorG, o.weaponG, o.ally, o.world, o.cum, o.job, o.reb, o.q, o.tw, o.pv, o.tt, o.jump || 0, o.gb || 0]);
   if (pick(ch) !== pick(sum)){ Object.assign(ch, sum, {t:now()}); A.t = now(); saveReg(); }
 }
 function bootCloud(){
@@ -23564,7 +23602,7 @@ function resetRuntime(){
   paradeAbort();
   mobs = []; texts = []; parts = []; fx = []; projs = []; later = []; vfx = []; skCut = null; soulApp = []; autoGap = 0; skReadyT = {}; parade = null;
   bossActive = false; bossRef = null; bossTime = 0; spawnT = 0.5; raid = null; jobChain = false;
-  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, ki:0, kiT:0, cntCd:0, gN:0, gMv:0, gAlt:false, pt:0, ptT:0, ptGap:0, ptFull:false, ptTg:null, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
+  Object.assign(hero, {tx:10 + FOX, ty:8 + FOY, fx:10 + FOX, fy:8 + FOY, mt:0, moving:false, dir:'down', hp:ST.maxHp, dead:false, wound:0, deadT:0, atkT:0, swing:0, hurt:0, buffT:0, target:null, engaged:false, goal:null, holdT:0, shield:0, shieldT:0, charge:0, baguaT:0, gutT:0, bocheonT:0, comboT:0, mp:mpMax(), oathT:0, oathN:0, sumbiT:0, ebbT:0, yongT:0, chargeN:0, windT:0, aim:0, ki:0, kiT:0, cntCd:0, gN:0, gMv:0, gAlt:false, pt:0, ptT:0, ptGap:0, ptFull:false, ptTg:null, gwF:0, gwFT:0, gwK:0, gwKT:0, gwTg:null, gwSkip:false, waveT:0, ripCd:0, budongT:0, darkT:0, hushT:0, incT:0, eyeT:0, eyeN:0, vowT:0});
   placeOf(hero); camSnap = true; pbT = {}; pbL = {}; lastCast = null; skPreset = null; skBarKey = '';
   for (const k in skillCd) skillCd[k] = 1.5;
   for (const t of PET_TYPE_ORDER) petRt[t].init = false;
@@ -24180,7 +24218,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {ASURA, startAsura, finishAsura, asuraOpen, asuraLeft, asuraTier, indSoulRoll, asLuck:null, KUB, startKub, finishKub, kubOpen, kubLeft, kubTier, kubLuck:null, IND_PAT, patInd, patHeads, headOff, headsLeft, patFlower, flowerNear, flowerOk, patTiles, updatePat, heroTile, noIndPat:false, DBOSS_IND, dbInd, DB_SPIRIT_P, skinDropPart});   // 물의 신화 9-26
   // @@END-F
   // @@HOOK-G (갈래 G의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
-  Object.assign(window.__game, {PT, ptStep, updatePt, hit, noPt:false, synBossMine, SYN, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, synForce:null, raidParty, raidAt});
+  Object.assign(window.__game, {PT, ptStep, updatePt, hit, noPt:false, noGw:false, synBossMine, SYN, GW, gwKSpd, synCalc, synState, synHints, synDmg, synCnt, myPartyPick, myPartyToggle, myPartyPool, myPartyHTML, myPartyRender, noSyn:false, synForce:null, raidParty, raidAt});
   // @@END-G
   // @@HOOK-H (갈래 H의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {LG, GD, guardMax, guardShown, lgGate, lgOn, lgMulPct, lgExtra, lgIncPct, memBranchN, lgDay, lgReqCost, lgReqWhy, lgReqTake, lgReqDone, lgReqClaim, lgReqSwap, lgReqNext, lgRaidOk, lgAuto, lgEv, lgDot, lgIncCost, lgIncWhy, lgIncLight, lgIncOff, lgAmbSpare, gainExp, guardUp, guardLv, guardEff, guardRefGold, guardGold, guardOpen, guardSet, noLg:true});
