@@ -581,13 +581,13 @@ async def main():
 
         await page.evaluate('() => window.__game.showNotes(false)')
         await page.wait_for_timeout(300)
-        nt = await page.evaluate("() => document.querySelector('#modal') ? document.querySelector('#modal').innerText : document.body.innerText")
+        nt = await page.evaluate("() => document.querySelector('#mBody').textContent")   # 접힌 이전 소식까지 모두
         check('물의 신화' in nt and '삼신할미' not in nt, f'새 소식 창에는 「물의 신화」 소식만 뜬다')
         await page.screenshot(path=str(OUT / '22_업데이트소식.png'))
         await page.click('#modal-btn-0')
         await page.evaluate('() => window.__game.showNotes(true)')
         await page.wait_for_timeout(300)
-        nt = await page.evaluate("() => document.body.innerText")
+        nt = await page.evaluate("() => document.querySelector('#mTitle').textContent + document.querySelector('#mBody').textContent")
         check('시즌 1 개발 내용' in nt and '삼신할미' in nt, '시즌 1 개발 내용 창이 옛 소식을 보여 준다')
         await page.screenshot(path=str(OUT / '22b_시즌1소식.png'))
         await page.click('#modal-btn-0')
@@ -1520,7 +1520,7 @@ async def main():
         check(pt['t4'] == ['0', '1', '2', '3*', '4L', '5L'] and set(pt['v4']) == {3} and pt['vAll'] == 29 and pt['vOwn'] == 6 and pt['vAtk'] and set(pt['vAtk']) == {'atk'},
               f'부별 탭: 처음 열리는 탭은 지금 있는 부, 「전체」·「가진 것만」·종류 거르기가 된다 {pt["t4"]} {pt["vAll"]} {pt["vOwn"]} {pt["vAtk"]}')
         check('1!' in pt['dot'] and '1*' in pt['dot2'] and pt['isNew'], f'부별 탭: 다른 부에서 새로 얻은 것이 있으면 그 탭에 빨간 점, 열어 보면 사라진다 {pt["dot"]} {pt["dot2"]}')
-        check(pt['rt'] == ['0', '1', '2', '3*', '4L', '5L'] and pt['past'] == 34 and pt['pastVis'] == 0 and pt['r1'] == [1] and pt['curHidden'],
+        check(pt['rt'] == ['0', '1', '2', '3*', '4L', '5L'] and pt['past'] == 34 and pt['pastVis'] == 34 and pt['r1'] == [] and pt['curHidden'],
               f'레이드 목록: 부별 탭으로 지나온 땅의 레이드(상위 단계 「진」 칸)를 본다(이승 8·저승 10·천계 8·부상 8) {pt["rt"]} {pt["past"]} {pt["rt1"]}')
         check(pt['dexRows'] == 3 and all(d[1] > 0 for d in pt['dex']) and pt['dexT'], f'도감: [정보]에 부별 모음 현황(펫·탈것·아바타·치장·넋 구슬)과 부별 별호 {pt["dex"]}')
         # 알림 연출 틀: 여럿이면 중요한 것 하나만 저절로(계승 > 8칸), 나머지는 왼쪽 위 두루마리. 「줄이기」면 한 줄 띠로만. [정보]에서 다시 보기
@@ -2244,6 +2244,9 @@ async def main():
           return {segs, n: cards.length, all: q('.rcard.jin').length, pow: txt(c0.querySelector('.rpow.jin')), btn: txt(c0.querySelector('[data-jin]')), dis: c0.querySelector('[data-jin]').disabled, left: txt(document.querySelector('.jin-left')), tier: !!c0.querySelector('.rpow.jin [class^="jt-"]'), hint: txt(document.querySelector('#page')).includes('다음 땅에 들어서면 이 땅의 진')}; }""")
         await jp.wait_for_timeout(300)
         await jp.screenshot(path=str(OUT / '27_진_레이드_목록.png'))
+        jl3 = await jp.evaluate("""() => { const sec = document.querySelector('.jin-left').closest('.jinsec'), fd = sec.querySelector('details.rfold'), vis = [...sec.querySelectorAll('.rcard')].filter(c => !c.closest('details.rfold')).length, all = sec.querySelectorAll('.rcard').length;
+          return {vis, all, fold: fd ? fd.querySelectorAll('.rcard').length : 0, sum: fd ? fd.querySelector('summary').textContent : ''}; }""")
+        check(jl3['vis'] == min(3, jl3['all']) and jl3['vis'] + jl3['fold'] == jl3['all'] and (jl3['all'] <= 3 or f"{jl3['fold']}개" in jl3['sum']), f"[레이드] 진 목록(11-22): 땅 전체를 합쳐 보상 좋은 3곳만 보이고 나머지는 「다른 레이드 n개 보기」 {jl3}")
         await jp.evaluate("""() => { const G = window.__game; G.S.presetMode = 'ask'; document.querySelector('.rcard.jin:not(.part-off) [data-jin]:not([disabled])').click(); }""")
         await jp.wait_for_selector('.jrules', timeout=4000)
         jm = await jp.evaluate("""() => ({title: document.querySelector('#mTitle').textContent, rules: document.querySelectorAll('.jrules li').length, pot: !!document.querySelector('#prePotBox'), pre: !!document.querySelector('#preGrid'), pow: document.querySelector('#mBody .rpow.jin').textContent})""")
@@ -2253,7 +2256,7 @@ async def main():
         await jp.wait_for_timeout(1500)
         await jp.screenshot(path=str(OUT / '27c_진_싸움.png'))
         jf = await jp.evaluate("""() => { const G = window.__game; const r = {page: G.currentTab, label: G.raid.info.label, falls: G.raid.falls, wipes: G.raid.info.wipes.length}; G.quiet = true; G.raid.boss.hp = 1e-9; for (let k = 0; k < 200 && G.raid; k++) G.update(0.05); G.quiet = false; return r; }""")
-        check('haetae' not in jr['segs'] and 'dummy' in jr['segs'] and jr['n'] == 8 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '압도적' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3번 남음' in jr['left'] and jr['hint'],
+        check('haetae' not in jr['segs'] and 'dummy' in jr['segs'] and jr['n'] == 34 and jr['all'] == 34 and '권장 전투력' in jr['pow'] and '넉넉' in jr['pow'] and jr['tier'] and jr['btn'] == '진 입장' and not jr['dis'] and '3번 남음' in jr['left'] and jr['hint'],
               f'[레이드] 목록: 지나온 땅의 레이드마다 「진」 칸(권장 전투력·내 전투력 빛깔·오늘 횟수), 해태 수련은 따로 칸이 없고(허수아비 칸의 칩, 46장부터) 다음 땅이 있는 땅(곤륜)에는 진 안내가 보인다 {jr}')
         check('진 ·' in jm['title'] and jm['rules'] >= 3 and jm['pot'] and jm['pre'] and '권장 전투력' in jm['pow'] and jf['page'] is None and jf['label'].startswith('진 ·') and jf['falls'] == 0,
               f'진 시작 전 창(규칙·권장 전투력·조합·들고 가는 물약) → [출발]로 싸움이 시작된다 {jm} {jf}')
@@ -6169,6 +6172,40 @@ async def main():
         await mp.wait_for_timeout(500)
         ru = await mp.evaluate("""() => ({sec:!!document.querySelector('#trLeft'), head:document.querySelector('#trLeft') ? document.querySelector('#trLeft').textContent : '', btn:[...document.querySelectorAll('[data-trk]')].map(b => b.textContent + (b.disabled ? '(꺼짐)' : '')), cards:document.querySelectorAll('#trr-0,#trr-1,#trr-2,#trr-3,#trr-4').length})""")
         check(ru['sec'] and ru['cards'] == 5 and ru['btn'][:3] == ['초월 입장'] * 3 and '열려요' in ru['btn'][3] and '열려요' in ru['btn'][4] and '2번 남음' in ru['head'], f"[레이드] 화면: 초월 레이드 다섯 칸, Lv.660이면 셋이 입장 가능·둘은 잠김, 이번 주 2번 남음 {ru}")
+        # (11-22) 초월 레이드 목록: 열린 곳 중 보상 좋은 3곳만 보이고 나머지는 「다른 레이드 n개 보기」 안에(첫 승리 보상이 남은 곳이 먼저)
+        tl = await mp.evaluate("""() => { const sec = document.querySelector('#trLeft').closest('[data-psec]'), vis = [...sec.querySelectorAll('.rcard')].filter(c => !c.closest('details.rfold')).map(c => c.id), fd = sec.querySelector('details.rfold');
+          return {vis, fold: fd ? [...fd.querySelectorAll('.rcard')].map(c => c.id) : [], sum: fd ? fd.querySelector('summary').textContent : '', open: !!(fd && fd.open)}; }""")
+        check(tl['vis'] == ['trr-2', 'trr-1', 'trr-0'] and tl['fold'] == ['trr-4', 'trr-3'] and '2개' in tl['sum'] and not tl['open'], f"[레이드] 초월 목록: 열린 3곳(첫 승리 남은 곳 먼저)만 보이고 잠긴 2곳은 접힘 {tl}")
+        await mp.evaluate("() => document.querySelector('#trLeft').closest('[data-psec]').querySelector('details.rfold').open = true")
+        await mp.wait_for_timeout(200)
+        await mp.evaluate("() => document.querySelector('#trLeft').closest('[data-psec]').scrollIntoView()")
+        await mp.screenshot(path=str(OUT / '98b_초월레이드_접힌목록.png'))
+        await mp.evaluate("() => { document.querySelector('#trLeft').closest('[data-psec]').querySelector('details.rfold').open = false; }")
+        # (11-22) 업데이트 소식: [확인]이 창 아래에 붙고, 맨 위 묶음만 펼침·나머지는 「이전 소식 n개」 한 줄
+        await mp.evaluate("() => { const G = window.__game; G.closePage(); G.showNotes(false); document.querySelector('.sheet').scrollTop = 99999; }")
+        await mp.wait_for_timeout(300)
+        nt = await mp.evaluate("""() => { const sh = document.querySelector('.sheet'), b = document.querySelector('#mBtns').getBoundingClientRect(), s = sh.getBoundingClientRect(); const o = document.querySelector('#notesOld'); const before = b.bottom; sh.scrollTop = 0; const after = document.querySelector('#mBtns').getBoundingClientRect().bottom;
+          return {sticky: sh.classList.contains('nsheet'), inView: b.bottom <= s.bottom + 2 && b.top >= s.top, same: Math.abs(before - after) < 2, openN: document.querySelectorAll('.ngrp[open]').length, oldClosed: !!o && !o.open, oldTxt: o ? o.querySelector('summary').textContent : ''}; }""")
+        check(nt['sticky'] and nt['inView'] and nt['same'] and nt['openN'] == 1 and nt['oldClosed'] and '이전 소식' in nt['oldTxt'] and '펼쳐보기' in nt['oldTxt'], f"업데이트 소식: [확인]이 스크롤해도 창 아래에 붙어 있고 맨 위 묶음만 펼침, 나머지는 한 줄로 접힘 {nt}")
+        await mp.screenshot(path=str(OUT / '98a_업데이트소식.png'))
+        await mp.evaluate("() => { const G = window.__game; document.querySelector('#modal-btn-0').click(); const m = document.querySelector('.sheet'); }")
+        await mp.evaluate("() => { const G = window.__game; G.showModal('x', '<p>a</p>', [{label:'확인', primary:true}]); }")
+        ns = await mp.evaluate("() => document.querySelector('.sheet').classList.contains('nsheet')")
+        check(not ns, "다른 창에는 소식 창의 붙박이 단추 규칙이 번지지 않는다")
+        await mp.evaluate("() => window.__game.hideModal()")
+        # (11-22) 영약: 달이기를 누른 영약 바로 아래에 처방이 펼쳐진다
+        await mp.evaluate("() => { const G = window.__game, S = G.S; G.hideModal(); S.world = 10; S.gold = 1e300; for (const k of ['m0','m1','m2','m3','m4']) S.mat[k] = 1e6; S.gems = 1e6; S.elix = {o:{}, offer:null, qi:0}; G.refreshStats(); G.buildTab('grow'); document.querySelector('#gv-elix').click(); }")
+        await mp.wait_for_timeout(300)
+        await mp.evaluate("() => document.querySelector('[data-brew=\"sin\"]').click()")
+        await mp.wait_for_timeout(300)
+        ex = await mp.evaluate("() => { const o = document.querySelector('.elx-of'), c = document.querySelector('#el-sin'); return {n: document.querySelectorAll('.elx-of').length, adj: !!o && o.previousElementSibling === c, cards: o ? o.querySelectorAll('[data-pick]').length : 0, wrap: !!document.querySelector('#elOfWrap')}; }")
+        check(ex['n'] == 1 and ex['adj'] and ex['cards'] == 3 and not ex['wrap'], f"영약: 처방 세 장이 달인 영약(신) 바로 아래에 펼쳐진다 {ex}")
+        await mp.screenshot(path=str(OUT / '98a_영약_처방.png'))
+        await mp.evaluate("() => { document.querySelector('[data-pick=\"0\"]').click(); }")
+        await mp.wait_for_timeout(200)
+        check(await mp.evaluate("() => document.querySelectorAll('.elx-of').length") == 0, "영약: 처방을 고르면 그 자리가 닫힌다")
+        await mp.evaluate("() => { const G = window.__game; G.S.elix = {o:{}, offer:null, qi:0}; G.closePage(); G.S.level = 660; G.buildTab('raid'); G.update(0.05); }")
+        await mp.wait_for_timeout(300)
         await mp.evaluate("() => { const el = document.querySelector('#trr-0'); if (el) el.scrollIntoView(); }")
         await mp.wait_for_timeout(300)
         await mp.screenshot(path=str(OUT / '98c_초월레이드.png'))

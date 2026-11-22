@@ -303,7 +303,7 @@ body.cmp #page .partbar{margin:5px 0 5px;padding:3px}body.cmp #page .ptab{paddin
 .elx-ln{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:3px}.elx-ln .k{min-width:66px;font-weight:700}.elx-ln .v{color:var(--jade);white-space:nowrap}
 body.portrait .card.elo{grid-template-columns:auto 1fr}body.portrait .card.elo .gbt{grid-column:1/-1;grid-template-columns:1fr 1fr;min-width:0}
 .pips{display:inline-flex;gap:2px}.pips i{width:9px;height:9px;border-radius:3px;background:var(--panel-3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}.pips i.on{background:var(--gc);box-shadow:0 0 6px -1px var(--gc)}
-.elx-of{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 20px -8px var(--gold)}
+.elx-of{margin-top:-2px;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 20px -8px var(--gold)}
 .elx-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
 .elx-card{border:0;border-radius:14px;padding:10px 8px;background:linear-gradient(160deg,var(--panel-2),var(--panel-3));color:var(--text);cursor:pointer;text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .elx-card b{font-size:13.5px;color:var(--gold)}.elx-card span{font-size:11px;color:var(--text-soft);line-height:1.35}.elx-card.best{box-shadow:inset 0 0 0 1px var(--gold),0 0 12px -4px var(--gold)}
@@ -838,6 +838,8 @@ body.heaven .page{background:radial-gradient(60% 50% at 85% 0%,rgba(255,236,170,
 .rpow .ok{color:#8ff0c4;font-weight:800}.rpow .bad{color:#ff8a8a;font-weight:800}
 /* 상위 레이드 「진」: 권장 전투력 네 가지 빛깔(모자람·딱 맞음·넉넉함·압도적) */
 .jt-low{color:#ff8a8a;font-weight:800}.jt-fit{color:#ffd96a;font-weight:800}.jt-good{color:#8ff0c4;font-weight:800}.jt-over{color:#9fd0ff;font-weight:800}
+.rfold{margin-top:8px}.rfold>summary{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px dashed var(--line-2);border-radius:12px;cursor:pointer;list-style:none;font-size:13px;font-weight:700;color:var(--text-soft)}
+.rfold>summary::-webkit-details-marker{display:none}.rfold>summary::after{content:'▾';transition:transform .2s}.rfold[open]>summary::after{transform:rotate(180deg)}.rfold[open]>summary{margin-bottom:8px}
 .rcard.jin{border-color:rgba(255,90,110,.38);background:linear-gradient(180deg,rgba(120,24,44,.34),var(--panel))}
 .rcard.jin .rport{position:relative}.rcard.jin .jmark{position:absolute;left:-4px;top:-4px;width:20px;height:20px;border-radius:50%;background:#a01028;color:#ffe9c8;font-size:12px;font-weight:900;display:grid;place-items:center;border:1px solid rgba(255,220,180,.6);box-shadow:0 1px 4px rgba(0,0,0,.5)}
 .rpow.jin{margin:4px 0}.jrules{margin:8px 0;padding-left:18px;font-size:12.5px;line-height:1.55;color:var(--text-soft)}.jrules b{color:var(--text)}
@@ -868,6 +870,11 @@ i.dust{display:inline-block;width:12px;height:12px;border-radius:3px;background:
 .ngrp summary::after{content:'▾';color:var(--text-soft);transition:transform .2s}
 .ngrp[open] summary::after{transform:rotate(180deg)}
 .ngrp ul{margin:0;padding:0 12px 10px}
+.nold{margin:0 0 8px}.nold>summary{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px dashed var(--line-2);border-radius:12px;cursor:pointer;list-style:none;font-size:13px;font-weight:700;color:var(--text-soft)}
+.nold>summary::-webkit-details-marker{display:none}.nold>summary::after{content:'▾';transition:transform .2s}.nold[open]>summary::after{transform:rotate(180deg)}
+.nold[open]>summary{margin-bottom:8px}
+.sheet.nsheet .mbtns{position:sticky;bottom:-18px;margin:10px -18px -18px;padding:10px 18px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(17,24,39,0),#111827 28%);z-index:2}
+body.hell .sheet.nsheet .mbtns{background:linear-gradient(180deg,rgba(23,11,15,0),#170b0f 28%)}
 .jm-top{display:grid;gap:6px;margin:0 0 8px}
 .jm-row1{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
 .jm-row1 .jm-sum{flex:1;min-width:230px;max-width:380px}
@@ -4656,9 +4663,13 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-22-1', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-22-4', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 22일 · 화면 편하게'],
+  ['업데이트 소식 창: [확인]이 늘 아래에 보여요', '소식이 길어도 끝까지 내릴 필요 없이, 창 아래에 [확인] 단추가 붙어 있어요. 소식 묶음은 맨 위 새 소식만 펼쳐 두고, 나머지는 「이전 소식 n개 펼쳐보기」 한 줄로 접어 뒀어요. [정보]에서 다시 볼 때도 같아요.'],
+  ['영약 달이기: 누른 영약 바로 아래에서 처방을 골라요', '아래쪽 영약에서 [달이기]를 눌러도 화면이 맨 위로 올라가지 않아요. 처방 세 장이 달인 영약 바로 아래에 펼쳐지고, 고르면 그 자리에서 이어서 달일 수 있어요.'],
+  ['진 레이드·초월 레이드: 보상 좋은 3곳만 먼저', '하루에 3번만 돌 수 있어서, 지금 도전할 수 있는 곳 가운데 보상이 좋은 3곳만 목록에 보여요(진 레이드는 모든 땅을 합쳐 3곳, 초월 레이드는 따로 3곳). 이번 주 첫 승리 보상이 남은 곳이 먼저예요. 나머지는 「다른 레이드 n개 보기」 한 줄로 접어 뒀고, 이미 깬 곳·잠긴 곳 표시도 그 안에서 그대로 볼 수 있어요.'],
   ['#', '11월 22일 · 권사 시너지'],
   ['주먹 길 권사: 맞받아칠수록 다음 한 방이 세져요', '보스를 맞받아치는 데 성공할 때마다 「받아낸 힘」이 한 겹씩(최대 3겹) 모이고, 다음 한 방이 겹마다 크게 터져요. 머리 위 붉은 점으로 보여요. 혼자 보스·레이드 보스를 칠 때만 있고, 몬스터 떼에는 없어요. [수련]의 직업 특성에서 「?」를 누르면 자세히 나와요.'],
   ['발 길 권사: 이어 찰수록 빨라져요', '같은 보스를 쉬지 않고 차면 「이어 차기」가 겹겹이 쌓여(최대 5겹) 공격과 기술 재사용이 점점 빨라져요. 머리 위 푸른 점으로 보여요. 보스에게만 걸리고, 못 차거나 대상이 바뀌면 처음부터예요.'],
@@ -5032,11 +5043,15 @@ function showErrLog(){
   showModal('오류 기록', rows || '<p>적힌 오류가 없어요.</p>', [{label:'지우기', fn:() => { try { localStorage.removeItem(ERR_KEY); } catch (e) {} errSeen = {}; }}, {label:'닫기', primary:true}]);
 }
 function showNotes(season){
-  // 묶음(['#', 이름])마다 접고 펴기. 가장 새 묶음만 펼쳐 둔다. season이면 시즌 1 소식
+  // 묶음(['#', 이름])마다 접고 펴기. 가장 새 묶음만 펼쳐 두고 나머지는 「이전 소식 n개」 한 줄로 접는다. [확인]은 창 아래에 붙박이. season이면 시즌 1 소식
   const LIST = season ? SEASON1_NOTES : NOTES;
   const groups = []; for (const [t, d] of LIST){ if (t === '#') groups.push({g:d, items:[]}); else if (groups.length) groups[groups.length - 1].items.push([t, d]); else groups.push({g:'소식', items:[[t, d]]}); }
-  showModal(season ? '시즌 1 개발 내용' : `업데이트 소식 · ${NOTE_VER.slice(0, 10)}`, groups.map((G, k) => `<details class="ngrp"${k ? '' : ' open'}><summary><b>${G.g}</b><span>${G.items.length}가지</span></summary>
-    <ul class="rewards notes">${G.items.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ul></details>`).join(''), [{label:'확인', primary:true}]);
+  const grp = (G, open) => `<details class="ngrp"${open ? ' open' : ''}><summary><b>${G.g}</b><span>${G.items.length}가지</span></summary>
+    <ul class="rewards notes">${G.items.map(([t, d]) => `<li><b>${t}</b><span>${d}</span></li>`).join('')}</ul></details>`;
+  const old = groups.slice(1);
+  showModal(season ? '시즌 1 개발 내용' : `업데이트 소식 · ${NOTE_VER.slice(0, 10)}`,
+    (groups[0] ? grp(groups[0], true) : '') + (old.length ? `<details class="nold" id="notesOld"><summary>이전 소식 ${old.length}개 펼쳐보기</summary>${old.map(G => grp(G, false)).join('')}</details>` : ''),
+    [{label:'확인', primary:true}], () => $('.sheet').classList.add('nsheet'));
   try { localStorage.setItem(NOTE_KEY, NOTE_VER); } catch (e) {}
 }
 // 로그인 화면에서 열었을 때는 안내 창을 닫으면 로그인 화면으로 돌아온다
@@ -19158,6 +19173,7 @@ let modalOpen = false;
 function showModal(title, html, buttons, onBuilt){
   $('#mTitle').textContent = title;
   $('#mBody').innerHTML = html;
+  $('.sheet').classList.remove('nsheet');
   const bx = $('#mBtns'); bx.innerHTML = '';
   buttons.forEach((bt, i) => {
     const el = document.createElement('button');
@@ -19524,11 +19540,10 @@ function buildElix(){
     <p class="small apt-leg">${aptLegend()}</p>
     <div class="card"><div class="ct">오장 조화<span class="tag" id="elSetNow"></span></div>
       <div class="elx-set">${EL_SET.map((x, i) => `<span data-set="${i}">${i + 1}단 · 합계 ${x.n} · 공격력·체력 ${x.se}단계 · 경험치 +${x.exp}%</span>`).join('')}</div></div>
-    <div id="elOfWrap">${ofHTML()}</div>
     <div class="elx">${ORGANS.map(O => `<div class="card elo" id="el-${O.k}" style="--gc:${O.c}">
       <div class="gbadge">${O.n}</div>
       <div><div class="nm">${O.n}<span class="l">${O.el} · ${O.d}</span></div><div data-r="lines"></div><div class="small" data-r="t" style="margin-top:3px"></div></div>
-      <div class="gbt"><button class="buy" data-brew="${O.k}"><span class="coin"></span><span data-r="cost"></span></button><button class="btn sm" data-reset="${O.k}">다시 달이기</button></div></div>`).join('')}</div>`;
+      <div class="gbt"><button class="buy" data-brew="${O.k}"><span class="coin"></span><span data-r="cost"></span></button><button class="btn sm" data-reset="${O.k}">다시 달이기</button></div></div>${of && of.o === O.k ? ofHTML() : ''}`).join('')}</div>`;   // 처방 고르기는 달인 영약 바로 아래에 펼침(화면 맨 위로 올라가지 않게)
   wireGrowSeg();
   panel.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
     const k = S.elix.offer && S.elix.offer.o, r = elPick(+b.dataset.pick); if (!r) return;
@@ -19544,6 +19559,7 @@ function buildElix(){
     const k = b.dataset.brew; if (S.elix && S.elix.offer){ addLog('먼저 처방을 골라요.', 'warn'); return; }
     if (!elBrew(k)){ addLog('엽전이나 재료가 모자라요.', 'warn'); sfx('click'); return; }
     sfx('summon'); buildTab('grow', true);
+    const ofc = panel.querySelector('.elx-of'); if (ofc) ofc.scrollIntoView({block:'nearest'});   // 처방이 화면 밖이면 그 자리까지만 살짝
   }));
   panel.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.reset, st = elSt(k), c = elResetCost(st);
@@ -21696,16 +21712,13 @@ function buildRaid(){
       <button class="btn rgo" data-e="1"></button>
     </div>`; })(entryInfo());
   // 지나온 땅의 레이드(부별 탭): 상위 단계 「진」(물의 신화 3단계) — 레이드마다 한 칸, 권장 전투력·내 전투력·주간 첫 승리 보상
+  // 진·초월 목록(사용자 요청): 하루에 3번만 돌 수 있으니 지금 도전할 수 있는 것 가운데 보상이 좋은 3곳만 보이고, 나머지는 「다른 레이드 n개 보기」 한 줄로 접는다(접힌 안쪽에도 같은 칸이 그대로 있어 단추·권장 전투력·깬 표시는 똑같이 갱신됨)
+  // 좋은 순서: ① 이번 주 첫 승리 보상이 남은 곳 ② 더 나중 땅 ③ 땅 안에서 더 위 단계. 이미 깬 곳(첫 승리 보상이 나간 곳)은 뒤로. 진은 땅 전체를 합쳐 3곳, 초월은 따로 3곳
+  const rfOpen = buildRaid.rf || (buildRaid.rf = {}), SHOWN = 3;
+  const foldOf = (key, cs) => cs.length ? `<details class="rfold" data-rf="${key}"${rfOpen[key] ? ' open' : ''}><summary>다른 레이드 ${cs.length}개 보기</summary><div class="rlist">${cs.join('')}</div></details>` : '';
   jinCheck();
-  const past = RAID_WORLDS.filter(R => R.w < S.world || (R.w === S.world && jinOpen(R.w))).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length, jOn = jinOpen(R.w);
-    if (!jOn) return `<div data-psec><h3 class="sub">${WORLD_NAME[R.w]} 레이드 <span class="small" style="font-weight:600">지나온 땅 · ${done}/${R.n} 토벌</span></h3><div class="rlist rpast">${L.map(info => { const ok = !!S.raid.first[info.key];
-      return `<div class="rcard past${ok ? ' done' : ''}" data-part="${partOfW(R.w)}" data-pk="${info.key}"><div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""></div>
-        <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`;
-    const jdone = L.filter(x => S.jin.win['j' + x.key]).length;
-    return `<div data-psec><div class="ph"><h2>${WORLD_NAME[R.w]} 레이드 · 진(眞)</h2><span class="tkbadge jin-left"></span></div>
-      <p class="hint">${R.w < S.world ? '지나온 땅' : '이야기를 마친 땅'} ${WORLD_NAME[R.w]}의 레이드 ${R.n}곳(일반 ${done}/${R.n} 토벌)의 <b>상위 단계</b>예요(진 ${jdone}/${R.n} 토벌). 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 하루 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀), 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째로 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
-      <div class="rlist">${L.map((b0, i) => { const info = jinInfo(R.w, i), wk = !S.jin.wk[info.key], n = S.jin.win[info.key] || 0, pity = Math.round(jinPity(info.key) * 100);
-        return `<div class="rcard jin" id="jin-${R.w}-${i}" data-part="${partOfW(R.w)}" data-pk="${b0.key}">
+  const jinCard = (R, b0, i) => { const info = jinInfo(R.w, i), wk = !S.jin.wk[info.key], n = S.jin.win[info.key] || 0, pity = Math.round(jinPity(info.key) * 100);
+    return `<div class="rcard jin" id="jin-${R.w}-${i}">
           <div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""><span class="jmark">眞</span></div>
           <div class="rbody">
             <div class="rtop"><b>${info.label}</b><span class="rstate ${wk ? 'new' : 'done'}">${wk ? '주간 첫 승리 보상!' : '이번 주 토벌함 ✓'}</span></div>
@@ -21714,13 +21727,22 @@ function buildRaid(){
             <div class="rchips"><span class="rchip rc-gem">보석 ${fmt(jinGems(info))}${wk ? ` +${fmt(jinWeekGems(info))}` : ''}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-acc">${GRADES[itemG(jinGearIt(R.w))].name} 장비</span><span class="rchip rc-myth">신화 조각${wk ? ` ${1 + SHARD_SRC.raidFirst}` : ''}</span>${soulOpen() ? '<span class="rchip rc-av">넋 구슬 2배</span>' : ''}<span class="rchip rc-av">진 아바타</span></div>
           </div>
           <button class="btn rgo" data-jin="${R.w}:${i}"></button>
-        </div>`; }).join('')}</div></div>`; }).join('');
+        </div>`; };
+  const jinWorlds = RAID_WORLDS.filter(R => R.w < S.world || (R.w === S.world && jinOpen(R.w))).filter(R => jinOpen(R.w));
+  const jinAll = []; for (const R of jinWorlds){ const L = Array.from({length:R.n}, (_, i) => R.info(i)); L.forEach((b0, i) => jinAll.push({R, b0, i, wk:!S.jin.wk[jinInfo(R.w, i).key]})); }
+  jinAll.sort((a, b) => (b.wk - a.wk) || (b.R.w - a.R.w) || (b.i - a.i));
+  const jinTotN = jinAll.length, jinDone = jinAll.filter(x => S.jin.win['j' + x.b0.key]).length;
+  const jinSec = !jinAll.length ? '' : `<div class="jinsec"><div class="ph"><h2>진(眞) 레이드</h2><span class="tkbadge jin-left"></span></div>
+      <p class="hint">지나온 땅과 이야기를 마친 땅의 레이드마다 있는 <b>상위 단계</b>예요(진 ${jinDone}/${jinTotN} 토벌). 하루에 <b>${JIN.tries}번</b>(모든 진을 합쳐, 들어가면 씀)만 돌 수 있어서 <b>지금 보상이 좋은 ${SHOWN}곳</b>만 먼저 보여요 — 이번 주 첫 승리 보상이 남은 곳이 먼저, 그다음은 더 나중 땅·더 위 단계 순이에요. 보스의 세기가 <b>정해져 있어서</b> 내 힘이 권장 전투력을 넘을수록 쉬워지고, 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이겨요. 레이드마다 <b>주에 한 번 첫 승리 보상</b>. 전멸기·큰 살·「쫓는 살」이 나오고 자동 피하기는 절반만 통해요. ${JIN.lives}번째로 쓰러지면 끝, 탕약은 한 판에 ${JIN.pots}개까지.</p>
+      <div class="rlist">${jinAll.slice(0, SHOWN).map(x => jinCard(x.R, x.b0, x.i)).join('')}</div>${foldOf('j', jinAll.slice(SHOWN).map(x => jinCard(x.R, x.b0, x.i)))}</div>`;
+  const past = RAID_WORLDS.filter(R => (R.w < S.world || (R.w === S.world && jinOpen(R.w))) && !jinOpen(R.w)).reverse().map(R => { const L = Array.from({length:R.n}, (_, i) => R.info(i)), done = L.filter(x => S.raid.first[x.key]).length;
+    return `<div data-psec><h3 class="sub">${WORLD_NAME[R.w]} 레이드 <span class="small" style="font-weight:600">지나온 땅 · ${done}/${R.n} 토벌</span></h3><div class="rlist rpast">${L.map(info => { const ok = !!S.raid.first[info.key];
+      return `<div class="rcard past${ok ? ' done' : ''}" data-part="${partOfW(R.w)}" data-pk="${info.key}"><div class="rport"><img src="${bossPortrait(info.type || 'm_' + (info.cls || 'musa'), info.color)}" alt=""></div>
+        <div class="rbody"><div class="rtop"><b>${info.label}</b><span class="rstate ${ok ? 'done' : ''}">${ok ? '토벌함 ✓' : '토벌 못 함'}</span></div><div class="rsub">${info.bossName}</div></div></div>`; }).join('')}</div></div>`; }).join('');
   // 초월 레이드(11월 21일): 5부 레이드 보스의 다른 모습 다섯 — 초월의 조각이 열린 용사(수미산 이야기를 마침)에게만 보인다
   transRdCheck();
-  const transSec = !transOpen() ? '' : `<div data-psec><div class="ph"><h2>초월 레이드</h2><span class="tkbadge" id="trLeft"></span></div>
-      <p class="hint">5부 레이드 보스의 <b>다른 모습</b> 다섯이에요. 레벨 600에서 700으로 가는 길에 Lv.${TRANS_RAIDS.map(T => T.lv).join('·')}에 한 곳씩 열려요. 세기가 <b>정해져 있고</b>(진 레이드와 같은 싸움) <b>이기면 주 ${TRANS_RD.week}번까지</b> 초월의 조각을 받아요. 져도 횟수는 안 써요.</p>
-      <div class="rlist">${TRANS_RAIDS.map((T, k) => { const info = transInfo(k), tot = S.trans.rd.tot[k] || 0;
-        return `<div class="rcard jin" id="trr-${k}" data-part="5" data-pk="t${k}" data-pn="0">
+  const transCard = k => { const T = TRANS_RAIDS[k], info = transInfo(k), tot = S.trans.rd.tot[k] || 0;
+    return `<div class="rcard jin" id="trr-${k}" data-part="5" data-pk="t${k}" data-pn="0">
           <div class="rport"><img src="${bossPortrait(info.type || 'm_musa', info.color)}" alt=""><span class="jmark">超</span></div>
           <div class="rbody">
             <div class="rtop"><b>${T.name}</b><span class="rstate" data-trs="${k}"></span></div>
@@ -21729,7 +21751,13 @@ function buildRaid(){
             <div class="rchips"><span class="rchip rc-myth">초월의 조각 ${T.shard}${tot ? '' : ` +${TRANS_RD.firstShard}`}</span><span class="rchip rc-gem">보석 ${fmt(T.gems)}</span><span class="rchip rc-gold">엽전</span><span class="rchip rc-myth">신화 조각 2</span></div>
           </div>
           <button class="btn rgo" data-trk="${k}"></button>
-        </div>`; }).join('')}</div></div>`;
+        </div>`; };
+  // 좋은 순서: 열린 곳이 먼저 → 처음 이기는 보상(조각 +첫 승리)이 남은 곳 → 더 위 단계. 잠긴 곳은 맨 뒤(열린 곳이 하나도 없으면 가장 먼저 열릴 곳 하나만 앞에)
+  const trOrder = TRANS_RAIDS.map((_, k) => k).sort((a, b) => (transRaidOpen(b) - transRaidOpen(a)) || ((!(S.trans.rd.tot[b])) - (!(S.trans.rd.tot[a]))) || (b - a));
+  const trShown = trOrder.filter(k => transRaidOpen(k)).length ? SHOWN : 1;
+  const transSec = !transOpen() ? '' : `<div data-psec><div class="ph"><h2>초월 레이드</h2><span class="tkbadge" id="trLeft"></span></div>
+      <p class="hint">5부 레이드 보스의 <b>다른 모습</b> 다섯이에요. 레벨 600에서 700으로 가는 길에 Lv.${TRANS_RAIDS.map(T => T.lv).join('·')}에 한 곳씩 열려요. 세기가 <b>정해져 있고</b>(진 레이드와 같은 싸움) <b>이기면 주 ${TRANS_RD.week}번까지</b> 초월의 조각을 받아요. 져도 횟수는 안 써요. 지금 도전할 수 있는 곳 가운데 <b>보상이 좋은 ${SHOWN}곳</b>(처음 이기는 보상이 남은 곳 먼저, 그다음 더 위 단계)만 먼저 보여요.</p>
+      <div class="rlist">${trOrder.slice(0, trShown).map(transCard).join('')}</div>${foldOf('t', trOrder.slice(trShown).map(transCard))}</div>`;
   panel.innerHTML = top + `${partBarHTML()}
     <div data-psec><div class="ph"><h2>${WORLD_NAME[S.world]} 레이드</h2><span class="tkbadge" id="tkInfo"></span></div>
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개를 쓰고(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
@@ -21738,13 +21766,14 @@ function buildRaid(){
     ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
     ${eCard ? `<p class="small" style="margin:0 0 8px"><b>입문 레이드</b>는 이 땅에 들어서자마자 열리고 늘 열려 있어요. 세기는 내가 지나온 단계를 따라가서, 다른 레이드가 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 쓰기 좋아요. 이야기의 레이드 횟수에는 세지 않아요.</p>` : ''}
     <div class="rlist">${eCard}${cards.join('')}</div></div>
-    ${transSec}${past}`;
+    ${jinSec}${transSec}${past}`;
   wireSeg();
   partWire('raid', {own:k => !!S.raid.first[k], count:raidPartCount, filt:false, fresh:false});
   panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => bt.addEventListener('click', () => confirmRaid(+bt.dataset.i)));
   panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => bt.addEventListener('click', () => { const [w, i] = bt.dataset.jin.split(':').map(Number); confirmJin(w, i); }));
   { const eb = panel.querySelector('.rcard .btn[data-e]'); if (eb) eb.addEventListener('click', confirmEntry); }
   panel.querySelectorAll('.rcard .btn[data-trk]').forEach(bt => bt.addEventListener('click', () => confirmTrans(+bt.dataset.trk)));
+  panel.querySelectorAll('details.rfold').forEach(d => d.addEventListener('toggle', () => { rfOpen[d.dataset.rf] = d.open; }));   // 다시 그려도 펼친 채로
   return () => {
     const live = $('#raidLive');
     if (raid){
