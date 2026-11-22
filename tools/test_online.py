@@ -472,7 +472,8 @@ async def main():
                 print('DEBUG F', await F.inner_text('#mTitle'), '|', (await F.inner_text('#mBody'))[:200], '|', await F.evaluate('() => !!window.__game.session'))
                 raise
             lvBefore = db("select save::json->>'level' from samhan_chars where name = '온라인용사'")
-            kk = await B.evaluate('async () => await window.__game.checkKick()')
+            # 20초마다 도는 자동 확인이 먼저 멈춰 놓았으면 checkKick()은 「이미 멈춤」이라 false를 돌려준다 → 멈춤 창이 떠 있어도 멈춘 것으로 본다
+            kk = await B.evaluate('async () => !!(await window.__game.checkKick()) || /다른 기기에서 접속/.test(document.querySelector("#mTitle").textContent)')
             ttlB = await B.inner_text('#mTitle')
             await B.evaluate("() => { window.__game.S.level = 4; }")
             await B.evaluate('async () => { await window.__game.pushOnline(); }')
