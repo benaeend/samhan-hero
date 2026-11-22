@@ -4663,9 +4663,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-22-6', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-22-8', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 22일 · 권사 세기 조정'],
+  ['권사 초각성기: 싸움마다 터지는 횟수가 고르게', '연타 칸이 이제 「싸움이 나아간 만큼」(보스 체력이 준 만큼, 또는 지난 시간만큼) 차요. 예전엔 싸움이 짧으면 0~1번, 길면 7번까지 터져 판마다 크게 달랐는데, 이제는 보스가 세든 약하든 한 싸움에 4번 안팎(맞받아치기·이어 차기를 잘하면 5번) 터져요. 한 싸움 피해 합은 예전 한 방과 비슷해요.'],
+  ['발 길 권사가 보스에게 조금 세졌어요', '같은 보스를 이어 차면 빨라지는 「이어 차기」가 더 크게 붙어요(5겹이면 공격·기술 재사용 +7.5% → +20%). 보스·레이드 보스를 혼자 칠 때만이라 사냥 빠르기는 그대로예요. 발 길이 가장 약했던 것을 무사와 비슷하게 맞췄어요.'],
   ['#', '11월 22일 · 화면 편하게'],
   ['업데이트 소식 창: [확인]이 늘 아래에 보여요', '소식이 길어도 끝까지 내릴 필요 없이, 창 아래에 [확인] 단추가 붙어 있어요. 소식 묶음은 맨 위 새 소식만 펼쳐 두고, 나머지는 「이전 소식 n개 펼쳐보기」 한 줄로 접어 뒀어요. [정보]에서 다시 볼 때도 같아요.'],
   ['영약 달이기: 누른 영약 바로 아래에서 처방을 골라요', '아래쪽 영약에서 [달이기]를 눌러도 화면이 맨 위로 올라가지 않아요. 처방 세 장이 달인 영약 바로 아래에 펼쳐지고, 고르면 그 자리에서 이어서 달일 수 있어요.'],
@@ -5967,7 +5970,7 @@ const FOOT = {each:0.5, dash:1.6, spd:0.08, mv:0.2, jobB:1.1};
    주먹 「받아낸 힘」: 보스를 맞받아치는 데 성공할 때마다 힘이 한 겹(최대 GW.fMax, GW.fHold초) 모이고, 다음 한 방(기본 공격·기술 첫 타)이 (1 + GW.fK × 겹)배로 터지며 모두 풀린다(맞받아치기 자체는 겹을 안 씀).
    발 「이어 차기」: 같은 보스를 이어 찰 때마다(기본 공격 한 번에 한 겹, 최대 GW.kMax, 안 차면 GW.kHold초 뒤 풀림·대상 바뀌면 처음부터) 공격 속도와 기술 재사용이 흐르는 속도 +GW.kSpd씩(배율).
    수치는 tools/sim_gwon.py(무사 저장에서 직업만 권사로 바꿔 보스 bench 120초, 켬/끔 — window.__game.noGw)로 잼 */
-const GW = {fMax:3, fHold:8, fK:1.5, kMax:5, kHold:2.5, kSpd:0.015};   // 잼(11-22, 무사 저장 4개·보스 bench 120초·보스가 3초에 한 번 때림, 끔 대비): 주먹 fK 0.5 +4% · 1.0 +4% · 1.5 +10.6% — 발 kSpd 0.03 +15.7% · 0.02 +14% · 0.015 +8.8%
+const GW = {fMax:3, fHold:8, fK:1.5, kMax:5, kHold:2.5, kSpd:0.04};   // 잼(11-22, 무사 저장 4개·보스 bench 120초·보스가 3초에 한 번 때림, 끔 대비): 주먹 fK 0.5 +4% · 1.0 +4% · 1.5 +10.6% — 발 kSpd 0.03 +15.7% · 0.02 +14% · 0.015 +8.8%. (11-22 권사 세기 조정) 발이 무사의 0.79배로 가장 약해 kSpd 0.015 → 0.04(혼자 보스만, 사냥은 그대로): 무사 저장 다섯 곳 켬 0.79 → 0.9 안팎(tools/sim_gwon.py)
 const gwOn = () => !(window.__game && window.__game.noGw);
 const gwKSpd = () => gwOn() && gwonBr() === 2 && hero.gwKT > 0 ? 1 + GW.kSpd * (hero.gwK || 0) : 1;
 const kiMul = () => hero.kiT > 0 ? 1 + (hero.ki || 0) * FIST.kiAtk / 100 : 1;
@@ -7226,13 +7229,21 @@ function startFight(info, party, o){
 }
 /* 초각성기: 레이드(타임 보스 포함)마다 한 번. 12초가 지나거나 보스 체력이 60% 아래로 내려가면 저절로 쓴다 */
 /* 권사(2026-11-22)의 첫째 초각성기만 「연타가 쌓여 저절로 터지는 패시브」: 보스·레이드 보스를 칠 때마다 연타 칸(raid.awk.g)이 쌓이고 GWA.full이 되면 저절로 터진다(몬스터 떼·사냥에서는 안 쌓임).
-   주먹 기본 공격 한 번 +1 · 주먹 맞받아치기 성공 +GWA.ctr · 발 한 번 차기 +GWA.foot(같은 보스를 이어 찬 두 번째부터 +GWA.chain). 터질 때마다 피해 = realDps × GWA.sec초 몫(4차 뒤 GWA.sec4), 5번에 나눠 침. 한 판 최대 GWA.max번.
-   수치는 tools/sim_gwon_awk.py로 잼: 한 판 평균 4~5번 터져 총합이 예전 한 방(5초 몫 · 4차 뒤 8초 몫)과 비슷하게 */
-const GWA = {full:60, ctr:4, chain:1, foot:0.5, sec:1.2, sec4:1.92, max:7};
+   (처음 판) 주먹 한 번 +1 · 맞받아치기 +4 · 발 +0.5/이어 찬 발 +1로 60칸 — 아래 「권사 세기 조정」에서 바꿈. 터질 때마다 피해 = realDps × GWA.sec초 몫(4차 뒤 GWA.sec4), 5번에 나눠 침. 한 판 최대 GWA.max번.
+   수치는 tools/sim_gwon_awk.py로 잼: 한 판 평균 4~5번 터져 총합이 예전 한 방(5초 몫 · 4차 뒤 8초 몫)과 비슷하게
+   (2026-11-22 권사 세기 조정) 예전엔 칠 때마다 칸이 일정하게(60칸) 차서 싸움이 짧으면 0~1번, 길면 7번 — 실제 레이드(2~90초)에서 한 판 총합이 예전 한 방의 0~1.7배로 흔들렸다.
+   이제 칸은 「내가 보스를 칠 때, 그 사이 싸움이 나아간 만큼」 찬다: 나아간 몫 = max(보스 체력이 준 몫, 지난 시간 ÷ GWA.t초), 1/GWA.n마다 가득(GWA.full)
+   — 보스가 세든 약하든(짧은 판·긴 판·지는 판) 한 판에 4번 안팎.
+   (연타 칸 스스로 터진 피해 A.ex는 빼고 셈.) 맞받아치기 성공 +GWA.ctr·이어 찬 발 +GWA.chain은 그 위에 덤으로 더 차되, 한 판에 덤은 GWA.bmax까지. 한 판 최대 GWA.max번.
+   잰 도구 tools/sim_gwon_awk_real.py(실제 레이드·진을 끝까지) */
+const GWA = {full:100, n:4.6, t:60, ctr:15, chain:0.35, bmax:100, sec:1.2, sec4:1.92, max:6};
 function gwAwkAdd(tg, n){
   const R = raid, A = R && R.awk; if (!A || !A.gw || A.used || !R.boss || tg !== R.boss || R.boss.dead || R.boss.spawnT > 0 || hero.dead || (A.n || 0) >= GWA.max) return;
-  A.g = (A.g || 0) + n;
-  if (A.g >= GWA.full){ A.g = (A.n + 1 >= GWA.max) ? 0 : A.g - GWA.full; A.n = (A.n || 0) + 1; castAwaken(); }
+  const B = R.boss, p = Math.max(0, Math.min(1, Math.max(1 - (B.hp + (A.ex || 0)) / Math.max(1e-9, B.maxHp), (R.limit - R.time) / GWA.t))), d = Math.max(0, p - (A.lp || 0));
+  A.lp = Math.max(A.lp || 0, p);
+  const b = Math.max(0, Math.min(n || 0, GWA.bmax - (A.b || 0))); A.b = (A.b || 0) + b;
+  A.g = (A.g || 0) + d * GWA.n * GWA.full + b;
+  if (A.g >= GWA.full){ A.g = (A.n + 1 >= GWA.max) ? 0 : Math.min(GWA.full * 0.5, A.g - GWA.full); A.n = (A.n || 0) + 1; castAwaken(); }
 }
 const AWAKEN_PCT = 15000, AWAKEN_SEC = 5, AWAKEN_SEC4 = 8;   // AWAKEN_PCT는 예전 값(설명용), 지금은 실제 보스 피해 몇 초 몫. (물의 신화) 8·12초 → 5·8초 몫(넋 부름·변신과 겹쳐 한 판에 큰 한 방이 너무 많음). 동료 초각성도 5초 몫
 function castAwaken(){
@@ -7245,7 +7256,7 @@ function castAwaken(){
   fx.push({type:'awaken', t:0, dur:1.3, color:C.fx, x:B.x, y:B.y - mobHeight(B) * 0.5});
   fx.push({type:C.nukeFx, t:0, dur:1, pts:[[B.x - 22, B.y - 8], [B.x, B.y - 24], [B.x + 22, B.y - 8], [B.x - 12, B.y - 36], [B.x + 12, B.y - 36], [B.x, B.y - 2]], seed:Math.random() * 1000});
   shake = gw ? 0.3 : 0.7;
-  for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead){ hitNoBase = true; hit(B, dmg / 5, 'skill', true, true); hitNoBase = false; } });
+  for (let k = 0; k < 5; k++) after(k * 0.14, () => { if (raid === R && !B.dead){ const h0 = B.hp; hitNoBase = true; hit(B, dmg / 5, 'skill', true, true); hitNoBase = false; if (gw) R.awk.ex = (R.awk.ex || 0) + Math.max(0, h0 - Math.max(0, B.hp)); } });   // 권사: 연타 칸이 터진 피해는 칸 채우기에서 뺌
   if (!gw || (R.awk.n || 0) <= 1) addLog(`초각성기 · ${S.job >= 4 ? C.awaken4 : C.awaken}!`, 'gain'); sfx('awaken');
 }
 /* ================= 초각성기 2(물의 신화 6단계, PLAN 「초각성기 2」) =================
@@ -9869,12 +9880,12 @@ function gwonAttack(tg){   // 권사의 기본 공격(위 FIST·FOOT)
     if ((tg.boss || tg.raid) && gwOn()){ if (hero.gwTg !== tg){ hero.gwTg = tg; hero.gwK = 0; } hero.gwK = Math.min(GW.kMax, (hero.gwK || 0) + 1); hero.gwKT = GW.kHold; }   // 「이어 차기」: 같은 보스를 이어 찰수록 겹
     if (dash) addText('파고들기', hero.x, hero.y - 40, '#9fe7ff', 9, true);
     fx.push({type:'kick', t:0, dur:0.22, x:px, y:py, dir:hero.dir, big:fin || dash});
-    gwAwkAdd(tg, hero.gwK >= 2 && hero.gwTg === tg ? GWA.chain : GWA.foot);   // 초각성 연타 칸: 두 번 차는 발은 한 번에 +GWA.foot, 이어 찬(같은 보스를 두 번째부터) 발은 +GWA.chain
+    gwAwkAdd(tg, hero.gwK >= 2 && hero.gwTg === tg ? GWA.chain : 0);   // 초각성 연타 칸: 보스 체력이 준 만큼 차고, 이어 찬(같은 보스를 두 번째부터) 발은 덤 +GWA.chain
     hit(tg, ST.atk * m * FOOT.each * (dash ? FOOT.dash : 1), 'basic');
     after(0.1, () => { if (tg.dead || hero.dead) return; fx.push({type:'kick', t:0, dur:0.2, x:px, y:py, dir:hero.dir, big:fin}); hit(tg, ST.atk * m * FOOT.each, 'basic'); });
   } else {
     fx.push({type:'fist', t:0, dur:fin ? 0.3 : 0.2, x:px, y:py, big:fin, br});
-    gwAwkAdd(tg, 1);   // 초각성 연타 칸 +1
+    gwAwkAdd(tg, 0);   // 초각성 연타 칸: 보스 체력이 준 만큼
     hit(tg, ST.atk * m, 'basic');
     if (fin){ shake = Math.max(shake, 0.08); addText('연권!', hero.x, hero.y - 40, '#ffb84a', 9, true); }
   }
@@ -19928,7 +19939,7 @@ function buildSkill(){
     <div class="card ${S.awaken ? 'ready' : ''}" style="margin-top:14px">
       <div class="ct"><span style="color:var(--gold)">초각성기</span> · ${cls().awaken}<span class="tag">${S.awaken ? '익힘' : '잠김'}</span></div>
       <p class="small" style="margin:0 0 4px">꼬리표 없음 — 내 실제 보스 피해 몫이라 적성이 저절로 들어가요.</p>
-      ${S.cls === 'gwon' ? `<p class="story">권사의 초각성기는 <b>연타가 쌓이면 저절로 터지는 힘</b>이에요. 레이드·타임 보스 같은 보스 싸움에서 보스를 칠 때마다 머리 위 금빛 막대(연타 칸)가 차오르고, 맞받아치기(주먹 길)나 이어 차기(발 길)에 성공하면 더 많이 차요. 가득 차면 내 보스 피해 <b>${GWA.sec}초 몫</b>(4차 전직 뒤 ${GWA.sec4}초)이 다섯 번에 나뉘어 터지고, 한 싸움에 여러 번(평균 4~5번, 최대 ${GWA.max}번) 터져요. 몬스터 떼를 잡을 때는 쌓이지 않아요.</p>` : `<p class="story">레이드·타임 보스에서 <b>한 싸움에 딱 한 번</b>, 내 보스 피해 <b>${AWAKEN_SEC}초 몫</b>(4차 전직 뒤 ${AWAKEN_SEC4}초)을 다섯 번에 나눠 퍼부어요. 싸움이 시작되고 12초가 지나거나 보스 체력이 60% 아래로 떨어지면 저절로 써요.</p>`}
+      ${S.cls === 'gwon' ? `<p class="story">권사의 초각성기는 <b>연타가 쌓이면 저절로 터지는 힘</b>이에요. 레이드·타임 보스 같은 보스 싸움에서 보스를 칠 때마다 머리 위 금빛 막대(연타 칸)가 <b>싸움이 나아간 만큼</b>(보스 체력이 준 만큼, 또는 지난 시간만큼) 차오르고, 맞받아치기(주먹 길)나 이어 차기(발 길)에 성공하면 덤으로 더 차요. 가득 차면 내 보스 피해 <b>${GWA.sec}초 몫</b>(4차 전직 뒤 ${GWA.sec4}초)이 다섯 번에 나뉘어 터져요. 보스가 세든 약하든 한 싸움에 4번 안팎(덤을 잘 채우면 5번, 최대 ${GWA.max}번) 터져요. 몬스터 떼를 잡을 때는 쌓이지 않아요.</p>` : `<p class="story">레이드·타임 보스에서 <b>한 싸움에 딱 한 번</b>, 내 보스 피해 <b>${AWAKEN_SEC}초 몫</b>(4차 전직 뒤 ${AWAKEN_SEC4}초)을 다섯 번에 나눠 퍼부어요. 싸움이 시작되고 12초가 지나거나 보스 체력이 60% 아래로 떨어지면 저절로 써요.</p>`}
       ${S.awaken ? '' : `<p class="small">배우는 법: 환생한 뒤 저승 레벨 60을 넘기고, 시왕 레이드 「송제전」을 토벌한 다음, 저승 이야기의 「각성의 시련」 퀘스트를 완료해요.</p>`}
     </div>
     ${aw2Open() || S.aw2.got ? `<div class="card ${S.aw2.got ? 'ready' : ''}" style="margin-top:14px" id="aw2Info">
