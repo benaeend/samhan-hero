@@ -20128,6 +20128,7 @@ function spiritCardHTML(slot){
   const st = spSt(), cur = spBeast(slot), P = st.pool[slot];
   return `<div class="card sp" id="spCard"><div class="ct">깃든 짐승<span class="tag">영물 · 5부</span></div>
     <p class="small" id="spLine" style="margin:0 0 6px">${spiritLine()}</p>
+    <p class="small" style="margin:0 0 6px"><b>어디서 얻나요?</b> 영물 장비는 5부 천축의 <b>수문장·레이드</b>, [보물 동굴]의 <b>쿠베라의 곳간</b>, [천공의 탑] <b>401층부터</b>의 문지기에서 나와요. 장비를 얻을 때 깃든 짐승이 무작위로 하나 정해지고, 짐승 옆 숫자가 <b>가진 영물 수</b>예요. 같은 칸에서 영물 4개를 합성하면 짐승이 이어져요. 낀 짐승은 아래 단추로 바꿔요.</p>
     <p class="small apt-leg" style="margin:0 0 4px">${aptLegend()}</p>
     <div class="spbtns" role="group" aria-label="깃든 짐승 고르기">${SPIRITS.map((B, b) => `<button class="chip" data-spb="${b}" aria-pressed="${cur === b}" ${P[b] > 0 ? '' : 'disabled'} style="--sc:${B.color}"><span style="color:${B.color}">●</span> ${B.name}${aptStarOf(APT_CAT.spirit, B.k)} ${P[b]}</button>`).join('')}</div>
     <p class="small" style="margin:6px 0 0">짐승마다 같은 짐승을 <b>2·3·5칸</b>에 맞추면 추가 효과가 켜져요(코끼리 ${spFxText(SP_FX.elephant[2])} · 공작 ${spFxText(SP_FX.peacock[2])} · 뱀 ${spFxText(SP_FX.serpent[2])} · 원숭이 ${spFxText(SP_FX.monkey[2])} · 소 ${spFxText(SP_FX.ox[2])} — 5칸 때). 영물끼리 합성하면 짐승이 이어져요.</p></div>`;
