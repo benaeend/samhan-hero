@@ -431,6 +431,7 @@ body.hell .tabs{background:rgba(22,9,12,.96)}
 .ct{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;letter-spacing:-.2px}
 .ct .tag{margin-left:auto;font-weight:700;font-size:11px;color:var(--text-soft);white-space:nowrap}
 .ct .badge{color:var(--gold)}
+.numtag{font:inherit;font-size:10.5px;font-weight:800;color:var(--gold);background:rgba(255,210,90,.12);border:1px solid rgba(255,210,90,.35);border-radius:999px;padding:1px 7px;cursor:pointer}
 .story{font-size:12.5px;color:#b8c2d6;margin:0;max-width:62ch;line-height:1.55}
 .meter{height:8px;border-radius:999px;background:rgba(255,255,255,.07);position:relative;overflow:hidden}
 .meter i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:999px;background:linear-gradient(90deg,#1fb985,#7ff0c4)}
@@ -4675,9 +4676,12 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-22-8', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-26-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 26일 · 숫자 단위 줄여 보기'],
+  ['싸움 숫자가 너무 커졌어요: 3부부터 줄여 보여 줘요', '전투력·피해·체력·공격력이 조·경·해·자…로 너무 길어져서, 가장 멀리 간 땅을 기준으로 3부는 1억, 4부는 1조, 5부는 1경으로 나눠 보여 줘요(1·2부는 그대로예요). 억을 넘으면 「41,200억」처럼 억 단위 숫자로 써요. 한 화면의 싸움 숫자는 모두 같은 값으로 나누니까 권장 전투력과 내 전투력도 그대로 견줄 수 있고, 힘은 하나도 안 바뀌어요. 엽전·보석·경험치·레벨은 그대로예요. 너무 작아진 숫자는 「1 미만」으로 보여요.'],
+  ['[정보]에서 켜고 끌 수 있어요', '[정보]의 「싸움 숫자 줄여 보기」에서 켬·끔을 골라요(처음엔 켬, 이 기기에만 저장돼요). 줄여 보는 동안에는 [내 정보]의 전투력 옆에 「숫자 ÷1경」 같은 꼬리표가 붙고, 누르면 설명이 떠요. 새 땅에 처음 들어서면 길잡이 까치가 한 번 알려 줘요. 다른 용사의 정보 창 숫자도 내 기준으로 줄여 보여요.'],
   ['#', '11월 22일 · 권사 세기 조정'],
   ['권사 초각성기: 싸움마다 터지는 횟수가 고르게', '연타 칸이 이제 「싸움이 나아간 만큼」(보스 체력이 준 만큼, 또는 지난 시간만큼) 차요. 예전엔 싸움이 짧으면 0~1번, 길면 7번까지 터져 판마다 크게 달랐는데, 이제는 보스가 세든 약하든 한 싸움에 4번 안팎(맞받아치기·이어 차기를 잘하면 5번) 터져요. 한 싸움 피해 합은 예전 한 방과 비슷해요.'],
   ['발 길 권사가 보스에게 조금 세졌어요', '같은 보스를 이어 차면 빨라지는 「이어 차기」가 더 크게 붙어요(5겹이면 공격·기술 재사용 +7.5% → +20%). 보스·레이드 보스를 혼자 칠 때만이라 사냥 빠르기는 그대로예요. 발 길이 가장 약했던 것을 무사와 비슷하게 맞췄어요.'],
@@ -5549,6 +5553,47 @@ function fmt(n){
   if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
   return s + UNITS[u];
 }
+/* ===== 싸움 숫자 줄여 보기(2026-11-26, 숫자 표시 패치) =====
+   전투력·피해·체력·공격력 같은 「싸움 숫자」만 화면에서 부마다 만 배씩 줄여 보여 준다(저장 값·계산·밸런스·서버는 그대로 — 글자만).
+   · 기준 = 가장 멀리 간 부(S.best에서 셈, 지금 세계 S.world·withWorld 안 임시 세계와 무관, 줄지 않음): 1·2부 ÷1(그대로), 3부 ÷1억, 4부 ÷1조, 5부 ÷1경
+   · 맨 위 단위는 억: 줄인 값이 1조를 넘으면 조·경… 대신 「41,200억」처럼 억 단위 쉼표 숫자. 줄인 값이 0과 1 사이면 「1 미만」(0은 「0」)
+   · 한 화면의 싸움 숫자는 모두 같은 값으로 나눠서(권장·내 전투력, 기준·넣은 피해) 크기 순서와 비율이 그대로다. 엽전·보석·경험치·레벨·% 등은 fmt 그대로
+   · [정보]에서 켬/끔(기본 켬), 기기 설정 NUM_KEY에만 저장(캐릭터 저장·서버 아님) */
+const NUM_KEY = KP + 'samhan-num', NUM_K = [0, 0, 0, 2, 3, 4], NUM_DIV = ['', '1만', '1억', '1조', '1경'];   // NUM_K: 가장 멀리 간 부(1~5) → 만 배 단계(10000^k)
+let numOn = true;
+try { if (localStorage.getItem(NUM_KEY) === '0') numOn = false; } catch (e) {}
+function numPart(){   // 가장 멀리 간 부(1~5)
+  let p = 1;
+  if (typeof S !== 'undefined' && S && S.best) for (let w = 0; w <= WORLD_MAX; w++) if ((S.best['s' + w] || 0) > 0 || (S.best['l' + w] || 0) > 0) p = Math.max(p, partOfW(w));
+  return p;
+}
+const numStepRaw = () => NUM_K[numPart()];         // 켬/끔과 상관없이 이 용사의 환산 단계(0·2·3·4)
+const numStep = () => numOn ? numStepRaw() : 0;    // 지금 화면에 쓰는 단계(끔이면 0)
+const numDiv = () => Math.pow(10000, numStep());
+const numTag = () => numStep() ? `숫자 ÷${NUM_DIV[numStep()]}` : '';
+function setNumOn(on){ numOn = !!on; try { localStorage.setItem(NUM_KEY, numOn ? '1' : '0'); } catch (e) {} }
+function numNoteText(){
+  const k = numStepRaw();
+  if (!k) return '지금은 1~2부라 숫자를 줄이지 않아요. 3부(곤륜)에 들어서면 전투력·피해·체력이 너무 커지니까 그때부터 줄여서 보여 줘요.';
+  return numOn ? `전투력·피해·체력·공격력을 <b>${NUM_DIV[k]}</b>로 나눠서 보여 줘요(지금 <b>${numTag()}</b>). 힘은 그대로고 글자만 줄어요. 엽전·보석·경험치는 그대로예요.`
+    : `지금은 줄이지 않고 원래 숫자(조·경·해·자…)로 보여 줘요. 켜면 전투력·피해·체력·공격력을 ${NUM_DIV[k]}로 나눠 보여 줘요.`;
+}
+function numExplain(){
+  const k = numStepRaw(); if (!k) return;
+  showModal('싸움 숫자 줄여 보기', `<p>가장 멀리 간 땅(${PART_LAND[numPart()]}) 기준으로, <b>전투력·피해·체력·공격력</b>을 <b>${NUM_DIV[k]}</b>로 나눠서 보여 줘요. 한 화면의 싸움 숫자는 모두 같은 값으로 나누니까 크기 순서와 비율은 그대로예요.</p>
+    <p class="small">힘 자체는 하나도 안 바뀌어요. 엽전·보석·경험치·레벨은 그대로 보여요. 너무 작아진 숫자는 「1 미만」, 억을 넘으면 「41,200억」처럼 억 단위로 써요. [정보]에서 켜고 끌 수 있어요.</p>`, [{label:'확인', primary:true}]);
+}
+function fmtB(n, step){   // 싸움 숫자 표시: 단계 0이면 fmt와 똑같다
+  if (step == null) step = numStep();
+  if (!step) return fmt(n);
+  if (!isFinite(n)) return '∞';
+  n = Math.max(0, +n || 0);
+  if (n === 0) return '0';
+  const r = n / Math.pow(10000, step) * (1 + 1e-12);   // 1e-12: 나눗셈 오차로 821억이 820억으로 내려가는 것 막기
+  if (r < 1) return '1 미만';
+  if (r < 1e12) return fmt(r);
+  return Math.floor(r / 1e8).toLocaleString('ko-KR') + '억';
+}
 function fmtTime(sec){
   sec = Math.floor(sec);
   const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
@@ -5966,8 +6011,8 @@ function refreshStats(){
 }
 function statValue(k, st){
   switch (k){
-    case 'atk': return st.atk < 100 ? st.atk.toFixed(1) : fmt(st.atk);
-    case 'hp': return st.maxHp < 1000 ? st.maxHp.toFixed(1) : fmt(st.maxHp);
+    case 'atk': return !numStep() && st.atk < 100 ? st.atk.toFixed(1) : fmtB(st.atk);
+    case 'hp': return !numStep() && st.maxHp < 1000 ? st.maxHp.toFixed(1) : fmtB(st.maxHp);
     case 'crit': return (st.crit * 100).toFixed(1) + '%' + (st.critOver > 0 ? ` · 넘친 ${(st.critOver * 100).toFixed(1)}% → 치명타 피해 +${Math.round(st.critOver * 200)}%` : '');
     case 'critDmg': return Math.round(st.critDmg * 100) + '%';
     case 'aspd': return st.aspd.toFixed(2) + '회/초';
@@ -6928,7 +6973,7 @@ function hit(m, base, kind, sure, raw){   // raw: 이미 다 계산된 피해(�
   m.hp -= hpLoss; if (!(m.flashCd > 0)){ m.flash = 0.08; m.flashCd = 0.3; } m.aggro = true;   // 맞을 때 하얗게: 계속 맞아도 0.3초에 한 번만 깜빡(예전엔 늘 하얬음)
   if (m.pat && !(m.pat.grogT > 0) && m.hp > 0) patStg(m, dmg / m.maxHp * PAT.stgK * (mine ? C.stgMul || 1 : 1) * (kind === 'skill' || kind === 'soul' ? 1 : 0.5) * (m.pat.tel && m.pat.tel.kind === 'wipe' ? 2.5 : 1));   // 버팀 깎기
   const st = HIT_STYLE[kind] || HIT_STYLE.basic;
-  addText(fmt(dmg), m.x + (Math.random() * (m.raid ? 30 : 10) - (m.raid ? 15 : 5)), m.y - mobHeight(m) - 2 + (kind === 'ally' ? 8 : 0),
+  addText(fmtB(dmg), m.x + (Math.random() * (m.raid ? 30 : 10) - (m.raid ? 15 : 5)), m.y - mobHeight(m) - 2 + (kind === 'ally' ? 8 : 0),
     crit ? '#ffb347' : st[0], crit ? 15 : st[1], crit);
   fx.push({type:'hit', t:0, dur:0.18, x:m.x + (m.raid ? Math.random() * 20 - 10 : 0), y:m.y - mobHeight(m) * 0.5});
   if (m.hp <= 0) killMob(m);
@@ -6972,7 +7017,7 @@ function damageHero(d){
   }
   tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0); tkWoundAdd(Math.min(dmg, Math.max(0, hero.hp)));
   hero.hp -= dmg; hero.hurt = 0.12; hero.shockT = 0.7;
-  addText('-' + fmt(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
+  addText('-' + fmtB(dmg), hero.x + Math.random() * 8 - 4, hero.y - 30, '#ff8a7a', 11);
   if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
   else if (cls().fist && gwonBr() === 1) gwonCounter();
 }
@@ -7853,7 +7898,7 @@ function damageAlly(a, d){
   if (TM) TM.aDmg += Math.min(dmg, Math.max(0, a.hp));
   if (tkWoundOn()) a.wound = Math.min(Math.max(0, a.maxHp - 1), (a.wound || 0) + Math.min(dmg, Math.max(0, a.hp)) * TANK.wound);   // 동료도 깊은 상처
   a.hp -= dmg; a.hurt = 0.12;
-  addText('-' + fmt(dmg), a.x, a.y - 30, '#ff8a7a', 9);
+  addText('-' + fmtB(dmg), a.x, a.y - 30, '#ff8a7a', 9);
   if (a.hp <= 0){ a.hp = 0; a.down = true; a.downT = 6; a.swing = 0; if (TM){ TM.aFalls++; TM.aDown.add(a); }
     if (raid && raid.norm && tkFx()){ a.falls = (a.falls || 0) + 1; raid.aFalls = (raid.aFalls || 0) + 1; a.downT = a.falls >= TANK.allyLives ? Infinity : TANK.allyDown; }   // 9-4 일반 레이드: 10초 뒤 30%로 일어나되 두 번째 쓰러지면 끝까지 누움
     if (raid && raid.info.tb){ raid.deaths = (raid.deaths || 0) + 1; if (raid.deaths >= TB_LIVES){ a.downT = Infinity; for (const b2 of raid.allies) if (b2.down) b2.downT = Infinity; if (hero.dead) hero.deadT = Infinity; } } }
@@ -7890,7 +7935,7 @@ function healParty(a){
   if (!tg || r > 0.85) return;
   const h = mx * (tkFx() ? TANK.healParty : 0.25);
   if (tg === hero) heroHeal(h, 'ally'); else allyHeal(tg, h, 'ally');
-  addText('+' + fmt(h), tg.x, tg.y - 34, '#8ff0a0', 10);
+  addText('+' + fmtB(h), tg.x, tg.y - 34, '#8ff0a0', 10);
   fx.push({type:'heal', t:0, dur:0.7, x:tg.x, y:tg.y});
   fx.push({type:'pillar', t:0, dur:0.35, x:a.x, y:a.y - 10});
 }
@@ -8167,7 +8212,7 @@ function patHitHero(d, raw){
     if (hero.shield > 0){ const a = Math.min(hero.shield, dmg); hero.shield -= a; dmg -= a; tmDmg(0, a); }
     if (dmg <= 0){ addText('막음', hero.x, hero.y - 30, '#9fe7ff', 10, true); return; }
     tmDmg(Math.min(dmg, Math.max(0, hero.hp)), 0); tkWoundAdd(Math.min(dmg, Math.max(0, hero.hp)));
-    hero.hp -= dmg; hero.hurt = 0.15; hero.shockT = 0.7; addText('-' + fmt(dmg), hero.x, hero.y - 30, '#ff5a4a', 13, true);
+    hero.hp -= dmg; hero.hurt = 0.15; hero.shockT = 0.7; addText('-' + fmtB(dmg), hero.x, hero.y - 30, '#ff5a4a', 13, true);
     if (hero.hp <= 0){ hero.hp = 0; heroDie(); }
   } else damageHero(d);
 }
@@ -8561,8 +8606,8 @@ function finishDummy(R){
   let acc = '';
   if (tier >= 4){ const k = tier >= 5 ? (Math.random() < 0.5 ? 'ear' : 'brace') : 'ring', gg = Math.min(4, tier >= 5 ? w : w - 1); const r = giveAcc(k, Math.max(0, gg)); acc = ACC[k].names[Math.max(0, gg)] + (r ? '' : ' (이미 더 좋은 것)'); }
   if (dmg > (S.dummy.best || 0)) S.dummy.best = dmg;
-  addLog(`허수아비 수련 끝! 피해 ${fmt(dmg)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
-  if (!(window.__game && window.__game.quiet)) showModal('허수아비 수련', `<p>${early ? `<b>${early.toFixed(1)}초</b> 만에 5등급 달성! 넣은 피해` : `${DUMMY_TIME}초 동안 넣은 피해`} <b>${fmt(dmg)}</b></p>
+  addLog(`허수아비 수련 끝! 피해 ${fmtB(dmg)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
+  if (!(window.__game && window.__game.quiet)) showModal('허수아비 수련', `<p>${early ? `<b>${early.toFixed(1)}초</b> 만에 5등급 달성! 넣은 피해` : `${DUMMY_TIME}초 동안 넣은 피해`} <b>${fmtB(dmg)}</b></p>
     <div class="dtier">${[1, 2, 3, 4, 5].map(t => `<span class="${t <= tier ? 'on' : ''}">${t}</span>`).join('')}</div>
     <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${gems}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${acc ? `<span class="rchip rc-acc">${acc}</span>` : ''}${piece ? `<span class="rchip rc-mount">고삐 조각 ${piece}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`,
     [{label:'확인', primary:true}]);
@@ -9857,7 +9902,7 @@ function updatePets(dt){
       if (hero.hp < ST.maxHp){
         const h = ST.maxHp * petInfo(si).heal / 100;
         heroHeal(h, 'pet');
-        addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 11);
+        addText('+' + fmtB(h), hero.x, hero.y - 34, '#8ff0a0', 11);
         fx.push({type:'heal', t:0, dur:0.7});
       }
     }
@@ -9865,7 +9910,7 @@ function updatePets(dt){
   const mh = rideAb('heal');   // 백록: 5초마다 체력 회복
   if (mh > 0){
     hero.mHealT = (hero.mHealT == null ? 5 : hero.mHealT) - dt;
-    if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; heroHeal(h, 'mount'); addText('+' + fmt(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
+    if (hero.mHealT <= 0){ hero.mHealT = 5; if (hero.hp < ST.maxHp){ const h = ST.maxHp * mh / 100; heroHeal(h, 'mount'); addText('+' + fmtB(h), hero.x + 6, hero.y - 44, '#c8ffd8', 10); } }
   }
 }
 // 궁사는 멀리서 쏘면 덜 맞아요(2026-11-18, 주인 승인 「수정안 나」). ① 화살을 맞으며 다가온 사냥터 몬스터는 붙은 뒤 첫 공격(덤벼들기)을 건너뜀(몬스터마다 한 번) ② 레이드에서 보스와 `far`칸 이상 떨어진 궁사는 보스 일반 공격 대상으로 덜 뽑힘.
@@ -10076,7 +10121,7 @@ function doinCast(kind, lv, alive, tg, mul){
     hero.buffT = 8; hero.buffLv = lv;
     const h = ST.maxHp * 0.3;
     heroHeal(h, 'skill');
-    addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 12);
+    addText('+' + fmtB(h), hero.x, hero.y - 34, '#8ff0a0', 12);
     fx.push({type:'heal', t:0, dur:0.9}); fx.push({type:'aura', t:0, dur:0.9, color:C.fx});
     return true;
   }
@@ -13865,7 +13910,7 @@ function soulAct(k, manual){
     case 'heal': case 'grace': {
       const h = ST.maxHp * v / 100;
       heroHeal(h, 'soul'); hero.shield = Math.max(hero.shield, ST.maxHp * v / 200); hero.shieldT = Math.max(hero.shieldT || 0, 8);
-      addText('+' + fmt(h), hero.x, hero.y - 34, '#8ff0a0', 11, true);
+      addText('+' + fmtB(h), hero.x, hero.y - 34, '#8ff0a0', 11, true);
       if (raid) for (const a of raid.allies) if (!a.down) allyHeal(a, a.maxHp * v / 200, 'soul');
       if (s.kind === 'grace'){ hero.graceT = 12; hero.graceP = v; }
       if (!fxOff()){ vadd({type:'pillar', x:hero.x, y:hero.y, w:12, col, dur:0.8}); vMotes(hero.x, hero.y - 10, 10, col); }
@@ -14653,7 +14698,7 @@ function finishJin(R){
 // 권장 전투력 줄(레이드 칸·시작 전 창): 내 전투력과 나란히, 네 가지 빛깔
 function jinPowHTML(w, i, pw = power(ST)){
   const rec = jinRec(w, i), T = jinTier(pw / rec);
-  return `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="jt-${T[1]}">내 ${fmt(pw)} · ${T[2]}</span>`;
+  return `<span>권장 전투력 <b>${fmtB(rec)}</b></span><span class="jt-${T[1]}">내 ${fmtB(pw)} · ${T[2]}</span>`;
 }
 function confirmJin(w, i){
   jinCheck();
@@ -14767,7 +14812,7 @@ function finishTrans(R){
 }
 function transPowHTML(k, pw = power(ST)){
   const rec = transRec(k), T = jinTier(pw / rec);
-  return `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="jt-${T[1]}">내 ${fmt(pw)} · ${T[2]}</span>`;
+  return `<span>권장 전투력 <b>${fmtB(rec)}</b></span><span class="jt-${T[1]}">내 ${fmtB(pw)} · ${T[2]}</span>`;
 }
 function confirmTrans(k){
   transRdCheck();
@@ -14838,8 +14883,8 @@ function finishHaetae(R){
   const amb = tier >= 4 ? amberDrop('raid', tier >= 6) : null;   // 4등급부터 호박석(6등급부터는 반드시, 바다에 들어선 뒤)
   if (tier > (S.haetae.top || 0)) S.haetae.top = tier;
   if (d > (S.haetae.best || 0)) S.haetae.best = d;
-  addLog(`해태 수련 끝! 제대로 친 피해 ${fmt(d)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
-  if (!(window.__game && window.__game.quiet)) showModal('해태 수련', `<p>${R && R.early > 0 ? `<b>${R.early.toFixed(1)}초</b> 만에 7등급 달성! 제대로 친 피해` : `${HAETAE.time}초 동안 제대로 친 피해`} <b>${fmt(d)}</b></p>
+  addLog(`해태 수련 끝! 제대로 친 피해 ${fmtB(d)} · ${tier ? tier + '등급' : '등급 없음'}`, tier ? 'gain' : 'warn'); sfx(tier ? 'win' : 'fail');
+  if (!(window.__game && window.__game.quiet)) showModal('해태 수련', `<p>${R && R.early > 0 ? `<b>${R.early.toFixed(1)}초</b> 만에 7등급 달성! 제대로 친 피해` : `${HAETAE.time}초 동안 제대로 친 피해`} <b>${fmtB(d)}</b></p>
     <div class="dtier">${[1, 2, 3, 4, 5, 6, 7].map(t => `<span class="${t <= tier ? 'on' : ''}">${t}</span>`).join('')}</div>
     <div class="rchips" style="justify-content:center">${gold ? `<span class="rchip rc-gold">엽전 ${fmt(gold)}</span>` : ''}${gems ? `<span class="rchip rc-gem">보석 ${fmt(gems)}</span>` : ''}${mats ? `<span class="rchip rc-mat">재료 ${mats}</span>` : ''}${amb ? `<span class="rchip" style="color:#ffc35a">${amb.name}</span>` : ''}${tier ? '' : '<span class="rchip">1등급까지 조금만 더!</span>'}</div>`, [{label:'확인', primary:true}]);
   ev('raid');
@@ -17378,7 +17423,7 @@ function drawOverlayMain(){
     if (k > 0){ const gr = ctx.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, '#ff3d61'); gr.addColorStop(1, '#ff9a5b');
       rrect(bx + 3, y1 + 3, Math.max(8, Math.round((bw - 6) * k)), 16, 8); ctx.fillStyle = gr; ctx.fill(); }
     ctx.fillStyle = '#fff4e0'; ctx.font = '800 11.5px SamhanSans, sans-serif';
-    ctx.fillText(raid && raid.info.dummy ? `누적 피해 ${fmt(dmgMeter)} · ${dummyTier(dmgMeter)}등급` : hae ? `제대로 친 피해 ${fmt(raid.hDmg || 0)} · ${haetaeTier(raid.hDmg || 0)}등급${raid.hPh === 'horn' ? ' · 뿔 ×2!' : raid.hPh === 'eye' ? ' · 눈이 붉다!' : ''}` : bRef.name, bx + 9, y1 + 11.5);
+    ctx.fillText(raid && raid.info.dummy ? `누적 피해 ${fmtB(dmgMeter)} · ${dummyTier(dmgMeter)}등급` : hae ? `제대로 친 피해 ${fmtB(raid.hDmg || 0)} · ${haetaeTier(raid.hDmg || 0)}등급${raid.hPh === 'horn' ? ' · 뿔 ×2!' : raid.hPh === 'eye' ? ' · 눈이 붉다!' : ''}` : bRef.name, bx + 9, y1 + 11.5);
     ctx.textAlign = 'right'; ctx.fillText(`${Math.max(0, Math.ceil(bt))}초`, bx + bw - 9, y1 + 11.5); ctx.textAlign = 'left';
     ctx.fillStyle = bt < 8 ? '#ff6b5a' : '#ffcc4d'; rrect(bx + 7, y1 + 22, Math.max(2, Math.round((bw - 14) * Math.max(0, bt / maxT))), 2, 1); ctx.fill();
     let ry = y1 + 28;
@@ -19351,14 +19396,14 @@ function updateHud(){
   if (drawMode !== 'off'){ const tn = performance.now(); if (tn - hudT < 100) slow = true; else hudT = tn; }
   if (slow){ updateSkBar(true); return; }
   setText(elLv, 'Lv.' + S.level); setText(elCls, jobName()); setText(elNick, session ? S.name : '');
-  setText(elCp, fmt(power(ST)));
+  setText(elCp, fmtB(power(ST)));
   setText(elGold, fmt(S.gold)); setText(elGems, fmt(S.gems)); setText(elDustTop, fmt(S.dust));
   const pc = S.world >= 3 || S.mount.piece > 0; if (elCurPiece.hidden === pc) elCurPiece.hidden = !pc; if (pc) setText(elPieceTop, fmt(S.mount.piece));
   { const tc = transShopOn(); if (elCurTrans.hidden === tc) elCurTrans.hidden = !tc; if (tc) setText(elTransTop, fmt(S.trans.shard)); }
   updateFace(); updatePetFaces(); updateBigBoss(); updatePotBar();
   if (currentTab){ setText($('#pgGold'), fmt(S.gold)); setText($('#pgGems'), fmt(S.gems)); }
   const hr = Math.max(0, hero.hp / ST.maxHp);
-  elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmt(hero.hp) + '/' + fmt(ST.maxHp));
+  elHp.style.width = (hr * 100).toFixed(1) + '%'; setText(elHpN, fmtB(hero.hp) + '/' + fmtB(ST.maxHp));
   { const wd = hero.wound > 0 && !hero.dead && tkWoundOn() ? Math.min(100, hero.wound / ST.maxHp * 100).toFixed(1) + '%' : '0%'; if (elHpWd.style.width !== wd) elHpWd.style.width = wd; }   // 깊은 상처 줄무늬
   const mpv = hero.mp ?? mpMax(); elMp.style.width = (mpv / mpMax() * 100).toFixed(1) + '%'; setText(elMpN, Math.floor(mpv) + '/' + mpMax());
   const atCap = S.level >= levelCap(), rl = atCap && transRealmOpen(), xr = rl ? Math.min(1, S.trans.exp / realmNeed(S.trans.lv)) : atCap ? 1 : Math.min(1, S.exp / expNeed(S.level));
@@ -21743,8 +21788,8 @@ function buildRaid(){
     return () => {
       const left = haetaeLeft(), T = haetaeTiers(), hLock = tierLock('haetae'); chipsUpd();
       setText($('#hLeft'), hLock ? '오늘 잠김' : `${leftTxt(left)}`);
-      setText($('#hBest'), S.haetae.best ? `최고 기록 ${fmt(S.haetae.best)}` : '');
-      for (let t = 1; t <= 7; t++){ setText(panel.querySelector(`[data-ht="${t}"]`), `제대로 친 피해 ${fmt(T[t - 1])} 이상`); $('#ht-' + t).classList.toggle('ready', (S.haetae.best || 0) >= T[t - 1]); }
+      setText($('#hBest'), S.haetae.best ? `최고 기록 ${fmtB(S.haetae.best)}` : '');
+      for (let t = 1; t <= 7; t++){ setText(panel.querySelector(`[data-ht="${t}"]`), `제대로 친 피해 ${fmtB(T[t - 1])} 이상`); $('#ht-' + t).classList.toggle('ready', (S.haetae.best || 0) >= T[t - 1]); }
       const b = $('#hGo'); b.disabled = !!raid || left <= 0 || !!hLock; setText(b, raid ? (raid.info.haetae ? '수련 중…' : '다른 싸움 중') : hLock ? hLock + '(내일 다시)' : left > 0 ? '해태 수련 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
@@ -21763,8 +21808,8 @@ function buildRaid(){
     return () => {
       const left = dummyLeft(), T = dummyTiers(), dLock = tierLock('dummy'); chipsUpd();
       setText($('#dLeft'), dLock ? '오늘 잠김' : `${leftTxt(left)}`);
-      setText($('#dBest'), S.dummy.best ? `최고 피해 ${fmt(S.dummy.best)}` : '');
-      for (let t = 1; t <= 5; t++){ const el = panel.querySelector(`[data-dt="${t}"]`); setText(el, `피해 ${fmt(T[t - 1])} 이상`); $('#dt-' + t).classList.toggle('ready', (S.dummy.best || 0) >= T[t - 1]); }
+      setText($('#dBest'), S.dummy.best ? `최고 피해 ${fmtB(S.dummy.best)}` : '');
+      for (let t = 1; t <= 5; t++){ const el = panel.querySelector(`[data-dt="${t}"]`); setText(el, `피해 ${fmtB(T[t - 1])} 이상`); $('#dt-' + t).classList.toggle('ready', (S.dummy.best || 0) >= T[t - 1]); }
       const b = $('#dGo'); b.disabled = !!raid || left <= 0 || !!dLock; setText(b, raid ? (raid.info.dummy ? '수련 중…' : '다른 싸움 중') : dLock ? dLock + '(내일 다시)' : left > 0 ? '허수아비 수련 시작' : '오늘은 다 했어요(내일 다시)');
     };
   }
@@ -21882,13 +21927,13 @@ function buildRaid(){
       setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
       $('#raid-' + i).classList.toggle('ready', !dis);
       const rp = panel.querySelector(`[data-rp="${i}"]`);
-      if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(tkRaidS(info.ref))}`); }
+      if (rp){ const rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmtB(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmtB(pw)} ${ok ? '✓' : '↓'}</span>${tkRaidHTML(tkRaidS(info.ref))}`); }
     });
     { const eb = panel.querySelector('.rcard .btn[data-e]');   // 입문 레이드 칸(토벌패는 일반 레이드와 함께 씀)
       if (eb){ let t, dis = true;
         if (raid) t = raid.info.entry ? '토벌 중' : '다른 싸움 중'; else if (tk <= 0) t = `토벌패 ${fmtTime(left / 1000)}`; else { t = '입장'; dis = false; }
         setText(eb, t); eb.disabled = dis; eb.classList.toggle('primary', !dis); $('#raid-entry').classList.toggle('ready', !dis);
-        const rp = panel.querySelector('[data-rp="entry"]'); if (rp){ const info = entryInfo(), rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmt(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmt(pw)} ${ok ? '✓' : '↓'}</span>`); } } }
+        const rp = panel.querySelector('[data-rp="entry"]'); if (rp){ const info = entryInfo(), rec = raidRecPower(info), ok = pw >= rec; setHTML(rp, `<span>권장 전투력 <b>${fmtB(rec)}</b></span><span class="${ok ? 'ok' : 'bad'}">내 ${fmtB(pw)} ${ok ? '✓' : '↓'}</span>`); } } }
     const jl = jinLeft();
     panel.querySelectorAll('.jin-left').forEach(el => setText(el, `진 ${'■'.repeat(jl)}${'□'.repeat(JIN.tries - jl)} ${leftTxt(jl)}`));
     panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => {
@@ -21909,7 +21954,7 @@ function buildRaid(){
         else { t = '초월 입장'; dis = false; }
         setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
         const st = panel.querySelector(`[data-trs="${k}"]`); if (st){ const on = transRaidOpen(k); setText(st, !on ? '잠김' : (S.trans.rd.tot[k] ? '토벌함 ✓' : '처음 이기면 +' + TRANS_RD.firstShard)); st.className = 'rstate' + (on && S.trans.rd.tot[k] ? ' done' : on ? ' new' : ''); }
-        const rp = panel.querySelector(`[data-trp="${k}"]`); if (rp) setHTML(rp, transRaidOpen(k) ? transPowHTML(k, pw) : `<span>Lv.${TRANS_RAIDS[k].lv}이 되면 열려요 · 권장 전투력 <b>${fmt(transRec(k))}</b></span>`);
+        const rp = panel.querySelector(`[data-trp="${k}"]`); if (rp) setHTML(rp, transRaidOpen(k) ? transPowHTML(k, pw) : `<span>Lv.${TRANS_RAIDS[k].lv}이 되면 열려요 · 권장 전투력 <b>${fmtB(transRec(k))}</b></span>`);
       }); }
   };
 }
@@ -22005,7 +22050,7 @@ function meSlots(){
   const bot = SK_PARTS.map(P => { const it = S.skin.eq[P.k]; return it ? {cap:P.name, nm:SKC[it.c].name, sw:SKC[it.c].col, g:it.g, lv:it.l.length + '줄', go:'gear:skin'} : {cap:P.name, nm:skinOpen() ? '없음' : `${SK_CH0}장부터`, ic:'charm', empty:true, go:'gear:skin'}; });
   return {top, left, right, bot};
 }
-function meKey(){ return JSON.stringify([S.cls, S.level, S.job, S.world, S.equip, S.refine.weapon.lv, S.refine.armor.lv, S.acc, S.craft.w.t, S.craft.a.t, S.craft.n.t, S.form.eq, S.mount.ride, S.av, Object.values(S.skin.eq).map(x => x && x.c + ':' + x.g), curSet(), S.petEq, S.soul.eq, S.title.eq, S.look, Math.round(power(ST))]); }
+function meKey(){ return JSON.stringify([S.cls, S.level, S.job, S.world, S.equip, S.refine.weapon.lv, S.refine.armor.lv, S.acc, S.craft.w.t, S.craft.a.t, S.craft.n.t, S.form.eq, S.mount.ride, S.av, Object.values(S.skin.eq).map(x => x && x.c + ':' + x.g), curSet(), S.petEq, S.soul.eq, S.title.eq, S.look, Math.round(power(ST)), numStep()]); }
 function buildMe(){
   let key = '';
   panel.innerHTML = '<div id="meBox"></div>';
@@ -22025,7 +22070,7 @@ function buildMe(){
         <div class="me-bot"><span class="me-lab">치장</span>${L.bot.map(meSlot).join('')}</div>
       </div>
       <div class="me-side">
-        <div class="card"><div class="ct">능력치<span class="tag">전투력 ${fmt(power(st))}</span></div>
+        <div class="card"><div class="ct">능력치<span class="tag">${numStep() ? `<button type="button" class="numtag" data-numtag>${numTag()}</button> ` : ''}전투력 ${fmtB(power(st))}</span></div>
           ${row('공격력', statValue('atk', st))}${row('체력', statValue('hp', st))}${row('치명타 확률', statValue('crit', st).split(' · ')[0])}${row('치명타 피해', statValue('critDmg', st))}
           ${row('공격 속도', statValue('aspd', st))}${row('체력 회복', statValue('regen', st))}${row('받는 피해', '-' + Math.round((1 - takenK()) * 100) + '%')}${row('마나', `${mpMax()} · 초당 ${MP_REGEN}`)}<p class="small" style="margin:6px 0 0">적성 ${aptMain().map(a => aptName(a) + ' ' + aptPct(aptCalc().a[a])).join(' · ')}</p></div>
         <div class="card"><div class="ct">전투 기술<span class="tag">${curSet().length}/${SK_SLOTS}</span></div><div class="me-sk">${curSet().map(i => `<button type="button" class="me-ski" data-go="skill" title="${esc(skillName(i))} Lv.${skLv(i)}">${SVG[skDef(i).icon]}<i>${esc(skillName(i))}</i><b>${skLv(i)}</b></button>`).join('') || '<span class="small">없음</span>'}</div></div>
@@ -22037,6 +22082,7 @@ function buildMe(){
   };
 }
 function meGo(e){
+  if (e.target.closest('[data-numtag]') && currentTab === 'me'){ sfx('click'); numExplain(); return; }
   const b = e.target.closest('[data-go]'); if (!b || !b.dataset.go || currentTab !== 'me') return;
   const [t, sub] = b.dataset.go.split(':');
   if (t === 'gear'){ gearSlot = sub; gearSel = -1; }
@@ -22210,7 +22256,7 @@ function showUserInfo(o, basic){
     <div class="ui-sec">천공의 탑 <b>${fmt(o.tw || 0)} / ${towerMaxOf(o.tw || 0)}층</b></div>${bar(o.tw || 0, towerMaxOf(o.tw || 0), 'linear-gradient(90deg,#9fe7ff,#7a9aff)')}
     ${row('결투 점수', `${fmt(o.pv || 1000)}점 · ${pvpTier(o.pv || 1000)}`)}${row('전직', o.job ? `${o.job}차 · ${esc(jobName(o.cls, o.job))}` : '아직')}` :
     `<p class="small">${o.npc ? '다른 용사가 없을 때 나오는 연습 상대예요. 세기는 나와 비슷하게 맞춰져요.' : '이 용사는 아직 자세한 진행도를 올리지 않았어요(그 용사가 새 판으로 한 번 저장하면 보여요).'}</p>`}
-    ${o.rd ? row('보스에 넣는 피해', fmt(o.rd) + '/초') : ''}${o.maxHp && o.maxHp > 1 ? row('최대 체력', fmt(o.maxHp)) : ''}
+    ${o.rd ? row('보스에 넣는 피해', fmtB(o.rd) + '/초') : ''}${o.maxHp && o.maxHp > 1 ? row('최대 체력', fmtB(o.maxHp)) : ''}
     ${o.weaponG != null && o.look ? row('무기 · 갑옷', `${gname(o.weaponG)} · ${gname(o.armorG)}`) : ''}
     ${rel && !me ? row('나와 견주면', `<span style="color:${rel > 1.15 ? '#ff8a8a' : rel < 0.87 ? '#8ff0a0' : 'var(--text)'}">×${rel.toFixed(2)}</span>`) : ''}`;
   showModal(`${o.mine ? '내 캐릭터' : '용사 정보'} · ${esc(o.name)}`, html, [{label:'닫기', primary:true}]);
@@ -22257,6 +22303,9 @@ function buildRec(){
     ${canRot() ? '' : '<div class="card"><p class="small" style="margin:0">컴퓨터에서는 창 모양을 따라가요. 창을 가로로 길게 늘이면 가로 화면, 세로로 길게 하면 세로 화면이 돼요. (화면 돌리기는 휴대폰·태블릿에서만 화면을 돌려요.)</p></div>'}
     <div class="card" ${canRot() ? '' : 'hidden'}><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[['auto', '자동(기기 방향)'], ['land', '가로'], ['port', '세로']].map(([k, n]) => `<button class="chip" data-orient="${k}" aria-pressed="${orientMode === k}">${n}</button>`).join('')}</div>
       <p class="small" style="margin:6px 0 0">오른쪽 위 [화면 돌리기] 아이콘으로도 가로·세로를 바로 바꿔요. 휴대폰이 화면 방향을 바꿀 수 없으면 게임 화면을 돌려서 보여 줘요(그때는 휴대폰을 그 방향으로 들어 주세요).</p></div>
+    <div class="ph" style="margin-top:16px"><h2>싸움 숫자 줄여 보기 ${helpTip('전투력·피해·체력이 너무 커지면 부마다 만 배씩 줄여 보여 줘요. 글자만 바뀌고 힘은 그대로예요. 이 기기에만 저장돼요.')}</h2></div>
+    <div class="card"><div class="mode" style="display:flex;gap:6px;flex-wrap:wrap">${[[1, '켬'], [0, '끔']].map(([v, n]) => `<button class="chip" data-num="${v}" aria-pressed="${numOn === !!v}">${n}</button>`).join('')}</div>
+      <p class="small" style="margin:6px 0 0" id="numNote">${numNoteText()}</p></div>
     <div class="ph" style="margin-top:16px"><h2>채팅 확성기</h2></div>
     <div class="card"><label class="check"><input type="checkbox" id="megaChk"> 용사들이 채팅으로 한 말을 게임 화면 위에 공지 띠로 보여 주기</label>
       <p class="small" style="margin:6px 0 0">내가 한 말과 다른 용사가 한 말이 확성기처럼 화면 위 가운데에 잠깐 떠요. 주민(마을) 수다와 알림은 채팅창에만 나와요.</p></div>
@@ -22283,6 +22332,7 @@ function buildRec(){
   $('#brMainBtn').addEventListener('click', () => { if (!session) return; const on = !isMainChar(); if (on) showModal('본캐 지정', `<p><b>${esc(S.name)}</b>${josa(S.name, '을', '를')} 본캐로 정할까요?</p><p class="small">본캐는 <b>배럭 효과를 받지 않아요</b>(공격력·체력·엽전·경험치·보석). 다른 캐릭터들은 그대로 받아요. 언제든 해제할 수 있어요.</p>`, [{label:'취소'}, {label:'본캐로 지정', primary:true, fn:() => { setMainChar(true); refreshPanel(); }}]); else { setMainChar(false); refreshPanel(); } });
   { const mc = $('#megaChk'); if (mc){ mc.checked = megaOn; mc.addEventListener('change', () => { setMega(mc.checked); sfx('click'); }); } }
   panel.querySelectorAll('[data-afk]').forEach(b => b.addEventListener('click', () => { setAfk(+b.dataset.afk); sfx('click'); panel.querySelectorAll('[data-afk]').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.afk === afkMin))); addLog(afkMin ? `${afkMin}분 동안 누르지 않으면 절전 모드로 들어가요.` : '자리 비움 절전 모드를 껐어요.', 'good'); }));
+  panel.querySelectorAll('[data-num]').forEach(b => b.addEventListener('click', () => { setNumOn(b.dataset.num === '1'); sfx('click'); panel.querySelectorAll('[data-num]').forEach(x => x.setAttribute('aria-pressed', String(numOn === (x.dataset.num === '1')))); setHTML($('#numNote'), numNoteText()); try { refreshPanel(); } catch (e) {} }));
   panel.querySelectorAll('[data-draw]').forEach(b => b.addEventListener('click', () => { setDrawMode(b.dataset.draw); sfx('click'); panel.querySelectorAll('[data-draw]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.draw === drawMode))); setText($('#drawNote'), drawNoteText()); }));
   { const nc = $('#notiLiteChk'); if (nc){ nc.checked = notiLite; nc.addEventListener('change', () => { setNotiLite(nc.checked); sfx('click'); }); } $('#notiReviewBtn').addEventListener('click', () => { sfx('click'); notiReview(); }); }
   panel.querySelectorAll('[data-orient]').forEach(b => b.addEventListener('click', () => { setOrient(b.dataset.orient, true); panel.querySelectorAll('[data-orient]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.orient === orientMode))); }));
@@ -22327,9 +22377,9 @@ function buildRec(){
     setText($('#r-kills'), fmt(S.rec.kills) + '마리');
     setText($('#r-boss'), fmt(S.rec.bosses) + '마리');
     setText($('#r-raid'), fmt(S.rec.raids) + '번');
-    setText($('#r-atk'), fmt(ST.atk));
-    setText($('#r-hp'), fmt(ST.maxHp));
-    setText($('#r-dps'), fmt(dpsOf(ST)));
+    setText($('#r-atk'), fmtB(ST.atk));
+    setText($('#r-hp'), fmtB(ST.maxHp));
+    setText($('#r-dps'), fmtB(dpsOf(ST)));
     setText($('#r-play'), fmtTime(S.rec.play));
     { const chNow = session && REG.accounts[session.acc] ? REG.accounts[session.acc].chars.find(c => c.cid === session.cid) : null, on = online && session && online.acc === session.acc;
       setText($('#r-save'), cloud ? '계정에 자동 저장 중이에요. 다른 기기에서 같은 Claude 계정으로 열어도 이어서 할 수 있어요.'
@@ -22964,6 +23014,14 @@ notiReg({k:'cls', pri:35, flag:'noClsNote', who:{name:'길잡이 까치', cast:'
     `레벨·전직·장비·펫은 그대로예요. 바꾸기 전에 무엇이 돌아가고 얼마를 돌려받는지 <b>숫자로 보여 드리니</b> 꼭 읽고 정하세요.`],
   body:() => `<div class="inh-h">직업 바꾸기</div><div class="pre-row"><span class="pre-sk">이번 주 남은 횟수 <i>${clsChgLeft()}번</i></span><span class="pre-sk">지금 직업 <i>${esc(cls().name)}</i></span></div>`,
   go:{label:'[정보]에서 보기', fn:() => { buildTab('rec'); setTimeout(() => { const b = $('#clsBtn'); if (b) b.scrollIntoView({block:'center'}); }, 80); }}});
+
+// 새 부(3부 곤륜·4부 바다·5부 천축)에 처음 들어선 뒤 한 번: 싸움 숫자를 만 배씩 줄여 보여 준다는 안내(2026-11-26 숫자 표시 패치). 끄면(기기 설정) 안 뜸. 부마다 한 번(키 = 부 번호)
+notiReg({k:'num', pri:34, flag:'noNumNote', who:{name:'길잡이 까치', cast:'kkachi'}, tag:'바뀐 표시', title:'숫자가 너무 커져서 줄여 보여 줘요', one:() => `까치: 싸움 숫자를 ${NUM_DIV[numStepRaw()]}로 줄여 보여 줘요`,
+  when:() => !!S.chosen && numOn && numStepRaw() > 0 && !jumpOn() && !(window.__game && window.__game.noNumNote !== false), key:() => 'p' + numPart(),   // 시험(__game)에서는 noNumNote가 false일 때만 목록에 나온다(다른 알림 점검을 흩뜨리지 않게)
+  lines:() => { const k = numStepRaw(); return [`{name}님, 숫자가 너무 커져서 이제부터 전투력·피해·체력 같은 <b>싸움 숫자</b>를 <b>${NUM_DIV[k]}</b>로 나눠 보여 줘요. 힘은 그대로예요!`,
+    '엽전·보석·경험치는 그대로고, 비교할 숫자(권장 전투력과 내 전투력)는 모두 같은 값으로 나눠서 크기는 그대로 견줄 수 있어요. 너무 작은 숫자는 「1 미만」으로 보여요.',
+    '원래 숫자가 보고 싶으면 [정보]에서 <b>싸움 숫자 줄여 보기</b>를 끌 수 있어요.']; },
+  go:{label:'[정보]에서 보기', fn:() => { buildTab('rec'); setTimeout(() => { const b = $('[data-num]'); if (b) b.scrollIntoView({block:'center'}); }, 80); }}});
 
 // 패치 날 한 번: 직업마다 맞는 능력이 생겼음을 알린다(물의 신화 9-5)
 notiReg({k:'apt', pri:36, flag:'noAptNote', who:{name:'길잡이 까치', cast:'kkachi'}, tag:'바뀐 규칙', title:'직업마다 맞는 능력', one:'까치: 직업마다 맞는 능력이 생겼어요!',
@@ -24262,7 +24320,7 @@ if (location.search.indexOf('simtest') >= 0){
     TRANS, TRANS_SHOP, realmGain, realmNeed, realmMul, realmOn, realmBankFix, gateLv, transRealmOpen, transOpen, gainTrans, transLvCheck, buyTrans, transShopState, capRaiseFix, LV_STORY, buildTrans, get SAVE_BUILD_(){ return SAVE_BUILD; },
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
     power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
-    potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
+    potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noNumNote:true, fmtB, numStep, numStepRaw, numPart, numDiv, numTag, setNumOn, get numOn(){ return numOn; }, NUM_KEY, NUM_K, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     storyQ, chOpen, prologue, cutMine, castSprite, cutFaceOf, cutFaceStr, cutTap, renderCut, get cutNow(){ return cut; }, CUT_FACE_RULES, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
     update, buyStat, upgradeSkill, ARCHER, archerFar, arrowMark, arrowSkip, pickRaidTarget, CLASSES, CLASS_ORDER, CLASS_ALL, CLASS_NEW, clsOpened, clsOpenAll:null, AIM, aimMul, heroRange, teacher1, GAP, gapMul, gapFar, gapPush, gapRiposte, waveGap, aw2Pierce, skillDesc, pbDesc, jobName, mobSprite, get projs(){ return projs; }, summon, mergeAll, equipBest, skillCost, buyInfo, SKILLS, setClass, render,

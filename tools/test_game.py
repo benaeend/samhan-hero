@@ -13,6 +13,7 @@ import base64
 import functools
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -6408,6 +6409,130 @@ async def main():
         check(av['cells'] == 14 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸·입은 것 표시 {av['cells']} {av['now']}")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.av.fx = ''; S.av.head = ''; G.closePage(); }")
         await ctxM.close()
+        # 99) 2026-11-26 숫자 표시 패치: 싸움 숫자만 부마다 만 배씩 줄여 보여 준다(1·2부 그대로, 3부 ÷1억 · 4부 ÷1조 · 5부 ÷1경, 맨 위 단위 억)
+        def unfmt(s):   # 「1,970억」「41,200억」「1.83만」「1 미만」 → 값(시험용 되읽기)
+            s = s.replace(',', '').strip()
+            if s.startswith('1 미만'): return 0.5
+            m = {'억': 1e8, '만': 1e4, '조': 1e12, '경': 1e16, '해': 1e20}
+            return float(s[:-1]) * m[s[-1]] if s[-1] in m else float(s)
+        ctxN = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)   # 기기 설정 저장을 살려 두려고 setItem을 막지 않는 새 창
+        npg = await ctxN.new_page()
+        watch(npg, errors, '숫자 줄이기 ')
+        await npg.goto(URL); await npg.evaluate("() => { try { localStorage.clear(); } catch (e) {} }"); await npg.goto(URL); await npg.wait_for_timeout(800)
+        await signup(npg, 'numtest', 'abcd', '숫자용사')
+        await npg.evaluate("() => { const G = window.__game; G.quiet = true; G.noFork = true; G.noInh = true; G.noNumNote = false; }")
+        # (a) 1부 저장: 새 함수 = fmt (초반은 그대로)
+        na = await npg.evaluate("""() => { const G = window.__game, vs = [0, 5, 999, 12345, 1.5e6, 3e9, 2.5e13, 8e17, 1e25, 8.21e26], o = {step:G.numStep(), part:G.numPart(), tag:G.numTag()};
+          o.same = vs.every(v => G.fmtB(v) === G.fmt(v)); o.on = G.numOn; return o; }""")
+        check(na['step'] == 0 and na['part'] == 1 and na['tag'] == '' and na['same'] and na['on'], f'숫자 줄이기: 1부는 싸움 숫자가 fmt와 똑같고(꼬리표 없음) 기본은 켬이다 {na}')
+        await npg.evaluate("() => { const G = window.__game; G.buildTab('me'); }"); await npg.wait_for_timeout(500)
+        m1 = await npg.evaluate("() => ({tag:!!document.querySelector('[data-numtag]'), cp:document.querySelector('#cp').textContent})")
+        check(not m1['tag'], f'숫자 줄이기: 1부 능력치 카드에는 꼬리표가 없다 {m1}')
+        await npg.screenshot(path=str(OUT / '99a_숫자_1부_내정보.png'))
+        await npg.evaluate("() => { const G = window.__game; G.buildTab('raid'); }"); await npg.wait_for_timeout(400)
+        await npg.screenshot(path=str(OUT / '99b_숫자_1부_레이드.png'))
+        # (b) 부 바꾸기: S.best로만 판단
+        nb = await npg.evaluate("""() => { const G = window.__game, S = G.S, o = {}, set = (k, v) => { S.best['s' + k] = v; S.best['l' + k] = v; };
+          o.p1 = [G.numPart(), G.numStep()];
+          set(3, 5); o.p2 = [G.numPart(), G.numStep(), G.fmtB(1.97e15), G.fmt(1.97e15)];
+          set(4, 5); o.p3 = [G.numPart(), G.numStep(), G.fmtB(2.38e22), G.fmtB(2.38e20), G.numTag()];
+          set(5, 5); o.p4 = [G.numPart(), G.numStep(), G.fmtB(1.93e24), G.fmtB(1.93e22), G.numTag()];
+          set(8, 5); o.p5 = [G.numPart(), G.numStep(), G.fmtB(8.21e26), G.fmtB(4.12e28), G.fmtB(1.49e27), G.numTag(), G.numDiv()];
+          return o; }""")
+        check(nb['p1'] == [1, 0] and nb['p2'] == [2, 0, '1,970조', '1,970조'], f'숫자 줄이기: 2부까지는 줄이지 않는다(1.97e15는 지금과 같은 「1,970조」) {nb["p1"]} {nb["p2"]}')
+        check(nb['p3'] == [3, 2, '2,380,000억', '23,800억', '숫자 ÷1억'], f'숫자 줄이기: 3부는 ÷1억(238조 → 억 단위 쉼표 숫자, 억을 넘어도 조·경 글자 없음) {nb["p3"]}')
+        check(nb['p4'] == [4, 3, '19,300억', '193억', '숫자 ÷1조'], f'숫자 줄이기: 4부는 ÷1조 {nb["p4"]}')
+        check(nb['p5'] == [5, 4, '821억', '41,200억', '1,490억', '숫자 ÷1경', 1e16], f'숫자 줄이기: 5부는 ÷1경(8.21e26 → 「821억」, 4.12e28 → 「41,200억」) {nb["p5"]}')
+        # (c) 같은 단계에서 정렬된 값 100개 → fmt(값 ÷ 나눗셈 값) 그대로, 크기 순서 유지(억을 넘는 값까지)
+        nc = await npg.evaluate("""() => { const G = window.__game, S = G.S, out = {};
+          for (const [k, w] of [[2, 4], [3, 5], [4, 8]]){ S.best.s8 = k === 4 ? 5 : 0; S.best.l8 = S.best.s8; S.best.s5 = k >= 3 ? 5 : 0; S.best.l5 = S.best.s5; S.best.s4 = 5;
+            const div = Math.pow(10000, k), vs = Array.from({length:100}, (_, i) => 5 * Math.pow(1.25, i) * div), big = [1e12, 3.3e12, 5e13, 7.7e14].map(x => x * div);
+            out[k] = {step:G.numStep(), eq:vs.every(v => G.fmtB(v) === G.fmt(v / div)), list:vs.concat(big).map(v => G.fmtB(v))}; }
+          return out; }""")
+        for k in ['2', '3', '4']:
+            vals = [unfmt(x) for x in nc[k]['list']]
+            check(nc[k]['step'] == int(k) and nc[k]['eq'] and all(a <= b for a, b in zip(vals, vals[1:])) and not any(u in ''.join(nc[k]['list']) for u in '조경해'),
+                  f'숫자 줄이기: {k}단계에서 정렬된 값 100개가 fmt(값 ÷ 나눗셈 값)과 같고 크기 순서가 유지된다(맨 위는 억)')
+        # (d) 1 미만·0
+        nd = await npg.evaluate("""() => { const G = window.__game, S = G.S; S.best.s8 = 5; S.best.l8 = 5; const d = G.numDiv();
+          return [G.fmtB(0), G.fmtB(d * 0.5), G.fmtB(d * 0.0001), G.fmtB(d), G.fmtB(d * 1.5), G.fmtB(1e3), G.fmtB(Infinity)]; }""")
+        check(nd == ['0', '1 미만', '1 미만', '1', '1', '1 미만', '∞'], f'숫자 줄이기: 줄인 값이 0과 1 사이면 「1 미만」, 0은 「0」 {nd}')
+        # (e) 5부 용사가 다른 세계 안에서 표시해도 단계가 그대로(withWorld 흉내: 계산 중 S.world를 잠깐 바꿔도)
+        ne = await npg.evaluate("""() => { const G = window.__game, S = G.S, w0 = S.world, o = {}; o.base = [G.numPart(), G.numStep(), G.fmtB(8.21e26)];
+          for (const w of [0, 1, 3, 10]){ S.world = w; (o['w' + w] = [G.numPart(), G.numStep(), G.fmtB(8.21e26)]); } S.world = w0; return o; }""")
+        check(all(v == ne['base'] for v in ne.values()) and ne['base'] == [5, 4, '821억'], f'숫자 줄이기: 세계를 잠깐 바꿔도 가장 멀리 간 부 기준 단계가 그대로다 {ne}')
+        # (g) 5부 화면: HUD 전투력·권장/내 전투력·능력치·[기록] 이 같은 단위, 꼬리표
+        sm = json.loads((ROOT / 'docs' / 'patch-sea' / 'sim' / 'save_musa_ind3.json').read_text(encoding='utf-8'))
+        ng = await npg.evaluate(r"""(save) => { const G = window.__game, S = G.S; Object.assign(S, G.mergeState(JSON.parse(JSON.stringify(save)))); S.name = '숫자용사'; G.migrateStory(); G.refreshStats(); G.setStage(S.stage); G.applyWorld(); G.refreshStats();
+          for (let i = 0; i < 3; i++) G.update(0.05); G.quiet = true;
+          return {world:S.world, step:G.numStep(), tag:G.numTag(), div:G.numDiv()}; }""", sm)
+        await npg.wait_for_timeout(500)
+        ng2 = await npg.evaluate("""() => { const G = window.__game; G.buildTab('me'); return 1; }"""); await npg.wait_for_timeout(500)
+        ng3 = await npg.evaluate("""() => ({cp:document.querySelector('#cp').textContent, hp:document.querySelector('#hpnum') ? document.querySelector('#hpnum').textContent : '', tag:(document.querySelector('[data-numtag]') || {textContent:''}).textContent,
+          card:(document.querySelector('.me-side .ct .tag') || {textContent:''}).textContent, pw:window.__game.power(window.__game.ST)})""")
+        await npg.screenshot(path=str(OUT / '99c_숫자_5부_내정보.png'))
+        cpv = unfmt(ng3['cp']) * ng['div']
+        check(ng['step'] == 4 and ng['tag'] == '숫자 ÷1경' and ng3['tag'] == '숫자 ÷1경' and abs(cpv / ng3['pw'] - 1) < 0.02 and True,
+              f'숫자 줄이기: 5부 화면의 #cp는 power를 ÷1경으로 줄인 글자이고 능력치 카드에 꼬리표가 붙는다 {ng} {ng3}')
+        check(ng3['card'].replace(' ', '').endswith('전투력' + ng3['cp'].replace(' ', '')) or ('전투력 ' + ng3['cp']) in ng3['card'], f'숫자 줄이기: 능력치 카드 전투력이 HUD와 같은 글자 {ng3}')
+        await npg.evaluate("() => { const G = window.__game; G.buildTab('raid'); }"); await npg.wait_for_timeout(500)
+        ngr = await npg.evaluate("""() => { const G = window.__game, el = document.querySelector('[data-rp]') || document.querySelector('.rpow'), out = {txt:el ? el.textContent : '', ok:!!el};
+          const info = G.raidInfo(0); out.rec = G.raidRecPower(info); out.pw = G.power(G.ST); out.div = G.numDiv(); out.expRec = G.fmtB(out.rec); out.expPw = G.fmtB(out.pw); return out; }""")
+        check(ngr['ok'] and '권장 전투력' in ngr['txt'], f'숫자 줄이기: 레이드 칸의 권장·내 전투력이 같은 단위로 표시된다 {ngr}')
+        # 레이드 칸의 숫자 두 개를 되읽어 실제 값과 맞는지(둘 다 같은 나눗셈 값)
+        ngn = await npg.evaluate("""() => { const el = document.querySelector('[data-rp="0"]') || document.querySelector('[data-rp]'); if (!el) return null; const b = el.querySelector('b'), sp = el.querySelectorAll('span'); return {rec:b ? b.textContent : '', mine:sp[1] ? sp[1].textContent : ''}; }""")
+        check(bool(ngn) and bool(ngn['rec']) and bool(ngn['mine']), f'숫자 줄이기: 레이드 칸에서 권장·내 전투력 글자를 읽었다 {ngn}')
+        if ngn:
+            mm = ngn['mine'].replace('내', '').replace('✓', '').replace('↓', '').strip()
+            recv, minev = unfmt(ngn['rec']) * ngr['div'], unfmt(mm) * ngr['div']
+            check(abs(minev / ngr['pw'] - 1) < 0.03, f'숫자 줄이기: 레이드 칸의 내 전투력 글자가 실제 전투력을 ÷1경으로 줄인 값이다 {ngn} 실제 {ngr["pw"]:.3e}')
+        await npg.screenshot(path=str(OUT / '99d_숫자_5부_레이드.png'))
+        # 허수아비 기준표·결과(같은 단위)
+        await npg.evaluate("""() => { const G = window.__game; G.buildTab('raid'); const b = document.querySelector('[data-rv="dummy"]'); if (b) b.click(); }"""); await npg.wait_for_timeout(500)
+        nh = await npg.evaluate("""() => [...document.querySelectorAll('[data-dt], [data-ht]')].map(e => e.textContent)""")
+        await npg.screenshot(path=str(OUT / '99d2_숫자_5부_허수아비칸.png'))
+        check(len(nh) in (5, 7, 12) and all('피해' in x and '이상' in x for x in nh) and any('억' in x for x in nh) and not re.search(r'\d(조|경|해|자|양)', ''.join(nh)), f'숫자 줄이기: 허수아비 등급 기준도 줄인 숫자로 보인다 {nh}')
+        nh2 = await npg.evaluate("""() => { const G = window.__game, S = G.S; S.dummy.day = ''; S.dummy.n = 0; S.presetMode = 'off'; G.quiet = false; G.hideModal(); const st = G.startDummy(); for (let i = 0; i < 30; i++) G.update(0.05); return [st, !!(G.raid && G.raid.info.dummy)]; }""")
+        await npg.wait_for_timeout(600)
+        await npg.screenshot(path=str(OUT / '99e_숫자_5부_허수아비.png'))
+        nh3 = await npg.evaluate("""() => { const G = window.__game; if (G.raid){ G.raid.time = 0; for (let i = 0; i < 400 && G.raid; i++) G.update(0.05); } return {txt:document.querySelector('#mBody') ? document.querySelector('#mBody').textContent : ''}; }""")
+        await npg.wait_for_timeout(400)
+        await npg.screenshot(path=str(OUT / '99f_숫자_5부_허수아비결과.png'))
+        check(nh2[1] and '넣은 피해' in nh3['txt'] and '억' in nh3['txt'] and not re.search(r'\d(조|경|해|자|양)', nh3['txt'].split('넣은 피해')[1][:14]), f'숫자 줄이기: 5부 허수아비 결과의 피해가 억 단위로 줄어 보인다 {nh3["txt"][:60]}')
+        await npg.evaluate("() => { const G = window.__game; G.quiet = true; G.hideModal(); }")
+        await npg.wait_for_timeout(300)
+        # 다른 용사 정보: 내 기준으로 줄임
+        nu = await npg.evaluate("""() => { const G = window.__game; G.showUserInfo({name:'다른용사', cls:'musa', level:300, world:4, rd:G.dpsOf(G.ST) * 1.1, maxHp:G.ST.maxHp * 0.9, q:10}); return document.querySelector('#mBody').textContent + '|' + G.fmtB(G.dpsOf(G.ST) * 1.1) + '|' + G.fmtB(G.ST.maxHp * 0.9); }""")
+        pu = nu.split('|')
+        check(pu[1] in pu[0] and pu[2] in pu[0], f'숫자 줄이기: 다른 용사 정보 창의 싸움 숫자는 내 기준으로 줄인다 {pu[1:]}')
+        await npg.screenshot(path=str(OUT / '99g_숫자_다른용사.png'))
+        await npg.evaluate("() => window.__game.hideModal()")
+        # 새 부 알림(까치) 1회
+        nn = await npg.evaluate("""() => { const G = window.__game; G.quiet = true; const had = G.notiList().map(N => N.k).includes('num'); const N = G.NOTI.find(x => x.k === 'num');
+          const lines = N.lines().join(' '); G.quiet = false; G.hideModal(); G.notiShow(N); const shown = !!document.querySelector('#inh'); const sayT = document.querySelector('#inh') ? document.querySelector('#inh').textContent : '';
+          return {had, hasLines:lines.includes('1경'), shown, after:G.notiList().map(x => x.k).includes('num'), say:sayT.slice(0, 60)}; }""")
+        await npg.wait_for_timeout(600)
+        await npg.screenshot(path=str(OUT / '99h_숫자_새부알림.png'))
+        await npg.evaluate("() => { const G = window.__game; const b = document.querySelector('#notiLater, #inhOk, #inh .inh-btns button'); if (b) b.click(); document.querySelector('#inh') && document.querySelector('#inh').remove(); G.quiet = true; }")
+        check(nn['had'] and nn['hasLines'] and nn['shown'] and not nn['after'], f'숫자 줄이기: 5부에서 까치 알림이 한 번 뜨고(본 뒤엔 목록에서 빠짐) 설명에 ÷1경이 있다 {nn}')
+        # (f) 끄기·기기 설정 저장·캐릭터 저장엔 새 칸 없음
+        nf = await npg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; G.setNumOn(false); o.off = [G.numStep(), G.fmtB(8.21e26) === G.fmt(8.21e26), G.numTag(), localStorage.getItem(G.NUM_KEY)];
+          G.buildTab('me'); o.tagGone = !document.querySelector('[data-numtag]'); const ks = Object.keys(S); o.keys = ks.filter(k => /^num/i.test(k)); o.noti = Object.keys(S.noti.seen); o.inSave = JSON.stringify(S).includes('samhan-num'); G.setNumOn(true); return o; }""")
+        check(nf['off'] == [0, True, '', '0'] and nf['tagGone'] and not nf['keys'] and not nf['inSave'], f'숫자 줄이기: 끄면 fmt와 똑같고 꼬리표가 사라지며, 캐릭터 저장에 새 칸이 없다 {nf}')
+        # [정보] 켬/끔 단추
+        await npg.evaluate("() => window.__game.buildTab('rec')"); await npg.wait_for_timeout(400)
+        ni = await npg.evaluate("""() => { const bs = [...document.querySelectorAll('[data-num]')]; const o = {n:bs.length, pressed:bs.map(b => b.getAttribute('aria-pressed')), note:document.querySelector('#numNote').textContent};
+          bs.find(b => b.dataset.num === '0').click(); o.afterOff = [window.__game.numOn, localStorage.getItem(window.__game.NUM_KEY), document.querySelector('#numNote').textContent.includes('원래 숫자')]; return o; }""")
+        await npg.screenshot(path=str(OUT / '99i_숫자_정보_끔.png'))
+        check(ni['n'] == 2 and ni['pressed'] == ['true', 'false'] and '1경' in ni['note'] and ni['afterOff'] == [False, '0', True], f'숫자 줄이기: [정보]에 켬/끔 단추가 있고(기본 켬) 누르면 기기 설정이 바뀐다 {ni}')
+        # 다시 열어도 기기 설정이 남아 있다 → 켜서 확인
+        await npg.goto(URL); await npg.wait_for_timeout(1200)
+        nr = await npg.evaluate("() => [window.__game.numOn, localStorage.getItem(window.__game.NUM_KEY)]")
+        check(nr == [False, '0'], f'숫자 줄이기: 다시 열어도 끔 설정이 남아 있다 {nr}')
+        await npg.evaluate("() => window.__game.setNumOn(true)")
+        nr2 = await npg.evaluate("() => localStorage.getItem(window.__game.NUM_KEY)")
+        check(nr2 == '1', f'숫자 줄이기: 켜면 기기 설정이 1로 저장된다 {nr2}')
+        await ctxN.close()
         srv.shutdown()
 
         if '--sim' in sys.argv:
