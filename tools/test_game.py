@@ -6714,6 +6714,79 @@ async def main():
         wcl = await wpg.evaluate("() => { const G = window.__game; G.wbForce = false; G.closePage(); G.buildTab('raid'); const r = [...document.querySelectorAll('[data-rv]')].map(b => b.dataset.rv); G.wbForce = true; return r; }")
         check('wb' not in wcl and 'tb' in wcl, f'대요괴: 환생 전에는 [대요괴] 칸이 없다 {wcl}')
         await ctxW.close()
+
+        # ── 끝없는 신화 도전 기운(2026-11-27): 한도 −70%(14번)·단계가 내려가도 기록 유지·이기면 그 단계만 지움·이야기 구간은 예전 그대로 ──
+        ctxE = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        await ctxE.add_init_script(MOCK_CLAUDE % 'null')
+        epg = await ctxE.new_page()
+        watch(epg, errors, '끝없는 신화 기운 ')
+        await epg.goto(URL); await epg.wait_for_selector('#lg-id')
+        await signup(epg, 'pityend', 'abcd', '기운시험', 'musa')
+        await epg.evaluate("() => { const G = window.__game; G.quiet = true; G.noFork = true; G.noInh = true; G.noNoti = true; }")
+        # (a) 이야기 구간(끝없는 신화 전): 예전 그대로 — 한도 −40%·{k, n} 한 칸·새 칸(m) 없음·재도전 간격 8번 기준
+        pa = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; S.quest.main = 5; G.setStage(5); S.bossPity = {k:'', n:0};
+          o.end = G.pityEnd(); const mul = []; for (let i = 0; i < 12; i++){ G.bossFail('시험'); if ([1, 2, 8, 12].includes(i + 1)) mul.push(+G.bossPityMul().toFixed(4)); }
+          o.mul = mul; o.n = G.bossPityN(); o.noM = !('m' in S.bossPity); o.retry = [8, 9, 10].map(n => { S.bossPity.n = n; return G.bossRetryT(); }); S.bossPity.n = 12;
+          G.setStage(4); G.bossFail('시험'); o.after = [G.bossPityN(), S.bossPity.k]; G.setStage(5); o.back = G.bossPityN(); o.noM2 = !('m' in S.bossPity);
+          o.label = G.pityLabel(); return o; }""")
+        check(not pa['end'] and pa['mul'] == [0.95, 0.9, 0.6, 0.6] and pa['n'] == 12 and pa['noM'] and pa['retry'] == [45, 90, 180] and pa['after'] == [1, '0:4'] and pa['back'] == 0 and pa['noM2'],
+              f'도전 기운(이야기 구간): 예전 그대로 한도 −40%(8번)·단계가 바뀌면 처음부터·새 기록 칸이 안 생긴다 {pa}')
+        # (b) 끝없는 신화: 실패마다 −5%씩, 14번에 −70%에서 멈춤, 간격 늘기는 14번 뒤부터
+        pb = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; S.quest.main = G.MAIN_Q.length; G.setStage(60); S.bossPity = {k:'', n:0};
+          o.end = G.pityEnd(); o.q = G.mainQuest().s; const mul = {}; for (let i = 1; i <= 20; i++){ G.bossFail('시험'); if ([1, 2, 8, 14, 15, 20].includes(i)) mul[i] = +G.bossPityMul().toFixed(4); }
+          o.mul = mul; o.n = G.bossPityN(); o.m = Object.assign({}, S.bossPity.m); o.legacy = [S.bossPity.k, S.bossPity.n];
+          o.retry = [13, 14, 15, 16, 18].map(n => { S.bossPity.m['0:60'] = n; return G.bossRetryT(); }); S.bossPity.m['0:60'] = 20;
+          o.label = G.pityLabel(); return o; }""")
+        check(pb['end'] and pb['mul'] == {'1': 0.95, '2': 0.9, '8': 0.6, '14': 0.3, '15': 0.3, '20': 0.3} and pb['n'] == 20 and pb['m'] == {'0:60': 20} and pb['legacy'] == ['0:60', 20] and pb['retry'] == [45, 45, 90, 180, 600]
+              and pb['label'] == '도전 실패 20번 · 보스 체력 −70%',
+              f'도전 기운(끝없는 신화): 실패마다 −5%씩 14번에 −70%(그 뒤는 그대로)·재도전 간격은 14번 뒤부터 늘어난다 {pb}')
+        check('269' not in pb['q'] and '질수록 보스가 조금씩 약해져요' in pb['q'] and '2씩 올라가요' in pb['q'] and '−70' not in pb['q'] and '70%' not in pb['q'],
+              f'끝없는 신화 퀘스트 설명: 낡은 「269단계」 대신 지금 구조(단계 2씩·막히면 더 세짐·질수록 약해짐)를 숫자 없이 쉽게 적었다 {pb["q"]!r}')
+        # (c) 진짜 보스 체력(startBoss)·오프라인 보스 도전(offBossOdds)이 같은 값을 쓴다
+        pc = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; const hp = n => { S.bossPity = {k:'0:60', n, m:n ? {'0:60':n} : undefined}; if (!n) delete S.bossPity.m; G.startBoss(); const v = G.bossRef.maxHp; return v; };
+          const h0 = hp(0), h5 = hp(5), h10 = hp(10), h14 = hp(14), h20 = hp(20); o.hp = [h5 / h0, h10 / h0, h14 / h0, h20 / h0].map(v => +v.toFixed(4));
+          const x = n => { S.bossPity = {k:'0:60', n, m:n ? {'0:60':n} : undefined}; if (!n) delete S.bossPity.m; return G.offBossOdds(60).x; }; const x0 = x(0); o.off = [x(10) / x0, x(20) / x0].map(v => +v.toFixed(4));
+          S.quest.main = 5; const y0 = (() => { S.bossPity = {k:'0:60', n:0}; return G.offBossOdds(60).x; })(); S.bossPity = {k:'0:60', n:20}; o.offOld = +(G.offBossOdds(60).x / y0).toFixed(4);   // 이야기 구간은 −40%에서 멈춤(1/0.6)
+          S.bossPity = {k:'0:60', n:20}; G.startBoss(); const hOld = G.bossRef.maxHp; S.bossPity = {k:'', n:0}; G.startBoss(); o.hpOld = +(hOld / G.bossRef.maxHp).toFixed(4);
+          S.quest.main = G.MAIN_Q.length; S.bossPity = {k:'', n:0}; G.bossFail('정리'); S.bossPity = {k:'', n:0}; return o; }""")
+        check(pc['hp'] == [0.75, 0.5, 0.3, 0.3] and pc['off'] == [2.0, 3.3333] and pc['offOld'] == 1.6667 and pc['hpOld'] == 0.6,
+              f'도전 기운: 보스 체력(5번 −25%·10번 −50%·14번 이상 −70%)과 오프라인 도전 확률이 같은 값을 쓰고, 이야기 구간은 −40%에서 멈춘다 {pc}')
+        # (d) 필드에서 쓰러져 단계가 내려가도 기록이 남는다(끝없는 신화). 이야기 구간은 예전처럼 사라진다
+        pd = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; S.quest.main = G.MAIN_Q.length; G.setStage(80); S.bossPity = {k:'', n:0}; for (let i = 0; i < 3; i++) G.bossFail('시험');
+          S.deathsHere = 0; G.hero.dead = false; G.heroDie(); G.hero.dead = false; G.heroDie(); o.stage = S.stage; o.here = G.bossPityN();   // 2번 쓰러지면 한 단계 물러남
+          G.bossFail('시험'); G.bossFail('시험'); o.below = G.bossPityN(); G.setStage(80); o.up = [G.bossPityN(), +G.bossPityMul().toFixed(4)]; o.m = Object.assign({}, S.bossPity.m);
+          S.quest.main = 5; G.setStage(80); S.bossPity = {k:'', n:0}; for (let i = 0; i < 3; i++) G.bossFail('시험'); S.deathsHere = 0; G.hero.dead = false; G.heroDie(); G.hero.dead = false; G.heroDie(); G.bossFail('시험'); G.setStage(80); o.old = G.bossPityN();
+          S.quest.main = G.MAIN_Q.length; S.bossPity = {k:'', n:0}; G.hero.dead = false; return o; }""")
+        check(pd['stage'] == 79 and pd['here'] == 0 and pd['below'] == 2 and pd['up'] == [3, 0.85] and pd['m'] == {'0:80': 3, '0:79': 2} and pd['old'] == 0,
+              f'도전 기운(끝없는 신화): 필드에서 쓰러져 한 단계 물러나도 80단계의 3번 기록이 남아 돌아오면 이어진다(이야기 구간은 예전처럼 처음부터) {pd}')
+        # (e) 이기면 그 단계 기록만 지우고 다음 단계는 처음부터 / 이야기 구간은 전부 지움
+        pe = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; S.quest.main = G.MAIN_Q.length; G.setStage(90); S.bossPity = {k:'', n:0}; for (let i = 0; i < 4; i++) G.bossFail('시험'); G.setStage(89); G.bossFail('시험'); G.setStage(90);
+          o.before = Object.assign({}, S.bossPity.m); G.startBoss(); G.bossWin(); o.stage = S.stage; o.after = Object.assign({}, S.bossPity.m || {}); o.next = G.bossPityN(); o.label = G.pityLabel(); o.legacy = [S.bossPity.k, S.bossPity.n];
+          G.setStage(89); G.startBoss(); G.bossWin(); o.last = 'm' in S.bossPity ? Object.keys(S.bossPity.m) : 'none'; S.bossPity = {k:'', n:0};
+          S.quest.main = 5; G.setStage(90); S.bossPity = {k:'0:90', n:3}; G.startBoss(); G.bossWin(); o.old = [S.bossPity.k, S.bossPity.n, 'm' in S.bossPity]; S.quest.main = G.MAIN_Q.length; return o; }""")
+        check(pe['before'] == {'0:90': 4, '0:89': 1} and pe['stage'] == 91 and pe['after'] == {'0:89': 1} and pe['next'] == 0 and pe['label'] == '' and pe['last'] == 'none' and pe['old'] == ['', 0, False],
+              f'도전 기운(끝없는 신화): 이기면 그 단계 기록만 지워지고(다른 단계는 그대로) 다음 단계는 처음부터, 기운이 없으면 화면에 아무것도 안 뜬다 {pe}')
+        # (f) 기록 수 제한(최근 12개)과 저장 불러오기(예전 {k, n}·망가진 기록)
+        pf = await epg.evaluate("""() => { const G = window.__game, S = G.S, o = {}; S.quest.main = G.MAIN_Q.length; S.bossPity = {k:'', n:0};
+          for (let st = 100; st < 118; st++){ G.setStage(st); G.bossFail('시험'); } o.keys = Object.keys(S.bossPity.m); G.setStage(100); o.oldest = G.bossPityN(); G.setStage(117); o.newest = G.bossPityN();
+          const base = JSON.parse(JSON.stringify(S)); const mg = bp => { const d = JSON.parse(JSON.stringify(base)); d.bossPity = bp; return G.mergeState(d).bossPity; };
+          o.legacy = mg({k:'0:7', n:3}); o.none = mg(undefined); o.badType = [mg({k:'0:7', n:3, m:[1, 2]}), mg({k:'', n:0, m:'x'}), mg({k:'', n:0, m:null})];
+          const wild = {'0:5':5, 'bad':3, '10:340':200, '10:341':-4, '3:3':'x', '1:1':2.9, '123:4':5, '__proto__':7}; for (let i = 0; i < 30; i++) wild['2:' + (200 + i)] = 1 + (i % 3);
+          o.wild = mg({k:'0:7', n:500, m:wild}); o.wildN = Object.keys(o.wild.m).length; o.wild2 = mg({k:'', n:0, m:{'10:340':200, '10:341':-4, '1:1':2.9, 'bad':3, '123:4':5, '3:3':'x'}}); return o; }""")
+        check(len(pf['keys']) == 12 and pf['keys'][0] == '0:106' and pf['keys'][-1] == '0:117' and pf['oldest'] == 0 and pf['newest'] == 1
+              and pf['legacy'] == {'k':'0:7', 'n':3} and pf['none'] == {'k':'', 'n':0} and all(b == {'k':'0:7', 'n':3} or b == {'k':'', 'n':0} for b in pf['badType'])
+              and pf['wild']['n'] == 99 and pf['wildN'] == 12 and pf['wild']['m']['2:229'] == 3 and pf['wild']['m']['2:218'] == 1 and '0:5' not in pf['wild']['m'] and pf['wild2']['m'] == {'10:340': 99, '1:1': 2},
+              f'도전 기운 저장: 기록은 최근 12단계만, 예전 {{k, n}}은 그대로, 망가진 기록은 걸러지고 0~99 정수로 잘린다 {pf}')
+        # (g) 화면: 약해지는 중일 때만 보스 막대 아래에 작은 줄(캡처로 확인), 없으면 아무것도 안 그림
+        await epg.evaluate("() => { const G = window.__game, S = G.S; S.quest.main = G.MAIN_Q.length; G.setStage(10); S.bossPity = {k:'', n:0}; S.deathsHere = 0; G.quiet = false; }")
+        await epg.wait_for_timeout(600)
+        pg0 = await epg.evaluate("() => window.__game.pityLabel()")
+        await epg.screenshot(path=str(OUT / '97b_도전기운_없음.png'))
+        pg = await epg.evaluate("() => { const G = window.__game; for (let i = 0; i < 6; i++) G.bossFail('시험'); return [G.pityLabel(), G.bossPityN()]; }")
+        await epg.wait_for_timeout(700)
+        await epg.screenshot(path=str(OUT / '97c_도전기운_6번.png'))
+        check(pg0 == '' and pg == ['도전 실패 6번 · 보스 체력 −30%', 6], f'도전 기운 화면: 기운이 없으면 아무것도 안 뜨고, 6번 지면 보스 막대 아래에 「도전 실패 6번 · 보스 체력 −30%」가 뜬다(캡처 97b·97c) {pg0!r} {pg}')
+        await ctxE.close()
         srv.shutdown()
 
         if '--sim' in sys.argv:

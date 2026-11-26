@@ -4680,9 +4680,14 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 5;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-26-3', NOTE_KEY = KP + 'samhan-note-seen';
+const PITY_KEYS = 12;   // 끝없는 신화 도전 기운 기록(S.bossPity.m)을 최근 몇 단계까지 둘지
+const NOTE_VER = '2026-11-27-1', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 27일 · 끝없는 신화 보스'],
+  ['끝없는 신화 보스, 질수록 더 약해져요', '이야기를 다 마친 뒤 「끝없는 신화」에서는 단계 보스에게 질 때마다 다음 도전에서 그 보스 체력이 더 줄어요. 다른 땅에서는 8번 져서 체력이 40% 줄면 거기서 멈추는데, 끝없는 신화에서는 14번까지, 체력이 70% 줄 때까지 이어져요. 이기면 그 단계의 기운은 사라지고, 다음 단계는 처음부터 시작해요. 보상은 그대로예요.'],
+  ['쓰러져서 물러나도 쌓은 기운은 남아요', '끝없는 신화에서 필드에서 쓰러져 한 단계 물러나도, 보스에게 져서 쌓은 기운은 그 단계에 그대로 남아요. 다시 올라와 도전하면 약해진 보스부터 이어서 싸워요(최근 12개 단계까지 기억해요). 이야기를 아직 마치지 않은 용사의 진행은 그대로예요.'],
+  ['도전 실패 횟수가 화면에 보여요', '보스에게 져서 약해지는 중이면 위 가운데 보스 막대 아래에 「도전 실패 n번 · 보스 체력 −x%」가 작게 떠요. 약해지는 중이 아니면 아무것도 보이지 않아요. 끝없는 신화 퀘스트 설명도 지금 모습에 맞게 고쳤어요(이야기 하나마다 수미산 단계가 2씩 올라가고, 막히면 경지 · 영약 · 시험 · 대요괴로 더 세져요).'],
   ['#', '11월 26일 · 주간 대요괴 공동 토벌'],
   ['주간 대요괴: 모든 용사가 함께 큰 요괴를 쓰러뜨려요', '환생한 뒤 [레이드]에 「대요괴」 칸이 생겼어요. 한 주(월~일)마다 큰 요괴가 하나씩 나타나요(이무기 · 불가사리 · 어둑시니 왕 · 가뭄 괴물 강철이가 차례로 돌아와요). 나와 내 파티가 60초 동안 요괴를 깎고, 깎은 몫이 점수가 돼요. 쓰러뜨리면 100점에 남은 시간 보너스가 붙어요. 모든 용사의 점수가 합쳐져 목표 막대를 채워요(목표는 지난주에 참가한 캐릭터 수에 맞춰져요). 한 캐릭터가 하루 3번, 한 계정은 하루 6번까지 칠 수 있어요.'],
   ['막대가 차면 모두에게 보상이 있어요', '막대가 25 · 50 · 75 · 100%에 닿을 때마다 이번 주에 한 번이라도 친 캐릭터는 [받기]를 눌러 보석 · 재료 · 초월의 조각(또는 신화 조각) · 꾸미기 상자를 받아요. 한 판마다 엽전과 보석도 따로 줘요. 지난주 점수 1~3등은 이번 주 한 주 동안 별호 「대요괴를 베어 낸 자」를 달아요(겉모습만 바뀌고 힘은 그대로예요).'],
@@ -5800,6 +5805,12 @@ function mergeState(d){
   out.vault = {day:d.vault && typeof d.vault.day === 'string' ? d.vault.day : '', n:Math.max(0, Math.floor(+(d.vault && d.vault.n)) || 0)};
   out.setPick = typeof d.setPick === 'string' && /^[a-z0-9_]{1,20}$/.test(d.setPick) ? d.setPick : '';
   { const bp = d.bossPity && typeof d.bossPity === 'object' ? d.bossPity : {}; out.bossPity = {k:typeof bp.k === 'string' ? bp.k : '', n:Math.max(0, Math.min(99, Math.floor(+bp.n) || 0))}; }
+  { const bp = d.bossPity && typeof d.bossPity === 'object' ? d.bossPity : {};   // 끝없는 신화의 (세계:단계)별 기록 — 모양·범위를 다시 맞추고 최근 PITY_KEYS개만
+    if (bp.m && typeof bp.m === 'object' && !Array.isArray(bp.m)){
+      const m = {}; for (const key of Object.keys(bp.m)){ if (!/^\d{1,2}:\d{1,5}$/.test(key)) continue; const v = Math.max(0, Math.min(99, Math.floor(+bp.m[key]) || 0)); if (v > 0) m[key] = v; }
+      const ks = Object.keys(m); for (let i = 0; i < ks.length - PITY_KEYS; i++) delete m[ks[i]];
+      if (Object.keys(m).length) out.bossPity.m = m;
+    } }
   { const db = d.dboss && typeof d.dboss === 'object' ? d.dboss : {}; out.dboss = {day:typeof db.day === 'string' ? db.day : '', n:Math.max(0, Math.floor(+db.n) || 0), paid:!!db.paid, won:!!db.won}; }
   { const t = d.tower && typeof d.tower === 'object' ? d.tower : {}, st = v => typeof v === 'string' ? v : '', nn = v => Math.max(0, Math.floor(+v) || 0);
     out.tower = {best:Math.min(TOWER.top, nn(t.best)), day:st(t.day), n:nn(t.n), gday:st(t.gday), gn:nn(t.gn), godWin:nn(t.godWin), seed:!!t.seed, gweek:st(t.gweek)};
@@ -6408,7 +6419,7 @@ function mainQuest(){
   const i = S.quest.main;
   if (i < MAIN_Q.length) return Object.assign({i}, storyQ(i));
   const k = i - MAIN_Q.length + 1, last = MAIN_Q[MAIN_Q.length - 1];
-  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'마을 어귀로 돌아온 뒤에도 신화는 끝나지 않아요. 수미산에서 더 높이 올라가요(Lv.700 · 269단계까지).', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k, ...(k >= 5 ? {gems:500, ts:TRANS.questGive} : {})};
+  return {i, ch:-1, t:`끝없는 신화 ${k}`, s:'마을 어귀로 돌아온 뒤에도 신화는 끝나지 않아요. 이야기 하나마다 수미산 단계가 2씩 올라가요. 막히면 경지·영약·시험·대요괴로 더 세지고, 보스에게 질수록 보스가 조금씩 약해져요.', k:'s' + WORLD_MAX, n:40 + 2 * k, gems:5000 + 300 * k, ...(k >= 5 ? {gems:500, ts:TRANS.questGive} : {})};
 }
 const awakenOk = () => S.reb.n >= 1 && S.best.l1 >= 60 && !!S.raid.first.h2;
 function questCur(q){
@@ -7089,11 +7100,35 @@ let gateNoteT = -1e9;
 function gateNote(bg){ if (gtime - gateNoteT < 60) return; gateNoteT = gtime; addLog(`다음 단계 보스가 잠겨 있어요: ${bg.why}.`, 'warn'); }
 /* 보스 도전 기운(2026-11 (43), 사용자 요청: Lv266에 9-8 보스가 빡빡함): 같은 단계 보스에게 질 때마다 다음 도전에서 그 보스 체력이 BOSS_PITY.per씩 줄어든다(최대 max).
    이기거나 다른 단계로 가면 처음부터. 벽은 그대로 두되, 몇 번 부딪히면 넘을 수 있게. 오프라인 보스 자동 도전도 같이 센다 */
-const BOSS_PITY = {per:0.05, max:0.4};   // 천계 끝은 단계마다 보스 체력 ×1.26이라 20%로는 한 단계도 안 됨 → 40%(약 2단계)
+const BOSS_PITY = {per:0.05, max:0.4, endMax:0.7};   // 천계 끝은 단계마다 보스 체력 ×1.26이라 20%로는 한 단계도 안 됨 → 40%(약 2단계). endMax: 끝없는 신화는 −70%(14번)까지
+/* 끝없는 신화(2026-11-27, 사용자 요청: Lv.700·경지 47단·수미산 340단계에서 단계 보스에 막힘): 이야기를 다 마친 용사(S.quest.main ≥ MAIN_Q.length)만 한도가 −70%(실패 14번)로 늘고,
+   필드에서 쓰러져 단계가 내려가도 그 (세계:단계)의 기록이 남는다(S.bossPity.m = {'세계:단계': 횟수}, 최근 PITY_KEYS개). 이기면 그 단계 기록만 지움. 그 밖의 진행은 예전 그대로({k, n} 한 칸, 한도 −40%).
+   옛 화면이 저장을 덮어써도 m만 사라지고 {k, n}(가장 최근 단계)은 남아 안전하다 → SAVE_BUILD는 그대로 */
+const pityEnd = () => S.quest.main >= MAIN_Q.length;
+const pityMax = () => pityEnd() ? BOSS_PITY.endMax : BOSS_PITY.max;
 const bossPityKey = () => `${S.world}:${S.stage}`;
-const bossPityN = () => S.bossPity && S.bossPity.k === bossPityKey() ? S.bossPity.n : 0;
-const bossPityMul = () => 1 - Math.min(BOSS_PITY.max, bossPityN() * BOSS_PITY.per);
-function bossPityAdd(){ const k = bossPityKey(); if (!S.bossPity || S.bossPity.k !== k) S.bossPity = {k, n:0}; S.bossPity.n = Math.min(99, S.bossPity.n + 1); }
+const bossPityN = () => { const bp = S.bossPity, k = bossPityKey(); if (!bp) return 0; if (pityEnd() && bp.m && bp.m[k] > 0) return bp.m[k]; return bp.k === k ? bp.n : 0; };
+const bossPityMul = () => 1 - Math.min(pityMax(), bossPityN() * BOSS_PITY.per);
+function bossPityAdd(){
+  const k = bossPityKey();
+  if (pityEnd()){
+    const bp = S.bossPity || (S.bossPity = {k:'', n:0}), n = Math.min(99, bossPityN() + 1);
+    if (!bp.m) bp.m = {};
+    delete bp.m[k]; bp.m[k] = n;   // 가장 최근 것을 맨 뒤로
+    const ks = Object.keys(bp.m); for (let i = 0; i < ks.length - PITY_KEYS; i++) delete bp.m[ks[i]];
+    bp.k = k; bp.n = n;
+    return;
+  }
+  if (!S.bossPity || S.bossPity.k !== k) S.bossPity = {k, n:0};
+  S.bossPity.n = Math.min(99, S.bossPity.n + 1);
+}
+function bossPityClear(){   // 이겼다: 이 단계의 기록을 지움(끝없는 신화는 다른 단계 기록은 그대로)
+  const bp = S.bossPity, k = bossPityKey();
+  if (pityEnd() && bp && bp.m){
+    delete bp.m[k]; if (bp.k === k){ bp.k = ''; bp.n = 0; }
+    if (!Object.keys(bp.m).length) delete bp.m;
+  } else S.bossPity = {k:'', n:0};
+}
 function startBoss(){
   for (const m of mobs) if (!m.dead){ m.dead = true; m.deathT = 0.4; m.fled = true; fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
   const spot = spawnTile(6) || spawnTile(3) || [13 + FOX, 5 + FOY];
@@ -7125,7 +7160,7 @@ function bossWin(){
   if (TM && (TM.kind === 'boss' || TM.kind === 'gate')) tmEnd(true, 'win');   // (오프라인 자동 도전이 부른 것은 안 셈)
   bmeterEnd();
   if (window.__game && window.__game.onBoss) window.__game.onBoss('win');
-  S.bossPity = {k:'', n:0};
+  bossPityClear();
   const gems = Math.round((5 + Math.floor(effStage(S.stage) / 4)) * gemMul());
   const prev = regionIndex(S.stage), wasGate = isGateStage(S.stage);
   S.gems += gems; S.rec.bosses++; recWin(true, false);
@@ -17815,8 +17850,19 @@ function drawBuffChips(cw){
   ovRects.buff = [x0, ovBot + 4, x1, y - 3];
   ovBot = y - 3;
 }
+/* 보스 도전 기운 표시(2026-11-27): 이 단계 보스에게 져서 약해지는 중일 때만, 보스 막대 바로 아래에 작은 줄 하나 */
+function pityLabel(){ const n = bossPityN(); return n > 0 ? `도전 실패 ${n}번 · 보스 체력 −${Math.round((1 - bossPityMul()) * 100)}%` : ''; }
+function drawPityChip(cw){
+  if (!session || market || raid || parade) return;
+  const lab = pityLabel(); if (!lab) return;
+  ctx.font = '700 10px SamhanSans, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  const w = Math.ceil(ctx.measureText(lab).width) + 10, x = Math.round((cw - w) / 2), y = ovBot + 4;
+  box(x, y, w, 15); ctx.fillStyle = '#a8e6b8'; ctx.fillText(lab, x + 5, y + 8);
+  ovBot = y + 15 - 1;
+}
 function drawOverlay(){
   drawOverlayMain();
+  drawPityChip(cv.width / dpr);
   drawBuffChips(cv.width / dpr);
 }
 function drawOverlayMain(){
@@ -19808,7 +19854,7 @@ const BOSS_RETRY = 45;
    예전에는 99번을 져도 45초마다 다시 도전해서(보스전 30초 + 몹이 새로 나오는 시간) 사냥 시간의 절반 넘게를 못 이길 보스에 썼고, 마나까지 떨어지면 몹을 거의 못 잡아
    천계 끝에서 레벨이 멈췄다(진행 시뮬 420시간에 천계 Lv.214). [보스 도전] 단추를 누르면 언제든 바로 도전할 수 있다 */
 const BOSS_RETRY_MAX = 600;
-const bossRetryT = () => { const n = bossPityN() - Math.round(BOSS_PITY.max / BOSS_PITY.per); return n <= 0 ? BOSS_RETRY : Math.min(BOSS_RETRY_MAX, BOSS_RETRY * Math.pow(2, n)); };
+const bossRetryT = () => { const n = bossPityN() - Math.round(pityMax() / BOSS_PITY.per); return n <= 0 ? BOSS_RETRY : Math.min(BOSS_RETRY_MAX, BOSS_RETRY * Math.pow(2, n)); };
 const waitText = sec => sec >= 90 ? `${Math.floor(sec / 60)}분${sec % 60 >= 1 ? ' ' + Math.floor(sec % 60) + '초' : ''}` : `${Math.max(1, Math.ceil(sec))}초`;
 function applySpeedBtn(){ elSpeed.textContent = `×${S.speed}`; elSpeed.setAttribute('aria-label', `게임 속도 ${S.speed}배`); elSpeed.setAttribute('aria-pressed', String(S.speed === 2)); }
 /* 상태판 갱신: 「부드럽게」는 그릴 때마다, 「자동」·「절전」은 0.1초(초당 10번)에 한 번 — 막대·숫자·쿨타임 그늘·고리는 매 프레임 바꿔 봐야 눈에 안 띄는데 그때마다 그 조각을 다시 칠하기 때문.
@@ -24867,7 +24913,7 @@ if (location.search.indexOf('simtest') >= 0){
     offlineReward, offlineKps, get offHunt(){ return offHunt; }, offLuck:null, offBossOdds, OFF_BOSS_TRIES, offBossLuck:null, onBoss:null, SK_LIST, SKC, SK_PARTS, MK_STACK, WEEKLY, ev, bossPortrait, isoX, isoY, localPt, setOrient, applyRot, get rotDeg(){ return rotDeg; }, get orientMode(){ return orientMode; }, DBOSS, startDBoss, finishDBoss, dbOpen, isMainChar, setMainChar, TOWER, towerWS, towerBoss, startTower, finishTower, towerAsk, towerLeft, TOWER_MILE, TAECHO, startTaecho, finishTaecho, endBox, taechoForce:false, PVP, PVP_AI, pickSet, inhList, inhDo, inhPending, inhTodo, inhShow, inhRun, inhClose, get inhOpen(){ return inhOpen; }, noInh:true,   // 자동 점검에서는 대장장이가 저절로 나타나지 않게(계승 점검에서만 false)
     refineGen, seaOpen, slotsNow, ALL_SLOTS, NEW_SLOTS, GEAR_N, GEAR, SLOT, slotMain, slotFxText, refineCost, seaKit, seaGearDrop, seaSum, seaGrow, itemG, matW, gearEquipPct, gearName, giveItem,
     AMB, AMB_G, AMB_GOOD, AMB_BAD, ambSt, ambN, ambDone, ambGold, ambSet, ambCarve, ambBest, ambSum, gainAmber, amberDrop, ambMerge, ambMergeAll, ambRelic, ambRelicLuck:null, ambMergeCan, ambRoll, seaForce:false, ambLuck:null, noAmber:true, noSea:true, noJob5:true, noHaetae:true, levelCap, mainQuest, questCur, migrateStory, curRegion, stageLabel, castSprite, cutBg, skOpen, JOBS, SEA1, SEA1_REGIONS, SEA1_RAIDS, sea1RaidInfo, sea1RaidsOpen, SEA2, SEA3, SEAS, seaRaidInfo, seaRaidsOpen, heroDie, chapterDone, cumLv, CHAPTERS, CONT, CROSS_QW, STORY_SV, EXP_K, STAGE_LV, get PART4A_END(){ return PART4A_END; }, get PART4B_END(){ return PART4B_END; }, get CROSS_Q5(){ return CROSS_Q5; }, get PART3_END(){ return PART3_END; }, JOB5_LV, WORLD_MAX, LV_CAP, WORLD_NAME, jobEPct, mpMax, seaOpenCut, CH_OPEN, qShots, RAID_WORLDS, heroGx, personSprite, GRADES, mergeableSets, gradeOf, inhClose,
-    INH, MAT_DROP, MAT_SRC, SHARD_SRC, gainShard, questGo, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, BOSS_PITY, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
+    INH, MAT_DROP, MAT_SRC, SHARD_SRC, gainShard, questGo, elBrew, elPick, elSt, elSum, elMul, elPct, elReset, elResetCost, elBestCard, elCost, elCanPay, elDone, elFull, ORGANS, EL, EL_SET, mwCraft, mwUp, mwMul, MWEAP, MW_MUL, mythOk, raidReset, BAG_STACK, showUserInfo, userFind, sumProg, pvpCands, pvpFetch, startPvp, finishPvp, pvpLeft, bossPityN, bossPityMul, bossPityAdd, bossPityClear, pityEnd, pityLabel, BOSS_PITY, PITY_KEYS, dummyTiers, TOWER_BANDS, skCol, hasSkIcon:i => !!SVG[skDef(i).icon], skSavePut, skSaveLoad, skSaveGet, BR, TB_REW, finishTimeBoss, SETS, setSum, setCount, setPieceOk, gearRes, setMul, atkBuffX:() => atkBuff(), GANGLIM, GR, startGangrim, finishGangrim, grOpen, grLeft, grParty, grOthers, grAvatar, grLuck:null, wipeOff:false, D_ATK, PB, PB_T, partyBuff, get pbT(){ return pbT; }, pbV, pbRaidK, SK_PRE, skPresetFor, presetAsk, presetTake, get skPreset(){ return skPreset; }, fightKind, MP_MAX, skMp, WIPE, wipeKind, updateWipe, get potCd(){ return potCd; }, set potCd(v){ potCd = v; }, curSet, DB_FIT, FIT, TB_DIFF, skCap, skIn, skSetFix, skToggle, skSetAuto, SK_SLOTS, COMBOS, comboFor, comboMul, AWAKEN_PCT, AWAKEN_SEC, AWAKEN_SEC4, castAwaken, FORMS, FM, FORM_TIME, FORM_OLD_LATE, startForm, endForm, formOn, formOf, formFx, formDesc, giveForm, formDrop, formBest, curFight, formReady, toggleFormAuto, get formT(){ return formT; }, formLuck:null, tbFromSummary, hasK, fitRate, bossHit, takenK, counterOk, dbCheck, dbLeft, dbPart, dbBoss, dbDay, skinDropPart, dbLuck:null, get roomList(){ return roomList; }, roomTrack, setChat, weekKey, weekCheck, claimWeek, claimWeekAll, weekReady, weekGems, tbFetchPick, tbPickLocal, get tbPick(){ return tbPick; }, TB_PICK, TB_CLS_CAP, get TB_SELF_K(){ return TB_SELF_K; }, set TB_SELF_K(v){ TB_SELF_K = v; }, mkSources, mkTake, mkGive, mkClean, itemInfo, SK_GRADES, SK_P, skinDrop, skinGet, skMake, skinSum, skMul, skSE, skEquip, skSellWorse, skCh, skinOpen, skGradeP, skinLook, skLuck:null, skGrade:null,
     MOUNTS, giveMount, buyMount, rideMount, mountStarUp, mountStarCost, mountBuyCost, MOUNT_PIECE, MOUNT_STAR, SD_TIERS, SD_WFX, sdClaim, sdReady, sdCount, sdGot, sdTick, TITLE_RANK, TITLE_RANKS, titleSpan, setFxText, SET_STAT, mountCol, rideAb, heroStep, gainPiece, mountSprite, mountCatchUp,
     patSea, patFlow, breathOn, updateBreath, noSeaPat:false,
     YONGWANG, YGR, startYgr, finishYgr, ygrOpen, ygrLeft, ygrAvatar,
