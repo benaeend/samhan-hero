@@ -4679,10 +4679,13 @@ function giveGifts(){
     setTimeout(() => { if ($('#modal').hidden) showModal('운영 보상', `<p>${esc(g.why)}${josa(g.why, '으로', '로')} <b>보석 ${fmt(g.gems)}개</b>를 드렸어요. 불편을 드려 죄송해요.</p>`, [{label:'확인', primary:true}]); }, 1500);
   }
 }
-const SAVE_BUILD = 4;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-26-2', NOTE_KEY = KP + 'samhan-note-seen';
+const SAVE_BUILD = 5;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
+const NOTE_VER = '2026-11-26-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 26일 · 주간 대요괴 공동 토벌'],
+  ['주간 대요괴: 모든 용사가 함께 큰 요괴를 쓰러뜨려요', '환생한 뒤 [레이드]에 「대요괴」 칸이 생겼어요. 한 주(월~일)마다 큰 요괴가 하나씩 나타나요(이무기 · 불가사리 · 어둑시니 왕 · 가뭄 괴물 강철이가 차례로 돌아와요). 나와 내 파티가 60초 동안 요괴를 깎고, 깎은 몫이 점수가 돼요. 쓰러뜨리면 100점에 남은 시간 보너스가 붙어요. 모든 용사의 점수가 합쳐져 목표 막대를 채워요(목표는 지난주에 참가한 캐릭터 수에 맞춰져요). 한 캐릭터가 하루 3번, 한 계정은 하루 6번까지 칠 수 있어요.'],
+  ['막대가 차면 모두에게 보상이 있어요', '막대가 25 · 50 · 75 · 100%에 닿을 때마다 이번 주에 한 번이라도 친 캐릭터는 [받기]를 눌러 보석 · 재료 · 초월의 조각(또는 신화 조각) · 꾸미기 상자를 받아요. 한 판마다 엽전과 보석도 따로 줘요. 지난주 점수 1~3등은 이번 주 한 주 동안 별호 「대요괴를 베어 낸 자」를 달아요(겉모습만 바뀌고 힘은 그대로예요).'],
   ['#', '11월 26일 · 경지 시험과 끝없는 시험'],
   ['경지 시험: 경지 10단마다 「나의 그림자」와 겨뤄요', '[레이드]에 「경지 시험」 카드가 생겼어요. 초월의 경지를 10단 올릴 때마다 시험이 하나씩 열려요(문턱 · 첫 고개 · 여울목 … 경지의 끝, 모두 10가지). 진 레이드처럼 쓰러져도 다시 일어서고, 생명 3개·물약 10개·90초 안에 보스를 쓰러뜨리면 돼요. 경지가 이미 높은 용사는 지난 시험도 한꺼번에 열려 있고, 보상도 처음 깰 때 그대로 받아요.'],
   ['보상은 조각·보석·별호·빛깔뿐이에요', '시험마다 초월의 조각과 보석을 주고, 3·5·10번째에는 별호를 줘요. 10번째를 깨면 용사 둘레에 퍼지는 「경지의 빛」 꾸밈도 얻어요(빛깔은 상점에서 바꿀 수 있어요). 힘은 하나도 오르지 않는 보상이라 진행 속도와 기존 밸런스는 그대로예요.'],
@@ -5643,7 +5646,7 @@ function defaultState(){
     skin:{eq:{}, inv:[], seq:0, found:{}},
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
-    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
+    mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, wb:{wk:'', day:'', n:0, best:0, got:0, ti:''}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
     soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, rGot:0, buy:{wk:'', got:{}}, rd:{wk:'', n:0, tot:{}}, tr:{best:0, hue:0, tot:{}}, ex:{best:0, day:'', n:0, extra:0}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
@@ -5806,6 +5809,7 @@ function mergeState(d){
   { const j = d.jin && typeof d.jin === 'object' ? d.jin : {}, st = v => typeof v === 'string' ? v : '', nn = v => Math.max(0, Math.floor(+v) || 0), kv = (o, f) => { const r = {}; if (o && typeof o === 'object') for (const k of Object.keys(o)) if (/^j[hgbk]?\d{1,2}$/.test(k)){ const v = f(o[k]); if (v) r[k] = v; } return r; };   // 상위 레이드 「진」(물의 신화 3단계)
     out.jin = {day:st(j.day), n:nn(j.n), week:st(j.week), wk:kv(j.wk, v => !!v), fail:kv(j.fail, v => Math.min(9, nn(v))), win:kv(j.win, nn), pity:nn(j.pity)};
     const h = d.haetae && typeof d.haetae === 'object' ? d.haetae : {}; out.haetae = {day:st(h.day), n:nn(h.n), best:Math.max(0, +h.best || 0), top:Math.max(0, Math.min(7, Math.floor(+h.top) || 0))}; }
+  { const w = d.wb && typeof d.wb === 'object' ? d.wb : {}; out.wb = {wk:typeof w.wk === 'string' ? w.wk.slice(0, 10) : '', day:typeof w.day === 'string' ? w.day.slice(0, 12) : '', n:Math.max(0, Math.min(99, Math.floor(+w.n) || 0)), best:Math.max(0, Math.min(120, Math.floor(+w.best) || 0)), got:Math.max(0, Math.min(15, Math.floor(+w.got) || 0)), ti:typeof w.ti === 'string' ? w.ti.slice(0, 10) : ''}; }
   { const g = d.gr && typeof d.gr === 'object' ? d.gr : {}; out.gr = {day:typeof g.day === 'string' ? g.day : '', n:Math.max(0, Math.floor(+g.n) || 0), won:!!g.won, pity:Math.max(0, Math.floor(+g.pity) || 0)}; } out.mythShard = Math.max(0, Math.floor(+d.mythShard) || 0);
   out.mkNpc = d.mkNpc && typeof d.mkNpc.day === 'string' && Array.isArray(d.mkNpc.got) ? {day:d.mkNpc.day, got:d.mkNpc.got.filter(Number.isInteger)} : {day:'', got:[]};
   const mt = d.mount && typeof d.mount === 'object' ? d.mount : {};
@@ -7295,7 +7299,7 @@ function startFight(info, party, o){
   fx.push({type:'poof', t:0, dur:0.6, x:B.x, y:B.y - 20, big:true});
   raid = {info, boss:B, allies, time:o.time, limit:o.time, ending:false, endT:0, win:false, awk:S.awaken ? (S.cls === 'gwon' ? {t:12, used:false, show:0, gw:true, g:0, n:0} : {t:12, used:false, show:0}) : null, awk2:S.aw2 && S.aw2.got ? {g:0, hand:0, used:false, show:0} : null};
   hero.handT = 0; aw2Pat0 = patHurt;
-  tmStart(info.jin ? 'jin' : info.tb ? 'tb' : info.dboss ? 'db' : info.gr ? 'gr' : 'other', info.ref);   // 9-4 계측(startRaid가 일반 레이드면 'raid'로 고침)
+  tmStart(info.jin ? 'jin' : info.tb ? 'tb' : info.dboss ? 'db' : info.gr ? 'gr' : info.wb ? 'wb' : 'other', info.ref);   // 9-4 계측(startRaid가 일반 레이드면 'raid'로 고침)
   shake = 0.2; sfx('raid');
   if (currentTab === 'raid') buildTab('raid', true);
 }
@@ -9335,6 +9339,230 @@ function finishGangrim(R){
     <p class="small" style="margin-top:8px">강림 아바타는 ${Math.round(GR.avP * 100)}% 확률(${GR.pity}번 안에 꼭)로 나와요. 아바타는 [장비] → [아바타]에서 입어요.</p>`, [{label:'확인', primary:true}]);
   return {win:true, av, gold};
 }
+/* ===== 주간 대요괴 공동 토벌(2026-11-26, 사용자 요청 「3순위 안 Z」) =====
+   한 주(한국 시간 월요일 0시~일요일 밤)마다 큰 요괴 하나가 나오고, 서버에 사는 모든 용사의 점수를 합쳐 목표 막대를 채운다.
+   · 싸움: 나 + 내 파티(`myPartyPick`) AI 동료 WB.pick명, 60초. 보스 체력은 타임 보스처럼 내 기본 피해에 맞춰(FIT) 기본 피해만으로는 WB.tgt(75)초에 쓰러질 양
+     → 자동으로 60초면 약 80점, 되받기·피하기·기술을 잘 쓰면 100점 넘김(쓰러뜨리면 100 + 남은 초 × 0.5, 최대 +20).
+   · 점수 = 보스 체력을 깎은 %(0~99) 또는 쓰러뜨림 100~120. 캐릭터마다 하루 WB.tries(3)번, 한 계정은 하루 WB.acc(6)번(서버가 서버 날짜로 셈).
+   · 서버(samhan_wb_hit·state·claim — setup.sql)가 합계·목표·순위·받은 단계를 맡고, 서버에 닿지 않거나 함수가 아직 없으면(setup.sql 다시 실행 전) 「내 계정 대요괴」 혼자 모드:
+     같은 계정 캐릭터끼리만 합치고(목표 = 1,000 × 이번 주 친 캐릭터 수, 최소 1) 기록은 이 기기(claude.ai는 개인 저장소)에. 혼자 모드 점수는 나중에도 서버에 올리지 않는다.
+   · 실시간 소식 'wb'는 화면에 글자로만(합계에는 안 씀). 순위 보상은 「지난주 서버 1~3등 → 이번 주 별호」(겉모습만, 힘 없음), 단계 보상(25·50·75·100%)은 참가한 사람 모두 [받기] */
+const WB_BOSS = [
+  {name:'천 년 묵은 이무기', type:'serpent', color:'#3f8f7a', d:'용이 되지 못하고 천 년을 물 밑에 웅크린 큰 뱀'},
+  {name:'쇠를 먹는 불가사리', type:'bulgasari', color:'#8a96a4', d:'바늘도 가마솥도 먹어 치우는 쇠 먹는 짐승'},
+  {name:'어둑시니 왕', type:'shade', color:'#3a2a52', d:'쳐다볼수록 커지는 어둠 속의 그림자'},
+  {name:'가뭄 괴물 강철이', type:'dokkaebi', color:'#c8683a', d:'지나는 곳마다 물이 마른다는 불덩이 괴물'},
+];
+const WB = {tries:3, acc:6, time:60, tgt:75, hit:0.04, aoe:0.03, pick:3, per:1000, min:3, bonusRate:0.5, bonusMax:20, top:10, gem:200, goldK:600, sc:3.2, secMin:8, steps:[25, 50, 75, 100], bit:{25:1, 50:2, 75:4, 100:8}};
+// 단계 보상(설계안 표 그대로): 보석은 4부 이후(세계 배율 4) 값이고 더 앞선 땅은 WEEK_K/4만큼. ts = 초월의 조각(안 열렸으면 신화 조각 ×0.75)
+const WB_STEP = {25:{gems:2000}, 50:{gems:3000, mat:30}, 75:{gems:4000, ts:4}, 100:{gems:6000, ts:8, box:true}};
+const wbOpen = () => grOpen() || !!(window.__game && window.__game.wbForce);
+const wbDevWk = () => { const d = new Date(now()); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const wbBossIdx = wk => { const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(wk)); if (!m) return 0; const w = Math.floor((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(2024, 0, 1)) / 864e5 / 7); return ((w % 4) + 4) % 4; };
+const wbBossOf = wk => WB_BOSS[wbBossIdx(wk)];
+const wbTitleOn = () => !!S.wb && S.wb.ti === wbDevWk();
+let wbV = null, wbAt = 0, wbBusy = null, wbNoFn = false, wbClaiming = false, wbSoloCloudDone = '';
+const wbSrvOn = () => !!(online && session && online.acc === session.acc && !wbNoFn);
+const wbN = (v, hi) => Math.max(0, Math.min(hi, Math.floor(+v) || 0));
+// ── 혼자 모드 기록: 계정마다 {wk, chars:{cid:{name, cls, sum, n, day, best, got}}, acc:{day, n}, prevN} ──
+const wbSoloKey = () => KP + 'samhan-wb-' + (session ? session.acc : '');
+function wbSoloLoad(){
+  const wk = wbDevWk(); let d = null;
+  try { d = JSON.parse(localStorage.getItem(wbSoloKey())); } catch (e) {}
+  if (!d || typeof d !== 'object' || typeof d.chars !== 'object' || !d.chars) d = {wk, chars:{}, acc:{day:'', n:0}, prevN:0};
+  if (d.wk !== wk){ d = {wk, chars:{}, acc:{day:'', n:0}, prevN:0}; }
+  if (!d.acc || typeof d.acc !== 'object') d.acc = {day:'', n:0};
+  const today = dummyDay(); if (d.acc.day !== today) d.acc = {day:today, n:0};
+  return d;
+}
+function wbSoloSave(d){
+  try { localStorage.setItem(wbSoloKey(), JSON.stringify(d)); } catch (e) {}
+  if (cloud) { try { Promise.resolve(cdoc('samhan-wb-' + session.acc).set({wb:JSON.stringify(d)})).catch(() => {}); } catch (e) {} }
+}
+async function wbSoloCloud(){   // claude.ai 개인 저장소의 기록과 합치기(주마다 한 번)
+  if (!cloud || !session || wbSoloCloudDone === session.acc + wbDevWk()) return;
+  wbSoloCloudDone = session.acc + wbDevWk();
+  const c = await cloudGet('samhan-wb-' + session.acc); if (!c || typeof c.wb !== 'string') return;
+  let r; try { r = JSON.parse(c.wb); } catch (e) { return; }
+  const d = wbSoloLoad(); if (!r || r.wk !== d.wk || !r.chars) return;
+  for (const [cid, v] of Object.entries(r.chars)){ if (!v || typeof v !== 'object') continue; const m = d.chars[cid];
+    if (!m || (+v.sum || 0) > (+m.sum || 0)) d.chars[cid] = Object.assign({}, m || {}, v, {got:((m && m.got) | 0) | (v.got | 0)}); else m.got = (m.got | 0) | (v.got | 0); }
+  if (r.acc && r.acc.day === d.acc.day && (+r.acc.n || 0) > d.acc.n) d.acc.n = Math.min(WB.acc, +r.acc.n || 0);
+  try { localStorage.setItem(wbSoloKey(), JSON.stringify(d)); } catch (e) {}
+}
+function wbSoloView(){
+  const d = wbSoloLoad(), today = dummyDay(), list = Object.entries(d.chars).filter(([, v]) => v && (+v.sum || 0) > 0);
+  const me = d.chars[session.cid] || {}, sum = list.reduce((t, [, v]) => t + (+v.sum || 0), 0), cnt = Math.max(1, list.length);
+  const mn = me.day === today ? wbN(me.n, 99) : 0;
+  return {src:'solo', cid:session.cid, day:today, wk:d.wk, boss:wbBossIdx(d.wk), sum, target:WB.per * cnt, prevTop:[],
+    top:list.map(([, v]) => ({name:String(v.name || '').slice(0, 8), cls:hasK(CLASSES, v.cls) ? v.cls : 'musa', score:wbN(v.sum, 1e9)})).sort((a, b) => b.score - a.score).slice(0, WB.top),
+    me:{score:wbN(me.sum, 1e9), n:wbN(me.nAll, 999), best:wbN(me.best, 120), got:wbN(me.got, 15)}, leftC:Math.max(0, WB.tries - mn), left:Math.max(0, Math.min(WB.tries - mn, WB.acc - d.acc.n))};
+}
+function wbSoloHit(score){
+  const d = wbSoloLoad(), today = dummyDay(), me = d.chars[session.cid] || {name:S.name, cls:S.cls, sum:0, n:0, nAll:0, day:today, best:0, got:0};
+  if (me.day !== today){ me.day = today; me.n = 0; }
+  me.name = S.name; me.cls = S.cls; me.sum = (+me.sum || 0) + score; me.n = (me.n | 0) + 1; me.nAll = (me.nAll | 0) + 1; me.best = Math.max(me.best | 0, score);
+  d.chars[session.cid] = me; d.acc.n++;
+  wbSoloSave(d);
+  return wbSoloView();
+}
+function wbSoloClaim(step){
+  const d = wbSoloLoad(), me = d.chars[session.cid], bit = WB.bit[step];
+  if (!me || !(+me.sum > 0) || (me.got & bit)) return false;
+  me.got = (me.got | 0) | bit; wbSoloSave(d); return true;
+}
+// ── 서버 상태 받아 다듬기(남의 이름·직업이 섞여 오므로 길이·종류를 막는다) ──
+function wbClean(r){
+  if (!r || typeof r !== 'object' || typeof r.wk !== 'string' || !session) return null;
+  const me = r.me && typeof r.me === 'object' ? r.me : {};
+  const top = (Array.isArray(r.top) ? r.top : []).slice(0, WB.top).map(t => t && typeof t === 'object' ? {name:cleanChat(String(t.name || '')).slice(0, 8), cls:hasK(CLASSES, t.cls) ? t.cls : 'musa', score:wbN(t.score, 1e9)} : null).filter(Boolean);
+  return {src:'srv', cid:session.cid, day:dummyDay(), wk:r.wk.slice(0, 10), boss:wbN(r.boss, 3), sum:wbN(r.sum, 1e12), target:Math.max(WB.per * WB.min, wbN(r.target, 1e12)), top,
+    prevTop:(Array.isArray(r.prev_top) ? r.prev_top : []).slice(0, 3).map(s => cleanChat(String(s || '')).slice(0, 8)),
+    me:{score:wbN(me.score, 1e9), n:wbN(me.n, 999), best:wbN(me.best, 120), got:wbN(me.got, 15)}, leftC:wbN(r.left_c, WB.tries), left:wbN(r.left, WB.tries)};
+}
+function wbApply(v){
+  if (!v || !S.wb) return;
+  S.wb.wk = v.wk; S.wb.best = Math.max(S.wb.best | 0, v.me.best | 0); S.wb.got = v.me.got | 0;
+  wbDayCheck(); if (v.src === 'srv' || v.src === 'solo') S.wb.n = Math.max(S.wb.n, WB.tries - v.leftC);
+  if (v.src === 'srv' && v.prevTop.indexOf(S.name) >= 0 && S.wb.ti !== wbDevWk()){ S.wb.ti = wbDevWk(); titleCheck(); }   // 지난주 1~3등 → 이번 주 별호
+}
+function wbDayCheck(){ const d = dummyDay(); if (S.wb.day !== d){ S.wb.day = d; S.wb.n = 0; } }
+async function wbRefresh(force){
+  if (!session) return null;
+  if (wbBusy) return wbBusy;
+  if (!force && wbV && wbV.cid === session.cid && now() - wbAt < 30000) return wbV;
+  wbBusy = (async () => {
+    try {
+      if (wbSrvOn()){
+        try {
+          const v = wbClean(await rpc('samhan_wb_state', {p_token:online.token, p_cid:session.cid}));
+          if (v){ wbV = v; wbAt = now(); wbApply(v); return v; }
+        } catch (e){
+          if (e.code === 'no_fn') wbNoFn = true;                    // 서버에 대요괴 함수가 아직 없음 → 혼자 모드로 조용히
+          else { if (e.code === 'bad_token') lostOnline(); wbV = {src:'down', cid:session.cid, day:dummyDay(), wk:wbDevWk(), boss:wbBossIdx(wbDevWk()), sum:0, target:WB.per * WB.min, top:[], prevTop:[], me:{score:0, n:0, best:0, got:0}, leftC:0, left:0}; wbAt = now() - 20000; return wbV; }
+        }
+      }
+      await wbSoloCloud();
+      const v = wbSoloView(); wbV = v; wbAt = now(); wbApply(v); return v;
+    } finally { wbBusy = null; }
+  })();
+  return wbBusy;
+}
+const wbBit = step => WB.bit[step] | 0;
+const wbStepReady = (v, step) => !!v && v.src !== 'down' && v.sum * 100 >= v.target * step && v.me.score > 0 && !(v.me.got & wbBit(step));
+const wbReadyList = v => WB.steps.filter(s => wbStepReady(v, s));
+function wbLeft(){
+  wbDayCheck(); let l = WB.tries - S.wb.n;
+  if (wbV && wbV.cid === session.cid && wbV.day === dummyDay() && wbV.src !== 'down') l = Math.min(l, wbV.left);
+  return Math.max(0, l);
+}
+function wbCan(){
+  if (!session) return '로그인해 주세요';
+  if (!wbOpen()) return '환생한 뒤에 열려요';
+  if (raid || parade || market) return '다른 싸움 중이에요';
+  if (!wbV || wbV.cid !== session.cid || wbV.day !== dummyDay()) return '상태를 받는 중이에요';
+  if (wbV.src === 'down') return '서버에 닿지 않아요';
+  if (wbLeft() <= 0) return '오늘은 다 쳤어요';
+  return '';
+}
+function wbParty(){
+  return myPartyPick().map(c => tbFromSummary(c.name, c, true)).filter(Boolean).slice(0, WB.pick).map(o => ({name:o.name, cls:hasK(CLASSES, o.cls) ? o.cls : 'musa', look:cleanLook(o.look), armorG:gradeIdx(o.armorG), weaponG:gradeIdx(o.weaponG),
+    dps:allyRd(o) / TB_ALLY_SK, maxHp:Math.max(1, +o.maxHp || 1), own:true, level:o.level, mine:true, syn:!!o.syn}));
+}
+function startWb(){
+  if (wbCan()) return false;
+  wbDayCheck(); S.wb.n++;
+  const wk = wbV.wk, B = wbBossOf(wk), party = wbParty();
+  const partyDps = realDps() + party.reduce((t, a) => t + a.dps * TB_ALLY_SK, 0);
+  const info = {wb:true, wk, srv:wbV.src === 'srv', label:'주간 대요괴', bossName:B.name, type:B.type, color:B.color, region:regionIndex(S.stage), party:party.length + 1, ref:Math.max(1, S.maxStage), g:0, day:dummyDay()};
+  info.fit = fitNew(WB.tgt, partyDps, 'fitKw');
+  startFight(info, party, {hp:info.fit.rate * WB.tgt, atk:ST.maxHp * WB.hit, aoe:ST.maxHp * WB.aoe, time:WB.time});
+  raid.boss.tbPct = {hit:WB.hit, aoe:WB.aoe};
+  addLog(`주간 대요괴 ${B.name}! ${party.length + 1}명이 함께 ${WB.time}초 동안 힘껏 깎아요(많이 깎을수록 높은 점수).`, 'warn');
+  if (!fxOff()) fxBanner('주간 대요괴', B.name, '#ff9a6a', '34%', 1.6);
+  return true;
+}
+const wbErrText = c => ({wb_many:'서버 기준으로 오늘은 다 쳤어요(캐릭터 3번 · 계정 6번).', wb_bad:'점수가 이상해서 서버가 받지 않았어요.', wb_fast:'너무 빨리 다시 보내서 서버가 받지 않았어요.', wb_char:'서버에 이 캐릭터의 저장이 아직 없어요. 잠시 뒤 다시 해 보세요.', old_client:'이 화면이 예전 버전이라 서버가 받지 않았어요. 새로 고침해 주세요.', no_fn:'서버에 대요괴가 아직 준비되지 않았어요.'}[c] || '서버에 닿지 않아 점수를 올리지 못했어요.');
+async function wbSubmit(score, secs){
+  if (wbSrvOn()){
+    try {
+      const v = wbClean(await rpc('samhan_wb_hit', {p_token:online.token, p_cid:session.cid, p_score:score, p_secs:secs, p_build:SAVE_BUILD}));
+      if (!v) return {ok:false, err:'net'};
+      wbV = v; wbAt = now(); wbApply(v);
+      try { if (room) Promise.resolve(room.emit('wb', {n:S.name, s:score})).catch(() => {}); } catch (e) {}
+      return {ok:true, v};
+    } catch (e){ if (e.code === 'bad_token') lostOnline(); return {ok:false, err:e.code || 'net'}; }
+  }
+  const v = wbSoloHit(score); wbV = v; wbAt = now(); wbApply(v);
+  try { if (room) Promise.resolve(room.emit('wb', {n:S.name, s:score})).catch(() => {}); } catch (e) {}   // claude.ai: 지금 같은 페이지에 있는 용사에게 소식만
+  return {ok:true, v, solo:true};
+}
+const wbGems = () => raidGemBase(TB_GEMS.normal * 0.5);   // 한 판 보석 = 타임 보스 노말 한 번(창 하나)의 절반
+const wbGold = () => mGold(Math.max(1, S.maxStage)) * WB.goldK * gainMul('gold');
+function wbScore(R){
+  const win = !!R.win, rem = Math.max(0, +R.time || 0), cut = win ? 1 : Math.max(0, Math.min(1, 1 - (R.endBoss == null ? 1 : R.endBoss)));
+  const score = win ? 100 + Math.min(WB.bonusMax, Math.floor(rem * WB.bonusRate)) : Math.min(99, Math.floor(cut * 100));
+  return {score, win, cut, secs:Math.max(WB.secMin, Math.min(WB.time, Math.round(R.limit - rem)))};
+}
+function finishWb(R){
+  const I = R.info, sc = wbScore(R), gem = wbGems(), gold = wbGold();
+  S.gems += gem; S.gold += gold; S.rec.wb = (S.rec.wb || 0) + 1;
+  if (R.win) recWin(true, true);
+  ev('raid'); saveLocal(); sfx(R.win ? 'win' : 'fail');
+  addLog(`주간 대요괴 ${I.bossName} ${sc.score}점! 엽전 +${fmt(gold)} · 보석 +${fmt(gem)}`, R.win ? 'gain' : 'good');
+  const quiet = !!(window.__game && window.__game.quiet);
+  const p = wbSubmit(sc.score, sc.secs).then(res => {
+    const el = $('#wbSrvLine');
+    if (res.ok){
+      const v = res.v, pct = Math.min(100, v.sum / v.target * 100);
+      if (el) el.innerHTML = `${res.solo ? '내 계정 대요괴' : '서버 전체'} 합계 <b>${fmt(v.sum)} / ${fmt(v.target)}</b> (${pct.toFixed(1)}%)${wbReadyList(v).length ? ' · <b style="color:var(--gold)">받을 보상이 있어요!</b> [레이드] → [대요괴]' : ''}`;
+      if (wbReadyList(v).length) addLog('대요괴 단계 보상을 받을 수 있어요! [레이드] → [대요괴]', 'gain');
+    } else if (el) el.textContent = wbErrText(res.err);
+    if (!res.ok && !quiet) addLog(wbErrText(res.err), 'warn');
+    return Object.assign({}, res, sc, {gem, gold});
+  });
+  if (quiet) return Object.assign({p}, sc, {gem, gold});
+  showModal(R.win ? '주간 대요괴 토벌!' : '주간 대요괴 · 한 판 끝', `<p><b>${I.bossName}</b>${josa(I.bossName, '을', '를')} ${R.win ? `${WB.time - sc.secs}초나 남기고 쓰러뜨렸어요!` : `${(sc.cut * 100).toFixed(0)}%만큼 깎았어요.`}</p>
+    <p style="font-size:22px;margin:6px 0"><b style="color:var(--gold)">${sc.score}점</b>${R.win ? ` <span class="small">(쓰러뜨려 100 + 남은 시간 ${sc.score - 100})</span>` : ''}</p>
+    <ul class="rewards"><li><span class="coin"></span>${fmt(gold)}<span>엽전</span></li><li>보석 ${fmt(gem)}<span>보석</span></li></ul>
+    <p class="small" id="wbSrvLine" style="margin-top:8px">${wbSrvOn() ? '서버에 점수를 올리는 중…' : '내 계정 기록에 적는 중…'}</p>`, [{label:'확인', primary:true}]);
+  return Object.assign({p}, sc, {gem, gold});
+}
+function wbGive(step){
+  const R = WB_STEP[step], k = WEEK_K[Math.max(0, Math.min(4, S.world))] / 4, out = [], g = Math.round(R.gems * k);
+  S.gems += g; out.push(`보석 ${fmt(g)}`);
+  if (R.mat){ const m = gainMat(R.mat, true); out.push(`${MATS[matW()].name} ${m}`); }
+  if (R.ts){ if (transOpen()){ gainTrans(R.ts, true); out.push(`초월의 조각 ${R.ts}`); } else { const n = Math.round(R.ts * 0.75); S.mythShard = (S.mythShard || 0) + n; out.push(`신화 조각 ${n}`); } }
+  if (R.box){ S.gems += AV_BOX; const box = openAvatarBox(); out.push(box && box.a ? `꾸미기 상자: ${box.a.name}${box.isNew ? '(새것!)' : '(겹침)'}` : '꾸미기 상자: 위로품'); }
+  refreshStats(); saveLocal();
+  addLog(`대요괴 ${step}% 보상! ${out.join(' · ')}`, 'gain');
+  return out;
+}
+async function wbClaim(step){
+  if (wbClaiming || !session) return null;
+  wbClaiming = true;
+  try {
+    const v = wbV; if (!wbStepReady(v, step)) return null;
+    let ok = false;
+    if (v.src === 'srv' && wbSrvOn()){
+      try { ok = (await rpc('samhan_wb_claim', {p_token:online.token, p_cid:session.cid, p_step:step})) === true; }
+      catch (e){ if (e.code === 'bad_token') lostOnline(); return null; }
+    } else if (v.src === 'solo') ok = wbSoloClaim(step);
+    if (!ok){ await wbRefresh(true); return null; }
+    const out = wbGive(step);
+    v.me.got |= wbBit(step); S.wb.got = v.me.got;
+    return out;
+  } finally { wbClaiming = false; }
+}
+function wbRecv(msg){   // 다른 용사의 「○○님 92점」 소식 — 화면에 글자로만 보이고 합계에는 안 쓴다(합계는 늘 서버에서)
+  if (!msg || msg.sameTab || msg.isMe) return;
+  const d = msg.data && typeof msg.data === 'object' ? msg.data : {}, s = Math.floor(+d.s);
+  if (!(s >= 0 && s <= 120) || typeof d.n !== 'string') return;
+  const name = cleanChat(d.n).slice(0, 8) || '나그네';
+  addLog(`${name}님이 주간 대요괴에게 ${s}점!`, 'good');
+  wbAt = 0;   // 다음에 화면을 열면 서버에서 다시 받는다
+}
+
 /* ===== 천공의 탑(2026-11 (42), 사용자 요청: 1~300층 수직 컨텐츠, 300층을 넘으면 최종 보스 태초의 신) =====
    층마다 세기가 정해져 있다(towerWS: 1~40층 이승 · 41~100 저승 · 101~160 천계 · 161~230 부상 · 231~300 곤륜). 그 세계·단계의 단계 보스만큼 단단한 수호자와 혼자 60초.
    10층마다 문지기(더 단단하고 전멸기). 기술 조합·장비는 저절로 바꾸지 않는다 — 들어가기 전 '정비' 창에서 직접(저장한 조합 3칸을 불러올 수 있음).
@@ -9829,6 +10057,7 @@ function finishRaid(){
   if (info.dboss){ finishDBoss(R); return; }
   if (info.ygr){ finishYgr(R); return; }
   if (info.gr){ finishGangrim(R); return; }
+  if (info.wb){ finishWb(R); return; }
   if (info.tower){ finishTower(R); return; }
   if (info.taecho){ finishTaecho(R); return; }
   if (info.pvp){ finishPvp(R); return; }
@@ -12732,6 +12961,8 @@ const TITLES = [
   {k:'dex4', name:'바다의 수집가', need:'4부 도감을 모두 모아요', prog:() => dexProg(4), eff:{atk:8, hp:8, boss:6}},   // 물의 신화 7-2
   {k:'dex5', name:'천축의 수집가', need:'5부 도감을 모두 모아요', prog:() => dexProg(5), eff:{atk:10, hp:10, boss:8}},   // 물의 신화 9단계
   // 세트 도감(2026-11-17): 도감 보상을 받을 때 함께. 이름은 옛 옷차림 말(갖춤새·온갖춤)과 오방색에서
+  // 주간 대요괴(11월 26일): 지난주 서버 1~3등이 이번 주 한 주 동안만 다는 별호(겉모습만). 한 주가 지나면 저절로 사라진다(titleCheck)
+  {k:'wbhunt', name:'대요괴를 베어 낸 자', need:'지난주 주간 대요괴 서버 순위 1~3등(한 주 동안만)', prog:() => [wbTitleOn() ? 1 : 0, 1], eff:{}, cos:true, hide:() => !wbOpen()},
   {k:'sd1', name:'갖춤새를 아는 이', need:'세트 도감 1단계 보상 받기(세트 3곳 3조각)', prog:() => [sdGot(0) ? 1 : 0, 1], eff:{atk:3, hp:3}},
   {k:'sd2', name:'오방을 두른 이', need:'세트 도감 2단계 보상 받기(세트 6곳 3조각)', prog:() => [sdGot(1) ? 1 : 0, 1], eff:{atk:4, hp:4, cdr:1}},
   {k:'sd3', name:'세 벌 온갖춤', need:'세트 도감 3단계 보상 받기(세트 3곳 5조각)', prog:() => [sdGot(2) ? 1 : 0, 1], eff:{atk:5, hp:5, cdr:2}},
@@ -12742,7 +12973,7 @@ const TITLES = [
 const TITLE_RANK = {step:0, hunt1:0, event:0, smith:0, helper:0, sea:0, pet:0,
   hunt2:1, boss1:1, raid1:1, counter:1, reb1:1, soul:1, west:1, east:1, india:1, f_snowA:1, f_snowB:1, f_towerA:1, f_towerB:1, f_yamaA:1, f_yamaB:1, sd1:1, sd2:1,
   myth:2, reb2:2, legend:2, three:2, sea1:2, sea2:2, ind1:2, ind2:2, pvp1:2, tower:2, haetae7:2, memNo:2, dex1:2, dex2:2, sd3:2, sd4:2,
-  taecho:3, sumeru:3, skygate:3, trueform:3, pvp2:3, rt10:3, ex30:3, ex50:3, rt5:2, ex10:2, rt3:1, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
+  taecho:3, sumeru:3, skygate:3, trueform:3, pvp2:3, rt10:3, ex30:3, ex50:3, rt5:2, ex10:2, rt3:1, wbhunt:2, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
 const TITLE_RANKS = [{n:'일반', c:'trk0'}, {n:'희귀', c:'trk1'}, {n:'영예', c:'trk2'}, {n:'전설', c:'trk3'}];
 for (const t of TITLES) t.rank = TITLE_RANK[t.k] || 0;
 const trk = k => (TT[k] && TT[k].rank) || 0;
@@ -12756,6 +12987,7 @@ const titleEff = k => { const t = TT[S.title.eq]; return t && S.title.own[t.k] ?
 const titleCol = () => TITLE_COL * TITLES.filter(t => S.title.own[t.k] && !t.cos).length * lateCol();   // cos(겉모습만) 별호는 안 센다
 function titleCheck(){
   let got = 0;
+  if (S.title.own.wbhunt && !wbTitleOn()){ delete S.title.own.wbhunt; if (S.title.eq === 'wbhunt') S.title.eq = ''; }   // 별호는 한 주만
   for (const t of TITLES){
     if (S.title.own[t.k]) continue;
     const [v, n] = t.prog();
@@ -18040,6 +18272,7 @@ async function bootRoom(){
       if (fresh && session && tbJoinedId === d.w) tbJoin();   // 나중에 들어온 용사도 먼저 참가한 나를 알 수 있게 한 번 답한다
     }, () => {});
     r.on('mk', msg => { if (msg && !msg.sameTab && !msg.isMe) mkRecv(msg); }, () => {});
+    r.on('wb', msg => { try { wbRecv(msg); } catch (e) {} }, () => {});
     room = r;
   } catch (e) { room = null; }
 }
@@ -19757,7 +19990,7 @@ function updatePotBar(){
 function updateBigBoss(){
   let cls = '', txt = '보스', sub = `${S.kills}/${FIELD.kills}`, p = Math.min(1, S.kills / FIELD.kills);
   if (market){ cls = 'mk'; txt = '나가기'; sub = '사냥터로'; p = 1; }
-  else if (raid){ cls = 'fight'; txt = raid.info.mem ? '옛 기억' : raid.info.aw2tut ? '연습' : raid.info.aw2t ? '겨루기' : raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.haetae ? '해태 수련' : raid.info.jin ? '진 레이드' : raid.info.yv ? '용궁 보물고' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
+  else if (raid){ cls = 'fight'; txt = raid.info.mem ? '옛 기억' : raid.info.aw2tut ? '연습' : raid.info.aw2t ? '겨루기' : raid.info.tb ? '타임 보스' : raid.info.dummy ? '허수아비' : raid.info.haetae ? '해태 수련' : raid.info.jin ? '진 레이드' : raid.info.yv ? '용궁 보물고' : raid.info.vault ? '보물 동굴' : raid.info.dboss ? '1일 보스' : raid.info.wb ? '대요괴' : raid.info.job ? '전직 시험' : '레이드'; sub = `${Math.max(0, Math.ceil(raid.time))}초`; p = raid.boss && raid.boss.maxHp < 1e299 ? Math.max(0, raid.boss.hp / raid.boss.maxHp) : raid.time / raid.limit; }
   else if (parade){ cls = 'fight'; txt = parade.kub ? '쿠베라의 곳간' : parade.asura ? '아수라 야행' : parade.sea ? '수군 야행' : '백귀야행'; sub = `${Math.max(0, Math.ceil(parade.t))}초`; p = Math.max(0, parade.t / (parade.kub ? KUB.time : parade.asura ? ASURA.time : parade.sea ? SUGUN.time : PARADE_TIME)); }
   else if (bossActive && bossRef){ cls = 'fight'; txt = '보스전'; sub = `${Math.max(0, Math.ceil(bossTime))}초`; p = Math.max(0, bossRef.hp / bossRef.maxHp); }
   else if (S.kills >= FIELD.kills && !bossGate().ok){ const bg = bossGate(); cls = 'off'; txt = '잠김'; sub = bg.story ? '이야기 진행' : `Lv.${stageLvNeed(S.stage + 1)}`; p = 1; }
@@ -21793,8 +22026,9 @@ function raidRecPower(info){
   return power(ST) * est / 45;
 }
 function buildRaid(){
-  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스'], ['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']];   // 해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없고 허수아비·보물 동굴·강림 칸 안의 칩으로(열리면 칩이 생김)
+  const segs = [['raid', '레이드'], ['gr', '강림'], ['tb', '타임 보스']].concat(wbOpen() ? [['wb', '대요괴']] : []).concat([['dummy', '허수아비'], ['vault', '보물 동굴'], ['parade', '백귀야행']]);   // 해태 수련·용궁 보물고·용왕 강림은 따로 칸이 없고 허수아비·보물 동굴·강림 칸 안의 칩으로(열리면 칩이 생김)
   if (raidView === 'haetae') raidView = 'dummy';   // 옛 보기 이름
+  if (raidView === 'wb' && !wbOpen()) raidView = 'raid';
   const chips = slot => {   // 칸 안 [하위 / 상위] 칩(상위가 안 열렸으면 없음)
     if (!tierOpen(slot)) return '';
     const T = TIER_SLOTS[slot], pk = tierPick(slot);
@@ -21802,7 +22036,7 @@ function buildRaid(){
       <p class="small tiernote">하루에 둘 중 하나만 해요. 한 번이라도 시작하면 다른 쪽은 그날 잠기고, 내일 다시 풀려요.</p>`;
   };
   const chipsUpd = () => panel.querySelectorAll('[data-tk]').forEach(b => { const why = tierLock(b.dataset.tk); b.classList.toggle('locked', !!why); setText(b.querySelector('[data-tl]'), why ? ' · 오늘 잠김' : ''); });
-  const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>` + (['raid', 'gr', 'tb'].includes(raidView) ? '<div id="myPartyBox"></div>' : '');
+  const top = `<div class="qseg" role="tablist">${segs.map(([k, n]) => `<button class="qsegb${raidView === k ? ' on' : ''}" data-rv="${k}" role="tab" aria-selected="${raidView === k}">${n}</button>`).join('')}</div>` + (['raid', 'gr', 'tb', 'wb'].includes(raidView) ? '<div id="myPartyBox"></div>' : '');
   const wireSeg = () => {
     panel.querySelectorAll('[data-rv]').forEach(b => b.addEventListener('click', () => { raidView = b.dataset.rv; tierSel = {}; buildTab('raid'); }));   // 다른 칸을 눌렀다 오면 칩은 다시 기본 선택(상위)부터
     panel.querySelectorAll('[data-tier]').forEach(b => b.addEventListener('click', () => { const [sl, w] = b.dataset.tier.split(':'); tierSel[sl] = w; buildTab('raid'); }));
@@ -21881,6 +22115,38 @@ function buildRaid(){
         <div class="meter fire"><i style="width:${Math.max(0, raid.boss.hp / raid.boss.maxHp * 100).toFixed(1)}%"></i></div>
         <div class="party">${rows.join('')}</div></div>`);
     } else setHTML(live, '');
+    };
+  }
+  if (raidView === 'wb'){
+    panel.innerHTML = top + `<div id="wbBox"></div><div id="raidLive3"></div>`;
+    wireSeg(); wbRefresh(true);
+    $('#wbBox').addEventListener('click', e => {
+      const go = e.target.closest('[data-wb]'); if (!go) return;
+      if (go.dataset.wb === 'go'){ if (!wbCan()) presetAsk('party', '주간 대요괴', () => { if (startWb()){ closePage(); return true; } }); return; }
+      if (go.dataset.wb === 'claim'){ wbClaim(+go.dataset.step).then(out => { if (out && !(window.__game && window.__game.quiet)) showModal(`대요괴 ${go.dataset.step}% 보상`, `<ul class="rewards">${out.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`, [{label:'확인', primary:true}]); }); }
+    });
+    return () => {
+      const v = wbV && session && wbV.cid === session.cid ? wbV : null;
+      if (!v){ wbRefresh(); setHTML($('#wbBox'), `<div class="card"><p class="small">대요괴 소식을 받는 중이에요…</p></div>`); return; }
+      if (now() - wbAt > 30000) wbRefresh();
+      const B = WB_BOSS[v.boss] || WB_BOSS[0], pct = Math.min(100, v.sum / Math.max(1, v.target) * 100), why = wbCan(), left = wbLeft(), solo = v.src === 'solo', ti = wbTitleOn();
+      const steps = WB.steps.map(s => { const got = !!(v.me.got & wbBit(s)), rd = wbStepReady(v, s), R = WB_STEP[s], k = WEEK_K[Math.max(0, Math.min(4, S.world))] / 4;
+        const txt = [`보석 ${fmt(Math.round(R.gems * k))}`].concat(R.mat ? [`재료 ${R.mat}`] : [], R.ts ? [transOpen() ? `초월의 조각 ${R.ts}` : `신화 조각 ${Math.round(R.ts * 0.75)}`] : [], R.box ? ['꾸미기 상자'] : []).join(' · ');
+        return `<div class="dl"><span>${s}%</span><b style="${got ? 'opacity:.55' : rd ? 'color:var(--gold)' : ''}">${txt}</b><button class="btn ${rd ? 'primary' : ''}" data-wb="claim" data-step="${s}" ${rd ? '' : 'disabled'} style="margin-left:6px">${got ? '받음' : rd ? '받기' : pct >= s ? (v.me.score > 0 ? '받기' : '참가해야 받아요') : '아직'}</button></div>`; }).join('');
+      const top10 = v.top.length ? v.top.map((t, i) => `<span>${i + 1}. ${esc(t.name)}(${(hasK(CLASSES, t.cls) ? CLASSES[t.cls] : CLASSES.musa).name}) ${fmt(t.score)}</span>`).join(' · ') : '아직 아무도 치지 않았어요';
+      setHTML($('#wbBox'), `<div class="card dcard ${!why ? 'ready' : ''}"><div class="dport"><img src="${bossPortrait(B.type, B.color)}" alt=""></div><div>
+        <div class="ct">주간 대요괴 · ${esc(B.name)}<span class="tag">${leftTxt(left)}</span></div>
+        <p class="story">${esc(B.d)}. 한 주(월~일) 동안 ${solo ? '<b>내 계정</b>의' : '<b>서버의 모든 용사</b>가'} 낸 점수를 합쳐 목표 막대를 채워요. 한 판은 <b>${WB.time}초</b>, 나 + 내 파티 ${WB.pick}명이 함께 싸우고 보스를 많이 깎을수록(쓰러뜨리면 100점 이상) 높은 점수예요. <b>캐릭터마다 하루 ${WB.tries}번 · 한 계정 하루 ${WB.acc}번.</b></p>
+        <div class="dl"><span>${solo ? '내 계정' : '서버 전체'}</span><b>${fmt(v.sum)} / ${fmt(v.target)} (${pct.toFixed(1)}%)</b></div>
+        <div class="bar xp"><span class="tr"><i style="width:${pct.toFixed(1)}%"></i></span><span class="num">${pct.toFixed(1)}%</span></div>
+        <div class="dl"><span>내 점수</span><b>합계 ${fmt(v.me.score)} · 최고 ${v.me.best}점 · 오늘 ${Math.max(0, WB.tries - left)}번 침</b></div>
+        ${steps}
+        <div class="dl"><span>이번 주 순위</span><b>${top10}</b></div>
+        ${v.prevTop.length ? `<div class="dl"><span>지난주 1~3등</span><b>${v.prevTop.map(n => esc(n)).join(' · ')}${ti ? ' · <span style="color:var(--gold)">나는 이번 주 별호를 달았어요</span>' : ''}</b></div>` : ''}
+        ${v.src === 'down' ? '<p class="small">서버에 닿지 않아요. 잠시 뒤 다시 열어 보세요.</p>' : ''}
+        <button class="btn ${!why ? 'primary' : ''}" data-wb="go" ${why ? 'disabled' : ''}>${raid ? (raid.info.wb ? '싸우는 중…' : '다른 싸움 중') : why || '대요괴 도전'}</button>
+        <p class="small" style="margin:6px 0 0">${solo ? '서버에 대요괴가 아직 없어 혼자 모드예요(같은 계정의 캐릭터끼리만 합쳐요). ' : ''}지난주 서버 1~3등은 이번 주 한 주 동안 별호(겉모습만)를 달아요. 실시간 소식은 글자로만 보이고 합계에는 서버 기록만 써요.</p>
+      </div></div>`);
     };
   }
   if (raidView === 'vault'){
@@ -23744,7 +24010,7 @@ function logout(){
    서버에 닿지 않으면 지금처럼 이 기기 저장으로 놀고, 다시 닿으면 1분마다 올린다. */
 const ONLINE = Object.assign({url:'https://gqconcepvhoyqciwwbbf.supabase.co', key:'sb_publishable_iYTPNM7jQlmlA7ibfhHKaw_UyjTU_0B'}, window.__samhanOnline || {});   // key는 '공개용(publishable) 키'라 여기 적어도 된다(비밀 키는 절대 넣지 않는다)
 const ON_KEY = KP + 'samhan-online-v1';
-const ON_CODES = ['old_client', 'id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own'];
+const ON_CODES = ['old_client', 'id_taken', 'bad_login', 'bad_id', 'bad_pw', 'bad_token', 'name_taken', 'too_many', 'too_big', 'gone', 'mk_full', 'bad_item', 'bad_price', 'own', 'wb_many', 'wb_bad', 'wb_fast', 'wb_char'];
 let online = null, onlineLib = null, onlineNote = '';
 const onlineWanted = () => !BETA && !!(ONLINE.url && ONLINE.key) && (PWA_HOST || !!window.__samhanOnline) && !(window.claude && typeof window.claude.use === 'function');
 // 타이틀 아래 한 줄: 계정이 어디에 저장되는지(온라인 서버 · Claude 저장소 · 이 기기)
@@ -23919,7 +24185,7 @@ async function pushOnlineNow(){
 async function onlineRoom(){
   const sb = await onlineClient(), me = randHex(6), hs = {}, peerFns = [];
   const ch = sb.channel('samhan-world', {config:{broadcast:{self:false}, presence:{key:me}}});
-  for (const topic of ['chat', 'tb', 'mk']) ch.on('broadcast', {event:topic}, msg => {
+  for (const topic of ['chat', 'tb', 'mk', 'wb']) ch.on('broadcast', {event:topic}, msg => {
     const p = msg && msg.payload && typeof msg.payload === 'object' ? msg.payload : {};
     for (const fn of hs[topic] || []) fn({data:p.d, peer:String(p.p || '').slice(0, 16)});
   });
@@ -24554,6 +24820,7 @@ if (BETA){
 
 if (location.search.indexOf('simtest') >= 0){
   window.__game = {
+    WB, WB_STEP, WB_BOSS, wbSubmit, wbSoloHit, wbSoloView, wbRefresh, wbCan, startWb, wbClaim, wbScore, wbSoloLoad, wbDevWk, wbBossIdx, wbLeft, wbOpen, wbClean, wbRecv, wbTitleOn, wbGems, get wbV(){ return wbV; }, set wbV(v){ wbV = v; }, get wbNoFn(){ return wbNoFn; }, set wbNoFn(v){ wbNoFn = v; },
     TRANS, TRANS_SHOP, realmGain, realmNeed, realmMul, realmOn, realmBankFix, gateLv, transRealmOpen, transOpen, gainTrans, transLvCheck, buyTrans, transShopState, capRaiseFix, LV_STORY, buildTrans, get SAVE_BUILD_(){ return SAVE_BUILD; },
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
     power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, REALM_TRIALS, REALM_LADDER, REALM_EX, REALM_HUES, trialBase, trialRec, trialInfo, trialOpen, trialDone, startTrial, startEx, finishRealm, exBase, exRec, exInfo, exOpen, exLeft, exCheck, trialShard, trialGems, trialForce:false, exForce:false, trialOv:null, exOv:null, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,

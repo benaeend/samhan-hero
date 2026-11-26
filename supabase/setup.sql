@@ -296,3 +296,118 @@ end $$;
 revoke all on function public.samhan_tb_pick(uuid, text, text) from public;
 grant execute on function public.samhan_tb_pick(uuid, text, text) to anon, authenticated;
 
+
+-- ── 주간 대요괴 공동 토벌(2026-11-26): 한 주(한국 시간 월요일 0시~일요일 밤)마다 큰 요괴 하나, 서버의 모든 용사 점수를 합쳐 목표 막대를 채운다 ──
+-- 표 2개(주간 점수·점수 기록)는 타임 보스·장터와 같이 잠그고(RLS + 권한 회수), 게임은 samhan_wb_hit · samhan_wb_state · samhan_wb_claim만 부른다.
+-- 서버가 하는 일: 점수 범위·판 길이(secs) 앞뒤 맞추기, 캐릭터 하루 3번·계정 하루 6번(한국 날짜), 보내는 사이 (판 길이 − 3초) 이상(최소 8초), 그 계정의 캐릭터인지, 화면 판 번호(p_build ≥ 5), 단계 보상은 캐릭터마다 한 번(비트 25=1·50=2·75=4·100=8).
+-- 목표 = 1000 × max(3, 지난주 참가 캐릭터 수). 이번 주 보스는 주 번호 % 4(2024-01-01 월요일 기준). 점수는 화면이 보내므로 마음먹고 속이는 것까지는 못 막지만, 보상은 겉모습 별호뿐이고 남에게 해를 주지 않는다.
+-- 이상한 기록은 SQL Editor에서 지운다 → docs/주간_대요괴_운영.md
+create table if not exists public.samhan_wb (
+  wk text not null check (wk ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
+  acc text not null references public.samhan_accounts(id) on delete cascade,
+  cid text not null,
+  name text not null default '',
+  score int not null default 0 check (score >= 0),
+  n int not null default 0,
+  best int not null default 0,
+  got int not null default 0,
+  last_at timestamptz not null default now(),
+  primary key (wk, acc, cid)
+);
+create index if not exists samhan_wb_rank on public.samhan_wb (wk, score desc, last_at);
+create table if not exists public.samhan_wb_log (
+  id bigserial primary key,
+  wk text not null,
+  acc text not null references public.samhan_accounts(id) on delete cascade,
+  cid text not null,
+  day date not null,
+  score int not null,
+  secs int not null,
+  at timestamptz not null default now()
+);
+create index if not exists samhan_wb_log_c on public.samhan_wb_log (cid, day);
+create index if not exists samhan_wb_log_a on public.samhan_wb_log (acc, day);
+alter table public.samhan_wb enable row level security;
+alter table public.samhan_wb_log enable row level security;
+revoke all on table public.samhan_wb, public.samhan_wb_log from public, anon, authenticated;
+revoke all on sequence public.samhan_wb_log_id_seq from public, anon, authenticated;
+
+-- 이번 주(0)·지난주(-1)의 월요일 날짜(한국 시간) (내부용)
+create or replace function public.samhan_wb_wk(p_off int default 0) returns text
+language sql stable security definer set search_path = public, extensions as $$
+  select to_char((date_trunc('week', now() at time zone 'Asia/Seoul') + p_off * interval '7 days')::date, 'YYYY-MM-DD')
+$$;
+
+-- 이번 주 상태(내부용): 합계·목표·상위 10·지난주 1~3등·이 캐릭터의 점수와 남은 횟수
+create or replace function public.samhan_wb_view(p_acc text, p_cid text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare cw text := samhan_wb_wk(0); pw text := samhan_wb_wk(-1); d date := (now() at time zone 'Asia/Seoul')::date;
+  s bigint; pn int; m record; lc int; la int; wi int;
+begin
+  select coalesce(sum(score), 0) into s from samhan_wb where wk = cw;
+  select count(*) into pn from samhan_wb where wk = pw and score > 0;
+  select * into m from samhan_wb where wk = cw and acc = p_acc and cid = p_cid;
+  select count(*) into lc from samhan_wb_log where cid = p_cid and acc = p_acc and day = d;
+  select count(*) into la from samhan_wb_log where acc = p_acc and day = d;
+  wi := (floor((cw::date - date '2024-01-01') / 7.0)::int % 4 + 4) % 4;
+  return jsonb_build_object(
+    'wk', cw, 'boss', wi, 'sum', s, 'target', 1000 * greatest(3, pn),
+    'top', coalesce((select jsonb_agg(jsonb_build_object('name', t.name, 'cls', coalesce(t.cls, ''), 'score', t.score) order by t.score desc, t.last_at)
+      from (select w.name, c.summary->>'cls' as cls, w.score, w.last_at from samhan_wb w left join samhan_chars c on c.acc = w.acc and c.cid = w.cid
+             where w.wk = cw and w.score > 0 order by w.score desc, w.last_at limit 10) t), '[]'::jsonb),
+    'prev_top', coalesce((select jsonb_agg(t.name order by t.score desc, t.last_at)
+      from (select w.name, w.score, w.last_at from samhan_wb w where w.wk = pw and w.score > 0 order by w.score desc, w.last_at limit 3) t), '[]'::jsonb),
+    'me', jsonb_build_object('score', coalesce(m.score, 0), 'n', coalesce(m.n, 0), 'best', coalesce(m.best, 0), 'got', coalesce(m.got, 0)),
+    'left_c', greatest(0, 3 - lc), 'left', greatest(0, least(3 - lc, 6 - la)));
+end $$;
+
+create or replace function public.samhan_wb_state(p_token uuid, p_cid text) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token);
+begin
+  return samhan_wb_view(a, coalesce(p_cid, ''));
+end $$;
+
+create or replace function public.samhan_wb_hit(p_token uuid, p_cid text, p_score int, p_secs int, p_build int) returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); c record; cw text := samhan_wb_wk(0); d date := (now() at time zone 'Asia/Seoul')::date; lc int; la int; lastat timestamptz;
+begin
+  perform pg_advisory_xact_lock(hashtext('samhan_wb:' || a));
+  if p_build is null or p_build < 5 then raise exception 'old_client'; end if;
+  select name into c from samhan_chars where acc = a and cid = coalesce(p_cid, '') and updated_at > now() - interval '1 day';   -- 내 캐릭터이고 하루 안에 저장된 적이 있어야 함
+  if not found then raise exception 'wb_char'; end if;
+  if p_score is null or p_secs is null or p_score < 0 or p_score > 120 or p_secs < 8 or p_secs > 60 then raise exception 'wb_bad'; end if;
+  -- 쓰러뜨린 판(100점~)은 남은 시간 보너스(최대 20)가 판 길이와 맞아야 한다: 100 + min(20, floor((60 - secs) / 2))
+  if p_score >= 100 and p_score > 100 + least(20, floor((60 - p_secs) / 2.0)) then raise exception 'wb_bad'; end if;
+  select max(at) into lastat from samhan_wb_log where acc = a and cid = p_cid;
+  if lastat is not null and now() - lastat < make_interval(secs => greatest(8, p_secs - 3)) then raise exception 'wb_fast'; end if;   -- 진짜 한 판은 p_secs초가 걸리므로 앞 점수와 그만큼(−3초) 떨어져야 한다. 일찍 쓰러져 곧바로 다시 한 판은 통과
+  select count(*) into lc from samhan_wb_log where acc = a and cid = p_cid and day = d;
+  select count(*) into la from samhan_wb_log where acc = a and day = d;
+  if lc >= 3 or la >= 6 then raise exception 'wb_many'; end if;
+  insert into samhan_wb_log (wk, acc, cid, day, score, secs) values (cw, a, p_cid, d, p_score, p_secs);
+  insert into samhan_wb as w (wk, acc, cid, name, score, n, best, last_at) values (cw, a, p_cid, c.name, p_score, 1, p_score, now())
+    on conflict (wk, acc, cid) do update set name = excluded.name, score = w.score + excluded.score, n = w.n + 1, best = greatest(w.best, excluded.best), last_at = now();
+  delete from samhan_wb where wk < samhan_wb_wk(-4);
+  delete from samhan_wb_log where day < d - 35;
+  return samhan_wb_view(a, p_cid);
+end $$;
+
+-- 단계 보상(25·50·75·100%): 캐릭터마다 한 번. 받을 수 있으면 true(그 단계 표시를 서버에 적음), 아니면 false
+create or replace function public.samhan_wb_claim(p_token uuid, p_cid text, p_step int) returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare a text := samhan_acc(p_token); cw text := samhan_wb_wk(0); bit int; s bigint; pn int; n int;
+begin
+  perform pg_advisory_xact_lock(hashtext('samhan_wb:' || a));
+  bit := case p_step when 25 then 1 when 50 then 2 when 75 then 4 when 100 then 8 else 0 end;
+  if bit = 0 then return false; end if;
+  select coalesce(sum(score), 0) into s from samhan_wb where samhan_wb.wk = cw;
+  select count(*) into pn from samhan_wb where samhan_wb.wk = samhan_wb_wk(-1) and score > 0;
+  if s * 100 < 1000 * greatest(3, pn) * p_step then return false; end if;
+  update samhan_wb set got = got | bit where samhan_wb.wk = cw and acc = a and cid = coalesce(p_cid, '') and score > 0 and (got & bit) = 0;
+  get diagnostics n = row_count;
+  return n > 0;
+end $$;
+
+revoke all on function public.samhan_wb_wk(int), public.samhan_wb_view(text, text) from public, anon, authenticated;
+revoke all on function public.samhan_wb_state(uuid, text), public.samhan_wb_hit(uuid, text, int, int, int), public.samhan_wb_claim(uuid, text, int) from public;
+grant execute on function public.samhan_wb_state(uuid, text), public.samhan_wb_hit(uuid, text, int, int, int), public.samhan_wb_claim(uuid, text, int) to anon, authenticated;

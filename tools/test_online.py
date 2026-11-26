@@ -530,6 +530,196 @@ async def main():
             await P.evaluate("() => window.__game.showCharSelect()"); await P.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
             check(await P.evaluate(names_js) == '첫째,둘째,셋째', f'서버에 순서 정보가 없으면 이 기기 순서를 그대로 둔다 {await P.evaluate(names_js)}')
             await ctxP.close(); await ctxQ.close()
+
+            # ───────────── 주간 대요괴 W1~W14 (서버 함수 samhan_wb_hit·state·claim) ─────────────
+            async def wb_play(page, cut=0.0, win=False):
+                """대요괴 한 판을 진짜 게임 흐름(startWb → 싸움 끝 → finishWb → 서버 제출)으로 돌린다. cut = 보스 체력을 깎은 몫"""
+                return await page.evaluate("""async ([cut, win]) => { const G = window.__game; G.wbForce = true; G.quiet = true; await G.wbRefresh(true);
+                  const n0 = G.wbV ? G.wbV.me.n : 0, why = G.wbCan(); if (why) return {err: why};
+                  G.startWb(); const R = G.raid; R.boss.hp = R.boss.maxHp * (1 - cut); G.raidEnd(win);
+                  for (let i = 0; i < 80 && G.raid; i++) await new Promise(r => setTimeout(r, 100));
+                  for (let i = 0; i < 40 && !(G.wbV && G.wbV.me.n > n0); i++) await new Promise(r => setTimeout(r, 100));
+                  return {ok: true, src: G.wbV && G.wbV.src, sum: G.wbV && G.wbV.sum, me: G.wbV && G.wbV.me, left: G.wbV && G.wbV.left}; }""", [cut, win])
+
+            def sql_err(sql, *a):
+                try:
+                    db(sql, *a)
+                    return 'ok'
+                except Exception as e:
+                    return str(e).split('\n')[0].strip()
+
+            async def wb_acct(uid, name, cls='musa'):
+                ctx, pg_ = await device(api)
+                await tg.signup(pg_, uid, 'pass1234', name, cls)
+                await pg_.evaluate('() => window.__game.pushOnline()'); await pg_.wait_for_timeout(500)
+                tk = await pg_.evaluate('() => window.__game.online.token'); cd = await pg_.evaluate('() => window.__game.session.cid')
+                return ctx, pg_, tk, cd
+            WBS = "select (samhan_wb_state(%s::uuid, %s))"
+            ctxWA, WA, tokA, cidA = await wb_acct('wbaaaa', '대요괴가', 'musa')
+            ctxWB, WB_, tokB, cidB = await wb_acct('wbbbbb', '대요괴나', 'sulsa')
+            ctxWC, WC, tokC, cidC = await wb_acct('wbcccc', '대요괴다', 'doin')
+            wkNow = db("select samhan_wb_wk(0)")[0][0]
+            # 이번 주 보스는 서버와 화면이 같은 칸(주 번호 % 4)
+            bossSrv = db(WBS, tokA, cidA)[0][0]['boss']
+            bossCli = await WA.evaluate("(w) => window.__game.wbBossIdx(w)", wkNow)
+            check(bossSrv == bossCli, f'W0 이번 주({wkNow}) 대요괴: 서버와 화면이 같은 보스 칸을 쓴다 {bossSrv} {bossCli}')
+
+            # W1: 두 기기가 각각 한 판 → 서버 합 = 두 점수의 합, 두 화면의 막대가 같다
+            rA = await wb_play(WA, 0.925); rB = await wb_play(WB_, 0.705)
+            sumDb = db("select coalesce(sum(score), 0) from samhan_wb where wk = %s", wkNow)[0][0]
+            await WA.evaluate("() => window.__game.wbRefresh(true)"); await WB_.evaluate("() => window.__game.wbRefresh(true)")
+            sa = await WA.evaluate("() => window.__game.wbV.sum"); sb = await WB_.evaluate("() => window.__game.wbV.sum")
+            for pg_ in (WA, WB_):
+                await pg_.evaluate("() => { const G = window.__game; G.hideModal(); G.closePage(); G.wbForce = true; G.buildTab('raid'); const b = document.querySelector('[data-rv=\"wb\"]'); if (b) b.click(); }")
+            await WA.wait_for_timeout(700); await WB_.wait_for_timeout(300)
+            bar = lambda pg_: pg_.evaluate("() => { const e = document.querySelector('#wbBox .bar i'); return e ? e.style.width : null; }")
+            barA, barB = await bar(WA), await bar(WB_)
+            check(rA.get('ok') and rB.get('ok') and rA['me']['score'] == 92 and rB['me']['score'] == 70 and sumDb == 162 and sa == 162 and sb == 162 and barA == barB and barA == '5.4%',
+                  f'W1 두 기기가 각각 한 판(92점·70점) → 서버 합 162, 두 화면 막대가 같다 {rA} {rB} {sumDb} {sa} {sb} {barA} {barB}')
+            await WA.screenshot(path=str(OUT / '36_대요괴_온라인A.png'))
+            await WB_.screenshot(path=str(OUT / '36_대요괴_온라인B.png'))
+            wbtxt = await WA.inner_text('#wbBox')
+            check('서버 전체' in wbtxt and '162' in wbtxt, f'W1 화면에 「서버 전체」 합계와 목표(1000 × 3명)가 보인다 {wbtxt[:200]!r}')
+
+            # W2: A가 하루 세 번을 채우고, 4번째는 서버가 wb_many, 게임은 「오늘은 다 쳤어요」
+            dbx("update samhan_wb_log set at = at - interval '2 minutes'")
+            r2 = await wb_play(WA, 0.5)
+            dbx("update samhan_wb_log set at = at - interval '2 minutes'")
+            r3 = await wb_play(WA, 0.4)
+            dbx("update samhan_wb_log set at = at - interval '2 minutes'")
+            r4 = await wb_play(WA, 0.3)
+            e4 = sql_err("select samhan_wb_hit(%s::uuid, %s, 50, 60, 5)", tokA, cidA)
+            check(r2.get('ok') and r3.get('ok') and 'wb_many' in e4 and r4.get('err') == '오늘은 다 쳤어요' and r4.get('left') is None,
+                  f'W2 하루 3번까지만: 서버가 4번째를 wb_many로 막고 게임은 「오늘은 다 쳤어요」 {r2.get("me")} {r3.get("me")} {r4} {e4}')
+            sumNow = db("select sum(score) from samhan_wb where wk = %s", wkNow)[0][0]
+
+            # W3: 점수 150·−5·걸린 초 3초는 서버가 거절, 합은 그대로
+            dbx("update samhan_wb_log set at = at - interval '2 minutes'")
+            e3 = [sql_err("select samhan_wb_hit(%s::uuid, %s, %s, %s, 5)", tokC, cidC, s, t) for s, t in ((150, 60), (-5, 60), (50, 3), (50, 61))]
+            e3b = sql_err("select samhan_wb_hit(%s::uuid, %s, 119, 60, 5)", tokC, cidC)   # 쓰러뜨린 판 보너스가 판 길이와 안 맞음(60초 다 쓰고 119점)
+            check(all('wb_bad' in x for x in e3) and 'wb_bad' in e3b and db("select count(*) from samhan_wb where acc = 'wbcccc'")[0][0] == 0 and db("select sum(score) from samhan_wb where wk = %s", wkNow)[0][0] == sumNow,
+                  f'W3 점수 150·−5·걸린 초 3초·61초·앞뒤가 안 맞는 119점은 모두 거절, 합은 그대로 {e3} {e3b}')
+
+            # W4: 같은 캐릭터가 곧바로 또 보내면 wb_fast(진짜 한 판이 걸리는 초만큼 떨어져야 함), 시간이 지나면 통과
+            ok1 = sql_err("select samhan_wb_hit(%s::uuid, %s, 10, 60, 5)", tokC, cidC)
+            e5 = sql_err("select samhan_wb_hit(%s::uuid, %s, 10, 60, 5)", tokC, cidC)
+            e5b = sql_err("select samhan_wb_hit(%s::uuid, %s, 10, 8, 5)", tokC, cidC)
+            dbx("update samhan_wb_log set at = at - interval '2 minutes' where acc = 'wbcccc'")
+            ok2 = sql_err("select samhan_wb_hit(%s::uuid, %s, 10, 8, 5)", tokC, cidC)
+            check('ok' == ok1 and 'wb_fast' in e5 and 'wb_fast' in e5b and ok2 == 'ok', f'W4 같은 캐릭터가 곧바로 또 보내면 wb_fast, 시간이 지나면 통과(일찍 쓰러진 짧은 판은 짧게) {ok1} {e5} {e5b} {ok2}')
+
+            # W5: 남의 캐릭터 id로 보냄·없는 캐릭터 → 거절(wb_char), W6: 옛 화면 → old_client
+            e6 = sql_err("select samhan_wb_hit(%s::uuid, %s, 30, 60, 5)", tokB, cidA)
+            e6b = sql_err("select samhan_wb_hit(%s::uuid, 'nosuchcid1', 30, 60, 5)", tokB)
+            e6c = sql_err("select samhan_wb_hit(%s::uuid, %s, 30, 60, 5)", '00000000-0000-0000-0000-000000000000', cidB)
+            e7 = sql_err("select samhan_wb_hit(%s::uuid, %s, 30, 60, 4)", tokB, cidB)
+            check('wb_char' in e6 and 'wb_char' in e6b and 'bad_token' in e6c, f'W5 남의 캐릭터 id·없는 캐릭터는 wb_char, 없는 토큰은 bad_token {e6} {e6b} {e6c}')
+            check('old_client' in e7, f'W6 판 번호가 낮은 옛 화면은 old_client {e7}')
+            # 계정 하루 6번: 계정 B가 오늘 5번을 더 쳤다고 치고(다른 캐릭터), B의 캐릭터가 또 보내면 wb_many
+            dbx(f"insert into samhan_wb_log (wk, acc, cid, day, score, secs, at) select '{wkNow}', 'wbbbbb', 'fakechar' || g, (now() at time zone 'Asia/Seoul')::date, 10, 60, now() - interval '3 hours' from generate_series(1, 5) g")
+            dbx("update samhan_wb_log set at = at - interval '2 minutes' where acc = 'wbbbbb' and cid = '" + cidB + "'")
+            e8 = sql_err("select samhan_wb_hit(%s::uuid, %s, 30, 60, 5)", tokB, cidB)
+            vB = db(WBS, tokB, cidB)[0][0]
+            check('wb_many' in e8 and vB['left'] == 0 and vB['left_c'] == 2, f'W5b 한 계정은 하루 6번: 캐릭터는 2번 남았어도 계정 한도로 막힌다 {e8} left={vB["left"]} left_c={vB["left_c"]}')
+            dbx("delete from samhan_wb_log where cid like 'fakechar%'")
+
+            # W7: 합이 25%를 넘으면 A·B 모두 받기 가능, 한 번 받은 뒤에는 false, 다른 기기에서 같은 캐릭터로도 false
+            dbx("update samhan_wb set score = 1000 where acc = 'wbaaaa'")   # 합 ≥ 750(= 3000의 25%)
+            await WA.evaluate("() => window.__game.wbRefresh(true)"); await WB_.evaluate("() => window.__game.wbRefresh(true)")
+            g0 = await WA.evaluate("() => window.__game.S.gems")
+            oA = await WA.evaluate("async () => { const G = window.__game; const o = await G.wbClaim(25); return {o, g: G.S.gems}; }")
+            oB = await WB_.evaluate("async () => { const G = window.__game; const o = await G.wbClaim(25); return {o, g: G.S.gems}; }")
+            oA2 = await WA.evaluate("async () => { const G = window.__game; const o = await G.wbClaim(25); return o; }")
+            sq = db("select samhan_wb_claim(%s::uuid, %s, 25)", tokA, cidA)[0][0]
+            ctxWA2 = await browser.new_context(viewport={'width': 390, 'height': 800}, device_scale_factor=2)   # 다른 기기: 같은 아이디로 로그인
+            await ctxWA2.add_init_script('window.__samhanNoKick = true;'); await ctxWA2.add_init_script(f'window.__samhanOnline = {json.dumps({"url": api, "key": "test-publishable-key"})};')
+            await ctxWA2.add_init_script(VENDOR + '\n;window.supabase = supabase;'); await ctxWA2.add_init_script(FAKE_CHANNEL)
+            WA2 = await ctxWA2.new_page(); tg.watch(WA2, errors, '[wa2] ')
+            async def noop_relay(s):
+                return None
+            await WA2.expose_function('__relaySend', noop_relay)
+            await WA2.goto(url); await WA2.wait_for_selector('#lg-id'); await WA2.click('#lg-tab-login'); await WA2.fill('#lg-id', 'wbaaaa'); await WA2.fill('#lg-pw', 'pass1234'); await WA2.click('#modal-btn-0')
+            await WA2.wait_for_selector('#mTitle:has-text("캐릭터 고르기")')
+            await WA2.click('#modal-btn-1'); await WA2.wait_for_function('() => window.__game.session && document.querySelector("#modal").hidden', timeout=15000); await tg.skip_cut(WA2)
+            oA3 = await WA2.evaluate("async () => { const G = window.__game; G.wbForce = true; await G.wbRefresh(true); return {ready: !!G.wbV && G.wbV.src === 'srv', got: G.wbV && G.wbV.me.got, o: await G.wbClaim(25)}; }")
+            check(oA['o'] and oA['g'] > g0 and oB['o'] and oA2 is None and sq is False and oA3['o'] is None and oA3['ready'] and (oA3['got'] & 1) == 1,
+                  f'W7 25% 단계: A·B 모두 한 번 받고, 다시 누르면 받을 게 없고(서버도 false), 다른 기기의 같은 캐릭터도 못 받는다 {oA} {oB} {oA2} {sq} {oA3}')
+            await WA.evaluate("() => { const G = window.__game; G.hideModal(); G.buildTab('raid'); document.querySelector('[data-rv=\"wb\"]').click(); }"); await WA.wait_for_timeout(500)
+            await WA.screenshot(path=str(OUT / '36_대요괴_단계보상.png'))
+            await ctxWA2.close()
+
+            # W8: 한 번도 안 친 캐릭터는 받기 불가(화면·서버)
+            dbx("delete from samhan_wb where acc = 'wbcccc'"); dbx("delete from samhan_wb_log where acc = 'wbcccc'")
+            await WC.evaluate("() => { window.__game.wbForce = true; return window.__game.wbRefresh(true); }")
+            oC = await WC.evaluate("async () => { const G = window.__game; const o = await G.wbClaim(25); return {o, sum: G.wbV.sum, ready: G.wbV.me.score}; }")
+            sqC = db("select samhan_wb_claim(%s::uuid, %s, 25)", tokC, cidC)[0][0]
+            check(oC['o'] is None and oC['ready'] == 0 and oC['sum'] > 750 and sqC is False, f'W8 한 번도 안 친 C는 합이 넘어도 받을 수 없다 {oC} {sqC}')
+
+            # W10: 위 10명 목록에는 계정 아이디가 없다(이름·직업·점수만)
+            stt = db(WBS, tokA, cidA)[0][0]
+            check(all(set(t) == {'name', 'cls', 'score'} for t in stt['top']) and 'wbaaaa' not in json.dumps(stt) and 'wbbbbb' not in json.dumps(stt) and len(stt['top']) == 2 and stt['top'][0]['name'] == '대요괴가',
+                  f'W10 위 10명에는 이름·직업·점수만 있다(계정 아이디 없음) {stt["top"]}')
+
+            # W11: 바깥(anon)에서 표를 직접 읽거나 쓰면 거절
+            def anon_try(sql):
+                with pg.conn() as c, c.cursor() as cur:
+                    cur.execute('set role anon')
+                    try:
+                        cur.execute(sql)
+                        return 'ok'
+                    except Exception as e:
+                        return str(e).split('\n')[0]
+            tries = [anon_try('select * from samhan_wb'), anon_try('select * from samhan_wb_log'), anon_try("update samhan_wb set score = 99999"), anon_try('select samhan_wb_view(\'wbaaaa\', \'x\')'), anon_try('select samhan_wb_wk(0)')]
+            check(all('permission denied' in x for x in tries), f'W11 표 2개와 내부 함수는 바깥에서 permission denied {tries}')
+
+            # W12: 실시간 소식은 화면에 글자로만 뜨고 합계는 바뀌지 않는다
+            s_before = db("select sum(score) from samhan_wb where wk = %s", wkNow)[0][0]
+            await WB_.evaluate("() => { window.__wbSeen = ''; new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) window.__wbSeen += n.textContent + '|'; }).observe(document.getElementById('log'), {childList: true}); }")
+            await WA.evaluate("() => window.__game.room.emit('wb', {n:'대요괴가', s:92})"); await WB_.wait_for_timeout(1200)
+            lg = await WB_.evaluate("() => window.__wbSeen")
+            fake = await WB_.evaluate("() => { const G = window.__game; G.wbRecv({data:{n:'<b>가짜</b>', s:9999}}); G.wbRecv({data:{n:'x', s:-1}}); return window.__wbSeen; }")
+            await WB_.evaluate("() => window.__game.wbRefresh(true)")
+            s_after = db("select sum(score) from samhan_wb where wk = %s", wkNow)[0][0]
+            check('대요괴가님이 주간 대요괴에게 92점' in lg and '9999' not in fake and s_before == s_after and await WB_.evaluate("() => window.__game.wbV.sum") == s_after,
+                  f'W12 B 화면에 A의 「92점」 소식이 뜨고(이상한 점수는 무시), 소식만으로는 서버 합이 안 바뀐다 {lg!r} {fake!r}')
+
+            # W9: 주가 바뀌면 이번 주 합 0, 목표 = 1000 × max(3, 지난주 참가 수), 지난주 1~3등이 이번 주 별호
+            dbx("update samhan_wb set wk = samhan_wb_wk(-1)"); dbx("update samhan_wb_log set wk = samhan_wb_wk(-1)")
+            st0 = db(WBS, tokA, cidA)[0][0]
+            dbx("insert into samhan_accounts (id, pw_hash) select 'wbfake' || g, 'x' from generate_series(1, 5) g")
+            dbx("insert into samhan_wb (wk, acc, cid, name, score, n, best) select samhan_wb_wk(-1), 'wbfake' || g, 'fk' || g, '가짜용사' || g, 10 + g, 1, 10 from generate_series(1, 5) g")
+            st1 = db(WBS, tokA, cidA)[0][0]
+            await WA.evaluate("() => { const G = window.__game; G.wbForce = true; G.S.wb.ti = ''; return G.wbRefresh(true); }")
+            ti = await WA.evaluate("() => { const G = window.__game; G.titleCheck(); return {on: G.wbTitleOn(), own: !!G.S.title.own.wbhunt, prev: G.wbV.prevTop}; }")
+            await WC.evaluate("() => { const G = window.__game; G.wbNoFn = false; G.S.wb.ti = ''; return G.wbRefresh(true); }")
+            tiB = await WC.evaluate("() => { const G = window.__game; G.titleCheck(); return {on: G.wbTitleOn(), own: !!G.S.title.own.wbhunt, src: G.wbV.src, prev: G.wbV.prevTop}; }")
+            gone = await WA.evaluate("() => { const G = window.__game; G.S.wb.ti = '2020-01-06'; G.titleCheck(); return {on: G.wbTitleOn(), own: !!G.S.title.own.wbhunt, eq: G.S.title.eq}; }")
+            check(st0['sum'] == 0 and st0['target'] == 3000 and st1['sum'] == 0 and st1['target'] == 7000 and st1['wk'] == wkNow and ti['on'] and ti['own'] and not tiB['on'] and not tiB['own'] and not gone['own'] and gone['eq'] != 'wbhunt',
+                  f'W9 주가 바뀌면 합 0·목표 = 1000 × max(3, 지난주 참가 {st1["target"]}), 지난주 1~3등만 이번 주 별호(한 주 지나면 빠짐) {st0["sum"]} {st0["target"]} {st1["target"]} {ti} {tiB} {gone} {st1["prev_top"]}')
+            await WA.evaluate("() => { const G = window.__game; G.hideModal(); G.buildTab('raid'); document.querySelector('[data-rv=\"wb\"]').click(); }"); await WA.wait_for_timeout(500)
+            await WA.screenshot(path=str(OUT / '36_대요괴_새주.png'))
+
+            # W13: 서버에 대요괴 함수가 없으면(setup.sql 다시 실행 전) 오류 없이 혼자 모드
+            dbx("drop function samhan_wb_state(uuid, text); drop function samhan_wb_hit(uuid, text, int, int, int); drop function samhan_wb_claim(uuid, text, int)")
+            await WC.evaluate("() => { const G = window.__game; G.wbNoFn = false; G.wbV = null; return 1; }")
+            r13 = await wb_play(WC, 0.85)
+            r13b = await WC.evaluate("() => { const G = window.__game; return {src: G.wbV.src, sum: G.wbV.sum, target: G.wbV.target, noFn: G.wbNoFn, modal: !document.querySelector('#modal').hidden, solo: G.wbSoloLoad().chars}; }")
+            check(r13.get('ok') and r13['src'] == 'solo' and r13b['noFn'] and not r13b['modal'] and r13b['sum'] == 85 and r13b['target'] == 1000 and len(r13b['solo']) == 1,
+                  f'W13 서버 함수가 없으면 오류 창 없이 「내 계정 대요괴」 혼자 모드로 돈다(목표 1000 × 1명) {r13} {r13b}')
+            await WC.evaluate("() => { const G = window.__game; G.hideModal(); G.closePage(); G.buildTab('raid'); document.querySelector('[data-rv=\"wb\"]').click(); }"); await WC.wait_for_timeout(500)
+            await WC.screenshot(path=str(OUT / '36_대요괴_혼자모드.png'))
+
+            # W14: setup.sql을 다시(두 번) 실행해도 된다 — 기록은 그대로, 사라졌던 함수가 돌아온다
+            before14 = db("select count(*), coalesce(sum(score), 0) from samhan_wb")[0]
+            for _ in range(2):
+                with pg.conn() as c, c.cursor() as cur:
+                    cur.execute(setup)
+            after14 = db("select count(*), coalesce(sum(score), 0) from samhan_wb")[0]
+            back = db(WBS, tokA, cidA)[0][0]
+            check(before14 == after14 and back['target'] == 7000 and db("select count(*) from pg_proc where proname like 'samhan_wb%%'")[0][0] == 5,
+                  f'W14 setup.sql을 두 번 더 실행해도 기록은 그대로이고 함수가 돌아온다 {before14} {after14}')
+            for ctx_ in (ctxWA, ctxWB, ctxWC):
+                await ctx_.close()
             await browser.close()
         web.shutdown(); rpc_srv.shutdown()
     finally:

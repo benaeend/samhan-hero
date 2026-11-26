@@ -5942,7 +5942,7 @@ async def main():
         await mp.wait_for_timeout(300)
         a['hud'] = await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.render(); return document.querySelector('#xpnum').textContent; }")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; G.refreshStats(); }")
-        check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 4, f"만렙 700: 수미산 레벨 상한 700, 저장 판 4 {a['cap']} {a['capNow']} {a['ver']}")
+        check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 5, f"만렙 700: 수미산 레벨 상한 700, 저장 판 5 {a['cap']} {a['capNow']} {a['ver']}")
         check(a['a1'] == 15 and a['a1l'] == 615 and a['a1b'] == 0, f"모음 전환 A1: 수미산 Lv.600 모음 50 → 접속할 때 +15레벨(Lv.615), 모음 0 {a['a1']} {a['a1l']} {a['a1b']}")
         check(a['a2'] == 30 and a['a2l'] == 630 and a['d2'] == [30, 3], f"모음 전환 A2: 모음 500 → 최대 +30레벨(Lv.630) · 오름 보상 610·620·630에서 조각 +30 {a['a2']} {a['a2l']} {a['d2']}")
         check(a['a3'] == 0 and a['a3l'] == 615, f"모음 전환 A3: 저장해 다시 들어와도 두 번 주지 않음 {a['a3']} {a['a3l']}")
@@ -6365,7 +6365,7 @@ async def main():
         check(rt['extraUse'][0] == 7 and rt['extraUse'][1] == [2, 5, 2] and rt['extraUse'][2] == 1 and rt['extraUse'][3] == 1, f"끝없는 시험 도전권: 기본 5번을 먼저 쓰고 그다음 도전권을 씀 {rt['extraUse']}")
         check(rt['re'] == [10, '{"0":2,"4":1,"9":1}', 1, 12, 3, 4, '2026-11-26'], f"경지 시험 저장(R7): 그대로 보존(best는 이긴 기록에서 다시 셈) {rt['re']}")
         check(rt['bad'][0] == 10 and rt['bad'][1] == '{"2":7,"9":1}' and rt['bad'][2] == 4 and rt['bad'][3] == 0 and rt['bad'][4] == '' and rt['bad'][5] == 5 and rt['bad'][6] == 20 and rt['cap'] == 9999 and rt['exNo10'] == 0, f"경지 시험 저장(R7): 이상한 값(best 999·글자·음수·범위 밖)은 잘라 내고, 시험 10 전의 끝없는 기록은 지움 {rt['bad']} {rt['cap']} {rt['exNo10']}")
-        check(rt['old'] == [0, '{}', 0, 0, 0] and rt['old2'][:2] == [0, 0] and rt['ver'] == 4, f"경지 시험: 예전 저장은 「아무 시험도 안 깬 상태」, 저장 판 4 {rt['old']} {rt['old2']} {rt['ver']}")
+        check(rt['old'] == [0, '{}', 0, 0, 0] and rt['old2'][:2] == [0, 0] and rt['ver'] == 5, f"경지 시험: 예전 저장은 「아무 시험도 안 깬 상태」, 저장 판 5 {rt['old']} {rt['old2']} {rt['ver']}")
         # 결과 창(글자) · 화면
         wd = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = false; G.closePage(); G.hideModal();
           const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
@@ -6660,6 +6660,60 @@ async def main():
         nr2 = await npg.evaluate("() => localStorage.getItem(window.__game.NUM_KEY)")
         check(nr2 == '1', f'숫자 줄이기: 켜면 기기 설정이 1로 저장된다 {nr2}')
         await ctxN.close()
+
+        # ── 주간 대요괴 혼자 모드(서버가 없을 때·claude.ai): 「내 계정 대요괴」 ──
+        ctxW = await browser.new_context(viewport={'width': 844, 'height': 390}, device_scale_factor=2)
+        await ctxW.add_init_script(MOCK_CLAUDE % 'null')
+        wpg = await ctxW.new_page()
+        watch(wpg, errors, '대요괴 혼자 ')
+        await wpg.goto(URL); await wpg.wait_for_selector('#lg-id')
+        await signup(wpg, 'wbsolo', 'abcd', '대요괴혼', 'sulsa')
+        await wpg.evaluate("() => { const G = window.__game; G.quiet = true; G.noFork = true; G.noInh = true; G.wbForce = true; }")
+        wa = await wpg.evaluate("""async () => { const G = window.__game; const closed = !G.wbOpen() ? 'x' : 'open'; const v = await G.wbRefresh(true);
+          return {closed, src: v.src, sum: v.sum, target: v.target, boss: v.boss, want: G.wbBossIdx(G.wbDevWk()), left: v.left, can: G.wbCan()}; }""")
+        check(wa['src'] == 'solo' and wa['sum'] == 0 and wa['target'] == 1000 and wa['boss'] == wa['want'] and wa['left'] == 3 and wa['can'] == '',
+              f'대요괴 혼자 모드: 서버가 없으면 「내 계정 대요괴」(목표 1000 × 1명, 3번 남음)로 열린다 {wa}')
+        # 점수 계산: 쓰러뜨리면 100 + 남은 초 × 0.5(최대 +20), 못 쓰러뜨리면 깎은 몫(최대 99)
+        ws = await wpg.evaluate("""() => { const G = window.__game, f = (win, time, endBoss) => { const r = G.wbScore({win, time, limit: 60, endBoss}); return [r.score, r.secs]; };
+          return [f(true, 60, 0), f(true, 30, 0), f(true, 1, 0), f(true, 0, 0), f(false, 0, 0.2), f(false, 0, 0.004), f(false, 0, 1), f(false, 0, 0)]; }""")
+        check(ws == [[120, 8], [115, 30], [100, 59], [100, 60], [80, 60], [99, 60], [0, 60], [99, 60]],
+              f'대요괴 점수 계산: 쓰러뜨리면 100 + 남은 시간 × 0.5(최대 +20)·못 쓰러뜨리면 깎은 몫(최대 99)·걸린 초는 8~60 {ws}')
+        # 한 판: 시작 → 보스·시간·동료 → 끝나면 점수 기록·엽전·보석
+        wf = await wpg.evaluate("""async () => { const G = window.__game, S = G.S; const g0 = S.gems, c0 = S.gold; const B = G.WB_BOSS[G.wbBossIdx(G.wbDevWk())];
+          const ok = G.startWb(); const R = G.raid; const o = {ok, wb: !!(R && R.info.wb), name: R && R.boss.name, want: B.name, limit: R && R.limit, hp: R && R.boss.maxHp > 0, fit: !!(R && R.info.fit), lab: document.querySelector('#bigBtn') ? 1 : 0, can2: G.wbCan()};
+          R.boss.hp = R.boss.maxHp * 0.2; G.raidEnd(false);
+          for (let i = 0; i < 60 && G.raid; i++) await new Promise(r => setTimeout(r, 100));
+          for (let i = 0; i < 30 && !(G.wbV && G.wbV.me.n > 0); i++) await new Promise(r => setTimeout(r, 100));
+          o.sum = G.wbV.sum; o.me = G.wbV.me; o.left = G.wbV.left; o.gems = S.gems - g0; o.gold = S.gold > c0; o.rec = S.rec.wb; o.n = S.wb.n; return o; }""")
+        check(wf['ok'] and wf['wb'] and wf['name'] == wf['want'] and wf['limit'] == 60 and wf['hp'] and wf['fit'] and wf['can2'] == '다른 싸움 중이에요' and wf['sum'] == 80 and wf['me']['best'] == 80 and wf['left'] == 2 and wf['gems'] > 0 and wf['gold'] and wf['rec'] == 1 and wf['n'] == 1,
+              f'대요괴 한 판: 이번 주 보스와 60초 싸움 → 끝나면 80점 기록·엽전·보석 {wf}')
+        # 하루 3번(캐릭터)·계정 6번(기기 날짜): 가짜 캐릭터 둘이 3번·2번 → 계정 한도(6)로 막힘
+        wl = await wpg.evaluate("""() => { const G = window.__game, cid = G.session.cid, o = {}; for (const [c, n] of [['fake2', 3], ['fake3', 2]]){ G.session.cid = c; for (let i = 0; i < n; i++) G.wbSoloHit(50); }
+          G.session.cid = cid; const v = G.wbSoloView(); o.left = v.left; o.leftC = v.leftC; o.target = v.target; return o; }""")
+        check(wl['left'] == 0 and wl['leftC'] == 2 and wl['target'] == 3000, f'대요괴 혼자 모드: 한 계정 하루 6번 한도(캐릭터는 2번 남았어도 막힘), 목표는 친 캐릭터 수만큼 {wl}')
+        # 다음 날(기록의 날짜를 어제로): 이번 주 합은 남고 횟수만 돌아온다 → 캐릭터마다 하루 3번
+        await wpg.evaluate("""() => { const G = window.__game; for (const k of Object.keys(localStorage)) if (k.includes('samhan-wb-')){ const d = JSON.parse(localStorage.getItem(k)); d.acc.day = '1999-1-1'; for (const c of Object.values(d.chars)) c.day = '1999-1-1'; delete d.chars.fake2; delete d.chars.fake3; localStorage.setItem(k, JSON.stringify(d)); } G.wbV = null; G.S.wb.n = 0; G.S.wb.day = '1999-1-1'; }""")
+        w3 = await wpg.evaluate("""async () => { const G = window.__game, out = []; await G.wbRefresh(true); out.push(G.wbV.left);
+          for (let i = 0; i < 3; i++){ G.startWb(); G.raid.boss.hp = G.raid.boss.maxHp * 0.2; G.raidEnd(false); for (let k = 0; k < 60 && G.raid; k++) await new Promise(r => setTimeout(r, 100)); for (let k = 0; k < 20 && G.wbV.left > 2 - i; k++) await new Promise(r => setTimeout(r, 100)); out.push(G.wbV.left); }
+          return {out, can: G.wbCan(), sum: G.wbV.sum}; }""")
+        check(w3['out'] == [3, 2, 1, 0] and w3['can'] == '오늘은 다 쳤어요' and w3['sum'] == 320, f'대요괴 혼자 모드: 캐릭터마다 하루 3번(기기 날짜), 다 치면 「오늘은 다 쳤어요」 {w3}')
+        # 단계 보상: 합 320 ≥ 250(= 1000의 25%) → 받기 한 번, 두 번째는 못 받음, 기록에 남음
+        wc = await wpg.evaluate("""async () => { const G = window.__game, S = G.S, g0 = S.gems; const a = await G.wbClaim(25), b = await G.wbClaim(25), c = await G.wbClaim(50);
+          return {a, b, c, gems: S.gems - g0, got: G.wbSoloLoad().chars[G.session.cid].got}; }""")
+        check(wc['a'] and wc['b'] is None and wc['c'] is None and wc['gems'] == 500 and wc['got'] == 1, f'대요괴 단계 보상(혼자 모드): 25%는 한 번만(보석 500), 아직 못 채운 50%는 못 받음 {wc}')
+        # claude.ai 저장 흉내: 기록이 개인 저장소에 올라가고, 새 기기(빈 저장)에서 같은 기록을 이어 받는다 + 소식은 room으로
+        await wpg.wait_for_timeout(300)
+        wst = await wpg.evaluate("() => ({keys: Object.keys(window.__store).filter(k => k.includes('samhan-wb-')), emitted: window.__emitted.filter(e => e[0] === 'wb').length, last: (window.__emitted.filter(e => e[0] === 'wb').pop() || [])[1]})")
+        check(len(wst['keys']) == 1 and wst['emitted'] == 4 and wst['last'] and wst['last']['s'] == 80, f'대요괴 혼자 모드: Claude 저장소에 내 계정 기록이 올라가고 room에 소식이 나간다 {wst}')
+        await wpg.evaluate("() => { const G = window.__game; G.hideModal(); G.closePage(); G.buildTab('raid'); document.querySelector('[data-rv=\"wb\"]').click(); }"); await wpg.wait_for_timeout(600)
+        await wpg.screenshot(path=str(OUT / '97_대요괴_혼자모드.png'))
+        wtxt = await wpg.inner_text('#wbBox')
+        wh = await wpg.evaluate("() => document.querySelector('#wbBox').innerHTML")   # 긴 안내는 「?」 말풍선 안에 접혀 있다
+        check('내 계정' in wtxt and '320 / 1,000' in wtxt and '혼자 모드' in wh, f'대요괴 화면(혼자 모드): 「내 계정」 합계와 안내가 보인다 {wtxt!r}')
+        # 환생 전(열리지 않음)에는 [대요괴] 칸이 없다
+        wcl = await wpg.evaluate("() => { const G = window.__game; G.wbForce = false; G.closePage(); G.buildTab('raid'); const r = [...document.querySelectorAll('[data-rv]')].map(b => b.dataset.rv); G.wbForce = true; return r; }")
+        check('wb' not in wcl and 'tb' in wcl, f'대요괴: 환생 전에는 [대요괴] 칸이 없다 {wcl}')
+        await ctxW.close()
         srv.shutdown()
 
         if '--sim' in sys.argv:
