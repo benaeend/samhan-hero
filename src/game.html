@@ -4458,7 +4458,7 @@ const bagRand = () => (window.__game && window.__game.bagRng ? window.__game.bag
 const bagCheck = () => { const d = today(); if (S.bot.day !== d){ S.bot.day = d; S.bot.n = 0; } };
 const bagLeft = () => { bagCheck(); return Math.max(0, BAG.day - S.bot.n); };
 const bagPityLeft = () => Math.max(1, BAG.pity - S.bot.pity);   // 전설 치장이 확정되기까지 남은 번호(1이면 다음 번이 확정)
-const bagCos = t => AVATARS.filter(a => a.bag && a.type === t);
+const bagCos = t => AVATARS.filter(a => a.bag && !a.trial && a.type === t);
 function bagAddScroll(k, secs){   // 두루마리 시간을 더한다(최대 2시간). 넘는 몫은 숫돌 3개로
   const over = S.buff[k] + secs > BAG.cap;
   S.buff[k] = Math.min(BAG.cap, S.buff[k] + secs);
@@ -4537,6 +4537,10 @@ const TRANS_SHOP = [   // {id, name, icon, cost(조각), week(주 한도), desc,
   {id:'t_box', name:'꾸미기 상자', icon:'gift', cost:10, week:1, pot:true, desc:'꾸미기 상자를 한 번 열어요(보석 값은 조각이 대신 내요).', give:() => openAvatarBoxFree()},
   // 초월의 경지 첫 물건: 지금 단에 드는 경험치의 pillFrac(20%)만큼을 채워 줌. 주 3번 = 최대 0.6단/주(경지 속도의 1% 안팎이라 시간표를 안 흔듦)
   {id:'t_realm', name:'경지 수련 단약', icon:'shard', cost:3, week:3, desc:'초월의 경지 경험치를 지금 단에 드는 양의 20%만큼 채워요.', open:() => transRealmOpen() && S.trans.lv < TRANS.realmMax, give:() => realmGain(realmNeed(S.trans.lv) * TRANS.pillFrac)},
+  // 경지 시험 · 끝없는 시험(11월 26일): 도전권은 끝없는 시험이 열린 뒤, 신화 조각 묶음은 경지가 열리면(MAT_SRC·SHARD_SRC 수급이 하루 10~20개라 묶음은 3개·주 5번 = 최대 15개로 작게), 색 바꾸기는 「경지의 빛」을 얻은 뒤
+  {id:'t_ex', name:'끝없는 시험 도전권', icon:'ticket', cost:5, week:3, desc:'끝없는 시험에 도전할 수 있는 횟수를 1번 늘려요(쓰기 전까지 남아요, 최대 20).', open:() => exOpen(), give:() => { S.trans.ex.extra = Math.min(REALM_EX.extraMax, S.trans.ex.extra + 1); }},
+  {id:'t_myth', name:'신화 조각 묶음', icon:'pearl', cost:4, week:5, desc:'신화 조각 3개.', open:() => transRealmOpen(), give:() => { S.mythShard = (S.mythShard || 0) + 3; }},
+  {id:'t_hue', name:'경지의 빛 색 바꾸기', icon:'shard', cost:30, week:1, desc:'이펙트 치장 「경지의 빛」 색을 다음 색으로 바꿔요(색만, 힘은 그대로).', open:() => !!S.av.own.x_gyeongji, give:() => { S.trans.tr.hue = (S.trans.tr.hue + 1) % REALM_HUES.length; prevCache.clear(); }},
   // 다음 패치: {id:'t_xxx', name:'(경지 소모 재료)', icon:'…', cost:…, week:…, desc:'…', open:() => S.trans.lv >= …, give:() => …}
 ];
 
@@ -4675,10 +4679,15 @@ function giveGifts(){
     setTimeout(() => { if ($('#modal').hidden) showModal('운영 보상', `<p>${esc(g.why)}${josa(g.why, '으로', '로')} <b>보석 ${fmt(g.gems)}개</b>를 드렸어요. 불편을 드려 죄송해요.</p>`, [{label:'확인', primary:true}]); }, 1500);
   }
 }
-const SAVE_BUILD = 3;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-26-1', NOTE_KEY = KP + 'samhan-note-seen';
+const SAVE_BUILD = 4;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
+const NOTE_VER = '2026-11-26-2', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
+  ['#', '11월 26일 · 경지 시험과 끝없는 시험'],
+  ['경지 시험: 경지 10단마다 「나의 그림자」와 겨뤄요', '[레이드]에 「경지 시험」 카드가 생겼어요. 초월의 경지를 10단 올릴 때마다 시험이 하나씩 열려요(문턱 · 첫 고개 · 여울목 … 경지의 끝, 모두 10가지). 진 레이드처럼 쓰러져도 다시 일어서고, 생명 3개·물약 10개·90초 안에 보스를 쓰러뜨리면 돼요. 경지가 이미 높은 용사는 지난 시험도 한꺼번에 열려 있고, 보상도 처음 깰 때 그대로 받아요.'],
+  ['보상은 조각·보석·별호·빛깔뿐이에요', '시험마다 초월의 조각과 보석을 주고, 3·5·10번째에는 별호를 줘요. 10번째를 깨면 용사 둘레에 퍼지는 「경지의 빛」 꾸밈도 얻어요(빛깔은 상점에서 바꿀 수 있어요). 힘은 하나도 오르지 않는 보상이라 진행 속도와 기존 밸런스는 그대로예요.'],
+  ['끝없는 시험: 경지 100단 뒤의 계단', '경지 10번째 시험을 깨면 「끝없는 시험」이 열려요. 계단을 오를수록 그림자가 조금씩 세져요. 하루 5번 도전할 수 있고, 이기면 도전 횟수를 쓰지 않고 다음 계단으로 올라가요(지면 한 번 줄어요). 10·30·50계단에는 별호가 있어요.'],
+  ['초월의 조각 상점에 물건이 늘었어요', '끝없는 시험 도전 횟수를 하나 늘리는 「끝없는 시험 도전권」, 신화 조각 3개를 조각 4개 값으로 사는 「신화 조각 묶음」, 경지의 빛 색을 바꾸는 「경지의 빛 색 바꾸기」가 생겼어요(모두 주마다 살 수 있는 수가 정해져 있어요).'],
   ['#', '11월 26일 · 숫자 단위 줄여 보기'],
   ['싸움 숫자가 너무 커졌어요: 3부부터 줄여 보여 줘요', '전투력·피해·체력·공격력이 조·경·해·자…로 너무 길어져서, 가장 멀리 간 땅을 기준으로 3부는 1조, 4부와 5부는 1경으로 나눠 보여 줘요(1·2부는 그대로예요). 억을 넘으면 「41,200억」처럼 억 단위 숫자로 써요. 한 화면의 싸움 숫자는 모두 같은 값으로 나누니까 권장 전투력과 내 전투력도 그대로 견줄 수 있고, 힘은 하나도 안 바뀌어요. 엽전·보석·경험치·레벨은 그대로예요. 너무 작아진 숫자는 「1 미만」으로 보여요.'],
   ['[정보]에서 켜고 끌 수 있어요', '[정보]의 「싸움 숫자 줄여 보기」에서 켬·끔을 골라요(처음엔 켬, 이 기기에만 저장돼요). 줄여 보는 동안에는 [내 정보]의 전투력 옆에 「숫자 ÷1경」 같은 꼬리표가 붙고, 누르면 설명이 떠요. 새 땅에 처음 들어서면 길잡이 까치가 한 번 알려 줘요. 다른 용사의 정보 창 숫자도 내 기준으로 줄여 보여요.'],
@@ -5635,7 +5644,7 @@ function defaultState(){
     awaken:false, seenCut:{}, tb:{normal:0, hell:0},
     craft:{w:{t:0, e:'', e2:'', el:0}, a:{t:0, e:'', e2:'', el:0}, n:{t:0, e:'', e2:'', el:0}}, mat:{m0:0, m1:0, m2:0, m3:0}, skManual:{}, skSet:[], skSetMan:false, skOff:[], skV:2, skW:SK_SLOTS, skKnown:[], skNote:false, avPity:0, petPity:0, petMythPity:0, useProtect:false,
     mount:{own:{}, star:{}, piece:0, ride:''}, off:{kps:0, acc:0}, bag:[], bagSeq:0, mkNpc:{day:'', got:[]}, vault:{day:'', n:0}, dboss:{day:'', n:0, paid:false, won:false}, bossPity:{k:'', n:0}, setPick:'', gr:{day:'', n:0, won:false, pity:0}, tower:{best:0, day:'', n:0, gday:'', gn:0, godWin:0, seed:false, gweek:''}, pvp:{pt:1000, best:1000, win:0, lose:0, day:'', n:0, fw:''}, skSaves:[null, null, null], skPre:{}, mythShard:0,
-    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, rGot:0, buy:{wk:'', got:{}}, rd:{wk:'', n:0, tot:{}}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
+    soul:{own:{}, star:{}, eq:['', ''], pity:0, bond:{}}, expBank:0, trans:{shard:0, total:0, lvGot:0, lv:0, exp:0, rGot:0, buy:{wk:'', got:{}}, rd:{wk:'', n:0, tot:{}}, tr:{best:0, hue:0, tot:{}}, ex:{best:0, day:'', n:0, extra:0}}, title:{own:{}, eq:''}, setDex:{best:{}, got:{}}, parade:{day:'', n:0, best:0}, lg:{pend:0, day:'', free:0, extra:0, inDay:0, seq:0, req:null, auto:false, inc:0, st:{t:0, b:0, e:0, q:0, i:0}}, sea2:{day:'', sugun:0, yv:0, ygr:0, ygrWon:false, ygrPity:0, sugunBest:0, asura:0, kub:0, asuraBest:0, kubBest:0}, fork:{}, grudge:0, guard:{lv:{}, on:''}, elix:{o:{}, offer:null, qi:0}, inh:{w:0}, asc:{weapon:0, armor:0}, amber:{raw:[0, 0, 0, 0], st:{}}, sea:{kit:false}, helmHide:false, seaPreview:false, s6Preview:false, clsChg:{wk:'', n:0}, clsNote:false, refBest:{}, noti:{seen:{}, log:[]}, pseen:{}, jin:{day:'', n:0, week:'', wk:{}, fail:{}, win:{}, pity:0}, haetae:{day:'', n:0, best:0}, apt:{v:1, t0:0, esw:{}, note:0},
     aw2:{q:0, c:0, g:0, n:0, hear:false, got:false, tut:false, man:false}, mem:{ch:'', p:[0, 0, 0], paid:[false, false, false], fin:false, orbs:0},
   };
 }
@@ -5809,10 +5818,13 @@ function mergeState(d){
     const b = Math.min(BOND_MAX, Math.max(0, Math.floor(+(so.bond && so.bond[sl.k])) || 0)); if (b) out.soul.bond[sl.k] = b; }
   if (Array.isArray(so.eq)) so.eq.slice(0, 2).forEach((k, i) => { if (out.soul.own[k] && !out.soul.eq.includes(k)) out.soul.eq[i] = k; });
   out.expBank = Math.max(0, Math.min(9999, +d.expBank || 0));
-  { const t = d.trans && typeof d.trans === 'object' ? d.trans : {}, n0 = (v, mx) => Math.min(mx, Math.max(0, Math.floor(+v) || 0)), by = t.buy && typeof t.buy === 'object' ? t.buy : {}, got = {}, rd = t.rd && typeof t.rd === 'object' ? t.rd : {}, tot = {};   // 초월의 조각·경지(만렙 700 패치): 예전 저장은 없음 → 기본값
+  { const t = d.trans && typeof d.trans === 'object' ? d.trans : {}, n0 = (v, mx) => Math.min(mx, Math.max(0, Math.floor(+v) || 0)), by = t.buy && typeof t.buy === 'object' ? t.buy : {}, got = {}, rd = t.rd && typeof t.rd === 'object' ? t.rd : {}, tot = {}, ex = t.ex && typeof t.ex === 'object' ? t.ex : {};   // 초월의 조각·경지(만렙 700 패치): 예전 저장은 없음 → 기본값
     if (rd.tot && typeof rd.tot === 'object') for (let k = 0; k < 5; k++){ const g = n0(rd.tot[k], 99999); if (g) tot[k] = g; }   // 초월 레이드: 곳마다 이긴 횟수(0~4)
     if (by.got && typeof by.got === 'object') for (const it of TRANS_SHOP){ const g = n0(by.got[it.id], it.week); if (g) got[it.id] = g; }
-    out.trans = {shard:n0(t.shard, TRANS.max), total:n0(t.total, 99999999), lvGot:n0(t.lvGot, 10), lv:n0(t.lv, TRANS.realmMax), exp:Math.max(0, isFinite(+t.exp) ? +t.exp : 0), rGot:n0(t.rGot != null ? t.rGot : Math.floor(n0(t.lv, TRANS.realmMax) / TRANS.realmEvery), TRANS.realmMax / TRANS.realmEvery), buy:{wk:typeof by.wk === 'string' ? by.wk : '', got}, rd:{wk:typeof rd.wk === 'string' ? rd.wk : '', n:n0(rd.n, 3), tot}}; }
+    out.trans = {shard:n0(t.shard, TRANS.max), total:n0(t.total, 99999999), lvGot:n0(t.lvGot, 10), lv:n0(t.lv, TRANS.realmMax), exp:Math.max(0, isFinite(+t.exp) ? +t.exp : 0), rGot:n0(t.rGot != null ? t.rGot : Math.floor(n0(t.lv, TRANS.realmMax) / TRANS.realmEvery), TRANS.realmMax / TRANS.realmEvery), buy:{wk:typeof by.wk === 'string' ? by.wk : '', got}, rd:{wk:typeof rd.wk === 'string' ? rd.wk : '', n:n0(rd.n, 3), tot}, tr:{best:0, hue:0, tot:{}}, ex:{best:n0(ex.best, REALM_EX.cap), day:typeof ex.day === 'string' ? ex.day : '', n:n0(ex.n, REALM_EX.tries), extra:n0(ex.extra, REALM_EX.extraMax)}};
+    { const tr = t.tr && typeof t.tr === 'object' ? t.tr : {}, T2 = out.trans.tr;   // 경지 시험: 이긴 횟수만 믿고 best는 거기서 다시 셈(이상한 값은 잘라 냄)
+      if (tr.tot && typeof tr.tot === 'object') for (let k = 0; k < REALM_TRIALS.length; k++){ const g = n0(tr.tot[k], 99999); if (g){ T2.tot[k] = g; T2.best = k + 1 > T2.best ? k + 1 : T2.best; } }
+      T2.hue = n0(tr.hue, REALM_HUES.length - 1); if (!T2.tot[REALM_TRIALS.length - 1]) out.trans.ex = {best:0, day:'', n:0, extra:0}; } }
   { const x = d.sea2 && typeof d.sea2 === 'object' ? d.sea2 : {}, n0 = v => Math.max(0, Math.floor(+v) || 0); out.sea2 = {day:typeof x.day === 'string' ? x.day : '', sugun:n0(x.sugun), yv:n0(x.yv), ygr:n0(x.ygr), ygrWon:!!x.ygrWon, ygrPity:n0(x.ygrPity), sugunBest:n0(x.sugunBest)}; }   // 물의 신화 7-2
   out.parade = {day:d.parade && typeof d.parade.day === 'string' ? d.parade.day : '', n:Math.max(0, Math.floor(+(d.parade && d.parade.n)) || 0), best:Math.max(0, Math.floor(+(d.parade && d.parade.best)) || 0)};
   const ti = d.title && typeof d.title === 'object' ? d.title : {};
@@ -12211,6 +12223,8 @@ const AVATARS = [
   {k:'x_jindallae', type:'fx', bag:true, fx:'jindallae', name:'진달래 꽃비', col:'#ff8ab8', src:'도깨비 보따리', d:'분홍 꽃잎이 둘레에 흩날리고 발밑에 꽃이 번져요.'},
   {k:'x_obang', type:'fx', bag:true, fx:'obang', name:'오방 빛기둥', col:'#ffd24a', src:'도깨비 보따리', d:'청·적·황·백·흑 다섯 빛기둥이 둥글게 서서 천천히 돌아요.'},
   {k:'h_lantern', type:'head', bag:true, fx:'lantern', name:'청사초롱 한 쌍', col:'#ff6a4a', src:'도깨비 보따리', d:'붉고 푸른 청사초롱 둘이 머리 곁에 둥실 떠 불을 밝혀요.'},
+  // 경지 시험 10 보상(11월 26일): 보따리 치장과 같은 틀의 이펙트지만 보따리에는 안 나오고(trial) 도감 효과(능력치)도 없다
+  {k:'x_gyeongji', type:'fx', bag:true, trial:true, fx:'gyeongji', name:'경지의 빛', col:'#8fe0d0', src:'경지 시험 10', d:'발밑에 달무리 같은 빛 테가 돌고, 세 갈래 빛줄기가 천천히 올라와요.'},
   {k:'h_magpie', type:'head', bag:true, fx:'magpie', name:'까치 한 쌍', col:'#9fb8ff', src:'도깨비 보따리', d:'까치 두 마리가 머리 위를 빙글 돌아요.'},
   {k:'h_butterfly', type:'head', bag:true, fx:'butterfly', name:'호랑나비 떼', col:'#ffa03a', src:'도깨비 보따리', d:'호랑나비 네 마리가 머리 둘레를 팔랑팔랑 날아요.'},
   {k:'h_bukdu', type:'head', bag:true, fx:'bukdu', name:'북두 일곱 별', col:'#ffe08a', src:'도깨비 보따리', d:'북두칠성 일곱 별이 머리 위에서 반짝여요.'},
@@ -12697,6 +12711,13 @@ const TITLES = [
   {k:'haetae7', name:'해태가 고개 끄덕인', need:'해태 수련 7등급', prog:() => [S.haetae && S.haetae.top || 0, 7], eff:{boss:8, critDmg:10}},
   {k:'mem3', name:'세 번 산 자', need:'환생의 기억 세 갈래를 모두 되찾아요', prog:() => [S.mem && S.mem.fin ? 1 : 0, 1], eff:{atk:8, hp:8, exp:5}, hide:() => !memOpen()},
   {k:'memNo', name:'뒤돌아보지 않는 자', need:'환생의 기억을 떠올리지 않기로 해요', prog:() => [S.mem && S.mem.ch === 'no' ? 1 : 0, 1], eff:{boss:8, critDmg:10}, hide:() => !memOpen()},
+  // 경지 시험·끝없는 시험(11월 26일): 겉모습만 — 능력치 없음(cos), 모음 효과(별호마다 +%)에도 안 센다
+  {k:'rt3', name:'여울을 건넌 자', need:'경지 시험 3(경지 30단) 통과', prog:() => [S.trans.tr.tot[2] ? 1 : 0, 1], eff:{}, cos:true, hide:() => !transOpen() && !S.trans.tr.tot[2]},
+  {k:'rt5', name:'구름다리를 건넌 자', need:'경지 시험 5(경지 50단) 통과', prog:() => [S.trans.tr.tot[4] ? 1 : 0, 1], eff:{}, cos:true, hide:() => !transOpen() && !S.trans.tr.tot[4]},
+  {k:'rt10', name:'제 그림자를 넘은 자', need:'경지 시험 10(경지 100단) 통과', prog:() => [S.trans.tr.tot[9] ? 1 : 0, 1], eff:{}, cos:true, hide:() => !transOpen() && !S.trans.tr.tot[9]},
+  {k:'ex10', name:'끝없는 계단의 나그네', need:'끝없는 시험 10계단', prog:() => [S.trans.ex.best, 10], eff:{}, cos:true, hide:() => !S.trans.tr.tot[9]},
+  {k:'ex30', name:'계단 위의 계단', need:'끝없는 시험 30계단', prog:() => [S.trans.ex.best, 30], eff:{}, cos:true, hide:() => !S.trans.tr.tot[9]},
+  {k:'ex50', name:'끝을 모르는 자', need:'끝없는 시험 50계단', prog:() => [S.trans.ex.best, 50], eff:{}, cos:true, hide:() => !S.trans.tr.tot[9]},
   {k:'three', name:'세 하늘의 용사', need:'3부 이야기 끝(45장)', prog:() => [S.quest.main, PART3_END], eff:{atk:10, hp:10}},
   {k:'f_snowA', name:'약속을 지킨 자', need:'갈림길(30장)에서 「말하지 않는다」', prog:() => [S.fork.snow === 0 ? 1 : 0, 1], eff:{hp:8}, fork:true},
   {k:'f_snowB', name:'등불을 건 자', need:'갈림길(30장)에서 「등불을 걸어 둔다」', prog:() => [S.fork.snow === 1 ? 1 : 0, 1], eff:{gold:10}, fork:true},
@@ -12721,18 +12742,18 @@ const TITLES = [
 const TITLE_RANK = {step:0, hunt1:0, event:0, smith:0, helper:0, sea:0, pet:0,
   hunt2:1, boss1:1, raid1:1, counter:1, reb1:1, soul:1, west:1, east:1, india:1, f_snowA:1, f_snowB:1, f_towerA:1, f_towerB:1, f_yamaA:1, f_yamaB:1, sd1:1, sd2:1,
   myth:2, reb2:2, legend:2, three:2, sea1:2, sea2:2, ind1:2, ind2:2, pvp1:2, tower:2, haetae7:2, memNo:2, dex1:2, dex2:2, sd3:2, sd4:2,
-  taecho:3, sumeru:3, skygate:3, trueform:3, pvp2:3, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
+  taecho:3, sumeru:3, skygate:3, trueform:3, pvp2:3, rt10:3, ex30:3, ex50:3, rt5:2, ex10:2, rt3:1, sea3:3, ind3:3, mem3:3, dex3:3, dex4:3, dex5:3, sd5:3};
 const TITLE_RANKS = [{n:'일반', c:'trk0'}, {n:'희귀', c:'trk1'}, {n:'영예', c:'trk2'}, {n:'전설', c:'trk3'}];
 for (const t of TITLES) t.rank = TITLE_RANK[t.k] || 0;
 const trk = k => (TT[k] && TT[k].rank) || 0;
 const titleSpan = (k, br = true) => TT[k] ? `<span class="ttl ${TITLE_RANKS[trk(k)].c}" title="${TITLE_RANKS[trk(k)].n} 별호">${br ? '「' : ''}${esc(TT[k].name)}${br ? '」' : ''}</span>` : '';
 const TT = Object.fromEntries(TITLES.map(t => [t.k, t]));
 const TITLE_EFF = {atk:'공격력', hp:'체력', boss:'보스 피해', exp:'경험치', gold:'엽전', gem:'보석', critDmg:'치명타 피해', cdr:'기술 재사용 감소'};
-const titleEffText = t => Object.entries(t.eff).map(([k, v]) => `${TITLE_EFF[k]} +${v}%`).join(' · ');
+const titleEffText = t => Object.keys(t.eff).length ? Object.entries(t.eff).map(([k, v]) => `${TITLE_EFF[k]} +${v}%`).join(' · ') : '겉모습만';
 const titleN = () => TITLES.filter(t => S.title.own[t.k]).length;
 const titleShown = () => TITLES.filter(t => S.title.own[t.k] || !(t.hide && t.hide()));   // 아직 열리지 않은 콘텐츠의 별호는 목록에서 숨긴다(환생의 기억)
 const titleEff = k => { const t = TT[S.title.eq]; return t && S.title.own[t.k] ? t.eff[k] || 0 : 0; };
-const titleCol = () => TITLE_COL * titleN() * lateCol();
+const titleCol = () => TITLE_COL * TITLES.filter(t => S.title.own[t.k] && !t.cos).length * lateCol();   // cos(겉모습만) 별호는 안 센다
 function titleCheck(){
   let got = 0;
   for (const t of TITLES){
@@ -14195,7 +14216,7 @@ function npcBuy(i){
   return {ok:true};
 }
 const avCount = () => AVATARS.filter(a => S.av.own[a.k] && !a.bag && (!a.job || a.cls === S.cls)).length;
-const bagCount = () => AVATARS.filter(a => a.bag && S.av.own[a.k]).length;   // 전직 망토는 지금 직업 것만 센다
+const bagCount = () => AVATARS.filter(a => a.bag && !a.trial && S.av.own[a.k]).length;   // 전직 망토는 지금 직업 것만 센다
 const avColPct = () => (AV_PCT * avCount() + BAG_PCT * bagCount()) * lateCol() * gearRes();   // 아바타 도감 효과 %(부상부터 ×LATE_COL)
 function giveAvatar(k, quiet){
   const a = AV[k];
@@ -14662,7 +14683,7 @@ function jinReward(info){
   return {gems, gold, out, mat, shard, piece, grudge, soul, av, week, firstN};
 }
 function finishJin(R){
-  const info = R.info; if (info.tr) return finishTrans(R); jinCheck();
+  const info = R.info; if (info.rt) return finishRealm(R); if (info.tr) return finishTrans(R); jinCheck();
   if (!R.win){
     S.jin.fail[info.key] = Math.min(Math.round(JIN.failMax / JIN.failPer), (S.jin.fail[info.key] || 0) + 1);
     const pity = Math.round(jinPity(info.key) * 100);
@@ -14826,6 +14847,164 @@ function confirmTrans(k){
     <p class="small" style="margin-top:8px">져도 이번 주 횟수는 안 써요(지금 ${transRdLeft()}번 남음, 이길 때만 줄어요).</p>
     ${ask ? presetHTML('party') : potNoteHTML()}`,
     [{label:'취소'}, {label:'출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (startTrans(k)) closePage(); presetNext = undefined; }}],
+    () => { if (ask) presetWire('party'); else { const pb = $('#prePot'); if (pb) pb.addEventListener('click', () => { sfx('click'); potShopGo(); }); } });
+  return true;
+}
+/* ================= 경지 시험 · 끝없는 시험(11월 26일, 만렙 700 뒤 할 거리) =================
+   초월의 경지가 10단 오를 때마다 시험 보스 하나가 열린다(10·20·…·100단, 모두 10곳). 경지가 오르는 길은 막지 않는다 — 시험은 따로 깨는 목표.
+   · 싸움 = 초월 레이드(진 레이드 규칙) 그대로: 전멸기·큰 살·쫓는 살, 목숨 3, 탕약 10개, 제한 시간 JIN.time. 주 횟수도 토벌패도 없음(져도 잃는 것 없음, 처음 이긴 뒤에는 「다시 겨루기」만 — 보상 없음)
+   · 처음 이기면 보상 한 번: 초월의 조각 10+2k · 보석 4,000+1,000k(k=1~10) + 시험 3·5·10에 별호 · 시험 10에 이펙트 치장 「경지의 빛」. 이미 지나간 시험도 열려 있으면 보상을 다 준다. 영구 힘은 없다(별호·치장은 겉모습만 — cos 표시)
+   · 시험 10을 깨면 「끝없는 시험」: 계단 1, 2, 3 … 한 칸씩 세지는 보스(끝이 없음). 하루 5번, 지면 1번을 쓴다(천공의 탑과 같은 규칙 — 이기면 안 씀). 새 계단을 처음 넘을 때 조각 3 · 보석 2,000+200n · 5계단마다 조각 +10 · 10·30·50계단 별호
+   · 세기 REALM_LADDER: 그 단에 막 닿은 용사(무사, 장비·재련을 그만큼 키운 시뮬 저장)의 [D0, EHP, PW](log10, TRANS_LADDER와 같은 모양, tools/sim_trans.py ladder·trial). 직업 차는 TRANS_CLS의 Lv.700 쪽. 시험마다 fit = [보스 체력, 한 방] 보정(log10)
+   · 새 그림 없음: 5부 레이드 보스(천축)의 색·크기·이름만 바꾼다 */
+const REALM_EX = {off:5, tries:5, hpK:0.04, blowK:0.02, pwK:0.03, shard:3, five:10, gems:2000, gemsK:200, extraMax:20, cap:9999, titles:{10:'ex10', 30:'ex30', 50:'ex50'}};
+const REALM_HUES = ['#8fe0d0', '#ffd24a', '#ff8ab8', '#9fd0ff', '#c8a0ff'];   // 「경지의 빛」 색(조각 상점의 색 바꾸기가 차례로 넘김)
+const REALM_TRIALS = [   // dan 열리는 경지 · w,i 바탕 보스(5부 레이드) · fit [보스 체력, 한 방] 보정(log10) · title 처음 이길 때 얻는 별호
+  {dan:10, w:8, i:0, name:'문턱', boss:'문턱을 막는 그림자', tint:'#8fe0d0', fit:[0, 0]},
+  {dan:20, w:8, i:1, name:'첫 고개', boss:'고개 위의 그림자', tint:'#8fe0d0', fit:[0, 0]},
+  {dan:30, w:8, i:2, name:'여울목', boss:'여울에 선 그림자', tint:'#8fe0d0', fit:[0, 0], title:'rt3'},
+  {dan:40, w:9, i:0, name:'벼랑 끝', boss:'벼랑 끝의 그림자', tint:'#9fd0ff', fit:[0, 0]},
+  {dan:50, w:9, i:1, name:'구름다리', boss:'구름다리의 그림자', tint:'#9fd0ff', fit:[0, 0], title:'rt5'},
+  {dan:60, w:9, i:2, name:'안개 숲', boss:'안개 속의 그림자', tint:'#9fd0ff', fit:[0, 0]},
+  {dan:70, w:10, i:0, name:'마루턱', boss:'마루턱의 그림자', tint:'#c8a0ff', fit:[0, 0]},
+  {dan:80, w:10, i:1, name:'하늘 문 앞', boss:'하늘 문 앞의 그림자', tint:'#c8a0ff', fit:[0, 0]},
+  {dan:90, w:10, i:2, name:'달빛 아래', boss:'달빛 아래의 그림자', tint:'#c8a0ff', fit:[0, 0]},
+  {dan:100, w:10, i:2, name:'경지의 끝', boss:'나의 그림자', tint:'#fff0b0', fit:[0, 0], title:'rt10', av:'x_gyeongji'},
+];
+const REALM_LADDER = [[10, 28.903, 24.564, 24.753], [20, 28.899, 24.581, 24.768], [30, 28.954, 24.618, 24.813], [40, 29.058, 24.685, 24.91], [50, 29.102, 24.73, 24.954], [60, 29.141, 24.793, 24.994], [70, 29.164, 24.828, 25.027], [80, 29.179, 24.844, 25.039], [90, 29.201, 24.855, 25.039], [100, 29.198, 24.865, 25.039]];   // [경지 단, D0, EHP, PW](log10, 무사) — tools/sim_realm10.py 저장으로 tools/sim_trans.py ladder 가 잰 값(무사. 10~40단은 원래 속도, 50~100단은 경지 4배 빠른 방법(realmBase 0.17)이라 장비가 덜 큰 만큼 힘이 조금 낮게 잰 값)
+const trialShard = k => 12 + 2 * k, trialGems = k => 5000 + 1000 * k;   // k = 0~9 (시험 k+1): 조각 10+2(k+1) · 보석 4,000+1,000(k+1)
+function realmRow(dan){   // 단 사이는 log10 직선
+  const A = REALM_LADDER; let j = 0; while (j < A.length - 2 && dan > A[j + 1][0]) j++;
+  const u = (dan - A[j][0]) / (A[j + 1][0] - A[j][0]);
+  return [1, 2, 3].map(x => A[j][x] + (A[j + 1][x] - A[j][x]) * u);
+}
+function realmOff(){   // 직업 차(무사와의 차, log10): TRANS_CLS의 Lv.700 쪽, 권사는 여섯 직업 평균
+  const c = TRANS_CLS[S.cls]; if (c) return c[1];
+  return [0, 1, 2].map(x => Object.values(TRANS_CLS).reduce((t, v) => t + v[1][x], 0) / Object.keys(TRANS_CLS).length);
+}
+function trialBase(k){   // [보스 체력, 보스 한 방, 권장 전투력]
+  const ov = window.__game && window.__game.trialOv; if (ov) return ov;
+  const T = REALM_TRIALS[k], row = realmRow(T.dan), off = realmOff(), fit = T.fit || [0, 0], v = [0, 1, 2].map(x => Math.pow(10, row[x] + off[x] + (fit[x] || 0)));
+  return [v[0] * JIN.t0, v[1] * JIN.a0 / Math.pow(10, tkLagLog()), v[2]];
+}
+const trialRec = k => trialBase(k)[2];
+function exBase(n){   // 끝없는 시험 n계단: 시험 10의 세기에서 한 계단마다 체력 ×10^hpK · 한 방 ×10^blowK
+  const ov = window.__game && window.__game.exOv; if (ov) return ov(n);
+  const b = trialBase(REALM_TRIALS.length - 1);
+  const m = n - REALM_EX.off;   // off: 계단 0의 세기를 시험 10보다 off계단 쉽게(손으로 처음 막히는 계단을 맞추는 값)
+  return [b[0] * Math.pow(10, REALM_EX.hpK * m), b[1] * Math.pow(10, REALM_EX.blowK * m), b[2] * Math.pow(10, REALM_EX.pwK * m)];
+}
+const exRec = n => exBase(n)[2];
+function trialInfo(k){
+  const T = REALM_TRIALS[k], R = RAID_WORLDS.find(x => x.w === T.w), base = R.info(T.i);
+  return Object.assign({}, base, {jin:true, rt:true, tk:k, jw:T.w, ji:T.i, mw:T.w, nkey:base.key, key:'rt' + k, label:'경지 시험 · ' + T.name, bossName:T.boss, color:mix(base.color, T.tint, 0.5), sc:3.1, wipes:JIN.wipes, rec:trialRec(k)});
+}
+function exInfo(n){
+  const T = REALM_TRIALS[REALM_TRIALS.length - 1], R = RAID_WORLDS.find(x => x.w === T.w), base = R.info(T.i);
+  return Object.assign({}, base, {jin:true, rt:true, ex:true, en:n, tk:-1, jw:T.w, ji:T.i, mw:T.w, nkey:base.key, key:'rx', label:`끝없는 시험 · ${n}계단`, bossName:`${n}번째 계단의 그림자`, color:mix(base.color, '#fff0b0', Math.min(0.7, 0.2 + n * 0.02)), sc:Math.min(3.8, 3.1 + n * 0.02), wipes:JIN.wipes, rec:exRec(n)});
+}
+const trialOpen = k => !!REALM_TRIALS[k] && (transRealmOpen() && S.trans.lv >= REALM_TRIALS[k].dan || !!(window.__game && window.__game.trialForce));
+const trialDone = k => !!(S.trans.tr.tot[k]);
+const exOpen = () => !!(S.trans.tr.tot[REALM_TRIALS.length - 1]) || !!(window.__game && window.__game.exForce);
+function exCheck(){ const E = S.trans.ex, d = dummyDay(); if (E.day !== d){ E.day = d; E.n = 0; } }
+const exLeft = () => { exCheck(); return Math.max(0, REALM_EX.tries - S.trans.ex.n) + S.trans.ex.extra; };
+function realmGo(info, base){   // 경지 시험·끝없는 시험 공통: 초월 레이드와 같은 진 규칙으로 싸움을 연다
+  const [bhp, atk] = base, party = raidParty(info), tk = Math.max(0.05, takenK(true));
+  for (const a of party) if (a.npc) a.maxHp = (tkOnAt(info.jw, info.ref) ? atk / JIN.a0 : ST.maxHp / tk) * (a.cls === 'musa' ? 1.3 : 0.85);
+  startFight(info, party, {hp:bhp, atk, aoe:atk * JIN.aoe, time:JIN.time});
+  raid.falls = 0; raid.pots = 0;
+  addLog(`${info.label} 시작! ${JIN.time}초 · 쓰러질 수 있는 건 ${JIN.lives - 1}번 · 탕약 ${JIN.pots}개까지.`, 'warn');
+  if (!fxOff()) fxBanner(info.ex ? '끝없는 시험' : '경지 시험', info.bossName, '#d8ccff', '30%', 1.6);
+  return true;
+}
+function startTrial(k){
+  if (raid || parade || market || !trialOpen(k) || !session && !window.__game) return false;
+  return realmGo(trialInfo(k), trialBase(k));
+}
+function startEx(){
+  exCheck();
+  if (raid || parade || market || !exOpen() || exLeft() <= 0 || S.trans.ex.best >= REALM_EX.cap || !session && !window.__game) return false;
+  const n = S.trans.ex.best + 1;
+  return realmGo(exInfo(n), exBase(n));
+}
+function trialReward(k){
+  const T = REALM_TRIALS[k], R = S.trans.tr, first = !R.tot[k];
+  R.tot[k] = (R.tot[k] || 0) + 1;
+  if (!first) return {first:false};
+  R.best = Math.max(R.best, k + 1);
+  const shard = trialShard(k), gems = Math.round(trialGems(k) * gemMul());
+  gainTrans(shard, true); S.gems += gems;
+  const got = []; let av = null;
+  if (T.av && giveAvatar(T.av, true)){ av = AV[T.av]; }
+  titleCheck(); if (T.title && S.title.own[T.title]) got.push(TT[T.title].name);
+  refreshStats(); ev('raid');
+  return {first:true, shard, gems, titles:got, av};
+}
+function exReward(n){
+  const E = S.trans.ex; E.best = Math.max(E.best, n);
+  const shard = REALM_EX.shard + (n % 5 === 0 ? REALM_EX.five : 0), gems = Math.round((REALM_EX.gems + REALM_EX.gemsK * n) * gemMul());
+  gainTrans(shard, true); S.gems += gems;
+  titleCheck(); const tk = REALM_EX.titles[n], got = tk && S.title.own[tk] ? [TT[tk].name] : [];
+  refreshStats(); ev('raid');
+  return {shard, gems, titles:got};
+}
+function finishRealm(R){
+  const info = R.info, quiet = !!(window.__game && window.__game.quiet);
+  if (info.ex){
+    if (!R.win){
+      exCheck(); if (S.trans.ex.n < REALM_EX.tries) S.trans.ex.n++; else S.trans.ex.extra = Math.max(0, S.trans.ex.extra - 1);
+      addLog(`${info.label}에서 물러났어요… 오늘 ${exLeft()}번 더 도전할 수 있어요.`, 'warn'); sfx('fail'); saveLocal();
+      if (quiet) return {win:false};
+      const why = (R.falls || 0) >= JIN.lives ? `<b>${JIN.lives}번</b> 쓰러져 물러났어요.` : `${JIN.time}초 안에 쓰러뜨리지 못했어요.`;
+      showModal('끝없는 시험 · 실패', `<p><b>${info.bossName}</b> — ${why}</p><p class="small">끝없는 시험은 지면 도전 횟수 1번을 써요(이기면 안 써요). 오늘 <b>${exLeft()}번</b> 더 도전할 수 있어요. 붉은 칸·쫓는 살은 직접 피하고 금빛 「!」에 [되받기]를 눌러 보세요.</p>`, [{label:'확인', primary:true}]);
+      return {win:false};
+    }
+    const n = info.en, rw = exReward(n);
+    addLog(`${info.label} 돌파! 초월의 조각 +${rw.shard}`, 'gain'); sfx('win');
+    announce(`${S.name}님이 끝없는 시험 ${n}계단에 올랐어요!`);
+    saveLocal();
+    if (quiet) return Object.assign({win:true}, rw);
+    const nx = n + 1, can = exLeft() > 0 && !raid;
+    showModal(`끝없는 시험 ${n}계단 돌파`, `<p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 쓰러뜨렸어요!</p>
+      <ul class="rewards"><li style="color:${TRANS.color}">${rw.shard}<span>초월의 조각</span></li><li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>${rw.titles.map(t => `<li style="color:var(--gold)">별호<span>「${esc(t)}」</span></li>`).join('')}</ul>
+      <p class="small" style="margin-top:8px">다음 ${nx}계단은 더 세요. 오늘 도전 ${exLeft()}번 남음(지면 1번을 써요).</p>`, [{label:'확인', primary:true}]);
+    return Object.assign({win:true}, rw);
+  }
+  const k = info.tk, T = REALM_TRIALS[k];
+  if (!R.win){
+    addLog(`${info.label} 실패… 잃은 것은 없어요. 다시 도전해요.`, 'warn'); sfx('fail'); saveLocal();
+    if (quiet) return {win:false};
+    const why = (R.falls || 0) >= JIN.lives ? `<b>${JIN.lives}번</b> 쓰러져 물러났어요.` : `${JIN.time}초 안에 쓰러뜨리지 못했어요.`;
+    showModal('경지 시험 · 실패', `<p><b>${info.bossName}</b> — ${why}</p><p class="small">경지 시험은 져도 잃는 것도, 횟수를 쓰는 것도 없어요. 보스의 세기는 정해져 있어서 권장 전투력에 못 미치면 장비·재련·능력치를 키운 뒤 다시 와요. 붉은 칸·쫓는 살은 직접 피하고 금빛 「!」에 [되받기]를 눌러 보세요.</p>`, [{label:'확인', primary:true}]);
+    return {win:false};
+  }
+  const rw = trialReward(k);
+  addLog(`${info.label} 통과!${rw.first ? ` 초월의 조각 +${rw.shard} · 보석 ${fmt(rw.gems)}` : ' (이미 깬 시험이라 보상은 없어요)'}`, 'gain'); sfx('win');
+  if (rw.first) announce(`${S.name}님이 경지 시험 「${T.name}」을 통과했어요!`);
+  saveLocal();
+  if (quiet) return Object.assign({win:true}, rw);
+  showModal(`시험 통과 · ${info.label}`, `<p><b>${info.bossName}</b>${josa(info.bossName, '을', '를')} 물리쳤어요! ${rw.first ? '<b>처음 통과한 보상</b>을 받았어요.' : '이미 통과한 시험이라 보상은 없어요 — 다시 겨루기는 기술 연습에 써요.'}</p>
+    ${rw.first ? `<ul class="rewards"><li style="color:${TRANS.color}">${rw.shard}<span>초월의 조각</span></li><li><span class="gem"></span>${fmt(rw.gems)}<span>보석</span></li>${rw.titles.map(t => `<li style="color:var(--gold)">별호<span>「${esc(t)}」</span></li>`).join('')}${rw.av ? `<li style="color:var(--myth)">치장<span>「${esc(rw.av.name)}」</span></li>` : ''}</ul>` : ''}
+    ${k === REALM_TRIALS.length - 1 && rw.first ? '<p class="small" style="margin-top:8px"><b>끝없는 시험</b>이 열렸어요. [레이드]에서 도전해요.</p>' : ''}`, [{label:'확인', primary:true}]);
+  return Object.assign({win:true}, rw);
+}
+function trialPowHTML(rec, pw = power(ST)){
+  const T = jinTier(pw / rec);
+  return `<span>권장 전투력 <b>${fmtB(rec)}</b></span><span class="jt-${T[1]}">내 ${fmtB(pw)} · ${T[2]}</span>`;
+}
+function confirmRealm(k){   // k = 시험 번호(0~9) 또는 -1(끝없는 시험)
+  const ex = k < 0;
+  if (raid || (ex ? !exOpen() || exLeft() <= 0 : !trialOpen(k))) return false;
+  const info = ex ? exInfo(S.trans.ex.best + 1) : trialInfo(k), T = ex ? null : REALM_TRIALS[k], party = raidParty(info), ask = S.presetMode === 'ask' || !S.presetMode, done = !ex && trialDone(k);
+  const rule = ex ? `이기면 <b>초월의 조각 ${REALM_EX.shard + (info.en % 5 === 0 ? REALM_EX.five : 0)}개</b> · 보석 ${fmt(REALM_EX.gems + REALM_EX.gemsK * info.en)}${REALM_EX.titles[info.en] ? ' · 별호' : ''} — 이기면 도전 횟수는 안 써요, <b>지면 1번</b>을 써요(오늘 ${exLeft()}번 남음)`
+    : done ? '이미 통과한 시험이에요 — <b>다시 겨루기</b>는 보상이 없고 횟수 제한도 없어요' : `처음 통과하면 <b>초월의 조각 ${trialShard(k)}개</b> · 보석 ${fmt(trialGems(k))}${T.title ? ' · 별호' : ''}${T.av ? ' · 치장 「경지의 빛」' : ''} — 져도 잃는 것은 없어요`;
+  showModal(info.label, `
+    <p><b>${info.bossName}</b> — 5부 레이드 보스의 다른 모습이에요. 세기가 정해져 있어서, 내 힘이 권장 전투력에 딱 맞을 땐 <b>손으로 피하고 되받아야</b> 이기기 쉬워요.</p>
+    <div class="rpow jin">${trialPowHTML(ex ? exRec(info.en) : trialRec(k))}</div>
+    <ul class="jrules"><li>싸우는 방식은 <b>초월 레이드·진 레이드와 같아요</b> — 전멸기 · 큰 살 두 번 · 「쫓는 살」, 자동 피하기는 절반만, 금빛 「!」를 되받으면 보스가 바로 휘청</li><li><b>${JIN.lives}번째</b> 쓰러지면 끝 · 탕약(인삼·산삼 합쳐)은 한 판에 <b>${JIN.pots}개</b>까지 · ${JIN.time}초</li><li>${rule}</li></ul>
+    <ol class="plist"><li><b>${esc(S.name || '나')}</b> (나·${synBrName(S.cls, S.cls === 'gwon' ? gwonBr() : 0)} Lv.${S.level})</li>${party.map(m => `<li>${partyLine(m)}</li>`).join('')}</ol>${synNoteHTML(party)}
+    ${ask ? presetHTML('party') : potNoteHTML()}`,
+    [{label:'취소'}, {label:done ? '다시 겨루기' : '출발', primary:true, fn:() => { if (ask) presetRead('party'); else presetNext = S.presetMode === 'off' ? null : skRaidSet('party'); if (ex ? startEx() : startTrial(k)) closePage(); presetNext = undefined; }}],
     () => { if (ask) presetWire('party'); else { const pb = $('#prePot'); if (pb) pb.addEventListener('click', () => { sfx('click'); potShopGo(); }); } });
   return true;
 }
@@ -16632,6 +16811,17 @@ function drawBagFx(g, kind, x, y, t, pass, hy){
       for (let k = 0; k < 16; k++){ const ph = (t * 0.32 + k / 16) % 1, a = k * 2.4 + t * 0.8, R = 9 + (k % 4) * 3.4;
         if ((Math.sin(a) > 0) !== (pass === 1)) continue;
         bagEll(g, x + Math.cos(a) * R, y - 36 + ph * 36 + Math.sin(a) * 3, 2.3, 1.2, k % 2 ? '#ff8ab8' : '#ffd0e0', Math.min(1, (1 - ph) * 3, ph * 8), t * 2 + k); }
+      break; }
+    case 'gyeongji': {   // 경지의 빛(경지 시험 10): 발밑 빛 테 둘 + 세 갈래 빛줄기. 색은 조각 상점의 「색 바꾸기」가 넘김
+      const c = REALM_HUES[S.trans && S.trans.tr ? S.trans.tr.hue : 0] || REALM_HUES[0];
+      if (pass === 0){
+        g.globalCompositeOperation = 'lighter'; bagEll(g, x, y, 22, 8.8, c, 0.13 + 0.06 * pu); bagGlow(g, x, y - 3, 24, c, 0.18 + 0.08 * pu); g.globalCompositeOperation = 'source-over';
+        bagRing(g, x, y, 21, 8.4, c, 0.9, 1.4, t * 0.9, t * 0.9 + 4.2); bagRing(g, x, y, 13, 5.2, '#ffffff', 0.55, 0.9, -t * 1.3, -t * 1.3 + 3.6);
+      }
+      g.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < 3; k++){ const a = t * 0.8 + k * TAU / 3, px = x + Math.cos(a) * 16, py = y + Math.sin(a) * 6.4; if ((Math.sin(a) > 0) !== (pass === 1)) continue;
+        const gr = g.createLinearGradient(px, py, px, py - 34); gr.addColorStop(0, hexA(c, 0.85)); gr.addColorStop(1, hexA(c, 0)); g.fillStyle = gr; g.fillRect(px - 1.6, py - 34, 3.2, 34); bagGlow(g, px, py, 6, c, 0.45); }
+      if (pass === 1) for (let k = 0; k < 8; k++){ const ph = (t * 0.5 + k / 8) % 1; g.fillStyle = hexA(k % 2 ? '#ffffff' : c, 0.9 * (1 - ph)); g.fillRect(x + Math.sin(k * 2.5 + t) * (9 + ph * 4) - 0.8, y - 2 - ph * 32, 1.6, 1.8); }
       break; }
     case 'obang': {   // 오방 빛기둥
       const cols = ['#3a7aff', '#ff4a3a', '#ffd24a', '#f4f4ff', '#8a6ad8'];
@@ -20781,7 +20971,7 @@ function buildShopTrans(){
   const items = TRANS_SHOP.filter(it => !it.open || it.open());
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
-    <p class="hint">초월의 조각으로 사는 물건이에요. 물건마다 <b>일주일에 살 수 있는 횟수</b>가 정해져 있고, 월요일에 새로 채워져요. 조각은 끝없는 신화 · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자 · 천공의 탑 510층부터 10층마다 · 초월 레이드(주 3번)에서 얻어요.</p>
+    <p class="hint">초월의 조각으로 사는 물건이에요. 물건마다 <b>일주일에 살 수 있는 횟수</b>가 정해져 있고, 월요일에 새로 채워져요. 조각은 끝없는 신화 · 오름 보상(Lv.610부터 10레벨마다) · 주간 퀘스트 상자 · 천공의 탑 510층부터 10층마다 · 초월 레이드(주 3번) · 경지 10단마다 · 경지 시험(처음 통과할 때)·끝없는 시험에서 얻어요.</p>
     <p class="small" id="shopLock" hidden style="margin:0 0 8px;color:#ff8a7a;font-weight:700">지금은 싸우는 중이라 이 물건은 살 수 없어요. ${POT_LOCK_MSG}.</p>
     <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
     <ul class="list">${items.map(it => `<li class="row" id="tsh-${it.id}"><div class="ic">${SVG[it.icon]}</div>
@@ -20825,7 +21015,7 @@ function bagOddsHTML(){
     · 10번(보석 ${fmt(BAG.ten)})은 열 번째에 「희귀 이상」이 하나 확정이에요. 하루 ${BAG.day}번까지 열 수 있어요.</p></div>`;
 }
 function buildShopBag(){
-  const cosAll = AVATARS.filter(a => a.bag);
+  const cosAll = AVATARS.filter(a => a.bag && !a.trial);
   panel.innerHTML = `
     <div class="ph"><h2>상점</h2><span class="bag" id="bag"></span></div>
     <div class="shop-cats mode" role="group" aria-label="상점 분류">${shopCatsHTML()}</div>
@@ -21889,6 +22079,34 @@ function buildRaid(){
   const transSec = !transOpen() ? '' : `<div data-psec><div class="ph"><h2>초월 레이드</h2><span class="tkbadge" id="trLeft"></span></div>
       <p class="hint">5부 레이드 보스의 <b>다른 모습</b> 다섯이에요. 레벨 600에서 700으로 가는 길에 Lv.${TRANS_RAIDS.map(T => T.lv).join('·')}에 한 곳씩 열려요. 세기가 <b>정해져 있고</b>(진 레이드와 같은 싸움) <b>이기면 주 ${TRANS_RD.week}번까지</b> 초월의 조각을 받아요. 져도 횟수는 안 써요. 지금 도전할 수 있는 곳 가운데 <b>보상이 좋은 ${SHOWN}곳</b>(처음 이기는 보상이 남은 곳 먼저, 그다음 더 위 단계)만 먼저 보여요.</p>
       <div class="rlist">${trOrder.slice(0, trShown).map(transCard).join('')}</div>${foldOf('t', trOrder.slice(trShown).map(transCard))}</div>`;
+  // 경지 시험 · 끝없는 시험(11월 26일): 초월의 경지가 열린 뒤 10단마다 한 곳씩
+  const realmCard = k => { const T = REALM_TRIALS[k], info = trialInfo(k), tot = S.trans.tr.tot[k] || 0;
+    return `<div class="rcard jin" id="rtr-${k}" data-part="5" data-pk="rt${k}" data-pn="0">
+          <div class="rport"><img src="${bossPortrait(info.type || 'm_musa', info.color)}" alt=""><span class="jmark">境</span></div>
+          <div class="rbody">
+            <div class="rtop"><b>시험 ${k + 1} · ${T.name}</b><span class="rstate" data-rts="${k}"></span></div>
+            <div class="rsub">${T.boss} · 경지 ${T.dan}단${tot ? ` · 통과 ${tot}번` : ''}</div>
+            <div class="rpow jin" data-rtp="${k}"></div>
+            <div class="rchips">${tot ? '<span class="rchip rc-gold">다시 겨루기 · 보상 없음</span>' : `<span class="rchip rc-myth">초월의 조각 ${trialShard(k)}</span><span class="rchip rc-gem">보석 ${fmt(trialGems(k))}</span>${T.title ? `<span class="rchip rc-myth">별호 「${TT[T.title].name}」</span>` : ''}${T.av ? '<span class="rchip rc-myth">치장 「경지의 빛」</span>' : ''}`}</div>
+          </div>
+          <button class="btn rgo" data-rtk="${k}"></button>
+        </div>`; };
+  const exCard = () => { const E = S.trans.ex, n = E.best + 1, info = exInfo(n);
+    return `<div class="rcard jin" id="rtx" data-n="${n}" data-part="5" data-pk="rtx" data-pn="0">
+          <div class="rport"><img src="${bossPortrait(info.type || 'm_musa', info.color)}" alt=""><span class="jmark">∞</span></div>
+          <div class="rbody">
+            <div class="rtop"><b>끝없는 시험 · ${n}계단</b><span class="rstate" data-rxs></span></div>
+            <div class="rsub">${info.bossName} · 지금까지 ${E.best}계단</div>
+            <div class="rpow jin" data-rxp></div>
+            <div class="rchips"><span class="rchip rc-myth">초월의 조각 ${REALM_EX.shard + (n % 5 === 0 ? REALM_EX.five : 0)}</span><span class="rchip rc-gem">보석 ${fmt(REALM_EX.gems + REALM_EX.gemsK * n)}</span>${REALM_EX.titles[n] ? `<span class="rchip rc-myth">별호 「${TT[REALM_EX.titles[n]].name}」</span>` : ''}</div>
+          </div>
+          <button class="btn rgo" data-rxk></button>
+        </div>`; };
+  const rtOrder = REALM_TRIALS.map((_, k) => k).sort((a, b) => (trialOpen(b) - trialOpen(a)) || (trialOpen(a) ? ((trialDone(a) - trialDone(b)) || (trialDone(a) ? b - a : a - b)) : a - b));
+  const rtShown = rtOrder.filter(k => trialOpen(k)).length ? SHOWN : 1;
+  const realmSec = !transOpen() ? '' : `<div data-psec><div class="ph"><h2>경지 시험</h2><span class="tkbadge" id="rtLeft"></span></div>
+      <p class="hint">초월의 경지가 <b>10단 오를 때마다 시험이 하나씩</b> 열려요(10·20·…·100단). 경지는 시험과 상관없이 올라요 — 시험은 따로 깨는 목표예요. 싸우는 방식은 초월 레이드와 같고, <b>처음 통과하면 보상을 한 번</b> 받아요(초월의 조각·보석, 시험 3·5·10에 별호, 시험 10에 이펙트 치장 「경지의 빛」). 져도 잃는 것도 횟수를 쓰는 것도 없고, 이미 깬 시험은 <b>다시 겨루기</b>만 돼요. 시험 10을 깨면 <b>끝없는 시험</b>이 열려요 — 한 계단씩 세지는 보스예요(하루 ${REALM_EX.tries}번, 지면 1번을 써요). 별호·치장은 겉모습만 바뀌고 힘은 그대로예요.</p>
+      <div class="rlist">${exOpen() ? exCard() : ''}${rtOrder.slice(0, rtShown).map(realmCard).join('')}</div>${foldOf('rt', rtOrder.slice(rtShown).map(realmCard))}</div>`;
   panel.innerHTML = top + `${partBarHTML()}
     <div data-psec><div class="ph"><h2>${WORLD_NAME[S.world]} 레이드</h2><span class="tkbadge" id="tkInfo"></span></div>
     <p class="hint">나와 동료 ${RAID_PARTY_MAX - 1}명까지 함께 ${RAID_TIME}초 안에 보스를 쓰러뜨려요. 깨면 토벌패 1개를 쓰고(최대 ${TICKET_MAX}개, ${TICKET_REGEN / 60000}분마다 1개씩 다시 차요), 지면 돌려받아요. <b>권장 전투력</b>보다 내 힘이 낮으면 버거워요.</p>
@@ -21897,13 +22115,15 @@ function buildRaid(){
     ${S.world < LV_CAP.length - 1 ? `<p class="small" style="margin:0 0 8px">레이드마다 상위 단계 <b>「진(眞)」</b>이 있어요. 다음 땅에 들어서면 이 땅의 진이 열려요.</p>` : ''}
     ${eCard ? `<p class="small" style="margin:0 0 8px"><b>입문 레이드</b>는 이 땅에 들어서자마자 열리고 늘 열려 있어요. 세기는 내가 지나온 단계를 따라가서, 다른 레이드가 잠겨 있거나 이미 깬 약한 곳뿐일 때 토벌패를 쓰기 좋아요. 이야기의 레이드 횟수에는 세지 않아요.</p>` : ''}
     <div class="rlist">${eCard}${cards.join('')}</div></div>
-    ${jinSec}${transSec}${past}`;
+    ${jinSec}${transSec}${realmSec}${past}`;
   wireSeg();
   partWire('raid', {own:k => !!S.raid.first[k], count:raidPartCount, filt:false, fresh:false});
   panel.querySelectorAll('.rcard .btn[data-i]').forEach(bt => bt.addEventListener('click', () => confirmRaid(+bt.dataset.i)));
   panel.querySelectorAll('.rcard .btn[data-jin]').forEach(bt => bt.addEventListener('click', () => { const [w, i] = bt.dataset.jin.split(':').map(Number); confirmJin(w, i); }));
   { const eb = panel.querySelector('.rcard .btn[data-e]'); if (eb) eb.addEventListener('click', confirmEntry); }
   panel.querySelectorAll('.rcard .btn[data-trk]').forEach(bt => bt.addEventListener('click', () => confirmTrans(+bt.dataset.trk)));
+  panel.querySelectorAll('.rcard .btn[data-rtk]').forEach(bt => bt.addEventListener('click', () => confirmRealm(+bt.dataset.rtk)));
+  { const xb = panel.querySelector('.rcard .btn[data-rxk]'); if (xb) xb.addEventListener('click', () => confirmRealm(-1)); }
   panel.querySelectorAll('details.rfold').forEach(d => d.addEventListener('toggle', () => { rfOpen[d.dataset.rf] = d.open; }));   // 다시 그려도 펼친 채로
   return () => {
     const live = $('#raidLive');
@@ -21956,6 +22176,23 @@ function buildRaid(){
         const st = panel.querySelector(`[data-trs="${k}"]`); if (st){ const on = transRaidOpen(k); setText(st, !on ? '잠김' : (S.trans.rd.tot[k] ? '토벌함 ✓' : '처음 이기면 +' + TRANS_RD.firstShard)); st.className = 'rstate' + (on && S.trans.rd.tot[k] ? ' done' : on ? ' new' : ''); }
         const rp = panel.querySelector(`[data-trp="${k}"]`); if (rp) setHTML(rp, transRaidOpen(k) ? transPowHTML(k, pw) : `<span>Lv.${TRANS_RAIDS[k].lv}이 되면 열려요 · 권장 전투력 <b>${fmtB(transRec(k))}</b></span>`);
       }); }
+    { const xl = exLeft(), xb = $('#rtLeft'); if (xb) setText(xb, exOpen() ? `끝없는 시험 ${'■'.repeat(Math.min(REALM_EX.tries, xl))}${'□'.repeat(Math.max(0, REALM_EX.tries - xl))} ${leftTxt(xl)}` : `경지 ${S.trans.lv}단 · 시험 ${S.trans.tr.best}/${REALM_TRIALS.length}`);
+      panel.querySelectorAll('.rcard .btn[data-rtk]').forEach(bt => {
+        const k = +bt.dataset.rtk; let t, dis = true, on = trialOpen(k);
+        if (!on) t = `경지 ${REALM_TRIALS[k].dan}단에 열려요`;
+        else if (raid) t = raid.info.rt && !raid.info.ex && raid.info.tk === k ? '시험 중' : '다른 싸움 중';
+        else { t = trialDone(k) ? '다시 겨루기' : '시험 입장'; dis = false; }
+        setText(bt, t); bt.disabled = dis; bt.classList.toggle('primary', !dis);
+        const st = panel.querySelector(`[data-rts="${k}"]`); if (st){ setText(st, !on ? '잠김' : trialDone(k) ? '통과 ✓' : '처음 통과하면 보상'); st.className = 'rstate' + (on && trialDone(k) ? ' done' : on ? ' new' : ''); }
+        const rp = panel.querySelector(`[data-rtp="${k}"]`); if (rp) setHTML(rp, on ? trialPowHTML(trialRec(k), pw) : `<span>경지 ${REALM_TRIALS[k].dan}단이 되면 열려요 · 지금 ${S.trans.lv}단 · 권장 전투력 <b>${fmtB(trialRec(k))}</b></span>`);
+      });
+      { const xc = panel.querySelector('#rtx'); if (xc && +xc.dataset.n !== S.trans.ex.best + 1){ xc.outerHTML = exCard(); const nb = panel.querySelector('.rcard .btn[data-rxk]'); if (nb) nb.addEventListener('click', () => confirmRealm(-1)); } }
+      const xk = panel.querySelector('.rcard .btn[data-rxk]');
+      if (xk){ let t, dis = true; const n = S.trans.ex.best + 1;
+        if (raid) t = raid.info.ex ? '시험 중' : '다른 싸움 중'; else if (xl <= 0) t = '내일 다시'; else { t = '계단 입장'; dis = false; }
+        setText(xk, t); xk.disabled = dis; xk.classList.toggle('primary', !dis);
+        const st = panel.querySelector('[data-rxs]'); if (st){ setText(st, `${n}계단`); st.className = 'rstate new'; }
+        const rp = panel.querySelector('[data-rxp]'); if (rp) setHTML(rp, trialPowHTML(exRec(n), pw)); } }
   };
 }
 function confirmEntry(){
@@ -24319,7 +24556,7 @@ if (location.search.indexOf('simtest') >= 0){
   window.__game = {
     TRANS, TRANS_SHOP, realmGain, realmNeed, realmMul, realmOn, realmBankFix, gateLv, transRealmOpen, transOpen, gainTrans, transLvCheck, buyTrans, transShopState, capRaiseFix, LV_STORY, buildTrans, get SAVE_BUILD_(){ return SAVE_BUILD; },
     claimActive, checkKick, get beta(){ return BETA; }, get onlineWanted(){ return onlineWanted(); },
-    power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
+    power, JIN, JIN_W, TRANS_RD, TRANS_RAIDS, TRANS_LADDER, transBase, transRec, transInfo, startTrans, finishTrans, confirmTrans, REALM_TRIALS, REALM_LADDER, REALM_EX, REALM_HUES, trialBase, trialRec, trialInfo, trialOpen, trialDone, startTrial, startEx, finishRealm, exBase, exRec, exInfo, exOpen, exLeft, exCheck, trialShard, trialGems, trialForce:false, exForce:false, trialOv:null, exOv:null, transRaidOpen, transRdLeft, transRdCheck, transPowHTML, transForce:false, transOv:null, towerLvOff:false, towerLvNeed, towerShard, jinOpen, jinAny, jinRec, jinTier, jinInfo, jinCheck, jinLeft, jinPity, startJin, finishJin, confirmJin, jinPowHTML, jinNewW, jinLuck:null, noJin:true, jinForce:false, jinOv:null, jinBase, hand:null, powK:1, resetRuntime, get dmgBy(){ return dmgBy; }, TIER_SLOTS, tierUsed, tierLock, tierPick, get tierSel(){ return tierSel; }, set tierSel(v){ tierSel = v; }, HAETAE, haetaeOpen, haetaeLeft, haetaeTiers, haetaeTier, haetaePhase, haetaeHalt, startHaetae, haetaeForce:false,
     potLock, shopState, bossRetryT, skLearned, skBossK, skSwapAsk, updateNoti, notiList, notiShow, notiReg, notiReview, notiOpenList, NOTI, setNotiLite, get notiLite(){ return notiLite; }, get notiAuto(){ return notiAuto; }, noNoti:true, noNumNote:true, fmtB, numStep, numStepRaw, numPart, numDiv, numTag, setNumOn, get numOn(){ return numOn; }, NUM_KEY, NUM_K, noSkNote:true, noClsNote:true, noAw2:true, noMem:true, REB_STATS, raidEnd, AW2, AW2_SK, AW2_Q, aw2Open, aw2Has, aw2Quest, aw2Cur, aw2Tick, aw2Hear, aw2Claim, aw2Trial, aw2Grant, aw2Tutorial, startAw2Tut, castAwaken2, aw2Add, toggleAw2Auto, aw2HearCut, aw2TutCut, get patHurt(){ return patHurt; }, MEM, MEM_BR, memOpen, memHas, memClosed, memStart, memAsk, memPick, memCost, memCostOk, memPay, startMem, memOrbs, rebMax, memCapAdd, memOpenCut, mGold, counterOk, patBreak, heroRoll, titleShown, CLS_CHG, clsChgWeek, clsChgLeft, clsChgBusy, clsChgPlan, clsChgDo, clsChgOpen, clsChgAsk, chooseClass, refSp, refAvgCost, refStart, refBestOf, refEffLv, rebirthCheck, SUB_STATE, weekLeft, get PV(){ return PV; }, partApply, curPart, partOfW, partOfCh, dexSum, dexCount, RAID_WORLDS, raidPartCount, MAX_CHARS, switchChar, BR, MANY_NOTE, samjokSprite, samjokEmblem, AFK, setAfk, afkPoke, updateAfk, sleepEnter, sleepWake, afkTest:false, get afkMin(){ return afkMin; }, get sleepAt(){ return sleepAt; }, get afkWarnAt(){ return afkWarnAt; }, saveLocal, hideModal, get currentTab(){ return currentTab; }, MP_K, RAID_GEM_K, TB_GEMS, GR_GEMS, VAULT_GEMS, SOUL_PITY, RAID_MYTH_P, ACC_DROP, vaultShards, WEEK_SHARD, potLowAny, potNoteHTML,
     get S(){ return S; }, get ST(){ return ST; }, get hero(){ return hero; }, get mobs(){ return mobs; }, get bossActive(){ return bossActive; }, get bossRef(){ return bossRef; }, get raid(){ return raid; }, get session(){ return session; },
     storyQ, chOpen, prologue, cutMine, castSprite, cutFaceOf, cutFaceStr, cutTap, renderCut, get cutNow(){ return cut; }, CUT_FACE_RULES, CAST, GWON_Q, GWON_OPEN, GWON_JOIN, GWON_RECAP, GWON_PROLOGUE, heroSprite, gwonBr, gwonSel, gwonRepick, FIST, FOOT, gwonCounter, gwonAttack, kiMul, footSpd, get fxList(){ return fx; }, set gwonForce(v){ gwonForceF = v; }, openLookEditor, clsChgAsk,
@@ -24379,7 +24616,7 @@ if (location.search.indexOf('simtest') >= 0){
   Object.assign(window.__game, {HUNT, huntW, huntF, huntC, huntHcd, huntB, huntBeat, skBaseCd, skSplit, skCdOf, skMp, beatSync, beat:null, benchHunt:false, SKILLS, SK_SLOTS});   // 사냥 박자(기술 재사용 개편 1단계): beat 'hunt'·'raid'로 박자를 억지로 정할 수 있음
   // @@END-B
   // @@HOOK-C (갈래 C의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
-  Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip});   // 물의 신화 9단계(5부 물건)
+  Object.assign(window.__game, {skUp, SK_IND, SK_IND_CH, SK_GRADES, soulSprite, soulImg, petImg, mountImg, skSpirit:null, soulAct, PART_OF, partOfW, partOfCh, dexSum, dexCount, dexParts, TT, avPart, SOUL_BOND, mobSprite, petEquip, defaultState, titleEffText, gemMul, titleCheck});   // 물의 신화 9단계(5부 물건) · 경지 시험(11월 26일)
   // @@END-C
   // @@HOOK-D (갈래 D의 시험 훅은 이 줄 바로 아래에 Object.assign(window.__game, {…}); 로 — 위의 긴 목록 줄은 고치지 않는다)
   Object.assign(window.__game, {TOWER, TOWER_BANDS, TOWER_MILE, towerWS, towerBoss, TRUEF, trueOpen, trueLeft, startTrue, finishTrue, endBox2, trueForm, patTiles, drawSumeruArt, startTower, finishTower, towerMaxOf, towerCap, MOUNT_G});

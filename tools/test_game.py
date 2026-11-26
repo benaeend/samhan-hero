@@ -5942,7 +5942,7 @@ async def main():
         await mp.wait_for_timeout(300)
         a['hud'] = await mp.evaluate("() => { const G = window.__game; G.update(0.05); G.render(); return document.querySelector('#xpnum').textContent; }")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.level = 600; S.expBank = 0; S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; G.refreshStats(); }")
-        check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 3, f"만렙 700: 수미산 레벨 상한 700, 저장 판 3 {a['cap']} {a['capNow']} {a['ver']}")
+        check(a['cap'] == 700 and a['capNow'] == 700 and a['ver'] == 4, f"만렙 700: 수미산 레벨 상한 700, 저장 판 4 {a['cap']} {a['capNow']} {a['ver']}")
         check(a['a1'] == 15 and a['a1l'] == 615 and a['a1b'] == 0, f"모음 전환 A1: 수미산 Lv.600 모음 50 → 접속할 때 +15레벨(Lv.615), 모음 0 {a['a1']} {a['a1l']} {a['a1b']}")
         check(a['a2'] == 30 and a['a2l'] == 630 and a['d2'] == [30, 3], f"모음 전환 A2: 모음 500 → 최대 +30레벨(Lv.630) · 오름 보상 610·620·630에서 조각 +30 {a['a2']} {a['a2l']} {a['d2']}")
         check(a['a3'] == 0 and a['a3l'] == 615, f"모음 전환 A3: 저장해 다시 들어와도 두 번 주지 않음 {a['a3']} {a['a3l']}")
@@ -6087,7 +6087,7 @@ async def main():
         await tab(mp, 'shop'); await mp.click('.shop-cats .chip[data-c="trans"]'); await mp.wait_for_timeout(400)
         await mp.screenshot(path=str(OUT / '97e_조각상점_경지.png'))
         sh2 = await mp.evaluate("() => ({rows:document.querySelectorAll('#panel .list .row').length, txt:document.querySelector('#panel').textContent})")
-        check(sh2['rows'] == 6 and '경지 수련 단약' in sh2['txt'], f"[상점] → [조각]: Lv.700이면 첫 경지 물건(경지 수련 단약)이 6번째로 보임 {sh2['rows']}")
+        check(sh2['rows'] == 7 and '경지 수련 단약' in sh2['txt'], f"[상점] → [조각]: Lv.700이면 첫 경지 물건(경지 수련 단약)이 7번째로(신화 조각 묶음이 앞에 낌) 보임 {sh2['rows']}")
         await mp.evaluate("() => { const G = window.__game, S = G.S; G.closePage(); S.trans.lv = 0; S.trans.exp = 0; S.trans.rGot = 0; S.trans.shard = 0; S.level = 600; G.refreshStats(); }")
         await mp.evaluate("() => window.__game.closePage()")
         await tab(mp, 'bag'); await mp.wait_for_timeout(300)
@@ -6278,6 +6278,133 @@ async def main():
         await mp.evaluate("() => document.querySelector('#trLeft').closest('[data-psec]').scrollIntoView()")
         await mp.screenshot(path=str(OUT / '98b_초월레이드_접힌목록.png'))
         await mp.evaluate("() => { document.querySelector('#trLeft').closest('[data-psec]').querySelector('details.rfold').open = false; }")
+        # ===== (11-26) 경지 시험 · 끝없는 시험 =====
+        await mp.evaluate(LOADM, msave)
+        rt = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, T = G.REALM_TRIALS; G.quiet = true; G.noFork = true; G.closePage();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          const win = (go) => { const ok = go(); if (!G.raid) return ok; G.raid.boss.hp = 1; run(10, () => !G.raid); return ok; };
+          const lose = (go) => { const ok = go(); if (!G.raid) return ok; G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.raid.time = 0; run(10, () => !G.raid); return ok; };
+          S.world = 10; S.quest.main = G.MAIN_Q.length + 1; S.level = 700; S.inv.potion = 9999; S.inv.elixir = 9999; S.trans = JSON.parse(JSON.stringify(G.defaultState().trans)); S.cls = 'musa';
+          out.n = T.length; out.dans = T.map(t => t.dan);
+          // R1 열림 조건
+          const op = lv => { S.trans.lv = lv; return T.map((_, k) => G.trialOpen(k) ? 1 : 0).join(''); };
+          out.open = [op(0), op(9), op(10), op(19), op(20), op(55), op(99), op(100)];
+          S.world = 9; S.trans.lv = 100; out.openOtherWorld = T.map((_, k) => G.trialOpen(k) ? 1 : 0).join(''); S.world = 10;
+          // 보스·세기
+          out.rec = T.map((_, k) => G.trialRec(k)); out.base = T.map((_, k) => G.trialBase(k).every(v => isFinite(v) && v > 0));
+          { const cl = {}; for (const c of ['musa', 'jagaek', 'sulsa', 'doin', 'gungsa', 'changgaek', 'gwon', 'zzz']){ const c0 = S.cls; S.cls = c; cl[c] = T.every((_, k) => G.trialBase(k).every(v => isFinite(v) && v > 0)) && G.exBase(7).every(v => isFinite(v) && v > 0); S.cls = c0; } out.cls = cl; }
+          out.exUp = [1, 2, 5, 10, 30].map(n => G.exBase(n)); out.exMono = out.exUp.every((b, i) => i === 0 || (b[0] > out.exUp[i - 1][0] && b[1] > out.exUp[i - 1][1] && b[2] > out.exUp[i - 1][2]));
+          const I = G.trialInfo(2); out.info = [I.jin, I.rt, I.tr || false, I.key, I.label, I.bossName];
+          // R2 100단 용사: 열렸지만 보상은 아직 안 받음
+          S.trans.lv = 100; out.noRw = [S.trans.shard, JSON.stringify(S.trans.tr.tot), S.trans.tr.best, Object.keys(S.title.own).filter(k => /^rt|^ex/.test(k)).length, !!S.av.own.x_gyeongji, G.exOpen()];
+          out.exLocked = [G.exOpen(), G.startEx()];
+          // R3 첫 승리 보상 한 번 · 다시 이겨도 없음 · R4 지면 그대로
+          let sh = S.trans.shard, gm = S.gems; const gmul = G.gemMul();
+          out.st = win(() => G.startTrial(0)); out.w1 = [S.trans.shard - sh, S.gems - gm === Math.round(G.trialGems(0) * gmul), S.trans.tr.tot[0], S.trans.tr.best];
+          sh = S.trans.shard; gm = S.gems; out.st2 = win(() => G.startTrial(0)); out.w2 = [S.trans.shard - sh, S.gems - gm, S.trans.tr.tot[0]];
+          sh = S.trans.shard; gm = S.gems; const lv0 = S.trans.lv, tot0 = JSON.stringify(S.trans.tr.tot); out.st3 = lose(() => G.startTrial(1)); out.l1 = [S.trans.shard - sh, S.gems - gm, S.trans.lv - lv0, JSON.stringify(S.trans.tr.tot) === tot0];
+          out.lowOpen = (() => { S.trans.lv = 15; const a = G.startTrial(1); S.trans.lv = 100; return a; })();   // 경지 15단: 시험 2(20단)는 못 연다
+          // 시험 3 별호 · 모음 효과 · 5 · 10
+          const col0 = G.titleCol(), av0 = G.avColPct(); S.trans.tr.tot[0] = 0;
+          const first = []; for (let k = 0; k < 10; k++){ sh = S.trans.shard; gm = S.gems; win(() => G.startTrial(k)); first.push([S.trans.shard - sh, S.gems - gm === Math.round(G.trialGems(k) * gmul)]); }
+          out.first = first; out.shardSum = first.reduce((t, x) => t + x[0], 0); out.gemOk = first.every(x => x[1]);
+          out.titles = ['rt3', 'rt5', 'rt10'].map(k => !!S.title.own[k]); out.noTitle = ['rt3'].map(k => !!S.title.own[k]);
+          out.col = [col0, G.titleCol(), av0, G.avColPct(), !!S.av.own.x_gyeongji, G.titleEffText(G.TT ? G.TT.rt3 : {eff:{}})];
+          out.best = S.trans.tr.best; out.exOpen = G.exOpen();
+          // 다시 이겨도 별호·보상 그대로
+          sh = S.trans.shard; win(() => G.startTrial(9)); out.again = S.trans.shard - sh;
+          // R5 끝없는 시험: 하루 5번, 지면 1번, 이기면 안 씀, 다음 날 다시 5번
+          S.trans.ex = {best:0, day:'', n:0, extra:0}; out.left0 = G.exLeft();
+          sh = S.trans.shard; gm = S.gems; out.e1 = win(() => G.startEx()); out.e1r = [S.trans.shard - sh, S.gems - gm === Math.round((G.REALM_EX.gems + G.REALM_EX.gemsK) * gmul), S.trans.ex.best, G.exLeft(), G.raid ? 1 : 0];
+          out.exInfo = (() => { const i = G.exInfo(5); return [i.ex, i.rt, i.en, i.label, i.rec === G.exRec(5)]; })();
+          S.trans.ex.best = 4; sh = S.trans.shard; win(() => G.startEx()); out.e5 = [S.trans.shard - sh, S.trans.ex.best];
+          S.trans.ex.best = 9; win(() => G.startEx()); out.e10 = [S.trans.ex.best, !!S.title.own.ex10];
+          const b0 = S.trans.ex.best; out.fails = []; for (let i = 0; i < 5; i++){ lose(() => G.startEx()); out.fails.push([G.exLeft(), S.trans.ex.best === b0]); }
+          out.after5 = [G.exLeft(), G.startEx()];
+          G.addTime(86400000 * 1.2); G.exCheck(); out.nextDay = [G.exLeft(), S.trans.ex.n];
+          lose(() => G.startEx()); out.nextLose = G.exLeft();
+          // R6 상점
+          const sp = id => G.TRANS_SHOP.find(x => x.id === id);
+          S.trans.tr.tot[9] = 0; S.av.own = {}; out.shopLocked = [sp('t_ex').open(), sp('t_hue').open(), sp('t_myth').open()];
+          S.trans.tr.tot[9] = 1; S.trans.shard = 100; S.trans.buy = {wk:G.weekKey(), got:{}};
+          out.shopOpen = [sp('t_ex').open(), sp('t_myth').open(), sp('t_hue').open()];
+          S.trans.ex.n = 0; const ex0 = G.exLeft(); const ok = []; for (let i = 0; i < 4; i++) ok.push(G.buyTrans('t_ex')); out.buyEx = [ok, G.exLeft() - ex0, S.trans.shard, S.trans.ex.extra];
+          { const ms = S.mythShard || 0; S.trans.shard = 100; const o2 = []; for (let i = 0; i < 6; i++) o2.push(G.buyTrans('t_myth')); out.buyMyth = [o2.filter(Boolean).length, (S.mythShard || 0) - ms, S.trans.shard]; }
+          S.av.own.x_gyeongji = true; out.hueOpen = sp('t_hue').open(); S.trans.shard = 100; out.buyHue = [G.buyTrans('t_hue'), S.trans.tr.hue, G.buyTrans('t_hue'), S.trans.shard];
+          // 소진: 도전권으로 늘린 횟수 → 지면 extra부터가 아니라 기본 횟수부터 쓴다
+          S.trans.ex = {best:20, day:G.exCheck() || '', n:0, extra:2}; G.exCheck(); out.extraUse = (() => { const a = G.exLeft(); for (let i = 0; i < 5; i++) lose(() => G.startEx()); const b = [G.exLeft(), S.trans.ex.n, S.trans.ex.extra]; lose(() => G.startEx()); return [a, b, G.exLeft(), S.trans.ex.extra]; })();
+          // R7 저장 호환
+          S.trans.tr = {best:3, hue:1, tot:{0:2, 4:1, 9:1}}; S.trans.ex = {best:12, day:'2026-11-26', n:3, extra:4};
+          const re = G.mergeState(JSON.parse(JSON.stringify(S))); out.re = [re.trans.tr.best, JSON.stringify(re.trans.tr.tot), re.trans.tr.hue, re.trans.ex.best, re.trans.ex.n, re.trans.ex.extra, re.trans.ex.day];
+          const bad = JSON.parse(JSON.stringify(S)); bad.trans.tr = {best:999, hue:99, tot:{0:'x', 1:-4, 2:7, 12:3, 9:1}}; bad.trans.ex = {best:'abc', day:5, n:99, extra:999}; const mb = G.mergeState(bad);
+          out.bad = [mb.trans.tr.best, JSON.stringify(mb.trans.tr.tot), mb.trans.tr.hue, mb.trans.ex.best, mb.trans.ex.day, mb.trans.ex.n, mb.trans.ex.extra];
+          const bad2 = JSON.parse(JSON.stringify(S)); bad2.trans.tr = {best:999, hue:0, tot:{9:1}}; bad2.trans.ex = {best:99999, day:'', n:0, extra:0}; out.cap = G.mergeState(bad2).trans.ex.best;
+          const no10 = JSON.parse(JSON.stringify(S)); no10.trans.tr.tot = {0:1}; out.exNo10 = G.mergeState(no10).trans.ex.best;   // 시험 10을 안 깼는데 끝없는 시험 기록이 있으면 지움
+          const old = JSON.parse(JSON.stringify(S)); delete old.trans.tr; delete old.trans.ex; const mo = G.mergeState(old); out.old = [mo.trans.tr.best, JSON.stringify(mo.trans.tr.tot), mo.trans.ex.best, mo.trans.ex.n, mo.trans.ex.extra];
+          const old2 = JSON.parse(JSON.stringify(S)); delete old2.trans; const mo2 = G.mergeState(old2); out.old2 = [mo2.trans.tr.best, mo2.trans.ex.best, mo2.trans.shard];
+          out.ver = G.SAVE_BUILD_;
+          return out; }""")
+        check(rt['n'] == 10 and rt['dans'] == [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], f"경지 시험: 10곳, 경지 10단마다 한 곳씩 {rt['dans']}")
+        check(rt['open'] == ['0000000000', '0000000000', '1000000000', '1000000000', '1100000000', '1111100000', '1111111110', '1111111111'] and rt['openOtherWorld'] == '0000000000', f"경지 시험 열림(R1): 9단은 잠김·10단에 시험 1·20단에 시험 2…·수미산 밖에서는 안 열림 {rt['open']} {rt['openOtherWorld']}")
+        check(all(rt['base']) and all(rt['cls'].values()) and all(rt['rec'][i] <= rt['rec'][i + 1] * 1.0001 for i in range(9)) and rt['exMono'], f"경지 시험 세기: 모든 직업(모르는 직업 포함)이 유한한 값, 권장 전투력이 뒤로 갈수록 같거나 세짐, 끝없는 시험은 계단마다 세짐 {rt['cls']}")
+        check(rt['info'][:3] == [True, True, False] and rt['info'][3] == 'rt2' and rt['info'][4] == '경지 시험 · 여울목', f"경지 시험 정보: 진 레이드 싸움 규칙을 쓰고(jin) 이름이 새로 붙음 {rt['info']}")
+        check(rt['noRw'] == [0, '{}', 0, 0, False, False] and rt['exLocked'] == [False, False], f"경지 100단 예전 저장(R2): 시험 10곳이 다 열렸지만 보상·별호·치장·끝없는 시험은 아직 {rt['noRw']} {rt['exLocked']}")
+        check(rt['st'] is True and rt['w1'] == [12, True, 1, 1], f"경지 시험 첫 승리(R3): 초월의 조각 10+2k(시험 1=12), 보석 4,000+1,000k, 통과 1번 {rt['w1']}")
+        check(rt['st2'] is True and rt['w2'] == [0, 0, 2], f"경지 시험 다시 겨루기: 보상 없음, 통과 횟수만 늘고 횟수 제한 없음 {rt['w2']}")
+        check(rt['st3'] is True and rt['l1'] == [0, 0, 0, True] and rt['lowOpen'] is False, f"경지 시험 패배(R4): 져도 조각·보석·경지·기록이 그대로, 경지가 모자라면 못 엶 {rt['l1']} {rt['lowOpen']}")
+        check([x[0] for x in rt['first']] == [12, 14, 16, 18, 20, 22, 24, 26, 28, 30] and rt['shardSum'] == 210 and rt['gemOk'], f"경지 시험 보상 합계: 조각 12·14·…·30 = 210(설계 표), 보석 공식 맞음 {rt['first']} {rt['shardSum']}")
+        check(rt['titles'] == [True, True, True] and rt['best'] == 10 and rt['exOpen'] is True and rt['again'] == 0, f"경지 시험 별호: 시험 3·5·10 통과로 별호 3개, 시험 10을 깨면 끝없는 시험이 열림, 다시 깨도 보상 없음 {rt['titles']} {rt['best']}")
+        check(rt['col'][0] == rt['col'][1] and rt['col'][2] == rt['col'][3] and rt['col'][4] is True and rt['col'][5] == '겉모습만', f"경지 시험 별호·치장 「경지의 빛」은 겉모습만: 별호·아바타 모음 효과(힘)가 안 늘어남 {rt['col']}")
+        check(rt['left0'] == 5 and rt['e1'] is True and rt['e1r'][0] == 3 and rt['e1r'][1] and rt['e1r'][2] == 1 and rt['e1r'][3] == 5 and rt['e1r'][4] == 0, f"끝없는 시험(R5): 하루 5번, 첫 계단을 이기면 조각 3·보석 2,200·도전 횟수 안 씀 {rt['left0']} {rt['e1r']}")
+        check(rt['e5'] == [13, 5] and rt['e10'] == [10, True] and rt['exInfo'][:3] == [True, True, 5], f"끝없는 시험 보상: 5계단마다 조각 +10(5계단=13), 10계단에 별호 {rt['e5']} {rt['e10']} {rt['exInfo']}")
+        check(rt['fails'] == [[4, True], [3, True], [2, True], [1, True], [0, True]] and rt['after5'] == [0, False], f"끝없는 시험: 지면 하루 횟수 1번씩 줄고 5번을 다 지면 더 못 함, 계단은 그대로 {rt['fails']} {rt['after5']}")
+        check(rt['nextDay'] == [5, 0] and rt['nextLose'] == 4, f"끝없는 시험: 다음 날엔 다시 5번 {rt['nextDay']} {rt['nextLose']}")
+        check(rt['shopLocked'] == [False, False, True] and rt['shopOpen'] == [True, True, False], f"조각 상점(R6): 도전권은 끝없는 시험이 열린 뒤·색 바꾸기는 치장을 얻은 뒤·신화 조각 묶음은 경지가 열리면 {rt['shopLocked']} {rt['shopOpen']}")
+        check(rt['buyEx'][0] == [True, True, True, False] and rt['buyEx'][1] == 3 and rt['buyEx'][2] == 85, f"조각 상점: 도전권 5조각, 주 3번까지, 산 만큼 도전 횟수가 늘어요 {rt['buyEx']}")
+        check(rt['buyMyth'] == [5, 15, 80] and rt['hueOpen'] is True and rt['buyHue'][0] is True and rt['buyHue'][1] == 1 and rt['buyHue'][2] is False and rt['buyHue'][3] == 70, f"조각 상점: 신화 조각 묶음 4조각→3개(주 5번), 색 바꾸기 30조각 주 1번 {rt['buyMyth']} {rt['buyHue']}")
+        check(rt['extraUse'][0] == 7 and rt['extraUse'][1] == [2, 5, 2] and rt['extraUse'][2] == 1 and rt['extraUse'][3] == 1, f"끝없는 시험 도전권: 기본 5번을 먼저 쓰고 그다음 도전권을 씀 {rt['extraUse']}")
+        check(rt['re'] == [10, '{"0":2,"4":1,"9":1}', 1, 12, 3, 4, '2026-11-26'], f"경지 시험 저장(R7): 그대로 보존(best는 이긴 기록에서 다시 셈) {rt['re']}")
+        check(rt['bad'][0] == 10 and rt['bad'][1] == '{"2":7,"9":1}' and rt['bad'][2] == 4 and rt['bad'][3] == 0 and rt['bad'][4] == '' and rt['bad'][5] == 5 and rt['bad'][6] == 20 and rt['cap'] == 9999 and rt['exNo10'] == 0, f"경지 시험 저장(R7): 이상한 값(best 999·글자·음수·범위 밖)은 잘라 내고, 시험 10 전의 끝없는 기록은 지움 {rt['bad']} {rt['cap']} {rt['exNo10']}")
+        check(rt['old'] == [0, '{}', 0, 0, 0] and rt['old2'][:2] == [0, 0] and rt['ver'] == 4, f"경지 시험: 예전 저장은 「아무 시험도 안 깬 상태」, 저장 판 4 {rt['old']} {rt['old2']} {rt['ver']}")
+        # 결과 창(글자) · 화면
+        wd = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}; G.quiet = false; G.closePage(); G.hideModal();
+          const run = (sec, until) => { for (let i = 0; i < sec * 20 && !until(); i++){ G.update(0.05); G.addTime(50); } };
+          S.trans.tr.tot = {}; S.trans.tr.best = 0; S.title.own = {}; S.av.own = {}; S.trans.ex = {best:0, day:'', n:0, extra:0}; S.trans.lv = 100;
+          G.startTrial(9); G.raid.boss.hp = 1; run(10, () => !G.raid);
+          const m = document.querySelector('#modal'); out.win = m ? m.textContent : '';
+          G.hideModal(); G.startEx(); G.raid.boss.hp = G.raid.boss.maxHp = 1e300; G.raid.time = 0; run(10, () => !G.raid); out.exLose = document.querySelector('#modal') ? document.querySelector('#modal').textContent : '';
+          G.hideModal(); G.startEx(); G.raid.boss.hp = 1; run(10, () => !G.raid); out.exWin = document.querySelector('#modal') ? document.querySelector('#modal').textContent : '';
+          G.hideModal(); S.trans.tr.tot = {1:1}; S.trans.tr.best = 2; G.startTrial(1); G.raid.boss.hp = 1; run(10, () => !G.raid); out.again = document.querySelector('#modal') ? document.querySelector('#modal').textContent : '';
+          G.hideModal(); G.quiet = true; return out; }""")
+        check('처음 통과한 보상' in wd['win'] and '초월의 조각' in wd['win'] and '제 그림자를 넘은 자' in wd['win'] and '경지의 빛' in wd['win'] and '끝없는 시험' in wd['win'], f"경지 시험 10 결과 창: 처음 통과 보상·별호·치장·끝없는 시험 안내 {wd['win'][:150]}")
+        check('물러났어요' in wd['exLose'] or '쓰러' in wd['exLose'] or '못했어요' in wd['exLose'], f"끝없는 시험 실패 창 {wd['exLose'][:100]}")
+        check('1계단 돌파' in wd['exWin'] and '초월의 조각' in wd['exWin'] and '2계단' in wd['exWin'], f"끝없는 시험 성공 창: 계단 돌파·보상·다음 계단 {wd['exWin'][:120]}")
+        check('보상은 없어요' in wd['again'], f"이미 깬 시험을 다시 이기면 「보상은 없어요」 안내 {wd['again'][:100]}")
+        await mp.evaluate("""() => { const G = window.__game, S = G.S; G.quiet = true; G.hideModal(); S.world = 10; S.quest.main = G.MAIN_Q.length + 1; S.level = 700; S.trans.lv = 60; S.trans.tr = {best:2, hue:0, tot:{0:3, 1:1}}; S.trans.ex = {best:0, day:'', n:0, extra:0}; S.trans.rd = {wk:G.weekKey(), n:0, tot:{}}; G.closePage(); G.buildTab('raid'); G.update(0.05); }""")
+        await mp.wait_for_timeout(500)
+        rv = await mp.evaluate("""() => { const sec = document.querySelector('#rtLeft') ? document.querySelector('#rtLeft').closest('[data-psec]') : null; if (!sec) return {sec:false};
+          const vis = [...sec.querySelectorAll('.rcard')].filter(c => !c.closest('details.rfold')).map(c => c.id), fd = sec.querySelector('details.rfold');
+          return {sec:true, head:document.querySelector('#rtLeft').textContent, vis, fold:fd ? [...fd.querySelectorAll('.rcard')].map(c => c.id) : [], btn:[...sec.querySelectorAll('[data-rtk]')].map(b => b.dataset.rtk + ':' + b.textContent + (b.disabled ? '(꺼짐)' : '')), st:[...sec.querySelectorAll('[data-rts]')].map(e => e.textContent), ex:!!sec.querySelector('#rtx')}; }""")
+        check(rv['sec'] and rv['ex'] is False and rv['vis'] == ['rtr-2', 'rtr-3', 'rtr-4'] and len(rv['fold']) == 7 and '시험 2/10' in rv['head'], f"[레이드] 경지 시험 칸: 60단 → 열린 6곳 중 처음 통과 안 한 곳 먼저 3곳만 보이고 나머지는 접힘, 끝없는 시험은 아직 없음 {rv}")
+        await mp.evaluate("() => document.querySelector('#rtLeft').closest('[data-psec]').querySelector('details.rfold').open = true")
+        await mp.wait_for_timeout(200)
+        await mp.evaluate("() => document.querySelector('#rtLeft').closest('[data-psec]').scrollIntoView()")
+        await mp.screenshot(path=str(OUT / '98c_경지시험_60단.png'))
+        await mp.evaluate("""() => { const G = window.__game, S = G.S; S.trans.lv = 100; S.trans.tr = {best:10, hue:0, tot:{0:3, 1:1, 2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1}}; S.trans.ex = {best:7, day:'', n:0, extra:1}; G.exCheck(); S.trans.ex.n = 2; S.av.own.x_gyeongji = true; G.closePage(); G.buildTab('raid'); G.update(0.05); }""")
+        await mp.wait_for_timeout(500)
+        rv2 = await mp.evaluate("""() => { const sec = document.querySelector('#rtLeft').closest('[data-psec]'), x = sec.querySelector('#rtx'); return {head:document.querySelector('#rtLeft').textContent, x:x ? x.textContent.replace(/\\s+/g, ' ').trim() : '', btn:x ? x.querySelector('button').textContent : '', first:[...sec.querySelectorAll('.rcard')][0].id}; }""")
+        check(rv2['first'] == 'rtx' and '8계단' in rv2['x'] and '7계단' in rv2['x'] and rv2['btn'] == '계단 입장' and '4번 남음' in rv2['head'], f"[레이드] 끝없는 시험 칸: 시험 10을 깨면 맨 위에 나옴, 7계단까지 깼고 8계단 도전, 도전 횟수 {rv2}")
+        await mp.evaluate("() => document.querySelector('#rtLeft').closest('[data-psec]').scrollIntoView()")
+        await mp.screenshot(path=str(OUT / '98c_끝없는시험_8계단.png'))
+        await mp.evaluate("""() => { const G = window.__game; G.hideModal(); document.querySelector('#rtx button').click(); }""")
+        await mp.wait_for_timeout(300)
+        cm = await mp.evaluate("() => ({txt:document.querySelector('#modal') ? document.querySelector('#modal').textContent : '', btns:[...document.querySelectorAll('#mBtns button')].map(b => b.textContent)})")
+        check('끝없는 시험 · 8계단' in cm['txt'] and '지면 1번' in cm['txt'] and '권장 전투력' in cm['txt'] and '출발' in cm['btns'], f"끝없는 시험 입장 창: 계단·권장 전투력·지면 1번을 써요 {cm['txt'][:140]} {cm['btns']}")
+        await mp.screenshot(path=str(OUT / '98c_끝없는시험_입장창.png'))
+        await mp.evaluate("() => window.__game.hideModal()")
+        await mp.evaluate("""() => { const G = window.__game, S = G.S; S.shopCat = 'trans'; G.closePage(); G.buildTab('shop'); G.update(0.05); }""")
+        await mp.wait_for_timeout(300)
+        await mp.evaluate("() => window.__game.closePage()")
         # (11-22) 업데이트 소식: [확인]이 창 아래에 붙고, 맨 위 묶음만 펼침·나머지는 「이전 소식 n개」 한 줄
         await mp.evaluate("() => { const G = window.__game; G.closePage(); G.showNotes(false); document.querySelector('.sheet').scrollTop = 99999; }")
         await mp.wait_for_timeout(300)
@@ -6406,7 +6533,7 @@ async def main():
         await mp.screenshot(path=str(OUT / '98d_보따리_치장입음.png'))
         await tab(mp, 'gear'); await mp.click('#seg-av'); await mp.wait_for_timeout(500)
         av = await mp.evaluate("() => ({cells:document.querySelectorAll('.avcell[data-kd=fx], .avcell[data-kd=head]').length, now:[...document.querySelectorAll('.avcell[aria-pressed=true]')].map(b => b.textContent.replace(/\s+/g, ' ').trim()).join('|'), imgs:[...document.querySelectorAll('.avcell[data-kd=fx] img, .avcell[data-kd=head] img')].every(i => i.src.startsWith('data:image')), t:document.querySelector('#panel').textContent})")
-        check(av['cells'] == 14 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸·입은 것 표시 {av['cells']} {av['now']}")
+        check(av['cells'] == 15 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸 + 경지의 빛 1칸·입은 것 표시 {av['cells']} {av['now']}")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.av.fx = ''; S.av.head = ''; G.closePage(); }")
         await ctxM.close()
         # 99) 2026-11-26 숫자 표시 패치: 싸움 숫자만 부마다 만 배씩 줄여 보여 준다(1·2부 그대로, 3부 ÷1조 · 4·5부 ÷1경, 맨 위 단위 억)
