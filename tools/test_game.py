@@ -6409,7 +6409,7 @@ async def main():
         check(av['cells'] == 14 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸·입은 것 표시 {av['cells']} {av['now']}")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.av.fx = ''; S.av.head = ''; G.closePage(); }")
         await ctxM.close()
-        # 99) 2026-11-26 숫자 표시 패치: 싸움 숫자만 부마다 만 배씩 줄여 보여 준다(1·2부 그대로, 3부 ÷1억 · 4부 ÷1조 · 5부 ÷1경, 맨 위 단위 억)
+        # 99) 2026-11-26 숫자 표시 패치: 싸움 숫자만 부마다 만 배씩 줄여 보여 준다(1·2부 그대로, 3부 ÷1조 · 4·5부 ÷1경, 맨 위 단위 억)
         def unfmt(s):   # 「1,970억」「41,200억」「1.83만」「1 미만」 → 값(시험용 되읽기)
             s = s.replace(',', '').strip()
             if s.startswith('1 미만'): return 0.5
@@ -6440,16 +6440,16 @@ async def main():
           set(8, 5); o.p5 = [G.numPart(), G.numStep(), G.fmtB(8.21e26), G.fmtB(4.12e28), G.fmtB(1.49e27), G.numTag(), G.numDiv()];
           return o; }""")
         check(nb['p1'] == [1, 0] and nb['p2'] == [2, 0, '1,970조', '1,970조'], f'숫자 줄이기: 2부까지는 줄이지 않는다(1.97e15는 지금과 같은 「1,970조」) {nb["p1"]} {nb["p2"]}')
-        check(nb['p3'] == [3, 2, '2,380,000억', '23,800억', '숫자 ÷1억'], f'숫자 줄이기: 3부는 ÷1억(238조 → 억 단위 쉼표 숫자, 억을 넘어도 조·경 글자 없음) {nb["p3"]}')
-        check(nb['p4'] == [4, 3, '19,300억', '193억', '숫자 ÷1조'], f'숫자 줄이기: 4부는 ÷1조 {nb["p4"]}')
+        check(nb['p3'] == [3, 3, '238억', '2.38억', '숫자 ÷1조'], f'숫자 줄이기: 3부는 ÷1조(238조급 → 「238억」) {nb["p3"]}')
+        check(nb['p4'] == [4, 4, '1.93억', '193만', '숫자 ÷1경'], f'숫자 줄이기: 4부는 ÷1경 {nb["p4"]}')
         check(nb['p5'] == [5, 4, '821억', '41,200억', '1,490억', '숫자 ÷1경', 1e16], f'숫자 줄이기: 5부는 ÷1경(8.21e26 → 「821억」, 4.12e28 → 「41,200억」) {nb["p5"]}')
         # (c) 같은 단계에서 정렬된 값 100개 → fmt(값 ÷ 나눗셈 값) 그대로, 크기 순서 유지(억을 넘는 값까지)
         nc = await npg.evaluate("""() => { const G = window.__game, S = G.S, out = {};
-          for (const [k, w] of [[2, 4], [3, 5], [4, 8]]){ S.best.s8 = k === 4 ? 5 : 0; S.best.l8 = S.best.s8; S.best.s5 = k >= 3 ? 5 : 0; S.best.l5 = S.best.s5; S.best.s4 = 5;
+          for (const [k, w] of [[3, 4], [4, 5], [4, 8]]){ S.best.s8 = w === 8 ? 5 : 0; S.best.l8 = S.best.s8; S.best.s5 = w >= 5 ? 5 : 0; S.best.l5 = S.best.s5; S.best.s4 = 5;
             const div = Math.pow(10000, k), vs = Array.from({length:100}, (_, i) => 5 * Math.pow(1.25, i) * div), big = [1e12, 3.3e12, 5e13, 7.7e14].map(x => x * div);
             out[k] = {step:G.numStep(), eq:vs.every(v => G.fmtB(v) === G.fmt(v / div)), list:vs.concat(big).map(v => G.fmtB(v))}; }
           return out; }""")
-        for k in ['2', '3', '4']:
+        for k in ['3', '4']:
             vals = [unfmt(x) for x in nc[k]['list']]
             check(nc[k]['step'] == int(k) and nc[k]['eq'] and all(a <= b for a, b in zip(vals, vals[1:])) and not any(u in ''.join(nc[k]['list']) for u in '조경해'),
                   f'숫자 줄이기: {k}단계에서 정렬된 값 100개가 fmt(값 ÷ 나눗셈 값)과 같고 크기 순서가 유지된다(맨 위는 억)')
