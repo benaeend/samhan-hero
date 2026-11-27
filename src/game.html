@@ -4680,10 +4680,11 @@ function giveGifts(){
   }
 }
 const SAVE_BUILD = 5;   // 저장 판 번호. 아래 staleStop 설명 참고(본 게임 1 → 물의 신화 2: 세계·장비 칸·전직·이야기가 크게 늘어서)
-const NOTE_VER = '2026-11-27-2', NOTE_KEY = KP + 'samhan-note-seen';
+const NOTE_VER = '2026-11-27-3', NOTE_KEY = KP + 'samhan-note-seen';
 // 베타 서비스(~2026-11-10)는 총정리 한 묶음으로. 앞으로의 패치는 맨 위에 새 묶음(['#', 날짜 · 제목])으로 더한다(자세한 베타 기록은 docs/beta-update-history.md)
 const NOTES = [
   ['#', '11월 27일 · 끝없는 신화'],
+  ['끝없는 신화 사냥터 몹이 덜 질겨요', '이야기를 다 마친 뒤 수미산 41단계부터는 사냥터 몹 체력이 지금의 5분의 1로 줄어요. 보스 앞에서 몹 하나에 기술을 7~8번씩 박아야 하던 것이 2~3번이면 돼요. 몹이 쉬워진 만큼 엽전·보석·재료·장비가 나올 확률은 낮췄어요(시간당 얻는 양은 비슷해요). 보스·수문장·레이드·행사 몹은 그대로예요. 경험치도 그대로라, 레벨이 오르는 속도는 거의 같아요.'],
   ['끝없는 신화 보스는 원래대로예요', '보스에게 질수록 더 약해지게 했던 것은 취소했어요. 보스는 예전처럼 단계마다 진짜 벽으로 남고, 지는 만큼 조금씩 약해지는 정도(8번까지, 체력 40%)도 그대로예요.'],
   ['끝없는 신화 퀘스트 설명을 고쳤어요', '예전 「269단계까지」라는 설명을 지금 모습에 맞게 고쳤어요. 이야기 하나마다 수미산 단계가 2씩 올라가고, 막히면 경지 · 영약 · 시험 · 대요괴로 더 세져요.'],
   ['#', '11월 26일 · 주간 대요괴 공동 토벌'],
@@ -6922,6 +6923,15 @@ function spawnTile(minDist, maxDist = SPAWN_R){
 }
 const aliveMobs = () => mobs.filter(m => !m.dead);
 const maxField = () => Math.min(FIELD.max, FIELD.base + Math.floor((S.stage - 1) / FIELD.step) + (S.world ? FIELD.world : 0));   // 단계가 오를수록 사냥터에 몹이 더 많이
+/* 끝없는 신화 사냥터 잡몹 덜기(2026-11-27, 사용자 요청: 끝없는 신화에서 잡몹이 기술 7~8번을 맞아야 죽음).
+   이야기를 다 마친 뒤(수미산·끝없는 신화) from단계보다 위에서는 사냥터 일반 잡몹의 체력만 ×k로 줄인다(340단계에서 한 마리가 맞은 기술 수 무사 9.0→2.8·자객 10.7→3.3·도인 4.2→1.7,
+   보스까지 25마리 60~94초→25~33초). 몹이 3배쯤 빨리 죽으니 시간당 보상이 늘지 않게 한 마리당 엽전과 드롭 확률(보석·재료·장비 조각·쇳가루·장신구·치장)에 k^rw(≈0.30)를 곱한다.
+   경험치는 그대로(잡몹 몫이 원래 2.4%라 시간당 +4~6%만 오름)·보스까지 처치 수 25마리도 그대로. 보스·수문장·급보·야행·레이드·탑·타임 보스·대요괴는 안 건드린다(makeMob·mHp도 그대로 —
+   사냥터 몹을 만드는 자리 한 곳(update의 spawnT)에서만 fieldLateMob을 부른다). 오프라인 보상(offlineReward)의 엽전·보석·재료·쇳가루·치장에도 같은 배율을 곱한다 */
+const FIELD_LATE = {from:40, k:0.2, rw:0.75};
+const fieldLateK = () => S.world === WORLD_MAX && S.quest.main >= MAIN_Q.length && S.stage > FIELD_LATE.from ? FIELD_LATE.k : 1;
+const fieldLateR = () => Math.pow(fieldLateK(), FIELD_LATE.rw);   // 보상 배율(조건이 안 맞으면 정확히 1)
+function fieldLateMob(m){ const k = fieldLateK(); if (k < 1){ m.hp = m.maxHp = m.hp * k; m.late = Math.pow(k, FIELD_LATE.rw); m.gold *= m.late; } return m; }
 // 저승부터 단계 보스는 더 크고 세다(체력·공격 배율 BOSS_K, 그림 2.6배, 세계 빛깔 오라)
 const BOSS_K = {hp:[1, 1.4, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5], atk:[1, 1.3, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]}, BOSS_AURA = ['', '#ff3a2a', '#ffd24a', '#ff7ac8', '#7affd8', '#5ad8ff', '#7ab8ff', '#b08aff', '#ffb04a', '#f0e8ff', '#ffe27a'];
 /* 천계 끝 단계 보스 덜기(2026-11 (43), 사용자 요청: 천계 영소보전 9-8(88단계)이 너무 빡빡함). 천계는 단계마다 몬스터 체력이 ×1.256이라
@@ -7004,18 +7014,18 @@ function killMob(m){
   if (hero.target === m) hero.target = null;
   if (m.raid){ m.deathT = 1; raidEnd(true); return; }
   if (m.evt){ evtReward(m); return; }
-  const gm = gainMul('gold'), xm = gainMul('exp');
+  const gm = gainMul('gold'), xm = gainMul('exp'), lr = m.late || 1;   // lr: 끝없는 신화 사냥터 잡몹(fieldLateMob)이면 드롭 확률에 곱하는 보상 배율, 아니면 1
   S.gold += m.gold * gm; S.rec.kills++;
   if (m.boss){ gainExp(m.exp * xm); bossWin(); return; }
   addLog(`${m.name} 처치 · 경험 +${fmt(m.exp * xm)}`);
   gainExp(m.exp * xm);
   if (parade) parade.kills++; else { S.kills = Math.min(FIELD.kills, S.kills + 1); offHunt.k++; }
   ev('kill');
-  if (isGateStage(S.stage) && Math.random() < FIELD.rew) rollAcc(false);
-  if (Math.random() < MAT_DROP.mob * FIELD.rew) gainMat(1);
-  if (Math.random() < MOB_GEAR * FIELD.rew) mobGearDrop(m);
-  skinRoll();   // 장별 치장(천계 17장부터)
-  if (Math.random() < GEM_DROP * FIELD.rew * gemMul()){
+  if (isGateStage(S.stage) && Math.random() < FIELD.rew * lr) rollAcc(false);
+  if (Math.random() < MAT_DROP.mob * FIELD.rew * lr) gainMat(1);
+  if (Math.random() < MOB_GEAR * FIELD.rew * lr) mobGearDrop(m);
+  skinRoll(lr);   // 장별 치장(천계 17장부터)
+  if (Math.random() < GEM_DROP * FIELD.rew * lr * gemMul()){
     const g = 1 + (Math.random() < S.stage / 300 ? 1 : 0);
     S.gems += g;
     addText('보석 +' + g, m.x, m.y - mobHeight(m) - 12, '#7fdcff', 11, true); sfx('gem');
@@ -10748,7 +10758,7 @@ function update(dt){
       if (spawnT <= 0){
         if (aliveMobs().length < maxField()){
           const spot = spawnTile(4) || spawnTile(2);
-          if (spot){ const m = makeMob(false, spot[0], spot[1]); mobs.push(m); fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
+          if (spot){ const m = fieldLateMob(makeMob(false, spot[0], spot[1])); mobs.push(m); fx.push({type:'poof', t:0, dur:0.4, x:m.x, y:m.y - 6}); }
         }
         spawnT = FIELD.gap + Math.random() * FIELD.rand;
       }
@@ -12625,7 +12635,7 @@ function skinDrop(ch, quiet, minG = 0, rolls = 1, q, relicP = 0, spiritP = 0){  
   if (spirit) g = 6;
   return skinGet(skMake(sk, g, q), quiet);
 }
-function skinRoll(){ if (skinOpen() && Math.random() < SK_P * (window.__game && window.__game.skLuck || 1)) return skinDrop(); return null; }
+function skinRoll(lr = 1){ if (skinOpen() && Math.random() < SK_P * lr * (window.__game && window.__game.skLuck || 1)) return skinDrop(); return null; }   // lr: 끝없는 신화 사냥터 잡몹 보상 배율(fieldLateR)
 function skEquip(id){
   const i = S.skin.inv.findIndex(x => x.id === id); if (i < 0) return false;
   const it = S.skin.inv[i], part = SKC[it.c].p, eq = S.skin.eq[part];
@@ -24328,14 +24338,14 @@ function offlineReward(sec){
   sec = Math.min(sec, OFFLINE_CAP);
   if (sec < 60) return;
   const mk = 1 + rideAb('off') / 100, kps = offlineKps(), st0 = S.stage, lv0 = S.level;
-  let kills = 0, gold = 0, exp = 0, gx = 0, dustX = 0, matX = 0;
+  let kills = 0, gold = 0, exp = 0, gx = 0, dustX = 0, matX = 0, skW = 0;
   const run = (t, hunt) => {   // t초: 사냥(hunt)이면 그 단계 몹을 잡고, 아니면 보스 싸움. 부상·곤륜 기운은 늘 쌓임
-    const s = S.stage, k = hunt ? kps * t : 0;
-    kills += k; S.kills = Math.min(FIELD.kills, S.kills + Math.floor(k));
-    gold += k * mGold(s) * FIELD.rew;
+    const s = S.stage, k = hunt ? kps * t : 0, lr = fieldLateR();   // lr: 끝없는 신화 잡몹 보상 배율(조건이 안 맞으면 정확히 1). 단계가 오르면 그 단계로 다시 봄. 경험치·처치 수는 그대로
+    kills += k; S.kills = Math.min(FIELD.kills, S.kills + Math.floor(k)); skW += k * lr;
+    gold += k * mGold(s) * FIELD.rew * lr;
     exp += k * mExp(s) * FIELD.rew + (S.world >= 3 ? mExp(S.maxStage) * CONT[S.world].sun * t : 0);
-    gx += k * GEM_DROP * FIELD.rew * (1 + Math.min(1, s / 300));
-    matX += k * MAT_DROP.mob * FIELD.rew; dustX += k * MOB_GEAR * FIELD.rew * DUST_G[Math.max(0, dropGrade() - 1)] * 1.52;
+    gx += k * GEM_DROP * FIELD.rew * lr * (1 + Math.min(1, s / 300));
+    matX += k * MAT_DROP.mob * FIELD.rew * lr; dustX += k * MOB_GEAR * FIELD.rew * lr * DUST_G[Math.max(0, dropGrade() - 1)] * 1.52;
   };
   // 보스 도전
   const bt = {win:0, fail:0, end:'', from:st0};
@@ -24361,6 +24371,7 @@ function offlineReward(sec){
   if (bt.win) resetRuntime();   // 새 단계 사냥터로
   if (bt.end === 'stuck' || fails > 0){ S.autoBoss = false; bossRetry = 0; }
   bt.stuck = fails >= OFF_BOSS_TRIES ? S.stage : 0;
+  const skR = kills > 0 ? skW / kills : 1;   // 치장 굴림에 곱할 평균 보상 배율(전부 1이면 정확히 1)
   kills = Math.floor(kills);
   gold *= gainMul('gold', true) * OFF_CUR * mk;
   exp *= gainMul('exp', true) * OFF_EXP * mk;
@@ -24373,7 +24384,7 @@ function offlineReward(sec){
   gainExp(exp, {off:true, inF:lgF});
   const lgAdd = S.lg ? S.lg.st.e - lgE0 : 0;   // 레벨 단위
   // 장별 치장: 잡은 마리 수만큼 굴림(많아도 60번)
-  const skX = skinOpen() ? kills * SK_P : 0, skN = Math.min(60, Math.floor(skX) + (Math.random() < skX % 1 ? 1 : 0)), skins = [];
+  const skX = skinOpen() ? kills * SK_P * skR : 0, skN = Math.min(60, Math.floor(skX) + (Math.random() < skX % 1 ? 1 : 0)), skins = [];
   for (let i = 0; i < skN; i++){ const r = skinDrop(null, true); if (r) skins.push(r); }
   // 오프라인 누적 24시간마다 신화 보물 한 번 굴림
   S.off.acc += sec;
@@ -24919,6 +24930,7 @@ if (location.search.indexOf('simtest') >= 0){
   // @@END-ENTRY
   Object.assign(window.__game, {moveChar, applyOrder, flushOrder, syncChars, showCharSelect});   // 캐릭터 순서 시험
   Object.assign(window.__game, {cleanLook, lookPreview, heroFace, setDrawMode, openLookEditor, defaultLook});   // 남·여 모습·표정 시험
+  Object.assign(window.__game, {FIELD_LATE, fieldLateK, fieldLateR, fieldLateMob, killMob, isGateStage, mExp, gainExp, GEM_DROP, MOB_GEAR});   // 끝없는 신화 잡몹 시험
 }
 
 const hot = window.claude && window.claude.hot;
