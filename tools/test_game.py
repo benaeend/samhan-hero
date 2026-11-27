@@ -6535,15 +6535,14 @@ async def main():
         av = await mp.evaluate("() => ({cells:document.querySelectorAll('.avcell[data-kd=fx], .avcell[data-kd=head]').length, now:[...document.querySelectorAll('.avcell[aria-pressed=true]')].map(b => b.textContent.replace(/\s+/g, ' ').trim()).join('|'), imgs:[...document.querySelectorAll('.avcell[data-kd=fx] img, .avcell[data-kd=head] img')].every(i => i.src.startsWith('data:image')), t:document.querySelector('#panel').textContent})")
         check(av['cells'] == 15 and av['imgs'] and '삼태극 장판' in av['now'] and '청사초롱 한 쌍' in av['now'] and '이펙트(보따리)' in av['t'] and '머리 장식(보따리)' in av['t'], f"[장비] → [아바타]: 보따리 치장 14칸 + 경지의 빛 1칸·입은 것 표시 {av['cells']} {av['now']}")
         await mp.evaluate("() => { const G = window.__game, S = G.S; S.av.fx = ''; S.av.head = ''; G.closePage(); }")
-        # 끝없는 신화 잡몹(2026-11-27, 사용자 요청): 이야기를 다 마친 수미산 41단계부터 사냥터 잡몹 체력 ×0.2, 엽전·드롭 확률 ×0.2^0.75, 경험치·보스·행사 몹은 그대로
+        # 끝없는 신화 잡몹(2026-11-27, 사용자 요청): 이야기를 다 마친 수미산 41단계부터 사냥터 잡몹 체력만 ×0.2. 엽전·드롭 확률·경험치·처치 수·오프라인 보상·보스·행사 몹은 그대로
         await mp.evaluate(LOADM, msave)
-        R0 = 0.2 ** 0.75   # 보상 배율 k^rw = 0.2^0.75 ≈ 0.2991
         fl = await mp.evaluate(r"""() => { const G = window.__game, S = G.S, out = {}, keep = JSON.stringify(S), Rnd = Math.random; G.quiet = true; G.noFork = true; G.closePage(); G.hideModal();
-          const LEN = G.MAIN_Q.length, FL = G.FIELD_LATE, R = Math.pow(FL.k, FL.rw);
+          const LEN = G.MAIN_Q.length, FL = G.FIELD_LATE;
           const restore = () => { Math.random = Rnd; G.accLuck = null; G.evtT = 300; Object.assign(S, JSON.parse(keep)); G.setStage(S.stage); G.applyWorld(); G.refreshStats(); };
           const setup = (world, main, stage) => { S.world = world; S.quest.main = main; G.setStage(stage); G.refreshStats(); S.kills = 0; S.autoBoss = false; S.mode = 'semi'; G.hero.dead = false; G.hero.hp = G.ST.maxHp; };
           const kAt = (world, main, stage) => { setup(world, main, stage); return G.fieldLateK(); };
-          out.cfg = [FL.from, FL.k, FL.rw, +R.toFixed(4)];
+          out.cfg = [FL.from, FL.k, Object.keys(FL).sort().join(',')];
           // ① 조건: 수미산 + 이야기 끝 + 40단계 위
           out.k = {on:[kAt(10, LEN, 41), kAt(10, LEN + 5, 340), kAt(10, LEN, 100)], edge:[kAt(10, LEN, 40), kAt(10, LEN, 1), kAt(10, LEN, 39)], story:[kAt(10, LEN - 1, 100), kAt(10, 0, 100)], world:[kAt(9, LEN, 100), kAt(5, LEN, 100), kAt(0, LEN, 100)]};
           // 사냥터에 실제로 나오는 몹(update의 생성 자리)을 모아 본다: 처음 나온 순간의 최대 체력·엽전·경험치
@@ -6551,72 +6550,72 @@ async def main():
             for (let i = 0; i < 800 && rows.length < n; i++){ G.hero.hp = G.ST.maxHp; S.kills = 0; G.update(0.05);
               for (const m of G.mobs) if (!seen.has(m)){ seen.add(m); if (!m.boss && !m.evt) rows.push({hp:m.hp, max:m.maxHp, gold:m.gold, exp:m.exp, late:m.late}); } }
             const gb = G.mGold(S.stage) * G.FIELD.rew;
-            return {n:rows.length, maxR:rows.map(r => +(r.max / base.hp).toFixed(6)), hpOk:rows.every(r => r.hp <= r.max), goldR:rows.map(r => +(r.gold / gb).toFixed(3)), expSame:rows.every(r => r.exp === base.exp), late:rows.map(r => r.late === undefined ? 0 : +r.late.toFixed(4))}; };
+            return {n:rows.length, maxR:rows.map(r => +(r.max / base.hp).toFixed(6)), hpOk:rows.every(r => r.hp <= r.max), goldR:rows.map(r => +(r.gold / gb).toFixed(3)), expSame:rows.every(r => r.exp === base.exp), noMark:rows.every(r => r.late === undefined)}; };
           out.s = {on:sample(10, LEN, 60), e40:sample(10, LEN, 40), e41:sample(10, LEN, 41), story:sample(10, LEN - 1, 60), w9:sample(9, LEN, 60), w0:sample(0, LEN, 60)};
           // ③ 보스·수문장·행사 몹(급보)·백귀야행은 그대로
           setup(10, LEN, 60); S.bossPity = {k:'', n:0}; G.startBoss(); const b = G.bossRef, bb = G.makeMob(true, 9, 8);
-          out.boss = {late:b.late === undefined, same:b.maxHp === bb.maxHp, big:b.maxHp / G.makeMob(false, 9, 8).hp > 5, gold:b.gold / G.mGold(60) > 8}; G.bossFail('시험');
+          out.boss = {same:b.maxHp === bb.maxHp, big:b.maxHp / G.makeMob(false, 9, 8).hp > 5, gold:b.gold / G.mGold(60) > 8}; G.bossFail('시험');
           setup(10, LEN, 49); S.bossPity = {k:'', n:0}; G.startBoss(); const g = G.bossRef, gg = G.makeMob(true, 9, 8);
-          out.gate = {gate:!!g.gate, late:g.late === undefined, same:g.maxHp === gg.maxHp}; G.bossFail('시험');
+          out.gate = {gate:!!g.gate, same:g.maxHp === gg.maxHp}; G.bossFail('시험');
           setup(10, LEN, 60); G.evtT = 0; let ev = null; for (let i = 0; i < 40 && !ev; i++){ G.hero.hp = G.ST.maxHp; G.update(0.05); ev = G.mobs.find(m => m.evt); }
-          if (ev){ const E = G.EVTS.find(e => e.k === ev.evt); out.evt = {late:ev.late === undefined, hp:+(ev.maxHp / (G.makeMob(false, 9, 8).hp * E.hpK)).toFixed(6)}; } else out.evt = null; G.evtT = 300;
+          if (ev){ const E = G.EVTS.find(e => e.k === ev.evt); out.evt = {hp:+(ev.maxHp / (G.makeMob(false, 9, 8).hp * E.hpK)).toFixed(6)}; } else out.evt = null; G.evtT = 300;
           setup(10, LEN, 60); S.parade.n = 0; S.parade.day = ''; const pbase = G.makeMob(false, 9, 8, true).hp, pst = G.startParade(); const prow = [];
           for (let i = 0; i < 80 && prow.length < 3; i++){ G.hero.hp = G.ST.maxHp; G.update(0.05); for (const m of G.mobs) if (!m.dead && !m.boss && !prow.includes(m)) prow.push(m); }
-          out.parade = {started:pst, n:prow.length, late:prow.every(m => m.late === undefined), hpR:prow.map(m => +(m.maxHp / pbase).toFixed(3))}; if (G.parade) G.finishParade(); G.hideModal();
-          // ② 처치 보상: 엽전·경험치·처치 수, 드롭 확률(난수를 고정해 문턱을 건드림)
+          out.parade = {started:pst, n:prow.length, hpR:prow.map(m => +(m.maxHp / pbase).toFixed(3))}; if (G.parade) G.finishParade(); G.hideModal();
+          // ② 처치 보상: 엽전·경험치·처치 수, 드롭 확률(난수를 고정해 문턱 양옆을 건드림 — 체력만 줄인 몹도 보통 몹과 문턱이 같아야 함)
           const mkMob = late => late ? G.fieldLateMob(G.makeMob(false, 9, 8)) : G.makeMob(false, 9, 8);
           const withU = (u, f) => { Math.random = () => u; try { return f(); } finally { Math.random = Rnd; } };
           const kill = (late, u) => { const m = mkMob(late); m.gold = 1000; S.gold = 0; const sig = () => JSON.stringify([S.gems, S.mat, S.dust, S.gear, S.skin, S.acc, S.bag]);
             const k0 = S.kills, s0 = sig(); withU(u, () => G.killMob(m)); return {kills:S.kills - k0, gold:S.gold, sig0:s0, sig1:sig(), gems:S.gems}; };
           const diff = (late, u, pick) => { const m = mkMob(late); m.gold = 0; const get = () => pick(); const a = get(); withU(u, () => G.killMob(m)); return get() !== a; };
           setup(10, LEN, 60); S.gems = 0; S.gold = 0;
-          const th = G.GEM_DROP * G.FIELD.rew * G.gemMul(), tm = G.MAT_DROP.mob * G.FIELD.rew, tg = G.MOB_GEAR * G.FIELD.rew, ts = G.SK_P, between = t => t * (1 + R) / 2, below = t => t * R / 2;
+          const th = G.GEM_DROP * G.FIELD.rew * G.gemMul(), tm = G.MAT_DROP.mob * G.FIELD.rew, tg = G.MOB_GEAR * G.FIELD.rew, ts = G.SK_P;
           const gemsOf = () => S.gems, matOf = () => S.mat['m' + G.matW()] || 0, gearOf = () => JSON.stringify([S.dust, S.gear]), skinOf = () => JSON.stringify(S.skin);
-          out.drop = {gemN:diff(false, between(th), gemsOf), gemL:diff(true, between(th), gemsOf), gemLo:diff(true, below(th), gemsOf),
-            matN:diff(false, between(tm), matOf), matL:diff(true, between(tm), matOf), matLo:diff(true, below(tm), matOf),
-            gearN:diff(false, between(tg), gearOf), gearL:diff(true, between(tg), gearOf), gearLo:diff(true, below(tg), gearOf),
-            skinN:diff(false, between(ts), skinOf), skinL:diff(true, between(ts), skinOf), skinLo:diff(true, below(ts), skinOf)};
+          const edge = (late, t, pick) => [diff(late, t * 0.97, pick), diff(late, t * 1.03, pick)];   // [문턱 아래에서 나옴, 문턱 위에서 안 나옴]
+          out.drop = {};
+          for (const [nm, t, pick] of [['gem', th, gemsOf], ['mat', tm, matOf], ['gear', tg, gearOf], ['skin', ts, skinOf]]) out.drop[nm] = {n:edge(false, t, pick), l:edge(true, t, pick)};
           setup(10, LEN, 49); G.accLuck = 1e9; const accOf = () => JSON.stringify([S.acc, S.bag, S.gems]);
-          out.acc = {gate:G.isGateStage(S.stage), n:diff(false, 0.5, accOf), l:diff(true, 0.5, accOf), lo:diff(true, 0.1, accOf)}; G.accLuck = null;
+          out.acc = {gate:G.isGateStage(S.stage), n:[diff(false, 0.5, accOf), diff(false, 0.9, accOf)], l:[diff(true, 0.5, accOf), diff(true, 0.9, accOf)]}; G.accLuck = null;
           setup(10, LEN, 60); const kn = kill(false, 0.9), kl = kill(true, 0.9); out.kill = {kn:kn.kills, kl:kl.kills, gn:+(kn.gold / (1000 * G.gainMul('gold'))).toFixed(6), gl:+(kl.gold / (1000 * G.gainMul('gold'))).toFixed(6), none:kn.sig0 === kn.sig1 && kl.sig0 === kl.sig1};
           const expOf = late => { setup(10, LEN, 60); S.level = 650; S.exp = 0; S.expBank = 0; const m = mkMob(late); m.gold = 0; withU(0.9, () => G.killMob(m)); return JSON.stringify([S.level, S.exp, S.expBank]); };
           const eN = expOf(false), eL = expOf(true); out.exp = {same:eN === eL, moved:eN !== JSON.stringify([650, 0, 0])};
-          // ④ 오프라인 보상: 같은 상태에서 k=0.2와 k=1(끔)을 견줌
+          // ④ 오프라인 보상: 같은 상태·같은 난수로 k=0.2(켬)와 k=1(끔)을 돌려 모든 값이 똑같아야 함
           const off = (k, stage, boss) => { restore(); setup(10, LEN, stage); FL.k = k; S.off.kps = 2; S.off.acc = 0; S.bossAuto = !!boss; S.autoBoss = false; S.gold = 0; S.gems = 0; S.dust = 0; S.mat = {}; S.rec.rdpsK = 1e12; G.refreshStats(); G.offBossLuck = boss ? 1e9 : null;
-            const r = G.offlineReward(boss ? 1800 : 3600); G.hideModal(); G.offBossLuck = null; FL.k = 0.2; return {kills:r.kills, gold:r.gold, gems:r.gems, exp:r.exp, dust:r.dust, skins:r.skins, stage:r.stage, mat:S.mat['m' + G.matW()] || 0}; };
+            let sd = 12345; Math.random = () => (sd = (sd * 1664525 + 1013904223) % 4294967296) / 4294967296;
+            const r = G.offlineReward(boss ? 1800 : 3600); Math.random = Rnd; G.hideModal(); G.offBossLuck = null; FL.k = 0.2; return {kills:r.kills, gold:r.gold, gems:r.gems, exp:r.exp, dust:r.dust, skins:r.skins, stage:r.stage, mat:S.mat['m' + G.matW()] || 0}; };
           const oA = off(0.2, 60, false), oB = off(1, 60, false);
-          out.off = {kills:[oA.kills, oB.kills], gold:+(oA.gold / oB.gold).toFixed(5), gems:[oA.gems, oB.gems], dust:[oA.dust, oB.dust], mat:[oA.mat, oB.mat], exp:oA.exp === oB.exp, skins:[oA.skins, oB.skins]};
-          out.off40 = (() => { const a = off(0.2, 40, true), b = off(1, 40, true); return {stage:[a.stage, b.stage], gold:+(a.gold / b.gold).toFixed(4), exp:Math.abs(a.exp / b.exp - 1) < 1e-9, kills:[Math.round(a.kills), Math.round(b.kills)]}; })();
+          out.off = {same:JSON.stringify(oA) === JSON.stringify(oB), a:oA, kills:oA.kills, gold:oA.gold > 0, gems:oA.gems > 0, dust:oA.dust > 0};
+          out.off40 = (() => { const a = off(0.2, 40, true), b = off(1, 40, true); return {same:JSON.stringify(a) === JSON.stringify(b), stage:[a.stage, b.stage], gold:a.gold > 0}; })();
           restore(); out.ok = true; return out; }""")
-        check(abs(fl['cfg'][1] - 0.2) < 1e-9 and fl['cfg'][0] == 40 and abs(fl['cfg'][2] - 0.75) < 1e-9 and abs(fl['cfg'][3] - R0) < 1e-3, f"끝없는 신화 잡몹: 설정은 40단계 위·체력 ×0.2·보상 ×0.2^0.75(≈0.30) {fl['cfg']}")
+        check(abs(fl['cfg'][1] - 0.2) < 1e-9 and fl['cfg'][0] == 40 and fl['cfg'][2] == 'from,k', f"끝없는 신화 잡몹: 설정은 40단계 위·체력 ×0.2뿐(보상 배율 칸 없음) {fl['cfg']}")
         check(fl['k']['on'] == [0.2, 0.2, 0.2] and fl['k']['edge'] == [1, 1, 1] and fl['k']['story'] == [1, 1] and fl['k']['world'] == [1, 1, 1], f"끝없는 신화 잡몹 조건: 수미산+이야기 끝+41단계부터만 켜지고, 40·39단계·이야기 중·다른 세계는 1 {fl['k']}")
         fl_on = fl['s']['on']
-        check(fl_on['n'] == 5 and all(abs(x - 0.2) < 1e-4 for x in fl_on['maxR']) and fl_on['hpOk'] and all(abs(x - R0) < 1e-3 for x in fl_on['late']) and all(0.9 * R0 - 1e-3 <= x <= 1.1 * R0 + 1e-3 for x in fl_on['goldR']),
-              f"끝없는 신화 잡몹(수미산·이야기 끝·60단계): 사냥터 몹 최대 체력 ×0.2, 엽전 ×0.30(0.9~1.1 흔들림), 표시 m.late ≈ 0.30 {fl_on}")
+        check(fl_on['n'] == 5 and all(abs(x - 0.2) < 1e-4 for x in fl_on['maxR']) and fl_on['hpOk'] and fl_on['noMark'] and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in fl_on['goldR']),
+              f"끝없는 신화 잡몹(수미산·이야기 끝·60단계): 사냥터 몹 최대 체력만 ×0.2, 엽전은 보통 몹과 같은 범위(0.9~1.1 흔들림) {fl_on}")
         check(fl_on['expSame'] and fl['s']['e41']['expSame'], f"끝없는 신화 잡몹: 몹이 주는 경험치는 그대로 {fl_on['expSame']}")
         fl_e40, fl_e41 = fl['s']['e40'], fl['s']['e41']
-        check(fl_e40['n'] == 5 and all(abs(x - 1) < 1e-9 for x in fl_e40['maxR']) and all(x == 0 for x in fl_e40['late']) and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in fl_e40['goldR'])
-              and fl_e41['n'] == 5 and all(abs(x - 0.2) < 1e-4 for x in fl_e41['maxR']) and all(x > 0.29 for x in fl_e41['late']),
-              f"끝없는 신화 잡몹 경계: 40단계는 하나도 안 바뀌고 41단계부터 바뀐다 {fl_e40} {fl_e41}")
+        check(fl_e40['n'] == 5 and all(abs(x - 1) < 1e-9 for x in fl_e40['maxR']) and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in fl_e40['goldR'])
+              and fl_e41['n'] == 5 and all(abs(x - 0.2) < 1e-4 for x in fl_e41['maxR']) and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in fl_e41['goldR']),
+              f"끝없는 신화 잡몹 경계: 40단계는 하나도 안 바뀌고 41단계부터 체력만 바뀐다 {fl_e40} {fl_e41}")
         fl_sn, fl_w9, fl_w0 = fl['s']['story'], fl['s']['w9'], fl['s']['w0']
-        check(all(s['n'] == 5 and all(abs(x - 1) < 1e-9 for x in s['maxR']) and all(x == 0 for x in s['late']) and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in s['goldR']) and s['expSame'] for s in (fl_sn, fl_w9, fl_w0)),
+        check(all(s['n'] == 5 and all(abs(x - 1) < 1e-9 for x in s['maxR']) and s['noMark'] and all(0.9 - 1e-3 <= x <= 1.1 + 1e-3 for x in s['goldR']) and s['expSame'] for s in (fl_sn, fl_w9, fl_w0)),
               f"끝없는 신화 잡몹: 이야기를 아직 안 깬 용사·수미산이 아닌 세계(9·0)는 체력·엽전·경험치가 그대로 {fl_sn} {fl_w9} {fl_w0}")
-        check(fl['boss']['late'] and fl['boss']['same'] and fl['boss']['big'] and fl['boss']['gold'] and fl['gate']['gate'] and fl['gate']['late'] and fl['gate']['same'],
-              f"끝없는 신화 잡몹: 단계 보스·수문장은 체력·엽전이 그대로(표시 없음) {fl['boss']} {fl['gate']}")
-        check(fl['evt'] and fl['evt']['late'] and abs(fl['evt']['hp'] - 1) < 1e-9 and fl['parade']['started'] and fl['parade']['n'] == 3 and fl['parade']['late'] and all(x > 0.4 for x in fl['parade']['hpR']),
-              f"끝없는 신화 잡몹: 급보 손님(황금 도깨비 등)·백귀야행 요괴는 그대로(표시 없음, 체력이 0.2배로 줄지 않음) {fl['evt']} {fl['parade']}")
+        check(fl['boss']['same'] and fl['boss']['big'] and fl['boss']['gold'] and fl['gate']['gate'] and fl['gate']['same'],
+              f"끝없는 신화 잡몹: 단계 보스·수문장은 체력·엽전이 그대로 {fl['boss']} {fl['gate']}")
+        check(fl['evt'] and abs(fl['evt']['hp'] - 1) < 1e-9 and fl['parade']['started'] and fl['parade']['n'] == 3 and all(x > 0.4 for x in fl['parade']['hpR']),
+              f"끝없는 신화 잡몹: 급보 손님(황금 도깨비 등)·백귀야행 요괴는 그대로(체력이 0.2배로 줄지 않음) {fl['evt']} {fl['parade']}")
         fl_d = fl['drop']
-        check(fl_d['gemN'] and not fl_d['gemL'] and fl_d['gemLo'] and fl_d['matN'] and not fl_d['matL'] and fl_d['matLo'] and fl_d['gearN'] and not fl_d['gearL'] and fl_d['gearLo'] and fl_d['skinN'] and not fl_d['skinL'] and fl_d['skinLo'],
-              f"끝없는 신화 잡몹 드롭: 보석·재료·장비(쇳가루)·치장 확률 문턱이 ×0.30으로 낮아진다(문턱 사이 난수로는 보통 몹만 나옴, 더 낮으면 둘 다) {fl_d}")
-        check(fl['acc']['gate'] and fl['acc']['n'] and not fl['acc']['l'] and fl['acc']['lo'], f"끝없는 신화 잡몹 드롭: 수문장 단계 장신구 굴림 확률도 ×0.30 {fl['acc']}")
+        check(all(v['n'] == [True, False] and v['l'] == [True, False] for v in fl_d.values()) and sorted(fl_d) == ['gear', 'gem', 'mat', 'skin'],
+              f"끝없는 신화 잡몹 드롭: 보석·재료·장비(쇳가루)·치장 확률 문턱이 보통 몹과 똑같다(문턱 양옆 난수로 확인) {fl_d}")
+        check(fl['acc']['gate'] and fl['acc']['n'] == [True, False] and fl['acc']['l'] == [True, False], f"끝없는 신화 잡몹 드롭: 수문장 단계 장신구 굴림 확률도 그대로 {fl['acc']}")
         check(fl['kill']['kn'] == 1 and fl['kill']['kl'] == 1 and abs(fl['kill']['gn'] - 1) < 1e-9 and abs(fl['kill']['gl'] - 1) < 1e-9 and fl['kill']['none'] and fl['exp']['same'] and fl['exp']['moved'],
-              f"끝없는 신화 잡몹 처치: 처치 수는 하나씩 세고(보스까지 25마리 그대로), 난수가 크면 드롭이 없으며, 경험치로 오른 레벨·경험치는 보통 몹과 똑같다 {fl['kill']} {fl['exp']}")
+              f"끝없는 신화 잡몹 처치: 처치 수는 하나씩 세고(보스까지 25마리 그대로), 난수가 크면 드롭이 없으며, 엽전·경험치로 오른 레벨·경험치는 보통 몹과 똑같다 {fl['kill']} {fl['exp']}")
         fl_o = fl['off']
-        check(fl_o['kills'][0] == fl_o['kills'][1] and abs(fl_o['gold'] - R0) < 2e-3 and fl_o['exp'] and abs(fl_o['gems'][0] / fl_o['gems'][1] - R0) < 0.02 and abs(fl_o['dust'][0] / fl_o['dust'][1] - R0) < 0.02 and abs(fl_o['mat'][0] / fl_o['mat'][1] - R0) < 0.06 and fl_o['skins'][1] > fl_o['skins'][0],
-              f"끝없는 신화 잡몹 오프라인: 처치 수·경험치는 그대로, 엽전·보석·쇳가루·재료·치장은 ×0.30 {fl_o}")
+        check(fl_o['same'] and fl_o['kills'] > 0 and fl_o['gold'] and fl_o['gems'] and fl_o['dust'],
+              f"끝없는 신화 잡몹 오프라인: 켜도 꺼도 처치 수·경험치·엽전·보석·쇳가루·재료·치장이 똑같다(같은 난수) {fl_o}")
         fl_c = fl['off40']
-        check(fl_c['stage'][0] == fl_c['stage'][1] and fl_c['stage'][0] > 41 and fl_c['exp'] and R0 <= fl_c['gold'] < 0.34,
-              f"끝없는 신화 잡몹 오프라인: 40단계에서 출발해 41단계를 넘어가면 그 단계부터 배율이 걸린다(엽전 비 ≈ 0.30, 경험치 그대로) {fl_c}")
+        check(fl_c['same'] and fl_c['stage'][0] == fl_c['stage'][1] and fl_c['stage'][0] > 41 and fl_c['gold'],
+              f"끝없는 신화 잡몹 오프라인: 40단계에서 출발해 41단계를 넘어가도 보상이 똑같다 {fl_c}")
         await ctxM.close()
         # 99) 2026-11-26 숫자 표시 패치: 싸움 숫자만 부마다 만 배씩 줄여 보여 준다(1·2부 그대로, 3부 ÷1조 · 4·5부 ÷1경, 맨 위 단위 억)
         def unfmt(s):   # 「1,970억」「41,200억」「1.83만」「1 미만」 → 값(시험용 되읽기)
